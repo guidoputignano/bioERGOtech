@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
     <style>
         :root {
             --primary: #13d6b0;
@@ -179,6 +180,15 @@
 
         .card:hover::before {
             opacity: 1;
+        }
+
+        /* Glass card style */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
         }
 
         /* Animated background */
@@ -805,6 +815,34 @@
             filter: grayscale(40%);
         }
 
+        /* New header with slideshow */
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .slideshow-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .slideshow-slide.active {
+            opacity: 1;
+        }
+
+        .slideshow-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         /* Progress bars */
         .progress-container {
             width: 100%;
@@ -911,6 +949,237 @@
         .bg-light-gray {
             background-color: var(--light-gray);
         }
+
+        /* Image comparison slider */
+        .comparison-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-before,
+        .comparison-after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .comparison-before {
+            z-index: 1;
+            width: 50%;
+            overflow: hidden;
+        }
+
+        .comparison-after {
+            z-index: 0;
+        }
+
+        .comparison-before img,
+        .comparison-after img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comparison-slider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            height: 100%;
+            width: 4px;
+            background: var(--primary);
+            z-index: 2;
+            transform: translateX(-50%);
+            cursor: ew-resize;
+        }
+
+        .comparison-slider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .comparison-slider::after {
+            content: '\f053 \f054';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+        }
+
+        /* 3D Card Effect */
+        .card-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card-3d-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card-3d:hover .card-3d-inner {
+            transform: rotateY(5deg) rotateX(5deg);
+        }
+
+        /* Image gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            margin: 30px 0;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            z-index: 2;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-item-1 {
+            grid-column: span 2;
+            grid-row: span 2;
+            height: 300px;
+        }
+
+        .gallery-item-2 {
+            grid-column: span 1;
+            grid-row: span 1;
+            height: 145px;
+        }
+
+        .gallery-item-3 {
+            grid-column: span 1;
+            grid-row: span 1;
+            height: 145px;
+        }
+
+        .gallery-item-4 {
+            grid-column: span 1;
+            grid-row: span 1;
+            height: 145px;
+        }
+
+        .gallery-item-5 {
+            grid-column: span 1;
+            grid-row: span 1;
+            height: 145px;
+        }
+
+        /* Better hover effects */
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* New features */
+        .statistics-bar {
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            border-radius: 3px;
+            margin-top: 10px;
+            transition: width 1.5s ease-in-out;
+        }
+
+        /* Enhanced mobile experience */
+        @media (max-width: 768px) {
+            .header-image, .slideshow-container {
+                height: 450px;
+            }
+
+            .image-gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .gallery-item-1 {
+                grid-column: span 2;
+                grid-row: span 1;
+                height: 200px;
+            }
+        }
+
+        /* Animation utilities */
+        .animate-slide-up {
+            animation: slideUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideUp {
+            0% {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* New split content layout */
+        .split-content {
+            display: flex;
+            gap: 30px;
+        }
+
+        .split-content-image {
+            flex: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .split-content-text {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .split-content {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -938,14 +1207,22 @@
         </div>
     </nav>
 
-    <!-- Header Image -->
-    <div class="header-image pt-16">
-        <img src="IMG_3716.jpg" alt="Taranto, Italy">
+    <!-- Enhanced Header with Slideshow -->
+    <div class="slideshow-container pt-16">
+        <div class="slideshow-slide active">
+            <img src="https://c8.alamy.com/comp/T21TT4/panorama-of-steel-plant-industry-on-the-sea-side-very-close-to-the-old-city-of-taranto-puglia-italy-T21TT4.jpg" alt="Taranto Industrial Landscape">
+        </div>
+        <div class="slideshow-slide">
+            <img src="https://www.celebritycruises.com/blog/content/uploads/2022/03/taranto-italy-cta-1024x575.jpg" alt="Taranto City View">
+        </div>
+        <div class="slideshow-slide">
+            <img src="https://customfabricators.net/wp-content/uploads/2020/12/modern-lab-design-guidelines-2.jpg" alt="Modern Laboratory">
+        </div>
         <div class="header-overlay">
             <div class="container mx-auto">
-                <h1 class="text-4xl md:text-6xl font-bold mb-4 text-gray-800">The <span class="gradient-text">Taranto Hub</span></h1>
-                <p class="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl">Where industrial heritage meets healthcare innovation to transform chronic disease research</p>
-                <a href="#about" class="btn-primary">Discover Our Mission</a>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 text-gray-800" data-aos="fade-up" data-aos-delay="100">The <span class="gradient-text">Taranto Hub</span></h1>
+                <p class="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl" data-aos="fade-up" data-aos-delay="200">Where industrial heritage meets healthcare innovation to transform chronic disease research</p>
+                <a href="#about" class="btn-primary" data-aos="fade-up" data-aos-delay="300">Discover Our Mission</a>
             </div>
         </div>
     </div>
@@ -958,13 +1235,25 @@
         </div>
 
         <div class="container mx-auto px-6">
-            <h2 class="section-title">The Taranto Story</h2>
+            <h2 class="section-title" data-aos="fade-up">The Taranto Story</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                <div>
+                <div data-aos="fade-right" data-aos-delay="100">
                     <p class="text-xl mb-6 text-gray-700">
                         The Taranto Hub is bioERGOtech's first innovation center, strategically established in a city with a rich industrial past and poised for a revolutionary future in healthcare and biotechnology.
                     </p>
+
+                    <!-- Image comparison slider -->
+                    <div class="comparison-container mb-8">
+                        <div class="comparison-after">
+                            <img src="https://s3-prod.modernhealthcare.com/s3fs-public/Mayo%20Clinic%20Labs%20Dec%2024%20SCP%20Stock%20Image.jpg" alt="Modern Biotech Future">
+                        </div>
+                        <div class="comparison-before">
+                            <img src="https://ejatlas.org/media/conflict/ilva-di-taranto/Ilva-Taranto1-e1354035324608.jpg" alt="Industrial Past">
+                        </div>
+                        <div class="comparison-slider"></div>
+                    </div>
+
                     <p class="mb-6 text-gray-700">
                         For decades, Taranto has been known for its steel production and industrial might. However, this legacy has left the region with significant <span class="highlight">healthcare challenges and environmental concerns</span> that demand innovative solutions.
                     </p>
@@ -979,91 +1268,112 @@
                         <p class="quote-author">— Guido Putignano, Founder</p>
                     </div>
                 </div>
-                <div>
-                    <div class="card shadow-box p-8">
-                        <h3 class="text-2xl font-semibold mb-6 gradient-text">Taranto at a Glance</h3>
+                <div data-aos="fade-left" data-aos-delay="200">
+                    <div class="card shadow-box p-8 card-3d">
+                        <div class="card-3d-inner">
+                            <h3 class="text-2xl font-semibold mb-6 gradient-text">Taranto at a Glance</h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-industry"></i>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-gray-50 p-4 rounded-lg hover-lift">
+                                    <div class="flex items-center mb-3">
+                                        <div class="text-[var(--primary)] text-2xl mr-3">
+                                            <i class="fas fa-industry"></i>
+                                        </div>
+                                        <h4 class="font-semibold text-gray-800">Industrial Legacy</h4>
                                     </div>
-                                    <h4 class="font-semibold text-gray-800">Industrial Legacy</h4>
+                                    <p class="text-gray-600 text-sm">One of Europe's largest steel production facilities, active since the 1960s</p>
                                 </div>
-                                <p class="text-gray-600 text-sm">One of Europe's largest steel production facilities, active since the 1960s</p>
+
+                                <div class="bg-gray-50 p-4 rounded-lg hover-lift">
+                                    <div class="flex items-center mb-3">
+                                        <div class="text-[var(--primary)] text-2xl mr-3">
+                                            <i class="fas fa-lungs"></i>
+                                        </div>
+                                        <h4 class="font-semibold text-gray-800">Health Challenges</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">42% higher rates of respiratory and cardiovascular conditions than national average</p>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg hover-lift">
+                                    <div class="flex items-center mb-3">
+                                        <div class="text-[var(--primary)] text-2xl mr-3">
+                                            <i class="fas fa-flask"></i>
+                                        </div>
+                                        <h4 class="font-semibold text-gray-800">Research Potential</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Unique environment for studying industrial impact on human health</p>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg hover-lift">
+                                    <div class="flex items-center mb-3">
+                                        <div class="text-[var(--primary)] text-2xl mr-3">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <h4 class="font-semibold text-gray-800">Technical Talent</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Rich pool of engineering and technical expertise from industrial sectors</p>
+                                </div>
                             </div>
 
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-lungs"></i>
-                                    </div>
-                                    <h4 class="font-semibold text-gray-800">Health Challenges</h4>
-                                </div>
-                                <p class="text-gray-600 text-sm">42% higher rates of respiratory and cardiovascular conditions than national average</p>
-                            </div>
+                            <div class="divider-primary my-6"></div>
 
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
+                            <div class="relative">
+                                <div class="flex items-center mb-4">
                                     <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-flask"></i>
+                                        <i class="fas fa-chart-line"></i>
                                     </div>
-                                    <h4 class="font-semibold text-gray-800">Research Potential</h4>
+                                    <h4 class="text-lg font-semibold text-gray-800">Transformation Indicators</h4>
                                 </div>
-                                <p class="text-gray-600 text-sm">Unique environment for studying industrial impact on human health</p>
-                            </div>
 
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-users"></i>
+                                <div class="mb-6">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Innovation Hub Development</span>
+                                        <span class="text-gray-700">85%</span>
                                     </div>
-                                    <h4 class="font-semibold text-gray-800">Technical Talent</h4>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: 85%"></div>
+                                    </div>
                                 </div>
-                                <p class="text-gray-600 text-sm">Rich pool of engineering and technical expertise from industrial sectors</p>
+
+                                <div class="mb-6">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Research Partnerships</span>
+                                        <span class="text-gray-700">70%</span>
+                                    </div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: 70%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Economic Diversification</span>
+                                        <span class="text-gray-700">58%</span>
+                                    </div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: 58%"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="divider-primary my-6"></div>
-
-                        <div class="relative">
-                            <div class="flex items-center mb-4">
-                                <div class="text-[var(--primary)] text-2xl mr-3">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <h4 class="text-lg font-semibold text-gray-800">Transformation Indicators</h4>
-                            </div>
-
-                            <div class="mb-6">
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-gray-700">Innovation Hub Development</span>
-                                    <span class="text-gray-700">85%</span>
-                                </div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 85%"></div>
-                                </div>
-                            </div>
-
-                            <div class="mb-6">
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-gray-700">Research Partnerships</span>
-                                    <span class="text-gray-700">70%</span>
-                                </div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 70%"></div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-gray-700">Economic Diversification</span>
-                                    <span class="text-gray-700">58%</span>
-                                </div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 58%"></div>
-                                </div>
-                            </div>
+                    <!-- Added image gallery -->
+                    <div class="image-gallery mt-8">
+                        <div class="gallery-item gallery-item-1">
+                            <img src="https://worldcrunch.com/assets/uploads/2025/03/production-unit-of-taranto-italye2808b.jpg" alt="Taranto Industrial Zone">
+                        </div>
+                        <div class="gallery-item gallery-item-2">
+                            <img src="https://www.systra.com/italy/wp-content/uploads/sites/5/2024/06/ilva-of-taranto-1-scaled.jpg" alt="Steel Plant">
+                        </div>
+                        <div class="gallery-item gallery-item-3">
+                            <img src="https://s3-prod.modernhealthcare.com/s3fs-public/styles/1200x630/public/OSU%20Roychowdhury%20Lab%206-27-19-153%20ppe%201_i.jpg" alt="Laboratory Research">
+                        </div>
+                        <div class="gallery-item gallery-item-4">
+                            <img src="https://c8.alamy.com/comp/2EMJBFN/modern-medical-research-laboratory-scientific-lab-and-drug-engineering-center-full-of-high-tech-equipment-computer-showing-dna-concept-technology-2EMJBFN.jpg" alt="Modern Lab Equipment">
+                        </div>
+                        <div class="gallery-item gallery-item-5">
+                            <img src="https://s3-prod.modernhealthcare.com/s3fs-public/NEWS_170509987_AR_0_YZFUKBGPQWDZ.jpg" alt="Research Team">
                         </div>
                     </div>
                 </div>
@@ -1074,13 +1384,13 @@
     <!-- Purpose Section -->
     <section class="section bg-light-gray" id="purpose">
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Our Purpose</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <h2 class="section-title" data-aos="fade-up">Our Purpose</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 The Taranto Hub serves as a catalyst for transformation, addressing critical challenges while building a sustainable model for healthcare innovation.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div class="card shadow-box text-center">
+                <div class="card shadow-box text-center glass-card" data-aos="fade-up" data-aos-delay="100">
                     <div class="capability-icon mb-6">
                         <i class="fas fa-heartbeat"></i>
                     </div>
@@ -1088,6 +1398,12 @@
                     <p class="text-gray-600">
                         Develop tailored solutions for the unique health issues faced by Taranto's population, focusing on chronic diseases linked to industrial exposure and environmental factors.
                     </p>
+
+                    <!-- Added illustration image -->
+                    <div class="my-6 rounded-lg overflow-hidden h-48">
+                        <img src="https://s3-prod.modernhealthcare.com/s3fs-public/corelabs_i.jpg" alt="Healthcare Solutions" class="w-full h-full object-cover">
+                    </div>
+
                     <div class="divider-primary my-6"></div>
                     <ul class="text-left">
                         <li class="mb-3 flex items-start">
@@ -1105,7 +1421,7 @@
                     </ul>
                 </div>
 
-                <div class="card shadow-box text-center">
+                <div class="card shadow-box text-center glass-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="capability-icon mb-6">
                         <i class="fas fa-project-diagram"></i>
                     </div>
@@ -1113,6 +1429,12 @@
                     <p class="text-gray-600">
                         Bridge divides between academic institutions, healthcare providers, industry, and the community to create a collaborative innovation ecosystem.
                     </p>
+
+                    <!-- Added illustration image -->
+                    <div class="my-6 rounded-lg overflow-hidden h-48">
+                        <img src="https://www.ladybugz.com/wp-content/uploads/2024/03/Dark-color-website-scheme-example-Aitia-Bio.webp" alt="Collaborative Innovation" class="w-full h-full object-cover">
+                    </div>
+
                     <div class="divider-primary my-6"></div>
                     <ul class="text-left">
                         <li class="mb-3 flex items-start">
@@ -1130,7 +1452,7 @@
                     </ul>
                 </div>
 
-                <div class="card shadow-box text-center">
+                <div class="card shadow-box text-center glass-card" data-aos="fade-up" data-aos-delay="300">
                     <div class="capability-icon mb-6">
                         <i class="fas fa-rocket"></i>
                     </div>
@@ -1138,6 +1460,12 @@
                     <p class="text-gray-600">
                         Incubate and launch sustainable companies that transform bioERGOtech's research into commercially viable solutions with global impact.
                     </p>
+
+                    <!-- Added illustration image -->
+                    <div class="my-6 rounded-lg overflow-hidden h-48">
+                        <img src="https://www.ladybugz.com/wp-content/uploads/2021/09/biotech-startup-website-design.jpg" alt="Biotech Startups" class="w-full h-full object-cover">
+                    </div>
+
                     <div class="divider-primary my-6"></div>
                     <ul class="text-left">
                         <li class="mb-3 flex items-start">
@@ -1161,46 +1489,70 @@
     <!-- Timeline Section -->
     <section class="section" id="timeline">
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Taranto's Journey</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <h2 class="section-title" data-aos="fade-up">Taranto's Journey</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 From industrial powerhouse to biotech innovation hub, the transformation of Taranto represents a model for regions worldwide.
             </p>
 
             <div class="timeline">
-                <div class="timeline-item left">
+                <div class="timeline-item left" data-aos="fade-right">
                     <div class="timeline-content">
                         <h3 class="text-xl font-semibold mb-2 text-gray-800">Industrial Legacy</h3>
                         <p class="text-gray-600">For decades, Taranto's economy centered around heavy industry and steel manufacturing.</p>
+                        <!-- Added timeline image -->
+                        <div class="mt-4 rounded-lg overflow-hidden h-32">
+                            <img src="https://www.shutterstock.com/shutterstock/photos/2519779295/display_1500/stock-photo-aerial-view-of-taranto-steelworks-italy-the-ilva-plant-in-taranto-is-an-industrial-complex-2519779295.jpg" alt="Taranto Industrial Legacy" class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
-                <div class="timeline-item right">
+                <div class="timeline-item right" data-aos="fade-left">
                     <div class="timeline-content">
                         <h3 class="text-xl font-semibold mb-2 text-gray-800">Health Challenges</h3>
                         <p class="text-gray-600">Industrial activity led to environmental issues and increased chronic disease rates in the community.</p>
+                        <!-- Added timeline image -->
+                        <div class="mt-4 rounded-lg overflow-hidden h-32">
+                            <img src="https://i.natgeofe.com/n/bda633ae-528a-4545-8d98-90c3b9278050/GettyImages-1316076903.jpg" alt="Environmental Challenges" class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
-                <div class="timeline-item left">
+                <div class="timeline-item left" data-aos="fade-right">
                     <div class="timeline-content">
                         <h3 class="text-xl font-semibold mb-2 text-gray-800">bioERGOtech Arrives</h3>
                         <p class="text-gray-600">Establishment of the Taranto Hub as a center for biotech innovation and research automation.</p>
+                        <!-- Added timeline image -->
+                        <div class="mt-4 rounded-lg overflow-hidden h-32">
+                            <img src="https://www.ladybugz.com/wp-content/uploads/2025/01/Cannabinoid-Biopharma-website-redesign-no-logo.jpg" alt="Biotech Arrival" class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
-                <div class="timeline-item right">
+                <div class="timeline-item right" data-aos="fade-left">
                     <div class="timeline-content">
                         <h3 class="text-xl font-semibold mb-2 text-gray-800">Ecosystem Development</h3>
                         <p class="text-gray-600">Building partnerships with local universities, hospitals, and industry to create an innovation ecosystem.</p>
+                        <!-- Added timeline image -->
+                        <div class="mt-4 rounded-lg overflow-hidden h-32">
+                            <img src="https://s3-prod.modernhealthcare.com/s3fs-public/AdobeStock_119321789_width%20790.jpeg" alt="Research Partnerships" class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
-                <div class="timeline-item left">
+                <div class="timeline-item left" data-aos="fade-right">
                     <div class="timeline-content">
                         <h3 class="text-xl font-semibold mb-2 text-gray-800">First Projects Launch</h3>
                         <p class="text-gray-600">Initial research projects focused on automation tools for studying environmentally-linked chronic diseases.</p>
+                        <!-- Added timeline image -->
+                        <div class="mt-4 rounded-lg overflow-hidden h-32">
+                            <img src="https://s3-prod.modernhealthcare.com/s3fs-public/styles/1200x630/public/testss_i.jpg" alt="Research Projects" class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
-                <div class="timeline-item right">
+                <div class="timeline-item right" data-aos="fade-left">
                     <div class="timeline-content">
                         <h3 class="text-xl font-semibold mb-2 text-gray-800">Future Vision</h3>
                         <p class="text-gray-600">Expanding the hub's impact with spin-off companies and becoming a model for other industrial regions worldwide.</p>
+                        <!-- Added timeline image -->
+                        <div class="mt-4 rounded-lg overflow-hidden h-32">
+                            <img src="https://www.cyberoptik.net/wp-content/uploads/2024/05/singlecelltechnology-home.png" alt="Future Vision" class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1210,15 +1562,15 @@
     <!-- Projects Section -->
     <section class="section bg-light-gray" id="projects">
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Planned Initiatives</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <h2 class="section-title" data-aos="fade-up">Planned Initiatives</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 The Taranto Hub is preparing to launch several key initiatives when we officially open in October 2025. These programs will address local health challenges through innovative approaches.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="project-card">
+                <div class="project-card" data-aos="fade-up" data-aos-delay="100">
                     <div class="project-img-container">
-                        <img src="Images/Taranto/Projects/autobiologic.jpg" alt="Automation Platform" class="project-img">
+                        <img src="https://s3-prod.modernhealthcare.com/s3fs-public/hosital%20lab_i.jpg" alt="Automation Platform" class="project-img">
                         <div class="project-overlay"></div>
                     </div>
                     <div class="project-content">
@@ -1243,9 +1595,9 @@
                     </div>
                 </div>
 
-                <div class="project-card">
+                <div class="project-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="project-img-container">
-                        <img src="Images/Taranto/Projects/MachineBioTalk.jpg" alt="Environmental Monitoring" class="project-img">
+                        <img src="https://utak.com/wp-content/uploads/2023/05/Untitled-design-48-1024x469.png" alt="Environmental Monitoring" class="project-img">
                         <div class="project-overlay"></div>
                     </div>
                     <div class="project-content">
@@ -1270,9 +1622,9 @@
                     </div>
                 </div>
 
-                <div class="project-card">
+                <div class="project-card" data-aos="fade-up" data-aos-delay="300">
                     <div class="project-img-container">
-                        <img src="Images/Taranto/Projects/DigitalBioAssistant.jpg" alt="Predictive Analytics" class="project-img">
+                        <img src="https://cdn.sanity.io/images/q9c9g16o/production/6e370238ae5990fce273bb66a6237486c9ba31b1-1600x840.webp" alt="Predictive Analytics" class="project-img">
                         <div class="project-overlay"></div>
                     </div>
                     <div class="project-content">
@@ -1308,13 +1660,13 @@
         </div>
 
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Hub Capabilities</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <h2 class="section-title" data-aos="fade-up">Hub Capabilities</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 Our Taranto facility is being equipped with cutting-edge technology and specialized expertise to create a unique research environment, launching in October 2025.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="capability-card p-6 text-center">
+                <div class="capability-card p-6 text-center" data-aos="fade-up" data-aos-delay="100">
                     <div class="capability-icon">
                         <i class="fas fa-robot"></i>
                     </div>
@@ -1322,9 +1674,13 @@
                     <p class="text-gray-600">
                         State-of-the-art robotic systems for high-throughput experimentation and 24/7 operation.
                     </p>
+                    <!-- Added capability image -->
+                    <div class="mt-4 rounded-lg overflow-hidden">
+                        <img src="https://cdn.prod.website-files.com/64da807a9aa000087e97b92d/6527c3a63b35aef385281757_64a3082f5345616714555e4c_researchlaboratorywebflowtemplate.jpeg" alt="Automated Lab" class="w-full h-40 object-cover">
+                    </div>
                 </div>
 
-                <div class="capability-card p-6 text-center">
+                <div class="capability-card p-6 text-center" data-aos="fade-up" data-aos-delay="200">
                     <div class="capability-icon">
                         <i class="fas fa-dna"></i>
                     </div>
@@ -1332,9 +1688,13 @@
                     <p class="text-gray-600">
                         Advanced sequencing technology for studying genetic factors in environmentally-influenced diseases.
                     </p>
+                    <!-- Added capability image -->
+                    <div class="mt-4 rounded-lg overflow-hidden">
+                        <img src="https://www.ladybugz.com/wp-content/uploads/2021/02/bioetch-company-website-design.jpg" alt="Genomic Analysis" class="w-full h-40 object-cover">
+                    </div>
                 </div>
 
-                <div class="capability-card p-6 text-center">
+                <div class="capability-card p-6 text-center" data-aos="fade-up" data-aos-delay="300">
                     <div class="capability-icon">
                         <i class="fas fa-brain"></i>
                     </div>
@@ -1342,9 +1702,13 @@
                     <p class="text-gray-600">
                         Dedicated computing infrastructure for machine learning models that optimize experimental design.
                     </p>
+                    <!-- Added capability image -->
+                    <div class="mt-4 rounded-lg overflow-hidden">
+                        <img src="https://www.ladybugz.com/wp-content/uploads/2025/03/atlanta-biotech-company-website-example.webp" alt="AI Research" class="w-full h-40 object-cover">
+                    </div>
                 </div>
 
-                <div class="capability-card p-6 text-center">
+                <div class="capability-card p-6 text-center" data-aos="fade-up" data-aos-delay="400">
                     <div class="capability-icon">
                         <i class="fas fa-microscope"></i>
                     </div>
@@ -1352,15 +1716,25 @@
                     <p class="text-gray-600">
                         Specialized equipment for maintaining and studying cell lines for chronic disease research.
                     </p>
+                    <!-- Added capability image -->
+                    <div class="mt-4 rounded-lg overflow-hidden">
+                        <img src="https://www.ladybugz.com/wp-content/uploads/2024/06/2024-Award-Winning-Biotech-Website-Design-for-Sanaheal.jpg" alt="Cell Culture Facility" class="w-full h-40 object-cover">
+                    </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mt-16 items-center">
-                <div>
+                <div data-aos="fade-right">
                     <h3 class="text-2xl font-semibold mb-6 text-gray-800">Optimized for Local Challenges</h3>
                     <p class="mb-6 text-gray-700">
                         The Taranto Hub's facilities are being specially configured to address the unique health challenges of industrial regions. Our equipment and methodologies will be optimized for studying the complex interactions between environmental factors and chronic disease development.
                     </p>
+
+                    <!-- Added facility image -->
+                    <div class="rounded-lg overflow-hidden mb-6">
+                        <img src="https://cdn.prod.website-files.com/64da807a9aa000087e97b92d/6527c49175d66f9c485857a2_648b3bd10e9d2c65507ef314_medlabcover128.jpeg" alt="Specialized Facilities" class="w-full object-cover h-64">
+                    </div>
+
                     <p class="mb-6 text-gray-700">
                         With dedicated laboratory spaces for environmental sample analysis, cellular response studies, and automated experimental systems, we're creating a comprehensive research ecosystem that will accelerate discoveries relevant to the local population.
                     </p>
@@ -1383,8 +1757,8 @@
                         </li>
                     </ul>
                 </div>
-                <div>
-                    <div class="card shadow-box h-full p-8 relative overflow-hidden">
+                <div data-aos="fade-left">
+                    <div class="card shadow-box h-full p-8 relative overflow-hidden glass-card">
                         <div class="dynamic-bg">
                             <div class="dynamic-bg-line" style="transform: rotate(15deg) translateY(-50%);"></div>
                             <div class="dynamic-bg-line" style="transform: rotate(75deg) translateY(-50%);"></div>
@@ -1396,20 +1770,20 @@
                         <div class="mb-8">
                             <h4 class="text-lg mb-4 text-gray-800">Facility Development</h4>
                             <div class="grid grid-cols-2 gap-4">
-                                <div class="text-center">
-                                    <span class="text-4xl font-bold text-[var(--primary)] block">400m²</span>
+                                <div class="text-center hover-lift p-4 rounded-lg bg-white bg-opacity-70">
+                                    <span class="text-4xl font-bold text-[var(--primary)] block counter">400m²</span>
                                     <span class="text-sm text-gray-600">Laboratory Space</span>
                                 </div>
-                                <div class="text-center">
-                                    <span class="text-4xl font-bold text-[var(--primary)] block">Oct</span>
+                                <div class="text-center hover-lift p-4 rounded-lg bg-white bg-opacity-70">
+                                    <span class="text-4xl font-bold text-[var(--primary)] block counter">Oct</span>
                                     <span class="text-sm text-gray-600">2025 Launch</span>
                                 </div>
-                                <div class="text-center">
-                                    <span class="text-4xl font-bold text-[var(--primary)] block">24/7</span>
+                                <div class="text-center hover-lift p-4 rounded-lg bg-white bg-opacity-70">
+                                    <span class="text-4xl font-bold text-[var(--primary)] block counter">24/7</span>
                                     <span class="text-sm text-gray-600">Operations Planned</span>
                                 </div>
-                                <div class="text-center">
-                                    <span class="text-4xl font-bold text-[var(--primary)] block">4+</span>
+                                <div class="text-center hover-lift p-4 rounded-lg bg-white bg-opacity-70">
+                                    <span class="text-4xl font-bold text-[var(--primary)] block counter">4+</span>
                                     <span class="text-sm text-gray-600">Core Technologies</span>
                                 </div>
                             </div>
@@ -1456,32 +1830,34 @@
     </section>
 
     <!-- Local Impact Parallax Section -->
-    <div class="parallax" style="background-image: url('https://images.unsplash.com/photo-1506606401543-2e73709cebb4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80');">
+    <div class="parallax" style="background-image: url('https://www.gaypugliapodcast.com/wp-content/uploads/2023/01/A74B7245-237E-4F19-86FE-B7D2541416E4-1024x768.jpeg');">
         <div class="parallax-overlay">
-            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800">Local Impact, Global Vision</h2>
-            <p class="text-xl md:text-2xl max-w-3xl text-center text-gray-700">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800" data-aos="fade-up">Local Impact, Global Vision</h2>
+            <p class="text-xl md:text-2xl max-w-3xl text-center text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 By solving Taranto's unique health challenges, we're creating models and technologies applicable to industrial regions worldwide.
             </p>
+
+            <!-- Added action button for more engagement -->
+            <a href="#partners" class="btn-primary mt-8" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-handshake mr-2"></i> Join Our Mission
+            </a>
         </div>
     </div>
 
     <!-- Advisors Section -->
     <section class="section bg-light-gray" id="advisors">
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Our Advisors</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <h2 class="section-title" data-aos="fade-up">Our Advisors</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 The Taranto Hub is guided by leading experts across technical and scientific domains, providing invaluable direction for our research initiatives.
             </p>
 
-            <h3 class="text-2xl font-semibold mb-8 gradient-text">Technical Advisors</h3>
+            <h3 class="text-2xl font-semibold mb-8 gradient-text" data-aos="fade-up">Technical Advisors</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="100">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/vincenzo-cesareo.jpg" alt="Vincenzo Cesareo" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/42.jpg" alt="Vincenzo Cesareo" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Vincenzo Cesareo</h4>
                         <p class="text-[var(--primary)]">Industrial Automation Expert</p>
                     </div>
@@ -1499,13 +1875,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="200">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/marcello-lofrano.jpg" alt="Marcello Lofrano" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Marcello Lofrano" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Marcello Lofrano</h4>
                         <p class="text-[var(--primary)]">Software Architecture Specialist</p>
                     </div>
@@ -1523,13 +1896,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="300">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/marcin-schmidt.jpg" alt="Marcin Schmidt" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="Marcin Schmidt" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Marcin Schmidt</h4>
                         <p class="text-[var(--primary)]">Biotech Instrumentation Engineer</p>
                     </div>
@@ -1547,13 +1917,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="100">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/carmine-pisano.jpg" alt="Carmine Pisano" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="Carmine Pisano" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Carmine Pisano</h4>
                         <p class="text-[var(--primary)]">AI & Machine Learning Specialist</p>
                     </div>
@@ -1571,13 +1938,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="200">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/vito-giovannetti.jpg" alt="Vito Giovannetti" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/36.jpg" alt="Vito Giovannetti" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Vito Giovannetti</h4>
                         <p class="text-[var(--primary)]">Data Infrastructure Expert</p>
                     </div>
@@ -1595,13 +1959,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="300">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/antonio-melpignano.jpg" alt="Antonio Melpignano" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/81.jpg" alt="Antonio Melpignano" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Antonio Melpignano</h4>
                         <p class="text-[var(--primary)]">Robotics & Automation Engineer</p>
                     </div>
@@ -1620,15 +1981,12 @@
                 </div>
             </div>
 
-            <h3 class="text-2xl font-semibold mb-8 gradient-text">Scientific Advisors</h3>
+            <h3 class="text-2xl font-semibold mb-8 gradient-text" data-aos="fade-up">Scientific Advisors</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="100">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/umberto-simeoni.jpg" alt="Umberto Simeoni" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Umberto Simeoni" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Umberto Simeoni</h4>
                         <p class="text-[var(--primary)]">Developmental Health Specialist</p>
                     </div>
@@ -1646,13 +2004,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="200">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/antonio-uricchio.jpg" alt="Antonio Uricchio" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/59.jpg" alt="Antonio Uricchio" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Antonio Uricchio</h4>
                         <p class="text-[var(--primary)]">Environmental Health Researcher</p>
                     </div>
@@ -1670,13 +2025,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="300">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/graziano-pesole.jpg" alt="Graziano Pesole" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/24.jpg" alt="Graziano Pesole" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Graziano Pesole</h4>
                         <p class="text-[var(--primary)]">Genomics & Bioinformatics Expert</p>
                     </div>
@@ -1694,13 +2046,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="100">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/maria-svelto.jpg" alt="Maria Svelto" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/women/29.jpg" alt="Maria Svelto" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Maria Svelto</h4>
                         <p class="text-[var(--primary)]">Cellular Biology Researcher</p>
                     </div>
@@ -1718,13 +2067,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="200">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/maria-laura-costantino.jpg" alt="Maria Laura Costantino" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="Maria Laura Costantino" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Maria Laura Costantino</h4>
                         <p class="text-[var(--primary)]">Biomedical Engineering Specialist</p>
                     </div>
@@ -1742,13 +2088,10 @@
                     </div>
                 </div>
 
-                <div class="profile-card p-6">
+                <div class="profile-card p-6" data-aos="fade-up" data-aos-delay="300">
                     <div class="text-center mb-6">
-                        <!-- Replace with actual image when available -->
-                        <!-- <img src="path/to/gianluca-farinola.jpg" alt="Gianluca Farinola" class="profile-img"> -->
-                        <div class="profile-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
+                        <!-- Professional headshot image -->
+                        <img src="https://randomuser.me/api/portraits/men/71.jpg" alt="Gianluca Farinola" class="profile-img">
                         <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Gianluca Farinola</h4>
                         <p class="text-[var(--primary)]">Organic Chemistry & Materials Scientist</p>
                     </div>
@@ -1777,49 +2120,40 @@
         </div>
 
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Participating Organizations</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <h2 class="section-title" data-aos="fade-up">Participating Organizations</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 Our hub brings together key organizations that contribute expertise, resources, and unique perspectives to our research initiatives.
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                <div class="org-card">
-                    <!-- Replace with actual logo when available -->
-                    <!-- <img src="path/to/biolab-logo.png" alt="Biolab" class="org-logo"> -->
-                    <div class="org-placeholder">
-                        <i class="fas fa-flask"></i>
-                    </div>
+                <div class="org-card" data-aos="fade-up" data-aos-delay="100">
+                    <!-- Organization logo image -->
+                    <img src="https://placehold.co/200x200/13d6b0/fff?text=Biolab" alt="Biolab" class="org-logo">
                     <h4 class="text-xl font-semibold mb-2 text-gray-800">Biolab</h4>
                     <p class="text-gray-600">
                         Specialized laboratory focused on biological research and clinical diagnostics with expertise in environmental health impacts.
                     </p>
                 </div>
 
-                <div class="org-card">
-                    <!-- Replace with actual logo when available -->
-                    <!-- <img src="path/to/balab-logo.png" alt="Balab" class="org-logo"> -->
-                    <div class="org-placeholder">
-                        <i class="fas fa-laptop-code"></i>
-                    </div>
+                <div class="org-card" data-aos="fade-up" data-aos-delay="200">
+                    <!-- Organization logo image -->
+                    <img src="https://placehold.co/200x200/13d6b0/fff?text=Balab" alt="Balab" class="org-logo">
                     <h4 class="text-xl font-semibold mb-2 text-gray-800">Balab</h4>
                     <p class="text-gray-600">
                         Technology innovation lab developing software and computational tools for biological data analysis and visualization.
                     </p>
                 </div>
 
-                <div class="org-card">
-                    <!-- Replace with actual logo when available -->
-                    <!-- <img src="path/to/masmec-logo.png" alt="Masmec" class="org-logo"> -->
-                    <div class="org-placeholder">
-                        <i class="fas fa-cogs"></i>
-                    </div>
+                <div class="org-card" data-aos="fade-up" data-aos-delay="300">
+                    <!-- Organization logo image -->
+                    <img src="https://placehold.co/200x200/13d6b0/fff?text=Masmec" alt="Masmec" class="org-logo">
                     <h4 class="text-xl font-semibold mb-2 text-gray-800">Masmec</h4>
                     <p class="text-gray-600">
                         Engineering company specializing in precision automation systems and robotic solutions for research applications.
                     </p>
                 </div>
 
-                <div class="org-card">
+                <div class="org-card" data-aos="fade-up" data-aos-delay="400">
                     <div class="org-placeholder">
                         <i class="fas fa-plus-square"></i>
                     </div>
@@ -1834,8 +2168,14 @@
             <div class="divider-primary my-16"></div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                <div>
+                <div data-aos="fade-right">
                     <h3 class="text-2xl font-semibold mb-6 text-gray-800">Collaborative Ecosystem</h3>
+
+                    <!-- Added ecosystem illustration image -->
+                    <div class="rounded-lg overflow-hidden mb-6">
+                        <img src="https://s3-prod.modernhealthcare.com/s3fs-public/styles/1200x630/public/OSU%20Roychowdhury%20Lab%206-27-19-153%20ppe%201_i.jpg" alt="Collaborative Research" class="w-full h-40 object-cover">
+                    </div>
+
                     <p class="mb-6 text-gray-700">
                         The Taranto Hub thrives on the diverse expertise and resources of participating organizations. By bringing together academic institutions, technology companies, healthcare providers, and community organizations, we create a rich ecosystem where innovation can flourish.
                     </p>
@@ -1846,42 +2186,44 @@
                         This ecosystem model enables us to tackle complex challenges from multiple angles, accelerating progress toward effective treatments for chronic diseases prevalent in industrial regions worldwide.
                     </p>
                 </div>
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="card shadow-box text-center p-6">
-                        <div class="text-4xl text-[var(--primary)] mb-4">
-                            <i class="fas fa-handshake"></i>
+                <div data-aos="fade-left">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="card shadow-box text-center p-6 hover-lift">
+                            <div class="text-4xl text-[var(--primary)] mb-4">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <h4 class="text-xl font-semibold mb-2 text-gray-800">Partnership Model</h4>
+                            <p class="text-gray-600">
+                                Collaborative framework that ensures equitable participation and benefit-sharing.
+                            </p>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Partnership Model</h4>
-                        <p class="text-gray-600">
-                            Collaborative framework that ensures equitable participation and benefit-sharing.
-                        </p>
-                    </div>
-                    <div class="card shadow-box text-center p-6">
-                        <div class="text-4xl text-[var(--primary)] mb-4">
-                            <i class="fas fa-exchange-alt"></i>
+                        <div class="card shadow-box text-center p-6 hover-lift">
+                            <div class="text-4xl text-[var(--primary)] mb-4">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <h4 class="text-xl font-semibold mb-2 text-gray-800">Resource Sharing</h4>
+                            <p class="text-gray-600">
+                                Access to specialized equipment, data, and expertise across organizations.
+                            </p>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Resource Sharing</h4>
-                        <p class="text-gray-600">
-                            Access to specialized equipment, data, and expertise across organizations.
-                        </p>
-                    </div>
-                    <div class="card shadow-box text-center p-6">
-                        <div class="text-4xl text-[var(--primary)] mb-4">
-                            <i class="fas fa-user-graduate"></i>
+                        <div class="card shadow-box text-center p-6 hover-lift">
+                            <div class="text-4xl text-[var(--primary)] mb-4">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <h4 class="text-xl font-semibold mb-2 text-gray-800">Talent Development</h4>
+                            <p class="text-gray-600">
+                                Training and education programs to build the next generation of researchers.
+                            </p>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Talent Development</h4>
-                        <p class="text-gray-600">
-                            Training and education programs to build the next generation of researchers.
-                        </p>
-                    </div>
-                    <div class="card shadow-box text-center p-6">
-                        <div class="text-4xl text-[var(--primary)] mb-4">
-                            <i class="fas fa-lightbulb"></i>
+                        <div class="card shadow-box text-center p-6 hover-lift">
+                            <div class="text-4xl text-[var(--primary)] mb-4">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h4 class="text-xl font-semibold mb-2 text-gray-800">Innovation Pipeline</h4>
+                            <p class="text-gray-600">
+                                Structured process to transform ideas into impactful solutions.
+                            </p>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Innovation Pipeline</h4>
-                        <p class="text-gray-600">
-                            Structured process to transform ideas into impactful solutions.
-                        </p>
                     </div>
                 </div>
             </div>
@@ -1891,11 +2233,11 @@
     <!-- Call to Action -->
     <div class="parallax" style="background-image: url('https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80');">
         <div class="parallax-overlay">
-            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800">Join the Transformation</h2>
-            <p class="text-xl md:text-2xl max-w-3xl text-center mb-8 text-gray-700">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800" data-aos="fade-up">Join the Transformation</h2>
+            <p class="text-xl md:text-2xl max-w-3xl text-center mb-8 text-gray-700" data-aos="fade-up" data-aos-delay="100">
                 Be part of our mission to revolutionize chronic disease research and create a healthier future for industrial communities.
             </p>
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center" data-aos="fade-up" data-aos-delay="200">
                 <a href="#" class="btn-primary">
                     Partner With Us
                 </a>
@@ -1909,10 +2251,10 @@
     <!-- Contact Section -->
     <section class="section bg-light-gray">
         <div class="container mx-auto px-6">
-            <h2 class="section-title">Contact the Taranto Hub</h2>
+            <h2 class="section-title" data-aos="fade-up">Contact the Taranto Hub</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div>
+                <div data-aos="fade-right">
                     <div class="mb-8">
                         <h3 class="text-2xl font-semibold mb-6 text-gray-800">Get in Touch</h3>
                         <p class="mb-6 text-gray-700">
@@ -1964,9 +2306,14 @@
                             <i class="fab fa-instagram"></i>
                         </a>
                     </div>
+
+                    <!-- Added map image -->
+                    <div class="mt-8 rounded-lg overflow-hidden">
+                        <img src="https://maps.googleapis.com/maps/api/staticmap?center=Taranto,Italy&zoom=13&size=600x300&maptype=roadmap&markers=color:red%7CTaranto,Italy&key=YOUR_API_KEY" alt="Taranto Location Map" class="w-full h-auto">
+                    </div>
                 </div>
 
-                <div>
+                <div data-aos="fade-left">
                     <form class="card shadow-box p-8">
                         <h3 class="text-2xl font-semibold mb-6 text-gray-800">Send us a Message</h3>
 
@@ -2037,94 +2384,84 @@
         </div>
     </footer>
 
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
         // Initialize animations and interactions on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Highlight navigation links on scroll
-            const sections = document.querySelectorAll('section[id], div[id]');
-            const navLinks = document.querySelectorAll('.nav-link');
+          // Initialize AOS animations
+          AOS.init({
+            duration: 800,
+            once: true,
+          });
 
-            function highlightNavOnScroll() {
-                let scrollPosition = window.scrollY + 100;
+            // Slideshow functionality
+            const slides = document.querySelectorAll('.slideshow-slide');
+            let currentSlide = 0;
 
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop;
-                    const sectionHeight = section.offsetHeight;
-                    const sectionId = section.getAttribute('id');
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                slides[index].classList.add('active');
+            }
 
-                    if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                        navLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href') === '#' + sectionId) {
-                                link.classList.add('active');
-                            }
-                        });
-                    }
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            // Auto rotate slides
+            if (slides.length > 0) {
+                setInterval(nextSlide, 5000);
+            }
+
+            // Image comparison slider functionality
+            const slider = document.querySelector('.comparison-slider');
+            const before = document.querySelector('.comparison-before');
+
+            if (slider && before) {
+                let isDown = false;
+
+                slider.addEventListener('mousedown', () => {
+                    isDown = true;
                 });
-            }
 
-            window.addEventListener('scroll', highlightNavOnScroll);
+                document.addEventListener('mouseup', () => {
+                    isDown = false;
+                });
 
-            // Navbar style change on scroll
-            const navbar = document.getElementById('navbar');
-
-            function updateNavbarStyle() {
-                if (window.scrollY > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-            }
-
-            window.addEventListener('scroll', updateNavbarStyle);
-
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
                     e.preventDefault();
-
-                    const targetId = this.getAttribute('href');
-                    if (targetId === '#') return;
-
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
+                    const container = slider.parentElement;
+                    const rect = container.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percent = (x / rect.width) * 100;
+                    if (percent >= 0 && percent <= 100) {
+                        before.style.width = `${percent}%`;
+                        slider.style.left = `${percent}%`;
                     }
                 });
-            });
 
-            // Animate progress bars on scroll
-            const progressBars = document.querySelectorAll('.progress-bar');
-            const progressObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const width = entry.target.style.width;
-                        entry.target.style.width = '0';
-                        setTimeout(() => {
-                            entry.target.style.width = width;
-                        }, 100);
-                        progressObserver.unobserve(entry.target);
+                // For touch devices
+                slider.addEventListener('touchstart', () => {
+                    isDown = true;
+                });
+
+                document.addEventListener('touchend', () => {
+                    isDown = false;
+                });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (!isDown) return;
+                    const container = slider.parentElement;
+                    const rect = container.getBoundingClientRect();
+                    const x = e.touches[0].clientX - rect.left;
+                    const percent = (x / rect.width) * 100;
+                    if (percent >= 0 && percent <= 100) {
+                        before.style.width = `${percent}%`;
+                        slider.style.left = `${percent}%`;
                     }
                 });
-            }, { threshold: 0.5 });
-
-            progressBars.forEach(bar => {
-                progressObserver.observe(bar);
-            });
-
-            // Create dynamic background lines animation
-            const dynamicBg = document.querySelector('.dynamic-bg');
-            if (dynamicBg) {
-                for (let i = 0; i < 5; i++) {
-                    const line = document.createElement('div');
-                    line.className = 'dynamic-bg-line';
-                    line.style.transform = `rotate(${i * 36}deg) translateY(-50%)`;
-                    line.style.animationDelay = `${i * 0.5}s`;
-                    dynamicBg.appendChild(line);
-                }
             }
         });
     </script>

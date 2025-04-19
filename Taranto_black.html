@@ -9,14 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #13d6b0;
-            --primary-dark: #0eb093;
-            --primary-light: #61ffe0;
-            --dark: #333333;
-            --darker: #1a1a1a;
-            --light: #ffffff;
-            --light-gray: #f5f5f5;
-            --medium-gray: #9e9e9e;
+            --primary: #00D1A7;
+            --primary-dark: #00a083;
+            --primary-light: #4fffe0;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #f8f8f8;
         }
 
         html {
@@ -25,8 +23,8 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
+            background-color: var(--dark);
+            color: white;
             margin: 0;
             padding: 0;
             line-height: 1.6;
@@ -36,7 +34,7 @@
         /* Button styles */
         .btn-primary {
             background-color: var(--primary);
-            color: white;
+            color: var(--dark);
             padding: 12px 28px;
             border-radius: 8px;
             font-weight: 600;
@@ -46,7 +44,7 @@
             position: relative;
             overflow: hidden;
             z-index: 1;
-            box-shadow: 0 4px 15px rgba(19, 214, 176, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 209, 167, 0.2);
         }
 
         .btn-primary::before {
@@ -64,7 +62,7 @@
         .btn-primary:hover {
             background-color: var(--primary-dark);
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(19, 214, 176, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 209, 167, 0.3);
         }
 
         .btn-primary:hover::before {
@@ -73,7 +71,7 @@
 
         .btn-outline {
             border: 2px solid var(--primary);
-            color: var(--dark);
+            color: white;
             padding: 11px 28px;
             border-radius: 8px;
             font-weight: 600;
@@ -99,7 +97,7 @@
         }
 
         .btn-outline:hover {
-            color: white;
+            color: var(--dark);
         }
 
         .btn-outline:hover::before {
@@ -148,7 +146,7 @@
 
         /* Card styles */
         .card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 30px;
             margin: 15px 0;
@@ -156,7 +154,7 @@
             border-left: 4px solid transparent;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
         .card::before {
@@ -173,8 +171,8 @@
 
         .card:hover {
             transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            background-color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background-color: rgba(255, 255, 255, 0.08);
         }
 
         .card:hover::before {
@@ -242,25 +240,25 @@
 
         /* Navbar styles */
         .navbar {
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(15px);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
             transition: all 0.4s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         }
 
         .navbar.scrolled {
-            background-color: rgba(255, 255, 255, 0.98);
+            background-color: rgba(10, 10, 10, 0.95);
             padding: 0.5rem 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
         }
 
         .nav-link {
             position: relative;
-            color: var(--dark);
+            color: white;
             transition: all 0.3s ease;
         }
 
@@ -295,7 +293,7 @@
         .logo-text {
             font-weight: 700;
             font-size: 1.6rem;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--dark) 100%);
+            background: linear-gradient(90deg, var(--primary) 0%, white 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
@@ -308,9 +306,9 @@
         }
 
         .ergo-text {
-            color: var(--dark);
+            color: white;
             font-weight: 700;
-            -webkit-text-fill-color: var(--dark);
+            -webkit-text-fill-color: white;
             transition: all 0.3s ease;
         }
 
@@ -345,7 +343,7 @@
 
         /* Profile card styles */
         .profile-card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 20px;
             transition: all 0.3s ease;
@@ -354,7 +352,6 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
         }
 
         .profile-card::after {
@@ -370,8 +367,8 @@
 
         .profile-card:hover {
             transform: translateY(-10px);
-            background-color: white;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
         }
 
         .profile-card:hover::after {
@@ -386,7 +383,7 @@
             margin: 0 auto;
             border: 3px solid var(--primary);
             padding: 3px;
-            background-color: var(--light);
+            background-color: var(--dark);
         }
 
         .profile-placeholder {
@@ -397,7 +394,7 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto;
-            background-color: rgba(19, 214, 176, 0.1);
+            background-color: rgba(0, 209, 167, 0.1);
             border: 3px solid var(--primary);
             padding: 3px;
             font-size: 2rem;
@@ -415,7 +412,7 @@
             content: '';
             position: absolute;
             width: 4px;
-            background: linear-gradient(to bottom, var(--primary), rgba(19, 214, 176, 0.1));
+            background: linear-gradient(to bottom, var(--primary), rgba(0, 209, 167, 0.1));
             top: 0;
             bottom: 0;
             left: 50%;
@@ -436,7 +433,7 @@
             width: 20px;
             height: 20px;
             right: -10px;
-            background-color: white;
+            background-color: var(--dark);
             border: 4px solid var(--primary);
             top: 15px;
             border-radius: 50%;
@@ -463,22 +460,22 @@
 
         .timeline-content {
             padding: 20px 25px;
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.05);
             position: relative;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
 
         .timeline-content:hover {
             transform: translateY(-5px);
-            background-color: white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         /* Project card styles */
         .project-card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
             overflow: hidden;
             transition: all 0.5s ease;
@@ -486,13 +483,13 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .project-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            background-color: white;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.06);
         }
 
         .project-img-container {
@@ -521,7 +518,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
             opacity: 0.6;
             transition: all 0.3s ease;
         }
@@ -547,7 +544,7 @@
         }
 
         .status-active {
-            background-color: rgba(19, 214, 176, 0.2);
+            background-color: rgba(0, 209, 167, 0.2);
             color: var(--primary);
         }
 
@@ -558,18 +555,18 @@
 
         .capability-card {
             height: 100%;
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             overflow: hidden;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             position: relative;
         }
 
         .capability-card:hover {
             transform: translateY(-5px);
-            background-color: white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .capability-icon {
@@ -580,7 +577,7 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
-            background-color: rgba(19, 214, 176, 0.1);
+            background-color: rgba(0, 209, 167, 0.1);
             color: var(--primary);
             font-size: 2rem;
             transition: all 0.3s ease;
@@ -588,7 +585,7 @@
 
         .capability-card:hover .capability-icon {
             background-color: var(--primary);
-            color: var(--light);
+            color: var(--dark);
             transform: scale(1.1) rotate(10deg);
         }
 
@@ -609,7 +606,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.9));
+            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.7), rgba(18, 18, 18, 1));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -620,7 +617,7 @@
 
         /* Organization card */
         .org-card {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 20px;
             transition: all 0.3s ease;
@@ -632,7 +629,6 @@
             text-align: center;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         .org-card::before {
@@ -650,7 +646,7 @@
 
         .org-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .org-card:hover::before {
@@ -675,7 +671,7 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background-color: rgba(19, 214, 176, 0.1);
+            background-color: rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -687,7 +683,7 @@
         /* Stats counter */
         .stats-container {
             padding: 80px 0;
-            background-color: rgba(19, 214, 176, 0.05);
+            background-color: rgba(0, 209, 167, 0.05);
             margin: 80px 0;
             position: relative;
         }
@@ -725,7 +721,7 @@
             position: relative;
             padding: 40px;
             margin: 60px 0;
-            background-color: rgba(19, 214, 176, 0.05);
+            background-color: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
             overflow: hidden;
         }
@@ -746,7 +742,6 @@
             line-height: 1.8;
             position: relative;
             z-index: 1;
-            color: var(--dark);
         }
 
         .quote-author {
@@ -791,7 +786,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.9));
+            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.7), rgba(18, 18, 18, 1));
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -808,7 +803,7 @@
         /* Progress bars */
         .progress-container {
             width: 100%;
-            background-color: rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             margin-bottom: 5px;
             overflow: hidden;
@@ -826,7 +821,7 @@
         .divider {
             width: 100%;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             margin: 40px 0;
         }
 
@@ -888,7 +883,7 @@
         /* Coming Soon Badge */
         .badge-coming-soon {
             background-color: rgba(111, 66, 193, 0.2);
-            color: #7e56d8;
+            color: #9b6dff;
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
@@ -899,17 +894,12 @@
         /* Launch Badge */
         .badge-launching {
             background-color: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
+            color: #ff6b81;
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
             display: inline-block;
-        }
-
-        /* Alternate section backgrounds */
-        .bg-light-gray {
-            background-color: var(--light-gray);
         }
     </style>
 </head>
@@ -941,10 +931,10 @@
     <!-- Header Image -->
     <div class="header-image pt-16">
         <img src="IMG_3716.jpg" alt="Taranto, Italy">
-        <div class="header-overlay">
+        <div class="header-overlay" style="background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(18, 18, 18, 0.8));">
             <div class="container mx-auto">
-                <h1 class="text-4xl md:text-6xl font-bold mb-4 text-gray-800">The <span class="gradient-text">Taranto Hub</span></h1>
-                <p class="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl">Where industrial heritage meets healthcare innovation to transform chronic disease research</p>
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">The <span class="gradient-text">Taranto Hub</span></h1>
+                <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl">Where industrial heritage meets healthcare innovation to transform chronic disease research</p>
                 <a href="#about" class="btn-primary">Discover Our Mission</a>
             </div>
         </div>
@@ -962,120 +952,118 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
-                    <p class="text-xl mb-6 text-gray-700">
+                    <p class="text-xl mb-6">
                         The Taranto Hub is bioERGOtech's first innovation center, strategically established in a city with a rich industrial past and poised for a revolutionary future in healthcare and biotechnology.
                     </p>
-                    <p class="mb-6 text-gray-700">
+                    <p class="mb-6">
                         For decades, Taranto has been known for its steel production and industrial might. However, this legacy has left the region with significant <span class="highlight">healthcare challenges and environmental concerns</span> that demand innovative solutions.
                     </p>
-                    <p class="mb-6 text-gray-700">
+                    <p class="mb-6">
                         Our hub represents a pivotal transformation in Taranto's story - leveraging the region's industrial expertise and engineering capabilities to pioneer advances in biological research automation and healthcare innovation.
                     </p>
 
                     <div class="quote-container">
-                        <p class="quote-text text-gray-700">
+                        <p class="quote-text">
                             "The Taranto Hub embodies our vision of turning industrial expertise toward solving pressing healthcare problems. This is not just about technology; it's about transforming a community's relationship with health and innovation."
                         </p>
                         <p class="quote-author">— Guido Putignano, Founder</p>
                     </div>
                 </div>
                 <div>
-                    <div class="card shadow-box p-8">
-                        <h3 class="text-2xl font-semibold mb-6 gradient-text">Taranto at a Glance</h3>
+    <div class="card shadow-box p-8">
+        <h3 class="text-2xl font-semibold mb-6 gradient-text">Taranto at a Glance</h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-industry"></i>
-                                    </div>
-                                    <h4 class="font-semibold text-gray-800">Industrial Legacy</h4>
-                                </div>
-                                <p class="text-gray-600 text-sm">One of Europe's largest steel production facilities, active since the 1960s</p>
-                            </div>
-
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-lungs"></i>
-                                    </div>
-                                    <h4 class="font-semibold text-gray-800">Health Challenges</h4>
-                                </div>
-                                <p class="text-gray-600 text-sm">42% higher rates of respiratory and cardiovascular conditions than national average</p>
-                            </div>
-
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-flask"></i>
-                                    </div>
-                                    <h4 class="font-semibold text-gray-800">Research Potential</h4>
-                                </div>
-                                <p class="text-gray-600 text-sm">Unique environment for studying industrial impact on human health</p>
-                            </div>
-
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center mb-3">
-                                    <div class="text-[var(--primary)] text-2xl mr-3">
-                                        <i class="fas fa-users"></i>
-                                    </div>
-                                    <h4 class="font-semibold text-gray-800">Technical Talent</h4>
-                                </div>
-                                <p class="text-gray-600 text-sm">Rich pool of engineering and technical expertise from industrial sectors</p>
-                            </div>
-                        </div>
-
-                        <div class="divider-primary my-6"></div>
-
-                        <div class="relative">
-                            <div class="flex items-center mb-4">
-                                <div class="text-[var(--primary)] text-2xl mr-3">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                                <h4 class="text-lg font-semibold text-gray-800">Transformation Indicators</h4>
-                            </div>
-
-                            <div class="mb-6">
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-gray-700">Innovation Hub Development</span>
-                                    <span class="text-gray-700">85%</span>
-                                </div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 85%"></div>
-                                </div>
-                            </div>
-
-                            <div class="mb-6">
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-gray-700">Research Partnerships</span>
-                                    <span class="text-gray-700">70%</span>
-                                </div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 70%"></div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-gray-700">Economic Diversification</span>
-                                    <span class="text-gray-700">58%</span>
-                                </div>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 58%"></div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-[rgba(255,255,255,0.03)] p-4 rounded-lg">
+                <div class="flex items-center mb-3">
+                    <div class="text-[var(--primary)] text-2xl mr-3">
+                        <i class="fas fa-industry"></i>
                     </div>
+                    <h4 class="font-semibold">Industrial Legacy</h4>
+                </div>
+                <p class="text-gray-300 text-sm">One of Europe's largest steel production facilities, active since the 1960s</p>
+            </div>
+
+            <div class="bg-[rgba(255,255,255,0.03)] p-4 rounded-lg">
+                <div class="flex items-center mb-3">
+                    <div class="text-[var(--primary)] text-2xl mr-3">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <h4 class="font-semibold">Health Challenges</h4>
+                </div>
+                <p class="text-gray-300 text-sm">42% higher rates of respiratory and cardiovascular conditions than national average</p>
+            </div>
+
+            <div class="bg-[rgba(255,255,255,0.03)] p-4 rounded-lg">
+                <div class="flex items-center mb-3">
+                    <div class="text-[var(--primary)] text-2xl mr-3">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <h4 class="font-semibold">Research Potential</h4>
+                </div>
+                <p class="text-gray-300 text-sm">Unique environment for studying industrial impact on human health</p>
+            </div>
+
+            <div class="bg-[rgba(255,255,255,0.03)] p-4 rounded-lg">
+                <div class="flex items-center mb-3">
+                    <div class="text-[var(--primary)] text-2xl mr-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4 class="font-semibold">Technical Talent</h4>
+                </div>
+                <p class="text-gray-300 text-sm">Rich pool of engineering and technical expertise from industrial sectors</p>
+            </div>
+        </div>
+
+        <div class="divider-primary my-6"></div>
+
+        <div class="relative">
+            <div class="flex items-center mb-4">
+                <div class="text-[var(--primary)] text-2xl mr-3">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4 class="text-lg font-semibold">Transformation Indicators</h4>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex justify-between mb-2">
+                    <span>Innovation Hub Development</span>
+                    <span>85%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 85%"></div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex justify-between mb-2">
+                    <span>Research Partnerships</span>
+                    <span>70%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 70%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between mb-2">
+                    <span>Economic Diversification</span>
+                    <span>58%</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width: 58%"></div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
     </section>
 
     <!-- Purpose Section -->
-    <section class="section bg-light-gray" id="purpose">
+    <section class="section bg-[var(--darker)]" id="purpose">
         <div class="container mx-auto px-6">
             <h2 class="section-title">Our Purpose</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <p class="text-xl mb-12 max-w-3xl">
                 The Taranto Hub serves as a catalyst for transformation, addressing critical challenges while building a sustainable model for healthcare innovation.
             </p>
 
@@ -1084,23 +1072,23 @@
                     <div class="capability-icon mb-6">
                         <i class="fas fa-heartbeat"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Address Local Health Challenges</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-2xl font-semibold mb-4">Address Local Health Challenges</h3>
+                    <p class="text-gray-300">
                         Develop tailored solutions for the unique health issues faced by Taranto's population, focusing on chronic diseases linked to industrial exposure and environmental factors.
                     </p>
                     <div class="divider-primary my-6"></div>
                     <ul class="text-left">
                         <li class="mb-3 flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Specialized research on environmental health impacts</span>
+                            <span>Specialized research on environmental health impacts</span>
                         </li>
                         <li class="mb-3 flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Development of monitoring technologies for at-risk populations</span>
+                            <span>Development of monitoring technologies for at-risk populations</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Accessible health solutions tailored to regional needs</span>
+                            <span>Accessible health solutions tailored to regional needs</span>
                         </li>
                     </ul>
                 </div>
@@ -1109,23 +1097,23 @@
                     <div class="capability-icon mb-6">
                         <i class="fas fa-project-diagram"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Unite Local Ecosystems</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-2xl font-semibold mb-4">Unite Local Ecosystems</h3>
+                    <p class="text-gray-300">
                         Bridge divides between academic institutions, healthcare providers, industry, and the community to create a collaborative innovation ecosystem.
                     </p>
                     <div class="divider-primary my-6"></div>
                     <ul class="text-left">
                         <li class="mb-3 flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Cross-sector collaboration platforms and regular forums</span>
+                            <span>Cross-sector collaboration platforms and regular forums</span>
                         </li>
                         <li class="mb-3 flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Shared research facilities for universities and companies</span>
+                            <span>Shared research facilities for universities and companies</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Community engagement programs for inclusive innovation</span>
+                            <span>Community engagement programs for inclusive innovation</span>
                         </li>
                     </ul>
                 </div>
@@ -1134,23 +1122,23 @@
                     <div class="capability-icon mb-6">
                         <i class="fas fa-rocket"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Spin Out Projects</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-2xl font-semibold mb-4">Spin Out Projects</h3>
+                    <p class="text-gray-300">
                         Incubate and launch sustainable companies that transform bioERGOtech's research into commercially viable solutions with global impact.
                     </p>
                     <div class="divider-primary my-6"></div>
                     <ul class="text-left">
                         <li class="mb-3 flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Incubator program for biotech startups</span>
+                            <span>Incubator program for biotech startups</span>
                         </li>
                         <li class="mb-3 flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Mentorship from industry leaders and technical experts</span>
+                            <span>Mentorship from industry leaders and technical experts</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Access to funding networks and commercialization pathways</span>
+                            <span>Access to funding networks and commercialization pathways</span>
                         </li>
                     </ul>
                 </div>
@@ -1159,48 +1147,48 @@
     </section>
 
     <!-- Timeline Section -->
-    <section class="section" id="timeline">
+    <section class="section">
         <div class="container mx-auto px-6">
             <h2 class="section-title">Taranto's Journey</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <p class="text-xl mb-12 max-w-3xl">
                 From industrial powerhouse to biotech innovation hub, the transformation of Taranto represents a model for regions worldwide.
             </p>
 
             <div class="timeline">
                 <div class="timeline-item left">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Industrial Legacy</h3>
-                        <p class="text-gray-600">For decades, Taranto's economy centered around heavy industry and steel manufacturing.</p>
+                        <h3 class="text-xl font-semibold mb-2">Industrial Legacy</h3>
+                        <p class="text-gray-300">For decades, Taranto's economy centered around heavy industry and steel manufacturing.</p>
                     </div>
                 </div>
                 <div class="timeline-item right">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Health Challenges</h3>
-                        <p class="text-gray-600">Industrial activity led to environmental issues and increased chronic disease rates in the community.</p>
+                        <h3 class="text-xl font-semibold mb-2">Health Challenges</h3>
+                        <p class="text-gray-300">Industrial activity led to environmental issues and increased chronic disease rates in the community.</p>
                     </div>
                 </div>
                 <div class="timeline-item left">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">bioERGOtech Arrives</h3>
-                        <p class="text-gray-600">Establishment of the Taranto Hub as a center for biotech innovation and research automation.</p>
+                        <h3 class="text-xl font-semibold mb-2">bioERGOtech Arrives</h3>
+                        <p class="text-gray-300">Establishment of the Taranto Hub as a center for biotech innovation and research automation.</p>
                     </div>
                 </div>
                 <div class="timeline-item right">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Ecosystem Development</h3>
-                        <p class="text-gray-600">Building partnerships with local universities, hospitals, and industry to create an innovation ecosystem.</p>
+                        <h3 class="text-xl font-semibold mb-2">Ecosystem Development</h3>
+                        <p class="text-gray-300">Building partnerships with local universities, hospitals, and industry to create an innovation ecosystem.</p>
                     </div>
                 </div>
                 <div class="timeline-item left">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">First Projects Launch</h3>
-                        <p class="text-gray-600">Initial research projects focused on automation tools for studying environmentally-linked chronic diseases.</p>
+                        <h3 class="text-xl font-semibold mb-2">First Projects Launch</h3>
+                        <p class="text-gray-300">Initial research projects focused on automation tools for studying environmentally-linked chronic diseases.</p>
                     </div>
                 </div>
                 <div class="timeline-item right">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Future Vision</h3>
-                        <p class="text-gray-600">Expanding the hub's impact with spin-off companies and becoming a model for other industrial regions worldwide.</p>
+                        <h3 class="text-xl font-semibold mb-2">Future Vision</h3>
+                        <p class="text-gray-300">Expanding the hub's impact with spin-off companies and becoming a model for other industrial regions worldwide.</p>
                     </div>
                 </div>
             </div>
@@ -1208,10 +1196,10 @@
     </section>
 
     <!-- Projects Section -->
-    <section class="section bg-light-gray" id="projects">
+    <section class="section bg-[var(--darker)]" id="projects">
         <div class="container mx-auto px-6">
             <h2 class="section-title">Planned Initiatives</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <p class="text-xl mb-12 max-w-3xl">
                 The Taranto Hub is preparing to launch several key initiatives when we officially open in October 2025. These programs will address local health challenges through innovative approaches.
             </p>
 
@@ -1223,12 +1211,12 @@
                     </div>
                     <div class="project-content">
                         <span class="project-status status-planned">Planned</span>
-                        <h3 class="text-xl font-semibold mb-3 text-gray-800">AutoBioLogic</h3>
-                        <p class="text-gray-600 mb-6">
+                        <h3 class="text-xl font-semibold mb-3">AutoBioLogic</h3>
+                        <p class="text-gray-300 mb-6">
                             An intelligent automation platform for biological experiments that optimizes protocols for studying chronic diseases prevalent in industrial regions.
                         </p>
                         <div class="mt-auto">
-                            <p class="text-sm text-gray-500">
+                            <p class="text-sm text-gray-400">
                                 <i class="fas fa-calendar-alt mr-2"></i> Starting: October 2025
                             </p>
                             <div class="flex justify-between items-center mt-3">
@@ -1250,12 +1238,12 @@
                     </div>
                     <div class="project-content">
                         <span class="project-status status-planned">Planned</span>
-                        <h3 class="text-xl font-semibold mb-3 text-gray-800">MachineBioTalk</h3>
-                        <p class="text-gray-600 mb-6">
+                        <h3 class="text-xl font-semibold mb-3">MachineBioTalk</h3>
+                        <p class="text-gray-300 mb-6">
                             A integrated system that allows to set-up experiments just using natural language prompts.
                         </p>
                         <div class="mt-auto">
-                            <p class="text-sm text-gray-500">
+                            <p class="text-sm text-gray-400">
                                 <i class="fas fa-calendar-alt mr-2"></i> Starting: Q1 2025
                             </p>
                             <div class="flex justify-between items-center mt-3">
@@ -1277,12 +1265,12 @@
                     </div>
                     <div class="project-content">
                         <span class="project-status status-planned">Planned</span>
-                        <h3 class="text-xl font-semibold mb-3 text-gray-800">DigitalBioAssistant</h3>
-                        <p class="text-gray-600 mb-6">
+                        <h3 class="text-xl font-semibold mb-3">DigitalBioAssistant</h3>
+                        <p class="text-gray-300 mb-6">
                             An AI-powered assistant capable of interacting with patients given the lack of enough qualified people
                         </p>
                         <div class="mt-auto">
-                            <p class="text-sm text-gray-500">
+                            <p class="text-sm text-gray-400">
                                 <i class="fas fa-calendar-alt mr-2"></i> Starting: Q1 2025
                             </p>
                             <div class="flex justify-between items-center mt-3">
@@ -1297,6 +1285,13 @@
                     </div>
                 </div>
             </div>
+            <!--
+            <div class="mt-12 text-center">
+                <a href="#" class="btn-primary">
+                    Learn About Our Research Agenda
+                </a>
+            </div>
+            -->
         </div>
     </section>
 
@@ -1309,7 +1304,7 @@
 
         <div class="container mx-auto px-6">
             <h2 class="section-title">Hub Capabilities</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <p class="text-xl mb-12 max-w-3xl">
                 Our Taranto facility is being equipped with cutting-edge technology and specialized expertise to create a unique research environment, launching in October 2025.
             </p>
 
@@ -1318,8 +1313,8 @@
                     <div class="capability-icon">
                         <i class="fas fa-robot"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Automated Laboratory</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-xl font-semibold mb-3">Automated Laboratory</h3>
+                    <p class="text-gray-300">
                         State-of-the-art robotic systems for high-throughput experimentation and 24/7 operation.
                     </p>
                 </div>
@@ -1328,8 +1323,8 @@
                     <div class="capability-icon">
                         <i class="fas fa-dna"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Genomic Analysis</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-xl font-semibold mb-3">Genomic Analysis</h3>
+                    <p class="text-gray-300">
                         Advanced sequencing technology for studying genetic factors in environmentally-influenced diseases.
                     </p>
                 </div>
@@ -1338,8 +1333,8 @@
                     <div class="capability-icon">
                         <i class="fas fa-brain"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800">AI Research Systems</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-xl font-semibold mb-3">AI Research Systems</h3>
+                    <p class="text-gray-300">
                         Dedicated computing infrastructure for machine learning models that optimize experimental design.
                     </p>
                 </div>
@@ -1348,8 +1343,8 @@
                     <div class="capability-icon">
                         <i class="fas fa-microscope"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Cell Culture Facility</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-xl font-semibold mb-3">Cell Culture Facility</h3>
+                    <p class="text-gray-300">
                         Specialized equipment for maintaining and studying cell lines for chronic disease research.
                     </p>
                 </div>
@@ -1357,29 +1352,29 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mt-16 items-center">
                 <div>
-                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">Optimized for Local Challenges</h3>
-                    <p class="mb-6 text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-6">Optimized for Local Challenges</h3>
+                    <p class="mb-6">
                         The Taranto Hub's facilities are being specially configured to address the unique health challenges of industrial regions. Our equipment and methodologies will be optimized for studying the complex interactions between environmental factors and chronic disease development.
                     </p>
-                    <p class="mb-6 text-gray-700">
+                    <p class="mb-6">
                         With dedicated laboratory spaces for environmental sample analysis, cellular response studies, and automated experimental systems, we're creating a comprehensive research ecosystem that will accelerate discoveries relevant to the local population.
                     </p>
                     <ul class="space-y-4">
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Specialized environmental contaminant detection systems</span>
+                            <span>Specialized environmental contaminant detection systems</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Biomarker identification platforms for industrial exposure</span>
+                            <span>Biomarker identification platforms for industrial exposure</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">High-throughput screening for therapeutic compound discovery</span>
+                            <span>High-throughput screening for therapeutic compound discovery</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-[var(--primary)] mr-3 mt-1"></i>
-                            <span class="text-gray-700">Population data analytics integration with laboratory findings</span>
+                            <span>Population data analytics integration with laboratory findings</span>
                         </li>
                     </ul>
                 </div>
@@ -1394,56 +1389,56 @@
                         <h3 class="text-2xl font-semibold mb-8 text-center gradient-text">Hub Innovation Metrics</h3>
 
                         <div class="mb-8">
-                            <h4 class="text-lg mb-4 text-gray-800">Facility Development</h4>
+                            <h4 class="text-lg mb-4">Facility Development</h4>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="text-center">
                                     <span class="text-4xl font-bold text-[var(--primary)] block">400m²</span>
-                                    <span class="text-sm text-gray-600">Laboratory Space</span>
+                                    <span class="text-sm text-gray-400">Laboratory Space</span>
                                 </div>
                                 <div class="text-center">
                                     <span class="text-4xl font-bold text-[var(--primary)] block">Oct</span>
-                                    <span class="text-sm text-gray-600">2025 Launch</span>
+                                    <span class="text-sm text-gray-400">2025 Launch</span>
                                 </div>
                                 <div class="text-center">
                                     <span class="text-4xl font-bold text-[var(--primary)] block">24/7</span>
-                                    <span class="text-sm text-gray-600">Operations Planned</span>
+                                    <span class="text-sm text-gray-400">Operations Planned</span>
                                 </div>
                                 <div class="text-center">
                                     <span class="text-4xl font-bold text-[var(--primary)] block">4+</span>
-                                    <span class="text-sm text-gray-600">Core Technologies</span>
+                                    <span class="text-sm text-gray-400">Core Technologies</span>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <h4 class="text-lg mb-4 text-gray-800">Development Timeline</h4>
+                            <h4 class="text-lg mb-4">Development Timeline</h4>
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-700">Planning Phase</span>
-                                <span class="text-gray-600">Completed</span>
+                                <span>Planning Phase</span>
+                                <span class="text-gray-400">Completed</span>
                             </div>
                             <div class="progress-container mb-6">
                                 <div class="progress-bar" style="width: 100%"></div>
                             </div>
 
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-700">Equipment Installation</span>
-                                <span class="text-gray-600">In Progress</span>
+                                <span>Equipment Installation</span>
+                                <span class="text-gray-400">In Progress</span>
                             </div>
                             <div class="progress-container mb-6">
                                 <div class="progress-bar" style="width: 65%"></div>
                             </div>
 
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-700">Team Formation</span>
-                                <span class="text-gray-600">In Progress</span>
+                                <span>Team Formation</span>
+                                <span class="text-gray-400">In Progress</span>
                             </div>
                             <div class="progress-container mb-6">
                                 <div class="progress-bar" style="width: 80%"></div>
                             </div>
 
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-700">Research Programs</span>
-                                <span class="text-gray-600">Planning</span>
+                                <span>Research Programs</span>
+                                <span class="text-gray-400">Planning</span>
                             </div>
                             <div class="progress-container">
                                 <div class="progress-bar" style="width: 40%"></div>
@@ -1457,19 +1452,19 @@
 
     <!-- Local Impact Parallax Section -->
     <div class="parallax" style="background-image: url('https://images.unsplash.com/photo-1506606401543-2e73709cebb4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80');">
-        <div class="parallax-overlay">
-            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800">Local Impact, Global Vision</h2>
-            <p class="text-xl md:text-2xl max-w-3xl text-center text-gray-700">
+        <div class="parallax-overlay" style="background: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(18, 18, 18, 0.8));">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">Local Impact, Global Vision</h2>
+            <p class="text-xl md:text-2xl max-w-3xl text-center">
                 By solving Taranto's unique health challenges, we're creating models and technologies applicable to industrial regions worldwide.
             </p>
         </div>
     </div>
 
     <!-- Advisors Section -->
-    <section class="section bg-light-gray" id="advisors">
+    <section class="section bg-[var(--darker)]" id="advisors">
         <div class="container mx-auto px-6">
             <h2 class="section-title">Our Advisors</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <p class="text-xl mb-12 max-w-3xl">
                 The Taranto Hub is guided by leading experts across technical and scientific domains, providing invaluable direction for our research initiatives.
             </p>
 
@@ -1482,15 +1477,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Vincenzo Cesareo</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Vincenzo Cesareo</h4>
                         <p class="text-[var(--primary)]">Industrial Automation Expert</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         30+ years of experience in industrial automation systems, specializing in transforming manufacturing technologies for healthcare applications.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Key Expertise:</strong></p>
+                        <p class="mb-2"><strong>Key Expertise:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Industrial Systems</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Robotics</span>
@@ -1506,15 +1501,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Marcello Lofrano</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Marcello Lofrano</h4>
                         <p class="text-[var(--primary)]">Software Architecture Specialist</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Pioneer in developing integrated software systems for laboratory automation and experimental data processing.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Key Expertise:</strong></p>
+                        <p class="mb-2"><strong>Key Expertise:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Software Integration</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Database Architecture</span>
@@ -1530,15 +1525,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Marcin Schmidt</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Marcin Schmidt</h4>
                         <p class="text-[var(--primary)]">Biotech Instrumentation Engineer</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Expert in designing and optimizing specialized equipment for cellular and molecular biology research with a focus on automation.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Key Expertise:</strong></p>
+                        <p class="mb-2"><strong>Key Expertise:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Lab Equipment Design</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Precision Systems</span>
@@ -1554,15 +1549,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Carmine Pisano</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Carmine Pisano</h4>
                         <p class="text-[var(--primary)]">AI & Machine Learning Specialist</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Develops machine learning algorithms for experimental design optimization and predictive modeling in biological systems.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Key Expertise:</strong></p>
+                        <p class="mb-2"><strong>Key Expertise:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Machine Learning</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Neural Networks</span>
@@ -1578,15 +1573,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Vito Giovannetti</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Vito Giovannetti</h4>
                         <p class="text-[var(--primary)]">Data Infrastructure Expert</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Specializes in creating robust data infrastructure for handling and analyzing large-scale biological and environmental datasets.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Key Expertise:</strong></p>
+                        <p class="mb-2"><strong>Key Expertise:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Big Data</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Cloud Infrastructure</span>
@@ -1602,15 +1597,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Antonio Melpignano</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Antonio Melpignano</h4>
                         <p class="text-[var(--primary)]">Robotics & Automation Engineer</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Designs advanced robotic systems for laboratory environments with expertise in precision movements and experimental execution.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Key Expertise:</strong></p>
+                        <p class="mb-2"><strong>Key Expertise:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Lab Robotics</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Precision Control</span>
@@ -1629,15 +1624,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Umberto Simeoni</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Umberto Simeoni</h4>
                         <p class="text-[var(--primary)]">Developmental Health Specialist</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Researcher focused on early-life health impacts of environmental exposures and their relation to chronic disease development.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Research Focus:</strong></p>
+                        <p class="mb-2"><strong>Research Focus:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Environmental Health</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Pediatric Medicine</span>
@@ -1653,15 +1648,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Antonio Uricchio</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Antonio Uricchio</h4>
                         <p class="text-[var(--primary)]">Environmental Health Researcher</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Studies the complex interactions between industrial pollutants and human health, with emphasis on chronic disease mechanisms.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Research Focus:</strong></p>
+                        <p class="mb-2"><strong>Research Focus:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Industrial Toxicology</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Public Health</span>
@@ -1677,15 +1672,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Graziano Pesole</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Graziano Pesole</h4>
                         <p class="text-[var(--primary)]">Genomics & Bioinformatics Expert</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Leading authority on genomic analysis and bioinformatics approaches to understanding disease mechanisms at the molecular level.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Research Focus:</strong></p>
+                        <p class="mb-2"><strong>Research Focus:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Computational Biology</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Genomic Analysis</span>
@@ -1701,15 +1696,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Maria Svelto</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Maria Svelto</h4>
                         <p class="text-[var(--primary)]">Cellular Biology Researcher</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Investigates cellular mechanisms and pathways affected by environmental factors, focusing on their role in chronic disease development.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Research Focus:</strong></p>
+                        <p class="mb-2"><strong>Research Focus:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Cell Signaling</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Membrane Biology</span>
@@ -1725,15 +1720,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Maria Laura Costantino</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Maria Laura Costantino</h4>
                         <p class="text-[var(--primary)]">Biomedical Engineering Specialist</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Develops innovative biomedical systems and devices for monitoring and treating conditions prevalent in industrial regions.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Research Focus:</strong></p>
+                        <p class="mb-2"><strong>Research Focus:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Medical Devices</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Biomedical Instrumentation</span>
@@ -1749,15 +1744,15 @@
                         <div class="profile-placeholder">
                             <i class="fas fa-user"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mt-4 mb-1 text-gray-800">Gianluca Farinola</h4>
+                        <h4 class="text-xl font-semibold mt-4 mb-1">Gianluca Farinola</h4>
                         <p class="text-[var(--primary)]">Organic Chemistry & Materials Scientist</p>
                     </div>
-                    <p class="text-gray-600 mb-4">
+                    <p class="text-gray-300 mb-4">
                         Pioneers new materials and chemical approaches for detecting and mitigating environmental factors linked to chronic diseases.
                     </p>
                     <div class="divider"></div>
                     <div class="mt-4">
-                        <p class="mb-2 text-gray-700"><strong>Research Focus:</strong></p>
+                        <p class="mb-2"><strong>Research Focus:</strong></p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Material Development</span>
                             <span class="bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] text-xs px-3 py-1 rounded-full">Chemical Sensors</span>
@@ -1778,7 +1773,7 @@
 
         <div class="container mx-auto px-6">
             <h2 class="section-title">Participating Organizations</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+            <p class="text-xl mb-12 max-w-3xl">
                 Our hub brings together key organizations that contribute expertise, resources, and unique perspectives to our research initiatives.
             </p>
 
@@ -1789,8 +1784,8 @@
                     <div class="org-placeholder">
                         <i class="fas fa-flask"></i>
                     </div>
-                    <h4 class="text-xl font-semibold mb-2 text-gray-800">Biolab</h4>
-                    <p class="text-gray-600">
+                    <h4 class="text-xl font-semibold mb-2">Biolab</h4>
+                    <p class="text-gray-300">
                         Specialized laboratory focused on biological research and clinical diagnostics with expertise in environmental health impacts.
                     </p>
                 </div>
@@ -1801,8 +1796,8 @@
                     <div class="org-placeholder">
                         <i class="fas fa-laptop-code"></i>
                     </div>
-                    <h4 class="text-xl font-semibold mb-2 text-gray-800">Balab</h4>
-                    <p class="text-gray-600">
+                    <h4 class="text-xl font-semibold mb-2">Balab</h4>
+                    <p class="text-gray-300">
                         Technology innovation lab developing software and computational tools for biological data analysis and visualization.
                     </p>
                 </div>
@@ -1813,8 +1808,8 @@
                     <div class="org-placeholder">
                         <i class="fas fa-cogs"></i>
                     </div>
-                    <h4 class="text-xl font-semibold mb-2 text-gray-800">Masmec</h4>
-                    <p class="text-gray-600">
+                    <h4 class="text-xl font-semibold mb-2">Masmec</h4>
+                    <p class="text-gray-300">
                         Engineering company specializing in precision automation systems and robotic solutions for research applications.
                     </p>
                 </div>
@@ -1823,8 +1818,8 @@
                     <div class="org-placeholder">
                         <i class="fas fa-plus-square"></i>
                     </div>
-                    <h4 class="text-xl font-semibold mb-2 text-gray-800">Your Organization</h4>
-                    <p class="text-gray-600">
+                    <h4 class="text-xl font-semibold mb-2">Your Organization</h4>
+                    <p class="text-gray-300">
                         Join our collaborative ecosystem and contribute to groundbreaking research in chronic disease treatments.
                     </p>
                     <a href="#" class="btn-outline text-sm mt-4 py-2">Join the Hub</a>
@@ -1835,14 +1830,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div>
-                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">Collaborative Ecosystem</h3>
-                    <p class="mb-6 text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-6">Collaborative Ecosystem</h3>
+                    <p class="mb-6">
                         The Taranto Hub thrives on the diverse expertise and resources of participating organizations. By bringing together academic institutions, technology companies, healthcare providers, and community organizations, we create a rich ecosystem where innovation can flourish.
                     </p>
-                    <p class="mb-6 text-gray-700">
+                    <p class="mb-6">
                         Our approach to partnership emphasizes mutual benefit, with each organization contributing unique capabilities while gaining access to cutting-edge research, technologies, and collaborative opportunities.
                     </p>
-                    <p class="text-gray-700">
+                    <p>
                         This ecosystem model enables us to tackle complex challenges from multiple angles, accelerating progress toward effective treatments for chronic diseases prevalent in industrial regions worldwide.
                     </p>
                 </div>
@@ -1851,8 +1846,8 @@
                         <div class="text-4xl text-[var(--primary)] mb-4">
                             <i class="fas fa-handshake"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Partnership Model</h4>
-                        <p class="text-gray-600">
+                        <h4 class="text-xl font-semibold mb-2">Partnership Model</h4>
+                        <p class="text-gray-300">
                             Collaborative framework that ensures equitable participation and benefit-sharing.
                         </p>
                     </div>
@@ -1860,8 +1855,8 @@
                         <div class="text-4xl text-[var(--primary)] mb-4">
                             <i class="fas fa-exchange-alt"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Resource Sharing</h4>
-                        <p class="text-gray-600">
+                        <h4 class="text-xl font-semibold mb-2">Resource Sharing</h4>
+                        <p class="text-gray-300">
                             Access to specialized equipment, data, and expertise across organizations.
                         </p>
                     </div>
@@ -1869,8 +1864,8 @@
                         <div class="text-4xl text-[var(--primary)] mb-4">
                             <i class="fas fa-user-graduate"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Talent Development</h4>
-                        <p class="text-gray-600">
+                        <h4 class="text-xl font-semibold mb-2">Talent Development</h4>
+                        <p class="text-gray-300">
                             Training and education programs to build the next generation of researchers.
                         </p>
                     </div>
@@ -1878,8 +1873,8 @@
                         <div class="text-4xl text-[var(--primary)] mb-4">
                             <i class="fas fa-lightbulb"></i>
                         </div>
-                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Innovation Pipeline</h4>
-                        <p class="text-gray-600">
+                        <h4 class="text-xl font-semibold mb-2">Innovation Pipeline</h4>
+                        <p class="text-gray-300">
                             Structured process to transform ideas into impactful solutions.
                         </p>
                     </div>
@@ -1891,8 +1886,8 @@
     <!-- Call to Action -->
     <div class="parallax" style="background-image: url('https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80');">
         <div class="parallax-overlay">
-            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800">Join the Transformation</h2>
-            <p class="text-xl md:text-2xl max-w-3xl text-center mb-8 text-gray-700">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">Join the Transformation</h2>
+            <p class="text-xl md:text-2xl max-w-3xl text-center mb-8">
                 Be part of our mission to revolutionize chronic disease research and create a healthier future for industrial communities.
             </p>
             <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
@@ -1907,15 +1902,15 @@
     </div>
 
     <!-- Contact Section -->
-    <section class="section bg-light-gray">
+    <section class="section bg-[var(--darker)]">
         <div class="container mx-auto px-6">
             <h2 class="section-title">Contact the Taranto Hub</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
                     <div class="mb-8">
-                        <h3 class="text-2xl font-semibold mb-6 text-gray-800">Get in Touch</h3>
-                        <p class="mb-6 text-gray-700">
+                        <h3 class="text-2xl font-semibold mb-6">Get in Touch</h3>
+                        <p class="mb-6">
                             Whether you're interested in collaboration, want to learn more about our research, or are seeking opportunities to get involved, we'd love to hear from you.
                         </p>
 
@@ -1924,8 +1919,8 @@
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
                             <div>
-                                <h4 class="font-semibold mb-1 text-gray-800">Address</h4>
-                                <p class="text-gray-600">Via Industrial Innovation 42, 74121 Taranto, Italy</p>
+                                <h4 class="font-semibold mb-1">Address</h4>
+                                <p class="text-gray-300">Via Industrial Innovation 42, 74121 Taranto, Italy</p>
                             </div>
                         </div>
 
@@ -1934,8 +1929,8 @@
                                 <i class="fas fa-envelope"></i>
                             </div>
                             <div>
-                                <h4 class="font-semibold mb-1 text-gray-800">Email</h4>
-                                <a href="mailto:taranto@bioergotech.org" class="text-gray-600 hover:text-[var(--primary)]">taranto@bioergotech.org</a>
+                                <h4 class="font-semibold mb-1">Email</h4>
+                                <a href="mailto:taranto@bioergotech.org" class="text-gray-300 hover:text-[var(--primary)]">taranto@bioergotech.org</a>
                             </div>
                         </div>
 
@@ -1944,8 +1939,8 @@
                                 <i class="fas fa-phone-alt"></i>
                             </div>
                             <div>
-                                <h4 class="font-semibold mb-1 text-gray-800">Phone</h4>
-                                <a href="tel:+393405258406" class="text-gray-600 hover:text-[var(--primary)]">+39 3405258406</a>
+                                <h4 class="font-semibold mb-1">Phone</h4>
+                                <a href="tel:+393405258406" class="text-gray-300 hover:text-[var(--primary)]">+39 3405258406</a>
                             </div>
                         </div>
                     </div>
@@ -1968,21 +1963,21 @@
 
                 <div>
                     <form class="card shadow-box p-8">
-                        <h3 class="text-2xl font-semibold mb-6 text-gray-800">Send us a Message</h3>
+                        <h3 class="text-2xl font-semibold mb-6">Send us a Message</h3>
 
                         <div class="mb-6">
-                            <label for="name" class="block text-sm font-medium mb-2 text-gray-700">Name</label>
-                            <input type="text" id="name" class="w-full p-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                            <label for="name" class="block text-sm font-medium mb-2">Name</label>
+                            <input type="text" id="name" class="w-full p-3 bg-[var(--dark)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                         </div>
 
                         <div class="mb-6">
-                            <label for="email" class="block text-sm font-medium mb-2 text-gray-700">Email</label>
-                            <input type="email" id="email" class="w-full p-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                            <label for="email" class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" id="email" class="w-full p-3 bg-[var(--dark)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                         </div>
 
                         <div class="mb-6">
-                            <label for="subject" class="block text-sm font-medium mb-2 text-gray-700">Subject</label>
-                            <select id="subject" class="w-full p-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                            <label for="subject" class="block text-sm font-medium mb-2">Subject</label>
+                            <select id="subject" class="w-full p-3 bg-[var(--dark)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                                 <option value="" disabled selected>Select a subject</option>
                                 <option value="collaboration">Research Collaboration</option>
                                 <option value="partnership">Partnership Opportunity</option>
@@ -1992,8 +1987,8 @@
                         </div>
 
                         <div class="mb-6">
-                            <label for="message" class="block text-sm font-medium mb-2 text-gray-700">Message</label>
-                            <textarea id="message" rows="4" class="w-full p-3 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"></textarea>
+                            <label for="message" class="block text-sm font-medium mb-2">Message</label>
+                            <textarea id="message" rows="4" class="w-full p-3 bg-[var(--dark)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"></textarea>
                         </div>
 
                         <button type="submit" class="btn-primary w-full">
@@ -2006,25 +2001,25 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-light-gray py-10">
+    <footer class="bg-[var(--darker)] py-10">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-6 md:mb-0">
                     <a href="#">
                         <span class="logo-text text-2xl">bio<span class="ergo-text">ERGO</span>tech</span>
                     </a>
-                    <p class="text-gray-600 mt-2">Making research smarter, not just faster</p>
+                    <p class="text-gray-400 mt-2">Making research smarter, not just faster</p>
                 </div>
                 <div class="flex flex-col md:flex-row md:space-x-8 space-y-4 md:space-y-0">
-                    <a href="#about" class="text-gray-600 hover:text-[var(--primary)] transition">About</a>
-                    <a href="#purpose" class="text-gray-600 hover:text-[var(--primary)] transition">Purpose</a>
-                    <a href="#projects" class="text-gray-600 hover:text-[var(--primary)] transition">Projects</a>
-                    <a href="#capabilities" class="text-gray-600 hover:text-[var(--primary)] transition">Capabilities</a>
-                    <a href="#advisors" class="text-gray-600 hover:text-[var(--primary)] transition">Advisors</a>
-                    <a href="#partners" class="text-gray-600 hover:text-[var(--primary)] transition">Partners</a>
+                    <a href="#about" class="text-gray-400 hover:text-[var(--primary)] transition">About</a>
+                    <a href="#purpose" class="text-gray-400 hover:text-[var(--primary)] transition">Purpose</a>
+                    <a href="#projects" class="text-gray-400 hover:text-[var(--primary)] transition">Projects</a>
+                    <a href="#capabilities" class="text-gray-400 hover:text-[var(--primary)] transition">Capabilities</a>
+                    <a href="#advisors" class="text-gray-400 hover:text-[var(--primary)] transition">Advisors</a>
+                    <a href="#partners" class="text-gray-400 hover:text-[var(--primary)] transition">Partners</a>
                 </div>
             </div>
-            <hr class="border-gray-300 my-8">
+            <hr class="border-gray-800 my-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <p class="text-gray-500 text-sm mb-4 md:mb-0">
                     &copy; 2025 bioERGOtech Foundation - Taranto Hub. All rights reserved.
