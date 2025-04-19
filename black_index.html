@@ -4,22 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bioERGOtech Foundation - Making Research Smarter</title>
-    <link rel="icon" href="Images/Logo/short_logo.png" type="image/x-icon">
-    <link rel="shortcut icon" href="Images/Logo/short_logo.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #13d6b0;
-            --primary-dark: #0eb093;
-            --primary-light: #61ffe0;
-            --dark: #333333;
-            --darker: #1a1a1a;
-            --light: #ffffff;
-            --light-gray: #e5e5e5;
-            --medium-gray: #9e9e9e;
+            --primary: #00D1A7;
+            --primary-dark: #00a083;
+            --primary-light: #4fffe0;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #f8f8f8;
         }
 
         /* Smooth scroll for better experience */
@@ -29,18 +25,26 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
+            background-color: var(--dark);
+            color: white;
             margin: 0;
             padding: 0;
             line-height: 1.6;
             overflow-x: hidden;
         }
 
+
+
+
+
+
+
+
+
         /* Button styles */
         .btn-primary {
             background-color: var(--primary);
-            color: white;
+            color: var(--dark);
             padding: 12px 28px;
             border-radius: 8px;
             font-weight: 600;
@@ -50,7 +54,7 @@
             position: relative;
             overflow: hidden;
             z-index: 1;
-            box-shadow: 0 4px 15px rgba(19, 214, 176, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 209, 167, 0.2);
         }
 
         .btn-primary::before {
@@ -68,7 +72,7 @@
         .btn-primary:hover {
             background-color: var(--primary-dark);
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(19, 214, 176, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 209, 167, 0.3);
         }
 
         .btn-primary:hover::before {
@@ -77,7 +81,7 @@
 
         .btn-outline {
             border: 2px solid var(--primary);
-            color: var(--dark);
+            color: white;
             padding: 11px 28px;
             border-radius: 8px;
             font-weight: 600;
@@ -103,7 +107,7 @@
         }
 
         .btn-outline:hover {
-            color: white;
+            color: var(--dark);
         }
 
         .btn-outline:hover::before {
@@ -152,7 +156,7 @@
 
         /* Card styles with hover effects */
         .card {
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 30px;
             margin: 15px 0;
@@ -160,7 +164,7 @@
             border-left: 4px solid transparent;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
 
         .card::before {
@@ -177,8 +181,8 @@
 
         .card:hover {
             transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            background-color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background-color: rgba(255, 255, 255, 0.08);
         }
 
         .card:hover::before {
@@ -246,25 +250,25 @@
 
         /* Navbar styles */
         .navbar {
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(15px);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
             transition: all 0.4s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         }
 
         .navbar.scrolled {
-            background-color: rgba(255, 255, 255, 0.98);
+            background-color: rgba(10, 10, 10, 0.95);
             padding: 0.5rem 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
         }
 
         .nav-link {
             position: relative;
-            color: var(--dark);
+            color: white;
             transition: all 0.3s ease;
         }
 
@@ -297,7 +301,7 @@
 
         /* Hero section */
         .hero {
-            background: linear-gradient(135deg, #ffffff 0%, var(--light-gray) 100%);
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -394,21 +398,21 @@
         /* Card hover effects */
         .problem-card, .approach-card, .strategy-card, .hub-card, .market-card {
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: white;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
             padding: 30px;
             position: relative;
             overflow: hidden;
             z-index: 1;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(5px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .problem-card:hover, .approach-card:hover, .strategy-card:hover, .hub-card:hover, .market-card:hover {
             transform: translateY(-10px);
-            background: white;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .card-icon {
@@ -417,7 +421,7 @@
             justify-content: center;
             width: 60px;
             height: 60px;
-            background-color: rgba(19, 214, 176, 0.1);
+            background-color: rgba(0, 209, 167, 0.1);
             border-radius: 50%;
             transition: all 0.5s ease;
             margin-bottom: 20px;
@@ -443,14 +447,14 @@
         .strategy-card:hover .card-icon i,
         .hub-card:hover .card-icon i,
         .market-card:hover .card-icon i {
-            color: white;
+            color: var(--darker);
         }
 
         /* Logo animation */
         .logo-text {
             font-weight: 700;
             font-size: 1.6rem;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--dark) 100%);
+            background: linear-gradient(90deg, var(--primary) 0%, white 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
@@ -463,9 +467,9 @@
         }
 
         .ergo-text {
-            color: var(--dark);
+            color: white;
             font-weight: 700;
-            -webkit-text-fill-color: var(--dark);
+            -webkit-text-fill-color: white;
             transition: all 0.3s ease;
         }
 
@@ -508,7 +512,7 @@
             content: '';
             position: absolute;
             width: 4px;
-            background: linear-gradient(to bottom, var(--primary), rgba(19, 214, 176, 0.1));
+            background: linear-gradient(to bottom, var(--primary), rgba(0, 209, 167, 0.1));
             top: 0;
             bottom: 0;
             left: 50%;
@@ -529,7 +533,7 @@
             width: 20px;
             height: 20px;
             right: -10px;
-            background-color: white;
+            background-color: var(--dark);
             border: 4px solid var(--primary);
             top: 15px;
             border-radius: 50%;
@@ -556,43 +560,43 @@
 
         .timeline-content {
             padding: 20px 25px;
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.05);
             position: relative;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
 
         .timeline-content:hover {
             transform: translateY(-5px);
-            background-color: white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         /* Form inputs with animation */
         .form-input {
             width: 100%;
             padding: 14px;
-            background-color: white;
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            color: var(--dark);
+            color: white;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             outline: none;
         }
 
         .form-input:focus {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.08);
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(19, 214, 176, 0.2);
+            box-shadow: 0 0 0 3px rgba(0, 209, 167, 0.2);
         }
 
         .form-label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: var(--dark);
+            color: rgba(255, 255, 255, 0.9);
             transition: all 0.3s ease;
         }
 
@@ -717,7 +721,7 @@
             height: 12px;
             margin: 10px 0;
             border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
             cursor: pointer;
         }
@@ -735,7 +739,7 @@
             right: -100%;
             width: 80%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.98);
+            background-color: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(10px);
             z-index: 1100;
             transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
@@ -743,18 +747,18 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.05);
         }
 
         .mobile-menu.active {
             right: 0;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .mobile-nav-link {
             font-size: 1.5rem;
             margin: 15px 0;
             display: block;
-            color: var(--dark);
+            color: white;
             text-decoration: none;
             transition: all 0.3s ease;
             opacity: 0;
@@ -791,7 +795,7 @@
             position: absolute;
             width: 100%;
             height: 3px;
-            background-color: var(--dark);
+            background-color: white;
             transition: all 0.3s ease;
             left: 0;
             border-radius: 3px;
@@ -869,13 +873,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--dark);
             font-size: 1.5rem;
             cursor: pointer;
             opacity: 0;
             transition: all 0.3s ease;
             transform: translateY(20px);
-            box-shadow: 0 5px 15px rgba(19, 214, 176, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 209, 167, 0.3);
             z-index: 99;
         }
 
@@ -887,7 +891,7 @@
         .back-to-top:hover {
             background-color: var(--primary-dark);
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(19, 214, 176, 0.5);
+            box-shadow: 0 8px 25px rgba(0, 209, 167, 0.5);
         }
 
         /* Text highlight */
@@ -945,81 +949,12 @@
                 transform: translateY(0);
             }
         }
-
-        /* Featured image styling */
-        .featured-image {
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.5s ease;
-            max-width: 100%;
-            height: auto;
-        }
-
-        .featured-image:hover {
-            transform: scale(1.02);
-            box-shadow: 0 15px 40px rgba(19, 214, 176, 0.2);
-        }
-
-        /* Image container styles */
-        .image-container {
-            overflow: hidden;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .image-container img {
-            transition: transform 0.5s ease;
-            width: 100%;
-            height: auto;
-        }
-
-        .image-container:hover img {
-            transform: scale(1.05);
-        }
-
-        /* Image overlay */
-        .image-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent, rgba(19, 214, 176, 0.7));
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            display: flex;
-            align-items: flex-end;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .image-container:hover .image-overlay {
-            opacity: 1;
-        }
-
-        .image-overlay-text {
-            color: white;
-            font-weight: 600;
-            transform: translateY(20px);
-            transition: transform 0.5s ease;
-        }
-
-        .image-container:hover .image-overlay-text {
-            transform: translateY(0);
-        }
-
-        /* Set background colors for alternating sections */
-        .bg-light {
-            background-color: var(--light);
-        }
-
-        .bg-light-gray {
-            background-color: var(--light-gray);
-        }
     </style>
 </head>
 <body>
+    <!-- Custom cursor -->
+    <div class="custom-cursor"></div>
+
     <!-- Progress Bar -->
     <div class="progress-container">
         <div class="progress-bar" id="progressBar"></div>
@@ -1029,7 +964,7 @@
     <nav class="navbar py-4" id="navbar">
         <div class="container mx-auto px-6 flex justify-between items-center">
             <a href="#home" class="flex items-center cursor-pointer">
-                <img src="Images/Logo/full_bioergotech.jpg" alt="bioERGOtech Logo" class="h-10">
+                <span class="logo-text">bio<span class="ergo-text">ERGO</span>tech</span>
             </a>
             <div class="hidden md:flex space-x-10">
                 <a href="#problem" class="nav-link">Problem</a>
@@ -1089,10 +1024,10 @@
         <div class="container mx-auto px-6 pt-28 pb-12 relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div class="order-2 md:order-1" data-aos="fade-right" data-aos-duration="1000">
-                    <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
+                    <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
                         Making research <span class="typing" id="typingText">smarter</span>, not just faster
                     </h1>
-                    <p class="text-xl mb-8 text-gray-700">
+                    <p class="text-xl mb-8 text-gray-300">
                         bioERGOtech is a foundation addressing the critical gap between biotech's promises and tangible medical breakthroughs, focusing on chronic diseases like <span class="highlight">Parkinson's</span>, <span class="highlight">cancer</span>, <span class="highlight">diabetes</span>, and <span class="highlight">Alzheimer's</span>.
                     </p>
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
@@ -1105,7 +1040,14 @@
                     </div>
                 </div>
                 <div class="order-1 md:order-2 flex justify-center" data-aos="fade-left" data-aos-duration="1000">
-                    <img src="Images/Home/Automation.png" alt="AI in Biotech Research" class="featured-image rounded-lg shadow-xl w-full max-w-md">
+                    <div class="relative float-animation">
+                        <div class="w-64 h-64 md:w-80 md:h-80 rounded-full bg-[var(--primary)] opacity-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 glow"></div>
+                        <div class="relative z-10">
+                            <div class="logo-text text-6xl md:text-8xl">
+                                bio<span class="ergo-text">ERGO</span>tech
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1115,7 +1057,7 @@
     </section>
 
     <!-- Foundation Overview Section -->
-    <section class="section bg-light-gray">
+    <section class="section bg-[var(--darker)]">
         <div class="animated-bg">
             <div class="circle"></div>
             <div class="circle"></div>
@@ -1125,21 +1067,45 @@
             <h2 class="section-title" data-aos="fade-up">Our Foundation</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                 <div data-aos="fade-right" data-aos-duration="800">
-                    <p class="text-xl mb-6 text-gray-700">
+                    <p class="text-xl mb-6">
                         bioERGOtech is a foundation addressing the critical gap between biotech's promises and tangible medical breakthroughs. It aims to launch multiple companies that accelerate treatments for chronic diseases.
                     </p>
-                    <p class="text-xl mb-6 text-gray-700">
+                    <p class="text-xl mb-6">
                         At its core, bioERGOtech transforms how biological research tackles these diseases by developing <span class="highlight">"digital scientists"</span> - AI-powered lab assistants that make experiments smarter, not just faster.
                     </p>
-                    <p class="text-xl mb-6 text-gray-700">
+                    <p class="text-xl mb-6">
                         The foundation will incubate multiple companies, including software platforms for intelligent experimental design, physical robotics for lab automation, and specialized solutions for cell therapy development - all focused on translating biotech's potential into actual patient impact.
                     </p>
                 </div>
                 <div class="flex justify-center" data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
-                    <div class="image-container w-full">
-                        <img src="https://www.mckinsey.com/~/media/mckinsey/featured%20insights/the%20next%20normal/biotech-tile.jpg" alt="AI-driven drug discovery" class="w-full">
-                        <div class="image-overlay">
-                            <div class="image-overlay-text">Transforming biotech research through AI-driven innovation</div>
+                    <div class="card shadow-box w-full gradient-border">
+                        <h3 class="text-2xl font-semibold mb-6 text-center gradient-text">Our Core Systems</h3>
+                        <div class="mb-6 reveal">
+                            <div class="flex items-center mb-2">
+                                <span class="text-[var(--primary)] mr-3"><i class="fas fa-check-circle"></i></span>
+                                <p class="font-medium">Intelligent Automation Systems</p>
+                            </div>
+                            <p class="text-gray-300 ml-8">
+                                Handle routine laboratory procedures and data processing with precision, executing protocols 24/7 without human fatigue or error.
+                            </p>
+                        </div>
+                        <div class="mb-6 reveal">
+                            <div class="flex items-center mb-2">
+                                <span class="text-[var(--primary)] mr-3"><i class="fas fa-check-circle"></i></span>
+                                <p class="font-medium">Optimal Experimental Design</p>
+                            </div>
+                            <p class="text-gray-300 ml-8">
+                                Analyze experimental parameters to identify the most informative experiments to run next, significantly reducing the number of experiments needed.
+                            </p>
+                        </div>
+                        <div class="reveal">
+                            <div class="flex items-center mb-2">
+                                <span class="text-[var(--primary)] mr-3"><i class="fas fa-check-circle"></i></span>
+                                <p class="font-medium">Model Predictive Control</p>
+                            </div>
+                            <p class="text-gray-300 ml-8">
+                                Continuously learn from each experimental result, adapting protocols in real-time based on incoming data rather than following rigid plans.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1154,7 +1120,7 @@
 
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">The Problem</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos-delay="100">
                 Despite decades of research and billions in funding, chronic diseases like Parkinson's, cancer, diabetes, and Alzheimer's still lack effective treatments. Modern research faces significant challenges in efficiency, sustainability, and optimization.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
@@ -1162,8 +1128,8 @@
                     <div class="card-icon">
                         <i class="fas fa-sync-alt"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Repetitive Processes</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-2xl font-semibold mb-4">Repetitive Processes</h3>
+                    <p class="text-gray-300">
                         Brilliant researchers waste their talent on routine procedures instead of focusing on innovation and discovery. This inefficiency delays critical breakthroughs for patients with chronic diseases.
                     </p>
                 </div>
@@ -1171,8 +1137,8 @@
                     <div class="card-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">No Optimization</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-2xl font-semibold mb-4">No Optimization</h3>
+                    <p class="text-gray-300">
                         Labs lack intelligent systems to optimize experimental design and execution. Resources are wasted on poorly planned experiments with no systematic approach to improvement.
                     </p>
                 </div>
@@ -1180,8 +1146,8 @@
                     <div class="card-icon">
                         <i class="fas fa-random"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">No Proper Design</h3>
-                    <p class="text-gray-600">
+                    <h3 class="text-2xl font-semibold mb-4">No Proper Design</h3>
+                    <p class="text-gray-300">
                         Most labs pick experiments like "picking up candies" - randomly rather than strategically. This leads to marginal improvements instead of breakthrough innovations for treating chronic diseases.
                     </p>
                 </div>
@@ -1189,8 +1155,34 @@
         </div>
     </section>
 
+    <!-- Key Statistics Section (New) -->
+    <!--
+    <section class="section bg-[var(--darker)]">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title" data-aos="fade-up">Impact Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
+                <div class="card shadow-box text-center" data-aos="zoom-in" data-aos-delay="100">
+                    <span class="counter-value" data-count="60">0</span><span class="text-3xl text-[var(--primary)]">%</span>
+                    <p class="text-lg mt-2">Research Time Saved</p>
+                </div>
+                <div class="card shadow-box text-center" data-aos="zoom-in" data-aos-delay="200">
+                    <span class="counter-value" data-count="40">0</span><span class="text-3xl text-[var(--primary)]">%</span>
+                    <p class="text-lg mt-2">Cost Reduction</p>
+                </div>
+                <div class="card shadow-box text-center" data-aos="zoom-in" data-aos-delay="300">
+                    <span class="counter-value" data-count="300">0</span><span class="text-3xl text-[var(--primary)]">+</span>
+                    <p class="text-lg mt-2">Automated Protocols</p>
+                </div>
+                <div class="card shadow-box text-center" data-aos="zoom-in" data-aos-delay="400">
+                    <span class="counter-value" data-count="5">0</span><span class="text-3xl text-[var(--primary)]">x</span>
+                    <p class="text-lg mt-2">Research Output</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    -->
     <!-- Approach Section -->
-    <section class="section bg-light-gray" id="approach">
+    <section class="section" id="approach">
         <div class="animated-bg">
             <div class="circle"></div>
             <div class="circle"></div>
@@ -1198,35 +1190,16 @@
 
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Our Approach</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos="fade-up" data-aos-delay="100">
                 We believe in a pragmatic, focused approach that delivers real impact for patients suffering from chronic diseases.
             </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 items-center">
-                <div class="order-2 md:order-1" data-aos="fade-right" data-aos-delay="200">
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Intelligent Scientific Process</h3>
-                    <p class="text-lg mb-6 text-gray-700">
-                        Our approach combines cutting-edge AI technology with traditional scientific methods to create a more efficient research ecosystem. By implementing intelligent automation and optimization algorithms, we make every experiment count.
-                    </p>
-                    <p class="text-lg text-gray-700">
-                        Instead of randomly exploring possibilities, our systems analyze data in real-time to determine the most promising pathways for further investigation, drastically reducing the time and resources needed to achieve meaningful results.
-                    </p>
-                </div>
-                <div class="order-1 md:order-2 image-container" data-aos="fade-left" data-aos-delay="150">
-                    <img src="Images/Home/Approach.jpeg" alt="Advanced Scientific Laboratory Equipment" class="w-full">
-                    <div class="image-overlay">
-                        <div class="image-overlay-text">Advanced laboratory equipment for intelligent experimentation</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="approach-card shadow-box" data-aos="fade-up" data-aos-delay="200">
                     <div class="card-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Long Tail</h3>
-                    <p class="text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-4">Long Tail</h3>
+                    <p class="text-gray-300">
                         We focus on building solutions that address specific research markets. As the cost of building solutions has decreased dramatically, it's now possible to fulfill small niches efficiently and effectively.
                     </p>
                 </div>
@@ -1234,8 +1207,8 @@
                     <div class="card-icon">
                         <i class="fas fa-rocket"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Build Fast</h3>
-                    <p class="text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-4">Build Fast</h3>
+                    <p class="text-gray-300">
                         We prioritize projects with speedy iteration times of less than a year from idea to implementation. This rapid development cycle allows us to quickly address emerging research needs.
                     </p>
                 </div>
@@ -1243,8 +1216,8 @@
                     <div class="card-icon">
                         <i class="fas fa-globe"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Earthshot</h3>
-                    <p class="text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-4">Earthshot</h3>
+                    <p class="text-gray-300">
                         Unlike moonshots that aim for distant breakthroughs, our "Earthshot" approach targets immediate human needs with practical solutions. We focus on understanding day-to-day challenges and developing innovations that make a tangible difference for patients today.
                     </p>
                 </div>
@@ -1253,7 +1226,7 @@
     </section>
 
     <!-- Working Principles Section -->
-    <section class="section" id="principles">
+    <section class="section bg-[var(--darker)]" id="principles">
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Working Principles</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-12">
@@ -1263,9 +1236,9 @@
                             <i class="fas fa-lightbulb text-3xl text-[var(--primary)]"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-4 text-center text-gray-800">Solve Real Problems</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-center">Solve Real Problems</h3>
                     <div class="w-full h-[3px] mb-4 bg-gradient-to-r from-[var(--primary)] to-transparent"></div>
-                    <p class="text-gray-600 text-center">
+                    <p class="text-gray-300 text-center">
                         We identify core challenges in laboratory research for chronic diseases and develop targeted solutions that address fundamental issues rather than symptoms.
                     </p>
                 </div>
@@ -1275,9 +1248,9 @@
                             <i class="fas fa-code-branch text-3xl text-[var(--primary)]"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-4 text-center text-gray-800">Develop Algorithms</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-center">Develop Algorithms</h3>
                     <div class="w-full h-[3px] mb-4 bg-gradient-to-r from-[var(--primary)] to-transparent"></div>
-                    <p class="text-gray-600 text-center">
+                    <p class="text-gray-300 text-center">
                         We create sophisticated algorithms that optimize experiments and research processes for maximum efficiency and breakthrough potential in chronic disease research.
                     </p>
                 </div>
@@ -1287,9 +1260,9 @@
                             <i class="fas fa-share-alt text-3xl text-[var(--primary)]"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-4 text-center text-gray-800">Distribute Platforms</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-center">Distribute Platforms</h3>
                     <div class="w-full h-[3px] mb-4 bg-gradient-to-r from-[var(--primary)] to-transparent"></div>
-                    <p class="text-gray-600 text-center">
+                    <p class="text-gray-300 text-center">
                         We enable other research organizations to adopt and integrate our systems, transforming how chronic disease research is conducted worldwide.
                     </p>
                 </div>
@@ -1298,7 +1271,7 @@
     </section>
 
     <!-- Strategy Section -->
-    <section class="section bg-light-gray" id="strategy">
+    <section class="section" id="strategy">
         <div class="animated-bg">
             <div class="circle"></div>
             <div class="circle"></div>
@@ -1306,35 +1279,16 @@
 
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Our Strategy</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos-delay="100">
                 Our foundation follows key principles to maximize impact and create sustainable solutions for chronic disease research.
             </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 items-center">
-                <div class="order-2 md:order-1" data-aos="fade-right" data-aos-delay="200">
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Strategic Implementation</h3>
-                    <p class="text-lg mb-6 text-gray-700">
-                        Our strategy revolves around creating specialized, focused teams that can rapidly develop and deploy solutions to specific research challenges. We believe in the power of small, agile groups powered by technology to achieve what large conventional research organizations cannot.
-                    </p>
-                    <p class="text-lg text-gray-700">
-                        By developing foundational technologies that can be applied across multiple chronic diseases, we create an ecosystem of innovation where advancements in one area can quickly benefit research in related fields.
-                    </p>
-                </div>
-                <div class="order-1 md:order-2 image-container" data-aos="fade-left" data-aos-delay="150">
-                    <img src="Images/Home/Strategy.jpeg" class="w-full">
-                    <div class="image-overlay">
-                        <div class="image-overlay-text">Laboratory automation enhancing research capabilities</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="strategy-card shadow-box" data-aos="fade-right" data-aos-delay="200">
                     <div class="card-icon">
                         <i class="fas fa-star"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">New-first</h3>
-                    <p class="text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-4">New-first</h3>
+                    <p class="text-gray-300">
                         We focus on the latest technologies by reinventing entire research processes, rather than making marginal updates to existing systems. This revolutionary approach enables breakthroughs impossible with incremental improvements.
                     </p>
                 </div>
@@ -1342,8 +1296,8 @@
                     <div class="card-icon">
                         <i class="fas fa-seedling"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">You Eat What You Cook</h3>
-                    <p class="text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-4">You Eat What You Cook</h3>
+                    <p class="text-gray-300">
                         When projects prove sustainable, we spin them out by giving founders proper compensation. This ensures alignment of incentives and maintains the entrepreneurial spirit that drives innovation.
                     </p>
                 </div>
@@ -1351,8 +1305,8 @@
                     <div class="card-icon">
                         <i class="fas fa-bolt"></i>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Small is Good, Small is Fast</h3>
-                    <p class="text-gray-700">
+                    <h3 class="text-2xl font-semibold mb-4">Small is Good, Small is Fast</h3>
+                    <p class="text-gray-300">
                         We keep teams incredibly small, empowering them with AI agents and automation. This approach maximizes agility and creativity while maintaining focus on solving specific chronic disease research challenges.
                     </p>
                 </div>
@@ -1361,10 +1315,10 @@
     </section>
 
     <!-- Chronic Diseases Focus Section -->
-    <section class="section" id="diseases">
+    <section class="section bg-[var(--darker)]" id="diseases">
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Focus on Chronic Diseases</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos-delay="100">
                 Our foundation is dedicated to accelerating breakthroughs for these devastating conditions that affect millions worldwide.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -1374,8 +1328,8 @@
                             <i class="fas fa-brain"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-center text-gray-800">Parkinson's Disease</h3>
-                    <p class="text-gray-600 text-center">
+                    <h3 class="text-xl font-semibold mb-3 text-center">Parkinson's Disease</h3>
+                    <p class="text-gray-300 text-center">
                         Our intelligent systems help researchers identify new therapeutic targets and optimize treatment approaches for Parkinson's disease.
                     </p>
                 </div>
@@ -1385,8 +1339,8 @@
                             <i class="fas fa-procedures"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-center text-gray-800">Cancer</h3>
-                    <p class="text-gray-600 text-center">
+                    <h3 class="text-xl font-semibold mb-3 text-center">Cancer</h3>
+                    <p class="text-gray-300 text-center">
                         We accelerate cancer research by enabling more efficient experimental design and data analysis for personalized treatment approaches.
                     </p>
                 </div>
@@ -1396,8 +1350,8 @@
                             <i class="fas fa-tint"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-center text-gray-800">Diabetes</h3>
-                    <p class="text-gray-600 text-center">
+                    <h3 class="text-xl font-semibold mb-3 text-center">Diabetes</h3>
+                    <p class="text-gray-300 text-center">
                         Our technologies help researchers better understand the complex mechanisms of diabetes and develop more effective treatments.
                     </p>
                 </div>
@@ -1407,8 +1361,8 @@
                             <i class="fas fa-memory"></i>
                         </div>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-center text-gray-800">Alzheimer's Disease</h3>
-                    <p class="text-gray-600 text-center">
+                    <h3 class="text-xl font-semibold mb-3 text-center">Alzheimer's Disease</h3>
+                    <p class="text-gray-300 text-center">
                         We support innovative research approaches to unravel the complexities of Alzheimer's and develop treatments that can slow or reverse progression.
                     </p>
                 </div>
@@ -1417,7 +1371,7 @@
     </section>
 
     <!-- Target Markets Section -->
-    <section class="section bg-light-gray" id="markets">
+    <section class="section" id="markets">
         <div class="animated-bg">
             <div class="circle"></div>
             <div class="circle"></div>
@@ -1425,70 +1379,43 @@
 
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Target Markets</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos-delay="100">
                 Our solutions are designed for a range of research environments seeking to optimize their experimental processes and maximize output.
             </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 items-center">
-                <div class="order-2 md:order-1" data-aos="fade-right" data-aos-delay="200">
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Research Ecosystem</h3>
-                    <p class="text-lg mb-6 text-gray-700">
-                        Our technologies integrate across the entire research spectrum - from academic institutions pursuing fundamental science to pharmaceutical companies developing novel treatments and clinical researchers testing efficacy.
-                    </p>
-                    <p class="text-lg text-gray-700">
-                        By creating flexible, adaptable platforms, we ensure our solutions can benefit organizations of all sizes and specializations, making advanced research capabilities accessible to a wider range of institutions.
-                    </p>
-                </div>
-                <div class="order-1 md:order-2 image-container" data-aos="fade-left" data-aos-delay="150">
-                    <img src="https://www.missouripartnership.com/wp-content/uploads/2021/12/iStock-1346675584.jpg" alt="Modern Medicine Laboratory Team" class="w-full">
-                    <div class="image-overlay">
-                        <div class="image-overlay-text">Collaborative research environments powered by our technology</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="market-card shadow-box" data-aos="fade-up" data-aos-delay="100">
-                    <div class="flex justify-center">
-                        <div class="card-icon">
-                            <i class="fas fa-hospital"></i>
-                        </div>
+                    <div class="flex items-center justify-center h-20">
+                        <i class="fas fa-hospital text-5xl text-[var(--primary)]"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center text-gray-800">Hospitals</h3>
-                    <p class="text-gray-700 text-center">
+                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center">Hospitals</h3>
+                    <p class="text-gray-300 text-center">
                         Research departments at hospitals seeking to improve clinical research efficiency and translate findings to patient care.
                     </p>
                 </div>
                 <div class="market-card shadow-box" data-aos="fade-up" data-aos-delay="200">
-                    <div class="flex justify-center">
-                        <div class="card-icon">
-                            <i class="fas fa-pills"></i>
-                        </div>
+                    <div class="flex items-center justify-center h-20">
+                        <i class="fas fa-pills text-5xl text-[var(--primary)]"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center text-gray-800">Pharmaceutical Companies</h3>
-                    <p class="text-gray-700 text-center">
+                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center">Pharmaceutical Companies</h3>
+                    <p class="text-gray-300 text-center">
                         Large pharma companies seeking to optimize drug discovery and development processes for chronic diseases.
                     </p>
                 </div>
                 <div class="market-card shadow-box" data-aos="fade-up" data-aos-delay="300">
-                    <div class="flex justify-center">
-                        <div class="card-icon">
-                            <i class="fas fa-university"></i>
-                        </div>
+                    <div class="flex items-center justify-center h-20">
+                        <i class="fas fa-university text-5xl text-[var(--primary)]"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center text-gray-800">Research Institutions</h3>
-                    <p class="text-gray-700 text-center">
+                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center">Research Institutions</h3>
+                    <p class="text-gray-300 text-center">
                         Academic and research laboratories needing to reduce experimental costs while improving reproducibility.
                     </p>
                 </div>
                 <div class="market-card shadow-box" data-aos="fade-up" data-aos-delay="400">
-                    <div class="flex justify-center">
-                        <div class="card-icon">
-                            <i class="fas fa-vials"></i>
-                        </div>
+                    <div class="flex items-center justify-center h-20">
+                        <i class="fas fa-vials text-5xl text-[var(--primary)]"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center text-gray-800">CROs</h3>
-                    <p class="text-gray-700 text-center">
+                    <h3 class="text-xl font-semibold mt-6 mb-3 text-center">CROs</h3>
+                    <p class="text-gray-300 text-center">
                         Contract Research Organizations conducting research on behalf of pharmaceutical companies and medical institutions.
                     </p>
                 </div>
@@ -1496,43 +1423,43 @@
         </div>
     </section>
 
-    <!-- Research Timeline -->
-    <section class="section">
+    <!-- Research Timeline (New) -->
+    <section class="section bg-[var(--darker)]">
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Research Timeline</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos-delay="100">
                 Our approach accelerates the traditional research timeline for chronic disease treatments.
             </p>
 
             <div class="timeline" data-aos="fade-up" data-aos-delay="200">
                 <div class="timeline-item left" data-aos="fade-right" data-aos-delay="300">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Target Identification</h3>
-                        <p class="text-gray-600">AI-powered systems analyze vast datasets to identify promising therapeutic targets.</p>
+                        <h3 class="text-xl font-semibold mb-2">Target Identification</h3>
+                        <p>AI-powered systems analyze vast datasets to identify promising therapeutic targets.</p>
                     </div>
                 </div>
                 <div class="timeline-item right" data-aos="fade-left" data-aos-delay="400">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Experiment Design</h3>
-                        <p class="text-gray-600">Optimal experimental design algorithms determine the most informative experiments to run.</p>
+                        <h3 class="text-xl font-semibold mb-2">Experiment Design</h3>
+                        <p>Optimal experimental design algorithms determine the most informative experiments to run.</p>
                     </div>
                 </div>
                 <div class="timeline-item left" data-aos="fade-right" data-aos-delay="500">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Automated Execution</h3>
-                        <p class="text-gray-600">Robotic systems conduct experiments with precision and reproducibility 24/7.</p>
+                        <h3 class="text-xl font-semibold mb-2">Automated Execution</h3>
+                        <p>Robotic systems conduct experiments with precision and reproducibility 24/7.</p>
                     </div>
                 </div>
                 <div class="timeline-item right" data-aos="fade-left" data-aos-delay="600">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Real-time Analysis</h3>
-                        <p class="text-gray-600">Data is analyzed in real-time, with protocols adjusted based on incoming results.</p>
+                        <h3 class="text-xl font-semibold mb-2">Real-time Analysis</h3>
+                        <p>Data is analyzed in real-time, with protocols adjusted based on incoming results.</p>
                     </div>
                 </div>
                 <div class="timeline-item left" data-aos="fade-right" data-aos-delay="700">
                     <div class="timeline-content">
-                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Treatment Development</h3>
-                        <p class="text-gray-600">Promising candidates move rapidly to treatment development phase with optimized parameters.</p>
+                        <h3 class="text-xl font-semibold mb-2">Treatment Development</h3>
+                        <p>Promising candidates move rapidly to treatment development phase with optimized parameters.</p>
                     </div>
                 </div>
             </div>
@@ -1540,31 +1467,12 @@
     </section>
 
     <!-- Our Hubs Section -->
-    <section class="section bg-light-gray" id="hubs">
+    <section class="section" id="hubs">
         <div class="container mx-auto px-6">
             <h2 class="section-title" data-aos="fade-up">Our Hubs</h2>
-            <p class="text-xl mb-12 max-w-3xl text-gray-700" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-xl mb-12 max-w-3xl" data-aos="fade-up" data-aos-delay="100">
                 We're building a network of innovation hubs to address local and global health challenges.
             </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 items-center">
-                <div class="order-2 md:order-1" data-aos="fade-right" data-aos-delay="200">
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Global Innovation Network</h3>
-                    <p class="text-lg mb-6 text-gray-700">
-                        Our innovation hubs serve as focal points for collaboration between researchers, technologists, and healthcare professionals. Each hub specializes in specific research areas while maintaining connections to the broader network.
-                    </p>
-                    <p class="text-lg text-gray-700">
-                        By establishing multiple specialized centers, we can address both global chronic disease challenges and local health priorities, ensuring our work has maximum impact for patients worldwide.
-                    </p>
-                </div>
-                <div class="order-1 md:order-2 image-container" data-aos="fade-left" data-aos-delay="150">
-                    <img src="https://miro.medium.com/v2/resize:fit:1400/1*0ecDDL2UIpvW83qzUdmcmg.png" alt="AI-Enhanced Shared Bio Laboratory" class="w-full">
-                    <div class="image-overlay">
-                        <div class="image-overlay-text">Next-generation biotech research facilities</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="hub-card shadow-box" data-aos="fade-up" data-aos-delay="200">
                     <div class="flex items-center justify-center mb-6">
@@ -1572,44 +1480,44 @@
                             <i class="fas fa-map-marker-alt"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-center text-gray-800">Taranto</h3>
-                    <p class="text-gray-700 text-center mb-4">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">Taranto</h3>
+                    <p class="text-gray-300 text-center mb-4">
                         Our first innovation hub is located in Taranto, Italy, where we're developing and testing our core technologies.
                     </p>
                     <div class="flex justify-center">
-                        <a href="#taranto-details" class="text-sm bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] px-4 py-2 rounded-full hover:bg-opacity-30 transition-all cursor-pointer">
-                            Know More
-                        </a>
-                    </div>
+    <a href="#taranto-details" class="text-sm bg-[var(--primary)] bg-opacity-10 text-[var(--primary)] px-4 py-2 rounded-full hover:bg-opacity-30 transition-all cursor-pointer">
+        Know More
+    </a>
+</div>
                 </div>
-                <div class="hub-card shadow-box opacity-90" data-aos="fade-up" data-aos-delay="300">
+                <div class="hub-card shadow-box opacity-70" data-aos="fade-up" data-aos-delay="300">
                     <div class="flex items-center justify-center mb-6">
                         <div class="w-16 h-16 rounded-full bg-[var(--primary)] bg-opacity-10 flex items-center justify-center">
                             <i class="fas fa-map-marker-alt text-3xl text-gray-400"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-center text-gray-800">Future Hub 1</h3>
-                    <p class="text-gray-700 text-center mb-4">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">Future Hub 1</h3>
+                    <p class="text-gray-300 text-center mb-4">
                         Planned expansion location focusing on specific chronic disease research applications.
                     </p>
                     <div class="flex justify-center">
-                        <div class="text-sm bg-gray-200 text-gray-600 px-4 py-2 rounded-full">
+                        <div class="text-sm bg-gray-700 px-4 py-2 rounded-full">
                             Coming Soon
                         </div>
                     </div>
                 </div>
-                <div class="hub-card shadow-box opacity-90" data-aos="fade-up" data-aos-delay="400">
+                <div class="hub-card shadow-box opacity-70" data-aos="fade-up" data-aos-delay="400">
                     <div class="flex items-center justify-center mb-6">
                         <div class="w-16 h-16 rounded-full bg-[var(--primary)] bg-opacity-10 flex items-center justify-center">
                             <i class="fas fa-map-marker-alt text-3xl text-gray-400"></i>
                         </div>
                     </div>
-                    <h3 class="text-2xl font-semibold mb-4 text-center text-gray-800">Future Hub 2</h3>
-                    <p class="text-gray-700 text-center mb-4">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">Future Hub 2</h3>
+                    <p class="text-gray-300 text-center mb-4">
                         Planned expansion location addressing regional chronic disease research needs.
                     </p>
                     <div class="flex justify-center">
-                        <div class="text-sm bg-gray-200 text-gray-600 px-4 py-2 rounded-full">
+                        <div class="text-sm bg-gray-700 px-4 py-2 rounded-full">
                             Coming Soon
                         </div>
                     </div>
@@ -1619,7 +1527,7 @@
     </section>
 
     <!-- Contact Section -->
-    <section class="section bg-light" id="contact">
+    <section class="section bg-[var(--darker)]" id="contact">
         <div class="container mx-auto px-6">
             <h2 class="section-title">Contact Us</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -1630,8 +1538,8 @@
                                 <i class="fas fa-phone-alt"></i>
                             </div>
                             <div>
-                                <h3 class="text-xl font-semibold mb-2 text-gray-800">Phone</h3>
-                                <a href="tel:+393405258406" class="text-gray-700">+39 3405258406</a>
+                                <h3 class="text-xl font-semibold mb-2">Phone</h3>
+                                <a href="tel:+393405258406">+39 3405258406</a>
                             </div>
                         </div>
                         <div class="flex items-start mb-6">
@@ -1639,8 +1547,8 @@
                                 <i class="fas fa-envelope"></i>
                             </div>
                             <div>
-                                <h3 class="text-xl font-semibold mb-2 text-gray-800">Email</h3>
-                                <a href="mailto:guido.putignano@gmail.com" class="text-gray-700">guido.putignano@gmail.com</a>
+                                <h3 class="text-xl font-semibold mb-2">Email</h3>
+                                <a href="mailto:guido.putignano@gmail.com">guido.putignano@gmail.com</a>
                             </div>
                         </div>
                         <div class="flex items-start">
@@ -1648,8 +1556,8 @@
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
                             <div>
-                                <h3 class="text-xl font-semibold mb-2 text-gray-800">Address</h3>
-                                <p class="text-gray-700">Berninastrasse 85, 8057 Zurich</p>
+                                <h3 class="text-xl font-semibold mb-2">Address</h3>
+                                <p>Berninastrasse 85, 8057 Zurich</p>
                             </div>
                         </div>
                     </div>
@@ -1666,18 +1574,18 @@
                     </div>
                 </div>
                 <div>
-                    <form class="bg-white rounded-lg p-8 shadow-box">
+                    <form class="bg-[var(--dark)] rounded-lg p-8 shadow-box">
                         <div class="mb-6">
-                            <label for="name" class="block text-sm font-medium mb-2 text-gray-700">Name</label>
-                            <input type="text" id="name" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                            <label for="name" class="block text-sm font-medium mb-2">Name</label>
+                            <input type="text" id="name" class="w-full p-3 bg-[var(--darker)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                         </div>
                         <div class="mb-6">
-                            <label for="email" class="block text-sm font-medium mb-2 text-gray-700">Email</label>
-                            <input type="email" id="email" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                            <label for="email" class="block text-sm font-medium mb-2">Email</label>
+                            <input type="email" id="email" class="w-full p-3 bg-[var(--darker)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                         </div>
                         <div class="mb-6">
-                            <label for="message" class="block text-sm font-medium mb-2 text-gray-700">Message</label>
-                            <textarea id="message" rows="4" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"></textarea>
+                            <label for="message" class="block text-sm font-medium mb-2">Message</label>
+                            <textarea id="message" rows="4" class="w-full p-3 bg-[var(--darker)] border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"></textarea>
                         </div>
                         <button type="submit" class="btn-primary w-full">
                             Send Message
@@ -1689,23 +1597,23 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-light-gray py-10">
+    <footer class="bg-[var(--darker)] py-10">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-6 md:mb-0">
                     <span class="logo-text text-2xl">bio<span class="ergo-text">ERGO</span>tech</span>
-                    <p class="text-gray-600 mt-2">Making research smarter, not just faster</p>
+                    <p class="text-gray-400 mt-2">Making research smarter, not just faster</p>
                 </div>
                 <div class="flex flex-col md:flex-row md:space-x-10 space-y-4 md:space-y-0">
-                    <a href="#problem" class="text-gray-600 hover:text-[var(--primary)] transition">Problem</a>
-                    <a href="#approach" class="text-gray-600 hover:text-[var(--primary)] transition">Approach</a>
-                    <a href="#principles" class="text-gray-600 hover:text-[var(--primary)] transition">Principles</a>
-                    <a href="#strategy" class="text-gray-600 hover:text-[var(--primary)] transition">Strategy</a>
-                    <a href="#hubs" class="text-gray-600 hover:text-[var(--primary)] transition">Hubs</a>
-                    <a href="#contact" class="text-gray-600 hover:text-[var(--primary)] transition">Contact</a>
+                    <a href="#problem" class="text-gray-400 hover:text-[var(--primary)] transition">Problem</a>
+                    <a href="#approach" class="text-gray-400 hover:text-[var(--primary)] transition">Approach</a>
+                    <a href="#principles" class="text-gray-400 hover:text-[var(--primary)] transition">Principles</a>
+                    <a href="#strategy" class="text-gray-400 hover:text-[var(--primary)] transition">Strategy</a>
+                    <a href="#hubs" class="text-gray-400 hover:text-[var(--primary)] transition">Hubs</a>
+                    <a href="#contact" class="text-gray-400 hover:text-[var(--primary)] transition">Contact</a>
                 </div>
             </div>
-            <hr class="border-gray-300 my-8">
+            <hr class="border-gray-800 my-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <p class="text-gray-500 text-sm mb-4 md:mb-0">
                     &copy; 2023 bioERGOtech Foundation. All rights reserved.
@@ -1750,6 +1658,9 @@
             // Initialize typing animation
             initTypingAnimation();
 
+            // Initialize custom cursor
+            initCustomCursor();
+
             // Setup scroll listeners
             setupScrollListeners();
 
@@ -1768,6 +1679,36 @@
             // Setup back to top button
             setupBackToTop();
         });
+
+        // Custom cursor
+        function initCustomCursor() {
+            const cursor = document.querySelector('.custom-cursor');
+            const links = document.querySelectorAll('a, button, .btn-primary, .btn-outline');
+
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+
+            links.forEach(link => {
+                link.addEventListener('mouseenter', () => {
+                    cursor.classList.add('cursor-grow');
+                });
+
+                link.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('cursor-grow');
+                });
+            });
+
+            // Hide cursor when it leaves the window
+            document.addEventListener('mouseleave', () => {
+                cursor.style.opacity = '0';
+            });
+
+            document.addEventListener('mouseenter', () => {
+                cursor.style.opacity = '0.6';
+            });
+        }
 
         // Create tech lines for hero background
         function createTechLines() {
