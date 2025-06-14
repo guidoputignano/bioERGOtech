@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWKKXQ2S7M"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-GWKKXQ2S7M');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bioERGOtech Event Launch - Speakers & Panels</title>
+    <link rel="icon" href="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/short_logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/short_logo.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #13d6b0;
+            --primary-dark: #0eb093;
+            --primary-light: #61ffe0;
+            --dark: #333333;
+            --darker: #1a1a1a;
+            --light: #ffffff;
+            --light-gray: #e5e5e5;
+            --medium-gray: #9e9e9e;
+        }
+
+        /* Smooth scroll for better experience */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(19, 214, 176, 0.2);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(19, 214, 176, 0.3);
+        }
+
+        .btn-primary:hover::before {
+            width: 100%;
+        }
+
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--dark);
+            padding: 11px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        .btn-outline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn-outline:hover {
+            color: white;
+        }
+
+        .btn-outline:hover::before {
+            width: 100%;
+        }
+
+        /* Section styles */
+        .section {
+            padding: 100px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-title {
+            color: var(--primary);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary);
+            transition: width 0.5s ease;
+        }
+
+        .section-title:hover::after {
+            width: 100%;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary) 0%, #64ffda 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
+        /* Card styles with hover effects */
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 15px 0;
+            transition: all 0.5s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), transparent);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Speaker card styles */
+        .speaker-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(19, 214, 176, 0.1);
+        }
+
+        .speaker-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .speaker-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(19, 214, 176, 0.15);
+        }
+
+        .speaker-card:hover::before {
+            opacity: 1;
+        }
+
+        .speaker-name {
+            color: var(--primary);
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-title {
+            color: var(--dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .speaker-description {
+            color: var(--dark);
+            line-height: 1.7;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-card:hover .speaker-description {
+            opacity: 1;
+        }
+
+        /* Animated background */
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .animated-bg .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0.05;
+            filter: blur(60px);
+            animation: pulse 15s infinite alternate;
+        }
+
+        .animated-bg .circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .animated-bg .circle:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            top: 60%;
+            right: -10%;
+            animation-delay: 5s;
+        }
+
+        .animated-bg .circle:nth-child(3) {
+            width: 400px;
+            height: 400px;
+            bottom: 10%;
+            left: 30%;
+            animation-delay: 10s;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.05;
+            }
+            50% {
+                transform: scale(1.4);
+                opacity: 0.08;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.05;
+            }
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar.scrolled {
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 0.5rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-link {
+            position: relative;
+            color: var(--dark);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Hero section */
+        .hero {
+            background: linear-gradient(135deg, #ffffff 0%, var(--light-gray) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Tech lines animation */
+        .tech-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .tech-line {
+            position: absolute;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--primary), transparent);
+            opacity: 0.2;
+            top: 0;
+            bottom: 0;
+        }
+
+        @keyframes tech-line-animation {
+            0% {
+                opacity: 0;
+                height: 0;
+            }
+            50% {
+                opacity: 0.2;
+                height: 100%;
+            }
+            100% {
+                opacity: 0;
+                height: 0;
+            }
+        }
+
+        /* Floating elements */
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Particle effect */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        @keyframes particle-animation {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-500px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Featured image styling */
+        .featured-image {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .featured-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(19, 214, 176, 0.2);
+        }
+
+        /* Text highlight */
+        .highlight {
+            position: relative;
+            display: inline-block;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+            background-color: var(--primary);
+            opacity: 0.3;
+            z-index: -1;
+            transition: height 0.3s ease;
+        }
+
+        .highlight:hover::after {
+            height: 50%;
+        }
+
+        /* Typing animation */
+        .typing {
+            position: relative;
+            display: inline-block;
+        }
+
+        .typing::after {
+            content: '|';
+            position: absolute;
+            right: -8px;
+            color: var(--primary);
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Event badge */
+        .event-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 20px;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0% {
+                box-shadow: 0 0 0 0 rgba(19, 214, 176, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(19, 214, 176, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(19, 214, 176, 0);
+            }
+        }
+
+        /* Set background colors for alternating sections */
+        .bg-light {
+            background-color: var(--light);
+        }
+
+        .bg-light-gray {
+            background-color: var(--light-gray);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            z-index: 1001;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            width: 0%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(20px);
+            box-shadow: 0 5px 15px rgba(19, 214, 176, 0.3);
+            z-index: 99;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(19, 214, 176, 0.5);
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1100;
+            transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+            padding: 80px 40px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-nav-link {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            display: block;
+            color: var(--dark);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(50px);
+        }
+
+        .mobile-menu.active .mobile-nav-link {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .mobile-menu.active .mobile-nav-link:nth-child(1) { transition-delay: 0.1s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(2) { transition-delay: 0.2s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(3) { transition-delay: 0.3s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(4) { transition-delay: 0.4s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(5) { transition-delay: 0.5s; }
+
+        .mobile-nav-link:hover {
+            color: var(--primary);
+            padding-left: 10px;
+        }
+
+        .menu-toggle {
+            position: relative;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 1200;
+        }
+
+        .menu-toggle span {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background-color: var(--dark);
+            transition: all 0.3s ease;
+            left: 0;
+            border-radius: 3px;
+        }
+
+        .menu-toggle span:nth-child(1) {
+            top: 0;
+        }
+
+        .menu-toggle span:nth-child(2) {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .menu-toggle span:nth-child(3) {
+            bottom: 0;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg);
+            top: 10px;
+            background-color: var(--primary);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg);
+            bottom: 12px;
+            background-color: var(--primary);
+        }
+
+        /* Arrow animation */
+        .arrow-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+            background-color: var(--primary);
+            clip-path: polygon(0 30%, 70% 30%, 70% 0, 100% 50%, 70% 100%, 70% 70%, 0 70%);
+            transition: all 0.3s ease;
+            animation: arrow-pulse 1.5s infinite;
+        }
+
+        @keyframes arrow-pulse {
+            0% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        /* Event info styles */
+        .event-info-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(19, 214, 176, 0.3);
+        }
+
+        .event-info-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        .keynote-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar py-4" id="navbar">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#home" class="flex items-center cursor-pointer">
+                <img src="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/full_bioergotech_nobg.png" alt="bioERGOtech Logo" class="h-10">
+            </a>
+            <div class="hidden md:flex space-x-10">
+                <a href="#event" class="nav-link">Event</a>
+                <a href="#speakers" class="nav-link">Speakers</a>
+                <a href="#keynote" class="nav-link">Keynote</a>
+                <a href="#panels" class="nav-link">Panels</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+            <div class="md:hidden">
+                <div class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#event" class="mobile-nav-link">Event</a>
+        <a href="#speakers" class="mobile-nav-link">Speakers</a>
+        <a href="#keynote" class="mobile-nav-link">Keynote</a>
+        <a href="#panels" class="mobile-nav-link">Panels</a>
+        <a href="#contact" class="mobile-nav-link">Contact</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <!-- Tech lines animation background -->
+        <div class="tech-lines" id="techLines"></div>
+
+        <!-- Animated background -->
+        <div class="animated-bg">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+        </div>
+
+        <div class="container mx-auto px-6 pt-28 pb-12 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="order-2 md:order-1">
+                    <div class="event-badge">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        Official Launch Event
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
+                        bioERGOtech <span class="typing gradient-text" id="typingText">Innovation</span> Summit
+                    </h1>
+                    <p class="text-xl mb-8 text-gray-700">
+                        Join distinguished experts, innovators, and thought leaders as we launch the future of <span class="highlight">AI-driven biotech research</span> for chronic disease treatments. Discover groundbreaking approaches to <span class="highlight">Parkinson's</span>, <span class="highlight">cancer</span>, <span class="highlight">diabetes</span>, and <span class="highlight">Alzheimer's</span> research.
+                    </p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <a href="#speakers" class="btn-primary text-center group">
+                            Meet Our Speakers <span class="arrow-icon inline-block align-middle"></span>
+                        </a>
+                        <a href="#contact" class="btn-outline text-center">
+                            Register Now
+                        </a>
+                    </div>
+                </div>
+                <div class="order-1 md:order-2 flex justify-center">
+                    <img src="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Home/Automation.png" alt="AI in Biotech Research" class="featured-image rounded-lg shadow-xl w-full max-w-md float-animation">
+                </div>
+            </div>
+
+            <!-- Particles effect -->
+            <div class="particles" id="particles"></div>
+        </div>
+    </section>
+
+    <!-- Event Overview Section -->
+    <section class="section bg-light-gray" id="event">
+        <div class="animated-bg">
+            <div class="circle"></div>
+            <div class="circle"></div>
+        </div>
+
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Event Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
+                <div>
+                    <p class="text-xl mb-6 text-gray-700">
+                        The bioERGOtech Innovation Summit marks a pivotal moment in the transformation of biotech research. This exclusive launch event brings together leading experts from academia, industry, and government to explore the revolutionary potential of AI-driven laboratory automation.
+                    </p>
+                    <p class="text-xl mb-6 text-gray-700">
+                        Our distinguished speakers will present cutting-edge research, innovative technologies, and strategic insights that are reshaping how we approach chronic disease treatments. From genetic analysis platforms to digital health solutions, this summit showcases the future of intelligent biotech research.
+                    </p>
+                </div>
+                <div class="event-info-card">
+                    <div class="relative z-10">
+                        <div class="keynote-badge">
+                            <i class="fas fa-star mr-2"></i>
+                            Launch Summit
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">AI-Driven Biotech Innovation</h3>
+                        <p class="text-lg opacity-90 mb-6">
+                            Transforming chronic disease research through intelligent automation and strategic collaboration
+                        </p>
+                        <div class="flex justify-center space-x-8 text-center">
+                            <div>
+                                <div class="text-3xl font-bold">15+</div>
+                                <div class="text-sm opacity-80">Expert Speakers</div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-bold">5</div>
+                                <div class="text-sm opacity-80">Key Panels</div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-bold">1</div>
+                                <div class="text-sm opacity-80">Keynote Address</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Keynote Speaker Section -->
+    <section class="section" id="keynote">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Keynote Speaker</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="speaker-card bg-gradient-to-r from-white to-gray-50">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="flex-shrink-0">
+                            <div class="w-32 h-32 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-4xl font-bold shadow-xl">
+                                DL
+                            </div>
+                        </div>
+                        <div class="flex-1 text-center md:text-left">
+                            <div class="keynote-badge bg-teal-100 text-teal-800 mb-4">
+                                <i class="fas fa-microphone mr-2"></i>
+                                Introductory Keynote
+                            </div>
+                            <h3 class="speaker-name text-3xl">Domenico Lombardi</h3>
+                            <p class="speaker-title text-xl">Director of Policy Observatory – LUISS School of Government</p>
+                            <p class="speaker-description text-lg mt-4">
+                                Director of the Policy Observatory at LUISS School of Government and Professor of Practice in Public Policy. Former governance expert at IMF and World Bank, independent board member at Monte dei Paschi, and Knight of the Republic for contributions to international public policy. Professor Lombardi will address Italy's aging population and the critical need for software and physical automation to solve demographic challenges while maintaining quality of life standards.
+                            </p>
+                            <div class="mt-6">
+                                <p class="text-sm text-gray-600 italic">
+                                    <strong>Keynote Topic:</strong> "Addressing Italy's Aging Population: The Role of Automation in Maintaining Quality of Life"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        <!-- Panel Discussion Section -->
+    <section class="section bg-light-gray" id="panels_discussion">
+        <div class="animated-bg">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+        </div>
+
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Expert Panel Discussions</h2>
+            <p class="text-xl mb-16 max-w-5xl text-gray-700">
+                Engage with leading experts through four comprehensive panel discussions that explore the intersection of technology, policy, research, and practical healthcare solutions. Each panel addresses critical challenges and opportunities in biotech innovation, bringing together diverse perspectives from industry leaders, academic researchers, investors, and policymakers.
+            </p>
+
+            <!-- Panel 1: Clinical Frontlines -->
+            <div class="panel-section panel-clinical">
+                <h3 class="panel-title">
+                    <span class="panel-number">1</span>
+                    Clinical Frontlines - What Patients and Doctors Need
+                </h3>
+                <div class="topic-highlight">
+                    <strong>Focus Areas:</strong> Real-world clinical challenges, innovative diagnostics, pharmaceutical logistics, patient-centered solutions, and bridging the gap between research and practice.
+                </div>
+                <p class="panel-intro">
+                    This panel brings together clinical practitioners and healthcare technology innovators to discuss immediate patient needs and practical healthcare solutions. From revolutionary diagnostic tools to sophisticated pharmaceutical logistics, these experts address what really matters in clinical practice today.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h4 class="speaker-name">Michele Genga</h4>
+                        <span class="speaker-role">CEO, Cranio Tech Solution</span>
+                        <p class="speaker-description">
+                            Osteopath from Taranto and CEO of the startup that patented the "Cranial Device," a revolutionary helmet with sensors and AI for objective osteopathic diagnostics. Adjunct professor at D'Annunzio University, recognized in multiple innovation competitions for breakthrough medical technology.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-snowflake"></i>
+                        </div>
+                        <h4 class="speaker-name">Alba Gorenca</h4>
+                        <span class="speaker-role">Site Manager, Cryolab SOL Group</span>
+                        <p class="speaker-description">
+                            Graduate in Chemistry and Pharmaceutical Technology, Site Manager of Cryolab, a leader in biological sample logistics. Extensive experience as Technical Manager and Quality Assurance Officer in pharmaceutical companies, specializing in cryopreservation and cold chain management.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <h4 class="speaker-name">Alberto Costantini</h4>
+                        <span class="speaker-role">Hospital Pharmacy Director, ASL Pescara</span>
+                        <p class="speaker-description">
+                            Pharmacist with extensive experience in oncological pharmacology and clinical experimentation. Former professor at Chieti-Pescara University, approximately 50 scientific publications, leadership roles in SIFO (Italian Society of Hospital Pharmacy). Expert in clinical trial management.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="panel-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <div class="stat-label">Clinical Experts</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">15+</span>
+                        <div class="stat-label">Years Experience</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">50+</span>
+                        <div class="stat-label">Publications</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Research Excellence -->
+            <div class="panel-section panel-research">
+                <h3 class="panel-title">
+                    <span class="panel-number">2</span>
+                    Research Excellence and Academic Innovation
+                </h3>
+                <div class="topic-highlight">
+                    <strong>Focus Areas:</strong> Stem cell research, international collaboration, research evaluation systems, perinatal medicine, and translating academic discoveries into clinical applications.
+                </div>
+                <p class="panel-intro">
+                    Leading academic researchers and institutional leaders discuss the future of biomedical research, from fundamental stem cell biology to international research collaboration frameworks. This panel explores how academic excellence drives innovation in chronic disease research.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-dna"></i>
+                        </div>
+                        <h4 class="speaker-name">Davide Cacchiarelli</h4>
+                        <span class="speaker-role">Professor, Telethon Foundation</span>
+                        <p class="speaker-description">
+                            Professor at Federico II University and coordinator of research group at TIGEM, specialized in stem cell biology. "Alfredo Margreth" Prize winner from Accademia dei Lincei, with research experience at Harvard and Broad Institute MIT. Leading researcher in regenerative medicine and cellular reprogramming.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h4 class="speaker-name">Antonio Uricchio</h4>
+                        <span class="speaker-role">President, ANVUR</span>
+                        <p class="speaker-description">
+                            President of the National Agency for Evaluation of University and Research System, former rector of University of Bari. Over 200 publications on technological innovation and environmental policies, leading figure in Italian higher education and research evaluation.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <h4 class="speaker-name">Umberto Simeoni</h4>
+                        <span class="speaker-role">Director, CHUV Lausanne</span>
+                        <p class="speaker-description">
+                            Director of Institute of Pediatric Research and DOHaD Research Unit, over 150 scientific publications, president of European perinatal medicine associations. Focus on cardiovascular development in perinatal conditions, leading international researcher in maternal-fetal medicine.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="panel-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">350+</span>
+                        <div class="stat-label">Combined Publications</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <div class="stat-label">Countries Represented</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">4</span>
+                        <div class="stat-label">Major Institutions</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 3: Investment and Business Development -->
+            <div class="panel-section panel-business">
+                <h3 class="panel-title">
+                    <span class="panel-number">3</span>
+                    Investment, Technology, and Business Development
+                </h3>
+                <div class="topic-highlight">
+                    <strong>Focus Areas:</strong> Deep-tech investments, genomics platforms, venture capital strategies, infrastructure development, and scaling biotech innovations from lab to market.
+                </div>
+                <p class="panel-intro">
+                    This panel examines the current state of biotech investment, funding mechanisms, and emerging business opportunities. From genomics startups to venture capital strategies, explore how innovation translates into sustainable business models and market success.
+                </p>
+
+                <!-- Moderator Section -->
+                <div class="moderator-section">
+                    <div class="relative z-10">
+                        <h4 class="moderator-title">
+                            Panel Moderator: Carmine Pisano
+                            <span class="moderator-badge">Moderator</span>
+                        </h4>
+                        <p class="moderator-role">bioERGOtech Board Member</p>
+                        <p class="moderator-description">
+                            General Director of Taranto Municipality, former Military Navy Officer. Master in Public Administration Management with extensive experience in economic development, environment, and social services. Former president of Amiu SpA Board, bringing valuable public sector expertise to biotech innovation discussions.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="speaker-name">Mario Scuderi</h4>
+                        <span class="speaker-role">Senior Partner, CDP Venture Capital SGR</span>
+                        <p class="speaker-description">
+                            Senior Partner and Co-Head of Evolution Fund (€100M for Italian deeptech startups). Over 9 years in venture capital, board member of Empatica, D-Orbit, and Vino.com. Kauffman Fellows Class 21, focusing on AI, Cybersecurity, Biotech, and quantum computing investments.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-microscope"></i>
+                        </div>
+                        <h4 class="speaker-name">Guido Walter Di Donato</h4>
+                        <span class="speaker-role">Co-founder & CEO, GenoGra</span>
+                        <p class="speaker-description">
+                            Co-founder and CEO of GenoGra, a deep-tech startup winner of Startcup Lombardia 2022, developing intelligent platforms for genetic analysis. PhD in Computer Science from Politecnico di Milano, with expertise in computational genomics and high-performance computing at NECSTLab and Lawrence Berkeley National Laboratory.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h4 class="speaker-name">Alessandro Basso</h4>
+                        <span class="speaker-role">bioERGOtech Technical Committee Member</span>
+                        <p class="speaker-description">
+                            Engineer and ASSOBETON GM Structures representative (2022-2024). Specialist in prefabricated construction systems and institutional relations in the construction sector, bringing engineering expertise and industry connections to biotech infrastructure development.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="panel-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">€100M+</span>
+                        <div class="stat-label">Investment Fund</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">15+</span>
+                        <div class="stat-label">Portfolio Companies</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <div class="stat-label">Award-Winning Startups</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 4: Digital Innovation and Policy Framework -->
+            <div class="panel-section panel-policy">
+                <h3 class="panel-title">
+                    <span class="panel-number">4</span>
+                    Digital Innovation and Policy Framework
+                </h3>
+                <div class="topic-highlight">
+                    <strong>Focus Areas:</strong> Digital health transformation, government policy innovation, educational reform, sustainable economics, and telemedicine implementation across healthcare systems.
+                </div>
+                <p class="panel-intro">
+                    Exploring the intersection of technology policy, educational innovation, and healthcare transformation. This panel brings together policymakers, digital innovators, and healthcare leaders to discuss how regulatory frameworks and government initiatives can accelerate biotech innovation while ensuring equitable access to advanced healthcare solutions.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-globe-asia"></i>
+                        </div>
+                        <h4 class="speaker-name">Manila Di Giovanni</h4>
+                        <span class="speaker-role">Founder, DWorld</span>
+                        <p class="speaker-description">
+                            Founder of the first State metaverse (Monaco), Forbes 30 Under 30, Prix Monte-Carlo "Femme de l'Année" 2023. Pioneer in smart cities and digital twin technology for business-government collaboration, transforming digital governance and virtual spaces.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-landmark"></i>
+                        </div>
+                        <h4 class="speaker-name">Paola Frassinetti</h4>
+                        <span class="speaker-role">Undersecretary, Ministry of Education and Merit</span>
+                        <p class="speaker-description">
+                            Institutional representation of the Meloni government on education, training, and youth innovation themes. Undersecretary at the Ministry of Education and Merit, advocating for educational innovation and technology integration in Italian schools and universities.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <h4 class="speaker-name">Giammario Battaglia</h4>
+                        <span class="speaker-role">Founder, Human Economic Forum</span>
+                        <p class="speaker-description">
+                            Creator of Human Economic Forum hosted at Chamber of Deputies 2024. Focus on integrated sustainability and European "Social Deal." Representative of interest at Chamber of Deputies, advocating for human-centered economic models and sustainable development policies.
+                        </p>
+                    </div>
+
+                    <div class="speaker-card">
+                        <div class="card-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h4 class="speaker-name">Daniela Marotto</h4>
+                        <span class="speaker-role">Former President, Italian Rheumatologists College</span>
+                        <p class="speaker-description">
+                            Rheumatologist, first female president of CReI, head of Rheumatology Polyclinic Northern Sardinia. Promoter of telemedicine and uniform access to care. Assistant editor Beyond Rheumatology, leading advocate for digital health solutions in rheumatology.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Panel Discussion Section -->
+    <section class="section" id="panels">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Panel Discussions</h2>
+            <p class="text-xl mb-12 max-w-3xl text-gray-700">
+                Explore key themes through expert panel discussions covering innovation, investment, policy, and the future of biotech research.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Innovation & Technology Panel -->
+                <div class="card bg-gradient-to-br from-blue-50 to-blue-100">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-microscope"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Innovation & Technology</h3>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Deep-tech innovations transforming biotech research through AI, automation, and intelligent experimental design.
+                    </p>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600"><strong>Featuring:</strong> Guido Walter Di Donato, Michele Genga, Alba Gorenca</p>
+                    </div>
+                </div>
+
+                <!-- Investment & Venture Capital Panel -->
+                <div class="card bg-gradient-to-br from-green-50 to-green-100">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Investment & Funding</h3>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Venture capital perspectives on deep-tech biotech investments and funding strategies for innovation.
+                    </p>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600"><strong>Featuring:</strong> Mario Scuderi, Carmine Pisano, Alessandro Basso</p>
+                    </div>
+                </div>
+
+                <!-- Academic Research Panel -->
+                <div class="card bg-gradient-to-br from-purple-50 to-purple-100">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Academic Research</h3>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Leading academic perspectives on research evaluation, stem cell biology, and international collaboration.
+                    </p>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600"><strong>Featuring:</strong> Antonio Uricchio, Davide Cacchiarelli, Umberto Simeoni</p>
+                    </div>
+                </div>
+
+                <!-- Digital Health & Innovation Panel -->
+                <div class="card bg-gradient-to-br from-orange-50 to-orange-100">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-digital-tachograph"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Digital Health & Future</h3>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Digital transformation in healthcare, telemedicine, and the future of medical practice.
+                    </p>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600"><strong>Featuring:</strong> Manila Di Giovanni, Daniela Marotto, Alberto Costantini</p>
+                    </div>
+                </div>
+
+                <!-- Policy & Governance Panel -->
+                <div class="card bg-gradient-to-br from-red-50 to-red-100 lg:col-span-2">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">Policy & Governance</h3>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Government policies, educational innovation, and sustainable economic models for biotech advancement.
+                    </p>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600"><strong>Featuring:</strong> Paola Frassinetti, Giammario Battaglia, Domenico Lombardi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Event Impact Section -->
+    <section class="section bg-light-gray">
+        <div class="animated-bg">
+            <div class="circle"></div>
+            <div class="circle"></div>
+        </div>
+
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Event Impact</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <p class="text-xl mb-6 text-gray-700">
+                        This launch event represents a convergence of expertise across multiple domains essential for advancing biotech innovation. Our speakers bring together perspectives from cutting-edge research, strategic investment, regulatory policy, and technological implementation.
+                    </p>
+                    <p class="text-xl mb-6 text-gray-700">
+                        The bioERGOtech Innovation Summit establishes a foundation for collaborative networks that will drive the next generation of chronic disease treatments through intelligent automation and AI-driven research methodologies.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-teal-600 mb-2">€100M+</div>
+                        <div class="text-gray-600">Investment Focus</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-teal-600 mb-2">200+</div>
+                        <div class="text-gray-600">Research Publications</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-teal-600 mb-2">5</div>
+                        <div class="text-gray-600">Countries Represented</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-teal-600 mb-2">10+</div>
+                        <div class="text-gray-600">Innovation Patents</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section bg-light" id="contact">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Contact & Registration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="contact-info mb-8">
+                        <div class="flex items-start mb-6">
+                            <div class="text-teal-500 text-2xl mr-4">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-gray-800">Event Information</h3>
+                                <a href="mailto:info@bioergotech.org" class="text-gray-700">info@bioergotech.org</a>
+                            </div>
+                        </div>
+                        <div class="flex items-start mb-6">
+                            <div class="text-teal-500 text-2xl mr-4">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-gray-800">Event Location</h3>
+                                <p class="text-gray-700">Berninastrasse 85, 8057 Zurich</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="text-teal-500 text-2xl mr-4">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-gray-800">Registration</h3>
+                                <p class="text-gray-700">Limited seats available - Register early</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-4 mt-8">
+                        <a href="#" class="w-12 h-12 rounded-full bg-teal-500 bg-opacity-20 flex items-center justify-center text-teal-500 hover:bg-opacity-30 transition">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-full bg-teal-500 bg-opacity-20 flex items-center justify-center text-teal-500 hover:bg-opacity-30 transition">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-full bg-teal-500 bg-opacity-20 flex items-center justify-center text-teal-500 hover:bg-opacity-30 transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <form class="bg-white rounded-lg p-8 shadow-lg border border-gray-100">
+                        <div class="mb-6">
+                            <label for="name" class="block text-sm font-medium mb-2 text-gray-700">Full Name</label>
+                            <input type="text" id="name" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div class="mb-6">
+                            <label for="email" class="block text-sm font-medium mb-2 text-gray-700">Email Address</label>
+                            <input type="email" id="email" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div class="mb-6">
+                            <label for="organization" class="block text-sm font-medium mb-2 text-gray-700">Organization</label>
+                            <input type="text" id="organization" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div class="mb-6">
+                            <label for="message" class="block text-sm font-medium mb-2 text-gray-700">Interest & Questions</label>
+                            <textarea id="message" rows="4" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary w-full">
+                            Register for Event
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-light-gray py-10">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <a href="#home" class="flex items-center cursor-pointer">
+                        <img src="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/full_bioergotech_nobg.png" alt="bioERGOtech Logo" class="h-10">
+                    </a>
+                    <p class="text-gray-600 mt-2">Innovation Summit - Making research smarter, not just faster</p>
+                </div>
+                <div class="flex flex-col md:flex-row md:space-x-10 space-y-4 md:space-y-0">
+                    <a href="#event" class="text-gray-600 hover:text-teal-500 transition">Event</a>
+                    <a href="#speakers" class="text-gray-600 hover:text-teal-500 transition">Speakers</a>
+                    <a href="#keynote" class="text-gray-600 hover:text-teal-500 transition">Keynote</a>
+                    <a href="#panels" class="text-gray-600 hover:text-teal-500 transition">Panels</a>
+                    <a href="#contact" class="text-gray-600 hover:text-teal-500 transition">Contact</a>
+                </div>
+            </div>
+            <hr class="border-gray-300 my-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm mb-4 md:mb-0">
+                    &copy; 2025 bioERGOtech Foundation. All rights reserved.
+                </p>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-500 hover:text-teal-500 transition">Privacy Policy</a>
+                    <a href="#" class="text-gray-500 hover:text-teal-500 transition">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to top button -->
+    <div class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script>
+        // Initialize all functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create tech lines animation
+            createTechLines();
+
+            // Create particle effect
+            createParticles();
+
+            // Initialize typing animation
+            initTypingAnimation();
+
+            // Setup scroll listeners
+            setupScrollListeners();
+
+            // Navigation highlighting
+            setupNavHighlighting();
+
+            // Mobile menu toggle
+            setupMobileMenu();
+
+            // Setup back to top button
+            setupBackToTop();
+        });
+
+        // Create tech lines for hero background
+        function createTechLines() {
+            const techLines = document.getElementById('techLines');
+            const lineCount = 10;
+
+            for (let i = 0; i < lineCount; i++) {
+                const line = document.createElement('div');
+                line.className = 'tech-line';
+                line.style.left = (Math.random() * 100) + '%';
+                line.style.animation = `tech-line-animation ${5 + Math.random() * 10}s infinite ${Math.random() * 5}s`;
+                techLines.appendChild(line);
+            }
+        }
+
+        // Create particle effect
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            if (!particles) return;
+
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+
+                particle.style.left = x + '%';
+                particle.style.top = y + '%';
+                particle.style.opacity = Math.random() * 0.5;
+                particle.style.width = (2 + Math.random() * 4) + 'px';
+                particle.style.height = particle.style.width;
+
+                const duration = 10 + Math.random() * 20;
+                const delay = Math.random() * 5;
+
+                particle.style.animation = `particle-animation ${duration}s linear infinite ${delay}s`;
+
+                particles.appendChild(particle);
+            }
+        }
+
+        // Initialize typing animation for hero text
+        function initTypingAnimation() {
+            const typingElement = document.getElementById('typingText');
+            if (!typingElement) return;
+
+            const words = ['Innovation', 'Research', 'Collaboration', 'Discovery', 'Future'];
+            let wordIndex = 0;
+
+            const animateTyping = () => {
+                const currentWord = words[wordIndex];
+                typingElement.textContent = currentWord;
+
+                wordIndex = (wordIndex + 1) % words.length;
+                setTimeout(animateTyping, 3000);
+            };
+
+            animateTyping();
+        }
+
+        // Setup scroll listeners for scroll-based effects
+        function setupScrollListeners() {
+            const navbar = document.getElementById('navbar');
+            const progressBar = document.getElementById('progressBar');
+
+            window.addEventListener('scroll', () => {
+                // Update navbar style on scroll
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+
+                // Update progress bar
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (window.scrollY / scrollHeight) * 100;
+                progressBar.style.width = scrolled + '%';
+            });
+        }
+
+        // Handle navigation highlighting on scroll
+        function setupNavHighlighting() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+
+                    if (window.pageYOffset >= (sectionTop - 200)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Mobile menu functionality
+        function setupMobileMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+            menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+                mobileMenu.classList.toggle('active');
+            });
+
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    menuToggle.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                });
+            });
+        }
+
+        // Back to top button functionality
+        function setupBackToTop() {
+            const backToTop = document.getElementById('backToTop');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 500) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
+
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
