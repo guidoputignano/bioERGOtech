@@ -13,13 +13,760 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bioERGOtech Event Launch - Speakers & Panels</title>
-    <link rel="icon" href="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/short_logo.webp" type="image/x-icon">
-    <link rel="shortcut icon" href="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/short_logo.webp" type="image/x-icon">
+    <link rel="icon" href="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/short_logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/short_logo.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/launch_event.css">
+    <style>
+        :root {
+            --primary: #13d6b0;
+            --primary-dark: #0eb093;
+            --primary-light: #61ffe0;
+            --dark: #333333;
+            --darker: #1a1a1a;
+            --light: #ffffff;
+            --light-gray: #e5e5e5;
+            --medium-gray: #9e9e9e;
+        }
+
+        /* Smooth scroll for better experience */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(19, 214, 176, 0.2);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(19, 214, 176, 0.3);
+        }
+
+        .btn-primary:hover::before {
+            width: 100%;
+        }
+
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--dark);
+            padding: 11px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        .btn-outline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn-outline:hover {
+            color: white;
+        }
+
+        .btn-outline:hover::before {
+            width: 100%;
+        }
+
+        /* Section styles */
+        .section {
+            padding: 100px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-title {
+            color: var(--primary);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary);
+            transition: width 0.5s ease;
+        }
+
+        .section-title:hover::after {
+            width: 100%;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary) 0%, #64ffda 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
+        /* Card styles with hover effects */
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 15px 0;
+            transition: all 0.5s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), transparent);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Speaker card styles */
+        .speaker-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(19, 214, 176, 0.1);
+        }
+
+        .speaker-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .speaker-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(19, 214, 176, 0.15);
+        }
+
+        .speaker-card:hover::before {
+            opacity: 1;
+        }
+
+        .speaker-name {
+            color: var(--primary);
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-title {
+            color: var(--dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .speaker-description {
+            color: var(--dark);
+            line-height: 1.7;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-card:hover .speaker-description {
+            opacity: 1;
+        }
+
+        /* Animated background */
+        .animated-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .animated-bg .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0.05;
+            filter: blur(60px);
+            animation: pulse 15s infinite alternate;
+        }
+
+        .animated-bg .circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .animated-bg .circle:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            top: 60%;
+            right: -10%;
+            animation-delay: 5s;
+        }
+
+        .animated-bg .circle:nth-child(3) {
+            width: 400px;
+            height: 400px;
+            bottom: 10%;
+            left: 30%;
+            animation-delay: 10s;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.05;
+            }
+            50% {
+                transform: scale(1.4);
+                opacity: 0.08;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.05;
+            }
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar.scrolled {
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 0.5rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-link {
+            position: relative;
+            color: var(--dark);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Hero section */
+        .hero {
+            background: linear-gradient(135deg, #ffffff 0%, var(--light-gray) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Tech lines animation */
+        .tech-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .tech-line {
+            position: absolute;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--primary), transparent);
+            opacity: 0.2;
+            top: 0;
+            bottom: 0;
+        }
+
+        @keyframes tech-line-animation {
+            0% {
+                opacity: 0;
+                height: 0;
+            }
+            50% {
+                opacity: 0.2;
+                height: 100%;
+            }
+            100% {
+                opacity: 0;
+                height: 0;
+            }
+        }
+
+        /* Floating elements */
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Particle effect */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        @keyframes particle-animation {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-500px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Featured image styling */
+        .featured-image {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .featured-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(19, 214, 176, 0.2);
+        }
+
+        /* Text highlight */
+        .highlight {
+            position: relative;
+            display: inline-block;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+            background-color: var(--primary);
+            opacity: 0.3;
+            z-index: -1;
+            transition: height 0.3s ease;
+        }
+
+        .highlight:hover::after {
+            height: 50%;
+        }
+
+        /* Typing animation */
+        .typing {
+            position: relative;
+            display: inline-block;
+        }
+
+        .typing::after {
+            content: '|';
+            position: absolute;
+            right: -8px;
+            color: var(--primary);
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Event badge */
+        .event-badge {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 20px;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0% {
+                box-shadow: 0 0 0 0 rgba(19, 214, 176, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(19, 214, 176, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(19, 214, 176, 0);
+            }
+        }
+
+        /* Set background colors for alternating sections */
+        .bg-light {
+            background-color: var(--light);
+        }
+
+        .bg-light-gray {
+            background-color: var(--light-gray);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            z-index: 1001;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            width: 0%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(20px);
+            box-shadow: 0 5px 15px rgba(19, 214, 176, 0.3);
+            z-index: 99;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(19, 214, 176, 0.5);
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1100;
+            transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+            padding: 80px 40px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-nav-link {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            display: block;
+            color: var(--dark);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(50px);
+        }
+
+        .mobile-menu.active .mobile-nav-link {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .mobile-menu.active .mobile-nav-link:nth-child(1) { transition-delay: 0.1s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(2) { transition-delay: 0.2s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(3) { transition-delay: 0.3s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(4) { transition-delay: 0.4s; }
+        .mobile-menu.active .mobile-nav-link:nth-child(5) { transition-delay: 0.5s; }
+
+        .mobile-nav-link:hover {
+            color: var(--primary);
+            padding-left: 10px;
+        }
+
+        .menu-toggle {
+            position: relative;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 1200;
+        }
+
+        .menu-toggle span {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background-color: var(--dark);
+            transition: all 0.3s ease;
+            left: 0;
+            border-radius: 3px;
+        }
+
+        .menu-toggle span:nth-child(1) {
+            top: 0;
+        }
+
+        .menu-toggle span:nth-child(2) {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .menu-toggle span:nth-child(3) {
+            bottom: 0;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg);
+            top: 10px;
+            background-color: var(--primary);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg);
+            bottom: 12px;
+            background-color: var(--primary);
+        }
+
+        /* Arrow animation */
+        .arrow-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+            background-color: var(--primary);
+            clip-path: polygon(0 30%, 70% 30%, 70% 0, 100% 50%, 70% 100%, 70% 70%, 0 70%);
+            transition: all 0.3s ease;
+            animation: arrow-pulse 1.5s infinite;
+        }
+
+        @keyframes arrow-pulse {
+            0% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        /* Event info styles */
+        .event-info-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(19, 214, 176, 0.3);
+        }
+
+        .event-info-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        .keynote-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <!-- Progress Bar -->
@@ -31,7 +778,7 @@
     <nav class="navbar py-4" id="navbar">
         <div class="container mx-auto px-6 flex justify-between items-center">
             <a href="#home" class="flex items-center cursor-pointer">
-                <img src="Images/Logo/full_bioergotech_nobg.webp" alt="bioERGOtech Logo" class="h-10">
+                <img src="Images/Logo/full_bioergotech_nobg.png" alt="bioERGOtech Logo" class="h-10">
             </a>
             <div class="hidden md:flex space-x-10">
                 <a href="#event" class="nav-link">Event</a>
@@ -92,7 +839,7 @@
                     </div>
                 </div>
                 <div class="order-1 md:order-2 flex justify-center">
-                    <img src="Images/launch_event/first_image.webp" alt="AI in Biotech Research" class="featured-image rounded-lg shadow-xl w-full max-w-md float-animation">
+                    <img src="Images/launch_event/first_image.png" alt="AI in Biotech Research" class="featured-image rounded-lg shadow-xl w-full max-w-md float-animation">
                 </div>
             </div>
 
@@ -157,7 +904,7 @@
                 <div class="speaker-card bg-gradient-to-r from-white to-gray-50">
                     <div class="flex flex-col md:flex-row items-center gap-8">
                         <div class="flex-shrink-0">
-                            <img src="Images/launch_event/Domenico.webp" 
+                            <img src="Images/launch_event/Domenico.png" 
                                  alt="Domenico Lombardi"
                                  class="w-32 h-32 rounded-full object-cover shadow-xl" />
                         </div>
@@ -256,7 +1003,7 @@
                     <div class="relative z-10">
                         <div class="flex items-center mb-4">
                             <div class="speaker-image mr-6">
-                                <img src="Images/launch_event/soru.webp" 
+                                <img src="Images/launch_event/soru.jpg" 
                                      alt="Alessia Soru"
                                      class="rounded-full w-32 h-32 object-cover">
                             </div>
@@ -282,7 +1029,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="speaker-card">
                         <div class="speaker-image">
-                            <img src="Images/launch_event/Michele.webp" 
+                            <img src="Images/launch_event/Michele.png" 
                                  alt="Michele Genga"
                                  class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                         </div>
@@ -295,7 +1042,7 @@
 
                     <div class="speaker-card">
                         <div class="speaker-image">
-                            <img src="Images/launch_event/Alba.webp" 
+                            <img src="Images/launch_event/Alba.png" 
                                  alt="Alba Gorenca"
                                  class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                         </div>
@@ -370,7 +1117,7 @@
         <div class="relative z-10">
             <div class="flex items-center mb-4">
                 <div class="speaker-image mr-6">
-                    <img src="Images/launch_event/Carmine_Pisano.webp" 
+                    <img src="Images/launch_event/Carmine_Pisano.png" 
                          alt="Carmine Pisano"
                          class="rounded-full w-32 h-32 object-cover">
                 </div>
@@ -396,7 +1143,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="speaker-card">
             <div class="speaker-image">
-                <img src="Images/launch_event/Cacchiarelli.webp" 
+                <img src="Images/launch_event/Cacchiarelli.png" 
                      alt="Davide Cacchiarelli"
                      class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
             </div>
@@ -410,7 +1157,7 @@
     
         <div class="speaker-card">
             <div class="speaker-image">
-                <img src="Images/launch_event/Ale_Basso.webp" 
+                <img src="Images/launch_event/Ale_Basso.png" 
                      alt="MAlessandro Basso"
                      class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
             </div>
@@ -422,7 +1169,7 @@
         </div>
         <div class="speaker-card">
             <div class="speaker-image">
-                <img src="Images/launch_event/galli.webp" 
+                <img src="Images/launch_event/galli.jpg" 
                      alt="MAlessandro Basso"
                      class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
             </div>
@@ -494,7 +1241,7 @@
                     <div class="relative z-10">
                         <div class="flex items-center mb-4">
                             <div class="speaker-image mr-6">
-                                <img src="Images/launch_event/Carmine_Pisano.webp" 
+                                <img src="Images/launch_event/Carmine_Pisano.png" 
                                      alt="Carmine Pisano"
                                      class="rounded-full w-32 h-32 object-cover">
                             </div>
@@ -526,7 +1273,7 @@
 
                     <div class="speaker-card">
                         <div class="speaker-image">
-                            <img src="Images/launch_event/Manila.webp" 
+                            <img src="Images/launch_event/Manila.png" 
                                  alt="Manila Di Giovanni"
                                  class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                         </div>
@@ -539,7 +1286,7 @@
 
                     <div class="speaker-card">
                         <div class="speaker-image">
-                            <img src="Images/launch_event/Antonio.webp" 
+                            <img src="Images/launch_event/Antonio.png" 
                                  alt="Antonio Uricchio"
                                  class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                         </div>
@@ -552,7 +1299,7 @@
 
                     <div class="speaker-card">
                         <div class="speaker-image">
-                            <img src="Images/launch_event/Alberto_Costantini.webp" 
+                            <img src="Images/launch_event/Alberto_Costantini.png" 
                                  alt="Alberto Costantini"
                                  class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                         </div>
@@ -624,7 +1371,7 @@
                                 <div class="relative z-10">
                                     <div class="flex items-center mb-4">
                                         <div class="speaker-image mr-6">
-                                            <img src="Images/launch_event/Giammario_Battaglia.webp" 
+                                            <img src="Images/launch_event/Giammario_Battaglia.png" 
                                                  alt="Giammario Battaglia"
                                                  class="rounded-full w-32 h-32 object-cover">
                                         </div>
@@ -652,7 +1399,7 @@
             
                                 <div class="speaker-card">
                                     <div class="speaker-image">
-                                        <img src="Images/launch_event/Frassinetti.webp" 
+                                        <img src="Images/launch_event/Frassinetti.png" 
                                              alt="Paola Frassinetti"
                                              class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                                     </div>
@@ -665,7 +1412,7 @@
             
                                 <div class="speaker-card">
                                     <div class="speaker-image">
-                                        <img src="Images/launch_event/Daniela.webp" 
+                                        <img src="Images/launch_event/Daniela.png" 
                                              alt="Daniela Marotto"
                                              class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                                     </div>
@@ -677,7 +1424,7 @@
                                 </div>
                                 <div class="speaker-card">
                                     <div class="speaker-image">
-                                        <img src="Images/launch_event/Umberto.webp" 
+                                        <img src="Images/launch_event/Umberto.png" 
                                              alt="Umberto Simeoni"
                                              class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                                     </div>
@@ -689,7 +1436,7 @@
                                 </div>
                                 <div class="speaker-card">
                                     <div class="speaker-image">
-                                        <img src="Images/launch_event/Guido_Walter.webp" 
+                                        <img src="Images/launch_event/Guido_Walter.png" 
                                              alt="Guido Walter Di Donato"
                                              class="rounded-full w-32 h-32 object-cover mx-auto mb-4">
                                     </div>
@@ -914,7 +1661,7 @@
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-6 md:mb-0">
                     <a href="#home" class="flex items-center cursor-pointer">
-                        <img src="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/full_bioergotech_nobg.webp" alt="bioERGOtech Logo" class="h-10">
+                        <img src="https://page1.genspark.site/get_upload_url/de572196eda4a80f9468dbd6655d91c454bc289df8a401cc43b5cdf6da0b5163/default/Images/Logo/full_bioergotech_nobg.png" alt="bioERGOtech Logo" class="h-10">
                     </a>
                     <p class="text-gray-600 mt-2">Innovation Summit - Making research smarter, not just faster</p>
                 </div>
@@ -944,6 +1691,191 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <script src="js/launch_event.js"></script>
+    <script>
+        // Initialize all functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create tech lines animation
+            createTechLines();
+
+            // Create particle effect
+            createParticles();
+
+            // Initialize typing animation
+            initTypingAnimation();
+
+            // Setup scroll listeners
+            setupScrollListeners();
+
+            // Navigation highlighting
+            setupNavHighlighting();
+
+            // Mobile menu toggle
+            setupMobileMenu();
+
+            // Setup back to top button
+            setupBackToTop();
+        });
+
+        // Create tech lines for hero background
+        function createTechLines() {
+            const techLines = document.getElementById('techLines');
+            const lineCount = 10;
+
+            for (let i = 0; i < lineCount; i++) {
+                const line = document.createElement('div');
+                line.className = 'tech-line';
+                line.style.left = (Math.random() * 100) + '%';
+                line.style.animation = `tech-line-animation ${5 + Math.random() * 10}s infinite ${Math.random() * 5}s`;
+                techLines.appendChild(line);
+            }
+        }
+
+        // Create particle effect
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            if (!particles) return;
+
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+
+                particle.style.left = x + '%';
+                particle.style.top = y + '%';
+                particle.style.opacity = Math.random() * 0.5;
+                particle.style.width = (2 + Math.random() * 4) + 'px';
+                particle.style.height = particle.style.width;
+
+                const duration = 10 + Math.random() * 20;
+                const delay = Math.random() * 5;
+
+                particle.style.animation = `particle-animation ${duration}s linear infinite ${delay}s`;
+
+                particles.appendChild(particle);
+            }
+        }
+
+        // Initialize typing animation for hero text
+        function initTypingAnimation() {
+            const typingElement = document.getElementById('typingText');
+            if (!typingElement) return;
+
+            const words = ['Innovation', 'Research', 'Collaboration', 'Discovery', 'Future'];
+            let wordIndex = 0;
+
+            const animateTyping = () => {
+                const currentWord = words[wordIndex];
+                typingElement.textContent = currentWord;
+
+                wordIndex = (wordIndex + 1) % words.length;
+                setTimeout(animateTyping, 3000);
+            };
+
+            animateTyping();
+        }
+
+        // Setup scroll listeners for scroll-based effects
+        function setupScrollListeners() {
+            const navbar = document.getElementById('navbar');
+            const progressBar = document.getElementById('progressBar');
+
+            window.addEventListener('scroll', () => {
+                // Update navbar style on scroll
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+
+                // Update progress bar
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (window.scrollY / scrollHeight) * 100;
+                progressBar.style.width = scrolled + '%';
+            });
+        }
+
+        // Handle navigation highlighting on scroll
+        function setupNavHighlighting() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+
+                    if (window.pageYOffset >= (sectionTop - 200)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Mobile menu functionality
+        function setupMobileMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+            menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+                mobileMenu.classList.toggle('active');
+            });
+
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    menuToggle.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                });
+            });
+        }
+
+        // Back to top button functionality
+        function setupBackToTop() {
+            const backToTop = document.getElementById('backToTop');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 500) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
+
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
