@@ -1,72 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>VERO Risk Calculator | BioERGOtech</title>
+    <meta charset="UTF-8" />
+    <title>VERO Risk Calculator | bioERGOtech</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-        content="VERO Oncological Risk Age Assessment – a clinical decision-support tool developed by BioERGOtech." />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="VERO Risk Calculator – Clinical risk stratification tool developed by bioERGOtech." />
 
-  <style>
-    /* Reset */
-    * {
-      box-sizing: border-box;
-    }
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+        }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: #ffffff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,
-                   "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
+        .page-wrapper {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-    /* Wrapper */
-    .vero-container {
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
-    }
+        .header {
+            padding: 14px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
-    /* Streamlit iframe */
-    .vero-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-    }
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+        }
 
-    /* Optional fallback message */
-    .fallback {
-      display: none;
-      padding: 2rem;
-      text-align: center;
-      color: #444;
-    }
+        .header p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
 
-    noscript .fallback {
-      display: block;
-    }
-  </style>
+        .app-container {
+            flex: 1;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
 </head>
 
 <body>
-  <div class="vero-container">
-    <iframe
-      src="https://vero-code-salerno-mztjl9hqrb8x9buohupitf.streamlit.app/?embed=true"
-      title="VERO Risk Calculator"
-      loading="lazy"
-      referrerpolicy="no-referrer"
-      allowfullscreen>
-    </iframe>
-  </div>
+    <div class="page-wrapper">
+        <div class="header">
+            <h1>VERO Risk Calculator</h1>
+            <p>Clinical risk stratification tool developed by bioERGOtech</p>
+        </div>
 
-  <noscript>
-    <div class="fallback">
-      <p>This application requires JavaScript to run.</p>
+        <div class="app-container">
+            <iframe
+                src="https://vero-risk-calculator-lym9exbyctkmfeiaxxwmja.streamlit.app/?embed=true"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                allowfullscreen>
+            </iframe>
+        </div>
     </div>
-  </noscript>
 </body>
 </html>
