@@ -30,46 +30,55 @@
     </div>
 
     <!-- Navigation Bar -->
-<nav class="navbar py-4" id="navbar">
-  <div class="container mx-auto px-6 flex justify-between items-center">
-    <a href="index.html" class="flex items-center cursor-pointer">
-      <img src="Images/Logo/full_bioergotech_nobg.webp" alt="bioERGOtech Logo" class="h-10">
-    </a>
+    <nav class="navbar py-4" id="navbar">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="index.html" class="flex items-center cursor-pointer">
+                <img src="Images/Logo/full_bioergotech_nobg.webp" alt="bioERGOtech Logo" class="h-10">
+            </a>
+            <div class="hidden md:flex space-x-10">
+                <a href="join-us.html" class="nav-link">Join Us</a>
+                <a href="partner-with-us.html" class="nav-link">Partner with Us</a>
+                <a href="build-with-us.html" class="nav-link">Build with Us</a>
+                <a href="about-us.html" class="nav-link">About Us</a>
+            </div>
+            <div class="md:hidden">
+                <div class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    <!-- Desktop nav -->
-    <div class="hidden md:flex items-center space-x-10">
-      <a href="/vero" class="nav-link font-semibold text-[var(--primary)]">VERO Risk Calculator</a>
-      <a href="join-us.html" class="nav-link">Join Us</a>
-      <a href="partner-with-us.html" class="nav-link">Partner with Us</a>
-      <a href="build-with-us.html" class="nav-link">Build with Us</a>
-      <a href="about-us.html" class="nav-link">About Us</a>
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="flex justify-end p-4">
+            <button id="closeMenu" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <a href="join-us.html" class="mobile-nav-link">Join Us</a>
+        <a href="partner-with-us.html" class="mobile-nav-link">Partner with Us</a>
+        <a href="build-with-us.html" class="mobile-nav-link">Build with Us</a>
+        <a href="about-us.html" class="mobile-nav-link">About Us</a>
     </div>
 
-    <!-- Mobile toggle -->
-    <div class="md:hidden">
-      <div class="menu-toggle" id="menuToggle" aria-label="Open menu" role="button" tabindex="0">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+    
+
+    <!-- Quick Navigation Dots -->
+    <div class="quick-nav" id="quickNav">
+        <div class="quick-nav-dot active" data-target="home"></div>
+        <div class="quick-nav-dot" data-target="problem"></div>
+        <div class="quick-nav-dot" data-target="approach"></div>
+        <div class="quick-nav-dot" data-target="principles"></div>
+        <div class="quick-nav-dot" data-target="strategy"></div>
+        <div class="quick-nav-dot" data-target="diseases"></div>
+        <div class="quick-nav-dot" data-target="markets"></div>
+        <div class="quick-nav-dot" data-target="hubs"></div>
+        <div class="quick-nav-dot" data-target="contact"></div>
     </div>
-  </div>
-</nav>
 
-<!-- Mobile Menu -->
-<div class="mobile-menu" id="mobileMenu">
-  <div class="flex justify-end p-4">
-    <button id="closeMenu" class="text-gray-500 hover:text-gray-700" aria-label="Close menu">
-      <i class="fas fa-times text-2xl"></i>
-    </button>
-  </div>
-
-  <a href="/vero" class="mobile-nav-link font-semibold" style="color: var(--primary);">VERO Risk Calculator</a>
-  <a href="join-us.html" class="mobile-nav-link">Join Us</a>
-  <a href="partner-with-us.html" class="mobile-nav-link">Partner with Us</a>
-  <a href="build-with-us.html" class="mobile-nav-link">Build with Us</a>
-  <a href="about-us.html" class="mobile-nav-link">About Us</a>
-</div>
     <!-- Hero Section -->
     <section class="hero" id="home">
         <!-- Tech lines animation background -->
