@@ -109,7 +109,7 @@
                     </div>
                 </div>
 
-                <!-- REGISTER PANEL -->
+                <!-- REGISTER PANEL (Join the Ecosystem) -->
                 <div id="registerPanel" style="display: none; max-width: 700px; margin: 0 auto;">
                     <div class="register-card">
                         <h2>Join the Ecosystem</h2>
@@ -146,6 +146,27 @@
                             </div>
                             <input type="hidden" id="orgTypeInput" name="orgType">
 
+                            <!-- Partnership Tier Selector -->
+                            <label style="font-weight: 600; margin-bottom: 12px; display: block; margin-top: 8px;">Which partnership level interests you?</label>
+                            <div class="tier-selector">
+                                <div class="tier-option selected" data-tier="community">
+                                    <i class="fas fa-users"></i>
+                                    <div class="tier-name">Community</div>
+                                    <div class="tier-desc">Network access, events, and knowledge exchange</div>
+                                </div>
+                                <div class="tier-option" data-tier="project">
+                                    <i class="fas fa-flask"></i>
+                                    <div class="tier-name">Project</div>
+                                    <div class="tier-desc">Collaborative R&D, shared equipment, co-publications</div>
+                                </div>
+                                <div class="tier-option" data-tier="strategic">
+                                    <i class="fas fa-handshake"></i>
+                                    <div class="tier-name">Strategic</div>
+                                    <div class="tier-desc">Long-term co-investment, joint ventures, IP sharing</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="tierInput" name="tier" value="community">
+
                             <!-- Form Fields -->
                             <div class="form-row">
                                 <div class="form-group">
@@ -164,8 +185,17 @@
                                     <input type="email" id="regEmail" placeholder="you@organisation.com" required>
                                 </div>
                                 <div class="form-group">
+                                    <label for="regPassword">Password *</label>
+                                    <input type="password" id="regPassword" placeholder="Min. 6 characters" required minlength="6">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
                                     <label for="regWebsite">Website</label>
                                     <input type="url" id="regWebsite" placeholder="https://...">
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
                                 </div>
                             </div>
 
@@ -235,6 +265,9 @@
                 </button>
                 <button class="sidebar-nav-item" data-view="knowledge">
                     <i class="fas fa-book"></i> Knowledge Base
+                </button>
+                <button class="sidebar-nav-item" data-view="admin" id="adminNavItem" style="display: none;">
+                    <i class="fas fa-shield-alt"></i> Admin Panel <span class="pending-badge" id="pendingCount">0</span>
                 </button>
             </nav>
 
@@ -341,10 +374,37 @@
                 </div>
             </div>
 
+            <!-- ADMIN PANEL (visible only to admin/board users) -->
+            <div id="section-admin" class="portal-section">
+                <div id="adminContent">
+
+                    <!-- Pending Applications -->
+                    <div class="portal-card">
+                        <h3><i class="fas fa-user-clock" style="color: var(--primary); margin-right: 8px;"></i>Pending Applications</h3>
+                        <div id="adminApplications">
+                            <p class="empty-state">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Current Members -->
+                    <div class="portal-card">
+                        <h3><i class="fas fa-users" style="color: var(--primary); margin-right: 8px;"></i>Approved Members</h3>
+                        <div id="adminMembersList">
+                            <p class="empty-state">Loading...</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </main>
     </div>
 
     <div id="site-footer"></div>
+
+    <!-- Supabase JS Client (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="/assets/js/supabase-config.js"></script>
 
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/components.js"></script>
