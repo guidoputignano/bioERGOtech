@@ -20,12 +20,118 @@
     z-index: 0;
 }
 
+/* --- Article Header (full-width image with overlay) --- */
+.article-header {
+    position: relative;
+    width: 100%;
+    height: 60vh;
+    min-height: 400px;
+    overflow: hidden;
+}
+
+.article-header img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.article-header-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, .7));
+    padding: 3rem 2rem;
+}
+
+.article-title {
+    color: #fff;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: .5rem;
+    line-height: 1.2;
+}
+
+.article-meta {
+    color: rgba(255, 255, 255, .8);
+    font-size: 1rem;
+}
+
+/* --- Header Image (landing-style hero with light overlay) --- */
+.header-image {
+    position: relative;
+    width: 100%;
+    height: 70vh;
+    min-height: 500px;
+    overflow: hidden;
+}
+
+.header-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.header-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(255, 255, 255, .95));
+    padding: 4rem 2rem;
+}
+
 /* --- Article Content --- */
 .article-content {
-    max-width: 4xl;
+    max-width: 56rem;
     margin: 0 auto;
     position: relative;
     z-index: 1;
+}
+
+.article-content h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 2.5rem 0 1rem;
+    position: relative;
+    padding-bottom: .5rem;
+}
+
+.article-content h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #13d6b0;
+}
+
+.article-content p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #4b5563;
+    margin-bottom: 1.25rem;
+}
+
+/* --- Placeholder Image (inline article images) --- */
+.placeholder-image {
+    margin: 2rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+}
+
+.placeholder-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform .5s ease;
+}
+
+.placeholder-image:hover img {
+    transform: scale(1.03);
 }
 
 .section-padding {
@@ -93,6 +199,132 @@
     background-color: #13d6b0;
 }
 
+/* --- Startup Cards --- */
+.startup-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .08);
+    border-left: 4px solid #13d6b0;
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.startup-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .12);
+}
+
+/* --- Award Badges --- */
+.award-badge {
+    display: inline-block;
+    padding: .3rem .9rem;
+    border-radius: 9999px;
+    font-size: .875rem;
+    font-weight: 600;
+    margin-bottom: .75rem;
+}
+
+.award-first   { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
+.award-second  { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+.award-third   { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; }
+.award-special { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; }
+
+/* --- Success Metrics (grid inside glass-card) --- */
+.success-metric {
+    text-align: center;
+    padding: 1rem;
+}
+
+.metric-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #13d6b0;
+}
+
+.metric-label {
+    display: block;
+    font-size: .875rem;
+    color: #6b7280;
+    margin-top: .25rem;
+}
+
+/* --- Impact Stats --- */
+.impact-stat {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .06);
+    transition: transform .3s ease;
+}
+
+.impact-stat:hover {
+    transform: translateY(-4px);
+}
+
+.impact-number {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #13d6b0;
+}
+
+.impact-description {
+    display: block;
+    font-size: .875rem;
+    color: #6b7280;
+    margin-top: .5rem;
+}
+
+/* --- Quote Container --- */
+.quote-container {
+    background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+    border-left: 4px solid #13d6b0;
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+.quote-text {
+    font-size: 1.125rem;
+    font-style: italic;
+    color: #374151;
+    line-height: 1.8;
+    margin-bottom: .5rem;
+}
+
+.quote-author {
+    font-size: .875rem;
+    font-weight: 600;
+    color: #13d6b0;
+}
+
+/* --- Glass Card --- */
+.glass-card {
+    background: rgba(255, 255, 255, .85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, .4);
+}
+
+/* --- Hover Lift --- */
+.hover-lift {
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, .1);
+}
+
+/* --- Q&A Question (interview articles) --- */
+.question {
+    font-weight: 600;
+    color: #13d6b0;
+    font-style: italic;
+}
+
 /* --- Interactive Image --- */
 .interactive-image {
     transition: transform .3s ease, box-shadow .3s ease;
@@ -101,4 +333,257 @@
 .interactive-image:hover {
     transform: scale(1.05);
     box-shadow: 0 15px 30px rgba(0, 0, 0, .15);
+}
+
+/* --- Hero (generic article hero section) --- */
+.hero {
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+    padding-top: 4rem;
+}
+
+/* --- Tech Lines & Particles (decorative backgrounds) --- */
+.tech-lines {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.particles {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* --- Float Animation --- */
+.float-animation {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+/* --- Event / Keynote Badges --- */
+.event-badge {
+    display: inline-block;
+    padding: .4rem 1rem;
+    border-radius: 9999px;
+    font-size: .875rem;
+    font-weight: 600;
+    background-color: rgba(19, 214, 176, .1);
+    color: #13d6b0;
+    margin-bottom: 1rem;
+}
+
+.keynote-badge {
+    display: inline-block;
+    padding: .4rem 1rem;
+    border-radius: 9999px;
+    font-size: .875rem;
+    font-weight: 600;
+    background-color: rgba(19, 214, 176, .15);
+    color: #0d9488;
+    margin-bottom: .5rem;
+}
+
+/* --- Event Info Card --- */
+.event-info-card {
+    background: linear-gradient(135deg, #13d6b0 0%, #0d9488 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(19, 214, 176, .25);
+}
+
+/* --- Speaker Cards --- */
+.speaker-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .06);
+    transition: transform .3s ease, box-shadow .3s ease;
+    border: 1px solid rgba(0, 0, 0, .05);
+}
+
+.speaker-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .1);
+}
+
+.speaker-image {
+    position: relative;
+}
+
+.speaker-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-top: .5rem;
+}
+
+.speaker-title {
+    font-size: 1rem;
+    color: #13d6b0;
+    font-weight: 500;
+    margin-top: .25rem;
+}
+
+.speaker-role {
+    display: block;
+    font-size: .875rem;
+    color: #13d6b0;
+    font-weight: 500;
+    margin-bottom: .75rem;
+}
+
+.speaker-description {
+    font-size: .9rem;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-top: .5rem;
+}
+
+/* --- Moderator Section --- */
+.moderator-section {
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- Panel Sections --- */
+.panel-section {
+    position: relative;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+}
+
+.panel-number-circle {
+    background-color: #13d6b0;
+    flex-shrink: 0;
+}
+
+.panel-intro {
+    border-left: 4px solid #13d6b0;
+}
+
+/* --- Stats Cards (cell therapies article) --- */
+.stats-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .06);
+    transition: transform .3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-4px);
+}
+
+.stats-number {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #13d6b0;
+}
+
+.stats-label {
+    display: block;
+    font-size: .875rem;
+    color: #6b7280;
+    margin-top: .5rem;
+}
+
+/* --- Quote Section (alternate quote style) --- */
+.quote-section {
+    background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+    border-left: 4px solid #13d6b0;
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+/* --- Contact Info --- */
+.contact-info {
+    position: relative;
+}
+
+/* --- Colour utilities (non-Tailwind) --- */
+.text-primary  { color: #13d6b0; }
+.bg-primary    { background-color: #13d6b0; }
+
+/* --- Article content lists --- */
+.article-content ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 1rem 0 1.5rem;
+}
+
+.article-content ul li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: .75rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #4b5563;
+}
+
+.article-content ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .6rem;
+    width: 8px;
+    height: 8px;
+    background-color: #13d6b0;
+    border-radius: 50%;
+}
+
+.article-content h3 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 2rem 0 .75rem;
+}
+
+/* --- Responsive (articles) --- */
+@media screen and (max-width: 768px) {
+    .article-header {
+        height: 40vh;
+        min-height: 280px;
+    }
+
+    .article-title {
+        font-size: 1.75rem;
+    }
+
+    .header-image {
+        height: 50vh;
+        min-height: 350px;
+    }
+
+    .article-content h2 {
+        font-size: 1.4rem;
+    }
+
+    .impact-number {
+        font-size: 2rem;
+    }
+
+    .metric-number {
+        font-size: 2rem;
+    }
 }
