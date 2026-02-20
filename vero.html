@@ -1,44 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWKKXQ2S7M"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-GWKKXQ2S7M');
+    </script>
     <meta charset="UTF-8" />
     <title>VERO Risk Calculator | bioERGOtech</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="VERO Risk Calculator – Clinical risk stratification tool developed by bioERGOtech." />
 
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont,
-                         "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff;
-        }
+    <link rel="icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/main.css">
 
+    <style>
         .page-wrapper {
-            height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        .header {
-            padding: 14px 24px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .header p {
-            margin: 4px 0 0 0;
-            font-size: 14px;
-            color: #6b7280;
+            min-height: 100vh;
         }
 
         .app-container {
@@ -55,19 +44,26 @@
 
 <body>
     <div class="page-wrapper">
-        <div class="header">
-            <h1>VERO Risk Calculator</h1>
-            <p>Clinical risk stratification tool developed by bioERGOtech</p>
-        </div>
+        <div id="site-header"></div>
 
-        <div class="app-container">
+        <div class="app-container pt-20">
+            <div class="container mx-auto px-6 py-4">
+                <h1 class="text-2xl font-bold text-gray-800">VERO Risk Calculator</h1>
+                <p class="text-gray-600 mt-1">Clinical risk stratification tool developed by bioERGOtech</p>
+            </div>
             <iframe
                 src="https://vero-risk-calculator-lym9exbyctkmfeiaxxwmja.streamlit.app/?embed=true"
                 loading="lazy"
                 referrerpolicy="no-referrer"
-                allowfullscreen>
+                allowfullscreen
+                style="height: calc(100vh - 200px);">
             </iframe>
         </div>
+
+        <div id="site-footer"></div>
     </div>
+
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/components.js"></script>
 </body>
 </html>
