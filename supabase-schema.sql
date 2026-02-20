@@ -1,18 +1,43 @@
 -- =========================================
--- bioERGOtech Foundation — Supabase Schema
+-- bioERGOtech Foundation — Supabase Schema v2
 -- =========================================
+-- Multi-person organisations, newsletter subscribers, invite codes.
 -- Run this in your Supabase SQL Editor (Dashboard > SQL Editor > New query)
--- This creates all tables, seed data, and Row Level Security policies.
 
 -- =====================
--- 1. PROFILES TABLE
+-- 1. ORGANISATIONS TABLE
 -- =====================
--- Extends Supabase auth.users with org info, role, and approval status.
+-- Each organisation can have multiple people (profiles).
+
+create table if not exists public.organisations (
+    id uuid default gen_random_uuid() primary key,
+    name text not null,
+    org_type text,
+    website text,
+    partnership_tier text default 'community' check (partnership_tier in ('community', 'project', 'strategic')),
+    photo_url text,
+    invite_code text unique default substr(gen_random_uuid()::text, 1, 8),
+    interest text,
+    status text default 'pending' check (status in ('pending', 'approved', 'rejected')),
+    reviewer_notes text,
+    reviewed_by uuid references auth.users,
+    reviewed_at timestamptz,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+-- =====================
+-- 2. PROFILES TABLE
+-- =====================
+-- Each person has a profile linked to an organisation.
 
 create table if not exists public.profiles (
     id uuid references auth.users on delete cascade primary key,
     email text,
     full_name text,
+    org_id uuid references public.organisations,
+    org_role text default 'member' check (org_role in ('primary', 'member')),
+    position text,
     org_name text,
     org_type text,
     website text,
@@ -21,6 +46,8 @@ create table if not exists public.profiles (
     role text default 'member' check (role in ('member', 'admin', 'board')),
     status text default 'pending' check (status in ('pending', 'approved', 'rejected')),
     reviewer_notes text,
+    photo_url text,
+    newsletter_consent boolean default false,
     reviewed_by uuid references auth.users,
     reviewed_at timestamptz,
     created_at timestamptz default now(),
@@ -42,7 +69,7 @@ create trigger on_auth_user_created
     after insert on auth.users
     for each row execute procedure public.handle_new_user();
 
--- Updated_at trigger
+-- Updated_at triggers
 create or replace function public.update_updated_at()
 returns trigger as $$
 begin
@@ -55,8 +82,12 @@ create trigger profiles_updated_at
     before update on public.profiles
     for each row execute procedure public.update_updated_at();
 
+create trigger organisations_updated_at
+    before update on public.organisations
+    for each row execute procedure public.update_updated_at();
+
 -- =====================
--- 2. PROJECTS TABLE
+-- 3. PROJECTS TABLE
 -- =====================
 
 create table if not exists public.projects (
@@ -76,7 +107,7 @@ create trigger projects_updated_at
     for each row execute procedure public.update_updated_at();
 
 -- =====================
--- 3. EQUIPMENT TABLE
+-- 4. EQUIPMENT TABLE
 -- =====================
 
 create table if not exists public.equipment (
@@ -89,7 +120,7 @@ create table if not exists public.equipment (
 );
 
 -- =====================
--- 4. EQUIPMENT BOOKINGS
+-- 5. EQUIPMENT BOOKINGS
 -- =====================
 
 create table if not exists public.equipment_bookings (
@@ -103,7 +134,7 @@ create table if not exists public.equipment_bookings (
 );
 
 -- =====================
--- 5. EVENTS TABLE
+-- 6. EVENTS TABLE
 -- =====================
 
 create table if not exists public.events (
@@ -117,7 +148,7 @@ create table if not exists public.events (
 );
 
 -- =====================
--- 6. EVENT RSVPS
+-- 7. EVENT RSVPS
 -- =====================
 
 create table if not exists public.event_rsvps (
@@ -129,7 +160,7 @@ create table if not exists public.event_rsvps (
 );
 
 -- =====================
--- 7. KNOWLEDGE BASE
+-- 8. KNOWLEDGE BASE
 -- =====================
 
 create table if not exists public.knowledge_base (
@@ -141,19 +172,25 @@ create table if not exists public.knowledge_base (
     created_at timestamptz default now()
 );
 
+-- =====================
+-- 9. NEWSLETTER SUBSCRIBERS
+-- =====================
+-- For visitors who subscribe via the website (not portal members).
+
+create table if not exists public.newsletter_subscribers (
+    id uuid default gen_random_uuid() primary key,
+    email text unique not null,
+    name text,
+    source text default 'website',
+    subscribed_at timestamptz default now(),
+    unsubscribed_at timestamptz
+);
+
 -- =============================================
--- ROW LEVEL SECURITY (RLS)
+-- HELPER FUNCTIONS
 -- =============================================
 
-alter table public.profiles enable row level security;
-alter table public.projects enable row level security;
-alter table public.equipment enable row level security;
-alter table public.equipment_bookings enable row level security;
-alter table public.events enable row level security;
-alter table public.event_rsvps enable row level security;
-alter table public.knowledge_base enable row level security;
-
--- Helper: check if current user is admin/board
+-- Check if current user is admin/board
 create or replace function public.is_admin()
 returns boolean as $$
     select exists (
@@ -162,6 +199,57 @@ returns boolean as $$
         and role in ('admin', 'board')
     );
 $$ language sql security definer;
+
+-- Look up organisation by invite code (bypasses RLS for registration)
+create or replace function public.lookup_org_by_invite(code text)
+returns json as $$
+    select row_to_json(t) from (
+        select id, name, org_type, status, partnership_tier
+        from public.organisations
+        where invite_code = code
+        limit 1
+    ) t;
+$$ language sql security definer;
+
+-- =============================================
+-- ROW LEVEL SECURITY (RLS)
+-- =============================================
+
+alter table public.organisations enable row level security;
+alter table public.profiles enable row level security;
+alter table public.projects enable row level security;
+alter table public.equipment enable row level security;
+alter table public.equipment_bookings enable row level security;
+alter table public.events enable row level security;
+alter table public.event_rsvps enable row level security;
+alter table public.knowledge_base enable row level security;
+alter table public.newsletter_subscribers enable row level security;
+
+-- --- ORGANISATIONS POLICIES ---
+create policy "Users can view their own org"
+    on public.organisations for select
+    using (
+        id in (select org_id from public.profiles where id = auth.uid())
+        or public.is_admin()
+    );
+
+create policy "Anyone can view approved orgs"
+    on public.organisations for select
+    using (status = 'approved');
+
+create policy "Authenticated users can create organisations"
+    on public.organisations for insert
+    with check (auth.uid() is not null);
+
+create policy "Primary contacts can update own org"
+    on public.organisations for update
+    using (
+        id in (select org_id from public.profiles where id = auth.uid() and org_role = 'primary')
+    );
+
+create policy "Admins can manage organisations"
+    on public.organisations for all
+    using (public.is_admin());
 
 -- --- PROFILES POLICIES ---
 create policy "Users can view approved profiles"
@@ -176,10 +264,6 @@ create policy "Users can update own profile"
 create policy "Admins can update any profile"
     on public.profiles for update
     using (public.is_admin());
-
-create policy "Public can view member count"
-    on public.profiles for select
-    using (status = 'approved');
 
 -- --- PROJECTS POLICIES ---
 create policy "Approved members can view projects"
@@ -265,6 +349,19 @@ create policy "Admins can manage knowledge base"
     on public.knowledge_base for all
     using (public.is_admin());
 
+-- --- NEWSLETTER SUBSCRIBERS POLICIES ---
+create policy "Anyone can subscribe to newsletter"
+    on public.newsletter_subscribers for insert
+    with check (true);
+
+create policy "Admins can view newsletter subscribers"
+    on public.newsletter_subscribers for select
+    using (public.is_admin());
+
+create policy "Admins can manage newsletter subscribers"
+    on public.newsletter_subscribers for all
+    using (public.is_admin());
+
 
 -- =============================================
 -- SEED DATA
@@ -318,3 +415,22 @@ insert into public.knowledge_base (title, category, description) values
 -- 6. Enable Email auth in Authentication > Providers > Email.
 -- 7. Optionally disable email confirmation for testing:
 --    Authentication > Settings > "Enable email confirmations" = OFF
+
+-- =============================================
+-- MIGRATION (if you already ran the v1 schema)
+-- =============================================
+-- Run these statements individually if you have an existing database:
+--
+-- -- New tables
+-- CREATE TABLE IF NOT EXISTS public.organisations (...);  -- copy from above
+-- CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (...);  -- copy from above
+--
+-- -- New columns on profiles
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS org_id uuid references public.organisations;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS org_role text default 'member';
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS position text;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS newsletter_consent boolean default false;
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS photo_url text;
+--
+-- -- New RLS policies and functions (run the ORGANISATIONS POLICIES and
+-- -- NEWSLETTER SUBSCRIBERS POLICIES sections above, plus the lookup_org_by_invite function)
