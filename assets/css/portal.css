@@ -1152,3 +1152,242 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* --- Partnership Tier Badges --- */
+.tier-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+
+.tier-community { background: rgba(19, 214, 176, .1); color: #0eb093; }
+.tier-project { background: rgba(124, 92, 252, .1); color: #7C5CFC; }
+.tier-strategic { background: rgba(232, 168, 23, .1); color: #c48f12; }
+
+/* --- Partnership Tier Selector (Register form) --- */
+.tier-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+    .tier-selector {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tier-option {
+    border: 2px solid rgba(0, 0, 0, .08);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .3s ease;
+    background: #fff;
+    text-align: center;
+}
+
+.tier-option:hover {
+    border-color: var(--primary);
+    background: rgba(19, 214, 176, .03);
+}
+
+.tier-option.selected {
+    border-color: var(--primary);
+    background: rgba(19, 214, 176, .06);
+}
+
+.tier-option .tier-name {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: .95rem;
+    margin-bottom: 4px;
+}
+
+.tier-option .tier-desc {
+    font-size: .75rem;
+    color: var(--medium-gray);
+    line-height: 1.4;
+}
+
+.tier-option i {
+    display: block;
+    font-size: 1.3rem;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+/* --- Admin Panel --- */
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--light-gray);
+    border-radius: 10px;
+    padding: 4px;
+    display: inline-flex;
+}
+
+.admin-tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.admin-tab.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.admin-app-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(0, 0, 0, .06);
+    transition: all .3s ease;
+}
+
+.admin-app-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .06);
+}
+
+.admin-app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-app-org {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--dark);
+    margin-bottom: 4px;
+}
+
+.admin-app-meta {
+    font-size: .85rem;
+    color: var(--medium-gray);
+}
+
+.admin-app-interest {
+    font-size: .9rem;
+    color: var(--dark);
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: var(--light-gray);
+    border-radius: 8px;
+}
+
+.admin-app-interest a {
+    color: var(--primary);
+    word-break: break-all;
+}
+
+.admin-app-date {
+    font-size: .8rem;
+    color: var(--medium-gray);
+    margin-bottom: 12px;
+}
+
+.admin-app-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admin-notes-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid rgba(0, 0, 0, .1);
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: .85rem;
+    outline: none;
+    transition: border-color .2s ease;
+}
+
+.admin-notes-input:focus {
+    border-color: var(--primary);
+}
+
+.btn-approve {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-approve:hover {
+    background: var(--primary-dark);
+}
+
+.btn-reject {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #E74C6F;
+    background: transparent;
+    color: #E74C6F;
+    font-size: .85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-reject:hover {
+    background: #E74C6F;
+    color: #fff;
+}
+
+.pending-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #E74C6F;
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    margin-left: 6px;
+}
+
+.empty-state {
+    color: var(--medium-gray);
+    text-align: center;
+    padding: 32px 0;
+    font-size: .95rem;
+}
