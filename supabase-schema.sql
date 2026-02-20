@@ -21,6 +21,7 @@ create table if not exists public.profiles (
     role text default 'member' check (role in ('member', 'admin', 'board')),
     status text default 'pending' check (status in ('pending', 'approved', 'rejected')),
     reviewer_notes text,
+    photo_url text,
     reviewed_by uuid references auth.users,
     reviewed_at timestamptz,
     created_at timestamptz default now(),
@@ -318,3 +319,5 @@ insert into public.knowledge_base (title, category, description) values
 -- 6. Enable Email auth in Authentication > Providers > Email.
 -- 7. Optionally disable email confirmation for testing:
 --    Authentication > Settings > "Enable email confirmations" = OFF
+-- 8. If you already ran the schema before photo_url was added, run:
+--    ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS photo_url text;

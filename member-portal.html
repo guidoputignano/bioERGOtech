@@ -188,7 +188,9 @@
                                     <label for="regWebsite">Website</label>
                                     <input type="url" id="regWebsite" placeholder="https://...">
                                 </div>
-                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                <div class="form-group">
+                                    <label for="regPhotoUrl">Photo URL <span style="font-weight:400;color:var(--medium-gray)">(optional)</span></label>
+                                    <input type="url" id="regPhotoUrl" placeholder="Link to your profile photo">
                                 </div>
                             </div>
 
@@ -258,6 +260,9 @@
                 </button>
                 <button class="sidebar-nav-item" data-view="knowledge">
                     <i class="fas fa-book"></i> Knowledge Base
+                </button>
+                <button class="sidebar-nav-item" data-view="profile">
+                    <i class="fas fa-user-cog"></i> Profile
                 </button>
                 <button class="sidebar-nav-item" data-view="admin" id="adminNavItem" style="display: none;">
                     <i class="fas fa-shield-alt"></i> Admin Panel <span class="pending-badge" id="pendingCount">0</span>
@@ -363,6 +368,30 @@
 
                     <div id="kbList">
                         <!-- Rendered by portal.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROFILE SETTINGS -->
+            <div id="section-profile" class="portal-section">
+                <div class="portal-card">
+                    <h3><i class="fas fa-user-circle" style="color: var(--primary); margin-right: 8px;"></i>Your Profile</h3>
+                    <div id="profileSettings">
+                        <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;">
+                            <div id="profileAvatar" style="flex-shrink:0"></div>
+                            <div>
+                                <div id="profileName" style="font-weight:600;font-size:1.1rem;color:var(--dark)"></div>
+                                <div id="profileOrg" style="color:var(--medium-gray);font-size:.9rem"></div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="max-width:500px;">
+                            <label for="profilePhotoUrl" style="font-weight:600;">Profile Photo URL</label>
+                            <p style="font-size:.8rem;color:var(--medium-gray);margin-bottom:8px;">
+                                Paste a link to your photo from LinkedIn, your website, or any public URL. No image is stored on our servers.
+                            </p>
+                            <input type="url" id="profilePhotoUrl" placeholder="https://example.com/your-photo.jpg" style="width:100%;padding:10px 14px;border:1px solid rgba(0,0,0,.15);border-radius:8px;font-family:'Poppins',sans-serif;font-size:.9rem;">
+                        </div>
+                        <button id="saveProfileBtn" class="btn-primary" style="padding:10px 28px;border:none;border-radius:8px;font-family:'Poppins',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;">Save Changes</button>
                     </div>
                 </div>
             </div>

@@ -50,11 +50,28 @@
         return 'foundation';
     }
 
-    /* --- Avatar URL (no storage needed) --- */
-    function avatarUrl(name, size) {
+    /* --- Avatar URL (no storage needed) ---
+       Priority: 1) custom photo_url  2) UI Avatars initials fallback
+       Members can paste any public image URL (LinkedIn, personal site, etc.)
+       UI Avatars generates initials-based avatars from a URL — zero storage. */
+    function avatarUrl(name, size, photoUrl) {
         size = size || 64;
+        // If the member has a custom photo URL, use it directly
+        if (photoUrl) return photoUrl;
+        // Otherwise, generate an initials avatar via UI Avatars API
         var encoded = encodeURIComponent(name || 'U');
         return 'https://ui-avatars.com/api/?name=' + encoded + '&background=13d6b0&color=fff&size=' + size + '&font-size=0.4&bold=true';
+    }
+
+    /* Build an <img> tag with fallback to initials if the custom URL fails */
+    function avatarImg(name, size, photoUrl, extraStyle) {
+        size = size || 64;
+        var src = avatarUrl(name, size, photoUrl);
+        var fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'U') + '&background=13d6b0&color=fff&size=' + size + '&font-size=0.4&bold=true';
+        var style = 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;' + (extraStyle || '');
+        // onerror fallback: if custom URL fails, switch to initials
+        var onerror = photoUrl ? ' onerror="this.onerror=null;this.src=\'' + escHtml(fallback) + '\'"' : '';
+        return '<img src="' + escHtml(src) + '" alt=""' + onerror + ' style="' + style + '">';
     }
 
     /* --- DOM Ready --- */
@@ -237,6 +254,7 @@
         var email = document.getElementById('regEmail').value.trim();
         var password = document.getElementById('regPassword').value;
         var website = document.getElementById('regWebsite').value.trim();
+        var photoUrl = document.getElementById('regPhotoUrl') ? document.getElementById('regPhotoUrl').value.trim() : '';
         var interest = document.getElementById('regInterest').value.trim();
         var btn = document.querySelector('#registerForm .btn-primary');
 
@@ -272,17 +290,20 @@
 
             if (userId) {
                 // Update profile with application details
+                var profileData = {
+                    full_name: contactName,
+                    org_name: orgName,
+                    org_type: selectedOrgType,
+                    website: website,
+                    interest: interest,
+                    partnership_tier: selectedTier,
+                    status: 'pending'
+                };
+                if (photoUrl) profileData.photo_url = photoUrl;
+
                 supabase
                     .from('profiles')
-                    .update({
-                        full_name: contactName,
-                        org_name: orgName,
-                        org_type: selectedOrgType,
-                        website: website,
-                        interest: interest,
-                        partnership_tier: selectedTier,
-                        status: 'pending'
-                    })
+                    .update(profileData)
                     .eq('id', userId)
                     .then(function () {
                         showToast('Application submitted! We will review your request and get back to you shortly.');
@@ -341,9 +362,11 @@
         var userAvatarEl = document.getElementById('portalUserAvatar');
         var greetingEl = document.getElementById('portalGreeting');
 
+        var photoUrl = (currentProfile && currentProfile.photo_url) || '';
+
         if (userNameEl) userNameEl.textContent = name;
         if (userOrgEl) userOrgEl.textContent = org + ' \u00B7 ' + capitalize(tier);
-        if (userAvatarEl) userAvatarEl.innerHTML = '<img src="' + avatarUrl(name, 36) + '" alt="" style="width:36px;height:36px;border-radius:50%">';
+        if (userAvatarEl) userAvatarEl.innerHTML = avatarImg(name, 36, photoUrl);
         if (greetingEl) greetingEl.textContent = 'Welcome back, ' + name.split(' ')[0];
 
         // Show/hide admin nav
@@ -425,6 +448,7 @@
             events: { title: 'Events', subtitle: 'Upcoming events and workshops' },
             directory: { title: 'Member Directory', subtitle: 'Connect with ecosystem members' },
             knowledge: { title: 'Knowledge Base', subtitle: 'Resources, protocols, and guides' },
+            profile: { title: 'Profile Settings', subtitle: 'Manage your profile and photo' },
             admin: { title: 'Admin Panel', subtitle: 'Manage applications and ecosystem members' }
         };
 
@@ -443,6 +467,7 @@
         if (view === 'events') renderEvents();
         if (view === 'directory') renderDirectory();
         if (view === 'knowledge') renderKnowledge();
+        if (view === 'profile') renderProfile();
         if (view === 'admin') renderAdmin();
 
         // Close mobile sidebar
@@ -764,7 +789,7 @@
                     var tier = m.partnership_tier || 'community';
 
                     html += '<div class="directory-card">' +
-                        '<img src="' + avatarUrl(name, 48) + '" alt="" style="width:48px;height:48px;border-radius:50%;flex-shrink:0">' +
+                        avatarImg(name, 48, m.photo_url, 'flex-shrink:0') +
                         '<div class="directory-info">' +
                         '<div class="directory-name">' + escHtml(name) + '</div>' +
                         '<div class="directory-org"><span class="member-type member-type-' + typeKey + '" style="font-size:.7rem">' + escHtml((m.org_type || '').split('/')[0].trim()) + '</span>' +
@@ -856,6 +881,68 @@
     }
 
     /* ===========================================
+       PROFILE SETTINGS
+       =========================================== */
+
+    function renderProfile() {
+        if (!currentProfile) return;
+
+        var name = currentProfile.full_name || currentUser.email.split('@')[0] || 'User';
+        var org = currentProfile.org_name || 'Ecosystem Member';
+        var photoUrl = currentProfile.photo_url || '';
+
+        var avatarEl = document.getElementById('profileAvatar');
+        var nameEl = document.getElementById('profileName');
+        var orgEl = document.getElementById('profileOrg');
+        var photoInput = document.getElementById('profilePhotoUrl');
+        var saveBtn = document.getElementById('saveProfileBtn');
+
+        if (avatarEl) avatarEl.innerHTML = avatarImg(name, 80, photoUrl);
+        if (nameEl) nameEl.textContent = name;
+        if (orgEl) orgEl.textContent = org;
+        if (photoInput) photoInput.value = photoUrl;
+
+        // Live preview when typing
+        if (photoInput) {
+            photoInput.oninput = function () {
+                var preview = photoInput.value.trim();
+                if (avatarEl) avatarEl.innerHTML = avatarImg(name, 80, preview);
+            };
+        }
+
+        // Save handler
+        if (saveBtn) {
+            saveBtn.onclick = function () {
+                var newPhotoUrl = photoInput ? photoInput.value.trim() : '';
+                saveBtn.textContent = 'Saving...';
+                saveBtn.disabled = true;
+
+                supabase.from('profiles')
+                    .update({ photo_url: newPhotoUrl || null })
+                    .eq('id', currentUser.id)
+                    .then(function (result) {
+                        saveBtn.textContent = 'Save Changes';
+                        saveBtn.disabled = false;
+
+                        if (result.error) {
+                            showToast('Error saving profile: ' + result.error.message, true);
+                            return;
+                        }
+
+                        currentProfile.photo_url = newPhotoUrl || null;
+                        showToast('Profile updated!');
+
+                        // Update sidebar avatar too
+                        var sidebarAvatar = document.getElementById('portalUserAvatar');
+                        if (sidebarAvatar) {
+                            sidebarAvatar.innerHTML = avatarImg(name, 36, currentProfile.photo_url);
+                        }
+                    });
+            };
+        }
+    }
+
+    /* ===========================================
        ADMIN PANEL
        =========================================== */
 
@@ -893,10 +980,12 @@
                     var tier = app.partnership_tier || 'community';
                     html += '<div class="admin-app-card" data-user-id="' + app.id + '">' +
                         '<div class="admin-app-header">' +
+                        '<div style="display:flex;align-items:center;gap:12px">' +
+                        avatarImg(app.org_name || app.full_name || 'U', 40, app.photo_url) +
                         '<div>' +
                         '<div class="admin-app-org">' + escHtml(app.org_name || 'Unnamed') + '</div>' +
                         '<div class="admin-app-meta">' + escHtml(app.full_name || '') + ' &middot; ' + escHtml(app.email || '') + '</div>' +
-                        '</div>' +
+                        '</div></div>' +
                         '<div style="text-align:right">' +
                         '<span class="tier-badge tier-' + tier + '">' + capitalize(tier) + ' Partner</span>' +
                         '<div class="admin-app-meta" style="margin-top:4px">' + escHtml(app.org_type || '') + '</div>' +
