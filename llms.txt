@@ -22,6 +22,7 @@ Our work is organised around four scientific pillars:
 - Build With Us: https://bioergotech.org/build-with-us.html
 - Join Us: https://bioergotech.org/join-us.html
 - Careers: https://bioergotech.org/careers.html
+- Member Portal: https://bioergotech.org/member-portal.html
 - VERO Risk Calculator: https://bioergotech.org/vero.html
 
 ## Articles
