@@ -1,0 +1,42 @@
+# bioERGOtech Foundation
+
+> bioERGOtech is a Swiss-registered, internationally operating foundation dedicated to advancing Engineered Living Systems. We develop projects at the intersection of synthetic biology, AI-driven automation, and multi-omics analytics to accelerate the future of biomanufacturing and therapeutic innovation.
+
+## About
+
+The bioERGOtech Foundation was established to bridge the gap between cutting-edge scientific research and real-world biotechnology applications. We operate across three hubs: Taranto (Italy), Zurich (Switzerland), and Riyadh (Saudi Arabia).
+
+Our work is organised around four scientific pillars:
+
+1. **Digital Twin Therapeutics** — Computational models that simulate biological systems for personalised medicine and drug discovery.
+2. **Synthetic Biology & Cell Engineering** — Designing and building new biological parts, devices, and systems for therapeutic and industrial use.
+3. **Automated Biomanufacturing & Control** — AI-driven laboratory automation and closed-loop control systems for scalable bioprocessing.
+4. **Integrated Multi-Omics Analytics** — Combining genomics, proteomics, metabolomics, and other -omics data for holistic biological understanding.
+
+## Key Pages
+
+- Homepage: https://bioergotech.org/
+- About Us: https://bioergotech.org/about-us.html
+- Taranto Innovation Hub: https://bioergotech.org/Taranto.html
+- Partner With Us: https://bioergotech.org/partner-with-us.html
+- Build With Us: https://bioergotech.org/build-with-us.html
+- Join Us: https://bioergotech.org/join-us.html
+- Careers: https://bioergotech.org/careers.html
+- VERO Risk Calculator: https://bioergotech.org/vero.html
+
+## Articles
+
+- Interview with Guido Putignano on Research and Entrepreneurship: https://bioergotech.org/articles/news-interview-guido-putignano-2025.html
+- Lorenzo Tarricone — A Journey of Science, Innovation, and Dreams: https://bioergotech.org/articles/news-lorenzo-tarricone-2025.html
+- Alessia Soru — From Research to Innovation: https://bioergotech.org/articles/news-alessia-soru-2025.html
+- BioShot 2024 — From Project to Product: https://bioergotech.org/articles/news-project-to-product.html
+- Cell Therapy Breakthroughs — Academic-Industry Collaboration: https://bioergotech.org/articles/news-cell-therapies-2024.html
+- Taranto Biotech Days — BioShot Competition: https://bioergotech.org/articles/news-bioshot-2024.html
+- bioERGOtech Innovation Summit — Launch Event: https://bioergotech.org/articles/launch-event.html
+
+## Contact
+
+- Website: https://bioergotech.org
+- Email: info@bioergotech.org
+- LinkedIn: https://www.linkedin.com/company/bioergotech
+- Location: Via Ciro Giovinazzi 70, 74123 Taranto, Italy
