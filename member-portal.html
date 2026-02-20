@@ -106,104 +106,56 @@
                 <div id="registerPanel" style="display: none; max-width: 700px; margin: 0 auto;">
                     <div class="register-card">
                         <h2>Join the Ecosystem</h2>
-                        <p class="auth-subtitle">Apply to become part of the bioERGOtech network. Register your organisation or join an existing team.</p>
-
-                        <!-- Registration Mode Toggle -->
-                        <div class="reg-mode-toggle">
-                            <button type="button" class="reg-mode-btn active" data-mode="new-org">
-                                <i class="fas fa-building"></i> Register Organisation
-                            </button>
-                            <button type="button" class="reg-mode-btn" data-mode="join-team">
-                                <i class="fas fa-user-plus"></i> Join a Team
-                            </button>
-                        </div>
+                        <p class="auth-subtitle">Apply to become part of the bioERGOtech network. Whether you represent an organisation or are an independent researcher, everyone is welcome.</p>
 
                         <form id="registerForm" class="register-form">
 
-                            <!-- INVITE CODE (only for join-team mode) -->
-                            <div id="inviteCodeSection" style="display: none;">
+                            <!-- Organisation Type Selector -->
+                            <label style="font-weight: 600; margin-bottom: 12px; display: block;">What type of organisation are you part of?</label>
+                            <div class="org-type-grid">
+                                <div class="org-type-option" data-type="Startup / Biotech">
+                                    <i class="fas fa-rocket"></i>
+                                    <span>Startup / Biotech</span>
+                                </div>
+                                <div class="org-type-option" data-type="Hospital / Clinical Center">
+                                    <i class="fas fa-hospital"></i>
+                                    <span>Hospital / Clinical Center</span>
+                                </div>
+                                <div class="org-type-option" data-type="University / Research Lab">
+                                    <i class="fas fa-university"></i>
+                                    <span>University / Research Lab</span>
+                                </div>
+                                <div class="org-type-option" data-type="Investor / VC">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Investor / VC</span>
+                                </div>
+                                <div class="org-type-option" data-type="Technology Partner">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>Technology Partner</span>
+                                </div>
+                                <div class="org-type-option" data-type="Policy / Advocacy Org">
+                                    <i class="fas fa-landmark"></i>
+                                    <span>Policy / Advocacy</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="orgTypeInput" name="orgType">
+
+                            <!-- Organisation & Personal Details -->
+                            <div class="form-row">
                                 <div class="form-group">
-                                    <label for="regInviteCode">Invite Code *</label>
-                                    <input type="text" id="regInviteCode" placeholder="Enter the code shared by your organisation" style="text-transform: lowercase; letter-spacing: 2px; font-size: 1.1rem; text-align: center;">
-                                    <p style="font-size: .75rem; color: var(--medium-gray); margin-top: 4px;">Ask your organisation's primary contact for the invite code.</p>
+                                    <label for="regOrgName">Organisation Name *</label>
+                                    <input type="text" id="regOrgName" placeholder="Your organisation or affiliation">
+                                </div>
+                                <div class="form-group">
+                                    <label for="regWebsite">Organisation Website</label>
+                                    <input type="url" id="regWebsite" placeholder="https://...">
                                 </div>
                             </div>
-
-                            <!-- ORG DETAILS (only for new-org mode) -->
-                            <div id="orgDetailsSection">
-
-                                <!-- Organisation Type Selector -->
-                                <label style="font-weight: 600; margin-bottom: 12px; display: block;">What type of organisation are you?</label>
-                                <div class="org-type-grid">
-                                    <div class="org-type-option" data-type="Startup / Biotech">
-                                        <i class="fas fa-rocket"></i>
-                                        <span>Startup / Biotech</span>
-                                    </div>
-                                    <div class="org-type-option" data-type="Hospital / Clinical Center">
-                                        <i class="fas fa-hospital"></i>
-                                        <span>Hospital / Clinical Center</span>
-                                    </div>
-                                    <div class="org-type-option" data-type="University / Research Lab">
-                                        <i class="fas fa-university"></i>
-                                        <span>University / Research Lab</span>
-                                    </div>
-                                    <div class="org-type-option" data-type="Investor / VC">
-                                        <i class="fas fa-chart-line"></i>
-                                        <span>Investor / VC</span>
-                                    </div>
-                                    <div class="org-type-option" data-type="Technology Partner">
-                                        <i class="fas fa-cogs"></i>
-                                        <span>Technology Partner</span>
-                                    </div>
-                                    <div class="org-type-option" data-type="Policy / Advocacy Org">
-                                        <i class="fas fa-landmark"></i>
-                                        <span>Policy / Advocacy</span>
-                                    </div>
-                                </div>
-                                <input type="hidden" id="orgTypeInput" name="orgType">
-
-                                <!-- Partnership Tier Selector -->
-                                <label style="font-weight: 600; margin-bottom: 12px; display: block; margin-top: 8px;">Which partnership level interests you?</label>
-                                <div class="tier-selector">
-                                    <div class="tier-option selected" data-tier="community">
-                                        <i class="fas fa-users"></i>
-                                        <div class="tier-name">Community</div>
-                                        <div class="tier-desc">Network access, events, and knowledge exchange</div>
-                                    </div>
-                                    <div class="tier-option" data-tier="project">
-                                        <i class="fas fa-flask"></i>
-                                        <div class="tier-name">Project</div>
-                                        <div class="tier-desc">Collaborative R&D, shared equipment, co-publications</div>
-                                    </div>
-                                    <div class="tier-option" data-tier="strategic">
-                                        <i class="fas fa-handshake"></i>
-                                        <div class="tier-name">Strategic</div>
-                                        <div class="tier-desc">Long-term co-investment, joint ventures, IP sharing</div>
-                                    </div>
-                                </div>
-                                <input type="hidden" id="tierInput" name="tier" value="community">
-
-                                <!-- Org Name & Website -->
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="regOrgName">Organisation Name *</label>
-                                        <input type="text" id="regOrgName" placeholder="Your organisation">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="regWebsite">Website</label>
-                                        <input type="url" id="regWebsite" placeholder="https://...">
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <!-- PERSONAL DETAILS (always shown) -->
-                            <label style="font-weight: 600; margin-bottom: 12px; display: block; margin-top: 8px;">Your Details</label>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="regContactName">Full Name *</label>
-                                    <input type="text" id="regContactName" placeholder="Full name" required>
+                                    <input type="text" id="regContactName" placeholder="Your full name" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="regPosition">Position / Role</label>
@@ -230,12 +182,9 @@
                                 <div class="form-group" style="display: flex; align-items: flex-end;"></div>
                             </div>
 
-                            <!-- Interest (only for new-org) -->
-                            <div id="interestSection">
-                                <div class="form-group">
-                                    <label for="regInterest">What interests you about the bioERGOtech ecosystem?</label>
-                                    <textarea id="regInterest" rows="3" placeholder="Tell us about your work and what you hope to achieve together..."></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label for="regInterest">What interests you about the bioERGOtech ecosystem?</label>
+                                <textarea id="regInterest" rows="3" placeholder="Tell us about your work and what you hope to achieve together..."></textarea>
                             </div>
 
                             <!-- Newsletter Consent -->

@@ -12,8 +12,6 @@
     var currentOrg = null;     // organisations row
     var currentView = 'dashboard';
     var selectedOrgType = '';
-    var selectedTier = 'community';
-    var registrationMode = 'new-org'; // 'new-org' or 'join-team'
 
     /* --- Fallback data (shown on public page before Supabase loads) --- */
     var fallbackMembers = [
@@ -81,8 +79,6 @@
         renderPublicMembers();
         setupAuthTabs();
         setupOrgTypeSelector();
-        setupTierSelector();
-        setupRegMode();
         setupSidebar();
         checkSession();
     });
@@ -152,45 +148,6 @@
         });
     }
 
-    /* --- Partnership tier selector --- */
-    function setupTierSelector() {
-        var options = document.querySelectorAll('.tier-option');
-        options.forEach(function (opt) {
-            opt.addEventListener('click', function () {
-                options.forEach(function (o) { o.classList.remove('selected'); });
-                opt.classList.add('selected');
-                selectedTier = opt.getAttribute('data-tier');
-                var input = document.getElementById('tierInput');
-                if (input) input.value = selectedTier;
-            });
-        });
-    }
-
-    /* --- Registration mode toggle --- */
-    function setupRegMode() {
-        var buttons = document.querySelectorAll('.reg-mode-btn');
-        buttons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                buttons.forEach(function (b) { b.classList.remove('active'); });
-                btn.classList.add('active');
-                registrationMode = btn.getAttribute('data-mode');
-
-                var orgSection = document.getElementById('orgDetailsSection');
-                var inviteSection = document.getElementById('inviteCodeSection');
-                var interestSection = document.getElementById('interestSection');
-
-                if (registrationMode === 'join-team') {
-                    if (orgSection) orgSection.style.display = 'none';
-                    if (inviteSection) inviteSection.style.display = 'block';
-                    if (interestSection) interestSection.style.display = 'none';
-                } else {
-                    if (orgSection) orgSection.style.display = 'block';
-                    if (inviteSection) inviteSection.style.display = 'none';
-                    if (interestSection) interestSection.style.display = 'block';
-                }
-            });
-        });
-    }
 
     /* ===========================================
        SUPABASE AUTH
@@ -284,12 +241,17 @@
             });
     }
 
-    /* Register handler — supports "new-org" and "join-team" modes */
+    /* Register handler — single flow for everyone.
+       Auto-matches to an existing org by name (case-insensitive),
+       or creates a new org if none exists. Tier is assigned by admin. */
     function handleRegister() {
         var contactName = document.getElementById('regContactName').value.trim();
         var email = document.getElementById('regEmail').value.trim();
         var password = document.getElementById('regPassword').value;
+        var orgName = document.getElementById('regOrgName').value.trim();
+        var website = document.getElementById('regWebsite').value.trim();
         var position = document.getElementById('regPosition') ? document.getElementById('regPosition').value.trim() : '';
+        var interest = document.getElementById('regInterest') ? document.getElementById('regInterest').value.trim() : '';
         var photoUrl = document.getElementById('regPhotoUrl') ? document.getElementById('regPhotoUrl').value.trim() : '';
         var newsletterEl = document.getElementById('regNewsletter');
         var newsletter = newsletterEl ? newsletterEl.checked : false;
@@ -303,28 +265,15 @@
             showToast('Password must be at least 6 characters.', true);
             return;
         }
-
-        if (registrationMode === 'new-org') {
-            registerNewOrg(contactName, email, password, position, photoUrl, newsletter, btn);
-        } else {
-            registerJoinTeam(contactName, email, password, position, photoUrl, newsletter, btn);
-        }
-    }
-
-    /* Register: create new organisation */
-    function registerNewOrg(contactName, email, password, position, photoUrl, newsletter, btn) {
-        var orgName = document.getElementById('regOrgName').value.trim();
-        var website = document.getElementById('regWebsite').value.trim();
-        var interest = document.getElementById('regInterest').value.trim();
-
         if (!orgName || !selectedOrgType) {
-            showToast('Please fill in the organisation name and select an organisation type.', true);
+            showToast('Please fill in your organisation name and select an organisation type.', true);
             return;
         }
 
         btn.textContent = 'Submitting...';
         btn.disabled = true;
 
+        // Step 1: Sign up the user
         supabase.auth.signUp({
             email: email,
             password: password,
@@ -345,131 +294,78 @@
                 return;
             }
 
-            // Create the organisation
-            supabase.from('organisations').insert({
-                name: orgName,
-                org_type: selectedOrgType,
-                website: website,
-                partnership_tier: selectedTier,
-                interest: interest,
-                status: 'pending'
-            }).select().single().then(function (orgResult) {
-                if (orgResult.error) {
-                    btn.textContent = 'Submit Application';
-                    btn.disabled = false;
-                    showToast('Error creating organisation: ' + orgResult.error.message, true);
-                    return;
-                }
+            // Step 2: Check if an org with this name already exists (case-insensitive)
+            supabase.from('organisations').select('*').ilike('name', orgName).limit(1)
+                .then(function (orgLookup) {
+                    var existingOrg = (orgLookup.data && orgLookup.data.length > 0) ? orgLookup.data[0] : null;
 
-                var org = orgResult.data;
+                    if (existingOrg) {
+                        // Org exists — link person to it as a member
+                        var profileData = {
+                            full_name: contactName,
+                            org_id: existingOrg.id,
+                            org_role: 'member',
+                            position: position,
+                            org_name: existingOrg.name,
+                            org_type: existingOrg.org_type,
+                            website: existingOrg.website || website,
+                            interest: interest,
+                            newsletter_consent: newsletter,
+                            status: 'pending'
+                        };
+                        if (photoUrl) profileData.photo_url = photoUrl;
 
-                // Update profile with org link
-                var profileData = {
-                    full_name: contactName,
-                    org_id: org.id,
-                    org_role: 'primary',
-                    position: position,
-                    org_name: orgName,
-                    org_type: selectedOrgType,
-                    website: website,
-                    interest: interest,
-                    partnership_tier: selectedTier,
-                    newsletter_consent: newsletter,
-                    status: 'pending'
-                };
-                if (photoUrl) profileData.photo_url = photoUrl;
-
-                supabase.from('profiles').update(profileData).eq('id', userId).then(function () {
-                    // Also subscribe to newsletter if opted in
-                    if (newsletter) subscribeNewsletter(email, contactName);
-
-                    btn.textContent = 'Submit Application';
-                    btn.disabled = false;
-                    showToast('Application submitted! We will review your request and get back to you shortly.');
-                    resetRegForm();
-                    supabase.auth.signOut();
-                });
-            });
-        });
-    }
-
-    /* Register: join existing team via invite code */
-    function registerJoinTeam(contactName, email, password, position, photoUrl, newsletter, btn) {
-        var inviteCode = document.getElementById('regInviteCode') ? document.getElementById('regInviteCode').value.trim().toLowerCase() : '';
-
-        if (!inviteCode) {
-            showToast('Please enter the invite code from your organisation.', true);
-            return;
-        }
-
-        btn.textContent = 'Verifying...';
-        btn.disabled = true;
-
-        // Validate invite code via RPC
-        supabase.rpc('lookup_org_by_invite', { code: inviteCode }).then(function (rpcResult) {
-            var org = rpcResult.data;
-
-            if (!org) {
-                btn.textContent = 'Submit Application';
-                btn.disabled = false;
-                showToast('Invalid invite code. Please check with your organisation.', true);
-                return;
-            }
-
-            btn.textContent = 'Submitting...';
-
-            // Sign up
-            supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: { data: { full_name: contactName } }
-            }).then(function (result) {
-                if (result.error) {
-                    btn.textContent = 'Submit Application';
-                    btn.disabled = false;
-                    showToast(result.error.message, true);
-                    return;
-                }
-
-                var userId = result.data.user ? result.data.user.id : null;
-                if (!userId) {
-                    btn.textContent = 'Submit Application';
-                    btn.disabled = false;
-                    showToast('Application submitted! Check your email to confirm your account.');
-                    return;
-                }
-
-                // Auto-approve if org is already approved
-                var newStatus = org.status === 'approved' ? 'approved' : 'pending';
-
-                var profileData = {
-                    full_name: contactName,
-                    org_id: org.id,
-                    org_role: 'member',
-                    position: position,
-                    org_name: org.name,
-                    org_type: org.org_type,
-                    partnership_tier: org.partnership_tier,
-                    newsletter_consent: newsletter,
-                    status: newStatus
-                };
-                if (photoUrl) profileData.photo_url = photoUrl;
-
-                supabase.from('profiles').update(profileData).eq('id', userId).then(function () {
-                    if (newsletter) subscribeNewsletter(email, contactName);
-
-                    btn.textContent = 'Submit Application';
-                    btn.disabled = false;
-
-                    if (newStatus === 'approved') {
-                        showToast('Welcome! You have joined ' + org.name + '. You can now sign in.');
+                        supabase.from('profiles').update(profileData).eq('id', userId).then(function () {
+                            if (newsletter) subscribeNewsletter(email, contactName);
+                            btn.textContent = 'Submit Application';
+                            btn.disabled = false;
+                            showToast('Application submitted! You have been linked to ' + existingOrg.name + '. We will review your request shortly.');
+                            resetRegForm();
+                            supabase.auth.signOut();
+                        });
                     } else {
-                        showToast('You have joined ' + org.name + '. Access will be granted once the organisation is approved.');
+                        // No matching org — create a new one (tier left as null for admin to assign)
+                        supabase.from('organisations').insert({
+                            name: orgName,
+                            org_type: selectedOrgType,
+                            website: website,
+                            interest: interest,
+                            status: 'pending'
+                        }).select().single().then(function (orgResult) {
+                            if (orgResult.error) {
+                                btn.textContent = 'Submit Application';
+                                btn.disabled = false;
+                                showToast('Error creating organisation: ' + orgResult.error.message, true);
+                                return;
+                            }
+
+                            var org = orgResult.data;
+
+                            var profileData = {
+                                full_name: contactName,
+                                org_id: org.id,
+                                org_role: 'primary',
+                                position: position,
+                                org_name: orgName,
+                                org_type: selectedOrgType,
+                                website: website,
+                                interest: interest,
+                                newsletter_consent: newsletter,
+                                status: 'pending'
+                            };
+                            if (photoUrl) profileData.photo_url = photoUrl;
+
+                            supabase.from('profiles').update(profileData).eq('id', userId).then(function () {
+                                if (newsletter) subscribeNewsletter(email, contactName);
+                                btn.textContent = 'Submit Application';
+                                btn.disabled = false;
+                                showToast('Application submitted! We will review your request and get back to you shortly.');
+                                resetRegForm();
+                                supabase.auth.signOut();
+                            });
+                        });
                     }
-                    resetRegForm();
-                    supabase.auth.signOut();
                 });
-            });
         });
     }
 
@@ -493,23 +389,7 @@
         var form = document.getElementById('registerForm');
         if (form) form.reset();
         document.querySelectorAll('.org-type-option').forEach(function (o) { o.classList.remove('selected'); });
-        document.querySelectorAll('.tier-option').forEach(function (o) {
-            o.classList.remove('selected');
-            if (o.getAttribute('data-tier') === 'community') o.classList.add('selected');
-        });
         selectedOrgType = '';
-        selectedTier = 'community';
-        registrationMode = 'new-org';
-        document.querySelectorAll('.reg-mode-btn').forEach(function (b) {
-            b.classList.remove('active');
-            if (b.getAttribute('data-mode') === 'new-org') b.classList.add('active');
-        });
-        var orgSection = document.getElementById('orgDetailsSection');
-        var inviteSection = document.getElementById('inviteCodeSection');
-        var interestSection = document.getElementById('interestSection');
-        if (orgSection) orgSection.style.display = 'block';
-        if (inviteSection) inviteSection.style.display = 'none';
-        if (interestSection) interestSection.style.display = 'block';
     }
 
     /* ===========================================
@@ -1262,9 +1142,15 @@
 
                         var html = '';
 
+                        var tierDropdown = '<select class="admin-tier-select">' +
+                            '<option value="community">Community Partner</option>' +
+                            '<option value="project">Project Partner</option>' +
+                            '<option value="strategic">Strategic Partner</option>' +
+                            '</select>';
+
                         // Render pending organisations
                         orgs.forEach(function (org) {
-                            var tier = org.partnership_tier || 'community';
+                            // Fetch primary contact for this org
                             html += '<div class="admin-app-card" data-org-id="' + org.id + '">' +
                                 '<div class="admin-app-header">' +
                                 '<div style="display:flex;align-items:center;gap:12px">' +
@@ -1273,14 +1159,12 @@
                                 '<div class="admin-app-org">' + escHtml(org.name) + '</div>' +
                                 '<div class="admin-app-meta">' + escHtml(org.org_type || '') + '</div>' +
                                 '</div></div>' +
-                                '<div style="text-align:right">' +
-                                '<span class="tier-badge tier-' + tier + '">' + capitalize(tier) + ' Partner</span>' +
-                                '</div>' +
                                 '</div>' +
                                 (org.interest ? '<div class="admin-app-interest"><strong>Interest:</strong> ' + escHtml(org.interest) + '</div>' : '') +
                                 (org.website ? '<div class="admin-app-interest"><strong>Website:</strong> <a href="' + escHtml(org.website) + '" target="_blank" rel="noopener">' + escHtml(org.website) + '</a></div>' : '') +
                                 '<div class="admin-app-date">Applied: ' + new Date(org.created_at).toLocaleDateString() + '</div>' +
                                 '<div class="admin-app-actions">' +
+                                '<div style="display:flex;align-items:center;gap:6px;"><label style="font-size:.8rem;font-weight:500;color:var(--medium-gray);white-space:nowrap;">Tier:</label>' + tierDropdown + '</div>' +
                                 '<input type="text" class="admin-notes-input" placeholder="Reviewer notes (optional)">' +
                                 '<button class="btn-approve" data-org-id="' + org.id + '"><i class="fas fa-check"></i> Approve</button>' +
                                 '<button class="btn-reject" data-org-id="' + org.id + '"><i class="fas fa-times"></i> Reject</button>' +
@@ -1290,7 +1174,6 @@
 
                         // Render solo pending profiles (no org)
                         soloProfiles.forEach(function (app) {
-                            var tier = app.partnership_tier || 'community';
                             html += '<div class="admin-app-card" data-user-id="' + app.id + '">' +
                                 '<div class="admin-app-header">' +
                                 '<div style="display:flex;align-items:center;gap:12px">' +
@@ -1299,13 +1182,11 @@
                                 '<div class="admin-app-org">' + escHtml(app.org_name || app.full_name || 'Individual') + '</div>' +
                                 '<div class="admin-app-meta">' + escHtml(app.full_name || '') + ' &middot; ' + escHtml(app.email || '') + '</div>' +
                                 '</div></div>' +
-                                '<div style="text-align:right">' +
-                                '<span class="tier-badge tier-' + tier + '">' + capitalize(tier) + '</span>' +
-                                '</div>' +
                                 '</div>' +
                                 (app.interest ? '<div class="admin-app-interest"><strong>Interest:</strong> ' + escHtml(app.interest) + '</div>' : '') +
                                 '<div class="admin-app-date">Applied: ' + new Date(app.created_at).toLocaleDateString() + '</div>' +
                                 '<div class="admin-app-actions">' +
+                                '<div style="display:flex;align-items:center;gap:6px;"><label style="font-size:.8rem;font-weight:500;color:var(--medium-gray);white-space:nowrap;">Tier:</label>' + tierDropdown + '</div>' +
                                 '<input type="text" class="admin-notes-input" placeholder="Reviewer notes (optional)">' +
                                 '<button class="btn-approve" data-user-id="' + app.id + '"><i class="fas fa-check"></i> Approve</button>' +
                                 '<button class="btn-reject" data-user-id="' + app.id + '"><i class="fas fa-times"></i> Reject</button>' +
@@ -1331,20 +1212,26 @@
         var userId = btn.getAttribute('data-user-id');
         var card = btn.closest('.admin-app-card');
         var notesInput = card.querySelector('.admin-notes-input');
+        var tierSelect = card.querySelector('.admin-tier-select');
         var notes = notesInput ? notesInput.value : '';
+        var selectedTier = tierSelect ? tierSelect.value : 'community';
 
         btn.disabled = true;
         btn.textContent = newStatus === 'approved' ? 'Approving...' : 'Rejecting...';
 
         if (orgId) {
             // Approve/reject an organisation — update org + all linked profiles
+            var orgUpdate = {
+                status: newStatus,
+                reviewer_notes: notes,
+                reviewed_by: currentUser.id,
+                reviewed_at: new Date().toISOString()
+            };
+            // Set tier when approving
+            if (newStatus === 'approved') orgUpdate.partnership_tier = selectedTier;
+
             supabase.from('organisations')
-                .update({
-                    status: newStatus,
-                    reviewer_notes: notes,
-                    reviewed_by: currentUser.id,
-                    reviewed_at: new Date().toISOString()
-                })
+                .update(orgUpdate)
                 .eq('id', orgId)
                 .then(function (orgRes) {
                     if (orgRes.error) {
@@ -1354,30 +1241,36 @@
                     }
 
                     // Also update all profiles linked to this org
+                    var profileUpdate = {
+                        status: newStatus,
+                        reviewer_notes: notes,
+                        reviewed_by: currentUser.id,
+                        reviewed_at: new Date().toISOString()
+                    };
+                    if (newStatus === 'approved') profileUpdate.partnership_tier = selectedTier;
+
                     supabase.from('profiles')
-                        .update({
-                            status: newStatus,
-                            reviewer_notes: notes,
-                            reviewed_by: currentUser.id,
-                            reviewed_at: new Date().toISOString()
-                        })
+                        .update(profileUpdate)
                         .eq('org_id', orgId)
                         .then(function () {
                             card.style.opacity = '0.5';
                             card.style.pointerEvents = 'none';
-                            showToast('Organisation ' + newStatus + ' (all members updated).');
+                            showToast('Organisation ' + newStatus + ' as ' + capitalize(selectedTier) + ' Partner (all members updated).');
                             setTimeout(function () { renderAdminApplications(); }, 1000);
                         });
                 });
         } else if (userId) {
             // Approve/reject individual profile
+            var profileUpdate = {
+                status: newStatus,
+                reviewer_notes: notes,
+                reviewed_by: currentUser.id,
+                reviewed_at: new Date().toISOString()
+            };
+            if (newStatus === 'approved') profileUpdate.partnership_tier = selectedTier;
+
             supabase.from('profiles')
-                .update({
-                    status: newStatus,
-                    reviewer_notes: notes,
-                    reviewed_by: currentUser.id,
-                    reviewed_at: new Date().toISOString()
-                })
+                .update(profileUpdate)
                 .eq('id', userId)
                 .then(function (result) {
                     if (result.error) {

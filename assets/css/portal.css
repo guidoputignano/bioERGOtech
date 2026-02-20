@@ -1320,6 +1320,22 @@
     flex-wrap: wrap;
 }
 
+.admin-tier-select {
+    padding: 8px 12px;
+    border: 1px solid rgba(0, 0, 0, .1);
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: .85rem;
+    outline: none;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .2s ease;
+}
+
+.admin-tier-select:focus {
+    border-color: var(--primary);
+}
+
 .admin-notes-input {
     flex: 1;
     min-width: 200px;
