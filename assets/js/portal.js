@@ -9,9 +9,11 @@
     /* --- State --- */
     var currentUser = null;   // Supabase user object
     var currentProfile = null; // profiles row
+    var currentOrg = null;     // organisations row
     var currentView = 'dashboard';
     var selectedOrgType = '';
     var selectedTier = 'community';
+    var registrationMode = 'new-org'; // 'new-org' or 'join-team'
 
     /* --- Fallback data (shown on public page before Supabase loads) --- */
     var fallbackMembers = [
@@ -80,6 +82,7 @@
         setupAuthTabs();
         setupOrgTypeSelector();
         setupTierSelector();
+        setupRegMode();
         setupSidebar();
         checkSession();
     });
@@ -163,6 +166,32 @@
         });
     }
 
+    /* --- Registration mode toggle --- */
+    function setupRegMode() {
+        var buttons = document.querySelectorAll('.reg-mode-btn');
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                buttons.forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                registrationMode = btn.getAttribute('data-mode');
+
+                var orgSection = document.getElementById('orgDetailsSection');
+                var inviteSection = document.getElementById('inviteCodeSection');
+                var interestSection = document.getElementById('interestSection');
+
+                if (registrationMode === 'join-team') {
+                    if (orgSection) orgSection.style.display = 'none';
+                    if (inviteSection) inviteSection.style.display = 'block';
+                    if (interestSection) interestSection.style.display = 'none';
+                } else {
+                    if (orgSection) orgSection.style.display = 'block';
+                    if (inviteSection) inviteSection.style.display = 'none';
+                    if (interestSection) interestSection.style.display = 'block';
+                }
+            });
+        });
+    }
+
     /* ===========================================
        SUPABASE AUTH
        =========================================== */
@@ -190,7 +219,7 @@
         });
     }
 
-    /* Load user profile from Supabase */
+    /* Load user profile and org from Supabase */
     function loadProfile(user) {
         currentUser = user;
 
@@ -206,6 +235,14 @@
                 }
 
                 currentProfile = result.data;
+
+                // Load org if linked
+                if (currentProfile.org_id) {
+                    supabase.from('organisations').select('*').eq('id', currentProfile.org_id).single()
+                        .then(function (orgResult) {
+                            if (orgResult.data) currentOrg = orgResult.data;
+                        });
+                }
 
                 if (currentProfile.status === 'approved') {
                     showPortal();
@@ -247,24 +284,41 @@
             });
     }
 
-    /* Register handler */
+    /* Register handler — supports "new-org" and "join-team" modes */
     function handleRegister() {
-        var orgName = document.getElementById('regOrgName').value.trim();
         var contactName = document.getElementById('regContactName').value.trim();
         var email = document.getElementById('regEmail').value.trim();
         var password = document.getElementById('regPassword').value;
-        var website = document.getElementById('regWebsite').value.trim();
+        var position = document.getElementById('regPosition') ? document.getElementById('regPosition').value.trim() : '';
         var photoUrl = document.getElementById('regPhotoUrl') ? document.getElementById('regPhotoUrl').value.trim() : '';
-        var interest = document.getElementById('regInterest').value.trim();
+        var newsletterEl = document.getElementById('regNewsletter');
+        var newsletter = newsletterEl ? newsletterEl.checked : false;
         var btn = document.querySelector('#registerForm .btn-primary');
 
-        if (!orgName || !contactName || !email || !password || !selectedOrgType) {
-            showToast('Please fill in all required fields, select an organisation type, and create a password.', true);
+        if (!contactName || !email || !password) {
+            showToast('Please fill in your name, email, and password.', true);
+            return;
+        }
+        if (password.length < 6) {
+            showToast('Password must be at least 6 characters.', true);
             return;
         }
 
-        if (password.length < 6) {
-            showToast('Password must be at least 6 characters.', true);
+        if (registrationMode === 'new-org') {
+            registerNewOrg(contactName, email, password, position, photoUrl, newsletter, btn);
+        } else {
+            registerJoinTeam(contactName, email, password, position, photoUrl, newsletter, btn);
+        }
+    }
+
+    /* Register: create new organisation */
+    function registerNewOrg(contactName, email, password, position, photoUrl, newsletter, btn) {
+        var orgName = document.getElementById('regOrgName').value.trim();
+        var website = document.getElementById('regWebsite').value.trim();
+        var interest = document.getElementById('regInterest').value.trim();
+
+        if (!orgName || !selectedOrgType) {
+            showToast('Please fill in the organisation name and select an organisation type.', true);
             return;
         }
 
@@ -274,55 +328,188 @@
         supabase.auth.signUp({
             email: email,
             password: password,
-            options: {
-                data: { full_name: contactName }
-            }
+            options: { data: { full_name: contactName } }
         }).then(function (result) {
-            btn.textContent = 'Submit Application';
-            btn.disabled = false;
-
             if (result.error) {
+                btn.textContent = 'Submit Application';
+                btn.disabled = false;
                 showToast(result.error.message, true);
                 return;
             }
 
             var userId = result.data.user ? result.data.user.id : null;
+            if (!userId) {
+                btn.textContent = 'Submit Application';
+                btn.disabled = false;
+                showToast('Application submitted! Check your email to confirm your account.');
+                return;
+            }
 
-            if (userId) {
-                // Update profile with application details
+            // Create the organisation
+            supabase.from('organisations').insert({
+                name: orgName,
+                org_type: selectedOrgType,
+                website: website,
+                partnership_tier: selectedTier,
+                interest: interest,
+                status: 'pending'
+            }).select().single().then(function (orgResult) {
+                if (orgResult.error) {
+                    btn.textContent = 'Submit Application';
+                    btn.disabled = false;
+                    showToast('Error creating organisation: ' + orgResult.error.message, true);
+                    return;
+                }
+
+                var org = orgResult.data;
+
+                // Update profile with org link
                 var profileData = {
                     full_name: contactName,
+                    org_id: org.id,
+                    org_role: 'primary',
+                    position: position,
                     org_name: orgName,
                     org_type: selectedOrgType,
                     website: website,
                     interest: interest,
                     partnership_tier: selectedTier,
+                    newsletter_consent: newsletter,
                     status: 'pending'
                 };
                 if (photoUrl) profileData.photo_url = photoUrl;
 
-                supabase
-                    .from('profiles')
-                    .update(profileData)
-                    .eq('id', userId)
-                    .then(function () {
-                        showToast('Application submitted! We will review your request and get back to you shortly.');
-                        document.getElementById('registerForm').reset();
-                        document.querySelectorAll('.org-type-option').forEach(function (o) { o.classList.remove('selected'); });
-                        document.querySelectorAll('.tier-option').forEach(function (o) {
-                            o.classList.remove('selected');
-                            if (o.getAttribute('data-tier') === 'community') o.classList.add('selected');
-                        });
-                        selectedOrgType = '';
-                        selectedTier = 'community';
+                supabase.from('profiles').update(profileData).eq('id', userId).then(function () {
+                    // Also subscribe to newsletter if opted in
+                    if (newsletter) subscribeNewsletter(email, contactName);
 
-                        // Sign out so they can't access portal until approved
-                        supabase.auth.signOut();
-                    });
-            } else {
-                showToast('Application submitted! Check your email to confirm your account.');
-            }
+                    btn.textContent = 'Submit Application';
+                    btn.disabled = false;
+                    showToast('Application submitted! We will review your request and get back to you shortly.');
+                    resetRegForm();
+                    supabase.auth.signOut();
+                });
+            });
         });
+    }
+
+    /* Register: join existing team via invite code */
+    function registerJoinTeam(contactName, email, password, position, photoUrl, newsletter, btn) {
+        var inviteCode = document.getElementById('regInviteCode') ? document.getElementById('regInviteCode').value.trim().toLowerCase() : '';
+
+        if (!inviteCode) {
+            showToast('Please enter the invite code from your organisation.', true);
+            return;
+        }
+
+        btn.textContent = 'Verifying...';
+        btn.disabled = true;
+
+        // Validate invite code via RPC
+        supabase.rpc('lookup_org_by_invite', { code: inviteCode }).then(function (rpcResult) {
+            var org = rpcResult.data;
+
+            if (!org) {
+                btn.textContent = 'Submit Application';
+                btn.disabled = false;
+                showToast('Invalid invite code. Please check with your organisation.', true);
+                return;
+            }
+
+            btn.textContent = 'Submitting...';
+
+            // Sign up
+            supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: { data: { full_name: contactName } }
+            }).then(function (result) {
+                if (result.error) {
+                    btn.textContent = 'Submit Application';
+                    btn.disabled = false;
+                    showToast(result.error.message, true);
+                    return;
+                }
+
+                var userId = result.data.user ? result.data.user.id : null;
+                if (!userId) {
+                    btn.textContent = 'Submit Application';
+                    btn.disabled = false;
+                    showToast('Application submitted! Check your email to confirm your account.');
+                    return;
+                }
+
+                // Auto-approve if org is already approved
+                var newStatus = org.status === 'approved' ? 'approved' : 'pending';
+
+                var profileData = {
+                    full_name: contactName,
+                    org_id: org.id,
+                    org_role: 'member',
+                    position: position,
+                    org_name: org.name,
+                    org_type: org.org_type,
+                    partnership_tier: org.partnership_tier,
+                    newsletter_consent: newsletter,
+                    status: newStatus
+                };
+                if (photoUrl) profileData.photo_url = photoUrl;
+
+                supabase.from('profiles').update(profileData).eq('id', userId).then(function () {
+                    if (newsletter) subscribeNewsletter(email, contactName);
+
+                    btn.textContent = 'Submit Application';
+                    btn.disabled = false;
+
+                    if (newStatus === 'approved') {
+                        showToast('Welcome! You have joined ' + org.name + '. You can now sign in.');
+                    } else {
+                        showToast('You have joined ' + org.name + '. Access will be granted once the organisation is approved.');
+                    }
+                    resetRegForm();
+                    supabase.auth.signOut();
+                });
+            });
+        });
+    }
+
+    /* Subscribe email to newsletter table */
+    function subscribeNewsletter(email, name) {
+        var url = SUPABASE_URL + '/rest/v1/newsletter_subscribers';
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ email: email, name: name, source: 'portal_registration' })
+        }).catch(function () { /* silently fail for newsletter */ });
+    }
+
+    /* Reset registration form */
+    function resetRegForm() {
+        var form = document.getElementById('registerForm');
+        if (form) form.reset();
+        document.querySelectorAll('.org-type-option').forEach(function (o) { o.classList.remove('selected'); });
+        document.querySelectorAll('.tier-option').forEach(function (o) {
+            o.classList.remove('selected');
+            if (o.getAttribute('data-tier') === 'community') o.classList.add('selected');
+        });
+        selectedOrgType = '';
+        selectedTier = 'community';
+        registrationMode = 'new-org';
+        document.querySelectorAll('.reg-mode-btn').forEach(function (b) {
+            b.classList.remove('active');
+            if (b.getAttribute('data-mode') === 'new-org') b.classList.add('active');
+        });
+        var orgSection = document.getElementById('orgDetailsSection');
+        var inviteSection = document.getElementById('inviteCodeSection');
+        var interestSection = document.getElementById('interestSection');
+        if (orgSection) orgSection.style.display = 'block';
+        if (inviteSection) inviteSection.style.display = 'none';
+        if (interestSection) interestSection.style.display = 'block';
     }
 
     /* ===========================================
@@ -447,6 +634,7 @@
             lab: { title: 'Distributed Lab', subtitle: 'Shared equipment across our hubs' },
             events: { title: 'Events', subtitle: 'Upcoming events and workshops' },
             directory: { title: 'Member Directory', subtitle: 'Connect with ecosystem members' },
+            team: { title: 'Your Team', subtitle: 'Organisation members and invite code' },
             knowledge: { title: 'Knowledge Base', subtitle: 'Resources, protocols, and guides' },
             profile: { title: 'Profile Settings', subtitle: 'Manage your profile and photo' },
             admin: { title: 'Admin Panel', subtitle: 'Manage applications and ecosystem members' }
@@ -466,6 +654,7 @@
         if (view === 'lab') renderEquipment();
         if (view === 'events') renderEvents();
         if (view === 'directory') renderDirectory();
+        if (view === 'team') renderTeam();
         if (view === 'knowledge') renderKnowledge();
         if (view === 'profile') renderProfile();
         if (view === 'admin') renderAdmin();
@@ -803,6 +992,94 @@
     }
 
     /* ===========================================
+       TEAM
+       =========================================== */
+
+    function renderTeam() {
+        var orgCard = document.getElementById('teamOrgCard');
+        var membersList = document.getElementById('teamMembersList');
+
+        if (!currentProfile || !currentProfile.org_id) {
+            if (orgCard) orgCard.innerHTML = '<p class="empty-state">You are not linked to an organisation yet.</p>';
+            if (membersList) membersList.innerHTML = '';
+            return;
+        }
+
+        // Load org info
+        var renderOrgCard = function (org) {
+            if (!orgCard) return;
+            var isPrimary = currentProfile.org_role === 'primary';
+            var tier = org.partnership_tier || 'community';
+
+            var html = '<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">' +
+                avatarImg(org.name, 56, org.photo_url) +
+                '<div>' +
+                '<h3 style="margin:0 0 4px">' + escHtml(org.name) + '</h3>' +
+                '<span class="member-type member-type-' + getTypeKey(org.org_type) + '" style="font-size:.75rem">' + escHtml((org.org_type || '').split('/')[0].trim()) + '</span>' +
+                ' <span class="tier-badge tier-' + tier + '">' + capitalize(tier) + '</span>' +
+                '</div></div>';
+
+            if (isPrimary) {
+                html += '<div class="team-invite-box">' +
+                    '<div style="font-weight:600;font-size:.85rem;color:var(--dark);margin-bottom:6px;"><i class="fas fa-key" style="color:var(--primary);margin-right:6px;"></i>Invite Code</div>' +
+                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                    '<code class="team-invite-code">' + escHtml(org.invite_code || '') + '</code>' +
+                    '<button class="btn-copy-invite" onclick="navigator.clipboard.writeText(\'' + escHtml(org.invite_code || '') + '\');this.textContent=\'Copied!\';var b=this;setTimeout(function(){b.textContent=\'Copy\'},2000)">Copy</button>' +
+                    '</div>' +
+                    '<p style="font-size:.75rem;color:var(--medium-gray);margin-top:6px;">Share this code with team members so they can join your organisation.</p>' +
+                    '</div>';
+            }
+
+            if (org.website) {
+                html += '<p style="font-size:.85rem;color:var(--medium-gray);margin-top:8px;"><i class="fas fa-globe" style="margin-right:6px;"></i><a href="' + escHtml(org.website) + '" target="_blank" rel="noopener" style="color:var(--primary)">' + escHtml(org.website) + '</a></p>';
+            }
+
+            orgCard.innerHTML = html;
+        };
+
+        // Use cached org or fetch
+        if (currentOrg && currentOrg.id === currentProfile.org_id) {
+            renderOrgCard(currentOrg);
+        } else {
+            supabase.from('organisations').select('*').eq('id', currentProfile.org_id).single()
+                .then(function (result) {
+                    if (result.data) {
+                        currentOrg = result.data;
+                        renderOrgCard(result.data);
+                    }
+                });
+        }
+
+        // Load team members
+        if (membersList && typeof supabase !== 'undefined') {
+            supabase.from('profiles').select('*').eq('org_id', currentProfile.org_id).order('org_role').order('full_name')
+                .then(function (result) {
+                    var members = result.data || [];
+                    if (members.length === 0) {
+                        membersList.innerHTML = '<p class="empty-state">No team members yet.</p>';
+                        return;
+                    }
+
+                    var html = '';
+                    members.forEach(function (m) {
+                        var isMe = m.id === currentUser.id;
+                        var roleLabel = m.org_role === 'primary' ? 'Primary Contact' : (m.position || 'Team Member');
+
+                        html += '<div class="team-member-item">' +
+                            avatarImg(m.full_name || m.email, 40, m.photo_url) +
+                            '<div class="team-member-info">' +
+                            '<div class="team-member-name">' + escHtml(m.full_name || m.email || 'Member') + (isMe ? ' <span style="font-size:.7rem;color:var(--primary)">(you)</span>' : '') + '</div>' +
+                            '<div class="team-member-role">' + escHtml(roleLabel) + '</div>' +
+                            '</div>' +
+                            '<span class="status-badge status-' + m.status + '">' + capitalize(m.status || 'pending') + '</span>' +
+                            '</div>';
+                    });
+                    membersList.innerHTML = html;
+                });
+        }
+    }
+
+    /* ===========================================
        KNOWLEDGE BASE
        =========================================== */
 
@@ -964,56 +1241,93 @@
         var el = document.getElementById('adminApplications');
         if (!el) return;
 
-        supabase.from('profiles').select('*').eq('status', 'pending').order('created_at', { ascending: false })
-            .then(function (result) {
-                var apps = result.data || [];
-                var countEl = document.getElementById('pendingCount');
-                if (countEl) countEl.textContent = apps.length;
+        // Fetch pending organisations with their primary contacts
+        supabase.from('organisations').select('*').eq('status', 'pending').order('created_at', { ascending: false })
+            .then(function (orgResult) {
+                var orgs = orgResult.data || [];
 
-                if (apps.length === 0) {
-                    el.innerHTML = '<p class="empty-state">No pending applications.</p>';
-                    return;
-                }
+                // Also fetch pending profiles without an org (legacy or direct)
+                supabase.from('profiles').select('*').eq('status', 'pending').is('org_id', null).order('created_at', { ascending: false })
+                    .then(function (profileResult) {
+                        var soloProfiles = profileResult.data || [];
+                        var totalPending = orgs.length + soloProfiles.length;
 
-                var html = '';
-                apps.forEach(function (app) {
-                    var tier = app.partnership_tier || 'community';
-                    html += '<div class="admin-app-card" data-user-id="' + app.id + '">' +
-                        '<div class="admin-app-header">' +
-                        '<div style="display:flex;align-items:center;gap:12px">' +
-                        avatarImg(app.org_name || app.full_name || 'U', 40, app.photo_url) +
-                        '<div>' +
-                        '<div class="admin-app-org">' + escHtml(app.org_name || 'Unnamed') + '</div>' +
-                        '<div class="admin-app-meta">' + escHtml(app.full_name || '') + ' &middot; ' + escHtml(app.email || '') + '</div>' +
-                        '</div></div>' +
-                        '<div style="text-align:right">' +
-                        '<span class="tier-badge tier-' + tier + '">' + capitalize(tier) + ' Partner</span>' +
-                        '<div class="admin-app-meta" style="margin-top:4px">' + escHtml(app.org_type || '') + '</div>' +
-                        '</div>' +
-                        '</div>' +
-                        (app.interest ? '<div class="admin-app-interest"><strong>Interest:</strong> ' + escHtml(app.interest) + '</div>' : '') +
-                        (app.website ? '<div class="admin-app-interest"><strong>Website:</strong> <a href="' + escHtml(app.website) + '" target="_blank" rel="noopener">' + escHtml(app.website) + '</a></div>' : '') +
-                        '<div class="admin-app-date">Applied: ' + new Date(app.created_at).toLocaleDateString() + '</div>' +
-                        '<div class="admin-app-actions">' +
-                        '<input type="text" class="admin-notes-input" placeholder="Reviewer notes (optional)">' +
-                        '<button class="btn-approve" data-user-id="' + app.id + '"><i class="fas fa-check"></i> Approve</button>' +
-                        '<button class="btn-reject" data-user-id="' + app.id + '"><i class="fas fa-times"></i> Reject</button>' +
-                        '</div>' +
-                        '</div>';
-                });
-                el.innerHTML = html;
+                        var countEl = document.getElementById('pendingCount');
+                        if (countEl) countEl.textContent = totalPending;
 
-                // Approve/reject handlers
-                el.querySelectorAll('.btn-approve').forEach(function (btn) {
-                    btn.addEventListener('click', function () { handleApplication(btn, 'approved'); });
-                });
-                el.querySelectorAll('.btn-reject').forEach(function (btn) {
-                    btn.addEventListener('click', function () { handleApplication(btn, 'rejected'); });
-                });
+                        if (totalPending === 0) {
+                            el.innerHTML = '<p class="empty-state">No pending applications.</p>';
+                            return;
+                        }
+
+                        var html = '';
+
+                        // Render pending organisations
+                        orgs.forEach(function (org) {
+                            var tier = org.partnership_tier || 'community';
+                            html += '<div class="admin-app-card" data-org-id="' + org.id + '">' +
+                                '<div class="admin-app-header">' +
+                                '<div style="display:flex;align-items:center;gap:12px">' +
+                                avatarImg(org.name, 40, org.photo_url) +
+                                '<div>' +
+                                '<div class="admin-app-org">' + escHtml(org.name) + '</div>' +
+                                '<div class="admin-app-meta">' + escHtml(org.org_type || '') + '</div>' +
+                                '</div></div>' +
+                                '<div style="text-align:right">' +
+                                '<span class="tier-badge tier-' + tier + '">' + capitalize(tier) + ' Partner</span>' +
+                                '</div>' +
+                                '</div>' +
+                                (org.interest ? '<div class="admin-app-interest"><strong>Interest:</strong> ' + escHtml(org.interest) + '</div>' : '') +
+                                (org.website ? '<div class="admin-app-interest"><strong>Website:</strong> <a href="' + escHtml(org.website) + '" target="_blank" rel="noopener">' + escHtml(org.website) + '</a></div>' : '') +
+                                '<div class="admin-app-date">Applied: ' + new Date(org.created_at).toLocaleDateString() + '</div>' +
+                                '<div class="admin-app-actions">' +
+                                '<input type="text" class="admin-notes-input" placeholder="Reviewer notes (optional)">' +
+                                '<button class="btn-approve" data-org-id="' + org.id + '"><i class="fas fa-check"></i> Approve</button>' +
+                                '<button class="btn-reject" data-org-id="' + org.id + '"><i class="fas fa-times"></i> Reject</button>' +
+                                '</div>' +
+                                '</div>';
+                        });
+
+                        // Render solo pending profiles (no org)
+                        soloProfiles.forEach(function (app) {
+                            var tier = app.partnership_tier || 'community';
+                            html += '<div class="admin-app-card" data-user-id="' + app.id + '">' +
+                                '<div class="admin-app-header">' +
+                                '<div style="display:flex;align-items:center;gap:12px">' +
+                                avatarImg(app.full_name || 'U', 40, app.photo_url) +
+                                '<div>' +
+                                '<div class="admin-app-org">' + escHtml(app.org_name || app.full_name || 'Individual') + '</div>' +
+                                '<div class="admin-app-meta">' + escHtml(app.full_name || '') + ' &middot; ' + escHtml(app.email || '') + '</div>' +
+                                '</div></div>' +
+                                '<div style="text-align:right">' +
+                                '<span class="tier-badge tier-' + tier + '">' + capitalize(tier) + '</span>' +
+                                '</div>' +
+                                '</div>' +
+                                (app.interest ? '<div class="admin-app-interest"><strong>Interest:</strong> ' + escHtml(app.interest) + '</div>' : '') +
+                                '<div class="admin-app-date">Applied: ' + new Date(app.created_at).toLocaleDateString() + '</div>' +
+                                '<div class="admin-app-actions">' +
+                                '<input type="text" class="admin-notes-input" placeholder="Reviewer notes (optional)">' +
+                                '<button class="btn-approve" data-user-id="' + app.id + '"><i class="fas fa-check"></i> Approve</button>' +
+                                '<button class="btn-reject" data-user-id="' + app.id + '"><i class="fas fa-times"></i> Reject</button>' +
+                                '</div>' +
+                                '</div>';
+                        });
+
+                        el.innerHTML = html;
+
+                        // Approve/reject handlers
+                        el.querySelectorAll('.btn-approve').forEach(function (btn) {
+                            btn.addEventListener('click', function () { handleApplication(btn, 'approved'); });
+                        });
+                        el.querySelectorAll('.btn-reject').forEach(function (btn) {
+                            btn.addEventListener('click', function () { handleApplication(btn, 'rejected'); });
+                        });
+                    });
             });
     }
 
     function handleApplication(btn, newStatus) {
+        var orgId = btn.getAttribute('data-org-id');
         var userId = btn.getAttribute('data-user-id');
         var card = btn.closest('.admin-app-card');
         var notesInput = card.querySelector('.admin-notes-input');
@@ -1022,28 +1336,61 @@
         btn.disabled = true;
         btn.textContent = newStatus === 'approved' ? 'Approving...' : 'Rejecting...';
 
-        supabase.from('profiles')
-            .update({
-                status: newStatus,
-                reviewer_notes: notes,
-                reviewed_by: currentUser.id,
-                reviewed_at: new Date().toISOString()
-            })
-            .eq('id', userId)
-            .then(function (result) {
-                if (result.error) {
-                    showToast('Error: ' + result.error.message, true);
-                    btn.disabled = false;
-                    btn.textContent = newStatus === 'approved' ? 'Approve' : 'Reject';
-                    return;
-                }
+        if (orgId) {
+            // Approve/reject an organisation — update org + all linked profiles
+            supabase.from('organisations')
+                .update({
+                    status: newStatus,
+                    reviewer_notes: notes,
+                    reviewed_by: currentUser.id,
+                    reviewed_at: new Date().toISOString()
+                })
+                .eq('id', orgId)
+                .then(function (orgRes) {
+                    if (orgRes.error) {
+                        showToast('Error: ' + orgRes.error.message, true);
+                        btn.disabled = false;
+                        return;
+                    }
 
-                card.style.opacity = '0.5';
-                card.style.pointerEvents = 'none';
-                showToast('Application ' + newStatus + '.');
-
-                setTimeout(function () { renderAdminApplications(); }, 1000);
-            });
+                    // Also update all profiles linked to this org
+                    supabase.from('profiles')
+                        .update({
+                            status: newStatus,
+                            reviewer_notes: notes,
+                            reviewed_by: currentUser.id,
+                            reviewed_at: new Date().toISOString()
+                        })
+                        .eq('org_id', orgId)
+                        .then(function () {
+                            card.style.opacity = '0.5';
+                            card.style.pointerEvents = 'none';
+                            showToast('Organisation ' + newStatus + ' (all members updated).');
+                            setTimeout(function () { renderAdminApplications(); }, 1000);
+                        });
+                });
+        } else if (userId) {
+            // Approve/reject individual profile
+            supabase.from('profiles')
+                .update({
+                    status: newStatus,
+                    reviewer_notes: notes,
+                    reviewed_by: currentUser.id,
+                    reviewed_at: new Date().toISOString()
+                })
+                .eq('id', userId)
+                .then(function (result) {
+                    if (result.error) {
+                        showToast('Error: ' + result.error.message, true);
+                        btn.disabled = false;
+                        return;
+                    }
+                    card.style.opacity = '0.5';
+                    card.style.pointerEvents = 'none';
+                    showToast('Application ' + newStatus + '.');
+                    setTimeout(function () { renderAdminApplications(); }, 1000);
+                });
+        }
     }
 
     function renderAdminMembers() {
