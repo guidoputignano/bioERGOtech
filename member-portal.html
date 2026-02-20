@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWKKXQ2S7M"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-GWKKXQ2S7M');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Portal - bioERGOtech Foundation</title>
+    <link rel="icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/portal.css">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Access the bioERGOtech Foundation member portal. Login to manage projects, book equipment, connect with ecosystem members, and access resources.">
+    <link rel="canonical" href="https://bioergotech.org/member-portal.html">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Member Portal - bioERGOtech Foundation">
+    <meta property="og:description" content="Access the bioERGOtech Foundation member portal. Login to manage projects, book equipment, and connect with ecosystem members.">
+    <meta property="og:image" content="https://bioergotech.org/assets/images/Logo/short_logo.webp">
+    <meta property="og:url" content="https://bioergotech.org/member-portal.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="bioERGOtech Foundation">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Member Portal - bioERGOtech Foundation">
+    <meta name="twitter:description" content="Access the bioERGOtech Foundation member portal. Login to manage projects, book equipment, and connect with ecosystem members.">
+    <meta name="twitter:image" content="https://bioergotech.org/assets/images/Logo/short_logo.webp">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Member Portal - bioERGOtech Foundation",
+        "description": "Access the bioERGOtech Foundation member portal. Login to manage projects, book equipment, and connect with ecosystem members.",
+        "url": "https://bioergotech.org/member-portal.html"
+    }
+    </script>
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <!-- =============================================
+         AUTH VIEW (Not logged in)
+         ============================================= -->
+    <div id="authView" class="portal-auth">
+
+        <!-- Hero -->
+        <section class="bg-light-gray" style="padding: 60px 0 40px;">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800">Member Portal</h1>
+                <p class="text-lg max-w-2xl mx-auto text-gray-600">
+                    Access your projects, connect with ecosystem members, and manage shared resources — all in one place.
+                </p>
+            </div>
+        </section>
+
+        <!-- Login / Register -->
+        <section class="section" style="padding-top: 60px; padding-bottom: 40px;">
+            <div class="auth-container">
+
+                <!-- Tabs -->
+                <div class="flex justify-center mb-10">
+                    <div style="display: inline-flex; background: var(--light-gray); border-radius: 10px; padding: 4px;">
+                        <button id="loginTab" class="active" style="padding: 10px 32px; border-radius: 8px; border: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: .95rem; cursor: pointer; transition: all .2s ease; background: var(--primary); color: #fff;">
+                            Sign In
+                        </button>
+                        <button id="registerTab" style="padding: 10px 32px; border-radius: 8px; border: none; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: .95rem; cursor: pointer; transition: all .2s ease; background: transparent; color: var(--dark);">
+                            Join the Ecosystem
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LOGIN PANEL -->
+                <div id="loginPanel" style="max-width: 480px; margin: 0 auto;">
+                    <div class="auth-card">
+                        <h2>Welcome Back</h2>
+                        <p class="auth-subtitle">Sign in to access your portal dashboard.</p>
+
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="loginEmail">Email</label>
+                                <input type="email" id="loginEmail" placeholder="you@organisation.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Sign In</button>
+                            </div>
+                        </form>
+
+                        <div class="auth-switch">
+                            Not a member yet? <a href="#" id="showRegister">Join the Ecosystem</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REGISTER PANEL -->
+                <div id="registerPanel" style="display: none; max-width: 700px; margin: 0 auto;">
+                    <div class="register-card">
+                        <h2>Join the Ecosystem</h2>
+                        <p class="auth-subtitle">Apply to become part of the bioERGOtech network. We welcome organisations across the life sciences ecosystem.</p>
+
+                        <form id="registerForm" class="register-form">
+                            <!-- Organisation Type Selector -->
+                            <label style="font-weight: 600; margin-bottom: 12px; display: block;">What type of organisation are you?</label>
+                            <div class="org-type-grid">
+                                <div class="org-type-option" data-type="Startup / Biotech">
+                                    <i class="fas fa-rocket"></i>
+                                    <span>Startup / Biotech</span>
+                                </div>
+                                <div class="org-type-option" data-type="Hospital / Clinical Center">
+                                    <i class="fas fa-hospital"></i>
+                                    <span>Hospital / Clinical Center</span>
+                                </div>
+                                <div class="org-type-option" data-type="University / Research Lab">
+                                    <i class="fas fa-university"></i>
+                                    <span>University / Research Lab</span>
+                                </div>
+                                <div class="org-type-option" data-type="Investor / VC">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Investor / VC</span>
+                                </div>
+                                <div class="org-type-option" data-type="Technology Partner">
+                                    <i class="fas fa-cogs"></i>
+                                    <span>Technology Partner</span>
+                                </div>
+                                <div class="org-type-option" data-type="Policy / Advocacy Org">
+                                    <i class="fas fa-landmark"></i>
+                                    <span>Policy / Advocacy</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="orgTypeInput" name="orgType">
+
+                            <!-- Form Fields -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="regOrgName">Organisation Name *</label>
+                                    <input type="text" id="regOrgName" placeholder="Your organisation" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regContactName">Contact Name *</label>
+                                    <input type="text" id="regContactName" placeholder="Full name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="regEmail">Email *</label>
+                                    <input type="email" id="regEmail" placeholder="you@organisation.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regWebsite">Website</label>
+                                    <input type="url" id="regWebsite" placeholder="https://...">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regInterest">What interests you about the bioERGOtech ecosystem?</label>
+                                <textarea id="regInterest" rows="3" placeholder="Tell us about your work and what you hope to achieve together..."></textarea>
+                            </div>
+
+                            <div class="form-actions" style="margin-top: 24px;">
+                                <button type="submit" class="btn-primary" style="width: 100%; text-align: center; border: none; font-family: 'Poppins', sans-serif; font-size: 1rem;">Submit Application</button>
+                            </div>
+                        </form>
+
+                        <div class="auth-switch">
+                            Already a member? <a href="#" id="showLogin">Sign In</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Our Current Members Include -->
+        <section class="members-section">
+            <h2>Our Current Members Include</h2>
+            <p class="members-subtitle">A growing network of organisations advancing life sciences together.</p>
+            <div class="members-grid" id="membersGrid">
+                <!-- Rendered by portal.js -->
+            </div>
+        </section>
+
+    </div>
+
+    <!-- =============================================
+         PORTAL VIEW (Logged in)
+         ============================================= -->
+    <div id="portalView" class="portal-view">
+
+        <!-- Mobile sidebar toggle -->
+        <button id="sidebarToggle" class="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside id="portalSidebar" class="portal-sidebar">
+            <div class="sidebar-header">
+                <img src="/assets/images/Logo/short_logo.webp" alt="bioERGOtech">
+                <span>bioERGOtech</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="sidebar-nav-item active" data-view="dashboard">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </button>
+                <button class="sidebar-nav-item" data-view="projects">
+                    <i class="fas fa-project-diagram"></i> Projects
+                </button>
+                <button class="sidebar-nav-item" data-view="lab">
+                    <i class="fas fa-microscope"></i> Distributed Lab
+                </button>
+                <button class="sidebar-nav-item" data-view="events">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </button>
+                <button class="sidebar-nav-item" data-view="directory">
+                    <i class="fas fa-address-book"></i> Directory
+                </button>
+                <button class="sidebar-nav-item" data-view="knowledge">
+                    <i class="fas fa-book"></i> Knowledge Base
+                </button>
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar" id="portalUserAvatar">U</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="portalUserName">User</div>
+                    <div class="sidebar-user-org" id="portalUserOrg">Member</div>
+                </div>
+                <button class="sidebar-logout" id="portalLogout" title="Sign out">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="portal-main">
+            <div class="portal-main-header">
+                <h1 id="portalTitle">Dashboard</h1>
+                <p id="portalSubtitle">Overview of your ecosystem activity</p>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="section-dashboard" class="portal-section active">
+                <p id="portalGreeting" style="font-size: 1.1rem; font-weight: 500; color: var(--dark); margin-bottom: 24px;">Welcome back</p>
+
+                <div class="stats-grid" id="dashboardStats">
+                    <!-- Rendered by portal.js -->
+                </div>
+
+                <div class="portal-two-col">
+                    <div class="portal-card">
+                        <h3><i class="fas fa-project-diagram" style="color: var(--primary); margin-right: 8px;"></i>Recent Projects</h3>
+                        <div id="dashboardProjects">
+                            <!-- Rendered by portal.js -->
+                        </div>
+                    </div>
+                    <div class="portal-card">
+                        <h3><i class="fas fa-calendar-alt" style="color: var(--primary); margin-right: 8px;"></i>Upcoming Events</h3>
+                        <div id="dashboardEvents">
+                            <!-- Rendered by portal.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROJECTS -->
+            <div id="section-projects" class="portal-section">
+                <div class="portal-card">
+                    <h3>All Projects</h3>
+                    <div id="projectsList">
+                        <!-- Rendered by portal.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- DISTRIBUTED LAB -->
+            <div id="section-lab" class="portal-section">
+                <div class="portal-card">
+                    <h3>Shared Equipment</h3>
+                    <div id="equipmentTable">
+                        <!-- Rendered by portal.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENTS -->
+            <div id="section-events" class="portal-section">
+                <div class="portal-card">
+                    <h3>Upcoming Events</h3>
+                    <div id="eventsList">
+                        <!-- Rendered by portal.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIRECTORY -->
+            <div id="section-directory" class="portal-section">
+                <div id="directoryGrid" class="directory-grid">
+                    <!-- Rendered by portal.js -->
+                </div>
+            </div>
+
+            <!-- KNOWLEDGE BASE -->
+            <div id="section-knowledge" class="portal-section">
+                <div class="portal-card">
+                    <div class="kb-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="kbSearch" placeholder="Search resources...">
+                    </div>
+
+                    <div class="kb-categories">
+                        <button class="kb-category-btn active" data-category="All">All</button>
+                        <button class="kb-category-btn" data-category="Regulatory Pathways">Regulatory</button>
+                        <button class="kb-category-btn" data-category="Funding Programs">Funding</button>
+                        <button class="kb-category-btn" data-category="Technical Protocols">Protocols</button>
+                        <button class="kb-category-btn" data-category="IP Strategy">IP Strategy</button>
+                        <button class="kb-category-btn" data-category="Onboarding">Onboarding</button>
+                    </div>
+
+                    <div id="kbList">
+                        <!-- Rendered by portal.js -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/components.js"></script>
+    <script src="/assets/js/portal.js"></script>
+
+    <!-- Tab styling logic -->
+    <script>
+        (function() {
+            var loginTab = document.getElementById('loginTab');
+            var registerTab = document.getElementById('registerTab');
+
+            function updateTabStyles() {
+                if (loginTab.classList.contains('active')) {
+                    loginTab.style.background = 'var(--primary)';
+                    loginTab.style.color = '#fff';
+                    registerTab.style.background = 'transparent';
+                    registerTab.style.color = 'var(--dark)';
+                } else {
+                    registerTab.style.background = 'var(--primary)';
+                    registerTab.style.color = '#fff';
+                    loginTab.style.background = 'transparent';
+                    loginTab.style.color = 'var(--dark)';
+                }
+            }
+
+            if (loginTab && registerTab) {
+                var observer = new MutationObserver(updateTabStyles);
+                observer.observe(loginTab, { attributes: true, attributeFilter: ['class'] });
+                observer.observe(registerTab, { attributes: true, attributeFilter: ['class'] });
+            }
+        })();
+    </script>
+</body>
+</html>
