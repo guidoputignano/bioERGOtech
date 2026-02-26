@@ -109,6 +109,9 @@
                                 <label for="loginPassword">Password</label>
                                 <input type="password" id="loginPassword" placeholder="Enter your password" required>
                             </div>
+                            <div style="text-align: right; margin-top: -8px; margin-bottom: 16px;">
+                                <a href="#" id="forgotPasswordLink" style="font-size: .85rem; color: var(--primary); font-weight: 500; text-decoration: none;">Forgot password?</a>
+                            </div>
                             <div class="form-actions">
                                 <button type="submit" class="btn-primary">Sign In</button>
                             </div>
@@ -117,6 +120,47 @@
                         <div class="auth-switch">
                             Not a member yet? <a href="#" id="showRegister">Join the Ecosystem</a>
                         </div>
+                    </div>
+                </div>
+
+                <!-- FORGOT PASSWORD PANEL -->
+                <div id="forgotPasswordPanel" style="display: none; max-width: 480px; margin: 0 auto;">
+                    <div class="auth-card">
+                        <h2>Reset Password</h2>
+                        <p class="auth-subtitle">Enter your email address and we'll send you a link to reset your password.</p>
+                        <form id="forgotPasswordForm">
+                            <div class="form-group">
+                                <label for="forgotEmail">Email</label>
+                                <input type="email" id="forgotEmail" placeholder="you@organisation.com" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Send Reset Link</button>
+                            </div>
+                        </form>
+                        <div class="auth-switch">
+                            <a href="#" id="backToLogin">← Back to Sign In</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SET NEW PASSWORD PANEL (shown after clicking reset email link) -->
+                <div id="setNewPasswordPanel" style="display: none; max-width: 480px; margin: 0 auto;">
+                    <div class="auth-card">
+                        <h2>Set New Password</h2>
+                        <p class="auth-subtitle">Enter your new password below.</p>
+                        <form id="setNewPasswordForm">
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" placeholder="Min. 6 characters" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNewPassword">Confirm New Password</label>
+                                <input type="password" id="confirmNewPassword" placeholder="Confirm your new password" required minlength="6">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Update Password</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 

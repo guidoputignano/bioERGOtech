@@ -149,6 +149,92 @@
         if (googleProfileSubmit) {
             googleProfileSubmit.addEventListener('click', handleOAuthProfileComplete);
         }
+
+        // Forgot password link
+        var forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                showForgotPasswordView();
+            });
+        }
+
+        // Back to login from forgot password panel
+        var backToLogin = document.getElementById('backToLogin');
+        if (backToLogin) {
+            backToLogin.addEventListener('click', function (e) {
+                e.preventDefault();
+                showLoginPanel();
+            });
+        }
+
+        // Forgot password form submit
+        var forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                handleForgotPassword();
+            });
+        }
+
+        // Set new password form submit
+        var setNewPasswordForm = document.getElementById('setNewPasswordForm');
+        if (setNewPasswordForm) {
+            setNewPasswordForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                handleSetNewPassword();
+            });
+        }
+    }
+
+    /* Show the forgot password panel */
+    function showForgotPasswordView() {
+        var loginPanel = document.getElementById('loginPanel');
+        var forgotPasswordPanel = document.getElementById('forgotPasswordPanel');
+        var registerPanel = document.getElementById('registerPanel');
+        var loginTab = document.getElementById('loginTab');
+        var registerTab = document.getElementById('registerTab');
+        if (loginPanel) loginPanel.style.display = 'none';
+        if (registerPanel) registerPanel.style.display = 'none';
+        if (forgotPasswordPanel) forgotPasswordPanel.style.display = 'block';
+        if (loginTab) loginTab.classList.remove('active');
+        if (registerTab) registerTab.classList.remove('active');
+    }
+
+    /* Show the login panel */
+    function showLoginPanel() {
+        var loginPanel = document.getElementById('loginPanel');
+        var forgotPasswordPanel = document.getElementById('forgotPasswordPanel');
+        var setNewPasswordPanel = document.getElementById('setNewPasswordPanel');
+        var registerPanel = document.getElementById('registerPanel');
+        var loginTab = document.getElementById('loginTab');
+        var registerTab = document.getElementById('registerTab');
+        if (loginPanel) loginPanel.style.display = 'block';
+        if (forgotPasswordPanel) forgotPasswordPanel.style.display = 'none';
+        if (setNewPasswordPanel) setNewPasswordPanel.style.display = 'none';
+        if (registerPanel) registerPanel.style.display = 'none';
+        if (loginTab) loginTab.classList.add('active');
+        if (registerTab) registerTab.classList.remove('active');
+    }
+
+    /* Show the set new password panel (after clicking the reset email link) */
+    function showSetNewPasswordView() {
+        var authView = document.getElementById('authView');
+        var portalView = document.getElementById('portalView');
+        var loginPanel = document.getElementById('loginPanel');
+        var forgotPasswordPanel = document.getElementById('forgotPasswordPanel');
+        var setNewPasswordPanel = document.getElementById('setNewPasswordPanel');
+        var registerPanel = document.getElementById('registerPanel');
+        var loginTab = document.getElementById('loginTab');
+        var registerTab = document.getElementById('registerTab');
+        if (authView) authView.style.display = 'block';
+        if (portalView) portalView.classList.remove('active');
+        if (loginPanel) loginPanel.style.display = 'none';
+        if (forgotPasswordPanel) forgotPasswordPanel.style.display = 'none';
+        if (registerPanel) registerPanel.style.display = 'none';
+        if (setNewPasswordPanel) setNewPasswordPanel.style.display = 'block';
+        if (loginTab) loginTab.classList.remove('active');
+        if (registerTab) registerTab.classList.remove('active');
     }
 
     /* --- Org type selector (multi-select) --- */
@@ -210,7 +296,10 @@
 
         // Listen for auth changes
         supabase.auth.onAuthStateChange(function (event, session) {
-            if (event === 'SIGNED_IN' && session && session.user) {
+            if (event === 'PASSWORD_RECOVERY' && session && session.user) {
+                currentUser = session.user;
+                showSetNewPasswordView();
+            } else if (event === 'SIGNED_IN' && session && session.user) {
                 loadProfile(session.user);
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
@@ -404,6 +493,76 @@
                 }
 
                 showToast('Welcome back!');
+            });
+    }
+
+    /* Forgot password handler */
+    function handleForgotPassword() {
+        var email = document.getElementById('forgotEmail').value.trim();
+        var btn = document.querySelector('#forgotPasswordForm .btn-primary');
+
+        if (!email) {
+            showToast('Please enter your email address.', true);
+            return;
+        }
+
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+
+        supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/member-portal.html'
+        }).then(function (result) {
+            btn.textContent = 'Send Reset Link';
+            btn.disabled = false;
+
+            if (result.error) {
+                showToast(result.error.message, true);
+                return;
+            }
+
+            showToast('Password reset link sent! Check your email.');
+            document.getElementById('forgotEmail').value = '';
+        });
+    }
+
+    /* Set new password handler (called after user clicks the reset email link) */
+    function handleSetNewPassword() {
+        var newPassword = document.getElementById('newPassword').value;
+        var confirmPassword = document.getElementById('confirmNewPassword').value;
+        var btn = document.querySelector('#setNewPasswordForm .btn-primary');
+
+        if (!newPassword || !confirmPassword) {
+            showToast('Please fill in both password fields.', true);
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            showToast('Password must be at least 6 characters.', true);
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showToast('Passwords do not match.', true);
+            return;
+        }
+
+        btn.textContent = 'Updating...';
+        btn.disabled = true;
+
+        supabase.auth.updateUser({ password: newPassword })
+            .then(function (result) {
+                btn.textContent = 'Update Password';
+                btn.disabled = false;
+
+                if (result.error) {
+                    showToast(result.error.message, true);
+                    return;
+                }
+
+                showToast('Password updated successfully! Please sign in.');
+                supabase.auth.signOut().then(function () {
+                    showLoginPanel();
+                });
             });
     }
 
