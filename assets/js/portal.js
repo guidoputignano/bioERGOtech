@@ -11,7 +11,8 @@
     var currentProfile = null; // profiles row
     var currentOrg = null;     // organisations row
     var currentView = 'dashboard';
-    var selectedOrgType = '';
+    var selectedOrgTypes = [];       // multi-select for registration form
+    var selectedGoogleOrgTypes = []; // multi-select for Google completion modal
 
     /* --- Fallback data (shown on public page before Supabase loads) --- */
     var fallbackMembers = [
@@ -132,20 +133,63 @@
                 handleRegister();
             });
         }
+
+        // Social OAuth buttons (Google + Apple, on both login and register panels)
+        ['googleSignInBtn', 'appleSignInBtn', 'googleRegisterBtn', 'appleRegisterBtn'].forEach(function (id) {
+            var btn = document.getElementById(id);
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    handleOAuthSignIn(btn.getAttribute('data-provider'));
+                });
+            }
+        });
+
+        // Google profile completion modal submit
+        var googleProfileSubmit = document.getElementById('googleProfileSubmit');
+        if (googleProfileSubmit) {
+            googleProfileSubmit.addEventListener('click', handleOAuthProfileComplete);
+        }
     }
 
-    /* --- Org type selector --- */
+    /* --- Org type selector (multi-select) --- */
     function setupOrgTypeSelector() {
-        var options = document.querySelectorAll('.org-type-option');
-        options.forEach(function (opt) {
-            opt.addEventListener('click', function () {
-                options.forEach(function (o) { o.classList.remove('selected'); });
-                opt.classList.add('selected');
-                selectedOrgType = opt.getAttribute('data-type');
-                var input = document.getElementById('orgTypeInput');
-                if (input) input.value = selectedOrgType;
+        // Main registration form (options inside #registerForm area)
+        var registerPanel = document.getElementById('registerPanel');
+        if (registerPanel) {
+            var options = registerPanel.querySelectorAll('.org-type-option');
+            options.forEach(function (opt) {
+                opt.addEventListener('click', function () {
+                    opt.classList.toggle('selected');
+                    var type = opt.getAttribute('data-type');
+                    var idx = selectedOrgTypes.indexOf(type);
+                    if (idx === -1) {
+                        selectedOrgTypes.push(type);
+                    } else {
+                        selectedOrgTypes.splice(idx, 1);
+                    }
+                    var input = document.getElementById('orgTypeInput');
+                    if (input) input.value = selectedOrgTypes.join(', ');
+                });
             });
-        });
+        }
+
+        // Google completion modal org type grid
+        var googleGrid = document.getElementById('googleOrgTypeGrid');
+        if (googleGrid) {
+            var googleOptions = googleGrid.querySelectorAll('.org-type-option');
+            googleOptions.forEach(function (opt) {
+                opt.addEventListener('click', function () {
+                    opt.classList.toggle('selected');
+                    var type = opt.getAttribute('data-type');
+                    var idx = selectedGoogleOrgTypes.indexOf(type);
+                    if (idx === -1) {
+                        selectedGoogleOrgTypes.push(type);
+                    } else {
+                        selectedGoogleOrgTypes.splice(idx, 1);
+                    }
+                });
+            });
+        }
     }
 
 
@@ -193,6 +237,15 @@
 
                 currentProfile = result.data;
 
+                // Detect new OAuth user who hasn't completed their profile yet
+                // (trigger creates a bare profile row — no org_name means they haven't applied)
+                var provider = user.app_metadata && user.app_metadata.provider;
+                var isSocialLogin = provider === 'google' || provider === 'apple';
+                if (isSocialLogin && !currentProfile.org_name && currentProfile.status === 'pending') {
+                    showOAuthProfileCompletion(user);
+                    return;
+                }
+
                 // Load org if linked
                 if (currentProfile.org_id) {
                     supabase.from('organisations').select('*').eq('id', currentProfile.org_id).single()
@@ -209,6 +262,119 @@
                 } else if (currentProfile.status === 'rejected') {
                     showToast('Your application was not approved. Contact info@bioergotech.org for details.', true);
                     supabase.auth.signOut();
+                }
+            });
+    }
+
+    /* Social OAuth sign-in (Google or Apple) */
+    function handleOAuthSignIn(provider) {
+        if (typeof supabase === 'undefined') {
+            showToast('Authentication service not available.', true);
+            return;
+        }
+        supabase.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: window.location.origin + '/member-portal.html'
+            }
+        }).then(function (result) {
+            if (result.error) {
+                showToast(result.error.message, true);
+            }
+        });
+    }
+
+    /* Show the profile completion modal for new OAuth users */
+    function showOAuthProfileCompletion(user) {
+        var modal = document.getElementById('googleProfileModal');
+        if (!modal) return;
+
+        // Pre-fill name from OAuth metadata if available
+        var meta = user.user_metadata || {};
+        var nameHint = meta.full_name || meta.name || '';
+        var orgInput = document.getElementById('googleOrgName');
+        var posInput = document.getElementById('googlePosition');
+        if (orgInput && !orgInput.value) orgInput.placeholder = 'Your organisation or affiliation';
+        if (posInput && !posInput.value) posInput.placeholder = 'e.g. CTO, Researcher, PI';
+
+        // Reset Google org type selections
+        selectedGoogleOrgTypes = [];
+        var googleGrid = document.getElementById('googleOrgTypeGrid');
+        if (googleGrid) {
+            googleGrid.querySelectorAll('.org-type-option').forEach(function (o) { o.classList.remove('selected'); });
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    /* Submit handler for the OAuth profile completion modal */
+    function handleOAuthProfileComplete() {
+        var orgName = (document.getElementById('googleOrgName').value || '').trim();
+        var position = (document.getElementById('googlePosition').value || '').trim();
+        var interest = (document.getElementById('googleInterest').value || '').trim();
+        var orgTypeStr = selectedGoogleOrgTypes.join(', ');
+        var submitBtn = document.getElementById('googleProfileSubmit');
+
+        if (!orgName) {
+            showToast('Please enter your organisation name.', true);
+            return;
+        }
+
+        submitBtn.textContent = 'Submitting...';
+        submitBtn.disabled = true;
+
+        var user = currentUser;
+        var userMeta = user.user_metadata || {};
+        var fullName = userMeta.full_name || userMeta.name || '';
+        var photoUrl = userMeta.avatar_url || userMeta.picture || '';
+        var email = user.email || '';
+
+        // Check if an org with this name already exists
+        supabase.from('organisations').select('*').ilike('name', orgName).limit(1)
+            .then(function (orgLookup) {
+                var existingOrg = (orgLookup.data && orgLookup.data.length > 0) ? orgLookup.data[0] : null;
+
+                function saveProfile(orgId, orgRole, finalOrgName, finalOrgType) {
+                    var profileData = {
+                        full_name: fullName,
+                        org_id: orgId,
+                        org_role: orgRole,
+                        position: position,
+                        org_name: finalOrgName,
+                        org_type: finalOrgType || null,
+                        interest: interest,
+                        status: 'pending'
+                    };
+                    if (photoUrl) profileData.photo_url = photoUrl;
+
+                    supabase.from('profiles').update(profileData).eq('id', user.id)
+                        .then(function () {
+                            submitBtn.textContent = 'Submit Application';
+                            submitBtn.disabled = false;
+                            var modal = document.getElementById('googleProfileModal');
+                            if (modal) modal.style.display = 'none';
+                            showToast('Application submitted! We will review your request and get back to you shortly.');
+                            supabase.auth.signOut();
+                        });
+                }
+
+                if (existingOrg) {
+                    saveProfile(existingOrg.id, 'member', existingOrg.name, existingOrg.org_type);
+                } else {
+                    supabase.from('organisations').insert({
+                        name: orgName,
+                        org_type: orgTypeStr || null,
+                        interest: interest,
+                        status: 'pending'
+                    }).select().single().then(function (orgResult) {
+                        if (orgResult.error) {
+                            submitBtn.textContent = 'Submit Application';
+                            submitBtn.disabled = false;
+                            showToast('Error creating organisation: ' + orgResult.error.message, true);
+                            return;
+                        }
+                        saveProfile(orgResult.data.id, 'primary', orgName, orgTypeStr || null);
+                    });
                 }
             });
     }
@@ -265,8 +431,8 @@
             showToast('Password must be at least 6 characters.', true);
             return;
         }
-        if (!orgName || !selectedOrgType) {
-            showToast('Please fill in your organisation name and select an organisation type.', true);
+        if (!orgName) {
+            showToast('Please fill in your organisation name.', true);
             return;
         }
 
@@ -325,9 +491,10 @@
                         });
                     } else {
                         // No matching org — create a new one (tier left as null for admin to assign)
+                        var orgTypeStr = selectedOrgTypes.join(', ');
                         supabase.from('organisations').insert({
                             name: orgName,
-                            org_type: selectedOrgType,
+                            org_type: orgTypeStr || null,
                             website: website,
                             interest: interest,
                             status: 'pending'
@@ -347,7 +514,7 @@
                                 org_role: 'primary',
                                 position: position,
                                 org_name: orgName,
-                                org_type: selectedOrgType,
+                                org_type: orgTypeStr || null,
                                 website: website,
                                 interest: interest,
                                 newsletter_consent: newsletter,
@@ -388,8 +555,11 @@
     function resetRegForm() {
         var form = document.getElementById('registerForm');
         if (form) form.reset();
-        document.querySelectorAll('.org-type-option').forEach(function (o) { o.classList.remove('selected'); });
-        selectedOrgType = '';
+        var registerPanel = document.getElementById('registerPanel');
+        if (registerPanel) {
+            registerPanel.querySelectorAll('.org-type-option').forEach(function (o) { o.classList.remove('selected'); });
+        }
+        selectedOrgTypes = [];
     }
 
     /* ===========================================
