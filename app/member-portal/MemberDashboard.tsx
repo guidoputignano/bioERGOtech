@@ -76,12 +76,12 @@ const KB_ITEMS = [
 
 export default function MemberDashboard({ user }: { user: User }) {
   const router = useRouter()
-  const supabase = createClient()
   const [activeSection, setActiveSection] = useState<Section>('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [rsvpdEvents, setRsvpdEvents] = useState<Set<number>>(new Set())
 
   const handleSignOut = async () => {
+    const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()

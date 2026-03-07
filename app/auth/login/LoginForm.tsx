@@ -34,8 +34,6 @@ export default function LoginForm() {
 
   const [forgotEmail, setForgotEmail] = useState('')
 
-  const supabase = createClient()
-
   const supabaseReady =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
@@ -44,6 +42,7 @@ export default function LoginForm() {
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
     if (!supabaseReady) { setError('Auth service not yet configured — please try again soon.'); return }
+    const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${location.origin}/auth/callback` },
@@ -54,6 +53,7 @@ export default function LoginForm() {
     e.preventDefault()
     if (!supabaseReady) { setError('Auth service not yet configured.'); return }
     setLoading(true); setError(null)
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
     setLoading(false)
     if (error) { setError(error.message) }
@@ -64,6 +64,7 @@ export default function LoginForm() {
     e.preventDefault()
     if (!supabaseReady) { setError('Auth service not yet configured.'); return }
     setLoading(true); setError(null)
+    const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email: regEmail,
       password: regPassword,
@@ -81,6 +82,7 @@ export default function LoginForm() {
     e.preventDefault()
     if (!supabaseReady) { setError('Auth service not yet configured.'); return }
     setLoading(true); setError(null)
+    const supabase = createClient()
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
       redirectTo: `${location.origin}/auth/reset-password`,
     })
