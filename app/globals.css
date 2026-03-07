@@ -1,5 +1,6 @@
 @import '../assets/css/main.css';
 @import '../assets/css/cookie-consent.css';
+@import '../assets/css/portal.css';
 
 @tailwind base;
 @tailwind components;
