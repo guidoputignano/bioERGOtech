@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import MemberDashboard from './MemberDashboard'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Member Portal',
   description: 'Access the bioERGOtech Foundation member portal.',
