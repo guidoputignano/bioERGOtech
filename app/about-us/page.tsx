@@ -1,44 +1,44 @@
-import type { Metadata } from 'next'
-import Image from 'next/image'
-import Link from 'next/link'
+import { Navbar } from "@/components/navbar";
+import { SiteFooter } from "@/components/site-footer";
+import Link from "next/link";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'About Us',
-  description:
-    'Learn about the bioERGOtech Foundation — our mission, team, scientific advisory board, and vision for advancing Engineered Living Systems.',
-  alternates: { canonical: 'https://bioergotech.org/about-us' },
-}
+  title: "About Us - bioERGOtech Foundation",
+  description: "Learn about the bioERGOtech Foundation — our mission, team, scientific advisory board, and vision for advancing Engineered Living Systems.",
+};
 
-export default function AboutUsPage() {
+export default function AboutUs() {
   return (
     <>
+      <Navbar />
+
       {/* Hero */}
-      <section className="hero bg-light-gray" id="home" style={{ paddingTop: 80 }}>
-        <div className="container mx-auto px-6 pt-28 pb-12 relative z-10 text-center">
+      <section className="hero bg-light-gray" id="home" style={{ paddingTop: "70px" }}>
+        <div className="container mx-auto px-6 pt-20 pb-12 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
             Engineering the Future of Living Medicine
           </h1>
           <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            A foundation transforming living cells into precisely controllable therapeutic agents through the
-            convergence of synthetic biology, AI, and automated biomanufacturing.
+            A foundation transforming living cells into precisely controllable therapeutic agents through the convergence of synthetic biology, AI, and automated biomanufacturing.
           </p>
         </div>
       </section>
 
       {/* Impact Metrics */}
-      <section className="section">
+      <section className="section" id="metrics">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { number: '3', label: 'Innovation Hubs', sub: 'Taranto · Zurich · Riyadh' },
-              { number: '4', label: 'Portfolio Companies', sub: 'From diagnostics to robotics' },
-              { number: '4', label: 'Scientific Pillars', sub: 'Integrated research domains' },
-              { number: '6+', label: 'Countries', sub: 'Italy · Switzerland · Germany · US · China · Saudi Arabia' },
-            ].map(({ number, label, sub }) => (
-              <div key={label}>
-                <span className="text-5xl md:text-6xl font-bold block mb-2" style={{ color: 'var(--primary)' }}>{number}</span>
-                <p className="text-lg text-gray-700 font-medium">{label}</p>
-                <p className="text-sm text-gray-500">{sub}</p>
+              { num: "3", label: "Innovation Hubs", sub: "Taranto · Zurich · Riyadh" },
+              { num: "4", label: "Portfolio Companies", sub: "From diagnostics to robotics" },
+              { num: "4", label: "Scientific Pillars", sub: "Integrated research domains" },
+              { num: "6+", label: "Countries", sub: "Italy · Switzerland · Germany · US · China · Saudi Arabia" },
+            ].map((m) => (
+              <div key={m.label}>
+                <span className="text-5xl md:text-6xl font-bold block mb-2" style={{ color: "var(--primary)" }}>{m.num}</span>
+                <p className="text-lg text-gray-700 font-medium">{m.label}</p>
+                <p className="text-sm text-gray-500">{m.sub}</p>
               </div>
             ))}
           </div>
@@ -46,85 +46,156 @@ export default function AboutUsPage() {
       </section>
 
       {/* Why We Exist */}
-      <section className="section bg-light-gray">
+      <section className="section bg-light-gray" id="mission">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="section-title">Why We Exist</h2>
               <p className="text-lg mb-6 text-gray-700">
-                The healthcare industry faces a critical gap: while groundbreaking research happens in laboratories
-                worldwide, too many life-saving innovations never reach the patients who need them.
+                The healthcare industry faces a critical gap: while groundbreaking research happens in laboratories worldwide, too many life-saving innovations never reach the patients who need them. Promising technologies remain trapped in academic settings instead of transforming lives.
               </p>
               <p className="text-lg mb-6 text-gray-700">
-                bioERGOtech was founded to close that gap. We advance{' '}
-                <strong>Engineered Living Systems</strong> — turning cells into predictable, manufacturable, and
-                controllable living medicines — through four integrated scientific pillars: digital twin therapeutics,
-                synthetic biology, automated biomanufacturing, and multi-omics analytics.
+                bioERGOtech was founded to close that gap. We advance <strong>Engineered Living Systems</strong> — turning cells into predictable, manufacturable, and controllable living medicines — through four integrated scientific pillars: digital twin therapeutics, synthetic biology, automated biomanufacturing, and multi-omics analytics.
               </p>
               <p className="text-lg text-gray-700 font-semibold">
                 We believe breakthrough science must become breakthrough medicine.
               </p>
             </div>
             <div className="flex justify-center">
-              <Image src="/assets/images/About-us/1.png" alt="Lab research" width={480} height={360} className="rounded-lg shadow-xl w-full max-w-md" />
+              <img src="/assets/images/About-us/1.png" alt="Lab research" className="rounded-lg shadow-xl w-full max-w-md" />
             </div>
           </div>
         </div>
       </section>
 
       {/* How We Work */}
-      <section className="section">
+      <section className="section" id="how-we-work">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1">
               <h2 className="section-title">How We Work</h2>
-              <p className="text-lg mb-6 text-gray-700" style={{ borderLeft: '4px solid var(--primary)', paddingLeft: 16 }}>
-                We are a not-for-profit foundation with commercial ambition — built to serve patients, powered by
-                innovation.
+              <p className="text-lg mb-6 text-gray-700" style={{ borderLeft: "4px solid var(--primary)", paddingLeft: "16px" }}>
+                We are a not-for-profit foundation with commercial ambition — built to serve patients, powered by innovation.
               </p>
+              <p className="text-lg mb-4 text-gray-700">bioERGOtech operates through a dual model designed to bridge the lab-to-market gap:</p>
               <ul className="space-y-4 text-lg text-gray-700">
                 <li className="flex items-start">
-                  <i className="fas fa-check-circle mt-1 mr-3" style={{ color: 'var(--primary)' }} />
-                  <span>
-                    <strong>AI Development &amp; Spin-off:</strong> We partner with healthcare organisations to
-                    develop and spin-off AI algorithms that address specific medical needs.
-                  </span>
+                  <i className="fas fa-check-circle mt-1 mr-3" style={{ color: "var(--primary)" }} />
+                  <span><strong>AI Development &amp; Spin-off:</strong> We partner with healthcare organizations to develop and spin-off AI algorithms that address specific medical needs.</span>
                 </li>
                 <li className="flex items-start">
-                  <i className="fas fa-check-circle mt-1 mr-3" style={{ color: 'var(--primary)' }} />
-                  <span>
-                    <strong>Technology Acceleration:</strong> We accelerate existing patents and lab technologies to
-                    market through strategic partnerships.
-                  </span>
+                  <i className="fas fa-check-circle mt-1 mr-3" style={{ color: "var(--primary)" }} />
+                  <span><strong>Technology Acceleration:</strong> We accelerate existing patents and lab technologies to market through strategic partnerships.</span>
                 </li>
               </ul>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
-              <Image src="/assets/images/About-us/2.png" alt="Team collaboration" width={480} height={360} className="rounded-lg shadow-xl w-full max-w-md" />
+              <img src="/assets/images/About-us/2.png" alt="Collaboration" className="rounded-lg shadow-xl w-full max-w-md" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Team */}
-      <section className="section bg-light-gray">
+      {/* Founder Quote */}
+      <section className="section bg-light-gray" id="founder">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">Our Team</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-12">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
+              <div className="md:col-span-1 flex justify-center">
+                <img src="/assets/images/About-us/Guido-Putignano.png" className="w-40 h-40 rounded-full shadow-lg" alt="Guido Putignano" />
+              </div>
+              <div className="md:col-span-3">
+                <i className="fas fa-quote-left text-3xl mb-4 block opacity-50" style={{ color: "var(--primary)" }} />
+                <p className="text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-4">
+                  We founded bioERGOtech because we saw too many life-saving innovations trapped between the lab bench and the patient bedside. Our mission is not to make research incrementally better — it is to make it fundamentally smarter, so that breakthroughs reach the people who need them most.
+                </p>
+                <p className="text-lg font-semibold text-gray-800">Guido Putignano</p>
+                <p style={{ color: "var(--primary)" }}>President &amp; Founder, bioERGOtech Foundation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Values */}
+      <section className="section" id="values">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title text-center block">Our 6 Core Values</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
             {[
-              { name: 'Guido Putignano', img: 'Guido-Putignano.webp', role: 'CEO & Co-Founder' },
-              { name: 'Mimma Leone', img: 'Mimma-Leone.webp', role: 'Chief Scientific Officer' },
-              { name: 'Francesco Giuri', img: 'Francesco-Giuri.webp', role: 'Scientific Advisor' },
-              { name: 'Carmine Pisano', img: 'Carmine-Pisano.webp', role: 'Scientific Advisor' },
-              { name: 'Giacomo Ferrazzini', img: 'Giacomo-Ferrazzini.webp', role: 'Advisor' },
-              { name: 'Sara Masella', img: 'Sara_Masella.webp', role: 'Research Associate' },
-            ].map(({ name, img, role }) => (
-              <div key={name} className="text-center">
-                <div className="image-container rounded-full overflow-hidden w-40 h-40 mx-auto mb-4">
-                  <Image src={`/assets/images/About-us/${img}`} alt={name} width={160} height={160} className="w-full h-full object-cover" />
+              { icon: "fa-heart", title: "Servant Ambition", desc: "We pursue breakthroughs to serve humanity, matching our ambition with humility." },
+              { icon: "fa-lightbulb", title: "Intelligent Agency", desc: "We act with autonomy and responsibility to solve problems and seize opportunities." },
+              { icon: "fa-seedling", title: "Sustainable Impact", desc: "We build solutions that are both scientifically sound and economically viable." },
+              { icon: "fa-handshake", title: "Generous Excellence", desc: "We share knowledge freely while demanding the highest standards from ourselves." },
+              { icon: "fa-brain", title: "Proximity to Genius", desc: "We bring together exceptional people to spark breakthrough discoveries." },
+              { icon: "fa-water", title: "Adaptive Resilience", desc: "We reframe every setback as a redirection toward a better solution." },
+            ].map((v) => (
+              <div key={v.title} className="card text-center">
+                <div className="mb-4"><i className={`fas ${v.icon} text-4xl`} style={{ color: "var(--primary)" }} /></div>
+                <h3 className="text-2xl font-semibold mb-2">{v.title}</h3>
+                <p className="text-gray-600">{v.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Who We Are */}
+      <section className="section bg-light-gray" id="team">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title">Who We Are</h2>
+
+          {/* Leadership */}
+          <div className="mb-16">
+            <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Leadership</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { img: "/assets/images/About-us/Guido-Putignano.png", name: "Guido Putignano", role: "President", desc: "Specialized in computational biology, with experience in engineering and AI-driven biomedical solutions." },
+                { img: "/assets/images/About-us/Mimma-Leone.png", name: "Mimma Leone", role: "Board Member", desc: "Legal expert and entrepreneur focused on advancing educational and university projects." },
+                { img: "/assets/images/About-us/Carmine-Pisano.png", name: "Carmine Pisano", role: "Board Member", desc: "Expert in public administration and urban development, specializing in digital transformation." },
+                { img: "/assets/images/About-us/Sara_Masella.png", name: "Sara Masella", role: "Board Member", desc: "Specialized in education, integrating new technologies to create engaging learning experiences." },
+                { img: "/assets/images/About-us/Giacomo-Ferrazzini.png", name: "Giacomo Ferrazzini", role: "Scientific Projects Lead", desc: "Medical student at ETH Zurich and USI, combining advanced medical training with leadership in health science initiatives." },
+              ].map((p) => (
+                <div key={p.name} className="card text-center">
+                  <img src={p.img} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
+                  <h4 className="text-xl font-semibold">{p.name}</h4>
+                  <p style={{ color: "var(--primary)" }}>{p.role}</p>
+                  <p className="text-gray-600 mt-2">{p.desc}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800">{name}</h3>
-                <p className="text-sm text-gray-500">{role}</p>
+              ))}
+            </div>
+          </div>
+
+          {/* Advisory Board */}
+          <div className="mb-16">
+            <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Advisory Board</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { img: "/assets/images/launch_event/Daniela.webp", name: "Daniela Marotto", role: "Doctor", desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care." },
+                { img: "/assets/images/About-us/Francesco-Giuri.png", name: "Francesco Giuri", role: "Innovator", desc: "Innovation expert recognized for active leadership in European grants and projects focused on startups." },
+                { img: "/assets/images/launch_event/Ale_Basso.webp", name: "Alessandro Basso", role: "Innovator", desc: "Leading figure in Italy's digital healthcare landscape, particularly in telemedicine and innovative health service delivery." },
+              ].map((p) => (
+                <div key={p.name} className="card text-center">
+                  <img src={p.img} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
+                  <h4 className="text-xl font-semibold">{p.name}</h4>
+                  <p style={{ color: "var(--primary)" }}>{p.role}</p>
+                  <p className="text-gray-600 mt-2">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Partners, Supporters, Donors */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            {[
+              { icon: "fa-handshake", title: "Our Partners", desc: "Strategic research partnerships, healthcare collaborators, portfolio companies, and industry partners." },
+              { icon: "fa-users", title: "Our Supporters", desc: "Advisory board members, industry mentors, institutional endorsers, and key community voices." },
+              { icon: "fa-hand-holding-heart", title: "Our Donors", desc: "Founding donors, institutional funders, and individual contributors who fuel our mission." },
+            ].map((item) => (
+              <div key={item.title}>
+                <div className="mb-4"><i className={`fas ${item.icon} text-3xl`} style={{ color: "var(--primary)" }} /></div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-4">{item.title}</h3>
+                <p className="text-gray-600">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -132,18 +203,21 @@ export default function AboutUsPage() {
       </section>
 
       {/* CTA */}
-      <section className="section">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="section-title">Join Our Mission</h2>
-          <p className="text-xl mb-10 max-w-2xl mx-auto text-gray-700">
-            Whether you are a researcher, investor, or innovator, there is a place for you in the bioERGOtech ecosystem.
+      <section className="section text-center" id="get-involved">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title block">Be Part of What We&apos;re Building</h2>
+          <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
+            Whether you&apos;re a researcher, innovator, healthcare professional, or supporter — there&apos;s a place for you in the bioERGOtech ecosystem.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/join-us" className="btn-primary">Join the Ecosystem</Link>
-            <Link href="/partner-with-us" className="btn-outline">Partner with Us</Link>
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <Link href="/join-us" className="btn-primary">Join Us</Link>
+            <Link href="/partner-with-us" className="btn-outline">Partner With Us</Link>
+            <Link href="/build-with-us" className="btn-outline">Build With Us</Link>
           </div>
         </div>
       </section>
+
+      <SiteFooter />
     </>
-  )
+  );
 }

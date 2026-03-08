@@ -1,23 +1,11 @@
-import type { Metadata } from 'next'
-import LoginForm from './LoginForm'
+import { LoginForm } from "@/components/login-form";
 
-export const metadata: Metadata = {
-  title: 'Sign In',
-  description: 'Sign in to the bioERGOtech Member Portal',
-}
-
-export default function LoginPage() {
+export default function Page() {
   return (
-    <section className="section" style={{ paddingTop: 120, paddingBottom: 80, minHeight: '100vh' }}>
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-800 mb-3">Member Portal</h1>
-          <p className="text-lg text-gray-600 max-w-xl mx-auto">
-            Access your projects, connect with ecosystem members, and manage shared resources.
-          </p>
-        </div>
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
         <LoginForm />
       </div>
-    </section>
-  )
+    </div>
+  );
 }
