@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import BioERGOtechPortal, { type PortalUser, type PartnershipLevel } from "./portal-dashboard";
@@ -15,12 +14,24 @@ export const metadata: Metadata = {
 };
 
 export default async function MemberPortal() {
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const claims = claimsData?.claims;
+  // ── Auth check ────────────────────────────────────────────────────────────
+  let userId: string | null = null;
+  let userEmail: string | null = null;
 
-  // ── Not logged in: show auth landing page ──────────────────────────────────
-  if (!claims) {
+  try {
+    const supabase = await createClient();
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+
+    if (!claimsError && claimsData?.claims) {
+      userId = claimsData.claims.sub as string ?? null;
+      userEmail = claimsData.claims.email as string ?? null;
+    }
+  } catch {
+    // getClaims failed — treat as unauthenticated
+  }
+
+  // ── Not logged in ─────────────────────────────────────────────────────────
+  if (!userId || !userEmail) {
     return (
       <>
         <Navbar />
@@ -39,10 +50,7 @@ export default async function MemberPortal() {
           </section>
 
           {/* Auth Section */}
-          <section
-            className="section"
-            style={{ paddingTop: "60px", paddingBottom: "60px" }}
-          >
+          <section className="section" style={{ paddingTop: "60px", paddingBottom: "60px" }}>
             <div className="max-w-md mx-auto px-6">
               <div className="card">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
@@ -58,7 +66,7 @@ export default async function MemberPortal() {
                     className="btn-primary text-center w-full block"
                     style={{ textDecoration: "none" }}
                   >
-                    <i className="fas fa-sign-in-alt mr-2" /> Sign In
+                    Sign In
                   </Link>
 
                   <div className="flex items-center gap-3 my-2">
@@ -72,15 +80,12 @@ export default async function MemberPortal() {
                     className="btn-outline text-center w-full block"
                     style={{ textDecoration: "none" }}
                   >
-                    <i className="fas fa-user-plus mr-2" /> Join the Ecosystem
+                    Join the Ecosystem
                   </Link>
                 </div>
 
                 <p className="text-center text-sm text-gray-500 mt-6">
-                  <Link
-                    href="/auth/forgot-password"
-                    style={{ color: "var(--primary)" }}
-                  >
+                  <Link href="/auth/forgot-password" style={{ color: "var(--primary)" }}>
                     Forgot your password?
                   </Link>
                 </p>
@@ -93,33 +98,15 @@ export default async function MemberPortal() {
                 </h3>
                 <div className="space-y-3">
                   {[
-                    {
-                      icon: "fa-project-diagram",
-                      label: "Project management across hubs",
-                    },
-                    { icon: "fa-flask", label: "Distributed lab booking" },
-                    {
-                      icon: "fa-calendar",
-                      label: "Exclusive events and workshops",
-                    },
-                    {
-                      icon: "fa-address-book",
-                      label: "Member directory and networking",
-                    },
-                    {
-                      icon: "fa-book",
-                      label: "Knowledge base and resources",
-                    },
-                  ].map((b) => (
-                    <div
-                      key={b.label}
-                      className="flex items-center gap-3 text-gray-700"
-                    >
-                      <i
-                        className={`fas ${b.icon}`}
-                        style={{ color: "var(--primary)", width: "20px" }}
-                      />
-                      <span>{b.label}</span>
+                    "Project management across hubs",
+                    "Distributed lab booking",
+                    "Exclusive events and workshops",
+                    "Member directory and networking",
+                    "Knowledge base and resources",
+                  ].map((label) => (
+                    <div key={label} className="flex items-center gap-3 text-gray-700">
+                      <span style={{ color: "var(--primary)", fontSize: "1.1rem" }}>→</span>
+                      <span>{label}</span>
                     </div>
                   ))}
                 </div>
@@ -132,37 +119,38 @@ export default async function MemberPortal() {
     );
   }
 
-  // ── Logged in: fetch profile with partnership level ────────────────────────
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, partnership_level")
-    .eq("id", claims.sub)
-    .single();
+  // ── Logged in: fetch profile ───────────────────────────────────────────────
+  let fullName = "";
+  let partnershipLevel: PartnershipLevel = "viewer";
 
-  // If no profile exists yet (e.g. existing user before migration), treat as viewer
-  const partnershipLevel: PartnershipLevel =
-    (profile?.partnership_level as PartnershipLevel) ?? "viewer";
+  try {
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, partnership_level")
+      .eq("id", userId)
+      .single();
 
-  // Build initials from full name or email
-  const fullName = profile?.full_name || "";
+    if (profile) {
+      fullName = profile.full_name ?? "";
+      partnershipLevel = (profile.partnership_level as PartnershipLevel) ?? "viewer";
+    }
+  } catch {
+    // Profile fetch failed — fall back to viewer defaults
+  }
+
   const initials = fullName
-    ? fullName
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : (claims.email as string).slice(0, 2).toUpperCase();
+    ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : userEmail.slice(0, 2).toUpperCase();
 
   const portalUser: PortalUser = {
-    email: claims.email as string,
-    sub: claims.sub as string,
+    email: userEmail,
+    sub: userId,
     full_name: fullName || undefined,
     partnership_level: partnershipLevel,
     initials,
-    display_name: fullName || (claims.email as string),
+    display_name: fullName || userEmail,
   };
 
-  // ── Render the full portal (full-screen, no navbar/footer) ─────────────────
   return <BioERGOtechPortal user={portalUser} />;
 }
