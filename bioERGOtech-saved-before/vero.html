@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+    <title>VERO Risk Calculator | bioERGOtech</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/cookie-consent.css">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="VERO Risk Calculator — a clinical risk stratification tool developed by bioERGOtech Foundation for evidence-based medical decision-making.">
+    <link rel="canonical" href="https://bioergotech.org/vero.html">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="VERO Risk Calculator | bioERGOtech">
+    <meta property="og:description" content="VERO Risk Calculator — a clinical risk stratification tool developed by bioERGOtech Foundation for evidence-based medical decision-making.">
+    <meta property="og:image" content="https://bioergotech.org/assets/images/Logo/short_logo.webp">
+    <meta property="og:url" content="https://bioergotech.org/vero.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="bioERGOtech Foundation">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="VERO Risk Calculator | bioERGOtech">
+    <meta name="twitter:description" content="VERO Risk Calculator — a clinical risk stratification tool developed by bioERGOtech Foundation for evidence-based medical decision-making.">
+    <meta name="twitter:image" content="https://bioergotech.org/assets/images/Logo/short_logo.webp">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "VERO Risk Calculator | bioERGOtech",
+        "description": "VERO Risk Calculator — a clinical risk stratification tool developed by bioERGOtech Foundation for evidence-based medical decision-making.",
+        "url": "https://bioergotech.org/vero.html"
+    }
+    </script>
+
+    <style>
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            flex: 1;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div id="site-header"></div>
+
+        <div class="app-container pt-20">
+            <div class="container mx-auto px-6 py-4">
+                <h1 class="text-2xl font-bold text-gray-800">VERO Risk Calculator</h1>
+                <p class="text-gray-600 mt-1">Clinical risk stratification tool developed by bioERGOtech</p>
+            </div>
+            <iframe
+                src="https://vero-risk-calculator-lym9exbyctkmfeiaxxwmja.streamlit.app/?embed=true"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                allowfullscreen
+                style="height: calc(100vh - 200px);">
+            </iframe>
+        </div>
+
+        <div id="site-footer"></div>
+    </div>
+
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/components.js"></script>
+        <script src="/assets/js/supabase-config.js"></script>
+    <script src="/assets/js/newsletter.js"></script>
+    <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>

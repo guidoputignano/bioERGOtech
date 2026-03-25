@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意大利语课程 - 专为中国学生设计</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .contact {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .main-title {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .main-title h1 {
+            font-size: 42px;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .main-title h2 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .main-title .level {
+            font-size: 20px;
+            color: #666;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .info-box h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-box ul {
+            list-style: none;
+        }
+
+        .info-box li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .info-box li:before {
+            content: "●";
+            position: absolute;
+            left: 0;
+            color: #ffd700;
+        }
+
+        .section {
+            margin: 40px 0;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 28px;
+            color: #0066cc;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0066cc;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title:before {
+            content: "■";
+            margin-right: 10px;
+            color: #0066cc;
+        }
+
+        .objective {
+            background: #e6f2ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .objective strong {
+            color: #0066cc;
+        }
+
+        h4 {
+            font-size: 20px;
+            color: #404040;
+            margin: 25px 0 15px 0;
+        }
+
+        .content-list {
+            margin-left: 20px;
+        }
+
+        .content-list li {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .two-columns {
+            columns: 2;
+            column-gap: 30px;
+        }
+
+        .exam-box {
+            background: #fff9e6;
+            border: 2px solid #ffb347;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .exam-box h4 {
+            color: #ff8c00;
+            margin-top: 0;
+            font-size: 22px;
+        }
+
+        .exam-box ul {
+            list-style: none;
+        }
+
+        .exam-box li {
+            margin: 12px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .exam-box li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #ff8c00;
+            font-size: 18px;
+        }
+
+        .price-box {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .price-box h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .price-item:last-child {
+            border-bottom: none;
+        }
+
+        .price-item .name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .price-item .amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">SafesPro</div>
+            <div class="subtitle">专业人士高级培训和专业学习学院</div>
+            <div class="contact">
+                <strong>法定地址：</strong>via Ciro Giovinazzi 74 | <strong>运营地址：</strong>via Anfiteatro 5<br>
+                74123 Taranto | 电话：099 6529777<br>
+                📧 info@safespro.it | @ altaformazioneprofessionisti@pec.it<br>
+                税号：90249390734
+            </div>
+        </div>
+
+        <!-- Main Title -->
+        <div class="main-title">
+            <h1>意大利语课程</h1>
+            <h2>专为中国学生设计</h2>
+            <div class="level">欧洲共同语言参考标准 A1 – A2 级</div>
+        </div>
+
+        <!-- General Info Box -->
+        <div class="info-box">
+            <h3>ℹ️ 基本信息</h3>
+            <ul>
+                <li><strong>每级别课时：</strong>12周（72小时）</li>
+                <li><strong>授课方式：</strong>面授或在线</li>
+                <li><strong>证书认证：</strong>内部期末考试 + 官方认证可选</li>
+            </ul>
+        </div>
+
+        <!-- A1 Section -->
+        <div class="section">
+            <h3 class="section-title">A1级别课程大纲</h3>
+
+            <div class="objective">
+                <strong>🎯 学习目标：</strong>掌握语言基础，能够在简单日常情境中进行交流。
+            </div>
+
+            <h4>1. 语音与书写</h4>
+            <ul class="content-list">
+                <li>意大利语字母表、发音、与中文的差异</li>
+                <li>重音规则</li>
+            </ul>
+
+            <h4>2. 基础语法</h4>
+            <ul class="content-list two-columns">
+                <li>定冠词和不定冠词</li>
+                <li>名词的性和数</li>
+                <li>形容词和物主形容词</li>
+                <li>规则动词现在时（-are, -ere, -ire）</li>
+                <li>常用不规则动词：essere（是）、avere（有）、andare（去）、fare（做）、stare（待）</li>
+                <li>肯定句、疑问句和否定句结构</li>
+            </ul>
+
+            <h4>3. 词汇</h4>
+            <ul class="content-list two-columns">
+                <li>问候和介绍</li>
+                <li>数字、星期、月份、时间</li>
+                <li>家庭、房屋、职业</li>
+                <li>食物和饮料、餐厅</li>
+                <li>旅行和交通</li>
+            </ul>
+
+            <h4>4. 交际功能</h4>
+            <ul class="content-list">
+                <li>自我介绍和介绍他人</li>
+                <li>询问和提供个人信息</li>
+                <li>谈论日常习惯</li>
+                <li>在酒吧或餐厅点餐</li>
+                <li>简单购物</li>
+            </ul>
+
+            <div class="exam-box">
+                <h4>📝 A1考试（内部考试）</h4>
+                <ul>
+                    <li><strong>阅读理解：</strong>简短文本配选择题</li>
+                    <li><strong>听力理解：</strong>简单对话听力</li>
+                    <li><strong>书面表达：</strong>填写表格或写简短自我介绍（5-6句）</li>
+                    <li><strong>口语表达：</strong>与教师的引导式对话</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- A2 Section -->
+        <div class="section page-break">
+            <h3 class="section-title">A2级别课程大纲</h3>
+
+            <div class="objective">
+                <strong>🎯 学习目标：</strong>巩固基础知识，在熟悉话题上获得自主交流能力。
+            </div>
+
+            <h4>1. 语法</h4>
+            <ul class="content-list two-columns">
+                <li>冠词、名词和形容词的复习和深化</li>
+                <li>动词时态：现在时、近过去时、未完成过去时（入门）</li>
+                <li>简单将来时（入门用法）</li>
+                <li>直接宾语代词和间接宾语代词</li>
+                <li>比较级和最高级</li>
+                <li>简单介词和冠词介词</li>
+            </ul>
+
+            <h4>2. 词汇</h4>
+            <ul class="content-list two-columns">
+                <li>日常生活和休闲时间</li>
+                <li>描述人物、地点和物品</li>
+                <li>旅行、度假、酒店、机场</li>
+                <li>健康和人体</li>
+                <li>过去的经历（用近过去时叙述）</li>
+            </ul>
+
+            <h4>3. 交际功能</h4>
+            <ul class="content-list">
+                <li>讲述个人经历</li>
+                <li>表达喜好和偏好</li>
+                <li>描述地点和人物</li>
+                <li>制定未来计划</li>
+                <li>谈论自己的一天和休闲时间</li>
+            </ul>
+
+            <div class="exam-box">
+                <h4>📝 A2考试（内部考试）</h4>
+                <ul>
+                    <li><strong>阅读理解：</strong>简单文本（公告、简短文章、信息）</li>
+                    <li><strong>听力理解：</strong>较长的日常对话听力</li>
+                    <li><strong>书面表达：</strong>简短叙述性文本（例如：描述一次度假或典型的一天）</li>
+                    <li><strong>口语表达：</strong>关于个人经历的半引导式对话</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Price Box -->
+        <div class="price-box">
+            <h3>💰 课程费用</h3>
+            <div class="price-item">
+                <span class="name">意大利语课程</span>
+                <span class="amount">500欧元<small>/人</small></span>
+            </div>
+            <div class="price-item">
+                <span class="name">A1/A2考试</span>
+                <span class="amount">250欧元</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            完整详细的方案，A1和A2级别课程大纲分别制定，<br>
+            专为中国学生量身打造
+        </div>
+    </div>
+</body>
+</html>
