@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+const MemberMap = dynamic(() => import("@/components/member-map"), { ssr: false });
 
 // ─── DESIGN TOKENS ──────────────────────────────────────────────────────────
 const TEAL = "#2EC4B6";
@@ -396,47 +398,59 @@ function EventsView() {
 }
 
 // ─── MEMBERS VIEW ─────────────────────────────────────────────────────────────
-function MembersView() {
-  const tc: Record<string, string> = { Foundation: TEAL, University: "#7C5CFC", Startup: "#00B894", SME: "#F0A500", "Clinical Center": "#E74C6F" };
-  const tbg: Record<string, string> = { Foundation: TEAL_LIGHT, University: "#F0EDFF", Startup: "#E6F9F5", SME: "#FFF8E6", "Clinical Center": "#FDECF1" };
+function MembersView({ members }: { members: Organisation[] }) {
+  const tc: Record<string, string> = { Foundation: TEAL, University: "#7C5CFC", Startup: "#00B894", SME: "#F0A500", "Clinical Center": "#E74C6F", Investor: "#4A7DFF", "International Partner": "#F0A500" };
+  const tbg: Record<string, string> = { Foundation: TEAL_LIGHT, University: "#F0EDFF", Startup: "#E6F9F5", SME: "#FFF8E6", "Clinical Center": "#FDECF1", Investor: "#EBF1FF", "International Partner": "#FFF8E6" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 28, boxShadow: SHADOW, minHeight: 220, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, opacity: 0.025, backgroundImage: `radial-gradient(${TEAL} 1.2px, transparent 1.2px)`, backgroundSize: "28px 28px" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, position: "relative" }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Network Map</h3>
-          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>Google Maps for Nonprofits</span>
+
+      {/* ── LIVE MAP ── */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+            Member Network Map
+          </h3>
+          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>
+            OpenStreetMap · 6 hubs across 3 continents
+          </span>
         </div>
-        <div style={{ position: "relative", height: 150, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {members.map((m, i) => {
-            const pos = [
-              { left: "40%", top: "38%" }, { left: "44%", top: "14%" }, { left: "45%", top: "18%" },
-              { left: "43%", top: "20%" }, { left: "39%", top: "34%" }, { left: "63%", top: "48%" },
-            ];
-            return (
-              <div key={i} title={`${m.name} — ${m.location}`} style={{ position: "absolute", ...pos[i], width: 14, height: 14, borderRadius: "50%", background: tc[m.type], border: "2.5px solid #fff", boxShadow: `0 0 0 3px ${tc[m.type]}25, 0 2px 6px rgba(0,0,0,0.1)`, cursor: "pointer", animation: `pulse 2.5s ease ${i * 0.3}s infinite`, zIndex: 2 }} />
-            );
-          })}
-          <span style={{ fontSize: 40, color: "#E8EDF3", fontFamily: "'Sora', sans-serif", fontWeight: 800, userSelect: "none" as const, letterSpacing: "0.04em" }}>INTERACTIVE MAP</span>
-        </div>
+        <MemberMap />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-        {members.map((m, i) => (
-          <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.type], color: tc[m.type], fontSize: 14, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>{m.name.charAt(0)}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{m.name}</div>
-                <div style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-                  <Icon name="mapPin" size={11} /> {m.location}
+
+      {/* ── MEMBER CARDS ── */}
+      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+        Member Organisations
+      </h3>
+
+      {(!members || members.length === 0) ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4, animation: "fadeUp 1s ease infinite alternate" }} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+          {members.map((m, i) => (
+            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>
+                  {m.name.charAt(0)}
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{m.name}</div>
+                  <div style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
+                    <Icon name="mapPin" size={11} /> {m.location}
+                  </div>
                 </div>
               </div>
+              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
+                {m.org_type}
+              </span>
             </div>
-            <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.type], color: tc[m.type], fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>{m.type}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
