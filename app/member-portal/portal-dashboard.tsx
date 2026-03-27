@@ -18,6 +18,34 @@ const TEXT_LIGHT = "#8896A6";
 const SHADOW = "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)";
 const SHADOW_HOVER = "0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.05)";
 
+// ─── TYPES ───────────────────────────────────────────────────────────────────
+type Project = {
+  id?: string;
+  name: string;
+  pillar: string;
+  phase: string;
+  status: string;
+  lead: string;
+  description: string;
+  progress: number;
+  color: string;
+};
+
+type Event = {
+  id?: string;
+  title: string;
+  event_date: string;
+  event_type: string;
+  location: string;
+};
+
+type Organisation = {
+  id?: string;
+  name: string;
+  org_type: string;
+  location: string;
+};
+
 // ─── PARTNERSHIP ACCESS CONTROL ─────────────────────────────────────────────
 export type PartnershipLevel = "viewer" | "member" | "partner" | "admin";
 
