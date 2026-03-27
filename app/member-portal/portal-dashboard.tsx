@@ -861,8 +861,8 @@ function AdminPanel() {
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, background: "#F3F5F8", borderRadius: 12, padding: 4, width: "fit-content" }}>
           {[
-            { id: "applications" as const, label: "Applications", icon: "inbox", badge: pendingCount > 0 && appFilter === "pending" ? pendingCount : null },
-            { id: "users" as const, label: "All Users", icon: "users", badge: null },
+            { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null },
+            { id: "users" as const, label: "All Users", icon: "users", badge: null as number | null },
           ].map((t) => (
             <button
               key={t.id}
@@ -880,7 +880,7 @@ function AdminPanel() {
             >
               <Icon name={t.icon} size={15} />
               {t.label}
-              {t.badge != null && t.badge !== false && (
+              {t.badge != null && (
                 <span style={{ background: "#E74C6F", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, padding: "1px 7px", fontFamily: "'DM Sans', sans-serif" }}>
                   {t.badge}
                 </span>
