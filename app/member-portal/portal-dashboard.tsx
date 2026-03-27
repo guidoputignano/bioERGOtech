@@ -90,6 +90,15 @@ const navItems = [
   { id: "admin", label: "Admin Panel", icon: "shield" },
 ];
 
+// ─── EQUIPMENT (static — DB connection in next phase) ────────────────────────
+const equipment = [
+  { name: "Flow Cytometer BD FACSAria III", location: "Taranto Lab A", status: "available", utilization: 42 },
+  { name: "CRISPR Electroporation System", location: "Zurich UZH", status: "booked", utilization: 78 },
+  { name: "Raman Spectrometer", location: "Taranto Lab B", status: "available", utilization: 31 },
+  { name: "Organoid Culture Station", location: "Zurich UZH", status: "maintenance", utilization: 65 },
+  { name: "High-Throughput Sequencer", location: "Taranto Lab A", status: "available", utilization: 55 },
+];
+
 // ─── ICONS ───────────────────────────────────────────────────────────────────
 const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
   const icons: Record<string, React.ReactNode> = {
@@ -121,42 +130,6 @@ const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
   };
   return <>{icons[name] || null}</>;
 };
-
-// ─── STATIC DATA (unchanged) ─────────────────────────────────────────────────
-const projects = [
-  { name: "OncoTarget", pillar: "Synthetic Biology", phase: "Ideation", status: "on-track", lead: "G. Papa & L. Scalise", description: "Gastric cancer organoid pipeline for drug screening and personalized medicine", progress: 35, color: "#E74C6F" },
-  { name: "VERO Algorithm", pillar: "Digital Twin", phase: "Production", status: "on-track", lead: "O. Yusuf", description: "Oncological risk assessment based on age and biomarkers", progress: 68, color: TEAL },
-  { name: "CranioTech", pillar: "Multi-Omics", phase: "Production", status: "at-risk", lead: "CranioTech Solution", description: "Detection and analysis of cranial neurophysiological parameters", progress: 52, color: "#F0A500" },
-  { name: "Lab AI Agents", pillar: "Multi-Omics", phase: "Ideation", status: "on-track", lead: "Z. Li (ETH Zurich)", description: "Protein language models to reduce costs and improve antibody simulations", progress: 20, color: "#7C5CFC" },
-  { name: "Xperbot Automation", pillar: "Biomanufacturing", phase: "Ideation", status: "on-track", lead: "H. Huang & X. Wang", description: "Cost-effective automation solutions for cell therapy manufacturing", progress: 15, color: "#00B894" },
-];
-
-const equipment = [
-  { name: "Flow Cytometer BD FACSAria III", location: "Taranto Lab A", status: "available", utilization: 42 },
-  { name: "CRISPR Electroporation System", location: "Zurich UZH", status: "booked", utilization: 78 },
-  { name: "Raman Spectrometer", location: "Taranto Lab B", status: "available", utilization: 31 },
-  { name: "Organoid Culture Station", location: "Zurich UZH", status: "maintenance", utilization: 65 },
-  { name: "High-Throughput Sequencer", location: "Taranto Lab A", status: "available", utilization: 55 },
-];
-
-const events = [
-  { date: "Feb 15", title: "Project Genesis Intro", type: "internal", location: "Online" },
-  { date: "Feb 28", title: "Progress Radar: CranioTech", type: "internal", location: "Taranto" },
-  { date: "Mar 12", title: "National Event Rome", type: "national", location: "Camera dei Deputati" },
-  { date: "Mar 25", title: "Project Genesis #1", type: "internal", location: "Online" },
-  { date: "Apr 8", title: "Board of Advisors", type: "internal", location: "Zurich" },
-  { date: "Apr 22", title: "Copy & Improve #1", type: "internal", location: "Taranto" },
-  { date: "Nov", title: "Taranto Biotech Days 2026", type: "national", location: "Taranto" },
-];
-
-const members = [
-  { name: "bioERGOtech Foundation", type: "Foundation", location: "Taranto, IT" },
-  { name: "UZH Research Lab", type: "University", location: "Zurich, CH" },
-  { name: "ETH Student Project House", type: "University", location: "Zurich, CH" },
-  { name: "Xperbot", type: "Startup", location: "Zug, CH" },
-  { name: "CranioTech Solution", type: "SME", location: "Puglia, IT" },
-  { name: "Riyadh Clinical Hub", type: "Clinical Center", location: "Riyadh, SA" },
-];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 const AnimNum = ({ target, dur = 1200 }: { target: number; dur?: number }) => {
@@ -208,12 +181,12 @@ function LockedOverlay({ requiredLevel, sectionName }: { requiredLevel: string; 
 }
 
 // ─── DASHBOARD VIEW ──────────────────────────────────────────────────────────
-function DashboardView() {
+function DashboardView({ projects, events }: { projects: Project[]; events: Event[] }) {
   const stats = [
-    { label: "Active Projects", value: 5, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
+    { label: "Active Projects", value: projects.length || 5, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
     { label: "Member Organizations", value: 8, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
     { label: "Equipment Shared", value: 12, icon: "cpu", color: "#E74C6F", bg: "#FDECF1" },
-    { label: "Upcoming Events", value: 7, icon: "calendar", color: "#F0A500", bg: "#FFF8E6" },
+    { label: "Upcoming Events", value: events.length || 7, icon: "calendar", color: "#F0A500", bg: "#FFF8E6" },
   ];
 
   return (
@@ -264,9 +237,9 @@ function DashboardView() {
           </div>
           {events.slice(0, 5).map((e, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "11px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
-              <div style={{ width: 46, height: 46, borderRadius: 12, flexShrink: 0, background: e.type === "national" ? TEAL_LIGHT : "#F3F5F8", border: `1px solid ${e.type === "national" ? TEAL_MUTED : BORDER}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 11, color: e.type === "national" ? TEAL_DARK : TEXT_MID, fontWeight: 700, fontFamily: "'Sora', sans-serif", lineHeight: 1.2 }}>{e.date.split(" ")[0]}</span>
-                {e.date.split(" ")[1] && <span style={{ fontSize: 9, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{e.date.split(" ")[1]}</span>}
+              <div style={{ width: 46, height: 46, borderRadius: 12, flexShrink: 0, background: e.event_type === "national" ? TEAL_LIGHT : "#F3F5F8", border: `1px solid ${e.event_type === "national" ? TEAL_MUTED : BORDER}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 11, color: e.event_type === "national" ? TEAL_DARK : TEXT_MID, fontWeight: 700, fontFamily: "'Sora', sans-serif", lineHeight: 1.2 }}>{e.event_date.split(" ")[0]}</span>
+                {e.event_date.split(" ")[1] && <span style={{ fontSize: 9, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{e.event_date.split(" ")[1]}</span>}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{e.title}</div>
@@ -274,7 +247,7 @@ function DashboardView() {
                   <Icon name="mapPin" size={11} /> {e.location}
                 </div>
               </div>
-              <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 20, fontWeight: 600, background: e.type === "national" ? TEAL_LIGHT : "#F3F5F8", color: e.type === "national" ? TEAL_DARK : TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{e.type}</span>
+              <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 20, fontWeight: 600, background: e.event_type === "national" ? TEAL_LIGHT : "#F3F5F8", color: e.event_type === "national" ? TEAL_DARK : TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{e.event_type}</span>
             </div>
           ))}
         </div>
@@ -303,7 +276,7 @@ function DashboardView() {
 }
 
 // ─── PROJECTS VIEW ────────────────────────────────────────────────────────────
-function ProjectsView() {
+function ProjectsView({ projects }: { projects: Project[] }) {
   const [selected, setSelected] = useState<number | null>(null);
   const pillars = ["All", "Digital Twin", "Synthetic Biology", "Biomanufacturing", "Multi-Omics"];
   const [filter, setFilter] = useState("All");
@@ -400,17 +373,17 @@ function LabView() {
 }
 
 // ─── EVENTS VIEW ──────────────────────────────────────────────────────────────
-function EventsView() {
+function EventsView({ events }: { events: Event[] }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
       {events.map((e, i) => {
-        const hl = e.type === "national";
+        const hl = e.event_type === "national";
         return (
           <div key={i} style={{ background: CARD, borderRadius: 16, padding: 24, border: `1.5px solid ${hl ? TEAL_MUTED : BORDER}`, boxShadow: SHADOW, position: "relative", overflow: "hidden" }}>
             {hl && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${TEAL}, ${TEAL_DARK})` }} />}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 20, fontWeight: 700, background: hl ? TEAL_LIGHT : "#F3F5F8", color: hl ? TEAL_DARK : TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.05em", fontFamily: "'DM Sans', sans-serif" }}>{e.type}</span>
-              <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'Sora', sans-serif", fontWeight: 700 }}>{e.date}</span>
+              <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 20, fontWeight: 700, background: hl ? TEAL_LIGHT : "#F3F5F8", color: hl ? TEAL_DARK : TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.05em", fontFamily: "'DM Sans', sans-serif" }}>{e.event_type}</span>
+              <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'Sora', sans-serif", fontWeight: 700 }}>{e.event_date}</span>
             </div>
             <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 8 }}>{e.title}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20 }}>
@@ -432,29 +405,18 @@ function MembersView({ members }: { members: Organisation[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-      {/* ── LIVE MAP ── */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
-            Member Network Map
-          </h3>
-          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>
-            OpenStreetMap · 6 hubs across 3 continents
-          </span>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Network Map</h3>
+          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>OpenStreetMap · 6 hubs across 3 continents</span>
         </div>
         <MemberMap />
       </div>
-
-      {/* ── MEMBER CARDS ── */}
-      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
-        Member Organisations
-      </h3>
-
+      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Organisations</h3>
       {(!members || members.length === 0) ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4, animation: "fadeUp 1s ease infinite alternate" }} />
+            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />
           ))}
         </div>
       ) : (
@@ -462,9 +424,7 @@ function MembersView({ members }: { members: Organisation[] }) {
           {members.map((m, i) => (
             <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>
-                  {m.name.charAt(0)}
-                </div>
+                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>{m.name.charAt(0)}</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{m.name}</div>
                   <div style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
@@ -472,9 +432,7 @@ function MembersView({ members }: { members: Organisation[] }) {
                   </div>
                 </div>
               </div>
-              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
-                {m.org_type}
-              </span>
+              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>{m.org_type}</span>
             </div>
           ))}
         </div>
@@ -546,28 +504,18 @@ type Application = {
 };
 
 const ORG_TYPE_LABELS: Record<string, string> = {
-  startup: "Startup",
-  sme: "SME / Company",
-  hospital: "Hospital / Clinic",
-  university: "University / Research Institute",
-  investor: "Investor / VC",
-  international_partner: "International Partner",
-  other: "Other",
+  startup: "Startup", sme: "SME / Company", hospital: "Hospital / Clinic",
+  university: "University / Research Institute", investor: "Investor / VC",
+  international_partner: "International Partner", other: "Other",
 };
 
 const PILLAR_LABELS: Record<string, string> = {
-  digital_twin: "Digital Twin Therapeutics",
-  synthetic_biology: "Synthetic Biology & Cell Engineering",
-  biomanufacturing: "Automated Biomanufacturing",
-  multi_omics: "Integrated Multi-Omics Analytics",
+  digital_twin: "Digital Twin Therapeutics", synthetic_biology: "Synthetic Biology & Cell Engineering",
+  biomanufacturing: "Automated Biomanufacturing", multi_omics: "Integrated Multi-Omics Analytics",
 };
 
 // ─── APPLICATION DETAIL DRAWER ────────────────────────────────────────────────
-function ApplicationDrawer({
-  app,
-  onClose,
-  onAction,
-}: {
+function ApplicationDrawer({ app, onClose, onAction }: {
   app: Application;
   onClose: () => void;
   onAction: (id: string, action: "approve" | "decline", notes: string, level: PartnershipLevel) => void;
@@ -584,37 +532,16 @@ function ApplicationDrawer({
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.4)", backdropFilter: "blur(3px)" }}
-      />
-      {/* Drawer */}
-      <div style={{
-        position: "absolute", right: 0, top: 0, bottom: 0, width: 520,
-        background: CARD, boxShadow: "-4px 0 32px rgba(0,0,0,0.12)",
-        display: "flex", flexDirection: "column", overflow: "hidden",
-        animation: "slideIn 0.25s ease both",
-      }}>
-        {/* Header */}
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.4)", backdropFilter: "blur(3px)" }} />
+      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 520, background: CARD, boxShadow: "-4px 0 32px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", overflow: "hidden", animation: "slideIn 0.25s ease both" }}>
         <div style={{ padding: "22px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
-              {app.full_name || app.email}
-            </div>
-            <div style={{ fontSize: 13, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-              {app.organisation_name && `${app.organisation_name} · `}{app.email}
-            </div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{app.full_name || app.email}</div>
+            <div style={{ fontSize: 13, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{app.organisation_name && `${app.organisation_name} · `}{app.email}</div>
           </div>
-          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}>
-            <Icon name="x" size={16} />
-          </button>
+          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
         </div>
-
-        {/* Body */}
         <div style={{ flex: 1, overflow: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
-
-          {/* Organisation */}
           <div style={{ background: "#FAFBFC", borderRadius: 14, padding: 18, border: `1px solid ${BORDER}` }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 14, fontFamily: "'DM Sans', sans-serif" }}>Organisation</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -631,58 +558,39 @@ function ApplicationDrawer({
               ))}
             </div>
           </div>
-
-          {/* Scientific interests */}
           {app.areas_of_interest && app.areas_of_interest.length > 0 && (
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 10, fontFamily: "'DM Sans', sans-serif" }}>Scientific Interests</div>
               <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 7 }}>
                 {app.areas_of_interest.map((a) => (
-                  <span key={a} style={{ fontSize: 12, padding: "4px 12px", borderRadius: 20, background: TEAL_LIGHT, color: TEAL_DARK, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
-                    {PILLAR_LABELS[a] ?? a}
-                  </span>
+                  <span key={a} style={{ fontSize: 12, padding: "4px 12px", borderRadius: 20, background: TEAL_LIGHT, color: TEAL_DARK, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{PILLAR_LABELS[a] ?? a}</span>
                 ))}
               </div>
             </div>
           )}
-
-          {/* What they bring */}
           {app.what_you_bring && (
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>What They Bring</div>
               <p style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.65, margin: 0, fontFamily: "'DM Sans', sans-serif", background: "#FAFBFC", padding: 14, borderRadius: 10, border: `1px solid ${BORDER}` }}>{app.what_you_bring}</p>
             </div>
           )}
-
-          {/* What they seek */}
           {app.what_you_seek && (
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>What They Seek</div>
               <p style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.65, margin: 0, fontFamily: "'DM Sans', sans-serif", background: "#FAFBFC", padding: 14, borderRadius: 10, border: `1px solid ${BORDER}` }}>{app.what_you_seek}</p>
             </div>
           )}
-
-          {/* Applied at */}
           {app.applied_at && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, color: TEXT_LIGHT, fontSize: 12, fontFamily: "'DM Sans', sans-serif" }}>
               <Icon name="clock" size={13} />
               Applied {new Date(app.applied_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
             </div>
           )}
-
-          {/* Admin notes */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>Admin Notes (internal)</div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes visible only to admins..."
-              rows={3}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`, fontSize: 13, fontFamily: "'DM Sans', sans-serif", color: TEXT, outline: "none", resize: "vertical" as const, background: "#FAFBFC" }}
-            />
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add notes visible only to admins..." rows={3}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`, fontSize: 13, fontFamily: "'DM Sans', sans-serif", color: TEXT, outline: "none", resize: "vertical" as const, background: "#FAFBFC" }} />
           </div>
-
-          {/* Partnership level on approve */}
           {app.application_status === "pending" && (
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>Grant Partnership Level</div>
@@ -690,15 +598,8 @@ function ApplicationDrawer({
                 {(["member", "partner"] as PartnershipLevel[]).map((l) => {
                   const lbl = PARTNERSHIP_LABELS[l];
                   return (
-                    <button
-                      key={l}
-                      onClick={() => setLevel(l)}
-                      style={{
-                        padding: "7px 18px", borderRadius: 10, border: `1.5px solid ${level === l ? lbl.color : BORDER}`,
-                        background: level === l ? lbl.bg : CARD, color: level === l ? lbl.color : TEXT_LIGHT,
-                        fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                      }}
-                    >
+                    <button key={l} onClick={() => setLevel(l)}
+                      style={{ padding: "7px 18px", borderRadius: 10, border: `1.5px solid ${level === l ? lbl.color : BORDER}`, background: level === l ? lbl.bg : CARD, color: level === l ? lbl.color : TEXT_LIGHT, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                       {lbl.label}
                     </button>
                   );
@@ -707,35 +608,21 @@ function ApplicationDrawer({
             </div>
           )}
         </div>
-
-        {/* Footer actions */}
         {app.application_status === "pending" && (
           <div style={{ padding: "18px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10 }}>
-            <button
-              onClick={() => handle("decline")}
-              disabled={acting}
-              style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1.5px solid #F9C3CE`, background: "#FEF2F4", color: "#D63563", fontSize: 13, fontWeight: 700, cursor: acting ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: acting ? 0.6 : 1 }}
-            >
+            <button onClick={() => handle("decline")} disabled={acting}
+              style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1.5px solid #F9C3CE`, background: "#FEF2F4", color: "#D63563", fontSize: 13, fontWeight: 700, cursor: acting ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: acting ? 0.6 : 1 }}>
               Decline
             </button>
-            <button
-              onClick={() => handle("approve")}
-              disabled={acting}
-              style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: acting ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: `0 2px 8px ${TEAL}33`, opacity: acting ? 0.6 : 1 }}
-            >
+            <button onClick={() => handle("approve")} disabled={acting}
+              style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: acting ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: `0 2px 8px ${TEAL}33`, opacity: acting ? 0.6 : 1 }}>
               {acting ? "Processing…" : `Approve as ${PARTNERSHIP_LABELS[level].label}`}
             </button>
           </div>
         )}
-
         {app.application_status !== "pending" && (
           <div style={{ padding: "18px 28px", borderTop: `1px solid ${BORDER}` }}>
-            <div style={{
-              padding: "12px 18px", borderRadius: 12, textAlign: "center",
-              background: app.application_status === "approved" ? "#E6F9F5" : "#FEF2F4",
-              color: app.application_status === "approved" ? "#0D9373" : "#D63563",
-              fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-            }}>
+            <div style={{ padding: "12px 18px", borderRadius: 12, textAlign: "center", background: app.application_status === "approved" ? "#E6F9F5" : "#FEF2F4", color: app.application_status === "approved" ? "#0D9373" : "#D63563", fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
               {app.application_status === "approved" ? "✓ Approved" : "✗ Declined"}
               {app.reviewed_at && ` · ${new Date(app.reviewed_at).toLocaleDateString("en-GB")}`}
             </div>
@@ -746,63 +633,45 @@ function ApplicationDrawer({
   );
 }
 
-// ─── ADMIN PANEL (UPGRADED) ───────────────────────────────────────────────────
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel() {
   const [tab, setTab] = useState<"applications" | "users">("applications");
-
-  // Applications state
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  // Users state
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
 
-  // Load applications
   useEffect(() => {
     setLoadingApps(true);
     fetch(`/api/admin/applications?status=${appFilter}`)
-      .then((r) => r.json())
-      .then((data) => { setApplications(data.applications || []); setLoadingApps(false); })
+      .then(r => r.json())
+      .then(data => { setApplications(data.applications || []); setLoadingApps(false); })
       .catch(() => setLoadingApps(false));
   }, [appFilter]);
 
-  // Load users
   useEffect(() => {
     if (tab !== "users") return;
     setLoadingUsers(true);
     fetch("/api/admin/users")
-      .then((r) => r.json())
-      .then((data) => { setUsers(data.users || []); setLoadingUsers(false); })
+      .then(r => r.json())
+      .then(data => { setUsers(data.users || []); setLoadingUsers(false); })
       .catch(() => setLoadingUsers(false));
   }, [tab]);
 
-  const handleAction = async (
-    id: string,
-    action: "approve" | "decline",
-    notes: string,
-    level: PartnershipLevel
-  ) => {
+  const handleAction = async (id: string, action: "approve" | "decline", notes: string, level: PartnershipLevel) => {
     setActionMessage(null);
     try {
       const res = await fetch("/api/admin/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ applicantId: id, action, adminNotes: notes, partnershipLevel: level }),
       });
       const data = await res.json();
       if (res.ok) {
-        setApplications((prev) =>
-          prev.map((a) =>
-            a.id === id
-              ? { ...a, application_status: action === "approve" ? "approved" : "declined", reviewed_at: new Date().toISOString() }
-              : a
-          )
-        );
+        setApplications(prev => prev.map(a => a.id === id ? { ...a, application_status: action === "approve" ? "approved" : "declined", reviewed_at: new Date().toISOString() } : a));
         setSelectedApp(null);
         setActionMessage({ type: "success", text: `Application ${action === "approve" ? "approved" : "declined"} successfully.` });
       } else {
@@ -816,33 +685,17 @@ function AdminPanel() {
   const updateLevel = async (userId: string, level: PartnershipLevel) => {
     setSaving(userId);
     try {
-      const res = await fetch("/api/admin/set-partnership", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, partnershipLevel: level }),
-      });
-      if (res.ok) {
-        setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, partnership_level: level } : u));
-      }
-    } finally {
-      setSaving(null);
-    }
+      const res = await fetch("/api/admin/set-partnership", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, partnershipLevel: level }) });
+      if (res.ok) setUsers(prev => prev.map(u => u.id === userId ? { ...u, partnership_level: level } : u));
+    } finally { setSaving(null); }
   };
 
-  const pendingCount = applications.filter((a) => a.application_status === "pending").length;
+  const pendingCount = applications.filter(a => a.application_status === "pending").length;
 
   return (
     <>
-      {selectedApp && (
-        <ApplicationDrawer
-          app={selectedApp}
-          onClose={() => setSelectedApp(null)}
-          onAction={handleAction}
-        />
-      )}
-
+      {selectedApp && <ApplicationDrawer app={selectedApp} onClose={() => setSelectedApp(null)} onAction={handleAction} />}
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header banner */}
         <div style={{ background: "#FDECF1", border: "1px solid #F9C3CE", borderRadius: 14, padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ color: "#E74C6F" }}><Icon name="shield" size={20} /></div>
           <div>
@@ -850,68 +703,36 @@ function AdminPanel() {
             <div style={{ fontSize: 12, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>Review membership applications and manage user partnership levels.</div>
           </div>
         </div>
-
-        {/* Action message */}
         {actionMessage && (
           <div style={{ padding: "12px 18px", borderRadius: 10, background: actionMessage.type === "success" ? "#E6F9F5" : "#FDECF1", border: `1px solid ${actionMessage.type === "success" ? "#A3E4D7" : "#F9C3CE"}`, color: actionMessage.type === "success" ? "#0D9373" : "#D63563", fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
             {actionMessage.text}
           </div>
         )}
-
-        {/* Tabs */}
         <div style={{ display: "flex", gap: 4, background: "#F3F5F8", borderRadius: 12, padding: 4, width: "fit-content" }}>
-          {[
-            { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null },
+          {([
+            { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null as number | null },
             { id: "users" as const, label: "All Users", icon: "users", badge: null as number | null },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "9px 18px", borderRadius: 9, border: "none",
-                background: tab === t.id ? CARD : "transparent",
-                color: tab === t.id ? TEXT : TEXT_LIGHT,
-                fontSize: 13, fontWeight: tab === t.id ? 700 : 500,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                boxShadow: tab === t.id ? SHADOW : "none",
-                transition: "all 0.15s ease",
-              }}
-            >
+          ]).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 9, border: "none", background: tab === t.id ? CARD : "transparent", color: tab === t.id ? TEXT : TEXT_LIGHT, fontSize: 13, fontWeight: tab === t.id ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: tab === t.id ? SHADOW : "none", transition: "all 0.15s ease" }}>
               <Icon name={t.icon} size={15} />
               {t.label}
               {t.badge != null && (
-                <span style={{ background: "#E74C6F", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, padding: "1px 7px", fontFamily: "'DM Sans', sans-serif" }}>
-                  {t.badge}
-                </span>
+                <span style={{ background: "#E74C6F", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, padding: "1px 7px", fontFamily: "'DM Sans', sans-serif" }}>{t.badge}</span>
               )}
             </button>
           ))}
         </div>
-
-        {/* ── APPLICATIONS TAB ── */}
         {tab === "applications" && (
           <>
-            {/* Status filter */}
             <div style={{ display: "flex", gap: 8 }}>
-              {(["pending", "approved", "declined", "all"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setAppFilter(s)}
-                  style={{
-                    padding: "6px 16px", borderRadius: 20, border: `1.5px solid ${appFilter === s ? (s === "pending" ? "#F0A500" : s === "approved" ? TEAL : s === "declined" ? "#E74C6F" : BORDER) : BORDER}`,
-                    background: appFilter === s ? (s === "pending" ? "#FFF8E6" : s === "approved" ? TEAL_LIGHT : s === "declined" ? "#FDECF1" : "#F3F5F8") : CARD,
-                    color: appFilter === s ? (s === "pending" ? "#C48700" : s === "approved" ? TEAL_DARK : s === "declined" ? "#D63563" : TEXT_MID) : TEXT_LIGHT,
-                    fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                    textTransform: "capitalize" as const,
-                  }}
-                >
+              {(["pending", "approved", "declined", "all"] as const).map(s => (
+                <button key={s} onClick={() => setAppFilter(s)}
+                  style={{ padding: "6px 16px", borderRadius: 20, border: `1.5px solid ${appFilter === s ? (s === "pending" ? "#F0A500" : s === "approved" ? TEAL : s === "declined" ? "#E74C6F" : BORDER) : BORDER}`, background: appFilter === s ? (s === "pending" ? "#FFF8E6" : s === "approved" ? TEAL_LIGHT : s === "declined" ? "#FDECF1" : "#F3F5F8") : CARD, color: appFilter === s ? (s === "pending" ? "#C48700" : s === "approved" ? TEAL_DARK : s === "declined" ? "#D63563" : TEXT_MID) : TEXT_LIGHT, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textTransform: "capitalize" as const }}>
                   {s}
                 </button>
               ))}
             </div>
-
-            {/* Applications list */}
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
               <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
@@ -919,7 +740,6 @@ function AdminPanel() {
                 </h3>
                 <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{applications.length} total</span>
               </div>
-
               {loadingApps ? (
                 <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>Loading applications…</div>
               ) : applications.length === 0 ? (
@@ -936,39 +756,21 @@ function AdminPanel() {
                     const statusColor = app.application_status === "approved" ? TEAL : app.application_status === "declined" ? "#E74C6F" : "#F0A500";
                     const statusBg = app.application_status === "approved" ? TEAL_LIGHT : app.application_status === "declined" ? "#FDECF1" : "#FFF8E6";
                     return (
-                      <div
-                        key={app.id}
-                        onClick={() => setSelectedApp(app)}
-                        style={{
-                          display: "grid", gridTemplateColumns: "1fr 1fr 140px 120px 80px",
-                          padding: "16px 24px",
-                          borderBottom: i < applications.length - 1 ? `1px solid ${BORDER}` : "none",
-                          alignItems: "center", cursor: "pointer",
-                          transition: "background 0.15s ease",
-                          fontFamily: "'DM Sans', sans-serif",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFBFC")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
+                      <div key={app.id} onClick={() => setSelectedApp(app)}
+                        style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px 120px 80px", padding: "16px 24px", borderBottom: i < applications.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", cursor: "pointer", transition: "background 0.15s ease", fontFamily: "'DM Sans', sans-serif" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#FAFBFC")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{app.full_name || "—"}</div>
                           <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>{app.email}</div>
                         </div>
                         <div>
                           <div style={{ fontSize: 13, color: TEXT }}>{app.organisation_name || "—"}</div>
-                          <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>
-                            {app.organisation_type ? ORG_TYPE_LABELS[app.organisation_type] : "—"}
-                          </div>
+                          <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>{app.organisation_type ? ORG_TYPE_LABELS[app.organisation_type] : "—"}</div>
                         </div>
-                        <div style={{ fontSize: 12, color: TEXT_LIGHT }}>
-                          {[app.city, app.country].filter(Boolean).join(", ") || "—"}
-                        </div>
-                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: statusBg, color: statusColor, textTransform: "capitalize" as const, width: "fit-content" }}>
-                          {app.application_status}
-                        </span>
-                        <div style={{ color: TEXT_LIGHT, display: "flex", justifyContent: "flex-end" }}>
-                          <Icon name="chevronRight" size={16} />
-                        </div>
+                        <div style={{ fontSize: 12, color: TEXT_LIGHT }}>{[app.city, app.country].filter(Boolean).join(", ") || "—"}</div>
+                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: statusBg, color: statusColor, textTransform: "capitalize" as const, width: "fit-content" }}>{app.application_status}</span>
+                        <div style={{ color: TEXT_LIGHT, display: "flex", justifyContent: "flex-end" }}><Icon name="chevronRight" size={16} /></div>
                       </div>
                     );
                   })}
@@ -977,8 +779,6 @@ function AdminPanel() {
             </div>
           </>
         )}
-
-        {/* ── USERS TAB ── */}
         {tab === "users" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1001,12 +801,8 @@ function AdminPanel() {
                       <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{u.email}</span>
                       <span style={{ fontSize: 13, color: TEXT_MID }}>{u.full_name || "—"}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <select
-                          value={u.partnership_level}
-                          onChange={(e) => updateLevel(u.id, e.target.value as PartnershipLevel)}
-                          disabled={saving === u.id}
-                          style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${lbl.color}30`, background: lbl.bg, color: lbl.color, fontSize: 12, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", cursor: "pointer", outline: "none", opacity: saving === u.id ? 0.6 : 1 }}
-                        >
+                        <select value={u.partnership_level} onChange={e => updateLevel(u.id, e.target.value as PartnershipLevel)} disabled={saving === u.id}
+                          style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${lbl.color}30`, background: lbl.bg, color: lbl.color, fontSize: 12, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", cursor: "pointer", outline: "none", opacity: saving === u.id ? 0.6 : 1 }}>
                           <option value="viewer">Viewer</option>
                           <option value="member">Member</option>
                           <option value="partner">Partner</option>
@@ -1028,7 +824,7 @@ function AdminPanel() {
 
 // ─── SECTION WRAPPER ──────────────────────────────────────────────────────────
 function SectionWrapper({ sectionId, sectionName, partnershipLevel, children }: { sectionId: string; sectionName: string; partnershipLevel: PartnershipLevel; children: React.ReactNode }) {
-  const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find((s) => s.id === sectionId);
+  const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find(s => s.id === sectionId);
   if (lockedEntry) {
     return (
       <div style={{ position: "relative", minHeight: 300 }}>
@@ -1054,35 +850,41 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [activeNav, setActiveNav] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
 
+  // ── Live data from database ──────────────────────────────────────────────
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [members, setMembers] = useState<Organisation[]>([]);
+
+  useEffect(() => {
+    fetch("/api/projects").then(r => r.json()).then(d => setProjects(d.projects || []));
+    fetch("/api/events").then(r => r.json()).then(d => setEvents(d.events || []));
+    fetch("/api/organisations").then(r => r.json()).then(d => setMembers(d.organisations || []));
+  }, []);
+
   const partnershipLevel = user.partnership_level;
   const accessibleSections = PARTNERSHIP_ACCESS[partnershipLevel] || PARTNERSHIP_ACCESS.viewer;
   const levelInfo = PARTNERSHIP_LABELS[partnershipLevel] || PARTNERSHIP_LABELS.viewer;
 
   const sectionNames: Record<string, string> = {
-    dashboard: "Dashboard",
-    projects: "Project Tracker",
-    lab: "Distributed Laboratory",
-    events: "Events & Meetings",
-    members: "Member Network",
-    knowledge: "Knowledge Base",
-    admin: "Admin Panel",
+    dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory",
+    events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", admin: "Admin Panel",
   };
 
-  const visibleNav = navItems.filter((item) => {
+  const visibleNav = navItems.filter(item => {
     if (item.id === "admin") return partnershipLevel === "admin";
     return true;
   });
 
   const renderContent = () => {
     switch (activeNav) {
-      case "dashboard": return <DashboardView />;
-      case "projects": return <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}><ProjectsView /></SectionWrapper>;
+      case "dashboard": return <DashboardView projects={projects} events={events} />;
+      case "projects": return <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}><ProjectsView projects={projects} /></SectionWrapper>;
       case "lab": return <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}><LabView /></SectionWrapper>;
-      case "events": return <SectionWrapper sectionId="events" sectionName="Events" partnershipLevel={partnershipLevel}><EventsView /></SectionWrapper>;
-      case "members": return <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}><MembersView /></SectionWrapper>;
+      case "events": return <SectionWrapper sectionId="events" sectionName="Events" partnershipLevel={partnershipLevel}><EventsView events={events} /></SectionWrapper>;
+      case "members": return <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}><MembersView members={members} /></SectionWrapper>;
       case "knowledge": return <SectionWrapper sectionId="knowledge" sectionName="Knowledge Base" partnershipLevel={partnershipLevel}><KnowledgeView /></SectionWrapper>;
       case "admin": return partnershipLevel === "admin" ? <AdminPanel /> : null;
-      default: return <DashboardView />;
+      default: return <DashboardView projects={projects} events={events} />;
     }
   };
 
@@ -1114,15 +916,13 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
             </div>
           )}
         </div>
-
         <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {visibleNav.map((item) => {
+          {visibleNav.map(item => {
             const active = activeNav === item.id;
             const locked = isLocked(item.id);
             return (
               <button key={item.id} onClick={() => setActiveNav(item.id)} title={locked ? "Requires higher partnership level" : item.label}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "11px 14px" : "11px 16px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? TEAL_LIGHT : "transparent", color: active ? TEAL_DARK : locked ? "#C5CED8" : TEXT_MID, fontSize: 13, fontWeight: active ? 700 : 500, fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s ease", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}
-              >
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "11px 14px" : "11px 16px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? TEAL_LIGHT : "transparent", color: active ? TEAL_DARK : locked ? "#C5CED8" : TEXT_MID, fontSize: 13, fontWeight: active ? 700 : 500, fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s ease", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}>
                 {active && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, borderRadius: 2, background: TEAL }} />}
                 <Icon name={item.icon} size={18} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
@@ -1131,7 +931,6 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
             );
           })}
         </nav>
-
         <div style={{ padding: collapsed ? "16px 10px" : "16px 18px", borderTop: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif" }}>
