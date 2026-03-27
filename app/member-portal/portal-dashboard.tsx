@@ -880,7 +880,7 @@ function AdminPanel() {
             >
               <Icon name={t.icon} size={15} />
               {t.label}
-              {t.badge !== null && t.badge !== false && (
+              {t.badge != null && t.badge !== false && (
                 <span style={{ background: "#E74C6F", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, padding: "1px 7px", fontFamily: "'DM Sans', sans-serif" }}>
                   {t.badge}
                 </span>
