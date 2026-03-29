@@ -3,18 +3,22 @@ import { ThemeProvider } from "next-themes";
 import CookieBanner from "@/components/cookie-banner";
 import "./globals.css";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "bioERGOtech Foundation - Making Research Smarter",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "bioERGOtech Foundation",
+    template: "%s | bioERGOtech Foundation",
+  },
   description:
     "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and multi-omics analytics across hubs in Taranto, Zurich, and Riyadh.",
   icons: {
-    icon: "/assets/images/Logo/short_logo.webp",
-    shortcut: "/assets/images/Logo/short_logo.webp",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.png",
   },
 };
 
@@ -36,7 +40,10 @@ export default function RootLayout({
         />
         <link rel="stylesheet" href="/assets/css/main.css" />
         <link rel="stylesheet" href="/assets/css/article.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        />
       </head>
       <body className="antialiased">
         <ThemeProvider
