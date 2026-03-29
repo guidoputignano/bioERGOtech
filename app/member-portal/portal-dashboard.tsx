@@ -22,11 +22,13 @@ const PROJECT_PILLARS = ["Digital Twin Therapeutics","Synthetic Biology & Cell E
 const PROJECT_PHASES = ["Planning","Discovery","Development","Validation","Execution","Completed"];
 const PROJECT_STATUSES = ["on-track","at-risk","blocked"];
 const EVENT_TYPES = ["internal","national","international","online"];
+const EQUIPMENT_CATEGORIES = ["Flow Cytometry","Sequencing","Imaging","Spectroscopy","Cell Culture","Electroporation","Organoid","PCR","Other"];
 
 type Project = { id?: string; name: string; pillar: string; phase: string; status: string; lead: string; description: string; progress: number; color: string; is_public?: boolean; };
 type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
 type Organisation = { id?: string; name: string; org_type: string; location: string; };
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
+type EquipmentProposal = { id: string; name: string; category?: string; location: string; description?: string; proposed_by_email?: string; proposed_by_name?: string; status: string; admin_notes?: string; reviewed_at?: string; created_at: string; };
 
 export type PartnershipLevel = "viewer" | "member" | "partner" | "admin";
 
@@ -56,7 +58,7 @@ const navItems = [
   { id: "knowledge", label: "Knowledge Base", icon: "book" },
   { id: "admin", label: "Admin Panel", icon: "shield" },
 ];
-const equipment = [
+const STATIC_EQUIPMENT = [
   { name: "Flow Cytometer BD FACSAria III", location: "Taranto Lab A", status: "available", utilization: 42 },
   { name: "CRISPR Electroporation System", location: "Zurich UZH", status: "booked", utilization: 78 },
   { name: "Raman Spectrometer", location: "Taranto Lab B", status: "available", utilization: 31 },
@@ -91,6 +93,7 @@ const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
     x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
     inbox: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>,
     mail: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+    check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   };
   return <>{icons[name] || null}</>;
 };
@@ -136,15 +139,16 @@ type EventFormState = { title: string; event_date: string; event_type: string; l
 const EMPTY_EVENT_FORM: EventFormState = { title: "", event_date: "", event_type: "internal", location: "", description: "", video_link: "", is_public: true, is_approved: true };
 
 function EventModal({ event, onClose, onSave }: { event: Partial<Event> | null; onClose: () => void; onSave: (e: Partial<Event>) => Promise<void>; }) {
-  const [form, setForm] = useState<EventFormState>(event ? {
-    title: event.title || "", event_date: event.event_date || "", event_type: event.event_type || "internal",
-    location: event.location || "", description: event.description || "", video_link: event.video_link || "",
-    is_public: event.is_public ?? true, is_approved: event.is_approved ?? true,
-  } : { ...EMPTY_EVENT_FORM });
+  const [form, setForm] = useState<EventFormState>(event ? { title: event.title || "", event_date: event.event_date || "", event_type: event.event_type || "internal", location: event.location || "", description: event.description || "", video_link: event.video_link || "", is_public: event.is_public ?? true, is_approved: event.is_approved ?? true } : { ...EMPTY_EVENT_FORM });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!event?.id;
-
+  const textFields: { label: string; key: keyof Pick<EventFormState, "title" | "event_date" | "location" | "video_link">; placeholder: string }[] = [
+    { label: "Title *", key: "title", placeholder: "e.g. Project Genesis Intro" },
+    { label: "Date *", key: "event_date", placeholder: "e.g. Feb 15 or Mar 2026" },
+    { label: "Location *", key: "location", placeholder: "e.g. Online or Taranto" },
+    { label: "Video Link", key: "video_link", placeholder: "https://..." },
+  ];
   const handle = async () => {
     if (!form.title.trim() || !form.event_date.trim() || !form.location.trim()) { setError("Title, date and location are required."); return; }
     setSaving(true); setError(null);
@@ -152,14 +156,6 @@ function EventModal({ event, onClose, onSave }: { event: Partial<Event> | null; 
     catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
     finally { setSaving(false); }
   };
-
-  const textFields: { label: string; key: keyof Pick<EventFormState, "title" | "event_date" | "location" | "video_link">; placeholder: string }[] = [
-    { label: "Title *", key: "title", placeholder: "e.g. Project Genesis Intro" },
-    { label: "Date *", key: "event_date", placeholder: "e.g. Feb 15 or Mar 2026" },
-    { label: "Location *", key: "location", placeholder: "e.g. Online or Taranto" },
-    { label: "Video Link", key: "video_link", placeholder: "https://..." },
-  ];
-
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
@@ -170,26 +166,12 @@ function EventModal({ event, onClose, onSave }: { event: Partial<Event> | null; 
         </div>
         <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "65vh", overflowY: "auto" }}>
           {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
-          {textFields.map(f => (
-            <div key={f.key}><label style={modalLabelStyle}>{f.label}</label>
-              <input value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={modalInputStyle} />
-            </div>
-          ))}
-          <div><label style={modalLabelStyle}>Event Type *</label>
-            <select value={form.event_type} onChange={e => setForm(p => ({ ...p, event_type: e.target.value }))} style={modalInputStyle}>
-              {EVENT_TYPES.map(t => (<option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>))}
-            </select>
-          </div>
-          <div><label style={modalLabelStyle}>Description</label>
-            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Optional..." style={{ ...modalInputStyle, resize: "vertical" as const }} />
-          </div>
+          {textFields.map(f => (<div key={f.key}><label style={modalLabelStyle}>{f.label}</label><input value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={modalInputStyle} /></div>))}
+          <div><label style={modalLabelStyle}>Event Type *</label><select value={form.event_type} onChange={e => setForm(p => ({ ...p, event_type: e.target.value }))} style={modalInputStyle}>{EVENT_TYPES.map(t => (<option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>))}</select></div>
+          <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Optional..." style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
           <div style={{ display: "flex", gap: 16 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>
-              <input type="checkbox" checked={form.is_public} onChange={e => setForm(p => ({ ...p, is_public: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />Public
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>
-              <input type="checkbox" checked={form.is_approved} onChange={e => setForm(p => ({ ...p, is_approved: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />Approved
-            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}><input type="checkbox" checked={form.is_public} onChange={e => setForm(p => ({ ...p, is_public: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />Public</label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}><input type="checkbox" checked={form.is_approved} onChange={e => setForm(p => ({ ...p, is_approved: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />Approved</label>
           </div>
         </div>
         <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -206,15 +188,10 @@ type ProjectFormState = { name: string; pillar: string; phase: string; status: s
 const EMPTY_PROJECT_FORM: ProjectFormState = { name: "", pillar: PROJECT_PILLARS[0], phase: "Planning", status: "on-track", lead: "", description: "", progress: 0, color: "#2EC4B6", is_public: true };
 
 function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> | null; onClose: () => void; onSave: (p: Partial<Project>) => Promise<void>; }) {
-  const [form, setForm] = useState<ProjectFormState>(project ? {
-    name: project.name || "", pillar: project.pillar || PROJECT_PILLARS[0], phase: project.phase || "Planning",
-    status: project.status || "on-track", lead: project.lead || "", description: project.description || "",
-    progress: project.progress ?? 0, color: project.color || "#2EC4B6", is_public: project.is_public ?? true,
-  } : { ...EMPTY_PROJECT_FORM });
+  const [form, setForm] = useState<ProjectFormState>(project ? { name: project.name || "", pillar: project.pillar || PROJECT_PILLARS[0], phase: project.phase || "Planning", status: project.status || "on-track", lead: project.lead || "", description: project.description || "", progress: project.progress ?? 0, color: project.color || "#2EC4B6", is_public: project.is_public ?? true } : { ...EMPTY_PROJECT_FORM });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!project?.id;
-
   const handle = async () => {
     if (!form.name.trim() || !form.lead.trim()) { setError("Name and lead are required."); return; }
     setSaving(true); setError(null);
@@ -222,7 +199,6 @@ function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> 
     catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
     finally { setSaving(false); }
   };
-
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
@@ -235,44 +211,93 @@ function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> 
           {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
           <div><label style={modalLabelStyle}>Project Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. CranioTech Radar" style={modalInputStyle} /></div>
           <div><label style={modalLabelStyle}>Lead *</label><input value={form.lead} onChange={e => setForm(p => ({ ...p, lead: e.target.value }))} placeholder="e.g. Dr. Maria Rossi" style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Scientific Pillar</label>
-            <select value={form.pillar} onChange={e => setForm(p => ({ ...p, pillar: e.target.value }))} style={modalInputStyle}>
-              {PROJECT_PILLARS.map(pl => (<option key={pl} value={pl}>{pl}</option>))}
-            </select>
-          </div>
+          <div><label style={modalLabelStyle}>Scientific Pillar</label><select value={form.pillar} onChange={e => setForm(p => ({ ...p, pillar: e.target.value }))} style={modalInputStyle}>{PROJECT_PILLARS.map(pl => (<option key={pl} value={pl}>{pl}</option>))}</select></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div><label style={modalLabelStyle}>Phase</label>
-              <select value={form.phase} onChange={e => setForm(p => ({ ...p, phase: e.target.value }))} style={modalInputStyle}>
-                {PROJECT_PHASES.map(ph => (<option key={ph} value={ph}>{ph}</option>))}
-              </select>
-            </div>
-            <div><label style={modalLabelStyle}>Status</label>
-              <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} style={modalInputStyle}>
-                {PROJECT_STATUSES.map(s => (<option key={s} value={s}>{s === "on-track" ? "On Track" : s === "at-risk" ? "At Risk" : "Blocked"}</option>))}
-              </select>
-            </div>
+            <div><label style={modalLabelStyle}>Phase</label><select value={form.phase} onChange={e => setForm(p => ({ ...p, phase: e.target.value }))} style={modalInputStyle}>{PROJECT_PHASES.map(ph => (<option key={ph} value={ph}>{ph}</option>))}</select></div>
+            <div><label style={modalLabelStyle}>Status</label><select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} style={modalInputStyle}>{PROJECT_STATUSES.map(s => (<option key={s} value={s}>{s === "on-track" ? "On Track" : s === "at-risk" ? "At Risk" : "Blocked"}</option>))}</select></div>
           </div>
-          <div><label style={modalLabelStyle}>Progress ({form.progress}%)</label>
-            <input type="range" min={0} max={100} value={form.progress} onChange={e => setForm(p => ({ ...p, progress: Number(e.target.value) }))} style={{ width: "100%", accentColor: TEAL }} />
-          </div>
-          <div><label style={modalLabelStyle}>Colour</label>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-              {PROJECT_COLORS.map(c => (
-                <button key={c} onClick={() => setForm(p => ({ ...p, color: c }))} style={{ width: 28, height: 28, borderRadius: "50%", background: c, border: form.color === c ? `3px solid ${TEXT}` : "3px solid transparent", cursor: "pointer", flexShrink: 0 }} />
-              ))}
-            </div>
-          </div>
-          <div><label style={modalLabelStyle}>Description</label>
-            <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Brief project description..." style={{ ...modalInputStyle, resize: "vertical" as const }} />
-          </div>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>
-            <input type="checkbox" checked={form.is_public} onChange={e => setForm(p => ({ ...p, is_public: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />Public
-          </label>
+          <div><label style={modalLabelStyle}>Progress ({form.progress}%)</label><input type="range" min={0} max={100} value={form.progress} onChange={e => setForm(p => ({ ...p, progress: Number(e.target.value) }))} style={{ width: "100%", accentColor: TEAL }} /></div>
+          <div><label style={modalLabelStyle}>Colour</label><div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>{PROJECT_COLORS.map(c => (<button key={c} onClick={() => setForm(p => ({ ...p, color: c }))} style={{ width: 28, height: 28, borderRadius: "50%", background: c, border: form.color === c ? `3px solid ${TEXT}` : "3px solid transparent", cursor: "pointer", flexShrink: 0 }} />))}</div></div>
+          <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Brief project description..." style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}><input type="checkbox" checked={form.is_public} onChange={e => setForm(p => ({ ...p, is_public: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />Public</label>
         </div>
         <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
           <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : isEdit ? "Save Changes" : "Add Project"}</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROPOSE EQUIPMENT MODAL ─────────────────────────────────────────────────
+type EquipmentFormState = { name: string; category: string; location: string; description: string; };
+const EMPTY_EQUIPMENT_FORM: EquipmentFormState = { name: "", category: "", location: "", description: "" };
+
+function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userEmail: string; userName: string; onClose: () => void; onSave: () => void; }) {
+  const [form, setForm] = useState<EquipmentFormState>({ ...EMPTY_EQUIPMENT_FORM });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handle = async () => {
+    if (!form.name.trim() || !form.location.trim()) { setError("Equipment name and location are required."); return; }
+    setSaving(true); setError(null);
+    try {
+      const res = await fetch("/api/admin/equipment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, proposed_by_email: userEmail, proposed_by_name: userName }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Submission failed");
+      setSuccess(true);
+      onSave();
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed to submit."); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
+      <div style={{ position: "relative", width: 500, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden", animation: "fadeUp 0.2s ease both" }}>
+        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Propose Equipment</div>
+            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>Submit a machine for the Distributed Lab network</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
+        </div>
+        {success ? (
+          <div style={{ padding: 40, textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: TEAL_LIGHT, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: TEAL }}><Icon name="check" size={28} /></div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 8 }}>Proposal Submitted!</div>
+            <div style={{ fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif", marginBottom: 24 }}>The admin team will review your proposal and get back to you.</div>
+            <button onClick={onClose} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Close</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+              {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
+              <div><label style={modalLabelStyle}>Equipment Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Confocal Microscope Leica SP8" style={modalInputStyle} /></div>
+              <div><label style={modalLabelStyle}>Category</label>
+                <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}>
+                  <option value="">Select a category…</option>
+                  {EQUIPMENT_CATEGORIES.map(c => (<option key={c} value={c}>{c}</option>))}
+                </select>
+              </div>
+              <div><label style={modalLabelStyle}>Location / Hub *</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="e.g. Taranto Lab A or Zurich UZH" style={modalInputStyle} /></div>
+              <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Describe the equipment, its capabilities and availability…" style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
+              <div style={{ padding: "12px 16px", borderRadius: 10, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, fontSize: 12, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>
+                Your proposal will be reviewed by the admin team. Once approved, the equipment will appear in the Distributed Lab network.
+              </div>
+            </div>
+            <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+              <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>{saving ? "Submitting…" : "Submit Proposal"}</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -321,12 +346,12 @@ function DashboardView({ projects, events }: { projects: Project[]; events: Even
           {events.slice(0, 5).map((e, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "11px 0", borderBottom: i < 4 ? `1px solid ${BORDER}` : "none" }}>
               <div style={{ width: 46, height: 46, borderRadius: 12, flexShrink: 0, background: e.event_type === "national" ? TEAL_LIGHT : "#F3F5F8", border: `1px solid ${e.event_type === "national" ? TEAL_MUTED : BORDER}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 11, color: e.event_type === "national" ? TEAL_DARK : TEXT_MID, fontWeight: 700, fontFamily: "'Sora', sans-serif", lineHeight: 1.2 }}>{e.event_date.split(" ")[0]}</span>
+                <span style={{ fontSize: 11, color: e.event_type === "national" ? TEAL_DARK : TEXT_MID, fontWeight: 700, lineHeight: 1.2 }}>{e.event_date.split(" ")[0]}</span>
                 {e.event_date.split(" ")[1] && <span style={{ fontSize: 9, color: TEXT_LIGHT }}>{e.event_date.split(" ")[1]}</span>}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{e.title}</div>
-                <div style={{ fontSize: 11, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name="mapPin" size={11} /> {e.location}</div>
+                <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2, display: "flex", alignItems: "center", gap: 4, fontFamily: "'DM Sans', sans-serif" }}><Icon name="mapPin" size={11} /> {e.location}</div>
               </div>
               <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 20, fontWeight: 600, background: e.event_type === "national" ? TEAL_LIGHT : "#F3F5F8", color: e.event_type === "national" ? TEAL_DARK : TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>{e.event_type}</span>
             </div>
@@ -334,11 +359,7 @@ function DashboardView({ projects, events }: { projects: Project[]; events: Even
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {[
-          { city: "Taranto", country: "Italy", role: "Experimental Hub", icon: "flask", count: 4, color: TEAL, bg: TEAL_LIGHT },
-          { city: "Zurich", country: "Switzerland", role: "Talent & Innovation Hub", icon: "dna", count: 3, color: "#7C5CFC", bg: "#F0EDFF" },
-          { city: "Riyadh", country: "Saudi Arabia", role: "Clinical Translation Hub", icon: "globe", count: 1, color: "#E74C6F", bg: "#FDECF1" },
-        ].map((h, i) => (
+        {[{ city: "Taranto", country: "Italy", role: "Experimental Hub", icon: "flask", count: 4, color: TEAL, bg: TEAL_LIGHT }, { city: "Zurich", country: "Switzerland", role: "Talent & Innovation Hub", icon: "dna", count: 3, color: "#7C5CFC", bg: "#F0EDFF" }, { city: "Riyadh", country: "Saudi Arabia", role: "Clinical Translation Hub", icon: "globe", count: 1, color: "#E74C6F", bg: "#FDECF1" }].map((h, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, boxShadow: SHADOW, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", bottom: -16, right: -12, opacity: 0.06, color: h.color }}><Icon name={h.icon} size={90} /></div>
             <div style={{ width: 42, height: 42, borderRadius: 12, background: h.bg, color: h.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}><Icon name={h.icon} size={20} /></div>
@@ -370,12 +391,7 @@ function ProjectsView({ projects, isAdmin, onEdit, onDelete }: { projects: Proje
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 12, height: 12, borderRadius: 4, background: p.color }} /><span style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{p.name}</span></div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <StatusBadge status={p.status} />
-                {isAdmin && (
-                  <div style={{ display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
-                    <button onClick={() => onEdit?.(p)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button>
-                    <button onClick={() => { if (confirm("Delete this project?")) onDelete?.(p.id!); }} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button>
-                  </div>
-                )}
+                {isAdmin && (<div style={{ display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}><button onClick={() => onEdit?.(p)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button><button onClick={() => { if (confirm("Delete this project?")) onDelete?.(p.id!); }} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button></div>)}
               </div>
             </div>
             <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 4 }}>{p.pillar}</div>
@@ -395,18 +411,42 @@ function ProjectsView({ projects, isAdmin, onEdit, onDelete }: { projects: Proje
   );
 }
 
-function LabView() {
+// ─── LAB VIEW ─────────────────────────────────────────────────────────────────
+function LabView({ userEmail, userName }: { userEmail: string; userName: string; }) {
+  const [proposing, setProposing] = useState(false);
+  const [approvedEquipment, setApprovedEquipment] = useState<EquipmentProposal[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/equipment")
+      .then(r => r.json())
+      .then(d => setApprovedEquipment((d.proposals || []).filter((p: EquipmentProposal) => p.status === "approved")))
+      .catch(() => {});
+  }, []);
+
+  const allEquipment = [
+    ...STATIC_EQUIPMENT,
+    ...approvedEquipment.map(p => ({ name: p.name, location: p.location, status: "available", utilization: 0 })),
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {proposing && <ProposeEquipmentModal userEmail={userEmail} userName={userName} onClose={() => setProposing(false)} onSave={() => {}} />}
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 14, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
           <input placeholder="Search equipment..." style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13, fontFamily: "'DM Sans', sans-serif" }} />
         </div>
-        <button style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
-          <Icon name="plus" size={14} /> List Equipment
+        <button onClick={() => setProposing(true)} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6, boxShadow: `0 2px 8px ${TEAL}33` }}>
+          <Icon name="plus" size={14} /> Propose Equipment
         </button>
       </div>
+
+      {/* Info banner */}
+      <div style={{ padding: "14px 18px", borderRadius: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span>
+        <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>Have equipment to share? Click <strong>Propose Equipment</strong> to submit it for admin approval. Once approved, it will appear in the network below.</span>
+      </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         {[{ label: "Network Utilization", value: "54%", sub: "Avg. across all equipment", color: TEAL }, { label: "Cost Savings", value: "€32K", sub: "Estimated this quarter", color: "#7C5CFC" }, { label: "Bookings This Month", value: "18", sub: "Across 3 locations", color: "#F0A500" }].map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
@@ -420,8 +460,8 @@ function LabView() {
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 130px 100px", padding: "14px 24px", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif", background: "#FAFBFC" }}>
           <span>Equipment</span><span>Location</span><span>Status</span><span>Utilization</span><span>Action</span>
         </div>
-        {equipment.map((e, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 130px 100px", padding: "16px 24px", borderBottom: i < equipment.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        {allEquipment.map((e, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 130px 100px", padding: "16px 24px", borderBottom: i < allEquipment.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
             <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>{e.name}</span>
             <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{e.location}</span>
             <span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: e.status === "available" ? "#E6F9F5" : e.status === "booked" ? "#FFF8E6" : "#FDECF1", color: e.status === "available" ? "#0D9373" : e.status === "booked" ? "#C48700" : "#D63563", textTransform: "capitalize" as const }}>{e.status}</span></span>
@@ -451,12 +491,7 @@ function EventsView({ events, isAdmin, onEdit, onDelete }: { events: Event[]; is
               <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 20, fontWeight: 700, background: hl ? TEAL_LIGHT : "#F3F5F8", color: hl ? TEAL_DARK : TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.05em", fontFamily: "'DM Sans', sans-serif" }}>{e.event_type}</span>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'Sora', sans-serif", fontWeight: 700 }}>{e.event_date}</span>
-                {isAdmin && (
-                  <div style={{ display: "flex", gap: 4 }}>
-                    <button onClick={() => onEdit?.(e)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button>
-                    <button onClick={() => { if (confirm("Delete this event?")) onDelete?.(e.id!); }} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button>
-                  </div>
-                )}
+                {isAdmin && (<div style={{ display: "flex", gap: 4 }}><button onClick={() => onEdit?.(e)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button><button onClick={() => { if (confirm("Delete this event?")) onDelete?.(e.id!); }} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button></div>)}
               </div>
             </div>
             <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 8 }}>{e.title}</div>
@@ -484,9 +519,7 @@ function MembersView({ members }: { members: Organisation[] }) {
       </div>
       <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Organisations</h3>
       {(!members || members.length === 0) ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-          {[1,2,3,4,5,6].map(i => (<div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />))}
-        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>{[1,2,3,4,5,6].map(i => (<div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />))}</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
           {members.map((m, i) => (
@@ -594,7 +627,7 @@ function ApplicationDrawer({ app, onClose, onAction }: { app: Application; onClo
 }
 
 function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "newsletter">("applications");
+  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "newsletter">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -611,6 +644,9 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const [adminProjects, setAdminProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [projectModal, setProjectModal] = useState<{ open: boolean; project: Partial<Project> | null }>({ open: false, project: null });
+  const [proposals, setProposals] = useState<EquipmentProposal[]>([]);
+  const [loadingProposals, setLoadingProposals] = useState(true);
+  const [reviewingProposal, setReviewingProposal] = useState<string | null>(null);
 
   useEffect(() => {
     setLoadingApps(true);
@@ -622,6 +658,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     if (tab === "newsletter") { setLoadingNewsletter(true); fetch("/api/admin/newsletter").then(r => r.json()).then(d => { setSubscribers(d.subscribers || []); setLoadingNewsletter(false); }).catch(() => setLoadingNewsletter(false)); }
     if (tab === "events") { setLoadingEvents(true); fetch("/api/admin/events").then(r => r.json()).then(d => { setAdminEvents(d.events || []); setLoadingEvents(false); }).catch(() => setLoadingEvents(false)); }
     if (tab === "projects") { setLoadingProjects(true); fetch("/api/admin/projects").then(r => r.json()).then(d => { setAdminProjects(d.projects || []); setLoadingProjects(false); }).catch(() => setLoadingProjects(false)); }
+    if (tab === "equipment") { setLoadingProposals(true); fetch("/api/admin/equipment").then(r => r.json()).then(d => { setProposals(d.proposals || []); setLoadingProposals(false); }).catch(() => setLoadingProposals(false)); }
   }, [tab]);
 
   const handleAction = async (id: string, action: "approve" | "decline", notes: string, level: PartnershipLevel) => {
@@ -643,29 +680,33 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     const res = await fetch("/api/admin/events", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to save");
-    if (isEdit) setAdminEvents(prev => prev.map(e => e.id === event.id ? data.event : e));
-    else setAdminEvents(prev => [data.event, ...prev]);
+    if (isEdit) setAdminEvents(prev => prev.map(e => e.id === event.id ? data.event : e)); else setAdminEvents(prev => [data.event, ...prev]);
     onEventsChanged?.();
   };
-
-  const handleDeleteEvent = async (id: string) => {
-    const res = await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) { setAdminEvents(prev => prev.filter(e => e.id !== id)); onEventsChanged?.(); }
-  };
+  const handleDeleteEvent = async (id: string) => { const res = await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminEvents(prev => prev.filter(e => e.id !== id)); onEventsChanged?.(); } };
 
   const handleSaveProject = async (project: Partial<Project>) => {
     const isEdit = !!project.id;
     const res = await fetch("/api/admin/projects", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to save");
-    if (isEdit) setAdminProjects(prev => prev.map(p => p.id === project.id ? data.project : p));
-    else setAdminProjects(prev => [data.project, ...prev]);
+    if (isEdit) setAdminProjects(prev => prev.map(p => p.id === project.id ? data.project : p)); else setAdminProjects(prev => [data.project, ...prev]);
     onProjectsChanged?.();
   };
+  const handleDeleteProject = async (id: string) => { const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); } };
 
-  const handleDeleteProject = async (id: string) => {
-    const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); }
+  const handleReviewProposal = async (id: string, status: "approved" | "rejected", notes?: string) => {
+    setReviewingProposal(id);
+    try {
+      const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: notes || "" }) });
+      const data = await res.json();
+      if (res.ok) setProposals(prev => prev.map(p => p.id === id ? data.proposal : p));
+    } finally { setReviewingProposal(null); }
+  };
+
+  const handleDeleteProposal = async (id: string) => {
+    const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (res.ok) setProposals(prev => prev.filter(p => p.id !== id));
   };
 
   const exportCSV = () => {
@@ -676,11 +717,14 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   };
 
   const pendingCount = applications.filter(a => a.application_status === "pending").length;
+  const pendingProposals = proposals.filter(p => p.status === "pending").length;
+
   const tabs = [
     { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null as number | null },
     { id: "users" as const, label: "Users", icon: "users", badge: null as number | null },
     { id: "events" as const, label: "Events", icon: "calendar", badge: null as number | null },
     { id: "projects" as const, label: "Projects", icon: "layers", badge: null as number | null },
+    { id: "equipment" as const, label: "Equipment", icon: "cpu", badge: pendingProposals > 0 ? pendingProposals : null as number | null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null as number | null },
   ];
 
@@ -694,7 +738,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ background: "#FDECF1", border: "1px solid #F9C3CE", borderRadius: 14, padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ color: "#E74C6F" }}><Icon name="shield" size={20} /></div>
-          <div><div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Admin Panel</div><div style={{ fontSize: 12, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>Manage applications, users, events, projects and newsletter.</div></div>
+          <div><div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Admin Panel</div><div style={{ fontSize: 12, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>Manage applications, users, events, projects, equipment proposals and newsletter.</div></div>
         </div>
         {actionMessage && (<div style={{ padding: "12px 18px", borderRadius: 10, background: actionMessage.type === "success" ? "#E6F9F5" : "#FDECF1", border: `1px solid ${actionMessage.type === "success" ? "#A3E4D7" : "#F9C3CE"}`, color: actionMessage.type === "success" ? "#0D9373" : "#D63563", fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{actionMessage.text}</div>)}
 
@@ -710,9 +754,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
         {tab === "applications" && (
           <>
             <div style={{ display: "flex", gap: 8 }}>
-              {(["pending", "approved", "declined", "all"] as const).map(s => (
-                <button key={s} onClick={() => setAppFilter(s)} style={{ padding: "6px 16px", borderRadius: 20, border: `1.5px solid ${appFilter === s ? (s === "pending" ? "#F0A500" : s === "approved" ? TEAL : s === "declined" ? "#E74C6F" : BORDER) : BORDER}`, background: appFilter === s ? (s === "pending" ? "#FFF8E6" : s === "approved" ? TEAL_LIGHT : s === "declined" ? "#FDECF1" : "#F3F5F8") : CARD, color: appFilter === s ? (s === "pending" ? "#C48700" : s === "approved" ? TEAL_DARK : s === "declined" ? "#D63563" : TEXT_MID) : TEXT_LIGHT, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textTransform: "capitalize" as const }}>{s}</button>
-              ))}
+              {(["pending", "approved", "declined", "all"] as const).map(s => (<button key={s} onClick={() => setAppFilter(s)} style={{ padding: "6px 16px", borderRadius: 20, border: `1.5px solid ${appFilter === s ? (s === "pending" ? "#F0A500" : s === "approved" ? TEAL : s === "declined" ? "#E74C6F" : BORDER) : BORDER}`, background: appFilter === s ? (s === "pending" ? "#FFF8E6" : s === "approved" ? TEAL_LIGHT : s === "declined" ? "#FDECF1" : "#F3F5F8") : CARD, color: appFilter === s ? (s === "pending" ? "#C48700" : s === "approved" ? TEAL_DARK : s === "declined" ? "#D63563" : TEXT_MID) : TEXT_LIGHT, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textTransform: "capitalize" as const }}>{s}</button>))}
             </div>
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
               <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -724,16 +766,13 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
                 : applications.map((app, i) => {
                   const sc = app.application_status === "approved" ? TEAL : app.application_status === "declined" ? "#E74C6F" : "#F0A500";
                   const sb = app.application_status === "approved" ? TEAL_LIGHT : app.application_status === "declined" ? "#FDECF1" : "#FFF8E6";
-                  return (
-                    <div key={app.id} onClick={() => setSelectedApp(app)} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px 120px 80px", padding: "16px 24px", borderBottom: i < applications.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", cursor: "pointer", transition: "background 0.15s", fontFamily: "'DM Sans', sans-serif" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "#FAFBFC")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                      <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{app.full_name || "—"}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>{app.email}</div></div>
-                      <div><div style={{ fontSize: 13, color: TEXT }}>{app.organisation_name || "—"}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>{app.organisation_type ? ORG_TYPE_LABELS[app.organisation_type] : "—"}</div></div>
-                      <div style={{ fontSize: 12, color: TEXT_LIGHT }}>{[app.city, app.country].filter(Boolean).join(", ") || "—"}</div>
-                      <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: sb, color: sc, textTransform: "capitalize" as const, width: "fit-content" }}>{app.application_status}</span>
-                      <div style={{ color: TEXT_LIGHT, display: "flex", justifyContent: "flex-end" }}><Icon name="chevronRight" size={16} /></div>
-                    </div>
-                  );
+                  return (<div key={app.id} onClick={() => setSelectedApp(app)} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 140px 120px 80px", padding: "16px 24px", borderBottom: i < applications.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", cursor: "pointer", transition: "background 0.15s", fontFamily: "'DM Sans', sans-serif" }} onMouseEnter={e => (e.currentTarget.style.background = "#FAFBFC")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                    <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{app.full_name || "—"}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>{app.email}</div></div>
+                    <div><div style={{ fontSize: 13, color: TEXT }}>{app.organisation_name || "—"}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 1 }}>{app.organisation_type ? ORG_TYPE_LABELS[app.organisation_type] : "—"}</div></div>
+                    <div style={{ fontSize: 12, color: TEXT_LIGHT }}>{[app.city, app.country].filter(Boolean).join(", ") || "—"}</div>
+                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: sb, color: sc, textTransform: "capitalize" as const, width: "fit-content" }}>{app.application_status}</span>
+                    <div style={{ color: TEXT_LIGHT, display: "flex", justifyContent: "flex-end" }}><Icon name="chevronRight" size={16} /></div>
+                  </div>);
                 })}
             </div>
           </>
@@ -748,24 +787,19 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             {loadingUsers ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
               : users.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No users found.</div>)
               : (<div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
-                  <span>Email</span><span>Name</span><span>Partnership Level</span>
-                </div>
-                {users.map((u, i) => {
-                  const lbl = PARTNERSHIP_LABELS[u.partnership_level] || PARTNERSHIP_LABELS.viewer;
-                  return (
-                    <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "16px 24px", borderBottom: i < users.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
-                      <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{u.email}</span>
-                      <span style={{ fontSize: 13, color: TEXT_MID }}>{u.full_name || "—"}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <select value={u.partnership_level} onChange={e => updateLevel(u.id, e.target.value as PartnershipLevel)} disabled={saving === u.id} style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${lbl.color}30`, background: lbl.bg, color: lbl.color, fontSize: 12, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", cursor: "pointer", outline: "none", opacity: saving === u.id ? 0.6 : 1 }}>
-                          <option value="viewer">Viewer</option><option value="member">Member</option><option value="partner">Partner</option><option value="admin">Admin</option>
-                        </select>
-                        {saving === u.id && <span style={{ fontSize: 11, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>Saving…</span>}
-                      </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Email</span><span>Name</span><span>Partnership Level</span></div>
+                {users.map((u, i) => { const lbl = PARTNERSHIP_LABELS[u.partnership_level] || PARTNERSHIP_LABELS.viewer; return (
+                  <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "16px 24px", borderBottom: i < users.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
+                    <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{u.email}</span>
+                    <span style={{ fontSize: 13, color: TEXT_MID }}>{u.full_name || "—"}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <select value={u.partnership_level} onChange={e => updateLevel(u.id, e.target.value as PartnershipLevel)} disabled={saving === u.id} style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${lbl.color}30`, background: lbl.bg, color: lbl.color, fontSize: 12, fontWeight: 700, fontFamily: "'DM Sans', sans-serif", cursor: "pointer", outline: "none", opacity: saving === u.id ? 0.6 : 1 }}>
+                        <option value="viewer">Viewer</option><option value="member">Member</option><option value="partner">Partner</option><option value="admin">Admin</option>
+                      </select>
+                      {saving === u.id && <span style={{ fontSize: 11, color: TEXT_LIGHT }}>Saving…</span>}
                     </div>
-                  );
-                })}
+                  </div>
+                ); })}
               </div>)}
           </div>
         )}
@@ -776,17 +810,13 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Events</h3>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{adminEvents.length} total</span>
-                <button onClick={() => setEventModal({ open: true, event: null })} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
-                  <Icon name="plus" size={14} /> Add Event
-                </button>
+                <button onClick={() => setEventModal({ open: true, event: null })} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}><Icon name="plus" size={14} /> Add Event</button>
               </div>
             </div>
             {loadingEvents ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
               : adminEvents.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No events yet.</div>)
               : (<div>
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
-                  <span>Title</span><span>Date</span><span>Location</span><span>Type</span><span>Actions</span>
-                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Title</span><span>Date</span><span>Location</span><span>Type</span><span>Actions</span></div>
                 {adminEvents.map((e, i) => (
                   <div key={e.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 90px", padding: "14px 24px", borderBottom: i < adminEvents.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
                     <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{e.title}</div>{!e.is_approved && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "#FFF8E6", color: "#C48700", fontWeight: 700 }}>Pending</span>}</div>
@@ -809,35 +839,78 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Projects</h3>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{adminProjects.length} total</span>
-                <button onClick={() => setProjectModal({ open: true, project: null })} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
-                  <Icon name="plus" size={14} /> Add Project
-                </button>
+                <button onClick={() => setProjectModal({ open: true, project: null })} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}><Icon name="plus" size={14} /> Add Project</button>
               </div>
             </div>
             {loadingProjects ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
               : adminProjects.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No projects yet.</div>)
               : (<div>
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 140px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
-                  <span>Name</span><span>Pillar</span><span>Phase</span><span>Progress</span><span>Actions</span>
-                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 140px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Name</span><span>Pillar</span><span>Phase</span><span>Progress</span><span>Actions</span></div>
                 {adminProjects.map((p, i) => (
                   <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 140px 90px", padding: "14px 24px", borderBottom: i < adminProjects.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: 3, background: p.color, flexShrink: 0 }} />
-                      <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{p.name}</div><div style={{ fontSize: 11, color: TEXT_LIGHT }}>{p.lead}</div></div>
-                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: p.color, flexShrink: 0 }} /><div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{p.name}</div><div style={{ fontSize: 11, color: TEXT_LIGHT }}>{p.lead}</div></div></div>
                     <span style={{ fontSize: 11, color: TEXT_MID }}>{p.pillar.split(" ").slice(0, 2).join(" ")}…</span>
                     <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: `${p.color}12`, color: p.color, fontWeight: 700, width: "fit-content" }}>{p.phase}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ flex: 1, height: 5, borderRadius: 3, background: `${p.color}14` }}><div style={{ width: `${p.progress}%`, height: "100%", borderRadius: 3, background: p.color }} /></div>
-                      <span style={{ fontSize: 11, color: TEXT_MID, fontWeight: 600, width: 30 }}>{p.progress}%</span>
-                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ flex: 1, height: 5, borderRadius: 3, background: `${p.color}14` }}><div style={{ width: `${p.progress}%`, height: "100%", borderRadius: 3, background: p.color }} /></div><span style={{ fontSize: 11, color: TEXT_MID, fontWeight: 600, width: 30 }}>{p.progress}%</span></div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => setProjectModal({ open: true, project: p })} style={{ ...btnBase, background: "#F3F5F8", color: TEXT_MID }}><Icon name="edit" size={14} /></button>
                       <button onClick={() => { if (confirm("Delete this project?")) handleDeleteProject(p.id!); }} style={{ ...btnBase, background: "#FDECF1", color: "#D63563" }}><Icon name="trash" size={14} /></button>
                     </div>
                   </div>
                 ))}
+              </div>)}
+          </div>
+        )}
+
+        {/* Equipment Proposals tab */}
+        {tab === "equipment" && (
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
+            <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Equipment Proposals</h3>
+              <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{proposals.length} total · {pendingProposals} pending</span>
+            </div>
+            {loadingProposals ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
+              : proposals.length === 0 ? (
+                <div style={{ padding: 48, textAlign: "center" }}>
+                  <div style={{ color: "#E8EDF3", marginBottom: 12 }}><Icon name="cpu" size={48} /></div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT_MID, fontFamily: "'Sora', sans-serif" }}>No equipment proposals yet</div>
+                  <div style={{ fontSize: 13, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>Members and partners can propose equipment from the Distributed Lab section.</div>
+                </div>
+              ) : (<div>
+                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 120px 160px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
+                  <span>Equipment</span><span>Location</span><span>Category</span><span>Status</span><span>Actions</span>
+                </div>
+                {proposals.map((p, i) => {
+                  const isPending = p.status === "pending";
+                  const isApproved = p.status === "approved";
+                  const statusColor = isApproved ? "#0D9373" : isPending ? "#C48700" : "#D63563";
+                  const statusBg = isApproved ? "#E6F9F5" : isPending ? "#FFF8E6" : "#FDECF1";
+                  return (
+                    <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 120px 160px", padding: "16px 24px", borderBottom: i < proposals.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{p.name}</div>
+                        {p.proposed_by_name && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>Proposed by {p.proposed_by_name}</div>}
+                        {p.description && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 1 }}>{p.description.slice(0, 60)}{p.description.length > 60 ? "…" : ""}</div>}
+                      </div>
+                      <span style={{ fontSize: 12, color: TEXT_MID }}>{p.location}</span>
+                      <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{p.category || "—"}</span>
+                      <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: statusBg, color: statusColor, fontWeight: 700, textTransform: "capitalize" as const, width: "fit-content" }}>{p.status}</span>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {isPending && (
+                          <>
+                            <button onClick={() => handleReviewProposal(p.id, "approved")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#0D9373", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>
+                              ✓ Approve
+                            </button>
+                            <button onClick={() => handleReviewProposal(p.id, "rejected")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>
+                              ✗ Reject
+                            </button>
+                          </>
+                        )}
+                        {!isPending && <button onClick={() => { if (confirm("Delete this proposal?")) handleDeleteProposal(p.id); }} style={{ ...btnBase, background: "#FDECF1", color: "#D63563" }}><Icon name="trash" size={14} /></button>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>)}
           </div>
         )}
@@ -854,9 +927,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             {loadingNewsletter ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
               : subscribers.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No subscribers yet.</div>)
               : (<div>
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 120px 120px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
-                  <span>Email</span><span>Name</span><span>Source</span><span>Date</span>
-                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 120px 120px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Email</span><span>Name</span><span>Source</span><span>Date</span></div>
                 {subscribers.map((s, i) => (
                   <div key={s.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 120px 120px", padding: "14px 24px", borderBottom: i < subscribers.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
                     <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{s.email}</span>
@@ -912,34 +983,25 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", admin: "Admin Panel" };
   const visibleNav = navItems.filter(item => { if (item.id === "admin") return isAdmin; return true; });
 
-  const handleSaveEventInline = async (event: Partial<Event>) => {
-    const res = await fetch("/api/admin/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) });
-    if (res.ok) { fetchEvents(); setEditingEvent(null); }
-  };
-
-  const handleSaveProjectInline = async (project: Partial<Project>) => {
-    const res = await fetch("/api/admin/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) });
-    if (res.ok) { fetchProjects(); setEditingProject(null); }
-  };
+  const handleSaveEventInline = async (event: Partial<Event>) => { const res = await fetch("/api/admin/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); if (res.ok) { fetchEvents(); setEditingEvent(null); } };
+  const handleSaveProjectInline = async (project: Partial<Project>) => { const res = await fetch("/api/admin/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); if (res.ok) { fetchProjects(); setEditingProject(null); } };
 
   const renderContent = () => {
     switch (activeNav) {
       case "dashboard": return <DashboardView projects={projects} events={events} />;
       case "projects": return (
         <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}>
-          <>
-            {editingProject && <ProjectModal project={editingProject} onClose={() => setEditingProject(null)} onSave={handleSaveProjectInline} />}
-            <ProjectsView projects={projects} isAdmin={isAdmin} onEdit={p => setEditingProject(p)} onDelete={async id => { await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchProjects(); }} />
-          </>
+          <>{editingProject && <ProjectModal project={editingProject} onClose={() => setEditingProject(null)} onSave={handleSaveProjectInline} />}<ProjectsView projects={projects} isAdmin={isAdmin} onEdit={p => setEditingProject(p)} onDelete={async id => { await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchProjects(); }} /></>
         </SectionWrapper>
       );
-      case "lab": return <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}><LabView /></SectionWrapper>;
+      case "lab": return (
+        <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}>
+          <LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} />
+        </SectionWrapper>
+      );
       case "events": return (
         <SectionWrapper sectionId="events" sectionName="Events" partnershipLevel={partnershipLevel}>
-          <>
-            {editingEvent && <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleSaveEventInline} />}
-            <EventsView events={events} isAdmin={isAdmin} onEdit={e => setEditingEvent(e)} onDelete={async id => { await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchEvents(); }} />
-          </>
+          <>{editingEvent && <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleSaveEventInline} />}<EventsView events={events} isAdmin={isAdmin} onEdit={e => setEditingEvent(e)} onDelete={async id => { await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchEvents(); }} /></>
         </SectionWrapper>
       );
       case "members": return <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}><MembersView members={members} /></SectionWrapper>;
