@@ -29,7 +29,35 @@ export async function POST(request: Request) {
 
     const email = body.email.toLowerCase().trim();
 
-    // Check for existing application
+    // ── Resolve organisation_id ───────────────────────────────────────────
+    // If user selected an existing org, use that id.
+    // If they typed a new org name, create the org record and use its id.
+    let organisation_id: string | null = body.organisation_id || null;
+
+    if (!organisation_id && body.organisation_name?.trim()) {
+      const { data: newOrg, error: orgError } = await adminClient
+        .from("organisations")
+        .insert({
+          name: body.organisation_name.trim(),
+          org_type: body.organisation_type,
+          city: body.city.trim(),
+          country: body.country.trim(),
+          website: body.organisation_website?.trim() || null,
+          location: [body.city.trim(), body.country.trim()].filter(Boolean).join(", "),
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (orgError) {
+        // Non-fatal — log but continue without org link
+        console.warn("Could not create org record:", orgError.message);
+      } else {
+        organisation_id = newOrg.id;
+      }
+    }
+
+    // ── Check for existing application ────────────────────────────────────
     const { data: existing } = await adminClient
       .from("applications")
       .select("id, application_status")
@@ -59,6 +87,7 @@ export async function POST(request: Request) {
           organisation_name: body.organisation_name.trim(),
           organisation_type: body.organisation_type,
           organisation_website: body.organisation_website?.trim() || null,
+          organisation_id,
           country: body.country.trim(),
           city: body.city.trim(),
           areas_of_interest: body.areas_of_interest || [],
@@ -83,6 +112,7 @@ export async function POST(request: Request) {
           organisation_name: body.organisation_name.trim(),
           organisation_type: body.organisation_type,
           organisation_website: body.organisation_website?.trim() || null,
+          organisation_id,
           country: body.country.trim(),
           city: body.city.trim(),
           areas_of_interest: body.areas_of_interest || [],
@@ -95,7 +125,7 @@ export async function POST(request: Request) {
       if (insertError) throw new Error(insertError.message);
     }
 
-    // ── Save newsletter subscriber if consent given ──────────────────────
+    // ── Save newsletter subscriber if consent given ───────────────────────
     if (body.newsletter_consent === true) {
       await adminClient
         .from("newsletter_subscribers")
@@ -109,7 +139,6 @@ export async function POST(request: Request) {
           },
           { onConflict: "email" }
         );
-      // We don't throw if this fails — it's non-critical
     }
 
     return NextResponse.json({ success: true });
