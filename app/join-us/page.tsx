@@ -270,7 +270,7 @@ function OrgSearch({ data, onSelectOrg, onChange }: {
             </Field>
           </div>
           <Field label="Website" hint="Optional — helps us learn more about your organisation.">
-            <input className={inputClass} placeholder="https://yourorganisation.com" value={data.organisation_website} onChange={e => onChange("organisation_website", e.target.value)} disabled={!!data.organisation_id} />
+            <input className={inputClass} placeholder="https://yourorganisation.com" value={data.organisation_website} onChange={e => onChange("organisation_website", e.target.value)} />
           </Field>
           {data.organisation_id && (
             <p className="text-xs text-gray-400 -mt-2">
@@ -409,13 +409,23 @@ export default function JoinUs() {
         : [...prev.areas_of_interest, value],
     }));
 
-  const handleSelectOrg = (org: OrgResult | null) => {
+  const ORG_TYPE_MAP: Record<string, string> = {
+  "Foundation": "other",
+  "University": "university",
+  "Startup": "startup",
+  "SME": "sme",
+  "Clinical Center": "hospital",
+  "Investor": "investor",
+  "International Partner": "international_partner",
+};
+
+const handleSelectOrg = (org: OrgResult | null) => {
     if (org) {
       setForm(prev => ({
         ...prev,
         organisation_id: org.id,
         organisation_name: org.name,
-        organisation_type: org.org_type,
+        organisation_type: ORG_TYPE_MAP[org.org_type] || org.org_type.toLowerCase(),
         city: org.city || "",
         country: org.country || "",
       }));
