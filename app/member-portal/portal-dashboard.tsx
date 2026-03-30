@@ -232,40 +232,29 @@ function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> 
 
 // ─── PROPOSE EQUIPMENT MODAL ─────────────────────────────────────────────────
 type EquipmentFormState = { name: string; category: string; location: string; description: string; };
-const EMPTY_EQUIPMENT_FORM: EquipmentFormState = { name: "", category: "", location: "", description: "" };
 
 function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userEmail: string; userName: string; onClose: () => void; onSave: () => void; }) {
-  const [form, setForm] = useState<EquipmentFormState>({ ...EMPTY_EQUIPMENT_FORM });
+  const [form, setForm] = useState<EquipmentFormState>({ name: "", category: "", location: "", description: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
   const handle = async () => {
     if (!form.name.trim() || !form.location.trim()) { setError("Equipment name and location are required."); return; }
     setSaving(true); setError(null);
     try {
-      const res = await fetch("/api/admin/equipment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, proposed_by_email: userEmail, proposed_by_name: userName }),
-      });
+      const res = await fetch("/api/admin/equipment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, proposed_by_email: userEmail, proposed_by_name: userName }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Submission failed");
-      setSuccess(true);
-      onSave();
+      setSuccess(true); onSave();
     } catch (e) { setError(e instanceof Error ? e.message : "Failed to submit."); }
     finally { setSaving(false); }
   };
-
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
       <div style={{ position: "relative", width: 500, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden", animation: "fadeUp 0.2s ease both" }}>
         <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Propose Equipment</div>
-            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>Submit a machine for the Distributed Lab network</div>
-          </div>
+          <div><div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Propose Equipment</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>Submit a machine for the Distributed Lab network</div></div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
         </div>
         {success ? (
@@ -280,17 +269,10 @@ function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userE
             <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
               {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
               <div><label style={modalLabelStyle}>Equipment Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Confocal Microscope Leica SP8" style={modalInputStyle} /></div>
-              <div><label style={modalLabelStyle}>Category</label>
-                <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}>
-                  <option value="">Select a category…</option>
-                  {EQUIPMENT_CATEGORIES.map(c => (<option key={c} value={c}>{c}</option>))}
-                </select>
-              </div>
+              <div><label style={modalLabelStyle}>Category</label><select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}><option value="">Select a category…</option>{EQUIPMENT_CATEGORIES.map(c => (<option key={c} value={c}>{c}</option>))}</select></div>
               <div><label style={modalLabelStyle}>Location / Hub *</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="e.g. Taranto Lab A or Zurich UZH" style={modalInputStyle} /></div>
               <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Describe the equipment, its capabilities and availability…" style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
-              <div style={{ padding: "12px 16px", borderRadius: 10, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, fontSize: 12, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>
-                Your proposal will be reviewed by the admin team. Once approved, the equipment will appear in the Distributed Lab network.
-              </div>
+              <div style={{ padding: "12px 16px", borderRadius: 10, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, fontSize: 12, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>Your proposal will be reviewed by the admin team. Once approved, the equipment will appear in the Distributed Lab network.</div>
             </div>
             <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
@@ -303,13 +285,13 @@ function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userE
   );
 }
 
-// ─── DASHBOARD VIEW ───────────────────────────────────────────────────────────
-function DashboardView({ projects, events }: { projects: Project[]; events: Event[] }) {
+// ─── DASHBOARD VIEW — real counts from Supabase ───────────────────────────────
+function DashboardView({ projects, events, members, approvedEquipmentCount }: { projects: Project[]; events: Event[]; members: Organisation[]; approvedEquipmentCount: number; }) {
   const stats = [
-    { label: "Active Projects", value: projects.length || 5, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
-    { label: "Member Organizations", value: 8, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
-    { label: "Equipment Shared", value: 12, icon: "cpu", color: "#E74C6F", bg: "#FDECF1" },
-    { label: "Upcoming Events", value: events.length || 7, icon: "calendar", color: "#F0A500", bg: "#FFF8E6" },
+    { label: "Active Projects", value: projects.length, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
+    { label: "Member Organizations", value: members.length, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
+    { label: "Equipment Shared", value: approvedEquipmentCount, icon: "cpu", color: "#E74C6F", bg: "#FDECF1" },
+    { label: "Upcoming Events", value: events.length, icon: "calendar", color: "#F0A500", bg: "#FFF8E6" },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -411,23 +393,13 @@ function ProjectsView({ projects, isAdmin, onEdit, onDelete }: { projects: Proje
   );
 }
 
-// ─── LAB VIEW ─────────────────────────────────────────────────────────────────
 function LabView({ userEmail, userName }: { userEmail: string; userName: string; }) {
   const [proposing, setProposing] = useState(false);
   const [approvedEquipment, setApprovedEquipment] = useState<EquipmentProposal[]>([]);
-
   useEffect(() => {
-    fetch("/api/admin/equipment")
-      .then(r => r.json())
-      .then(d => setApprovedEquipment((d.proposals || []).filter((p: EquipmentProposal) => p.status === "approved")))
-      .catch(() => {});
+    fetch("/api/admin/equipment").then(r => r.json()).then(d => setApprovedEquipment((d.proposals || []).filter((p: EquipmentProposal) => p.status === "approved"))).catch(() => {});
   }, []);
-
-  const allEquipment = [
-    ...STATIC_EQUIPMENT,
-    ...approvedEquipment.map(p => ({ name: p.name, location: p.location, status: "available", utilization: 0 })),
-  ];
-
+  const allEquipment = [...STATIC_EQUIPMENT, ...approvedEquipment.map(p => ({ name: p.name, location: p.location, status: "available", utilization: 0 }))];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {proposing && <ProposeEquipmentModal userEmail={userEmail} userName={userName} onClose={() => setProposing(false)} onSave={() => {}} />}
@@ -440,13 +412,10 @@ function LabView({ userEmail, userName }: { userEmail: string; userName: string;
           <Icon name="plus" size={14} /> Propose Equipment
         </button>
       </div>
-
-      {/* Info banner */}
       <div style={{ padding: "14px 18px", borderRadius: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span>
         <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>Have equipment to share? Click <strong>Propose Equipment</strong> to submit it for admin approval. Once approved, it will appear in the network below.</span>
       </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         {[{ label: "Network Utilization", value: "54%", sub: "Avg. across all equipment", color: TEAL }, { label: "Cost Savings", value: "€32K", sub: "Estimated this quarter", color: "#7C5CFC" }, { label: "Bookings This Month", value: "18", sub: "Across 3 locations", color: "#F0A500" }].map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
@@ -695,19 +664,15 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   };
   const handleDeleteProject = async (id: string) => { const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); } };
 
-  const handleReviewProposal = async (id: string, status: "approved" | "rejected", notes?: string) => {
+  const handleReviewProposal = async (id: string, status: "approved" | "rejected") => {
     setReviewingProposal(id);
     try {
-      const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: notes || "" }) });
+      const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: "" }) });
       const data = await res.json();
       if (res.ok) setProposals(prev => prev.map(p => p.id === id ? data.proposal : p));
     } finally { setReviewingProposal(null); }
   };
-
-  const handleDeleteProposal = async (id: string) => {
-    const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) setProposals(prev => prev.filter(p => p.id !== id));
-  };
+  const handleDeleteProposal = async (id: string) => { const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) setProposals(prev => prev.filter(p => p.id !== id)); };
 
   const exportCSV = () => {
     const csv = ["Name,Email,Source,Date"].concat(subscribers.map(s => `"${s.full_name || ""}","${s.email}","${s.source}","${new Date(s.subscribed_at).toLocaleDateString("en-GB")}"`)).join("\n");
@@ -718,7 +683,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
 
   const pendingCount = applications.filter(a => a.application_status === "pending").length;
   const pendingProposals = proposals.filter(p => p.status === "pending").length;
-
   const tabs = [
     { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null as number | null },
     { id: "users" as const, label: "Users", icon: "users", badge: null as number | null },
@@ -727,7 +691,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     { id: "equipment" as const, label: "Equipment", icon: "cpu", badge: pendingProposals > 0 ? pendingProposals : null as number | null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null as number | null },
   ];
-
   const btnBase: React.CSSProperties = { border: "none", borderRadius: 7, padding: "6px 8px", cursor: "pointer" };
 
   return (
@@ -741,7 +704,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           <div><div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Admin Panel</div><div style={{ fontSize: 12, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>Manage applications, users, events, projects, equipment proposals and newsletter.</div></div>
         </div>
         {actionMessage && (<div style={{ padding: "12px 18px", borderRadius: 10, background: actionMessage.type === "success" ? "#E6F9F5" : "#FDECF1", border: `1px solid ${actionMessage.type === "success" ? "#A3E4D7" : "#F9C3CE"}`, color: actionMessage.type === "success" ? "#0D9373" : "#D63563", fontSize: 13, fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>{actionMessage.text}</div>)}
-
         <div style={{ display: "flex", gap: 4, background: "#F3F5F8", borderRadius: 12, padding: 4, flexWrap: "wrap" as const }}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 9, border: "none", background: tab === t.id ? CARD : "transparent", color: tab === t.id ? TEXT : TEXT_LIGHT, fontSize: 13, fontWeight: tab === t.id ? 700 : 500, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", boxShadow: tab === t.id ? SHADOW : "none", transition: "all 0.15s ease" }}>
@@ -784,8 +746,8 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>All Users</h3>
               <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{users.length} users</span>
             </div>
-            {loadingUsers ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
-              : users.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No users found.</div>)
+            {loadingUsers ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>)
+              : users.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No users found.</div>)
               : (<div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Email</span><span>Name</span><span>Partnership Level</span></div>
                 {users.map((u, i) => { const lbl = PARTNERSHIP_LABELS[u.partnership_level] || PARTNERSHIP_LABELS.viewer; return (
@@ -809,12 +771,12 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Events</h3>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{adminEvents.length} total</span>
+                <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{adminEvents.length} total</span>
                 <button onClick={() => setEventModal({ open: true, event: null })} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}><Icon name="plus" size={14} /> Add Event</button>
               </div>
             </div>
-            {loadingEvents ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
-              : adminEvents.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No events yet.</div>)
+            {loadingEvents ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>)
+              : adminEvents.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No events yet.</div>)
               : (<div>
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Title</span><span>Date</span><span>Location</span><span>Type</span><span>Actions</span></div>
                 {adminEvents.map((e, i) => (
@@ -838,12 +800,12 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Projects</h3>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{adminProjects.length} total</span>
+                <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{adminProjects.length} total</span>
                 <button onClick={() => setProjectModal({ open: true, project: null })} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}><Icon name="plus" size={14} /> Add Project</button>
               </div>
             </div>
-            {loadingProjects ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
-              : adminProjects.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No projects yet.</div>)
+            {loadingProjects ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>)
+              : adminProjects.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No projects yet.</div>)
               : (<div>
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 140px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Name</span><span>Pillar</span><span>Phase</span><span>Progress</span><span>Actions</span></div>
                 {adminProjects.map((p, i) => (
@@ -862,19 +824,18 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
-        {/* Equipment Proposals tab */}
         {tab === "equipment" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Equipment Proposals</h3>
-              <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{proposals.length} total · {pendingProposals} pending</span>
+              <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{proposals.length} total · {pendingProposals} pending</span>
             </div>
-            {loadingProposals ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
+            {loadingProposals ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>)
               : proposals.length === 0 ? (
                 <div style={{ padding: 48, textAlign: "center" }}>
                   <div style={{ color: "#E8EDF3", marginBottom: 12 }}><Icon name="cpu" size={48} /></div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: TEXT_MID, fontFamily: "'Sora', sans-serif" }}>No equipment proposals yet</div>
-                  <div style={{ fontSize: 13, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>Members and partners can propose equipment from the Distributed Lab section.</div>
+                  <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 4 }}>Members and partners can propose equipment from the Distributed Lab section.</div>
                 </div>
               ) : (<div>
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 120px 160px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
@@ -898,12 +859,8 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
                       <div style={{ display: "flex", gap: 6 }}>
                         {isPending && (
                           <>
-                            <button onClick={() => handleReviewProposal(p.id, "approved")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#0D9373", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>
-                              ✓ Approve
-                            </button>
-                            <button onClick={() => handleReviewProposal(p.id, "rejected")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>
-                              ✗ Reject
-                            </button>
+                            <button onClick={() => handleReviewProposal(p.id, "approved")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#0D9373", fontSize: 11, fontWeight: 700, cursor: "pointer", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>✓ Approve</button>
+                            <button onClick={() => handleReviewProposal(p.id, "rejected")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 11, fontWeight: 700, cursor: "pointer", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>✗ Reject</button>
                           </>
                         )}
                         {!isPending && <button onClick={() => { if (confirm("Delete this proposal?")) handleDeleteProposal(p.id); }} style={{ ...btnBase, background: "#FDECF1", color: "#D63563" }}><Icon name="trash" size={14} /></button>}
@@ -920,12 +877,12 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Newsletter Subscribers</h3>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{subscribers.length} subscribers</span>
+                <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{subscribers.length} subscribers</span>
                 <button onClick={exportCSV} style={{ padding: "7px 16px", borderRadius: 10, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>↓ Export CSV</button>
               </div>
             </div>
-            {loadingNewsletter ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading…</div>)
-              : subscribers.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>No subscribers yet.</div>)
+            {loadingNewsletter ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>)
+              : subscribers.length === 0 ? (<div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No subscribers yet.</div>)
               : (<div>
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 120px 120px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}><span>Email</span><span>Name</span><span>Source</span><span>Date</span></div>
                 {subscribers.map((s, i) => (
@@ -965,6 +922,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [members, setMembers] = useState<Organisation[]>([]);
+  const [approvedEquipmentCount, setApprovedEquipmentCount] = useState(0);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
@@ -972,8 +930,13 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const fetchEvents = () => fetch("/api/events").then(r => r.json()).then(d => setEvents(d.events || []));
 
   useEffect(() => {
-    fetchProjects(); fetchEvents();
+    fetchProjects();
+    fetchEvents();
     fetch("/api/organisations").then(r => r.json()).then(d => setMembers(d.organisations || []));
+    fetch("/api/admin/equipment").then(r => r.json()).then(d => {
+      const approved = (d.proposals || []).filter((p: EquipmentProposal) => p.status === "approved").length;
+      setApprovedEquipmentCount(STATIC_EQUIPMENT.length + approved);
+    }).catch(() => setApprovedEquipmentCount(STATIC_EQUIPMENT.length));
   }, []);
 
   const partnershipLevel = user.partnership_level;
@@ -988,7 +951,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
 
   const renderContent = () => {
     switch (activeNav) {
-      case "dashboard": return <DashboardView projects={projects} events={events} />;
+      case "dashboard": return <DashboardView projects={projects} events={events} members={members} approvedEquipmentCount={approvedEquipmentCount} />;
       case "projects": return (
         <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}>
           <>{editingProject && <ProjectModal project={editingProject} onClose={() => setEditingProject(null)} onSave={handleSaveProjectInline} />}<ProjectsView projects={projects} isAdmin={isAdmin} onEdit={p => setEditingProject(p)} onDelete={async id => { await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchProjects(); }} /></>
@@ -1007,7 +970,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       case "members": return <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}><MembersView members={members} /></SectionWrapper>;
       case "knowledge": return <SectionWrapper sectionId="knowledge" sectionName="Knowledge Base" partnershipLevel={partnershipLevel}><KnowledgeView /></SectionWrapper>;
       case "admin": return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} /> : null;
-      default: return <DashboardView projects={projects} events={events} />;
+      default: return <DashboardView projects={projects} events={events} members={members} approvedEquipmentCount={approvedEquipmentCount} />;
     }
   };
 
