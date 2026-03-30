@@ -938,40 +938,196 @@ function ProjectDrawer({
   );
 }
 
-function ProjectsView({ projects, isAdmin, onEdit, onDelete }: { projects: Project[]; isAdmin?: boolean; onEdit?: (p: Project) => void; onDelete?: (id: string) => void; }) {
-  const [selected, setSelected] = useState<number | null>(null);
+function ProjectsView({
+  projects,
+  isAdmin,
+  onEdit,
+  onDelete,
+  onSaveProjectDetails,
+}: {
+  projects: Project[];
+  isAdmin?: boolean;
+  onEdit?: (p: Project) => void;
+  onDelete?: (id: string) => void;
+  onSaveProjectDetails: (payload: Partial<Project>) => Promise<void>;
+}) {
   const pillars = ["All", "Digital Twin", "Synthetic Biology", "Biomanufacturing", "Multi-Omics"];
   const [filter, setFilter] = useState("All");
-  const filtered = filter === "All" ? projects : projects.filter(p => p.pillar.toLowerCase().includes(filter.toLowerCase()));
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  const filtered =
+    filter === "All"
+      ? projects
+      : projects.filter((p) => p.pillar.toLowerCase().includes(filter.toLowerCase()));
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-        {pillars.map(p => (<button key={p} onClick={() => setFilter(p)} style={{ padding: "7px 16px", borderRadius: 24, border: `1.5px solid ${filter === p ? TEAL : BORDER}`, background: filter === p ? TEAL_LIGHT : CARD, color: filter === p ? TEAL_DARK : TEXT_MID, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{p}</button>))}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
-        {filtered.map((p, i) => (
-          <div key={i} onClick={() => setSelected(selected === i ? null : i)} style={{ background: CARD, border: `1.5px solid ${selected === i ? p.color + "50" : BORDER}`, borderRadius: 16, padding: 24, cursor: "pointer", boxShadow: selected === i ? SHADOW_HOVER : SHADOW, transition: "all 0.25s ease" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 12, height: 12, borderRadius: 4, background: p.color }} /><span style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{p.name}</span></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <StatusBadge status={p.status} />
-                {isAdmin && (<div style={{ display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}><button onClick={() => onEdit?.(p)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button><button onClick={() => { if (confirm("Delete this project?")) onDelete?.(p.id!); }} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button></div>)}
+    <>
+      {selectedProject && (
+        <ProjectDrawer
+          project={selectedProject}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedProject(null)}
+          onSave={async (payload) => {
+            await onSaveProjectDetails(payload);
+            setSelectedProject((prev) =>
+              prev ? { ...prev, ...payload, updated_at: new Date().toISOString() } : prev
+            );
+          }}
+        />
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+          {pillars.map((p) => (
+            <button
+              key={p}
+              onClick={() => setFilter(p)}
+              style={{
+                padding: "7px 16px",
+                borderRadius: 24,
+                border: `1.5px solid ${filter === p ? TEAL : BORDER}`,
+                background: filter === p ? TEAL_LIGHT : CARD,
+                color: filter === p ? TEAL_DARK : TEXT_MID,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
+          {filtered.map((p) => (
+            <div
+              key={p.id || p.name}
+              onClick={() => setSelectedProject(p)}
+              style={{
+                background: CARD,
+                border: `1.5px solid ${BORDER}`,
+                borderRadius: 16,
+                padding: 24,
+                cursor: "pointer",
+                boxShadow: SHADOW,
+                transition: "all 0.25s ease",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 4, background: p.color }} />
+                  <span style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+                    {p.name}
+                  </span>
+                </div>
+
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: 6 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <StatusBadge status={p.status} />
+                  {isAdmin && (
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        onClick={() => onEdit?.(p)}
+                        style={{
+                          background: "#F3F5F8",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "4px 6px",
+                          cursor: "pointer",
+                          color: TEXT_MID,
+                        }}
+                      >
+                        <Icon name="edit" size={13} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (p.id && confirm("Delete this project?")) onDelete?.(p.id);
+                        }}
+                        style={{
+                          background: "#FDECF1",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "4px 6px",
+                          cursor: "pointer",
+                          color: "#D63563",
+                        }}
+                      >
+                        <Icon name="trash" size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 4 }}>{p.pillar}</div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: TEXT_MID,
+                  lineHeight: 1.55,
+                  margin: "8px 0 16px",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {p.description}
+              </p>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <span
+                  style={{
+                    fontSize: 10,
+                    padding: "4px 12px",
+                    borderRadius: 20,
+                    background: `${p.color}12`,
+                    color: p.color,
+                    fontWeight: 700,
+                    textTransform: "uppercase" as const,
+                    letterSpacing: "0.06em",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  {p.phase}
+                </span>
+                <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>
+                  Lead: {p.lead}
+                </span>
+              </div>
+
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>
+                    Progress
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: p.color,
+                      fontWeight: 700,
+                      fontFamily: "'Sora', sans-serif",
+                    }}
+                  >
+                    {p.progress}%
+                  </span>
+                </div>
+                <div style={{ width: "100%", height: 6, borderRadius: 3, background: `${p.color}14` }}>
+                  <div
+                    style={{
+                      width: `${p.progress}%`,
+                      height: "100%",
+                      borderRadius: 3,
+                      background: p.color,
+                    }}
+                  />
+                </div>
               </div>
             </div>
-            <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 4 }}>{p.pillar}</div>
-            <p style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.55, margin: "8px 0 16px", fontFamily: "'DM Sans', sans-serif" }}>{p.description}</p>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <span style={{ fontSize: 10, padding: "4px 12px", borderRadius: 20, background: `${p.color}12`, color: p.color, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.06em", fontFamily: "'DM Sans', sans-serif" }}>{p.phase}</span>
-              <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>Lead: {p.lead}</span>
-            </div>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}><span style={{ fontSize: 11, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>Progress</span><span style={{ fontSize: 12, color: p.color, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>{p.progress}%</span></div>
-              <div style={{ width: "100%", height: 6, borderRadius: 3, background: `${p.color}14` }}><div style={{ width: `${p.progress}%`, height: "100%", borderRadius: 3, background: p.color }} /></div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1534,11 +1690,49 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const renderContent = () => {
     switch (activeNav) {
       case "dashboard": return <DashboardView projects={projects} events={events} members={members} approvedEquipmentCount={approvedEquipmentCount} />;
-      case "projects": return (
-        <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}>
-          <>{editingProject && <ProjectModal project={editingProject} onClose={() => setEditingProject(null)} onSave={handleSaveProjectInline} />}<ProjectsView projects={projects} isAdmin={isAdmin} onEdit={p => setEditingProject(p)} onDelete={async id => { await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchProjects(); }} /></>
-        </SectionWrapper>
-      );
+      case "projects":
+  return (
+    <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}>
+      <>
+        {editingProject && (
+          <ProjectModal
+            project={editingProject}
+            onClose={() => setEditingProject(null)}
+            onSave={handleSaveProjectInline}
+          />
+        )}
+
+        <ProjectsView
+          projects={projects}
+          isAdmin={isAdmin}
+          onEdit={(p) => setEditingProject(p)}
+          onDelete={async (id) => {
+            await fetch("/api/admin/projects", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id }),
+            });
+            fetchProjects();
+          }}
+          onSaveProjectDetails={async (payload) => {
+            const res = await fetch("/api/projects", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+              throw new Error(data.error || "Failed to update project");
+            }
+
+            fetchProjects();
+          }}
+        />
+      </>
+    </SectionWrapper>
+  );
       case "lab": return (
         <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}>
           <LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} />
