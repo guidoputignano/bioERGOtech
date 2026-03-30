@@ -24,7 +24,35 @@ const PROJECT_STATUSES = ["on-track","at-risk","blocked"];
 const EVENT_TYPES = ["internal","national","international","online"];
 const EQUIPMENT_CATEGORIES = ["Flow Cytometry","Sequencing","Imaging","Spectroscopy","Cell Culture","Electroporation","Organoid","PCR","Other"];
 
-type Project = { id?: string; name: string; pillar: string; phase: string; status: string; lead: string; description: string; progress: number; color: string; is_public?: boolean; };
+function generateProjectObjectives(project: Partial<Project>): string[] {
+  const name = project.name?.trim() || "this project";
+  const pillar = project.pillar?.trim() || "the selected pillar";
+  const phase = project.phase?.trim() || "the current phase";
+
+  return [
+    `Define a clear scope and expected outcomes for ${name}.`,
+    `Develop a practical workplan aligned with ${pillar}.`,
+    `Track execution milestones and risks during the ${phase} phase.`,
+    `Document progress updates, evidence, and next actions for internal review.`,
+  ];
+}
+
+type Project = {
+  id?: string;
+  name: string;
+  pillar: string;
+  phase: string;
+  status: string;
+  lead: string;
+  description: string;
+  progress: number;
+  color: string;
+  is_public?: boolean;
+  objectives?: string[];
+  update_notes?: string | null;
+  created_by?: string | null;
+  updated_at?: string | null;
+};
 type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
 type Organisation = { id?: string; name: string; org_type: string; location: string; };
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
@@ -351,6 +379,560 @@ function DashboardView({ projects, events, members, approvedEquipmentCount }: { 
             <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 4 }}>{h.count} organization{h.count > 1 ? "s" : ""}</div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ProjectDrawer({
+  project,
+  isAdmin,
+  onClose,
+  onSave,
+}: {
+  project: Project;
+  isAdmin?: boolean;
+  onClose: () => void;
+  onSave: (payload: Partial<Project>) => Promise<void>;
+}) {
+  const [progress, setProgress] = useState(project.progress ?? 0);
+  const [notes, setNotes] = useState(project.update_notes || "");
+  const [objectives, setObjectives] = useState<string[]>(
+    Array.isArray(project.objectives) ? project.objectives : []
+  );
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setProgress(project.progress ?? 0);
+    setNotes(project.update_notes || "");
+    setObjectives(Array.isArray(project.objectives) ? project.objectives : []);
+    setMessage(null);
+  }, [project]);
+
+  const handleObjectiveChange = (index: number, value: string) => {
+    setObjectives((prev) => prev.map((item, i) => (i === index ? value : item)));
+  };
+
+  const handleAddObjective = () => {
+    setObjectives((prev) => [...prev, ""]);
+  };
+
+  const handleRemoveObjective = (index: number) => {
+    setObjectives((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleGenerateObjectives = () => {
+    setObjectives(generateProjectObjectives(project));
+  };
+
+  const handleSave = async () => {
+    if (!project.id) return;
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      await onSave({
+        id: project.id,
+        progress,
+        update_notes: notes,
+        objectives: objectives.filter((item) => item.trim() !== ""),
+      });
+      setMessage("Project updated successfully.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Failed to update project.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 120, display: "flex" }}>
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(26,35,50,0.38)",
+          backdropFilter: "blur(3px)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 560,
+          background: CARD,
+          boxShadow: "-6px 0 28px rgba(0,0,0,0.12)",
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideIn 0.25s ease both",
+        }}
+      >
+        <div
+          style={{
+            padding: "22px 28px",
+            borderBottom: `1px solid ${BORDER}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 16,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 4,
+                  background: project.color || TEAL,
+                  flexShrink: 0,
+                }}
+              />
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: TEXT,
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              >
+                {project.name}
+              </h2>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: "4px 10px",
+                  borderRadius: 20,
+                  background: `${project.color || TEAL}12`,
+                  color: project.color || TEAL,
+                  fontWeight: 700,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {project.phase}
+              </span>
+              <StatusBadge status={project.status} />
+            </div>
+
+            <div
+              style={{
+                fontSize: 13,
+                color: TEXT_LIGHT,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {project.pillar} · Lead: {project.lead}
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{
+              background: "#F3F5F8",
+              border: "none",
+              borderRadius: 8,
+              padding: 8,
+              cursor: "pointer",
+              color: TEXT_MID,
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "24px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 22,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: TEXT_LIGHT,
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                marginBottom: 8,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Description
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                color: TEXT_MID,
+                lineHeight: 1.65,
+                fontFamily: "'DM Sans', sans-serif",
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+                padding: 16,
+              }}
+            >
+              {project.description || "No description available."}
+            </div>
+          </div>
+
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT_LIGHT,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Progress
+              </div>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: project.color || TEAL,
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              >
+                {progress}%
+              </div>
+            </div>
+
+            {isAdmin ? (
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={progress}
+                onChange={(e) => setProgress(Number(e.target.value))}
+                style={{ width: "100%", accentColor: project.color || TEAL }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: 8,
+                  borderRadius: 8,
+                  background: `${project.color || TEAL}14`,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${progress}%`,
+                    height: "100%",
+                    background: project.color || TEAL,
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT_LIGHT,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Objectives
+              </div>
+
+              {isAdmin && (
+                <button
+                  onClick={handleGenerateObjectives}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    border: `1px solid ${TEAL_MUTED}`,
+                    background: TEAL_LIGHT,
+                    color: TEAL_DARK,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  Generate Objectives
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {objectives.length === 0 && (
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: TEXT_LIGHT,
+                    fontFamily: "'DM Sans', sans-serif",
+                    background: "#FAFBFC",
+                    border: `1px dashed ${BORDER}`,
+                    borderRadius: 12,
+                    padding: 14,
+                  }}
+                >
+                  No objectives added yet.
+                </div>
+              )}
+
+              {objectives.map((objective, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 8,
+                      background: TEAL_LIGHT,
+                      color: TEAL_DARK,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      fontFamily: "'Sora', sans-serif",
+                      flexShrink: 0,
+                      marginTop: 2,
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+
+                  {isAdmin ? (
+                    <>
+                      <textarea
+                        value={objective}
+                        onChange={(e) => handleObjectiveChange(index, e.target.value)}
+                        rows={2}
+                        style={{
+                          ...modalInputStyle,
+                          resize: "vertical",
+                          flex: 1,
+                        }}
+                      />
+                      <button
+                        onClick={() => handleRemoveObjective(index)}
+                        style={{
+                          background: "#FDECF1",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "8px 10px",
+                          color: "#D63563",
+                          cursor: "pointer",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon name="trash" size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <div
+                      style={{
+                        flex: 1,
+                        fontSize: 14,
+                        color: TEXT_MID,
+                        lineHeight: 1.6,
+                        fontFamily: "'DM Sans', sans-serif",
+                        background: "#FAFBFC",
+                        border: `1px solid ${BORDER}`,
+                        borderRadius: 12,
+                        padding: 12,
+                      }}
+                    >
+                      {objective}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {isAdmin && (
+                <button
+                  onClick={handleAddObjective}
+                  style={{
+                    alignSelf: "flex-start",
+                    padding: "8px 14px",
+                    borderRadius: 10,
+                    border: `1px solid ${BORDER}`,
+                    background: CARD,
+                    color: TEXT_MID,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Icon name="plus" size={14} />
+                  Add Objective
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: TEXT_LIGHT,
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                marginBottom: 8,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Update Notes
+            </div>
+
+            {isAdmin ? (
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+                placeholder="Add a project update note..."
+                style={{
+                  ...modalInputStyle,
+                  resize: "vertical",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  fontSize: 14,
+                  color: TEXT_MID,
+                  lineHeight: 1.65,
+                  fontFamily: "'DM Sans', sans-serif",
+                  background: "#FAFBFC",
+                  border: `1px solid ${BORDER}`,
+                  borderRadius: 12,
+                  padding: 16,
+                }}
+              >
+                {notes || "No update notes available."}
+              </div>
+            )}
+          </div>
+
+          {project.updated_at && (
+            <div
+              style={{
+                fontSize: 12,
+                color: TEXT_LIGHT,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Last updated: {new Date(project.updated_at).toLocaleString()}
+            </div>
+          )}
+
+          {message && (
+            <div
+              style={{
+                padding: "12px 14px",
+                borderRadius: 10,
+                background: message.includes("success") ? "#E6F9F5" : "#FDECF1",
+                color: message.includes("success") ? "#0D9373" : "#D63563",
+                fontSize: 13,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {message}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            padding: "16px 28px",
+            borderTop: `1px solid ${BORDER}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 18px",
+              borderRadius: 10,
+              border: `1.5px solid ${BORDER}`,
+              background: CARD,
+              color: TEXT_MID,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Close
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                padding: "10px 22px",
+                borderRadius: 10,
+                border: "none",
+                background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`,
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: saving ? "default" : "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                opacity: saving ? 0.7 : 1,
+              }}
+            >
+              {saving ? "Saving…" : "Save Updates"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
