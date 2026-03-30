@@ -2054,7 +2054,16 @@ function OrganisationModal({
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
+      <div
+  onClick={onClose}
+  style={{
+    position: "absolute",
+    inset: 0,
+    background: "rgba(26,35,50,0.38)",
+    backdropFilter: "blur(3px)",
+    zIndex: 1000,
+  }}
+/>
       <div style={{ position: "relative", width: 620, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden" }}>
         <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
@@ -2111,9 +2120,22 @@ function MemberDrawer({
   onDelete?: (id: string) => void;
 }) {
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 215, display: "flex" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.38)", backdropFilter: "blur(3px)" }} />
-      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 540, background: CARD, boxShadow: "-6px 0 28px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column" }}>
+      <div
+  style={{
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 540,
+    background: CARD,
+    boxShadow: "-6px 0 28px rgba(0,0,0,0.12)",
+    display: "flex",
+    flexDirection: "column",
+    zIndex: 1001,
+  }}
+>
         <div style={{ padding: "22px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{member.name}</div>
