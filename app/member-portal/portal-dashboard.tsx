@@ -56,7 +56,37 @@ type Project = {
 type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
 type Organisation = { id?: string; name: string; org_type: string; location: string; };
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
-type EquipmentProposal = { id: string; name: string; category?: string; location: string; description?: string; proposed_by_email?: string; proposed_by_name?: string; status: string; admin_notes?: string; reviewed_at?: string; created_at: string; };
+
+type EquipmentProposal = {
+  id: string;
+  name: string;
+  category?: string;
+  location: string;
+  description?: string;
+  proposed_by_email?: string;
+  proposed_by_name?: string;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  image_url?: string | null;
+  status: string;
+  admin_notes?: string;
+  reviewed_at?: string;
+  created_at: string;
+  is_available?: boolean;
+  utilization?: number;
+  cost_savings_text?: string | null;
+  bookings_count?: number;
+};
+type LabStats = {
+  utilization_text: string;
+  utilization_sub: string;
+  cost_savings_text: string;
+  cost_savings_sub: string;
+  bookings_text: string;
+  bookings_sub: string;
+};
+
+
 
 export type PartnershipLevel = "viewer" | "member" | "partner" | "admin";
 
@@ -313,6 +343,129 @@ function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userE
   );
 }
 
+type EquipmentAdminFormState = {
+  name: string;
+  category: string;
+  location: string;
+  description: string;
+  contact_email: string;
+  contact_phone: string;
+  image_url: string;
+  utilization: number;
+  is_available: boolean;
+  cost_savings_text: string;
+  bookings_count: number;
+};
+
+function EquipmentAdminModal({
+  equipment,
+  onClose,
+  onSave,
+}: {
+  equipment: Partial<EquipmentProposal> | null;
+  onClose: () => void;
+  onSave: (payload: Partial<EquipmentProposal> & { is_admin_add?: boolean }) => Promise<void>;
+}) {
+  const [form, setForm] = useState<EquipmentAdminFormState>({
+    name: equipment?.name || "",
+    category: equipment?.category || "",
+    location: equipment?.location || "",
+    description: equipment?.description || "",
+    contact_email: equipment?.contact_email || "",
+    contact_phone: equipment?.contact_phone || "",
+    image_url: equipment?.image_url || "",
+    utilization: equipment?.utilization ?? 0,
+    is_available: equipment?.is_available ?? true,
+    cost_savings_text: equipment?.cost_savings_text || "",
+    bookings_count: equipment?.bookings_count ?? 0,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isEdit = !!equipment?.id;
+
+  const handle = async () => {
+    if (!form.name.trim() || !form.location.trim()) {
+      setError("Equipment name and location are required.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await onSave({
+        ...(isEdit ? { id: equipment!.id } : { is_admin_add: true }),
+        name: form.name,
+        category: form.category,
+        location: form.location,
+        description: form.description,
+        contact_email: form.contact_email,
+        contact_phone: form.contact_phone,
+        image_url: form.image_url,
+        utilization: form.utilization,
+        is_available: form.is_available,
+        cost_savings_text: form.cost_savings_text,
+        bookings_count: form.bookings_count,
+        status: "approved",
+      });
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save equipment.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 210, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
+      <div style={{ position: "relative", width: 620, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden" }}>
+        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+            {isEdit ? "Edit Equipment" : "Add Equipment"}
+          </div>
+          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}>
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+
+        <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "70vh", overflowY: "auto" }}>
+          {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
+
+          <div><label style={modalLabelStyle}>Equipment Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Category</label><select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}><option value="">Select a category…</option>{EQUIPMENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+          <div><label style={modalLabelStyle}>Location *</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div><label style={modalLabelStyle}>Contact Email</label><input value={form.contact_email} onChange={e => setForm(p => ({ ...p, contact_email: e.target.value }))} style={modalInputStyle} /></div>
+            <div><label style={modalLabelStyle}>Contact Phone</label><input value={form.contact_phone} onChange={e => setForm(p => ({ ...p, contact_phone: e.target.value }))} style={modalInputStyle} /></div>
+          </div>
+
+          <div><label style={modalLabelStyle}>Image URL</label><input value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} style={modalInputStyle} /></div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div><label style={modalLabelStyle}>Utilization (%)</label><input type="number" min={0} max={100} value={form.utilization} onChange={e => setForm(p => ({ ...p, utilization: Number(e.target.value) }))} style={modalInputStyle} /></div>
+            <div><label style={modalLabelStyle}>Bookings Count</label><input type="number" min={0} value={form.bookings_count} onChange={e => setForm(p => ({ ...p, bookings_count: Number(e.target.value) }))} style={modalInputStyle} /></div>
+            <div><label style={modalLabelStyle}>Cost Savings Text</label><input value={form.cost_savings_text} onChange={e => setForm(p => ({ ...p, cost_savings_text: e.target.value }))} style={modalInputStyle} /></div>
+          </div>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>
+            <input type="checkbox" checked={form.is_available} onChange={e => setForm(p => ({ ...p, is_available: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />
+            Available for booking
+          </label>
+        </div>
+
+        <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+          <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>
+            {saving ? "Saving…" : isEdit ? "Save Changes" : "Add Equipment"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 // ─── DASHBOARD VIEW — real counts from Supabase ───────────────────────────────
 function DashboardView({ projects, events, members, approvedEquipmentCount }: { projects: Project[]; events: Event[]; members: Organisation[]; approvedEquipmentCount: number; }) {
   const stats = [
@@ -1130,57 +1283,666 @@ function ProjectsView({
     </>
   );
 }
+function EquipmentDrawer({
+  equipment,
+  isAdmin,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  equipment: EquipmentProposal;
+  isAdmin?: boolean;
+  onClose: () => void;
+  onEdit?: (equipment: EquipmentProposal) => void;
+  onDelete?: (id: string) => void;
+}) {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 205, display: "flex" }}>
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(26,35,50,0.38)",
+          backdropFilter: "blur(3px)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 540,
+          background: CARD,
+          boxShadow: "-6px 0 28px rgba(0,0,0,0.12)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            padding: "22px 28px",
+            borderBottom: `1px solid ${BORDER}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: TEXT,
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
+              {equipment.name}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                color: TEXT_LIGHT,
+                marginTop: 6,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              {equipment.category || "Uncategorized"} · {equipment.location}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "#F3F5F8",
+              border: "none",
+              borderRadius: 8,
+              padding: 8,
+              cursor: "pointer",
+              color: TEXT_MID,
+            }}
+          >
+            <Icon name="x" size={16} />
+          </button>
+        </div>
 
-function LabView({ userEmail, userName }: { userEmail: string; userName: string; }) {
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "24px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          {equipment.image_url ? (
+            <img
+              src={equipment.image_url}
+              alt={equipment.name}
+              style={{
+                width: "100%",
+                height: 220,
+                objectFit: "cover",
+                borderRadius: 14,
+                border: `1px solid ${BORDER}`,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: 180,
+                borderRadius: 14,
+                border: `1px dashed ${BORDER}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: TEXT_LIGHT,
+                background: "#FAFBFC",
+                fontSize: 13,
+              }}
+            >
+              No image available
+            </div>
+          )}
+
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                color: TEXT_LIGHT,
+                marginBottom: 8,
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                fontWeight: 700,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Description
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                color: TEXT_MID,
+                lineHeight: 1.65,
+                fontFamily: "'DM Sans', sans-serif",
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+                padding: 16,
+              }}
+            >
+              {equipment.description || "No description available."}
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div
+              style={{
+                padding: 16,
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  color: TEXT_LIGHT,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Contact Email
+              </div>
+              <div style={{ fontSize: 14, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>
+                {equipment.contact_email ? (
+                  <a
+                    href={`mailto:${equipment.contact_email}`}
+                    style={{ color: TEAL_DARK, textDecoration: "none" }}
+                  >
+                    {equipment.contact_email}
+                  </a>
+                ) : (
+                  "Not provided"
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  color: TEXT_LIGHT,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Contact Phone
+              </div>
+              <div style={{ fontSize: 14, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>
+                {equipment.contact_phone ? (
+                  <a
+                    href={`tel:${equipment.contact_phone}`}
+                    style={{ color: TEAL_DARK, textDecoration: "none" }}
+                  >
+                    {equipment.contact_phone}
+                  </a>
+                ) : (
+                  "Not provided"
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+            <div
+              style={{
+                padding: 16,
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  color: TEXT_LIGHT,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Status
+              </div>
+              <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>
+                {equipment.is_available ? "Available" : "Unavailable"}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  color: TEXT_LIGHT,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Utilization
+              </div>
+              <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>
+                {equipment.utilization ?? 0}%
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                background: "#FAFBFC",
+                border: `1px solid ${BORDER}`,
+                borderRadius: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  color: TEXT_LIGHT,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Bookings
+              </div>
+              <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>
+                {equipment.bookings_count ?? 0}
+              </div>
+            </div>
+          </div>
+
+          {equipment.cost_savings_text && (
+            <div
+              style={{
+                padding: 16,
+                background: TEAL_LIGHT,
+                border: `1px solid ${TEAL_MUTED}`,
+                borderRadius: 12,
+                color: TEAL_DARK,
+                fontSize: 13,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Cost savings: <strong>{equipment.cost_savings_text}</strong>
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            padding: "16px 28px",
+            borderTop: `1px solid ${BORDER}`,
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 18px",
+              borderRadius: 10,
+              border: `1.5px solid ${BORDER}`,
+              background: CARD,
+              color: TEXT_MID,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Close
+          </button>
+
+          {isAdmin && (
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => onEdit?.(equipment)}
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: 10,
+                  border: `1.5px solid ${BORDER}`,
+                  background: CARD,
+                  color: TEXT_MID,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm("Delete this equipment item?")) onDelete?.(equipment.id);
+                }}
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#FDECF1",
+                  color: "#D63563",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LabView({
+  userEmail,
+  userName,
+  isAdmin,
+}: {
+  userEmail: string;
+  userName: string;
+  isAdmin?: boolean;
+}) {
   const [proposing, setProposing] = useState(false);
+  const [equipmentModal, setEquipmentModal] = useState<Partial<EquipmentProposal> | null>(null);
   const [approvedEquipment, setApprovedEquipment] = useState<EquipmentProposal[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState<EquipmentProposal | null>(null);
+  const [labStats, setLabStats] = useState<LabStats>({
+    utilization_text: "54%",
+    utilization_sub: "Avg. across all equipment",
+    cost_savings_text: "€32K",
+    cost_savings_sub: "Estimated this quarter",
+    bookings_text: "18",
+    bookings_sub: "Across 3 locations",
+  });
+  const [editingStats, setEditingStats] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const fetchEquipment = async () => {
+    const res = await fetch("/api/admin/equipment");
+    const data = await res.json();
+    setApprovedEquipment((data.proposals || []).filter((p: EquipmentProposal) => p.status === "approved"));
+  };
+
+  const fetchLabStats = async () => {
+    const res = await fetch("/api/admin/lab-stats");
+    const data = await res.json();
+    if (data.stats) setLabStats(data.stats);
+  };
+
   useEffect(() => {
-    fetch("/api/admin/equipment").then(r => r.json()).then(d => setApprovedEquipment((d.proposals || []).filter((p: EquipmentProposal) => p.status === "approved"))).catch(() => {});
+    fetchEquipment();
+    fetchLabStats();
   }, []);
-  const allEquipment = [...STATIC_EQUIPMENT, ...approvedEquipment.map(p => ({ name: p.name, location: p.location, status: "available", utilization: 0 }))];
+
+  const filteredEquipment = approvedEquipment.filter((e) =>
+    [e.name, e.location, e.category, e.description].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSaveEquipment = async (payload: Partial<EquipmentProposal> & { is_admin_add?: boolean }) => {
+    const isEdit = !!payload.id;
+    const res = await fetch("/api/admin/equipment", {
+      method: isEdit ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save equipment");
+
+    await fetchEquipment();
+  };
+
+  const handleDeleteEquipment = async (id: string) => {
+    await fetch("/api/admin/equipment", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSelectedEquipment(null);
+    await fetchEquipment();
+  };
+
+  const handleSaveStats = async () => {
+    const res = await fetch("/api/admin/lab-stats", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(labStats),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save lab stats");
+
+    setLabStats(data.stats);
+    setEditingStats(false);
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {proposing && <ProposeEquipmentModal userEmail={userEmail} userName={userName} onClose={() => setProposing(false)} onSave={() => {}} />}
+      {proposing && (
+        <ProposeEquipmentModal
+          userEmail={userEmail}
+          userName={userName}
+          onClose={() => setProposing(false)}
+          onSave={() => {
+            setProposing(false);
+            fetchEquipment();
+          }}
+        />
+      )}
+
+      {equipmentModal && (
+        <EquipmentAdminModal
+          equipment={equipmentModal}
+          onClose={() => setEquipmentModal(null)}
+          onSave={async (payload) => {
+            await handleSaveEquipment(payload);
+            setEquipmentModal(null);
+          }}
+        />
+      )}
+
+      {selectedEquipment && (
+        <EquipmentDrawer
+          equipment={selectedEquipment}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedEquipment(null)}
+          onEdit={(equipment) => {
+            setSelectedEquipment(null);
+            setEquipmentModal(equipment);
+          }}
+          onDelete={handleDeleteEquipment}
+        />
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 14, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
-          <input placeholder="Search equipment..." style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13, fontFamily: "'DM Sans', sans-serif" }} />
+          <input
+            placeholder="Search equipment..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}
+          />
         </div>
-        <button onClick={() => setProposing(true)} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6, boxShadow: `0 2px 8px ${TEAL}33` }}>
-          <Icon name="plus" size={14} /> Propose Equipment
-        </button>
+
+        {isAdmin ? (
+          <button onClick={() => setEquipmentModal({})} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name="plus" size={14} /> Add Equipment
+          </button>
+        ) : (
+          <button onClick={() => setProposing(true)} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name="plus" size={14} /> Propose Equipment
+          </button>
+        )}
       </div>
-      <div style={{ padding: "14px 18px", borderRadius: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span>
-        <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>Have equipment to share? Click <strong>Propose Equipment</strong> to submit it for admin approval. Once approved, it will appear in the network below.</span>
+
+      <div style={{ padding: "14px 18px", borderRadius: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span>
+          <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>
+            {isAdmin
+              ? "Add equipment directly to the Distributed Lab, or edit existing shared equipment details."
+              : "Have equipment to share? Click Propose Equipment to submit it for admin approval."}
+          </span>
+        </div>
+        {isAdmin && (
+          <button onClick={() => setEditingStats((p) => !p)} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${TEAL_MUTED}`, background: "#fff", color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+            {editingStats ? "Cancel Stats Edit" : "Edit Stats"}
+          </button>
+        )}
       </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {[{ label: "Network Utilization", value: "54%", sub: "Avg. across all equipment", color: TEAL }, { label: "Cost Savings", value: "€32K", sub: "Estimated this quarter", color: "#7C5CFC" }, { label: "Bookings This Month", value: "18", sub: "Across 3 locations", color: "#F0A500" }].map((s, i) => (
-          <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
-            <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 10, textTransform: "uppercase" as const, letterSpacing: "0.06em", fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{s.label}</div>
-            <div style={{ fontSize: 30, fontWeight: 700, color: s.color, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>{s.sub}</div>
+        {[
+          {
+            key: "utilization",
+            label: "Network Utilization",
+            value: labStats.utilization_text,
+            sub: labStats.utilization_sub,
+            color: TEAL,
+            valueKey: "utilization_text",
+            subKey: "utilization_sub",
+          },
+          {
+            key: "cost",
+            label: "Cost Savings",
+            value: labStats.cost_savings_text,
+            sub: labStats.cost_savings_sub,
+            color: "#7C5CFC",
+            valueKey: "cost_savings_text",
+            subKey: "cost_savings_sub",
+          },
+          {
+            key: "bookings",
+            label: "Bookings This Month",
+            value: labStats.bookings_text,
+            sub: labStats.bookings_sub,
+            color: "#F0A500",
+            valueKey: "bookings_text",
+            subKey: "bookings_sub",
+          },
+        ].map((s) => (
+          <div key={s.key} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
+            <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 10, textTransform: "uppercase" as const, letterSpacing: "0.06em", fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+              {s.label}
+            </div>
+
+            {editingStats && isAdmin ? (
+              <>
+                <input
+                  value={s.value}
+                  onChange={(e) => setLabStats((prev) => ({ ...prev, [s.valueKey]: e.target.value }))}
+                  style={{ ...modalInputStyle, marginBottom: 8 }}
+                />
+                <input
+                  value={s.sub}
+                  onChange={(e) => setLabStats((prev) => ({ ...prev, [s.subKey]: e.target.value }))}
+                  style={modalInputStyle}
+                />
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 30, fontWeight: 700, color: s.color, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>{s.sub}</div>
+              </>
+            )}
           </div>
         ))}
       </div>
-      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 130px 100px", padding: "14px 24px", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif", background: "#FAFBFC" }}>
-          <span>Equipment</span><span>Location</span><span>Status</span><span>Utilization</span><span>Action</span>
+
+      {editingStats && isAdmin && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={handleSaveStats} style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+            Save Stat Cards
+          </button>
         </div>
-        {allEquipment.map((e, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 130px 100px", padding: "16px 24px", borderBottom: i < allEquipment.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", fontFamily: "'DM Sans', sans-serif" }}>
+      )}
+
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px 140px 100px", padding: "14px 24px", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, fontFamily: "'DM Sans', sans-serif", background: "#FAFBFC" }}>
+          <span>Equipment</span>
+          <span>Location</span>
+          <span>Status</span>
+          <span>Utilization</span>
+          <span>Action</span>
+        </div>
+
+        {filteredEquipment.map((e, i) => (
+          <div
+            key={e.id}
+            onClick={() => setSelectedEquipment(e)}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 120px 140px 100px",
+              padding: "16px 24px",
+              borderBottom: i < filteredEquipment.length - 1 ? `1px solid ${BORDER}` : "none",
+              alignItems: "center",
+              fontFamily: "'DM Sans', sans-serif",
+              cursor: "pointer",
+            }}
+          >
             <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>{e.name}</span>
             <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{e.location}</span>
-            <span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: e.status === "available" ? "#E6F9F5" : e.status === "booked" ? "#FFF8E6" : "#FDECF1", color: e.status === "available" ? "#0D9373" : e.status === "booked" ? "#C48700" : "#D63563", textTransform: "capitalize" as const }}>{e.status}</span></span>
+            <span>
+              <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: e.is_available ? "#E6F9F5" : "#FDECF1", color: e.is_available ? "#0D9373" : "#D63563" }}>
+                {e.is_available ? "available" : "unavailable"}
+              </span>
+            </span>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#EEF0F4" }}><div style={{ width: `${e.utilization}%`, height: "100%", borderRadius: 3, background: e.utilization > 70 ? "#F0A500" : TEAL }} /></div>
-              <span style={{ fontSize: 12, color: TEXT_MID, fontFamily: "'Sora', sans-serif", fontWeight: 600, width: 30 }}>{e.utilization}%</span>
+              <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#EEF0F4" }}>
+                <div style={{ width: `${e.utilization ?? 0}%`, height: "100%", borderRadius: 3, background: (e.utilization ?? 0) > 70 ? "#F0A500" : TEAL }} />
+              </div>
+              <span style={{ fontSize: 12, color: TEXT_MID, fontFamily: "'Sora', sans-serif", fontWeight: 600, width: 30 }}>
+                {e.utilization ?? 0}%
+              </span>
             </div>
-            <button style={{ padding: "6px 16px", borderRadius: 8, border: e.status === "available" ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`, background: e.status === "available" ? TEAL_LIGHT : "#FAFBFC", color: e.status === "available" ? TEAL_DARK : TEXT_LIGHT, cursor: e.status === "available" ? "pointer" : "default", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
-              {e.status === "available" ? "Book" : e.status === "booked" ? "Waitlist" : "N/A"}
+            <button
+              onClick={(evt) => evt.stopPropagation()}
+              style={{ padding: "6px 16px", borderRadius: 8, border: e.is_available ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`, background: e.is_available ? TEAL_LIGHT : "#FAFBFC", color: e.is_available ? TEAL_DARK : TEXT_LIGHT, cursor: e.is_available ? "pointer" : "default", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}
+            >
+              {e.is_available ? "Book" : "N/A"}
             </button>
           </div>
         ))}
+
+        {filteredEquipment.length === 0 && (
+          <div style={{ padding: 24, textAlign: "center", color: TEXT_LIGHT, fontSize: 13 }}>
+            No equipment found.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1733,11 +2495,16 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       </>
     </SectionWrapper>
   );
-      case "lab": return (
-        <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}>
-          <LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} />
-        </SectionWrapper>
-      );
+      case "lab":
+  return (
+    <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}>
+      <LabView
+        userEmail={user.email}
+        userName={user.display_name || user.full_name || user.email}
+        isAdmin={isAdmin}
+      />
+    </SectionWrapper>
+  );
       case "events": return (
         <SectionWrapper sectionId="events" sectionName="Events" partnershipLevel={partnershipLevel}>
           <>{editingEvent && <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleSaveEventInline} />}<EventsView events={events} isAdmin={isAdmin} onEdit={e => setEditingEvent(e)} onDelete={async id => { await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchEvents(); }} /></>
