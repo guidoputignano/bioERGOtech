@@ -2053,7 +2053,7 @@ function OrganisationModal({
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div
   onClick={onClose}
   style={{
@@ -2267,6 +2267,7 @@ function MembersView({
   const [selectedMember, setSelectedMember] = useState<Organisation | null>(null);
   const [organisationModal, setOrganisationModal] = useState<Partial<Organisation> | null>(null);
   const [memberList, setMemberList] = useState<Organisation[]>(members);
+  const [isOpeningEdit, setIsOpeningEdit] = useState(false);
 
   useEffect(() => {
     setMemberList(members);
@@ -2306,46 +2307,79 @@ function MembersView({
     }
   };
 
+  const openEditModal = (member: Organisation) => {
+    setIsOpeningEdit(true);
+    setSelectedMember(null);
+
+    setTimeout(() => {
+      setOrganisationModal(member);
+      setIsOpeningEdit(false);
+    }, 120);
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {organisationModal && (
-        <OrganisationModal
-          organisation={organisationModal}
-          onClose={() => setOrganisationModal(null)}
-          onSave={async (payload) => {
-            await handleSaveOrganisation(payload);
-            setOrganisationModal(null);
-          }}
-        />
-      )}
-
-      {selectedMember && (
-        <MemberDrawer
-          member={selectedMember}
-          isAdmin={isAdmin}
-          onClose={() => setSelectedMember(null)}
-          onEdit={(member) => {
-            setSelectedMember(null);
-            setOrganisationModal(member);
-          }}
-          onDelete={handleDeleteOrganisation}
-        />
-      )}
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        position: "relative",
+        isolation: "isolate",
+      }}
+    >
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <h3
+            style={{
+              margin: 0,
+              fontSize: 16,
+              fontWeight: 700,
+              color: TEXT,
+              fontFamily: "'Sora', sans-serif",
+            }}
+          >
             Member Network Map
           </h3>
-          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>
-            OpenStreetMap · 6 hubs across 3 continents
+          <span
+            style={{
+              fontSize: 12,
+              color: TEXT_LIGHT,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            OpenStreetMap · {memberList.length} organisations
           </span>
         </div>
-        <MemberMap />
+
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            borderRadius: 16,
+            overflow: "hidden",
+          }}
+        >
+          <MemberMap />
+        </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+        <h3
+          style={{
+            margin: 0,
+            fontSize: 15,
+            fontWeight: 700,
+            color: TEXT,
+            fontFamily: "'Sora', sans-serif",
+          }}
+        >
           Member Organisations
         </h3>
 
@@ -2373,14 +2407,37 @@ function MembersView({
         )}
       </div>
 
-      {(!memberList || memberList.length === 0) ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />
+      {!memberList || memberList.length === 0 ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: 14,
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 14,
+                padding: 20,
+                boxShadow: SHADOW,
+                height: 80,
+                opacity: 0.4,
+              }}
+            />
           ))}
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: 14,
+          }}
+        >
           {memberList.map((m, i) => (
             <div
               key={m.id || i}
@@ -2392,6 +2449,7 @@ function MembersView({
                 padding: 20,
                 boxShadow: SHADOW,
                 cursor: "pointer",
+                transition: "transform 0.18s ease, box-shadow 0.18s ease",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
@@ -2408,16 +2466,35 @@ function MembersView({
                     fontSize: 14,
                     fontWeight: 700,
                     fontFamily: "'Sora', sans-serif",
+                    flexShrink: 0,
                   }}
                 >
-                  {m.name.charAt(0)}
+                  {m.name?.charAt(0) || "O"}
                 </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>
+
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: TEXT,
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
                     {m.name}
                   </div>
-                  <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1, fontFamily: "'DM Sans', sans-serif" }}>
-                    <Icon name="mapPin" size={11} /> {m.location}
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: TEXT_LIGHT,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      marginTop: 1,
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    <Icon name="mapPin" size={11} /> {m.location || "No location"}
                   </div>
                 </div>
               </div>
@@ -2433,16 +2510,40 @@ function MembersView({
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                {m.org_type}
+                {m.org_type || "Organisation"}
               </span>
             </div>
           ))}
         </div>
       )}
+
+      {selectedMember && !isOpeningEdit && (
+        <MemberDrawer
+          member={selectedMember}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedMember(null)}
+          onEdit={(member) => openEditModal(member)}
+          onDelete={handleDeleteOrganisation}
+        />
+      )}
+
+      {organisationModal && (
+        <OrganisationModal
+          organisation={organisationModal}
+          onClose={() => {
+            setOrganisationModal(null);
+            setIsOpeningEdit(false);
+          }}
+          onSave={async (payload) => {
+            await handleSaveOrganisation(payload);
+            setOrganisationModal(null);
+            setIsOpeningEdit(false);
+          }}
+        />
+      )}
     </div>
   );
 }
-
 function KnowledgeView() {
   const categories = [
     { name: "Regulatory Pathways", count: 8, icon: "book", desc: "IVDR, MDR, EMA guidance documents", color: TEAL, bg: TEAL_LIGHT },

@@ -69,8 +69,16 @@
 }
 .leaflet-container,
 .leaflet-pane,
-.leaflet-control,
 .leaflet-top,
-.leaflet-bottom {
+.leaflet-bottom,
+.leaflet-control,
+.leaflet-control-container,
+.leaflet-tooltip,
+.leaflet-popup,
+.leaflet-marker-pane,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-tile-pane,
+.leaflet-map-pane {
   z-index: 1 !important;
 }
