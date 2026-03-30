@@ -54,7 +54,17 @@ type Project = {
   updated_at?: string | null;
 };
 type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
-type Organisation = { id?: string; name: string; org_type: string; location: string; };
+type Organisation = {
+  id?: string;
+  name: string;
+  org_type: string;
+  location: string;
+  country?: string | null;
+  city?: string | null;
+  website?: string | null;
+  areas_of_interest?: string[];
+  is_active?: boolean;
+};
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
 
 type EquipmentProposal = {
@@ -1974,33 +1984,435 @@ function EventsView({ events, isAdmin, onEdit, onDelete }: { events: Event[]; is
   );
 }
 
-function MembersView({ members }: { members: Organisation[] }) {
-  const tc: Record<string, string> = { Foundation: TEAL, University: "#7C5CFC", Startup: "#00B894", SME: "#F0A500", "Clinical Center": "#E74C6F", Investor: "#4A7DFF", "International Partner": "#F0A500" };
-  const tbg: Record<string, string> = { Foundation: TEAL_LIGHT, University: "#F0EDFF", Startup: "#E6F9F5", SME: "#FFF8E6", "Clinical Center": "#FDECF1", Investor: "#EBF1FF", "International Partner": "#FFF8E6" };
+type OrganisationFormState = {
+  name: string;
+  org_type: string;
+  location: string;
+  country: string;
+  city: string;
+  website: string;
+  areas_of_interest: string;
+  is_active: boolean;
+};
+
+function OrganisationModal({
+  organisation,
+  onClose,
+  onSave,
+}: {
+  organisation: Partial<Organisation> | null;
+  onClose: () => void;
+  onSave: (payload: Partial<Organisation>) => Promise<void>;
+}) {
+  const [form, setForm] = useState<OrganisationFormState>({
+    name: organisation?.name || "",
+    org_type: organisation?.org_type || "",
+    location: organisation?.location || "",
+    country: organisation?.country || "",
+    city: organisation?.city || "",
+    website: organisation?.website || "",
+    areas_of_interest: Array.isArray(organisation?.areas_of_interest)
+      ? organisation!.areas_of_interest!.join(", ")
+      : "",
+    is_active: organisation?.is_active ?? true,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isEdit = !!organisation?.id;
+
+  const handle = async () => {
+    if (!form.name.trim()) {
+      setError("Organisation name is required.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await onSave({
+        ...(isEdit ? { id: organisation!.id } : {}),
+        name: form.name,
+        org_type: form.org_type,
+        location: form.location,
+        country: form.country,
+        city: form.city,
+        website: form.website,
+        areas_of_interest: form.areas_of_interest
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        is_active: form.is_active,
+      });
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save organisation.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
+      <div style={{ position: "relative", width: 620, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden" }}>
+        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+            {isEdit ? "Edit Organisation" : "Add Organisation"}
+          </div>
+          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}>
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+
+        <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "70vh", overflowY: "auto" }}>
+          {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
+
+          <div><label style={modalLabelStyle}>Organisation Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Organisation Type</label><input value={form.org_type} onChange={e => setForm(p => ({ ...p, org_type: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Location</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={modalInputStyle} /></div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div><label style={modalLabelStyle}>Country</label><input value={form.country} onChange={e => setForm(p => ({ ...p, country: e.target.value }))} style={modalInputStyle} /></div>
+            <div><label style={modalLabelStyle}>City</label><input value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} style={modalInputStyle} /></div>
+          </div>
+
+          <div><label style={modalLabelStyle}>Website</label><input value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Areas of Interest</label><input value={form.areas_of_interest} onChange={e => setForm(p => ({ ...p, areas_of_interest: e.target.value }))} placeholder="Comma separated" style={modalInputStyle} /></div>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>
+            <input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />
+            Active organisation
+          </label>
+        </div>
+
+        <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
+          <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>
+            {saving ? "Saving…" : isEdit ? "Save Changes" : "Add Organisation"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberDrawer({
+  member,
+  isAdmin,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  member: Organisation;
+  isAdmin?: boolean;
+  onClose: () => void;
+  onEdit?: (member: Organisation) => void;
+  onDelete?: (id: string) => void;
+}) {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 215, display: "flex" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.38)", backdropFilter: "blur(3px)" }} />
+      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 540, background: CARD, boxShadow: "-6px 0 28px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "22px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{member.name}</div>
+            <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+              {member.org_type || "Organisation"} · {member.location || "No location"}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}>
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div style={{ padding: 16, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 6, textTransform: "uppercase", fontWeight: 700 }}>Type</div>
+              <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>{member.org_type || "Not provided"}</div>
+            </div>
+
+            <div style={{ padding: 16, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 6, textTransform: "uppercase", fontWeight: 700 }}>Location</div>
+              <div style={{ fontSize: 14, color: TEXT, fontWeight: 600 }}>{member.location || "Not provided"}</div>
+            </div>
+
+            <div style={{ padding: 16, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 6, textTransform: "uppercase", fontWeight: 700 }}>Country</div>
+              <div style={{ fontSize: 14, color: TEXT }}>{member.country || "Not provided"}</div>
+            </div>
+
+            <div style={{ padding: 16, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 6, textTransform: "uppercase", fontWeight: 700 }}>City</div>
+              <div style={{ fontSize: 14, color: TEXT }}>{member.city || "Not provided"}</div>
+            </div>
+          </div>
+
+          <div style={{ padding: 16, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 6, textTransform: "uppercase", fontWeight: 700 }}>Website</div>
+            <div style={{ fontSize: 14, color: TEXT }}>
+              {member.website ? (
+                <a href={member.website} target="_blank" rel="noreferrer" style={{ color: TEAL_DARK, textDecoration: "none" }}>
+                  {member.website}
+                </a>
+              ) : (
+                "Not provided"
+              )}
+            </div>
+          </div>
+
+          <div style={{ padding: 16, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
+            <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 8, textTransform: "uppercase", fontWeight: 700 }}>Areas of Interest</div>
+            {member.areas_of_interest && member.areas_of_interest.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {member.areas_of_interest.map((area) => (
+                  <span
+                    key={area}
+                    style={{
+                      fontSize: 12,
+                      padding: "4px 10px",
+                      borderRadius: 20,
+                      background: TEAL_LIGHT,
+                      color: TEAL_DARK,
+                      fontWeight: 600,
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    {area}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 14, color: TEXT_LIGHT }}>No areas of interest provided.</div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <button onClick={onClose} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+            Close
+          </button>
+
+          {isAdmin && (
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => onEdit?.(member)} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  if (member.id && confirm("Delete this organisation?")) onDelete?.(member.id);
+                }}
+                style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MembersView({
+  members,
+  isAdmin,
+}: {
+  members: Organisation[];
+  isAdmin?: boolean;
+}) {
+  const tc: Record<string, string> = {
+    Foundation: TEAL,
+    University: "#7C5CFC",
+    Startup: "#00B894",
+    SME: "#F0A500",
+    "Clinical Center": "#E74C6F",
+    Investor: "#4A7DFF",
+    "International Partner": "#F0A500",
+  };
+
+  const tbg: Record<string, string> = {
+    Foundation: TEAL_LIGHT,
+    University: "#F0EDFF",
+    Startup: "#E6F9F5",
+    SME: "#FFF8E6",
+    "Clinical Center": "#FDECF1",
+    Investor: "#EBF1FF",
+    "International Partner": "#FFF8E6",
+  };
+
+  const [selectedMember, setSelectedMember] = useState<Organisation | null>(null);
+  const [organisationModal, setOrganisationModal] = useState<Partial<Organisation> | null>(null);
+  const [memberList, setMemberList] = useState<Organisation[]>(members);
+
+  useEffect(() => {
+    setMemberList(members);
+  }, [members]);
+
+  const fetchMembers = async () => {
+    const res = await fetch("/api/organisations");
+    const data = await res.json();
+    setMemberList(data.organisations || []);
+  };
+
+  const handleSaveOrganisation = async (payload: Partial<Organisation>) => {
+    const isEdit = !!payload.id;
+
+    const res = await fetch("/api/organisations", {
+      method: isEdit ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save organisation");
+
+    await fetchMembers();
+  };
+
+  const handleDeleteOrganisation = async (id: string) => {
+    const res = await fetch("/api/organisations", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+
+    if (res.ok) {
+      setSelectedMember(null);
+      await fetchMembers();
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {organisationModal && (
+        <OrganisationModal
+          organisation={organisationModal}
+          onClose={() => setOrganisationModal(null)}
+          onSave={async (payload) => {
+            await handleSaveOrganisation(payload);
+            setOrganisationModal(null);
+          }}
+        />
+      )}
+
+      {selectedMember && (
+        <MemberDrawer
+          member={selectedMember}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedMember(null)}
+          onEdit={(member) => {
+            setSelectedMember(null);
+            setOrganisationModal(member);
+          }}
+          onDelete={handleDeleteOrganisation}
+        />
+      )}
+
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Network Map</h3>
-          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>OpenStreetMap · 6 hubs across 3 continents</span>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+            Member Network Map
+          </h3>
+          <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>
+            OpenStreetMap · 6 hubs across 3 continents
+          </span>
         </div>
         <MemberMap />
       </div>
-      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Organisations</h3>
-      {(!members || members.length === 0) ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>{[1,2,3,4,5,6].map(i => (<div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />))}</div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+          Member Organisations
+        </h3>
+
+        {isAdmin && (
+          <button
+            onClick={() => setOrganisationModal({})}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 10,
+              border: "none",
+              background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`,
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Icon name="plus" size={14} />
+            Add Organisation
+          </button>
+        )}
+      </div>
+
+      {(!memberList || memberList.length === 0) ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />
+          ))}
+        </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-          {members.map((m, i) => (
-            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
+          {memberList.map((m, i) => (
+            <div
+              key={m.id || i}
+              onClick={() => setSelectedMember(m)}
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 14,
+                padding: 20,
+                boxShadow: SHADOW,
+                cursor: "pointer",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, fontFamily: "'Sora', sans-serif" }}>{m.name.charAt(0)}</div>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: tbg[m.org_type] || TEAL_LIGHT,
+                    color: tc[m.org_type] || TEAL,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    fontFamily: "'Sora', sans-serif",
+                  }}
+                >
+                  {m.name.charAt(0)}
+                </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{m.name}</div>
-                  <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1, fontFamily: "'DM Sans', sans-serif" }}><Icon name="mapPin" size={11} /> {m.location}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>
+                    {m.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1, fontFamily: "'DM Sans', sans-serif" }}>
+                    <Icon name="mapPin" size={11} /> {m.location}
+                  </div>
                 </div>
               </div>
-              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>{m.org_type}</span>
+
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: "3px 10px",
+                  borderRadius: 14,
+                  background: tbg[m.org_type] || TEAL_LIGHT,
+                  color: tc[m.org_type] || TEAL,
+                  fontWeight: 700,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {m.org_type}
+              </span>
             </div>
           ))}
         </div>
@@ -2510,7 +2922,12 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           <>{editingEvent && <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleSaveEventInline} />}<EventsView events={events} isAdmin={isAdmin} onEdit={e => setEditingEvent(e)} onDelete={async id => { await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchEvents(); }} /></>
         </SectionWrapper>
       );
-      case "members": return <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}><MembersView members={members} /></SectionWrapper>;
+      case "members":
+  return (
+    <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}>
+      <MembersView members={members} isAdmin={isAdmin} />
+    </SectionWrapper>
+  );
       case "knowledge": return <SectionWrapper sectionId="knowledge" sectionName="Knowledge Base" partnershipLevel={partnershipLevel}><KnowledgeView /></SectionWrapper>;
       case "admin": return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} /> : null;
       default: return <DashboardView projects={projects} events={events} members={members} approvedEquipmentCount={approvedEquipmentCount} />;
