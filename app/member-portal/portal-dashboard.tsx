@@ -2016,6 +2016,7 @@ function OrganisationModal({
       : "",
     is_active: organisation?.is_active ?? true,
   });
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!organisation?.id;
@@ -2053,51 +2054,235 @@ function OrganisationModal({
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 3000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <div
-  onClick={onClose}
-  style={{
-    position: "absolute",
-    inset: 0,
-    background: "rgba(26,35,50,0.38)",
-    backdropFilter: "blur(3px)",
-    zIndex: 1000,
-  }}
-/>
-      <div style={{ position: "relative", width: 620, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden" }}>
-        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(26,35,50,0.50)",
+          backdropFilter: "blur(4px)",
+          zIndex: 3000,
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 3001,
+          width: 620,
+          maxWidth: "92vw",
+          maxHeight: "88vh",
+          overflow: "hidden",
+          background: CARD,
+          borderRadius: 20,
+          boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            padding: "20px 28px",
+            borderBottom: `1px solid ${BORDER}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: CARD,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              color: TEXT,
+              fontFamily: "'Sora', sans-serif",
+            }}
+          >
             {isEdit ? "Edit Organisation" : "Add Organisation"}
           </div>
-          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}>
+
+          <button
+            onClick={onClose}
+            style={{
+              background: "#F3F5F8",
+              border: "none",
+              borderRadius: 8,
+              padding: 8,
+              cursor: "pointer",
+              color: TEXT_MID,
+            }}
+          >
             <Icon name="x" size={16} />
           </button>
         </div>
 
-        <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "70vh", overflowY: "auto" }}>
-          {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
+        <div
+          style={{
+            padding: "20px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+            overflowY: "auto",
+          }}
+        >
+          {error && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 10,
+                background: "#FDECF1",
+                color: "#D63563",
+                fontSize: 13,
+              }}
+            >
+              {error}
+            </div>
+          )}
 
-          <div><label style={modalLabelStyle}>Organisation Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Organisation Type</label><input value={form.org_type} onChange={e => setForm(p => ({ ...p, org_type: e.target.value }))} style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Location</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={modalInputStyle} /></div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div><label style={modalLabelStyle}>Country</label><input value={form.country} onChange={e => setForm(p => ({ ...p, country: e.target.value }))} style={modalInputStyle} /></div>
-            <div><label style={modalLabelStyle}>City</label><input value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} style={modalInputStyle} /></div>
+          <div>
+            <label style={modalLabelStyle}>Organisation Name *</label>
+            <input
+              value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              style={modalInputStyle}
+            />
           </div>
 
-          <div><label style={modalLabelStyle}>Website</label><input value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Areas of Interest</label><input value={form.areas_of_interest} onChange={e => setForm(p => ({ ...p, areas_of_interest: e.target.value }))} placeholder="Comma separated" style={modalInputStyle} /></div>
+          <div>
+            <label style={modalLabelStyle}>Organisation Type</label>
+            <input
+              value={form.org_type}
+              onChange={(e) => setForm((p) => ({ ...p, org_type: e.target.value }))}
+              style={modalInputStyle}
+            />
+          </div>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif" }}>
-            <input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} style={{ accentColor: TEAL, width: 15, height: 15 }} />
+          <div>
+            <label style={modalLabelStyle}>Location</label>
+            <input
+              value={form.location}
+              onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
+              style={modalInputStyle}
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={modalLabelStyle}>Country</label>
+              <input
+                value={form.country}
+                onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))}
+                style={modalInputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={modalLabelStyle}>City</label>
+              <input
+                value={form.city}
+                onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+                style={modalInputStyle}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={modalLabelStyle}>Website</label>
+            <input
+              value={form.website}
+              onChange={(e) => setForm((p) => ({ ...p, website: e.target.value }))}
+              style={modalInputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={modalLabelStyle}>Areas of Interest</label>
+            <input
+              value={form.areas_of_interest}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, areas_of_interest: e.target.value }))
+              }
+              placeholder="Comma separated"
+              style={modalInputStyle}
+            />
+          </div>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              cursor: "pointer",
+              fontSize: 13,
+              color: TEXT_MID,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={form.is_active}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, is_active: e.target.checked }))
+              }
+              style={{ accentColor: TEAL, width: 15, height: 15 }}
+            />
             Active organisation
           </label>
         </div>
 
-        <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
-          <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>
+        <div
+          style={{
+            padding: "16px 28px",
+            borderTop: `1px solid ${BORDER}`,
+            display: "flex",
+            gap: 10,
+            justifyContent: "flex-end",
+            background: CARD,
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 20px",
+              borderRadius: 10,
+              border: `1.5px solid ${BORDER}`,
+              background: CARD,
+              color: TEXT_MID,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handle}
+            disabled={saving}
+            style={{
+              padding: "10px 24px",
+              borderRadius: 10,
+              border: "none",
+              background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`,
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: saving ? "default" : "pointer",
+              fontFamily: "'DM Sans', sans-serif",
+              opacity: saving ? 0.7 : 1,
+            }}
+          >
             {saving ? "Saving…" : isEdit ? "Save Changes" : "Add Organisation"}
           </button>
         </div>
@@ -2105,6 +2290,7 @@ function OrganisationModal({
     </div>
   );
 }
+
 
 function MemberDrawer({
   member,
