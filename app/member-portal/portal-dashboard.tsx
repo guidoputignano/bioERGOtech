@@ -45,6 +45,35 @@ function generateProjectObjectives(project: Partial<Project>): string[] {
   ];
 }
 
+// ─── CHANGE 1: OBJECTIVE HELPERS ──────────────────────────────────────────────
+// Completion state is encoded as a "[x] " prefix on the objective string.
+// This persists in the DB without any schema change.
+function isObjectiveComplete(obj: string): boolean {
+  return obj.startsWith("[x] ");
+}
+function getObjectiveText(obj: string): string {
+  return obj.startsWith("[x] ") ? obj.slice(4) : obj;
+}
+function toggleObjectiveComplete(obj: string): string {
+  return obj.startsWith("[x] ") ? obj.slice(4) : `[x] ${obj}`;
+}
+
+// ─── CHANGE 2: LEAD MAILTO HELPER ─────────────────────────────────────────────
+// If the lead string contains "@" we use it directly as the email address.
+// Otherwise we construct firstname.lastname@bioergotech.org from the display name,
+// stripping common honorific prefixes.
+function leadMailtoHref(lead: string): string {
+  if (!lead) return "#";
+  if (lead.includes("@")) return `mailto:${lead.trim()}`;
+  const clean = lead.replace(/^(Dr\.|Prof\.|Mr\.|Ms\.|Mrs\.)\s*/i, "").trim();
+  const parts = clean.split(/\s+/);
+  const first = parts[0]?.toLowerCase() || "";
+  const last = parts[parts.length - 1]?.toLowerCase() || "";
+  const email = last && last !== first ? `${first}.${last}@bioergotech.org` : `${first}@bioergotech.org`;
+  return `mailto:${email}`;
+}
+
+// ─── TYPES ────────────────────────────────────────────────────────────────────
 type Project = { id?: string; name: string; pillar: string; phase: string; status: string; lead: string; description: string; progress: number; color: string; is_public?: boolean; objectives?: string[]; update_notes?: string | null; created_by?: string | null; updated_at?: string | null; };
 type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
 type Organisation = { id?: string; name: string; org_type: string; location: string; country?: string | null; city?: string | null; website?: string | null; areas_of_interest?: string[]; is_active?: boolean; };
@@ -81,13 +110,10 @@ const navItems = [
   { id: "knowledge", label: "Knowledge Base", icon: "book" },
   { id: "admin", label: "Admin Panel", icon: "shield" },
 ];
-const STATIC_EQUIPMENT = [
-  { name: "Flow Cytometer BD FACSAria III", location: "Taranto Lab A", status: "available", utilization: 42 },
-  { name: "CRISPR Electroporation System", location: "Zurich UZH", status: "booked", utilization: 78 },
-  { name: "Raman Spectrometer", location: "Taranto Lab B", status: "available", utilization: 31 },
-  { name: "Organoid Culture Station", location: "Zurich UZH", status: "maintenance", utilization: 65 },
-  { name: "High-Throughput Sequencer", location: "Taranto Lab A", status: "available", utilization: 55 },
-];
+
+// ─── CHANGE 3: STATIC_EQUIPMENT REMOVED ───────────────────────────────────────
+// Equipment is now fetched purely from the DB (equipment_proposals, status = "approved").
+// Run the SQL migration to insert the 5 legacy items as approved proposals if needed.
 
 const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
   const icons: Record<string, React.ReactNode> = {
@@ -159,7 +185,7 @@ function LockedOverlay({ requiredLevel, sectionName }: { requiredLevel: string; 
 const modalInputStyle: React.CSSProperties = { width: "100%", padding: "9px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`, fontSize: 13, fontFamily: "'DM Sans', sans-serif", color: TEXT, outline: "none", background: "#FAFBFC" };
 const modalLabelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif", marginBottom: 6, display: "block" };
 
-// ─── EVENT MODAL ─────────────────────────────────────────────────────────────
+// ─── EVENT MODAL ──────────────────────────────────────────────────────────────
 type EventFormState = { title: string; event_date: string; event_type: string; location: string; description: string; video_link: string; is_public: boolean; is_approved: boolean; };
 const EMPTY_EVENT_FORM: EventFormState = { title: "", event_date: "", event_type: "internal", location: "", description: "", video_link: "", is_public: true, is_approved: true };
 
@@ -255,7 +281,7 @@ function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> 
   );
 }
 
-// ─── PROPOSE EQUIPMENT MODAL ─────────────────────────────────────────────────
+// ─── PROPOSE EQUIPMENT MODAL ──────────────────────────────────────────────────
 type EquipmentFormState = { name: string; category: string; location: string; description: string; };
 
 function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userEmail: string; userName: string; onClose: () => void; onSave: () => void; }) {
@@ -431,24 +457,45 @@ function DashboardView({ projects, events, members, approvedEquipmentCount }: { 
 }
 
 // ─── PROJECT DRAWER ───────────────────────────────────────────────────────────
+// CHANGE 1: Objectives are now tappable checkboxes for all roles.
+//           Completion encoded as "[x] " prefix — persists in DB without schema change.
+//           Save button visible to all roles so ticking state persists.
+// CHANGE 2: Lead rendered as a clickable mailto anchor.
 function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project; isAdmin?: boolean; onClose: () => void; onSave: (payload: Partial<Project>) => Promise<void>; }) {
   const [progress, setProgress] = useState(project.progress ?? 0);
   const [notes, setNotes] = useState(project.update_notes || "");
   const [objectives, setObjectives] = useState<string[]>(Array.isArray(project.objectives) ? project.objectives : []);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  useEffect(() => { setProgress(project.progress ?? 0); setNotes(project.update_notes || ""); setObjectives(Array.isArray(project.objectives) ? project.objectives : []); setMessage(null); }, [project]);
+
+  useEffect(() => {
+    setProgress(project.progress ?? 0);
+    setNotes(project.update_notes || "");
+    setObjectives(Array.isArray(project.objectives) ? project.objectives : []);
+    setMessage(null);
+  }, [project]);
+
   const handleSave = async () => {
     if (!project.id) return;
     setSaving(true); setMessage(null);
-    try { await onSave({ id: project.id, progress, update_notes: notes, objectives: objectives.filter(o => o.trim() !== "") }); setMessage("Project updated successfully."); }
-    catch (e) { setMessage(e instanceof Error ? e.message : "Failed to update project."); }
+    try {
+      await onSave({ id: project.id, progress, update_notes: notes, objectives: objectives.filter(o => o.trim() !== "") });
+      setMessage("Project updated successfully.");
+    } catch (e) { setMessage(e instanceof Error ? e.message : "Failed to update project."); }
     finally { setSaving(false); }
   };
+
+  // Toggle completion for any role — state saved when user clicks "Save Updates"
+  const handleToggleComplete = (idx: number) => {
+    setObjectives(prev => prev.map((o, i) => i === idx ? toggleObjectiveComplete(o) : o));
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 120, display: "flex" }}>
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.38)", backdropFilter: "blur(3px)" }} />
       <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 560, background: CARD, boxShadow: "-6px 0 28px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", animation: "slideIn 0.25s ease both" }}>
+
+        {/* Header */}
         <div style={{ padding: "22px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
@@ -459,48 +506,129 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
               <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20, background: `${project.color || TEAL}12`, color: project.color || TEAL, fontWeight: 700 }}>{project.phase}</span>
               <StatusBadge status={project.status} />
             </div>
-            <div style={{ fontSize: 13, color: TEXT_LIGHT }}>{project.pillar} · Lead: {project.lead}</div>
+            {/* CHANGE 2: Lead as mailto link */}
+            <div style={{ fontSize: 13, color: TEXT_LIGHT }}>
+              {project.pillar} · Lead:{" "}
+              <a href={leadMailtoHref(project.lead)} style={{ color: TEAL_DARK, textDecoration: "none", fontWeight: 600 }} title={`Email ${project.lead}`}>
+                {project.lead}
+              </a>
+            </div>
           </div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID, flexShrink: 0 }}><Icon name="x" size={16} /></button>
         </div>
+
         <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 22 }}>
+
+          {/* Description */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Description</div>
             <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>{project.description || "No description available."}</div>
           </div>
+
+          {/* Progress */}
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.07em" }}>Progress</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: project.color || TEAL }}>{progress}%</div>
             </div>
-            {isAdmin ? <input type="range" min={0} max={100} value={progress} onChange={e => setProgress(Number(e.target.value))} style={{ width: "100%", accentColor: project.color || TEAL }} /> : <div style={{ width: "100%", height: 8, borderRadius: 8, background: `${project.color || TEAL}14`, overflow: "hidden" }}><div style={{ width: `${progress}%`, height: "100%", background: project.color || TEAL }} /></div>}
+            {isAdmin
+              ? <input type="range" min={0} max={100} value={progress} onChange={e => setProgress(Number(e.target.value))} style={{ width: "100%", accentColor: project.color || TEAL }} />
+              : <div style={{ width: "100%", height: 8, borderRadius: 8, background: `${project.color || TEAL}14`, overflow: "hidden" }}><div style={{ width: `${progress}%`, height: "100%", background: project.color || TEAL }} /></div>
+            }
           </div>
+
+          {/* Objectives — CHANGE 1 */}
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.07em" }}>Objectives</div>
-              {isAdmin && <button onClick={() => setObjectives(generateProjectObjectives(project))} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${TEAL_MUTED}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Generate Objectives</button>}
+              {isAdmin && (
+                <button onClick={() => setObjectives(generateProjectObjectives(project))} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${TEAL_MUTED}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  Generate Objectives
+                </button>
+              )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {objectives.length === 0 && <div style={{ fontSize: 13, color: TEXT_LIGHT, background: "#FAFBFC", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 14 }}>No objectives added yet.</div>}
-              {objectives.map((obj, idx) => (
-                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <div style={{ width: 24, height: 24, borderRadius: 8, background: TEAL_LIGHT, color: TEAL_DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0, marginTop: 2 }}>{idx + 1}</div>
-                  {isAdmin ? (<><textarea value={obj} onChange={e => setObjectives(prev => prev.map((o, i) => i === idx ? e.target.value : o))} rows={2} style={{ ...modalInputStyle, resize: "vertical", flex: 1 }} /><button onClick={() => setObjectives(prev => prev.filter((_, i) => i !== idx))} style={{ background: "#FDECF1", border: "none", borderRadius: 8, padding: "8px 10px", color: "#D63563", cursor: "pointer", flexShrink: 0 }}><Icon name="trash" size={14} /></button></>) : (<div style={{ flex: 1, fontSize: 14, color: TEXT_MID, lineHeight: 1.6, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12 }}>{obj}</div>)}
-                </div>
-              ))}
-              {isAdmin && <button onClick={() => setObjectives(prev => [...prev, ""])} style={{ alignSelf: "flex-start", padding: "8px 14px", borderRadius: 10, border: `1px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} />Add Objective</button>}
+              {objectives.length === 0 && (
+                <div style={{ fontSize: 13, color: TEXT_LIGHT, background: "#FAFBFC", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 14 }}>No objectives added yet.</div>
+              )}
+              {objectives.map((obj, idx) => {
+                const done = isObjectiveComplete(obj);
+                const text = getObjectiveText(obj);
+                return (
+                  <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    {/* Toggle button — clickable for ALL roles */}
+                    <button
+                      onClick={() => handleToggleComplete(idx)}
+                      title={done ? "Mark incomplete" : "Mark complete"}
+                      style={{
+                        width: 24, height: 24, borderRadius: 8, border: "none", cursor: "pointer",
+                        flexShrink: 0, marginTop: 2,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        background: done ? TEAL : TEAL_LIGHT,
+                        color: done ? "#fff" : TEAL_DARK,
+                        fontSize: 12, fontWeight: 700,
+                        transition: "all 0.18s ease",
+                      }}
+                    >
+                      {done ? <Icon name="check" size={13} /> : idx + 1}
+                    </button>
+
+                    {/* Admin: editable textarea + delete; non-admin: read-only with strikethrough when done */}
+                    {isAdmin ? (
+                      <>
+                        <textarea
+                          value={text}
+                          onChange={e => setObjectives(prev => prev.map((o, i) => {
+                            if (i !== idx) return o;
+                            return isObjectiveComplete(o) ? `[x] ${e.target.value}` : e.target.value;
+                          }))}
+                          rows={2}
+                          style={{ ...modalInputStyle, resize: "vertical", flex: 1, textDecoration: done ? "line-through" : "none", color: done ? TEXT_LIGHT : TEXT }}
+                        />
+                        <button onClick={() => setObjectives(prev => prev.filter((_, i) => i !== idx))} style={{ background: "#FDECF1", border: "none", borderRadius: 8, padding: "8px 10px", color: "#D63563", cursor: "pointer", flexShrink: 0 }}><Icon name="trash" size={14} /></button>
+                      </>
+                    ) : (
+                      <div style={{
+                        flex: 1, fontSize: 14, color: done ? TEXT_LIGHT : TEXT_MID, lineHeight: 1.6,
+                        background: done ? "#F7F9FC" : "#FAFBFC",
+                        border: `1px solid ${done ? TEAL_MUTED : BORDER}`,
+                        borderRadius: 12, padding: 12,
+                        textDecoration: done ? "line-through" : "none",
+                        transition: "all 0.18s ease",
+                      }}>
+                        {text}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {isAdmin && (
+                <button onClick={() => setObjectives(prev => [...prev, ""])} style={{ alignSelf: "flex-start", padding: "8px 14px", borderRadius: 10, border: `1px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="plus" size={14} />Add Objective
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Update Notes */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Update Notes</div>
-            {isAdmin ? <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={4} placeholder="Add a project update note..." style={{ ...modalInputStyle, resize: "vertical" }} /> : <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>{notes || "No update notes available."}</div>}
+            {isAdmin
+              ? <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={4} placeholder="Add a project update note..." style={{ ...modalInputStyle, resize: "vertical" }} />
+              : <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16 }}>{notes || "No update notes available."}</div>
+            }
           </div>
+
           {project.updated_at && <div style={{ fontSize: 12, color: TEXT_LIGHT }}>Last updated: {new Date(project.updated_at).toLocaleString()}</div>}
           {message && <div style={{ padding: "12px 14px", borderRadius: 10, background: message.includes("success") ? "#E6F9F5" : "#FDECF1", color: message.includes("success") ? "#0D9373" : "#D63563", fontSize: 13 }}>{message}</div>}
         </div>
+
         <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <button onClick={onClose} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Close</button>
-          {isAdmin && <button onClick={handleSave} disabled={saving} style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save Updates"}</button>}
+          {/* Save available to ALL roles so objective ticking persists */}
+          <button onClick={handleSave} disabled={saving} style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1 }}>
+            {saving ? "Saving…" : "Save Updates"}
+          </button>
         </div>
       </div>
     </div>
@@ -578,6 +706,8 @@ function EquipmentDrawer({ equipment, isAdmin, onClose, onEdit, onDelete }: { eq
   );
 }
 
+// ─── LAB VIEW ─────────────────────────────────────────────────────────────────
+// CHANGE 3: Pure DB fetch — STATIC_EQUIPMENT array and merge logic fully removed.
 function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName: string; isAdmin?: boolean; }) {
   const [proposing, setProposing] = useState(false);
   const [equipmentModal, setEquipmentModal] = useState<Partial<EquipmentProposal> | null>(null);
@@ -586,13 +716,21 @@ function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName
   const [labStats, setLabStats] = useState<LabStats>({ utilization_text: "54%", utilization_sub: "Avg. across all equipment", cost_savings_text: "€32K", cost_savings_sub: "Estimated this quarter", bookings_text: "18", bookings_sub: "Across 3 locations" });
   const [editingStats, setEditingStats] = useState(false);
   const [search, setSearch] = useState("");
-  const fetchEquipment = async () => { const res = await fetch("/api/admin/equipment"); const data = await res.json(); setApprovedEquipment((data.proposals || []).filter((p: EquipmentProposal) => p.status === "approved")); };
+
+  // Pure DB fetch — no static merge
+  const fetchEquipment = async () => {
+    const res = await fetch("/api/admin/equipment");
+    const data = await res.json();
+    setApprovedEquipment((data.proposals || []).filter((p: EquipmentProposal) => p.status === "approved"));
+  };
   const fetchLabStats = async () => { try { const res = await fetch("/api/admin/lab-stats"); const data = await res.json(); if (data.stats) setLabStats(data.stats); } catch {} };
   useEffect(() => { fetchEquipment(); fetchLabStats(); }, []);
+
   const filteredEquipment = approvedEquipment.filter(e => [e.name, e.location, e.category, e.description].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
   const handleSaveEquipment = async (payload: Partial<EquipmentProposal> & { is_admin_add?: boolean }) => { const isEdit = !!payload.id; const res = await fetch("/api/admin/equipment", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save equipment"); await fetchEquipment(); };
   const handleDeleteEquipment = async (id: string) => { await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); setSelectedEquipment(null); await fetchEquipment(); };
   const handleSaveStats = async () => { const res = await fetch("/api/admin/lab-stats", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(labStats) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save lab stats"); setLabStats(data.stats); setEditingStats(false); };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {proposing && <ProposeEquipmentModal userEmail={userEmail} userName={userName} onClose={() => setProposing(false)} onSave={() => { setProposing(false); fetchEquipment(); }} />}
@@ -603,7 +741,10 @@ function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
           <input placeholder="Search equipment..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }} />
         </div>
-        {isAdmin ? <button onClick={() => setEquipmentModal({})} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Add Equipment</button> : <button onClick={() => setProposing(true)} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Propose Equipment</button>}
+        {isAdmin
+          ? <button onClick={() => setEquipmentModal({})} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Add Equipment</button>
+          : <button onClick={() => setProposing(true)} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Propose Equipment</button>
+        }
       </div>
       <div style={{ padding: "14px 18px", borderRadius: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span><span style={{ fontSize: 13, color: TEAL_DARK }}>{isAdmin ? "Add equipment directly to the Distributed Lab, or edit existing shared equipment details." : "Have equipment to share? Click Propose Equipment to submit it for admin approval."}</span></div>
@@ -613,7 +754,10 @@ function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName
         {[{ key: "utilization", label: "Network Utilization", value: labStats.utilization_text, sub: labStats.utilization_sub, color: TEAL, vk: "utilization_text", sk: "utilization_sub" }, { key: "cost", label: "Cost Savings", value: labStats.cost_savings_text, sub: labStats.cost_savings_sub, color: "#7C5CFC", vk: "cost_savings_text", sk: "cost_savings_sub" }, { key: "bookings", label: "Bookings This Month", value: labStats.bookings_text, sub: labStats.bookings_sub, color: "#F0A500", vk: "bookings_text", sk: "bookings_sub" }].map(s => (
           <div key={s.key} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
             <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 10, textTransform: "uppercase" as const, letterSpacing: "0.06em", fontWeight: 600 }}>{s.label}</div>
-            {editingStats && isAdmin ? (<><input value={s.value} onChange={e => setLabStats(prev => ({ ...prev, [s.vk]: e.target.value }))} style={{ ...modalInputStyle, marginBottom: 8 }} /><input value={s.sub} onChange={e => setLabStats(prev => ({ ...prev, [s.sk]: e.target.value }))} style={modalInputStyle} /></>) : (<><div style={{ fontSize: 30, fontWeight: 700, color: s.color, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{s.value}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6 }}>{s.sub}</div></>)}
+            {editingStats && isAdmin
+              ? (<><input value={s.value} onChange={e => setLabStats(prev => ({ ...prev, [s.vk]: e.target.value }))} style={{ ...modalInputStyle, marginBottom: 8 }} /><input value={s.sub} onChange={e => setLabStats(prev => ({ ...prev, [s.sk]: e.target.value }))} style={modalInputStyle} /></>)
+              : (<><div style={{ fontSize: 30, fontWeight: 700, color: s.color, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{s.value}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6 }}>{s.sub}</div></>)
+            }
           </div>
         ))}
       </div>
@@ -629,7 +773,11 @@ function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName
             <button onClick={evt => evt.stopPropagation()} style={{ padding: "6px 16px", borderRadius: 8, border: e.is_available ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`, background: e.is_available ? TEAL_LIGHT : "#FAFBFC", color: e.is_available ? TEAL_DARK : TEXT_LIGHT, cursor: e.is_available ? "pointer" : "default", fontSize: 12, fontWeight: 600 }}>{e.is_available ? "Book" : "N/A"}</button>
           </div>
         ))}
-        {filteredEquipment.length === 0 && <div style={{ padding: 24, textAlign: "center", color: TEXT_LIGHT, fontSize: 13 }}>No equipment found.</div>}
+        {filteredEquipment.length === 0 && (
+          <div style={{ padding: 24, textAlign: "center", color: TEXT_LIGHT, fontSize: 13 }}>
+            {isAdmin ? "No equipment found. Add equipment using the button above." : "No approved equipment yet."}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -758,31 +906,30 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Organisations</h3>
         {isAdmin && <button onClick={() => setOrganisationModal({})} style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} />Add Organisation</button>}
       </div>
-      {(!memberList || memberList.length === 0) ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>{[1,2,3,4,5,6].map(i => (<div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />))}</div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-          {memberList.map((m, i) => (
-            <div key={m.id || i} onClick={() => setSelectedMember(m)} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, cursor: "pointer" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{m.name?.charAt(0) || "O"}</div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</div>
-                  <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}><Icon name="mapPin" size={11} /> {m.location || "No location"}</div>
+      {(!memberList || memberList.length === 0)
+        ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>{[1,2,3,4,5,6].map(i => (<div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />))}</div>
+        : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+            {memberList.map((m, i) => (
+              <div key={m.id || i} onClick={() => setSelectedMember(m)} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, cursor: "pointer" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{m.name?.charAt(0) || "O"}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</div>
+                    <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}><Icon name="mapPin" size={11} /> {m.location || "No location"}</div>
+                  </div>
                 </div>
+                <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700 }}>{m.org_type || "Organisation"}</span>
               </div>
-              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700 }}>{m.org_type || "Organisation"}</span>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+      }
       {selectedMember && !isOpeningEdit && <MemberDrawer member={selectedMember} isAdmin={isAdmin} onClose={() => setSelectedMember(null)} onEdit={openEditModal} onDelete={handleDeleteOrganisation} />}
       {organisationModal && <OrganisationModal organisation={organisationModal} onClose={() => { setOrganisationModal(null); setIsOpeningEdit(false); }} onSave={async payload => { await handleSaveOrganisation(payload); setOrganisationModal(null); setIsOpeningEdit(false); }} />}
     </div>
   );
 }
 
-// ─── KNOWLEDGE VIEW — live from DB, clickable categories ─────────────────────
+// ─── KNOWLEDGE VIEW ───────────────────────────────────────────────────────────
 function KnowledgeView({ isAdmin }: { isAdmin?: boolean }) {
   const [docCounts, setDocCounts] = useState<Record<string, number>>({});
   const [selectedCategory, setSelectedCategory] = useState<typeof KNOWLEDGE_CATEGORIES[0] | null>(null);
@@ -794,81 +941,52 @@ function KnowledgeView({ isAdmin }: { isAdmin?: boolean }) {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/knowledge")
-      .then(r => r.json())
-      .then(d => {
-        const counts: Record<string, number> = {};
-        (d.documents || []).forEach((doc: KnowledgeDocument) => {
-          counts[doc.category] = (counts[doc.category] || 0) + 1;
-        });
-        setDocCounts(counts);
-      })
-      .catch(() => {});
+    fetch("/api/admin/knowledge").then(r => r.json()).then(d => {
+      const counts: Record<string, number> = {};
+      (d.documents || []).forEach((doc: KnowledgeDocument) => { counts[doc.category] = (counts[doc.category] || 0) + 1; });
+      setDocCounts(counts);
+    }).catch(() => {});
   }, []);
 
   const openCategory = async (cat: typeof KNOWLEDGE_CATEGORIES[0]) => {
-    setSelectedCategory(cat);
-    setLoadingDocs(true);
-    setAddingDoc(false);
-    try {
-      const res = await fetch(`/api/admin/knowledge?category=${encodeURIComponent(cat.name)}`);
-      const data = await res.json();
-      setCategoryDocs(data.documents || []);
-    } catch { setCategoryDocs([]); }
+    setSelectedCategory(cat); setLoadingDocs(true); setAddingDoc(false);
+    try { const res = await fetch(`/api/admin/knowledge?category=${encodeURIComponent(cat.name)}`); const data = await res.json(); setCategoryDocs(data.documents || []); }
+    catch { setCategoryDocs([]); }
     finally { setLoadingDocs(false); }
   };
-
   const handleAddDoc = async () => {
     if (!newDoc.title.trim() || !selectedCategory) return;
     setSavingDoc(true);
     try {
       const res = await fetch("/api/admin/knowledge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newDoc.title, description: newDoc.description, url: newDoc.url, category: selectedCategory.name, doc_type: "link", is_public: true }) });
       const data = await res.json();
-      if (res.ok) {
-        setCategoryDocs(prev => [data.document, ...prev]);
-        setDocCounts(prev => ({ ...prev, [selectedCategory.name]: (prev[selectedCategory.name] || 0) + 1 }));
-        setNewDoc({ title: "", description: "", url: "" });
-        setAddingDoc(false);
-      }
+      if (res.ok) { setCategoryDocs(prev => [data.document, ...prev]); setDocCounts(prev => ({ ...prev, [selectedCategory.name]: (prev[selectedCategory.name] || 0) + 1 })); setNewDoc({ title: "", description: "", url: "" }); setAddingDoc(false); }
     } catch {} finally { setSavingDoc(false); }
   };
-
   const handleDeleteDoc = async (id: string, category: string) => {
     if (!confirm("Delete this document?")) return;
     const res = await fetch("/api/admin/knowledge", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) {
-      setCategoryDocs(prev => prev.filter(d => d.id !== id));
-      setDocCounts(prev => ({ ...prev, [category]: Math.max(0, (prev[category] || 1) - 1) }));
-    }
+    if (res.ok) { setCategoryDocs(prev => prev.filter(d => d.id !== id)); setDocCounts(prev => ({ ...prev, [category]: Math.max(0, (prev[category] || 1) - 1) })); }
   };
-
   const filteredDocs = categoryDocs.filter(d => [d.title, d.description].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
 
   if (selectedCategory) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Back button + header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => { setSelectedCategory(null); setSearch(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Icon name="chevronLeft" size={16} /> Back</button>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: selectedCategory.bg, color: selectedCategory.color, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={selectedCategory.icon} size={18} /></div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{selectedCategory.name}</div>
-                <div style={{ fontSize: 12, color: TEXT_LIGHT }}>{docCounts[selectedCategory.name] || 0} documents</div>
-              </div>
+              <div><div style={{ fontSize: 18, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{selectedCategory.name}</div><div style={{ fontSize: 12, color: TEXT_LIGHT }}>{docCounts[selectedCategory.name] || 0} documents</div></div>
             </div>
           </div>
           {isAdmin && <button onClick={() => setAddingDoc(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}><Icon name="plus" size={14} /> Add Document</button>}
         </div>
-
-        {/* Search */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
           <input placeholder={`Search ${selectedCategory.name}…`} value={search} onChange={e => setSearch(e.target.value)} style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }} />
         </div>
-
-        {/* Add document form */}
         {addingDoc && isAdmin && (
           <div style={{ background: CARD, border: `1.5px solid ${TEAL_MUTED}`, borderRadius: 16, padding: 24, boxShadow: SHADOW }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16, fontFamily: "'Sora', sans-serif" }}>Add Document to {selectedCategory.name}</div>
@@ -883,8 +1001,6 @@ function KnowledgeView({ isAdmin }: { isAdmin?: boolean }) {
             </div>
           </div>
         )}
-
-        {/* Document list */}
         {loadingDocs ? (
           <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
         ) : filteredDocs.length === 0 ? (
@@ -935,6 +1051,7 @@ function KnowledgeView({ isAdmin }: { isAdmin?: boolean }) {
   );
 }
 
+// ─── ADMIN TYPES ──────────────────────────────────────────────────────────────
 type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; };
 type Application = { id: string; email: string; full_name?: string; contact_role?: string; organisation_name?: string; organisation_type?: string; organisation_website?: string; country?: string; city?: string; areas_of_interest?: string[]; what_you_bring?: string; what_you_seek?: string; application_status: string; applied_at?: string; reviewed_at?: string; admin_notes?: string; partnership_level: PartnershipLevel; };
 const ORG_TYPE_LABELS: Record<string, string> = { startup: "Startup", sme: "SME / Company", hospital: "Hospital / Clinic", university: "University / Research Institute", investor: "Investor / VC", international_partner: "International Partner", other: "Other" };
@@ -1009,7 +1126,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const [proposals, setProposals] = useState<EquipmentProposal[]>([]);
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [reviewingProposal, setReviewingProposal] = useState<string | null>(null);
-  // knowledge tab state
   const [knowledgeDocs, setKnowledgeDocs] = useState<KnowledgeDocument[]>([]);
   const [loadingKnowledge, setLoadingKnowledge] = useState(true);
   const [knowledgeFilter, setKnowledgeFilter] = useState("All");
@@ -1061,7 +1177,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const pendingCount = applications.filter(a => a.application_status === "pending").length;
   const pendingProposals = proposals.filter(p => p.status === "pending").length;
   const filteredKnowledgeDocs = knowledgeFilter === "All" ? knowledgeDocs : knowledgeDocs.filter(d => d.category === knowledgeFilter);
-
   const tabs = [
     { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null as number | null },
     { id: "users" as const, label: "Users", icon: "users", badge: null as number | null },
@@ -1229,7 +1344,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
-        {/* ─── KNOWLEDGE TAB ─── */}
         {tab === "knowledge" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
@@ -1240,7 +1354,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
                   <button onClick={() => setAddingKnowledgeDoc(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><Icon name="plus" size={14} /> Add Document</button>
                 </div>
               </div>
-              {/* Category filter */}
               <div style={{ padding: "12px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 8, flexWrap: "wrap" as const }}>
                 {["All", ...KNOWLEDGE_CATEGORIES.map(c => c.name)].map(cat => (
                   <button key={cat} onClick={() => setKnowledgeFilter(cat)} style={{ padding: "5px 12px", borderRadius: 20, border: `1.5px solid ${knowledgeFilter === cat ? TEAL : BORDER}`, background: knowledgeFilter === cat ? TEAL_LIGHT : CARD, color: knowledgeFilter === cat ? TEAL_DARK : TEXT_MID, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{cat}</button>
@@ -1254,7 +1367,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
                     <div><label style={modalLabelStyle}>Category</label><select value={newKnowledgeDoc.category} onChange={e => setNewKnowledgeDoc(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}>{KNOWLEDGE_CATEGORIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}</select></div>
                   </div>
                   <div><label style={modalLabelStyle}>Description</label><input value={newKnowledgeDoc.description} onChange={e => setNewKnowledgeDoc(p => ({ ...p, description: e.target.value }))} placeholder="Brief description" style={modalInputStyle} /></div>
-                  <div><label style={modalLabelStyle}>URL (Google Drive or external link)</label><input value={newKnowledgeDoc.url} onChange={e => setNewKnowledgeDoc(p => ({ ...p, url: e.target.value }))} placeholder="https://drive.google.com/…" style={modalInputStyle} /></div>
+                  <div><label style={modalLabelStyle}>URL</label><input value={newKnowledgeDoc.url} onChange={e => setNewKnowledgeDoc(p => ({ ...p, url: e.target.value }))} placeholder="https://drive.google.com/…" style={modalInputStyle} /></div>
                   <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
                     <button onClick={() => { setAddingKnowledgeDoc(false); setNewKnowledgeDoc({ title: "", description: "", url: "", category: KNOWLEDGE_CATEGORIES[0].name }); }} style={{ padding: "8px 16px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
                     <button onClick={handleAddKnowledgeDoc} disabled={savingKnowledgeDoc || !newKnowledgeDoc.title.trim()} style={{ padding: "8px 18px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: savingKnowledgeDoc ? "default" : "pointer", opacity: savingKnowledgeDoc ? 0.7 : 1 }}>{savingKnowledgeDoc ? "Adding…" : "Add Document"}</button>
@@ -1328,6 +1441,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [members, setMembers] = useState<Organisation[]>([]);
+  // CHANGE 4: Pure DB count — no STATIC_EQUIPMENT offset
   const [approvedEquipmentCount, setApprovedEquipmentCount] = useState(0);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -1338,10 +1452,11 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   useEffect(() => {
     fetchProjects(); fetchEvents();
     fetch("/api/organisations").then(r => r.json()).then(d => setMembers(d.organisations || []));
+    // Pure DB count — no static offset added
     fetch("/api/admin/equipment").then(r => r.json()).then(d => {
       const approved = (d.proposals || []).filter((p: EquipmentProposal) => p.status === "approved").length;
-      setApprovedEquipmentCount(STATIC_EQUIPMENT.length + approved);
-    }).catch(() => setApprovedEquipmentCount(STATIC_EQUIPMENT.length));
+      setApprovedEquipmentCount(approved);
+    }).catch(() => setApprovedEquipmentCount(0));
   }, []);
 
   const partnershipLevel = user.partnership_level;
@@ -1391,6 +1506,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
         ::placeholder { color: #A8B5C4; }
         button:hover { filter: brightness(0.97); }
       `}</style>
+      {/* Sidebar */}
       <div style={{ width: collapsed ? 68 : 240, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "width 0.3s ease", flexShrink: 0, boxShadow: "1px 0 8px rgba(0,0,0,0.02)" }}>
         <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => setCollapsed(!collapsed)}>
           <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif", boxShadow: `0 2px 8px ${TEAL}33` }}>bE</div>
@@ -1417,6 +1533,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           {!collapsed && (<a href="/auth/sign-out" style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, color: TEXT_LIGHT, fontSize: 12, textDecoration: "none" }}><Icon name="logout" size={14} /> Sign out</a>)}
         </div>
       </div>
+      {/* Main content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "16px 30px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(12px)" }}>
           <div>
