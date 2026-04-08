@@ -6,12 +6,18 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const required = [
-      "full_name", "contact_role", "email",
-      "organisation_name", "organisation_type",
-      "country", "city"
+      "partnership_type",
+      "full_name",
+      "contact_role",
+      "email",
+      "organisation_name",
+      "organisation_type",
+      "country",
+      "city",
     ];
+
     for (const field of required) {
-      if (!body[field]?.trim()) {
+      if (!body[field]?.toString().trim()) {
         return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 });
       }
     }
@@ -28,10 +34,6 @@ export async function POST(request: Request) {
     );
 
     const email = body.email.toLowerCase().trim();
-
-    // ── Resolve organisation_id ───────────────────────────────────────────
-    // If user selected an existing org, use that id.
-    // If they typed a new org name, create the org record and use its id.
     let organisation_id: string | null = body.organisation_id || null;
 
     if (!organisation_id && body.organisation_name?.trim()) {
@@ -49,15 +51,32 @@ export async function POST(request: Request) {
         .select("id")
         .single();
 
-      if (orgError) {
-        // Non-fatal — log but continue without org link
-        console.warn("Could not create org record:", orgError.message);
-      } else {
+      if (!orgError && newOrg) {
         organisation_id = newOrg.id;
       }
     }
 
-    // ── Check for existing application ────────────────────────────────────
+    const payload = {
+      partnership_type: body.partnership_type?.trim(),
+      full_name: body.full_name?.trim(),
+      contact_role: body.contact_role?.trim(),
+      email,
+      organisation_name: body.organisation_name?.trim(),
+      organisation_type: body.organisation_type?.trim(),
+      organisation_website: body.organisation_website?.trim() || null,
+      organisation_id,
+      country: body.country?.trim(),
+      city: body.city?.trim(),
+      areas_of_interest: body.areas_of_interest || [],
+      what_you_bring: body.what_you_bring?.trim() || "",
+      what_you_seek: body.what_you_seek?.trim() || "",
+      collaboration_type: body.collaboration_type?.trim() || null,
+      expected_timeline: body.expected_timeline?.trim() || null,
+      mobile_phone: body.mobile_phone?.trim() || null,
+      strategic_email: body.strategic_email?.trim() || null,
+      tax_id: body.tax_id?.trim() || null,
+    };
+
     const { data: existing } = await adminClient
       .from("applications")
       .select("id, application_status")
@@ -71,6 +90,7 @@ export async function POST(request: Request) {
           { status: 409 }
         );
       }
+
       if (existing.application_status === "approved") {
         return NextResponse.json(
           { error: "This email already has an active membership. Please sign in." },
@@ -78,21 +98,10 @@ export async function POST(request: Request) {
         );
       }
 
-      // Previously declined — update existing row
       const { error: updateError } = await adminClient
         .from("applications")
         .update({
-          full_name: body.full_name.trim(),
-          contact_role: body.contact_role.trim(),
-          organisation_name: body.organisation_name.trim(),
-          organisation_type: body.organisation_type,
-          organisation_website: body.organisation_website?.trim() || null,
-          organisation_id,
-          country: body.country.trim(),
-          city: body.city.trim(),
-          areas_of_interest: body.areas_of_interest || [],
-          what_you_bring: body.what_you_bring.trim(),
-          what_you_seek: body.what_you_seek.trim(),
+          ...payload,
           application_status: "pending",
           applied_at: new Date().toISOString(),
           reviewed_at: null,
@@ -102,22 +111,10 @@ export async function POST(request: Request) {
 
       if (updateError) throw new Error(updateError.message);
     } else {
-      // Fresh application — insert new row
       const { error: insertError } = await adminClient
         .from("applications")
         .insert({
-          full_name: body.full_name.trim(),
-          contact_role: body.contact_role.trim(),
-          email,
-          organisation_name: body.organisation_name.trim(),
-          organisation_type: body.organisation_type,
-          organisation_website: body.organisation_website?.trim() || null,
-          organisation_id,
-          country: body.country.trim(),
-          city: body.city.trim(),
-          areas_of_interest: body.areas_of_interest || [],
-          what_you_bring: body.what_you_bring.trim(),
-          what_you_seek: body.what_you_seek.trim(),
+          ...payload,
           application_status: "pending",
           applied_at: new Date().toISOString(),
         });
@@ -125,7 +122,6 @@ export async function POST(request: Request) {
       if (insertError) throw new Error(insertError.message);
     }
 
-    // ── Save newsletter subscriber if consent given ───────────────────────
     if (body.newsletter_consent === true) {
       await adminClient
         .from("newsletter_subscribers")
@@ -142,7 +138,6 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true });
-
   } catch (err) {
     console.error("Application submission error:", err);
     return NextResponse.json(

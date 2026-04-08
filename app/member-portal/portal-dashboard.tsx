@@ -386,7 +386,105 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
 }
 
 // ─── DASHBOARD VIEW ───────────────────────────────────────────────────────────
-function DashboardView({ projects, events, members, approvedEquipmentCount }: { projects: Project[]; events: Event[]; members: Organisation[]; approvedEquipmentCount: number; }) {
+  const onboardingCopy: Record<
+    PartnershipLevel,
+    {
+      title: string;
+      text: string;
+      actions: { label: string; target: string }[];
+    }
+  > = {
+    viewer: {
+      title: "Your access is currently limited",
+      text: "You can view the dashboard for now. If you need broader access to members, events, projects, or knowledge resources, please contact the bioERGOtech team for an access upgrade.",
+      actions: [
+        { label: "View Dashboard", target: "dashboard" },
+      ],
+    },
+    member: {
+      title: "Welcome to the member network",
+      text: "You now have access to the ecosystem directory and shared events. A good place to start is to explore who is in the network and what events are coming up.",
+      actions: [
+        { label: "Explore Members", target: "members" },
+        { label: "View Events", target: "events" },
+      ],
+    },
+    partner: {
+      title: "You can now actively contribute",
+      text: "As a partner, you can work across projects, distributed lab resources, events, members, and the knowledge base. Start by opening your project portfolio or reviewing shared lab equipment.",
+      actions: [
+        { label: "Open Projects", target: "projects" },
+        { label: "Open Lab", target: "lab" },
+      ],
+    },
+    admin: {
+      title: "Administrator access enabled",
+      text: "You can manage applications, users, projects, organisations, equipment, knowledge resources, and newsletter subscribers. Review pending applications first to keep the ecosystem moving.",
+      actions: [
+        { label: "Open Admin Panel", target: "admin" },
+        { label: "Review Projects", target: "projects" },
+      ],
+    },
+  };
+
+function DashboardView({
+  projects,
+  events,
+  members,
+  approvedEquipmentCount,
+  partnershipLevel,
+  displayName,
+  onQuickNavigate,
+}: {
+  projects: Project[];
+  events: Event[];
+  members: Organisation[];
+  approvedEquipmentCount: number;
+  partnershipLevel: PartnershipLevel;
+  displayName?: string;
+  onQuickNavigate?: (section: string) => void;
+}) {
+  const onboardingCopy: Record<
+    PartnershipLevel,
+    {
+      title: string;
+      text: string;
+      actions: { label: string; target: string }[];
+    }
+  > = {
+    viewer: {
+      title: "Your access is currently limited",
+      text: "You can view the dashboard for now. If you need broader access to members, events, projects, or knowledge resources, please contact the bioERGOtech team for an access upgrade.",
+      actions: [{ label: "View Dashboard", target: "dashboard" }],
+    },
+    member: {
+      title: "Welcome to the member network",
+      text: "You now have access to the ecosystem directory and shared events. A good place to start is to explore who is in the network and what events are coming up.",
+      actions: [
+        { label: "Explore Members", target: "members" },
+        { label: "View Events", target: "events" },
+      ],
+    },
+    partner: {
+      title: "You can now actively contribute",
+      text: "As a partner, you can work across projects, distributed lab resources, events, members, and the knowledge base. Start by opening your project portfolio or reviewing shared lab equipment.",
+      actions: [
+        { label: "Open Projects", target: "projects" },
+        { label: "Open Lab", target: "lab" },
+      ],
+    },
+    admin: {
+      title: "Administrator access enabled",
+      text: "You can manage applications, users, projects, organisations, equipment, knowledge resources, and newsletter subscribers. Review pending applications first to keep the ecosystem moving.",
+      actions: [
+        { label: "Open Admin Panel", target: "admin" },
+        { label: "Review Projects", target: "projects" },
+      ],
+    },
+  };
+
+  const onboarding = onboardingCopy[partnershipLevel];
+
   const stats = [
     { label: "Active Projects", value: projects.length, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
     { label: "Member Organizations", value: members.length, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
@@ -395,6 +493,80 @@ function DashboardView({ projects, events, members, approvedEquipmentCount }: { 
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <div
+        style={{
+          background: CARD,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 18,
+          padding: "22px 24px",
+          boxShadow: SHADOW,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 18,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ maxWidth: 760 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: TEAL_DARK,
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              marginBottom: 8,
+            }}
+          >
+            Getting Started
+          </div>
+
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: TEXT,
+              fontFamily: "'Sora', sans-serif",
+              marginBottom: 8,
+            }}
+          >
+            {displayName ? `Welcome, ${displayName}` : "Welcome to your portal"}
+          </div>
+
+          <div
+            style={{
+              fontSize: 14,
+              color: TEXT_MID,
+              lineHeight: 1.65,
+              maxWidth: 700,
+            }}
+          >
+            <strong>{onboarding.title}</strong>
+            <div style={{ marginTop: 6 }}>{onboarding.text}</div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {onboarding.actions.map((action) => (
+            <button
+              key={action.target}
+              onClick={() => onQuickNavigate?.(action.target)}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 10,
+                border: "none",
+                background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`,
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {stats.map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 22px", boxShadow: SHADOW, animation: `fadeUp 0.45s ease ${i * 0.08}s both` }}>
@@ -635,38 +807,295 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
   );
 }
 
-function ProjectsView({ projects, isAdmin, onEdit, onDelete, onSaveProjectDetails }: { projects: Project[]; isAdmin?: boolean; onEdit?: (p: Project) => void; onDelete?: (id: string) => void; onSaveProjectDetails: (payload: Partial<Project>) => Promise<void>; }) {
+function ProjectsView({
+  projects,
+  isAdmin,
+  canCreateProjects,
+  currentUserId,
+  onEdit,
+  onDelete,
+  onSaveProjectDetails,
+}: {
+  projects: Project[];
+  isAdmin?: boolean;
+  canCreateProjects?: boolean;
+  currentUserId: string;
+  onEdit?: (p: Project) => void;
+  onDelete?: (id: string) => void;
+  onSaveProjectDetails: (payload: Partial<Project>) => Promise<void>;
+}) {
   const pillars = ["All", "Digital Twin", "Synthetic Biology", "Biomanufacturing", "Multi-Omics"];
   const [filter, setFilter] = useState("All");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const filtered = filter === "All" ? projects : projects.filter(p => p.pillar.toLowerCase().includes(filter.toLowerCase()));
+
+  const filtered =
+    filter === "All"
+      ? projects
+      : projects.filter((p) => p.pillar.toLowerCase().includes(filter.toLowerCase()));
+
+  const canEditProject = (project: Project) =>
+    !!isAdmin || (!!project.created_by && project.created_by === currentUserId);
+
+  const canDeleteProject = (project: Project) =>
+    !!isAdmin || (!!project.created_by && project.created_by === currentUserId);
+
   return (
     <>
-      {selectedProject && <ProjectDrawer project={selectedProject} isAdmin={isAdmin} onClose={() => setSelectedProject(null)} onSave={async (payload) => { await onSaveProjectDetails(payload); setSelectedProject(prev => prev ? { ...prev, ...payload, updated_at: new Date().toISOString() } : prev); }} />}
+      {selectedProject && (
+        <ProjectDrawer
+          project={selectedProject}
+          isAdmin={isAdmin || canEditProject(selectedProject)}
+          onClose={() => setSelectedProject(null)}
+          onSave={async (payload) => {
+            if (!canEditProject(selectedProject)) {
+              throw new Error("You do not have permission to update this project.");
+            }
+
+            await onSaveProjectDetails(payload);
+
+            setSelectedProject((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    ...payload,
+                    updated_at: new Date().toISOString(),
+                  }
+                : prev
+            );
+          }}
+        />
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>{pillars.map(p => (<button key={p} onClick={() => setFilter(p)} style={{ padding: "7px 16px", borderRadius: 24, border: `1.5px solid ${filter === p ? TEAL : BORDER}`, background: filter === p ? TEAL_LIGHT : CARD, color: filter === p ? TEAL_DARK : TEXT_MID, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{p}</button>))}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
-          {filtered.map(p => (
-            <div key={p.id || p.name} onClick={() => setSelectedProject(p)} style={{ background: CARD, border: `1.5px solid ${BORDER}`, borderRadius: 16, padding: 24, cursor: "pointer", boxShadow: SHADOW, transition: "all 0.25s ease" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 12, height: 12, borderRadius: 4, background: p.color }} /><span style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{p.name}</span></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={e => e.stopPropagation()}>
-                  <StatusBadge status={p.status} />
-                  {isAdmin && <div style={{ display: "flex", gap: 4 }}><button onClick={() => onEdit?.(p)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button><button onClick={() => { if (p.id && confirm("Delete this project?")) onDelete?.(p.id); }} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button></div>}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+            {pillars.map((p) => (
+              <button
+                key={p}
+                onClick={() => setFilter(p)}
+                style={{
+                  padding: "7px 16px",
+                  borderRadius: 24,
+                  border: `1.5px solid ${filter === p ? TEAL : BORDER}`,
+                  background: filter === p ? TEAL_LIGHT : CARD,
+                  color: filter === p ? TEAL_DARK : TEXT_MID,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {canCreateProjects && (
+            <div
+              style={{
+                fontSize: 12,
+                color: TEXT_LIGHT,
+                padding: "8px 12px",
+                borderRadius: 10,
+                background: "#F7F9FC",
+                border: `1px solid ${BORDER}`,
+              }}
+            >
+              You can manage projects you created.
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {filtered.map((p) => {
+            const canEdit = canEditProject(p);
+            const canDelete = canDeleteProject(p);
+
+            return (
+              <div
+                key={p.id || p.name}
+                onClick={() => setSelectedProject(p)}
+                style={{
+                  background: CARD,
+                  border: `1.5px solid ${BORDER}`,
+                  borderRadius: 16,
+                  padding: 24,
+                  cursor: "pointer",
+                  boxShadow: SHADOW,
+                  transition: "all 0.25s ease",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: 12,
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 4,
+                        background: p.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: 17,
+                        fontWeight: 700,
+                        color: TEXT,
+                        fontFamily: "'Sora', sans-serif",
+                      }}
+                    >
+                      {p.name}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <StatusBadge status={p.status} />
+
+                    {(canEdit || canDelete) && (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {canEdit && (
+                          <button
+                            onClick={() => onEdit?.(p)}
+                            style={{
+                              background: "#F3F5F8",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "4px 6px",
+                              cursor: "pointer",
+                              color: TEXT_MID,
+                            }}
+                            title="Edit project"
+                          >
+                            <Icon name="edit" size={13} />
+                          </button>
+                        )}
+
+                        {canDelete && p.id && (
+                          <button
+                            onClick={() => {
+                              if (confirm("Delete this project?")) onDelete?.(p.id!);
+                            }}
+                            style={{
+                              background: "#FDECF1",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "4px 6px",
+                              cursor: "pointer",
+                              color: "#D63563",
+                            }}
+                            title="Delete project"
+                          >
+                            <Icon name="trash" size={13} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 4 }}>{p.pillar}</div>
+
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: TEXT_MID,
+                    lineHeight: 1.55,
+                    margin: "8px 0 16px",
+                  }}
+                >
+                  {p.description}
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 14,
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: `${p.color}12`,
+                      color: p.color,
+                      fontWeight: 700,
+                      textTransform: "uppercase" as const,
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    {p.phase}
+                  </span>
+
+                  <span style={{ fontSize: 12, color: TEXT_LIGHT }}>
+                    Lead: {p.lead}
+                  </span>
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: TEXT_LIGHT }}>Progress</span>
+                    <span style={{ fontSize: 12, color: p.color, fontWeight: 700 }}>
+                      {p.progress}%
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 6,
+                      borderRadius: 3,
+                      background: `${p.color}14`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${p.progress}%`,
+                        height: "100%",
+                        borderRadius: 3,
+                        background: p.color,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 4 }}>{p.pillar}</div>
-              <p style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.55, margin: "8px 0 16px" }}>{p.description}</p>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <span style={{ fontSize: 10, padding: "4px 12px", borderRadius: 20, background: `${p.color}12`, color: p.color, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{p.phase}</span>
-                <span style={{ fontSize: 12, color: TEXT_LIGHT }}>Lead: {p.lead}</span>
-              </div>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}><span style={{ fontSize: 11, color: TEXT_LIGHT }}>Progress</span><span style={{ fontSize: 12, color: p.color, fontWeight: 700 }}>{p.progress}%</span></div>
-                <div style={{ width: "100%", height: 6, borderRadius: 3, background: `${p.color}14` }}><div style={{ width: `${p.progress}%`, height: "100%", borderRadius: 3, background: p.color }} /></div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </>
@@ -1053,49 +1482,504 @@ function KnowledgeView({ isAdmin }: { isAdmin?: boolean }) {
 
 // ─── ADMIN TYPES ──────────────────────────────────────────────────────────────
 type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; };
-type Application = { id: string; email: string; full_name?: string; contact_role?: string; organisation_name?: string; organisation_type?: string; organisation_website?: string; country?: string; city?: string; areas_of_interest?: string[]; what_you_bring?: string; what_you_seek?: string; application_status: string; applied_at?: string; reviewed_at?: string; admin_notes?: string; partnership_level: PartnershipLevel; };
+type Application = { id: string; email: string; full_name?: string; contact_role?: string; organisation_name?: string; organisation_type?: string; organisation_website?: string; country?: string; city?: string; areas_of_interest?: string[]; what_you_bring?: string; what_you_seek?: string; application_status: string; applied_at?: string; reviewed_at?: string; partnership_type?: string; admin_notes?: string; partnership_level: PartnershipLevel; };
 const ORG_TYPE_LABELS: Record<string, string> = { startup: "Startup", sme: "SME / Company", hospital: "Hospital / Clinic", university: "University / Research Institute", investor: "Investor / VC", international_partner: "International Partner", other: "Other" };
+const PARTNERSHIP_TYPE_LABELS: Record<string, string> = {
+  community_partner: "Community Partner",
+  project_partner: "Project Partner",
+  strategic_partner: "Strategic Partner",
+};
 const PILLAR_LABELS: Record<string, string> = { digital_twin: "Digital Twin Therapeutics", synthetic_biology: "Synthetic Biology & Cell Engineering", biomanufacturing: "Automated Biomanufacturing", multi_omics: "Integrated Multi-Omics Analytics" };
 
-function ApplicationDrawer({ app, onClose, onAction }: { app: Application; onClose: () => void; onAction: (id: string, action: "approve" | "decline", notes: string, level: PartnershipLevel) => void; }) {
+function ApplicationDrawer({
+  app,
+  onClose,
+  onAction,
+}: {
+  app: Application;
+  onClose: () => void;
+  onAction: (
+    id: string,
+    action: "approve" | "decline",
+    notes: string,
+    level: PartnershipLevel
+  ) => void;
+}) {
   const [notes, setNotes] = useState(app.admin_notes ?? "");
-  const [level, setLevel] = useState<PartnershipLevel>("member");
+  const [level, setLevel] = useState<PartnershipLevel>(
+    app.partnership_type === "strategic_partner" ? "partner" : "member"
+  );
   const [acting, setActing] = useState(false);
-  const handle = async (action: "approve" | "decline") => { setActing(true); await onAction(app.id, action, notes, level); setActing(false); };
+
+  const handle = async (action: "approve" | "decline") => {
+    setActing(true);
+    await onAction(app.id, action, notes, level);
+    setActing(false);
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.4)", backdropFilter: "blur(3px)" }} />
-      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 520, background: CARD, boxShadow: "-4px 0 32px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column", overflow: "hidden", animation: "slideIn 0.25s ease both" }}>
-        <div style={{ padding: "22px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div><div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{app.full_name || app.email}</div><div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 2 }}>{app.organisation_name && `${app.organisation_name} · `}{app.email}</div></div>
-          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(26,35,50,0.4)",
+          backdropFilter: "blur(3px)",
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 520,
+          background: CARD,
+          boxShadow: "-4px 0 32px rgba(0,0,0,0.12)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          animation: "slideIn 0.25s ease both",
+        }}
+      >
+        <div
+          style={{
+            padding: "22px 28px",
+            borderBottom: `1px solid ${BORDER}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 17,
+                fontWeight: 700,
+                color: TEXT,
+                fontFamily: "'Sora', sans-serif",
+              }}
+            >
+              {app.full_name || app.email}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                color: TEXT_LIGHT,
+                marginTop: 2,
+              }}
+            >
+              {app.organisation_name && `${app.organisation_name} · `}
+              {app.email}
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{
+              background: "#F3F5F8",
+              border: "none",
+              borderRadius: 8,
+              padding: 8,
+              cursor: "pointer",
+              color: TEXT_MID,
+            }}
+          >
+            <Icon name="x" size={16} />
+          </button>
         </div>
-        <div style={{ flex: 1, overflow: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ background: "#FAFBFC", borderRadius: 14, padding: 18, border: `1px solid ${BORDER}` }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 14 }}>Organisation</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {[{ label: "Name", value: app.organisation_name }, { label: "Type", value: app.organisation_type ? ORG_TYPE_LABELS[app.organisation_type] : undefined }, { label: "Location", value: [app.city, app.country].filter(Boolean).join(", ") }, { label: "Website", value: app.organisation_website }].map(({ label, value }) => (
-                <div key={label}><div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 3 }}>{label}</div><div style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{value || "—"}</div></div>
+
+        <div
+          style={{
+            flex: 1,
+            overflow: "auto",
+            padding: "24px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          <div
+            style={{
+              background: "#FAFBFC",
+              borderRadius: 14,
+              padding: 18,
+              border: `1px solid ${BORDER}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: TEXT_LIGHT,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.07em",
+                marginBottom: 10,
+              }}
+            >
+              Partnership Type
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                color: TEXT,
+                fontWeight: 600,
+              }}
+            >
+              {app.partnership_type
+                ? PARTNERSHIP_TYPE_LABELS[app.partnership_type] ?? app.partnership_type
+                : "—"}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: "#FAFBFC",
+              borderRadius: 14,
+              padding: 18,
+              border: `1px solid ${BORDER}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: TEXT_LIGHT,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.07em",
+                marginBottom: 14,
+              }}
+            >
+              Organisation
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              {[
+                { label: "Name", value: app.organisation_name },
+                {
+                  label: "Type",
+                  value: app.organisation_type
+                    ? ORG_TYPE_LABELS[app.organisation_type]
+                    : undefined,
+                },
+                {
+                  label: "Location",
+                  value: [app.city, app.country].filter(Boolean).join(", "),
+                },
+                { label: "Website", value: app.organisation_website },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: TEXT_LIGHT,
+                      marginBottom: 3,
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: TEXT,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {value || "—"}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-          {app.areas_of_interest && app.areas_of_interest.length > 0 && (<div><div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 10 }}>Scientific Interests</div><div style={{ display: "flex", flexWrap: "wrap" as const, gap: 7 }}>{app.areas_of_interest.map(a => (<span key={a} style={{ fontSize: 12, padding: "4px 12px", borderRadius: 20, background: TEAL_LIGHT, color: TEAL_DARK, fontWeight: 600 }}>{PILLAR_LABELS[a] ?? a}</span>))}</div></div>)}
-          {app.what_you_bring && (<div><div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8 }}>What They Bring</div><p style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.65, margin: 0, background: "#FAFBFC", padding: 14, borderRadius: 10, border: `1px solid ${BORDER}` }}>{app.what_you_bring}</p></div>)}
-          {app.what_you_seek && (<div><div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8 }}>What They Seek</div><p style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.65, margin: 0, background: "#FAFBFC", padding: 14, borderRadius: 10, border: `1px solid ${BORDER}` }}>{app.what_you_seek}</p></div>)}
-          {app.applied_at && (<div style={{ display: "flex", alignItems: "center", gap: 6, color: TEXT_LIGHT, fontSize: 12 }}><Icon name="clock" size={13} />Applied {new Date(app.applied_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div>)}
-          <div><div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8 }}>Admin Notes</div><textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add notes..." rows={3} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`, fontSize: 13, color: TEXT, outline: "none", resize: "vertical" as const, background: "#FAFBFC" }} /></div>
-          {app.application_status === "pending" && (<div><div style={{ fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 8 }}>Grant Partnership Level</div><div style={{ display: "flex", gap: 8 }}>{(["member", "partner"] as PartnershipLevel[]).map(l => { const lbl = PARTNERSHIP_LABELS[l]; return (<button key={l} onClick={() => setLevel(l)} style={{ padding: "7px 18px", borderRadius: 10, border: `1.5px solid ${level === l ? lbl.color : BORDER}`, background: level === l ? lbl.bg : CARD, color: level === l ? lbl.color : TEXT_LIGHT, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{lbl.label}</button>); })}</div></div>)}
-        </div>
-        {app.application_status === "pending" && (
-          <div style={{ padding: "18px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10 }}>
-            <button onClick={() => handle("decline")} disabled={acting} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: `1.5px solid #F9C3CE`, background: "#FEF2F4", color: "#D63563", fontSize: 13, fontWeight: 700, cursor: acting ? "default" : "pointer", opacity: acting ? 0.6 : 1 }}>Decline</button>
-            <button onClick={() => handle("approve")} disabled={acting} style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: acting ? "default" : "pointer", opacity: acting ? 0.6 : 1 }}>{acting ? "Processing…" : `Approve as ${PARTNERSHIP_LABELS[level].label}`}</button>
+
+          {app.areas_of_interest && app.areas_of_interest.length > 0 && (
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT_LIGHT,
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.07em",
+                  marginBottom: 10,
+                }}
+              >
+                Scientific Interests
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap" as const,
+                  gap: 7,
+                }}
+              >
+                {app.areas_of_interest.map((a) => (
+                  <span
+                    key={a}
+                    style={{
+                      fontSize: 12,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: TEAL_LIGHT,
+                      color: TEAL_DARK,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {PILLAR_LABELS[a] ?? a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {app.what_you_bring && (
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT_LIGHT,
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.07em",
+                  marginBottom: 8,
+                }}
+              >
+                What They Bring
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: TEXT_MID,
+                  lineHeight: 1.65,
+                  margin: 0,
+                  background: "#FAFBFC",
+                  padding: 14,
+                  borderRadius: 10,
+                  border: `1px solid ${BORDER}`,
+                }}
+              >
+                {app.what_you_bring}
+              </p>
+            </div>
+          )}
+
+          {app.what_you_seek && (
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT_LIGHT,
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.07em",
+                  marginBottom: 8,
+                }}
+              >
+                What They Seek
+              </div>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: TEXT_MID,
+                  lineHeight: 1.65,
+                  margin: 0,
+                  background: "#FAFBFC",
+                  padding: 14,
+                  borderRadius: 10,
+                  border: `1px solid ${BORDER}`,
+                }}
+              >
+                {app.what_you_seek}
+              </p>
+            </div>
+          )}
+
+          {app.applied_at && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                color: TEXT_LIGHT,
+                fontSize: 12,
+              }}
+            >
+              <Icon name="clock" size={13} />
+              Applied{" "}
+              {new Date(app.applied_at).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </div>
+          )}
+
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: TEXT_LIGHT,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.07em",
+                marginBottom: 8,
+              }}
+            >
+              Admin Notes
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add notes..."
+              rows={3}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: 10,
+                border: `1.5px solid ${BORDER}`,
+                fontSize: 13,
+                color: TEXT,
+                outline: "none",
+                resize: "vertical" as const,
+                background: "#FAFBFC",
+              }}
+            />
           </div>
-        )}
-        {app.application_status !== "pending" && (
-          <div style={{ padding: "18px 28px", borderTop: `1px solid ${BORDER}` }}>
-            <div style={{ padding: "12px 18px", borderRadius: 12, textAlign: "center", background: app.application_status === "approved" ? "#E6F9F5" : "#FEF2F4", color: app.application_status === "approved" ? "#0D9373" : "#D63563", fontSize: 13, fontWeight: 700 }}>
-              {app.application_status === "approved" ? "✓ Approved" : "✗ Declined"}{app.reviewed_at && ` · ${new Date(app.reviewed_at).toLocaleDateString("en-GB")}`}
+
+          {app.application_status === "pending" && (
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: TEXT_LIGHT,
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.07em",
+                  marginBottom: 8,
+                }}
+              >
+                Grant Portal Access Level
+              </div>
+
+              <div style={{ display: "flex", gap: 8 }}>
+                {(["member", "partner"] as PartnershipLevel[]).map((l) => {
+                  const lbl = PARTNERSHIP_LABELS[l];
+                  return (
+                    <button
+                      key={l}
+                      onClick={() => setLevel(l)}
+                      style={{
+                        padding: "7px 18px",
+                        borderRadius: 10,
+                        border: `1.5px solid ${level === l ? lbl.color : BORDER}`,
+                        background: level === l ? lbl.bg : CARD,
+                        color: level === l ? lbl.color : TEXT_LIGHT,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {lbl.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div
+                style={{
+                  fontSize: 12,
+                  color: TEXT_LIGHT,
+                  marginTop: 8,
+                  lineHeight: 1.5,
+                }}
+              >
+                Standard approved applicants should usually be granted <strong>Member</strong>.
+                Strategic partnership applications should usually be granted <strong>Partner</strong>.
+                Viewer is reserved for limited-access cases and is not part of normal approvals.
+              </div>
+            </div>
+          )}
+        </div>
+
+        {app.application_status === "pending" ? (
+          <div
+            style={{
+              padding: "18px 28px",
+              borderTop: `1px solid ${BORDER}`,
+              display: "flex",
+              gap: 10,
+            }}
+          >
+            <button
+              onClick={() => handle("decline")}
+              disabled={acting}
+              style={{
+                flex: 1,
+                padding: "11px 0",
+                borderRadius: 12,
+                border: `1.5px solid #F9C3CE`,
+                background: "#FEF2F4",
+                color: "#D63563",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: acting ? "default" : "pointer",
+                opacity: acting ? 0.6 : 1,
+              }}
+            >
+              Decline
+            </button>
+
+            <button
+              onClick={() => handle("approve")}
+              disabled={acting}
+              style={{
+                flex: 2,
+                padding: "11px 0",
+                borderRadius: 12,
+                border: "none",
+                background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`,
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: acting ? "default" : "pointer",
+                opacity: acting ? 0.6 : 1,
+              }}
+            >
+              {acting ? "Processing…" : `Approve as ${PARTNERSHIP_LABELS[level].label}`}
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              padding: "18px 28px",
+              borderTop: `1px solid ${BORDER}`,
+            }}
+          >
+            <div
+              style={{
+                padding: "12px 18px",
+                borderRadius: 12,
+                textAlign: "center",
+                background:
+                  app.application_status === "approved" ? "#E6F9F5" : "#FEF2F4",
+                color:
+                  app.application_status === "approved" ? "#0D9373" : "#D63563",
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {app.application_status === "approved" ? "✓ Approved" : "✗ Declined"}
+              {app.reviewed_at &&
+                ` · ${new Date(app.reviewed_at).toLocaleDateString("en-GB")}`}
             </div>
           </div>
         )}
@@ -1461,6 +2345,8 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
 
   const partnershipLevel = user.partnership_level;
   const isAdmin = partnershipLevel === "admin";
+  const canCreateProjects = partnershipLevel === "partner" || partnershipLevel === "admin";
+  const canManageAllProjects = partnershipLevel === "admin";
   const accessibleSections = PARTNERSHIP_ACCESS[partnershipLevel] || PARTNERSHIP_ACCESS.viewer;
   const levelInfo = PARTNERSHIP_LABELS[partnershipLevel] || PARTNERSHIP_LABELS.viewer;
   const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", admin: "Admin Panel" };
@@ -1469,30 +2355,128 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const handleSaveEventInline = async (event: Partial<Event>) => { const res = await fetch("/api/admin/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); if (res.ok) { fetchEvents(); setEditingEvent(null); } };
   const handleSaveProjectInline = async (project: Partial<Project>) => { const res = await fetch("/api/admin/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); if (res.ok) { fetchProjects(); setEditingProject(null); } };
 
+  // ─── renderContent ────────────────────────────────────────────────────────────
   const renderContent = () => {
     switch (activeNav) {
-      case "dashboard": return <DashboardView projects={projects} events={events} members={members} approvedEquipmentCount={approvedEquipmentCount} />;
-      case "projects": return (
-        <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}>
-          <>{editingProject && <ProjectModal project={editingProject} onClose={() => setEditingProject(null)} onSave={handleSaveProjectInline} />}
-          <ProjectsView projects={projects} isAdmin={isAdmin} onEdit={p => setEditingProject(p)} onDelete={async id => { await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchProjects(); }} onSaveProjectDetails={async payload => { const res = await fetch("/api/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to update project"); fetchProjects(); }} /></>
-        </SectionWrapper>
-      );
-      case "lab": return <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}><LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} isAdmin={isAdmin} /></SectionWrapper>;
-      case "events": return (
-        <SectionWrapper sectionId="events" sectionName="Events" partnershipLevel={partnershipLevel}>
-          <>{editingEvent && <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleSaveEventInline} />}<EventsView events={events} isAdmin={isAdmin} onEdit={e => setEditingEvent(e)} onDelete={async id => { await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); fetchEvents(); }} /></>
-        </SectionWrapper>
-      );
-      case "members": return <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}><MembersView members={members} isAdmin={isAdmin} /></SectionWrapper>;
-      case "knowledge": return <SectionWrapper sectionId="knowledge" sectionName="Knowledge Base" partnershipLevel={partnershipLevel}><KnowledgeView isAdmin={isAdmin} /></SectionWrapper>;
-      case "admin": return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} /> : null;
-      default: return <DashboardView projects={projects} events={events} members={members} approvedEquipmentCount={approvedEquipmentCount} />;
+      case "dashboard":
+        return (
+          <DashboardView
+            projects={projects}
+            events={events}
+            members={members}
+            approvedEquipmentCount={approvedEquipmentCount}
+            partnershipLevel={partnershipLevel}
+            displayName={user.display_name || user.full_name || user.email}
+            onQuickNavigate={(section) => setActiveNav(section)}
+          />
+        );
+
+      case "projects":
+        return (
+          <SectionWrapper sectionId="projects" sectionName="Projects" partnershipLevel={partnershipLevel}>
+            <>
+              {editingProject && (
+                <ProjectModal
+                  project={editingProject}
+                  onClose={() => setEditingProject(null)}
+                  onSave={handleSaveProjectInline}
+                />
+              )}
+              <ProjectsView
+                projects={projects}
+                isAdmin={isAdmin}
+                canCreateProjects={canCreateProjects}
+                currentUserId={user.sub}
+                onEdit={(p) => setEditingProject(p)}
+                onDelete={async (id) => {
+                  await fetch("/api/admin/projects", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id }),
+                  });
+                  fetchProjects();
+                }}
+                onSaveProjectDetails={async (payload) => {
+                  const res = await fetch("/api/projects", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || "Failed to update project");
+                  fetchProjects();
+                }}
+              />
+            </>
+          </SectionWrapper>
+        );
+
+      case "lab":
+        return (
+          <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}>
+            <LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} isAdmin={isAdmin} />
+          </SectionWrapper>
+        );
+
+      case "events":
+        return (
+          <SectionWrapper sectionId="events" sectionName="Events" partnershipLevel={partnershipLevel}>
+            <>
+              {editingEvent && (
+                <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={handleSaveEventInline} />
+              )}
+              <EventsView
+                events={events}
+                isAdmin={isAdmin}
+                onEdit={(e) => setEditingEvent(e)}
+                onDelete={async (id) => {
+                  await fetch("/api/admin/events", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id }),
+                  });
+                  fetchEvents();
+                }}
+              />
+            </>
+          </SectionWrapper>
+        );
+
+      case "members":
+        return (
+          <SectionWrapper sectionId="members" sectionName="Members" partnershipLevel={partnershipLevel}>
+            <MembersView members={members} isAdmin={isAdmin} />
+          </SectionWrapper>
+        );
+
+      case "knowledge":
+        return (
+          <SectionWrapper sectionId="knowledge" sectionName="Knowledge Base" partnershipLevel={partnershipLevel}>
+            <KnowledgeView isAdmin={isAdmin} />
+          </SectionWrapper>
+        );
+
+      case "admin":
+        return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} /> : null;
+
+      default:
+        return (
+          <DashboardView
+            projects={projects}
+            events={events}
+            members={members}
+            approvedEquipmentCount={approvedEquipmentCount}
+            partnershipLevel={partnershipLevel}
+            displayName={user.display_name || user.full_name || user.email}
+            onQuickNavigate={(section) => setActiveNav(section)}
+          />
+        );
     }
-  };
+  }; // ← closes renderContent
 
   const isLocked = (sectionId: string) => !accessibleSections.includes(sectionId);
 
+  // ─── RENDER ───────────────────────────────────────────────────────────────────
   return (
     <div style={{ display: "flex", height: "100vh", width: "100%", background: BG, fontFamily: "'DM Sans', sans-serif", overflow: "hidden" }}>
       <style>{`
@@ -1506,17 +2490,30 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
         ::placeholder { color: #A8B5C4; }
         button:hover { filter: brightness(0.97); }
       `}</style>
-      {/* Sidebar */}
+
+      {/* ── Sidebar ── */}
       <div style={{ width: collapsed ? 68 : 240, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "width 0.3s ease", flexShrink: 0, boxShadow: "1px 0 8px rgba(0,0,0,0.02)" }}>
         <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => setCollapsed(!collapsed)}>
           <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif", boxShadow: `0 2px 8px ${TEAL}33` }}>bE</div>
-          {!collapsed && (<div><div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div><div style={{ fontSize: 10, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 600 }}>Member Portal</div></div>)}
+          {!collapsed && (
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>
+              <div style={{ fontSize: 10, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 600 }}>Member Portal</div>
+            </div>
+          )}
         </div>
+
         <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
           {visibleNav.map(item => {
-            const active = activeNav === item.id; const locked = isLocked(item.id);
+            const active = activeNav === item.id;
+            const locked = isLocked(item.id);
             return (
-              <button key={item.id} onClick={() => setActiveNav(item.id)} title={locked ? "Requires higher partnership level" : item.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "11px 14px" : "11px 16px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? TEAL_LIGHT : "transparent", color: active ? TEAL_DARK : locked ? "#C5CED8" : TEXT_MID, fontSize: 13, fontWeight: active ? 700 : 500, transition: "all 0.15s ease", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}>
+              <button
+                key={item.id}
+                onClick={() => setActiveNav(item.id)}
+                title={locked ? "Requires higher partnership level" : item.label}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "11px 14px" : "11px 16px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? TEAL_LIGHT : "transparent", color: active ? TEAL_DARK : locked ? "#C5CED8" : TEXT_MID, fontSize: 13, fontWeight: active ? 700 : 500, transition: "all 0.15s ease", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}
+              >
                 {active && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, borderRadius: 2, background: TEAL }} />}
                 <Icon name={item.icon} size={18} />
                 {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
@@ -1525,15 +2522,30 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
             );
           })}
         </nav>
+
         <div style={{ padding: collapsed ? "16px 10px" : "16px 18px", borderTop: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>{user.initials || user.email.slice(0, 2).toUpperCase()}</div>
-            {!collapsed && (<div style={{ minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{user.display_name || user.full_name || user.email}</div><span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span></div>)}
+            <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>
+              {user.initials || user.email.slice(0, 2).toUpperCase()}
+            </div>
+            {!collapsed && (
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                  {user.display_name || user.full_name || user.email}
+                </div>
+                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
+              </div>
+            )}
           </div>
-          {!collapsed && (<a href="/auth/sign-out" style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, color: TEXT_LIGHT, fontSize: 12, textDecoration: "none" }}><Icon name="logout" size={14} /> Sign out</a>)}
+          {!collapsed && (
+            <a href="/auth/sign-out" style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, color: TEXT_LIGHT, fontSize: 12, textDecoration: "none" }}>
+              <Icon name="logout" size={14} /> Sign out
+            </a>
+          )}
         </div>
       </div>
-      {/* Main content */}
+
+      {/* ── Main content ── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "16px 30px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(12px)" }}>
           <div>
@@ -1541,13 +2553,25 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
             <p style={{ margin: "3px 0 0", fontSize: 13, color: TEXT_LIGHT }}>Fondazione bioERGOtech ETS · {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ padding: "7px 14px", borderRadius: 10, background: levelInfo.bg, border: `1px solid ${levelInfo.color}30`, display: "flex", alignItems: "center", gap: 6 }}><Icon name="star" size={13} /><span style={{ fontSize: 12, fontWeight: 700, color: levelInfo.color }}>{levelInfo.label}</span></div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "#F3F5F8", border: `1px solid ${BORDER}`, borderRadius: 10 }}><span style={{ color: TEXT_LIGHT }}><Icon name="search" size={14} /></span><input placeholder="Quick search..." style={{ background: "transparent", border: "none", outline: "none", color: TEXT, width: 140, fontSize: 13 }} /></div>
-            <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: "#F3F5F8", border: `1px solid ${BORDER}`, color: TEXT_LIGHT, cursor: "pointer", position: "relative" }}><Icon name="bell" size={16} /><div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: "#E74C6F", border: "2px solid #fff" }} /></div>
+            <div style={{ padding: "7px 14px", borderRadius: 10, background: levelInfo.bg, border: `1px solid ${levelInfo.color}30`, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="star" size={13} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: levelInfo.color }}>{levelInfo.label}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "#F3F5F8", border: `1px solid ${BORDER}`, borderRadius: 10 }}>
+              <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={14} /></span>
+              <input placeholder="Quick search..." style={{ background: "transparent", border: "none", outline: "none", color: TEXT, width: 140, fontSize: 13 }} />
+            </div>
+            <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: "#F3F5F8", border: `1px solid ${BORDER}`, color: TEXT_LIGHT, cursor: "pointer", position: "relative" }}>
+              <Icon name="bell" size={16} />
+              <div style={{ position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: "50%", background: "#E74C6F", border: "2px solid #fff" }} />
+            </div>
           </div>
         </div>
-        <div style={{ flex: 1, overflow: "auto", padding: "26px 30px" }}>{renderContent()}</div>
+
+        <div style={{ flex: 1, overflow: "auto", padding: "26px 30px" }}>
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
-}
+} // ← closes BioERGOtechPortal

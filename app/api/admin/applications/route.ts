@@ -49,11 +49,12 @@ export async function GET(request: Request) {
     .from("applications")
     .select(
       `id, email, full_name, contact_role,
-       organisation_name, organisation_type, organisation_website,
-       country, city, areas_of_interest,
-       what_you_bring, what_you_seek,
-       application_status, applied_at, reviewed_at,
-       admin_notes`
+      organisation_name, organisation_type, organisation_website,
+      country, city, areas_of_interest,
+      what_you_bring, what_you_seek,
+      partnership_type,
+      application_status, applied_at, reviewed_at,
+      admin_notes`
     )
     .order("applied_at", { ascending: false });
 
@@ -96,10 +97,10 @@ export async function POST(request: Request) {
 
   // Fetch the application so we have the applicant's email and name
   const { data: application, error: fetchError } = await client
-    .from("applications")
-    .select("email, full_name, organisation_name")
-    .eq("id", applicantId)
-    .single();
+  .from("applications")
+  .select("email, full_name, organisation_name, partnership_type")
+  .eq("id", applicantId)
+  .single();
 
   if (fetchError || !application) {
     return NextResponse.json(
@@ -110,7 +111,9 @@ export async function POST(request: Request) {
 
   // ── APPROVE ────────────────────────────────────────────────────────────────
   if (action === "approve") {
-    const grantedLevel = partnershipLevel ?? "member";
+    const grantedLevel =
+  partnershipLevel ??
+  (application.partnership_type === "strategic_partner" ? "partner" : "member");
 
     // 1. Check if this email already has a Supabase auth account
     const { data: existingUsers } = await client.auth.admin.listUsers();

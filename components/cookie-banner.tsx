@@ -11,6 +11,7 @@ type CookiePreferences = {
 };
 
 const COOKIE_KEY = "bioergotech_cookie_consent";
+const GA_ID = "G-GWKKXQ2S7M";
 
 function getStoredPreferences(): CookiePreferences | null {
   if (typeof window === "undefined") return null;
@@ -27,6 +28,59 @@ function savePreferences(prefs: CookiePreferences) {
   localStorage.setItem(COOKIE_KEY, JSON.stringify(prefs));
 }
 
+function loadGoogleAnalytics() {
+  if (typeof window === "undefined") return;
+
+  if (!document.getElementById("gtag-script")) {
+    const script = document.createElement("script");
+    script.id = "gtag-script";
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(script);
+  }
+
+  window.dataLayer = window.dataLayer || [];
+  function gtag(...args: any[]) {
+    window.dataLayer.push(args);
+  }
+  window.gtag = gtag;
+
+  window.gtag("js", new Date());
+  window.gtag("config", GA_ID, { anonymize_ip: true });
+}
+
+function removeGACookies() {
+  if (typeof document === "undefined") return;
+
+  const cookies = document.cookie.split(";");
+  for (let i = 0; i < cookies.length; i++) {
+    const name = cookies[i].split("=")[0].trim();
+    if (
+      name.indexOf("_ga") === 0 ||
+      name.indexOf("_gid") === 0 ||
+      name.indexOf("_gat") === 0
+    ) {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
+    }
+  }
+}
+
+function applyConsent(prefs: CookiePreferences) {
+  if (prefs.analytics) {
+    loadGoogleAnalytics();
+  } else {
+    removeGACookies();
+  }
+}
+
+declare global {
+  interface Window {
+    dataLayer: any[];
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -40,26 +94,41 @@ export default function CookieBanner() {
   useEffect(() => {
     const stored = getStoredPreferences();
     if (!stored) {
-      // Small delay so it doesn't flash immediately on load
       const timer = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(timer);
     }
+
+    setPrefs(stored);
+    applyConsent(stored);
   }, []);
 
   const acceptAll = () => {
-    const all = { necessary: true, functional: true, analytics: true, marketing: true };
+    const all = {
+      necessary: true,
+      functional: true,
+      analytics: true,
+      marketing: true,
+    };
     savePreferences(all);
+    applyConsent(all);
     setVisible(false);
   };
 
   const rejectAll = () => {
-    const minimal = { necessary: true, functional: false, analytics: false, marketing: false };
+    const minimal = {
+      necessary: true,
+      functional: false,
+      analytics: false,
+      marketing: false,
+    };
     savePreferences(minimal);
+    applyConsent(minimal);
     setVisible(false);
   };
 
   const saveCustom = () => {
     savePreferences(prefs);
+    applyConsent(prefs);
     setVisible(false);
   };
 
@@ -90,7 +159,6 @@ export default function CookieBanner() {
         }
       `}</style>
 
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
         <div style={{ fontSize: 22, lineHeight: 1 }}>🍪</div>
         <div>
@@ -110,7 +178,6 @@ export default function CookieBanner() {
         </div>
       </div>
 
-      {/* Expandable details */}
       {showDetails && (
         <div style={{ margin: "16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
           {[
@@ -164,7 +231,7 @@ export default function CookieBanner() {
                   {item.desc}
                 </div>
               </div>
-              {/* Toggle */}
+
               <button
                 onClick={() => !item.locked && setPrefs((p) => ({ ...p, [item.key]: !p[item.key] }))}
                 style={{
@@ -172,7 +239,7 @@ export default function CookieBanner() {
                   height: 24,
                   borderRadius: 12,
                   border: "none",
-                  background: (item.locked || prefs[item.key]) ? "var(--primary)" : "#D1D5DB",
+                  background: item.locked || prefs[item.key] ? "var(--primary)" : "#D1D5DB",
                   cursor: item.locked ? "default" : "pointer",
                   position: "relative",
                   flexShrink: 0,
@@ -183,7 +250,7 @@ export default function CookieBanner() {
                   style={{
                     position: "absolute",
                     top: 3,
-                    left: (item.locked || prefs[item.key]) ? 22 : 3,
+                    left: item.locked || prefs[item.key] ? 22 : 3,
                     width: 18,
                     height: 18,
                     borderRadius: "50%",
@@ -198,7 +265,6 @@ export default function CookieBanner() {
         </div>
       )}
 
-      {/* Actions */}
       <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" as const }}>
         <button
           onClick={acceptAll}
