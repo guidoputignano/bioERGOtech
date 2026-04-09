@@ -8,8 +8,8 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section — paddingTop matches navbar height (70px), inner pt-24 restores breathing room */}
-      <section className="hero" id="home" style={{ paddingTop: "70px" }}>
-        <div className="container mx-auto px-6 pt-32 pb-12 relative z-10">
+      <section className="hero" id="home" style={{ paddingTop: "120px" }}>
+        <div className="container mx-auto px-6 pt-8 pb-12 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1">
               <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
