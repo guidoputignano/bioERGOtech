@@ -2875,58 +2875,70 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       `}</style>
 
       {/* ── Sidebar ── */}
-      <div style={{ width: collapsed ? 68 : 240, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "width 0.3s ease", flexShrink: 0, boxShadow: "1px 0 8px rgba(0,0,0,0.02)" }}>
-        <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => setCollapsed(!collapsed)}>
-          <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif", boxShadow: `0 2px 8px ${TEAL}33` }}>bE</div>
-          {!collapsed && (
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>
-              <div style={{ fontSize: 10, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 600 }}>Member Portal</div>
-            </div>
-          )}
+<div style={{ width: collapsed ? 68 : 240, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "width 0.3s ease", flexShrink: 0, boxShadow: "1px 0 8px rgba(0,0,0,0.02)" }}>
+  
+  {/* Logo row — logo links home, arrow toggles collapse */}
+  <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
+    <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
+      <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif", boxShadow: `0 2px 8px ${TEAL}33` }}>bE</div>
+      {!collapsed && (
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>
+          <div style={{ fontSize: 10, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 600 }}>Member Portal</div>
         </div>
+      )}
+    </a>
+    <button
+      onClick={() => setCollapsed(!collapsed)}
+      style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_LIGHT, padding: 4, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+      title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+    >
+      <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={14} />
+    </button>
+  </div>
 
-        <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {visibleNav.map(item => {
-            const active = activeNav === item.id;
-            const locked = isLocked(item.id);
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveNav(item.id)}
-                title={locked ? "Requires higher partnership level" : item.label}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "11px 14px" : "11px 16px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? TEAL_LIGHT : "transparent", color: active ? TEAL_DARK : locked ? "#C5CED8" : TEXT_MID, fontSize: 13, fontWeight: active ? 700 : 500, transition: "all 0.15s ease", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}
-              >
-                {active && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, borderRadius: 2, background: TEAL }} />}
-                <Icon name={item.icon} size={18} />
-                {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
-                {!collapsed && locked && <span style={{ color: "#C5CED8" }}><Icon name="lock" size={13} /></span>}
-              </button>
-            );
-          })}
-        </nav>
+  <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
+    {visibleNav.map(item => {
+      const active = activeNav === item.id;
+      const locked = isLocked(item.id);
+      return (
+        <button
+          key={item.id}
+          onClick={() => setActiveNav(item.id)}
+          title={locked ? "Requires higher partnership level" : item.label}
+          style={{ display: "flex", alignItems: "center", gap: 12, padding: collapsed ? "11px 14px" : "11px 16px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? TEAL_LIGHT : "transparent", color: active ? TEAL_DARK : locked ? "#C5CED8" : TEXT_MID, fontSize: 13, fontWeight: active ? 700 : 500, transition: "all 0.15s ease", justifyContent: collapsed ? "center" : "flex-start", position: "relative" }}
+        >
+          {active && <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, borderRadius: 2, background: TEAL }} />}
+          <Icon name={item.icon} size={18} />
+          {!collapsed && <span style={{ flex: 1 }}>{item.label}</span>}
+          {!collapsed && locked && <span style={{ color: "#C5CED8" }}><Icon name="lock" size={13} /></span>}
+        </button>
+      );
+    })}
+  </nav>
 
-        <div style={{ padding: collapsed ? "16px 10px" : "16px 18px", borderTop: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>
-              {user.initials || user.email.slice(0, 2).toUpperCase()}
-            </div>
-            {!collapsed && (
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
-                  {user.display_name || user.full_name || user.email}
-                </div>
-                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
-              </div>
-            )}
-          </div>
-          {!collapsed && (
-            <a href="/auth/sign-out" style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, color: TEXT_LIGHT, fontSize: 12, textDecoration: "none" }}>
-              <Icon name="logout" size={14} /> Sign out
-            </a>
-          )}
-        </div>
+  <div style={{ padding: collapsed ? "16px 10px" : "16px 18px", borderTop: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>
+        {user.initials || user.email.slice(0, 2).toUpperCase()}
       </div>
+      {!collapsed && (
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+            {user.display_name || user.full_name || user.email}
+          </div>
+          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
+        </div>
+      )}
+    </div>
+    {!collapsed && (
+      <a href="/auth/sign-out" style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, color: TEXT_LIGHT, fontSize: 12, textDecoration: "none" }}>
+        <Icon name="logout" size={14} /> Sign out
+      </a>
+    )}
+  </div>
+
+</div>
 
       {/* ── Main content ── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>

@@ -116,7 +116,7 @@ export default function PartnerWithUs() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
               <img
-                src="/assets/images/Partner-With-Us/Partnership.webp"
+                src="/assets/images/Partner-With-Us/Partner.webp"
                 alt="Partnership"
                 className="rounded-lg shadow-xl w-full max-w-md"
               />
