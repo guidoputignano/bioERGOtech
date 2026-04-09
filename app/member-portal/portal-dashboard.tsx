@@ -1136,81 +1136,349 @@ function EquipmentDrawer({ equipment, isAdmin, onClose, onEdit, onDelete }: { eq
 }
 
 // ─── LAB VIEW ─────────────────────────────────────────────────────────────────
-// CHANGE 3: Pure DB fetch — STATIC_EQUIPMENT array and merge logic fully removed.
+
 function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName: string; isAdmin?: boolean; }) {
   const [proposing, setProposing] = useState(false);
   const [equipmentModal, setEquipmentModal] = useState<Partial<EquipmentProposal> | null>(null);
   const [approvedEquipment, setApprovedEquipment] = useState<EquipmentProposal[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentProposal | null>(null);
-  const [labStats, setLabStats] = useState<LabStats>({ utilization_text: "54%", utilization_sub: "Avg. across all equipment", cost_savings_text: "€32K", cost_savings_sub: "Estimated this quarter", bookings_text: "18", bookings_sub: "Across 3 locations" });
   const [editingStats, setEditingStats] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Pure DB fetch — no static merge
-  const fetchEquipment = async () => {
-    const res = await fetch("/api/admin/equipment");
-    const data = await res.json();
-    setApprovedEquipment((data.proposals || []).filter((p: EquipmentProposal) => p.status === "approved"));
-  };
-  const fetchLabStats = async () => { try { const res = await fetch("/api/admin/lab-stats"); const data = await res.json(); if (data.stats) setLabStats(data.stats); } catch {} };
-  useEffect(() => { fetchEquipment(); fetchLabStats(); }, []);
+  // Lab stats — loaded from DB, null until loaded
+  const [labStats, setLabStats] = useState<{
+    utilization_text: string;
+    utilization_sub: string;
+    cost_savings_text: string;
+    cost_savings_sub: string;
+    bookings_text: string;
+    bookings_sub: string;
+  } | null>(null);
+  const [labStatsLoading, setLabStatsLoading] = useState(true);
+  // Local draft for editing — only used when admin clicks "Edit Stats"
+  const [statsDraft, setStatsDraft] = useState<typeof labStats>(null);
 
-  const filteredEquipment = approvedEquipment.filter(e => [e.name, e.location, e.category, e.description].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
-  const handleSaveEquipment = async (payload: Partial<EquipmentProposal> & { is_admin_add?: boolean }) => { const isEdit = !!payload.id; const res = await fetch("/api/admin/equipment", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save equipment"); await fetchEquipment(); };
-  const handleDeleteEquipment = async (id: string) => { await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); setSelectedEquipment(null); await fetchEquipment(); };
-  const handleSaveStats = async () => { const res = await fetch("/api/admin/lab-stats", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(labStats) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save lab stats"); setLabStats(data.stats); setEditingStats(false); };
+  // Fetch approved equipment from DB
+  const fetchEquipment = async () => {
+    try {
+      const res = await fetch("/api/admin/equipment");
+      const data = await res.json();
+      setApprovedEquipment(
+        (data.proposals || []).filter((p: EquipmentProposal) => p.status === "approved")
+      );
+    } catch {}
+  };
+
+  // Fetch lab stats from DB
+  const fetchLabStats = async () => {
+    try {
+      const res = await fetch("/api/admin/lab-stats");
+      const data = await res.json();
+      if (data.stats) setLabStats(data.stats);
+    } catch {}
+    finally { setLabStatsLoading(false); }
+  };
+
+  useEffect(() => {
+    fetchEquipment();
+    fetchLabStats();
+  }, []);
+
+  const filteredEquipment = approvedEquipment.filter(e =>
+    [e.name, e.location, e.category, e.description]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  const handleSaveEquipment = async (payload: Partial<EquipmentProposal> & { is_admin_add?: boolean }) => {
+    const isEdit = !!payload.id;
+    const res = await fetch("/api/admin/equipment", {
+      method: isEdit ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save equipment");
+    await fetchEquipment();
+  };
+
+  const handleDeleteEquipment = async (id: string) => {
+    await fetch("/api/admin/equipment", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setSelectedEquipment(null);
+    await fetchEquipment();
+  };
+
+  const handleSaveStats = async () => {
+    if (!statsDraft) return;
+    try {
+      const res = await fetch("/api/admin/lab-stats", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(statsDraft),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save stats");
+      setLabStats(data.stats);
+      setEditingStats(false);
+      setStatsDraft(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to save stats");
+    }
+  };
+
+  const startEditingStats = () => {
+    // Copy current values into draft so edits don't affect display until saved
+    setStatsDraft(labStats ? { ...labStats } : {
+      utilization_text: "54%",
+      utilization_sub: "Avg. across all equipment",
+      cost_savings_text: "€32K",
+      cost_savings_sub: "Estimated this quarter",
+      bookings_text: "18",
+      bookings_sub: "Across 3 locations",
+    });
+    setEditingStats(true);
+  };
+
+  const cancelEditingStats = () => {
+    setEditingStats(false);
+    setStatsDraft(null);
+  };
+
+  // Stat card definitions — use live labStats when available, fallback otherwise
+  const statCards = [
+    {
+      key: "utilization",
+      label: "Network Utilization",
+      value: labStats?.utilization_text ?? "—",
+      sub: labStats?.utilization_sub ?? "No data yet",
+      color: TEAL,
+      draftValueKey: "utilization_text" as const,
+      draftSubKey: "utilization_sub" as const,
+    },
+    {
+      key: "cost",
+      label: "Cost Savings (Est. Q)",
+      value: labStats?.cost_savings_text ?? "—",
+      sub: labStats?.cost_savings_sub ?? "No data yet",
+      color: "#7C5CFC",
+      draftValueKey: "cost_savings_text" as const,
+      draftSubKey: "cost_savings_sub" as const,
+    },
+    {
+      key: "bookings",
+      label: "Bookings This Month",
+      value: labStats?.bookings_text ?? "—",
+      sub: labStats?.bookings_sub ?? "No data yet",
+      color: "#F0A500",
+      draftValueKey: "bookings_text" as const,
+      draftSubKey: "bookings_sub" as const,
+    },
+  ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {proposing && <ProposeEquipmentModal userEmail={userEmail} userName={userName} onClose={() => setProposing(false)} onSave={() => { setProposing(false); fetchEquipment(); }} />}
-      {equipmentModal && <EquipmentAdminModal equipment={equipmentModal} onClose={() => setEquipmentModal(null)} onSave={async (payload) => { await handleSaveEquipment(payload); setEquipmentModal(null); }} />}
-      {selectedEquipment && <EquipmentDrawer equipment={selectedEquipment} isAdmin={isAdmin} onClose={() => setSelectedEquipment(null)} onEdit={e => { setSelectedEquipment(null); setEquipmentModal(e); }} onDelete={handleDeleteEquipment} />}
+      {/* Modals */}
+      {proposing && (
+        <ProposeEquipmentModal
+          userEmail={userEmail}
+          userName={userName}
+          onClose={() => setProposing(false)}
+          onSave={() => { setProposing(false); fetchEquipment(); }}
+        />
+      )}
+      {equipmentModal !== null && (
+        <EquipmentAdminModal
+          equipment={equipmentModal}
+          onClose={() => setEquipmentModal(null)}
+          onSave={async (payload) => { await handleSaveEquipment(payload); setEquipmentModal(null); }}
+        />
+      )}
+      {selectedEquipment && (
+        <EquipmentDrawer
+          equipment={selectedEquipment}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedEquipment(null)}
+          onEdit={e => { setSelectedEquipment(null); setEquipmentModal(e); }}
+          onDelete={handleDeleteEquipment}
+        />
+      )}
+
+      {/* Toolbar */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 14, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
-          <input placeholder="Search equipment..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }} />
+          <input
+            placeholder="Search equipment..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }}
+          />
         </div>
-        {isAdmin
-          ? <button onClick={() => setEquipmentModal({})} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Add Equipment</button>
-          : <button onClick={() => setProposing(true)} style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} /> Propose Equipment</button>
-        }
+        {isAdmin ? (
+          <button
+            onClick={() => setEquipmentModal({})}
+            style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" as const }}
+          >
+            <Icon name="plus" size={14} /> Add Equipment
+          </button>
+        ) : (
+          <button
+            onClick={() => setProposing(true)}
+            style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" as const }}
+          >
+            <Icon name="plus" size={14} /> Propose Equipment
+          </button>
+        )}
       </div>
+
+      {/* Info banner */}
       <div style={{ padding: "14px 18px", borderRadius: 12, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span><span style={{ fontSize: 13, color: TEAL_DARK }}>{isAdmin ? "Add equipment directly to the Distributed Lab, or edit existing shared equipment details." : "Have equipment to share? Click Propose Equipment to submit it for admin approval."}</span></div>
-        {isAdmin && <button onClick={() => setEditingStats(p => !p)} style={{ padding: "8px 14px", borderRadius: 10, border: `1px solid ${TEAL_MUTED}`, background: "#fff", color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{editingStats ? "Cancel Stats Edit" : "Edit Stats"}</button>}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span>
+          <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>
+            {isAdmin
+              ? "Add equipment directly to the Distributed Lab, or edit existing shared equipment."
+              : "Have equipment to share? Click Propose Equipment to submit it for admin approval."}
+          </span>
+        </div>
+        {isAdmin && !editingStats && (
+          <button
+            onClick={startEditingStats}
+            style={{ padding: "7px 14px", borderRadius: 10, border: `1px solid ${TEAL_MUTED}`, background: "#fff", color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" as const }}
+          >
+            Edit Stats
+          </button>
+        )}
       </div>
+
+      {/* Stat cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        {[{ key: "utilization", label: "Network Utilization", value: labStats.utilization_text, sub: labStats.utilization_sub, color: TEAL, vk: "utilization_text", sk: "utilization_sub" }, { key: "cost", label: "Cost Savings", value: labStats.cost_savings_text, sub: labStats.cost_savings_sub, color: "#7C5CFC", vk: "cost_savings_text", sk: "cost_savings_sub" }, { key: "bookings", label: "Bookings This Month", value: labStats.bookings_text, sub: labStats.bookings_sub, color: "#F0A500", vk: "bookings_text", sk: "bookings_sub" }].map(s => (
-          <div key={s.key} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
-            <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 10, textTransform: "uppercase" as const, letterSpacing: "0.06em", fontWeight: 600 }}>{s.label}</div>
-            {editingStats && isAdmin
-              ? (<><input value={s.value} onChange={e => setLabStats(prev => ({ ...prev, [s.vk]: e.target.value }))} style={{ ...modalInputStyle, marginBottom: 8 }} /><input value={s.sub} onChange={e => setLabStats(prev => ({ ...prev, [s.sk]: e.target.value }))} style={modalInputStyle} /></>)
-              : (<><div style={{ fontSize: 30, fontWeight: 700, color: s.color, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{s.value}</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6 }}>{s.sub}</div></>)
-            }
-          </div>
-        ))}
+        {labStatsLoading ? (
+          // Loading skeleton
+          [0, 1, 2].map(i => (
+            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
+              <div style={{ height: 10, background: "#EEF0F4", borderRadius: 6, width: "60%", marginBottom: 14 }} />
+              <div style={{ height: 28, background: "#EEF0F4", borderRadius: 6, width: "40%", marginBottom: 10 }} />
+              <div style={{ height: 10, background: "#EEF0F4", borderRadius: 6, width: "70%" }} />
+            </div>
+          ))
+        ) : (
+          statCards.map(s => (
+            <div key={s.key} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW }}>
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 10, textTransform: "uppercase" as const, letterSpacing: "0.06em", fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+                {s.label}
+              </div>
+              {editingStats && isAdmin && statsDraft ? (
+                // Edit mode — show inputs using the draft copy
+                <>
+                  <input
+                    value={statsDraft[s.draftValueKey]}
+                    onChange={e => setStatsDraft(prev => prev ? { ...prev, [s.draftValueKey]: e.target.value } : prev)}
+                    placeholder="e.g. 54% or €32K"
+                    style={{ ...modalInputStyle, marginBottom: 8, fontSize: 18, fontWeight: 700, color: s.color }}
+                  />
+                  <input
+                    value={statsDraft[s.draftSubKey]}
+                    onChange={e => setStatsDraft(prev => prev ? { ...prev, [s.draftSubKey]: e.target.value } : prev)}
+                    placeholder="Subtitle text"
+                    style={{ ...modalInputStyle, fontSize: 12 }}
+                  />
+                </>
+              ) : (
+                // Display mode — show saved values
+                <>
+                  <div style={{ fontSize: 30, fontWeight: 700, color: s.color, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>
+                    {s.value}
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+                    {s.sub}
+                  </div>
+                </>
+              )}
+            </div>
+          ))
+        )}
       </div>
-      {editingStats && isAdmin && <div style={{ display: "flex", justifyContent: "flex-end" }}><button onClick={handleSaveStats} style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save Stat Cards</button></div>}
+
+      {/* Save / Cancel buttons — only shown when editing */}
+      {editingStats && isAdmin && (
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+          <button
+            onClick={cancelEditingStats}
+            style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSaveStats}
+            style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Save Stats
+          </button>
+        </div>
+      )}
+
+      {/* Equipment table */}
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px 140px 100px", padding: "14px 24px", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, background: "#FAFBFC" }}><span>Equipment</span><span>Location</span><span>Status</span><span>Utilization</span><span>Action</span></div>
-        {filteredEquipment.map((e, i) => (
-          <div key={e.id} onClick={() => setSelectedEquipment(e)} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px 140px 100px", padding: "16px 24px", borderBottom: i < filteredEquipment.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", cursor: "pointer" }}>
-            <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>{e.name}</span>
-            <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{e.location}</span>
-            <span><span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: e.is_available ? "#E6F9F5" : "#FDECF1", color: e.is_available ? "#0D9373" : "#D63563" }}>{e.is_available ? "available" : "unavailable"}</span></span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ flex: 1, height: 6, borderRadius: 3, background: "#EEF0F4" }}><div style={{ width: `${e.utilization ?? 0}%`, height: "100%", borderRadius: 3, background: (e.utilization ?? 0) > 70 ? "#F0A500" : TEAL }} /></div><span style={{ fontSize: 12, color: TEXT_MID, fontWeight: 600, width: 30 }}>{e.utilization ?? 0}%</span></div>
-            <button onClick={evt => evt.stopPropagation()} style={{ padding: "6px 16px", borderRadius: 8, border: e.is_available ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`, background: e.is_available ? TEAL_LIGHT : "#FAFBFC", color: e.is_available ? TEAL_DARK : TEXT_LIGHT, cursor: e.is_available ? "pointer" : "default", fontSize: 12, fontWeight: 600 }}>{e.is_available ? "Book" : "N/A"}</button>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px 140px 100px", padding: "14px 24px", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, background: "#FAFBFC", fontFamily: "'DM Sans', sans-serif" }}>
+          <span>Equipment</span>
+          <span>Location</span>
+          <span>Status</span>
+          <span>Utilization</span>
+          <span>Action</span>
+        </div>
+
+        {filteredEquipment.length === 0 ? (
+          <div style={{ padding: "40px 24px", textAlign: "center", color: TEXT_LIGHT, fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
+            {isAdmin
+              ? "No equipment yet. Use the Add Equipment button above."
+              : "No approved equipment in the network yet."}
           </div>
-        ))}
-        {filteredEquipment.length === 0 && (
-          <div style={{ padding: 24, textAlign: "center", color: TEXT_LIGHT, fontSize: 13 }}>
-            {isAdmin ? "No equipment found. Add equipment using the button above." : "No approved equipment yet."}
-          </div>
+        ) : (
+          filteredEquipment.map((e, i) => (
+            <div
+              key={e.id}
+              onClick={() => setSelectedEquipment(e)}
+              style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px 140px 100px", padding: "16px 24px", borderBottom: i < filteredEquipment.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center", cursor: "pointer", transition: "background 0.15s" }}
+              onMouseEnter={el => (el.currentTarget as HTMLElement).style.background = "#FAFBFC"}
+              onMouseLeave={el => (el.currentTarget as HTMLElement).style.background = "transparent"}
+            >
+              <div>
+                <div style={{ fontSize: 13, color: TEXT, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{e.name}</div>
+                {e.category && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>{e.category}</div>}
+              </div>
+              <span style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>{e.location}</span>
+              <span>
+                <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 20, fontWeight: 700, background: e.is_available ? "#E6F9F5" : "#FDECF1", color: e.is_available ? "#0D9373" : "#D63563", textTransform: "capitalize" as const }}>
+                  {e.is_available ? "Available" : "Unavailable"}
+                </span>
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#EEF0F4" }}>
+                  <div style={{ width: `${e.utilization ?? 0}%`, height: "100%", borderRadius: 3, background: (e.utilization ?? 0) > 70 ? "#F0A500" : TEAL }} />
+                </div>
+                <span style={{ fontSize: 12, color: TEXT_MID, fontWeight: 600, width: 30, fontFamily: "'Sora', sans-serif" }}>{e.utilization ?? 0}%</span>
+              </div>
+              <button
+                onClick={evt => { evt.stopPropagation(); }}
+                style={{ padding: "6px 16px", borderRadius: 8, border: e.is_available ? `1.5px solid ${TEAL}` : `1px solid ${BORDER}`, background: e.is_available ? TEAL_LIGHT : "#FAFBFC", color: e.is_available ? TEAL_DARK : TEXT_LIGHT, cursor: e.is_available ? "pointer" : "default", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}
+              >
+                {e.is_available ? "Book" : "N/A"}
+              </button>
+            </div>
+          ))
         )}
       </div>
     </div>
   );
 }
+
 
 function EventsView({ events, isAdmin, onEdit, onDelete }: { events: Event[]; isAdmin?: boolean; onEdit?: (e: Event) => void; onDelete?: (id: string) => void; }) {
   return (
@@ -1317,43 +1585,158 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
   const [organisationModal, setOrganisationModal] = useState<Partial<Organisation> | null>(null);
   const [memberList, setMemberList] = useState<Organisation[]>(members);
   const [isOpeningEdit, setIsOpeningEdit] = useState(false);
+
   useEffect(() => { setMemberList(members); }, [members]);
-  const fetchMembers = async () => { const res = await fetch("/api/organisations"); const data = await res.json(); setMemberList(data.organisations || []); };
-  const handleSaveOrganisation = async (payload: Partial<Organisation>) => { const isEdit = !!payload.id; const res = await fetch("/api/organisations", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save organisation"); await fetchMembers(); };
-  const handleDeleteOrganisation = async (id: string) => { const res = await fetch("/api/organisations", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setSelectedMember(null); await fetchMembers(); } };
-  const openEditModal = (member: Organisation) => { setIsOpeningEdit(true); setSelectedMember(null); setTimeout(() => { setOrganisationModal(member); setIsOpeningEdit(false); }, 120); };
+
+  const fetchMembers = async () => {
+    const res = await fetch("/api/organisations");
+    const data = await res.json();
+    setMemberList(data.organisations || []);
+  };
+
+  const handleSaveOrganisation = async (payload: Partial<Organisation>) => {
+    const isEdit = !!payload.id;
+    const res = await fetch("/api/organisations", {
+      method: isEdit ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to save organisation");
+    await fetchMembers();
+  };
+
+  const handleDeleteOrganisation = async (id: string) => {
+    const res = await fetch("/api/organisations", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) { setSelectedMember(null); await fetchMembers(); }
+  };
+
+  const openEditModal = (member: Organisation) => {
+    setIsOpeningEdit(true);
+    setSelectedMember(null);
+    setTimeout(() => {
+      setOrganisationModal(member);
+      setIsOpeningEdit(false);
+    }, 120);
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, position: "relative", isolation: "isolate" }}>
+
+      {/* Map */}
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Network Map</h3>
-          <span style={{ fontSize: 12, color: TEXT_LIGHT }}>OpenStreetMap · {memberList.length} organisations</span>
+          <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{memberList.length} organisations</span>
         </div>
-        <div style={{ position: "relative", zIndex: 1, borderRadius: 16, overflow: "hidden" }}><MemberMap /></div>
+        <div style={{ position: "relative", zIndex: 1, borderRadius: 16, overflow: "hidden" }}>
+          <MemberMap />
+        </div>
       </div>
+
+      {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Organisations</h3>
-        {isAdmin && <button onClick={() => setOrganisationModal({})} style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={14} />Add Organisation</button>}
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
+          Member Organisations
+        </h3>
+        {isAdmin && (
+          <button
+            onClick={() => setOrganisationModal({})}
+            style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <Icon name="plus" size={14} /> Add Organisation
+          </button>
+        )}
       </div>
-      {(!memberList || memberList.length === 0)
-        ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>{[1,2,3,4,5,6].map(i => (<div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />))}</div>
-        : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
-            {memberList.map((m, i) => (
-              <div key={m.id || i} onClick={() => setSelectedMember(m)} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, cursor: "pointer" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{m.name?.charAt(0) || "O"}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</div>
-                    <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}><Icon name="mapPin" size={11} /> {m.location || "No location"}</div>
+
+      {/* Cards */}
+      {(!memberList || memberList.length === 0) ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+          {memberList.map((m, i) => (
+            <div
+              key={m.id || i}
+              onClick={() => setSelectedMember(m)}
+              style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, cursor: "pointer", transition: "box-shadow 0.15s ease" }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = SHADOW_HOVER)}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = SHADOW)}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                {/* Avatar */}
+                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                  {m.name?.charAt(0) || "O"}
+                </div>
+
+                {/* Name + location */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>{m.name}</div>
+                  <div style={{ fontSize: 12, color: TEXT_LIGHT, display: "flex", alignItems: "center", gap: 4, marginTop: 1, fontFamily: "'DM Sans', sans-serif" }}>
+                    <Icon name="mapPin" size={11} /> {m.location || "No location"}
                   </div>
                 </div>
-                <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700 }}>{m.org_type || "Organisation"}</span>
+
+                {/* Admin action buttons — edit + delete */}
+                {isAdmin && (
+                  <div style={{ display: "flex", gap: 5, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => openEditModal(m)}
+                      title="Edit organisation"
+                      style={{ background: "#F3F5F8", border: "none", borderRadius: 7, padding: "5px 7px", cursor: "pointer", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Icon name="edit" size={13} />
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Delete ${m.name}?`)) handleDeleteOrganisation(m.id!); }}
+                      title="Delete organisation"
+                      style={{ background: "#FDECF1", border: "none", borderRadius: 7, padding: "5px 7px", cursor: "pointer", color: "#D63563", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Icon name="trash" size={13} />
+                    </button>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-      }
-      {selectedMember && !isOpeningEdit && <MemberDrawer member={selectedMember} isAdmin={isAdmin} onClose={() => setSelectedMember(null)} onEdit={openEditModal} onDelete={handleDeleteOrganisation} />}
-      {organisationModal && <OrganisationModal organisation={organisationModal} onClose={() => { setOrganisationModal(null); setIsOpeningEdit(false); }} onSave={async payload => { await handleSaveOrganisation(payload); setOrganisationModal(null); setIsOpeningEdit(false); }} />}
+
+              {/* Type badge */}
+              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 14, background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
+                {m.org_type || "Organisation"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Member detail drawer */}
+      {selectedMember && !isOpeningEdit && (
+        <MemberDrawer
+          member={selectedMember}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedMember(null)}
+          onEdit={openEditModal}
+          onDelete={handleDeleteOrganisation}
+        />
+      )}
+
+      {/* Add / Edit organisation modal */}
+      {organisationModal !== null && (
+        <OrganisationModal
+          organisation={organisationModal}
+          onClose={() => { setOrganisationModal(null); setIsOpeningEdit(false); }}
+          onSave={async payload => {
+            await handleSaveOrganisation(payload);
+            setOrganisationModal(null);
+            setIsOpeningEdit(false);
+          }}
+        />
+      )}
     </div>
   );
 }

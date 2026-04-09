@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 const getClient = () =>
@@ -8,12 +8,24 @@ const getClient = () =>
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-export async function GET() {
-  const { data, error } = await getClient()
+// GET /api/admin/knowledge
+// - No params        → returns all documents (used to build docCounts on mount)
+// - ?category=X      → returns only documents in that category (used when opening a category)
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const category = searchParams.get("category");
+
+  let query = getClient()
     .from("knowledge_documents")
     .select("*")
-    .eq("is_public", true)
     .order("created_at", { ascending: false });
+
+  // Apply category filter only when provided
+  if (category) {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -22,10 +34,10 @@ export async function GET() {
   return NextResponse.json({ documents: data });
 }
 
+// POST /api/admin/knowledge — add a document
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
     const payload = {
       title: body.title?.trim(),
       category: body.category?.trim(),
@@ -59,6 +71,7 @@ export async function POST(request: Request) {
   }
 }
 
+// DELETE /api/admin/knowledge — remove a document by id
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json();

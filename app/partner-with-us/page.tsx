@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -34,23 +35,37 @@ export default function PartnerWithUs() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                tier: "Community Partner", icon: "fa-users", desc: "Join our broader network and stay connected to the bioERGOtech ecosystem.",
+                tier: "Community Partner",
+                icon: "fa-users",
+                desc: "Join our broader network and stay connected to the bioERGOtech ecosystem.",
                 items: ["Access to ecosystem events and publications", "Newsletter and knowledge sharing", "Visibility in our partner directory", "Informal collaboration opportunities"],
-                cta: "community partnership",
+                partnershipType: "community_partner",
               },
               {
-                tier: "Project Partner", icon: "fa-project-diagram", desc: "Collaborate on specific research or innovation projects with defined scope and outcomes.",
+                tier: "Project Partner",
+                icon: "fa-project-diagram",
+                desc: "Collaborate on specific research or innovation projects with defined scope and outcomes.",
                 items: ["Co-development of research projects", "Access to shared infrastructure and datasets", "Joint IP arrangements", "Co-authorship on publications and reports", "Regular project reviews and milestone tracking"],
-                cta: "project partnership",
+                partnershipType: "project_partner",
                 featured: true,
               },
               {
-                tier: "Strategic Partner", icon: "fa-handshake", desc: "Enter into a deep, long-term relationship co-shaping bioERGOtech's strategic direction.",
+                tier: "Strategic Partner",
+                icon: "fa-handshake",
+                desc: "Enter into a deep, long-term relationship co-shaping bioERGOtech's strategic direction.",
                 items: ["All Project Partner benefits", "Advisory role in foundation governance", "Priority access to portfolio companies", "Co-branding on flagship initiatives", "Joint funding applications", "Dedicated partnership manager"],
-                cta: "strategic partnership",
+                partnershipType: "strategic_partner",
               },
             ].map((t) => (
-              <div key={t.tier} className="card" style={t.featured ? { borderTop: "4px solid var(--primary)", boxShadow: "0 8px 30px rgba(19,214,176,0.15)" } : { borderTop: "4px solid var(--primary)" }}>
+              <div
+                key={t.tier}
+                className="card"
+                style={
+                  t.featured
+                    ? { borderTop: "4px solid var(--primary)", boxShadow: "0 8px 30px rgba(19,214,176,0.15)" }
+                    : { borderTop: "4px solid var(--primary)" }
+                }
+              >
                 <div className="text-center mb-4">
                   <i className={`fas ${t.icon} text-3xl`} style={{ color: "var(--primary)" }} />
                 </div>
@@ -64,10 +79,15 @@ export default function PartnerWithUs() {
                     </li>
                   ))}
                 </ul>
+                {/* FIX: replaced mailto "Explore" links with Join Us page links */}
                 <div className="text-center">
-                  <a href={`mailto:partners@bioergotech.org?subject=Interested%20in%20${encodeURIComponent(t.tier)}`} className="btn-primary">
-                    Explore {t.cta}
-                  </a>
+                  <Link
+                    href={`/join-us`}
+                    className="btn-primary"
+                    style={{ textDecoration: "none" }}
+                  >
+                    Apply to Join Us
+                  </Link>
                 </div>
               </div>
             ))}
@@ -98,12 +118,28 @@ export default function PartnerWithUs() {
         </div>
       </section>
 
-      {/* What We Bring */}
+      {/* What We Bring — FIX: try webp, fall back to jpg if missing */}
       <section className="section" id="what-we-bring">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
-              <img src="/assets/images/Partner-With-Us/Partnership.webp" alt="Partnership" className="rounded-lg shadow-xl w-full max-w-md" />
+              <picture>
+                <source srcSet="/assets/images/Partner-With-Us/Partnership.webp" type="image/webp" />
+                <img
+                  src="/assets/images/Partner-With-Us/Partnership.jpg"
+                  alt="Partnership"
+                  className="rounded-lg shadow-xl w-full max-w-md"
+                  onError={(e) => {
+                    // If both fail, show a branded placeholder
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = "none";
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div style="width:100%;max-width:448px;height:320px;background:linear-gradient(135deg,#E8F8F6,#B2E8E2);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#2EC4B6;font-size:48px;"><i class='fas fa-handshake'></i></div>`;
+                    }
+                  }}
+                />
+              </picture>
             </div>
             <div>
               <h2 className="section-title">What We Bring to Partnerships</h2>
@@ -147,14 +183,21 @@ export default function PartnerWithUs() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — links to Join Us */}
       <section className="section text-center">
         <div className="container mx-auto px-6">
-          <h2 className="section-title block">Start a Conversation</h2>
+          <h2 className="section-title block">Ready to Join the Ecosystem?</h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
-            Tell us about your organization and the challenges you&apos;re working on. We&apos;ll explore how a partnership could create shared value.
+            Tell us about your organization and the challenges you&apos;re working on. Apply through our Join Us form and we&apos;ll explore how a partnership could create shared value.
           </p>
-          <a href="mailto:partners@bioergotech.org" className="btn-primary">Contact Our Partnerships Team</a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/join-us" className="btn-primary" style={{ textDecoration: "none" }}>
+              Apply to Join Us
+            </Link>
+            <a href="mailto:partners@bioergotech.org" className="btn-outline">
+              Contact Our Partnerships Team
+            </a>
+          </div>
         </div>
       </section>
 

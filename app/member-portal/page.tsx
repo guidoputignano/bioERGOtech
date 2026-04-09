@@ -16,16 +16,13 @@ export const metadata: Metadata = {
 export default async function MemberPortal() {
   const supabase = await createClient();
 
-  // ── Use getUser() for a fresh server-side auth check (never cached) ────────
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  // ── Not logged in: show auth landing page ──────────────────────────────────
   if (!user || authError) {
     return (
       <>
         <Navbar />
         <div style={{ paddingTop: "70px" }}>
-          {/* Hero */}
           <section className="bg-light-gray" style={{ padding: "60px 0 40px" }}>
             <div className="container mx-auto px-6 text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800">
@@ -38,11 +35,7 @@ export default async function MemberPortal() {
             </div>
           </section>
 
-          {/* Auth Section */}
-          <section
-            className="section"
-            style={{ paddingTop: "60px", paddingBottom: "60px" }}
-          >
+          <section className="section" style={{ paddingTop: "60px", paddingBottom: "60px" }}>
             <div className="max-w-md mx-auto px-6">
               <div className="card">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
@@ -51,7 +44,6 @@ export default async function MemberPortal() {
                 <p className="text-gray-600 mb-8 text-center">
                   Sign in to access your portal dashboard.
                 </p>
-
                 <div className="flex flex-col gap-4">
                   <Link
                     href="/auth/login"
@@ -60,13 +52,11 @@ export default async function MemberPortal() {
                   >
                     <i className="fas fa-sign-in-alt mr-2" /> Sign In
                   </Link>
-
                   <div className="flex items-center gap-3 my-2">
                     <div className="flex-1 h-px bg-gray-200" />
                     <span className="text-sm text-gray-500">or</span>
                     <div className="flex-1 h-px bg-gray-200" />
                   </div>
-
                   <Link
                     href="/auth/sign-up"
                     className="btn-outline text-center w-full block"
@@ -75,18 +65,13 @@ export default async function MemberPortal() {
                     <i className="fas fa-user-plus mr-2" /> Join the Ecosystem
                   </Link>
                 </div>
-
                 <p className="text-center text-sm text-gray-500 mt-6">
-                  <Link
-                    href="/auth/forgot-password"
-                    style={{ color: "var(--primary)" }}
-                  >
+                  <Link href="/auth/forgot-password" style={{ color: "var(--primary)" }}>
                     Forgot your password?
                   </Link>
                 </p>
               </div>
 
-              {/* Benefits teaser */}
               <div className="mt-10">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
                   What members get access to
@@ -100,10 +85,7 @@ export default async function MemberPortal() {
                     { icon: "fa-book", label: "Knowledge base and resources" },
                   ].map((b) => (
                     <div key={b.label} className="flex items-center gap-3 text-gray-700">
-                      <i
-                        className={`fas ${b.icon}`}
-                        style={{ color: "var(--primary)", width: "20px" }}
-                      />
+                      <i className={`fas ${b.icon}`} style={{ color: "var(--primary)", width: "20px" }} />
                       <span>{b.label}</span>
                     </div>
                   ))}
@@ -117,30 +99,24 @@ export default async function MemberPortal() {
     );
   }
 
-  // ── Logged in: fetch profile fresh from database (never from JWT cache) ─────
   const { data: profile, error: profileError } = await supabase
-  .from("profiles")
-  .select("full_name, partnership_level, organisation_name")
-  .eq("id", user.id)
-  .single();
+    .from("profiles")
+    .select("full_name, partnership_level, organisation_name")
+    .eq("id", user.id)
+    .single();
 
-console.log("USER ID:", user.id);
-console.log("PROFILE:", profile);
-console.log("PROFILE ERROR:", profileError);
+  console.log("USER ID:", user.id);
+  console.log("PROFILE:", profile);
+  console.log("PROFILE ERROR:", profileError);
 
-  // Always trust the database value — never the JWT
+  // FIX: new users now default to "member" instead of "viewer"
+  // so they immediately have access to events and the member network
   const partnershipLevel: PartnershipLevel =
-    (profile?.partnership_level as PartnershipLevel) ?? "viewer";
+    (profile?.partnership_level as PartnershipLevel) ?? "member";
 
-  // Build initials from full name or email
   const fullName = profile?.full_name || "";
   const initials = fullName
-    ? fullName
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+    ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user.email!.slice(0, 2).toUpperCase();
 
   const portalUser: PortalUser = {
@@ -152,6 +128,5 @@ console.log("PROFILE ERROR:", profileError);
     display_name: fullName || profile?.organisation_name || user.email!,
   };
 
-  // ── Render the full portal ──────────────────────────────────────────────────
   return <BioERGOtechPortal user={portalUser} />;
 }

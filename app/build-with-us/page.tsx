@@ -30,7 +30,19 @@ export default function BuildWithUs() {
               <a href="mailto:build@bioergotech.org" className="btn-primary text-center">Apply Now</a>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
-              <img src="/assets/images/Build-with-us/Build_with_us.webp" alt="Build With Us" className="rounded-lg shadow-xl w-full max-w-md" />
+              <div className="order-1 md:order-2 flex justify-center">
+  <div style={{ width: "100%", maxWidth: "520px" }}>
+    <div className="order-1 md:order-2 flex justify-center">
+  <div style={{ width: "100%", maxWidth: "520px" }}>
+    <img
+      src="/assets/images/Build-with-us/Build_with_us.webp"
+      alt="Build With Us"
+      className="rounded-lg shadow-xl w-full object-cover"
+    />
+  </div>
+</div>
+  </div>
+</div>
             </div>
           </div>
         </div>
