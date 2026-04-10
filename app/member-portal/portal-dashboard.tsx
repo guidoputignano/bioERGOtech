@@ -1532,7 +1532,20 @@ function OrganisationModal({ organisation, onClose, onSave }: { organisation: Pa
         <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
           {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
           <div><label style={modalLabelStyle}>Organisation Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Organisation Type</label><input value={form.org_type} onChange={e => setForm(p => ({ ...p, org_type: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Organisation Type</label>
+  <select value={form.org_type} onChange={e => setForm(p => ({ ...p, org_type: e.target.value }))} style={modalInputStyle}>
+    <option value="">Select a type…</option>
+    <option value="foundation">Foundation</option>
+    <option value="university">University / Research Institute</option>
+    <option value="startup">Startup</option>
+    <option value="sme">SME / Company</option>
+    <option value="hospital">Hospital / Clinic</option>
+    <option value="clinical_center">Clinical Center</option>
+    <option value="investor">Investor / VC</option>
+    <option value="international_partner">International Partner</option>
+    <option value="other">Other</option>
+  </select>
+</div>
           <div><label style={modalLabelStyle}>Location</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={modalInputStyle} /></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={modalLabelStyle}>Country</label><input value={form.country} onChange={e => setForm(p => ({ ...p, country: e.target.value }))} style={modalInputStyle} /></div>
