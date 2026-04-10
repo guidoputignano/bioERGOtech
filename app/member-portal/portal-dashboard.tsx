@@ -620,7 +620,6 @@ function DashboardView({
             <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{h.city}</div>
             <div style={{ fontSize: 12, color: TEXT_LIGHT, marginBottom: 6 }}>{h.country}</div>
             <div style={{ fontSize: 12, color: h.color, fontWeight: 600 }}>{h.role}</div>
-            <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 4 }}>{h.count} organization{h.count > 1 ? "s" : ""}</div>
           </div>
         ))}
       </div>
@@ -814,6 +813,7 @@ function ProjectsView({
   currentUserId,
   onEdit,
   onDelete,
+  onAddProject,
   onSaveProjectDetails,
 }: {
   projects: Project[];
@@ -822,6 +822,7 @@ function ProjectsView({
   currentUserId: string;
   onEdit?: (p: Project) => void;
   onDelete?: (id: string) => void;
+   onAddProject?: () => void;
   onSaveProjectDetails: (payload: Partial<Project>) => Promise<void>;
 }) {
   const pillars = ["All", "Digital Twin", "Synthetic Biology", "Biomanufacturing", "Multi-Omics"];
@@ -899,19 +900,20 @@ function ProjectsView({
           </div>
 
           {canCreateProjects && (
-            <div
-              style={{
-                fontSize: 12,
-                color: TEXT_LIGHT,
-                padding: "8px 12px",
-                borderRadius: 10,
-                background: "#F7F9FC",
-                border: `1px solid ${BORDER}`,
-              }}
-            >
-              You can manage projects you created.
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ fontSize: 12, color: TEXT_LIGHT, padding: "8px 12px", borderRadius: 10, background: "#F7F9FC", border: `1px solid ${BORDER}` }}>
+                You can manage projects you created.
             </div>
-          )}
+            {!isAdmin && (
+              <button
+                onClick={() => onAddProject?.()}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap" as const }}
+              >
+                <Icon name="plus" size={14} /> Add Project
+              </button>
+            )}
+  </div>
+)}
         </div>
 
         <div
@@ -2725,6 +2727,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [approvedEquipmentCount, setApprovedEquipmentCount] = useState(0);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [addingProject, setAddingProject] = useState(false);
 
   const fetchProjects = () => fetch("/api/projects").then(r => r.json()).then(d => setProjects(d.projects || []));
   const fetchEvents = () => fetch("/api/events").then(r => r.json()).then(d => setEvents(d.events || []));
@@ -2778,11 +2781,29 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                   onSave={handleSaveProjectInline}
                 />
               )}
+              {addingProject && (
+                <ProjectModal
+                  project={null}
+                  onClose={() => setAddingProject(false)}
+                  onSave={async (project) => {
+                    const res = await fetch("/api/projects", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ...project, created_by: user.sub }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Failed to create project");
+                    setAddingProject(false);
+                    fetchProjects();
+                  }}
+                />
+              )}
               <ProjectsView
                 projects={projects}
                 isAdmin={isAdmin}
                 canCreateProjects={canCreateProjects}
                 currentUserId={user.sub}
+                onAddProject={() => setAddingProject(true)}
                 onEdit={(p) => setEditingProject(p)}
                 onDelete={async (id) => {
                   await fetch("/api/admin/projects", {
