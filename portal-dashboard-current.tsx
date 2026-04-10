@@ -80,7 +80,7 @@ type Organisation = { id?: string; name: string; org_type: string; location: str
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
 type EquipmentProposal = { id: string; name: string; category?: string; location: string; description?: string; proposed_by_email?: string; proposed_by_name?: string; contact_email?: string | null; contact_phone?: string | null; image_url?: string | null; status: string; admin_notes?: string; reviewed_at?: string; created_at: string; is_available?: boolean; utilization?: number; cost_savings_text?: string | null; bookings_count?: number; };
 type LabStats = { utilization_text: string; utilization_sub: string; cost_savings_text: string; cost_savings_sub: string; bookings_text: string; bookings_sub: string; };
-type KnowledgeDocument = { id: string; title: string; category: string; description?: string; url?: string; doc_type?: string; is_public?: boolean; added_by?: string; created_at: string; is_approved?: boolean; proposed_by?: string | null; proposed_by_name?: string | null; };
+type KnowledgeDocument = { id: string; title: string; category: string; description?: string; url?: string; doc_type?: string; is_public?: boolean; added_by?: string; created_at: string; };
 
 export type PartnershipLevel = "viewer" | "member" | "partner" | "admin";
 
@@ -141,7 +141,6 @@ const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
     chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
     clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
     x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-    fileText: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
     inbox: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>,
     mail: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
@@ -1758,17 +1757,13 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
 }
 
 // ─── KNOWLEDGE VIEW ───────────────────────────────────────────────────────────
-
-// ─── KNOWLEDGE VIEW (with Propose Document for members/partners) ───────────────
-function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: boolean; currentUserId?: string; currentUserName?: string }) {
+function KnowledgeView({ isAdmin }: { isAdmin?: boolean }) {
   const [docCounts, setDocCounts] = useState<Record<string, number>>({});
   const [selectedCategory, setSelectedCategory] = useState<typeof KNOWLEDGE_CATEGORIES[0] | null>(null);
   const [categoryDocs, setCategoryDocs] = useState<KnowledgeDocument[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [addingDoc, setAddingDoc] = useState(false);
-  const [proposingDoc, setProposingDoc] = useState(false);
   const [newDoc, setNewDoc] = useState({ title: "", description: "", url: "" });
-  const [proposalDoc, setProposalDoc] = useState({ title: "", description: "", url: "" });
   const [savingDoc, setSavingDoc] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -1781,87 +1776,44 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
   }, []);
 
   const openCategory = async (cat: typeof KNOWLEDGE_CATEGORIES[0]) => {
-    setSelectedCategory(cat); setLoadingDocs(true); setAddingDoc(false); setProposingDoc(false);
+    setSelectedCategory(cat); setLoadingDocs(true); setAddingDoc(false);
     try { const res = await fetch(`/api/admin/knowledge?category=${encodeURIComponent(cat.name)}`); const data = await res.json(); setCategoryDocs(data.documents || []); }
     catch { setCategoryDocs([]); }
     finally { setLoadingDocs(false); }
   };
-
   const handleAddDoc = async () => {
     if (!newDoc.title.trim() || !selectedCategory) return;
     setSavingDoc(true);
     try {
-      const res = await fetch("/api/admin/knowledge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newDoc.title, description: newDoc.description, url: newDoc.url, category: selectedCategory.name, doc_type: "link", is_public: true, is_admin_add: true }) });
+      const res = await fetch("/api/admin/knowledge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newDoc.title, description: newDoc.description, url: newDoc.url, category: selectedCategory.name, doc_type: "link", is_public: true }) });
       const data = await res.json();
       if (res.ok) { setCategoryDocs(prev => [data.document, ...prev]); setDocCounts(prev => ({ ...prev, [selectedCategory.name]: (prev[selectedCategory.name] || 0) + 1 })); setNewDoc({ title: "", description: "", url: "" }); setAddingDoc(false); }
     } catch {} finally { setSavingDoc(false); }
   };
-
-  const handleProposeDoc = async () => {
-    if (!proposalDoc.title.trim() || !selectedCategory) return;
-    setSavingDoc(true);
-    try {
-      const res = await fetch("/api/admin/knowledge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: proposalDoc.title,
-          description: proposalDoc.description,
-          url: proposalDoc.url,
-          category: selectedCategory.name,
-          doc_type: "link",
-          is_public: true,
-          is_admin_add: false,
-          proposed_by: currentUserId,
-          proposed_by_name: currentUserName,
-        }),
-      });
-      if (res.ok) {
-        setProposingDoc(false);
-        setProposalDoc({ title: "", description: "", url: "" });
-        alert("Your proposal has been submitted for admin review. It will appear publicly once approved.");
-      }
-    } catch {} finally { setSavingDoc(false); }
-  };
-
   const handleDeleteDoc = async (id: string, category: string) => {
     if (!confirm("Delete this document?")) return;
     const res = await fetch("/api/admin/knowledge", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
     if (res.ok) { setCategoryDocs(prev => prev.filter(d => d.id !== id)); setDocCounts(prev => ({ ...prev, [category]: Math.max(0, (prev[category] || 1) - 1) })); }
   };
-
   const filteredDocs = categoryDocs.filter(d => [d.title, d.description].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
 
   if (selectedCategory) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* Header row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => { setSelectedCategory(null); setSearch(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}><Icon name="chevronLeft" size={16} /> Back</button>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: selectedCategory.bg, color: selectedCategory.color, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={selectedCategory.icon} size={18} /></div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{selectedCategory.name}</div>
-                <div style={{ fontSize: 12, color: TEXT_LIGHT }}>{docCounts[selectedCategory.name] || 0} documents</div>
-              </div>
+              <div><div style={{ fontSize: 18, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{selectedCategory.name}</div><div style={{ fontSize: 12, color: TEXT_LIGHT }}>{docCounts[selectedCategory.name] || 0} documents</div></div>
             </div>
           </div>
-          {/* Admin sees Add, members/partners see Propose */}
-          {isAdmin ? (
-            <button onClick={() => { setAddingDoc(true); setProposingDoc(false); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}><Icon name="plus" size={14} /> Add Document</button>
-          ) : (
-            <button onClick={() => { setProposingDoc(true); setAddingDoc(false); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}><Icon name="plus" size={14} /> Propose Document</button>
-          )}
+          {isAdmin && <button onClick={() => setAddingDoc(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}><Icon name="plus" size={14} /> Add Document</button>}
         </div>
-
-        {/* Search */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
           <input placeholder={`Search ${selectedCategory.name}…`} value={search} onChange={e => setSearch(e.target.value)} style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }} />
         </div>
-
-        {/* Admin add form */}
         {addingDoc && isAdmin && (
           <div style={{ background: CARD, border: `1.5px solid ${TEAL_MUTED}`, borderRadius: 16, padding: 24, boxShadow: SHADOW }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16, fontFamily: "'Sora', sans-serif" }}>Add Document to {selectedCategory.name}</div>
@@ -1876,28 +1828,6 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
             </div>
           </div>
         )}
-
-        {/* Member/partner propose form */}
-        {proposingDoc && !isAdmin && (
-          <div style={{ background: CARD, border: `1.5px solid ${TEAL_MUTED}`, borderRadius: 16, padding: 24, boxShadow: SHADOW }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 4, fontFamily: "'Sora', sans-serif" }}>Propose a Document</div>
-            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginBottom: 16 }}>Your proposal will be reviewed by an admin before appearing publicly.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div><label style={modalLabelStyle}>Title *</label><input value={proposalDoc.title} onChange={e => setProposalDoc(p => ({ ...p, title: e.target.value }))} placeholder="Document title" style={modalInputStyle} /></div>
-              <div><label style={modalLabelStyle}>Description</label><input value={proposalDoc.description} onChange={e => setProposalDoc(p => ({ ...p, description: e.target.value }))} placeholder="Brief description" style={modalInputStyle} /></div>
-              <div><label style={modalLabelStyle}>URL (optional)</label><input value={proposalDoc.url} onChange={e => setProposalDoc(p => ({ ...p, url: e.target.value }))} placeholder="https://drive.google.com/..." style={modalInputStyle} /></div>
-              <div style={{ padding: "10px 14px", borderRadius: 10, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, fontSize: 12, color: TEAL_DARK }}>
-                Your proposal will appear after admin approval.
-              </div>
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button onClick={() => { setProposingDoc(false); setProposalDoc({ title: "", description: "", url: "" }); }} style={{ padding: "9px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                <button onClick={handleProposeDoc} disabled={savingDoc || !proposalDoc.title.trim()} style={{ padding: "9px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: savingDoc ? "default" : "pointer", opacity: savingDoc ? 0.7 : 1 }}>{savingDoc ? "Submitting…" : "Submit Proposal"}</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Document list */}
         {loadingDocs ? (
           <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
         ) : filteredDocs.length === 0 ? (
@@ -1905,7 +1835,6 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
             <div style={{ color: "#E8EDF3", marginBottom: 12 }}><Icon name="book" size={48} /></div>
             <div style={{ fontSize: 15, fontWeight: 600, color: TEXT_MID, fontFamily: "'Sora', sans-serif" }}>No documents yet</div>
             {isAdmin && <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 4 }}>Click "Add Document" to add the first document to this category.</div>}
-            {!isAdmin && <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 4 }}>Click "Propose Document" to suggest a resource for this category.</div>}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1926,7 +1855,6 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
     );
   }
 
-  // Category grid view
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
@@ -1950,9 +1878,8 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
   );
 }
 
-
 // ─── ADMIN TYPES ──────────────────────────────────────────────────────────────
-type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; organisation_id?: string | null; };
+type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; };
 type Application = { id: string; email: string; full_name?: string; contact_role?: string; organisation_name?: string; organisation_type?: string; organisation_website?: string; country?: string; city?: string; areas_of_interest?: string[]; what_you_bring?: string; what_you_seek?: string; application_status: string; applied_at?: string; reviewed_at?: string; partnership_type?: string; admin_notes?: string; partnership_level: PartnershipLevel; };
 const ORG_TYPE_LABELS: Record<string, string> = { startup: "Startup", sme: "SME / Company", hospital: "Hospital / Clinic", university: "University / Research Institute", investor: "Investor / VC", international_partner: "International Partner", other: "Other" };
 const PARTNERSHIP_TYPE_LABELS: Record<string, string> = {
@@ -2460,10 +2387,8 @@ function ApplicationDrawer({
 }
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
-
-// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "newsletter">("applications");
+  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "newsletter">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -2472,7 +2397,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [allOrgs, setAllOrgs] = useState<{ id: string; name: string }[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loadingNewsletter, setLoadingNewsletter] = useState(true);
   const [adminEvents, setAdminEvents] = useState<Event[]>([]);
@@ -2484,16 +2408,12 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const [proposals, setProposals] = useState<EquipmentProposal[]>([]);
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [reviewingProposal, setReviewingProposal] = useState<string | null>(null);
-  // Knowledge docs (approved)
   const [knowledgeDocs, setKnowledgeDocs] = useState<KnowledgeDocument[]>([]);
   const [loadingKnowledge, setLoadingKnowledge] = useState(true);
   const [knowledgeFilter, setKnowledgeFilter] = useState("All");
   const [addingKnowledgeDoc, setAddingKnowledgeDoc] = useState(false);
   const [newKnowledgeDoc, setNewKnowledgeDoc] = useState({ title: "", description: "", url: "", category: KNOWLEDGE_CATEGORIES[0].name });
   const [savingKnowledgeDoc, setSavingKnowledgeDoc] = useState(false);
-  // Pending document proposals
-  const [pendingDocs, setPendingDocs] = useState<KnowledgeDocument[]>([]);
-  const [loadingPendingDocs, setLoadingPendingDocs] = useState(true);
 
   useEffect(() => {
     setLoadingApps(true);
@@ -2501,17 +2421,12 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   }, [appFilter]);
 
   useEffect(() => {
-    if (tab === "users") {
-      setLoadingUsers(true);
-      fetch("/api/admin/users").then(r => r.json()).then(d => { setUsers(d.users || []); setLoadingUsers(false); }).catch(() => setLoadingUsers(false));
-      fetch("/api/organisations").then(r => r.json()).then(d => setAllOrgs(d.organisations || [])).catch(() => {});
-    }
+    if (tab === "users") { setLoadingUsers(true); fetch("/api/admin/users").then(r => r.json()).then(d => { setUsers(d.users || []); setLoadingUsers(false); }).catch(() => setLoadingUsers(false)); }
     if (tab === "newsletter") { setLoadingNewsletter(true); fetch("/api/admin/newsletter").then(r => r.json()).then(d => { setSubscribers(d.subscribers || []); setLoadingNewsletter(false); }).catch(() => setLoadingNewsletter(false)); }
     if (tab === "events") { setLoadingEvents(true); fetch("/api/admin/events").then(r => r.json()).then(d => { setAdminEvents(d.events || []); setLoadingEvents(false); }).catch(() => setLoadingEvents(false)); }
     if (tab === "projects") { setLoadingProjects(true); fetch("/api/admin/projects").then(r => r.json()).then(d => { setAdminProjects(d.projects || []); setLoadingProjects(false); }).catch(() => setLoadingProjects(false)); }
     if (tab === "equipment") { setLoadingProposals(true); fetch("/api/admin/equipment").then(r => r.json()).then(d => { setProposals(d.proposals || []); setLoadingProposals(false); }).catch(() => setLoadingProposals(false)); }
     if (tab === "knowledge") { setLoadingKnowledge(true); fetch("/api/admin/knowledge").then(r => r.json()).then(d => { setKnowledgeDocs(d.documents || []); setLoadingKnowledge(false); }).catch(() => setLoadingKnowledge(false)); }
-    if (tab === "pending_docs") { setLoadingPendingDocs(true); fetch("/api/admin/knowledge?pending=true").then(r => r.json()).then(d => { setPendingDocs(d.documents || []); setLoadingPendingDocs(false); }).catch(() => setLoadingPendingDocs(false)); }
   }, [tab]);
 
   const handleAction = async (id: string, action: "approve" | "decline", notes: string, level: PartnershipLevel) => {
@@ -2522,58 +2437,28 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
       else { setActionMessage({ type: "error", text: data.error || "Failed." }); }
     } catch { setActionMessage({ type: "error", text: "Network error." }); }
   };
-
-  const updateLevel = async (userId: string, level: PartnershipLevel) => {
-    setSaving(userId);
-    try { const res = await fetch("/api/admin/set-partnership", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, partnershipLevel: level }) }); if (res.ok) setUsers(prev => prev.map(u => u.id === userId ? { ...u, partnership_level: level } : u)); } finally { setSaving(null); }
-  };
-
-  const updateUserOrg = async (userId: string, orgId: string | null) => {
-    const res = await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, organisation_id: orgId }) });
-    if (res.ok) setUsers(prev => prev.map(u => u.id === userId ? { ...u, organisation_id: orgId } : u));
-  };
-
+  const updateLevel = async (userId: string, level: PartnershipLevel) => { setSaving(userId); try { const res = await fetch("/api/admin/set-partnership", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId, partnershipLevel: level }) }); if (res.ok) setUsers(prev => prev.map(u => u.id === userId ? { ...u, partnership_level: level } : u)); } finally { setSaving(null); } };
   const handleSaveEvent = async (event: Partial<Event>) => { const isEdit = !!event.id; const res = await fetch("/api/admin/events", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminEvents(prev => prev.map(e => e.id === event.id ? data.event : e)); else setAdminEvents(prev => [data.event, ...prev]); onEventsChanged?.(); };
   const handleDeleteEvent = async (id: string) => { const res = await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminEvents(prev => prev.filter(e => e.id !== id)); onEventsChanged?.(); } };
   const handleSaveProject = async (project: Partial<Project>) => { const isEdit = !!project.id; const res = await fetch("/api/admin/projects", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminProjects(prev => prev.map(p => p.id === project.id ? data.project : p)); else setAdminProjects(prev => [data.project, ...prev]); onProjectsChanged?.(); };
   const handleDeleteProject = async (id: string) => { const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); } };
   const handleReviewProposal = async (id: string, status: "approved" | "rejected") => { setReviewingProposal(id); try { const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: "" }) }); const data = await res.json(); if (res.ok) setProposals(prev => prev.map(p => p.id === id ? data.proposal : p)); } finally { setReviewingProposal(null); } };
   const handleDeleteProposal = async (id: string) => { const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) setProposals(prev => prev.filter(p => p.id !== id)); };
-
   const handleAddKnowledgeDoc = async () => {
     if (!newKnowledgeDoc.title.trim()) return;
     setSavingKnowledgeDoc(true);
     try {
-      const res = await fetch("/api/admin/knowledge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...newKnowledgeDoc, doc_type: "link", is_public: true, is_admin_add: true }) });
+      const res = await fetch("/api/admin/knowledge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...newKnowledgeDoc, doc_type: "link", is_public: true }) });
       const data = await res.json();
       if (res.ok) { setKnowledgeDocs(prev => [data.document, ...prev]); setNewKnowledgeDoc({ title: "", description: "", url: "", category: KNOWLEDGE_CATEGORIES[0].name }); setAddingKnowledgeDoc(false); }
     } catch {} finally { setSavingKnowledgeDoc(false); }
   };
-
-  const handleDeleteKnowledgeDoc = async (id: string) => {
-    if (!confirm("Delete this document?")) return;
-    const res = await fetch("/api/admin/knowledge", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) setKnowledgeDocs(prev => prev.filter(d => d.id !== id));
-  };
-
-  const handleApproveDoc = async (id: string) => {
-    const res = await fetch("/api/admin/knowledge", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, is_approved: true }) });
-    if (res.ok) { setPendingDocs(prev => prev.filter(d => d.id !== id)); }
-  };
-
-  const handleRejectDoc = async (id: string) => {
-    if (!confirm("Reject and delete this proposal?")) return;
-    const res = await fetch("/api/admin/knowledge", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) setPendingDocs(prev => prev.filter(d => d.id !== id));
-  };
-
+  const handleDeleteKnowledgeDoc = async (id: string) => { if (!confirm("Delete this document?")) return; const res = await fetch("/api/admin/knowledge", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) setKnowledgeDocs(prev => prev.filter(d => d.id !== id)); };
   const exportCSV = () => { const csv = ["Name,Email,Source,Date"].concat(subscribers.map(s => `"${s.full_name || ""}","${s.email}","${s.source}","${new Date(s.subscribed_at).toLocaleDateString("en-GB")}"`)).join("\n"); const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `bioergotech-newsletter-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url); };
 
   const pendingCount = applications.filter(a => a.application_status === "pending").length;
   const pendingProposals = proposals.filter(p => p.status === "pending").length;
   const filteredKnowledgeDocs = knowledgeFilter === "All" ? knowledgeDocs : knowledgeDocs.filter(d => d.category === knowledgeFilter);
-  const btnBase: React.CSSProperties = { border: "none", borderRadius: 7, padding: "6px 8px", cursor: "pointer" };
-
   const tabs = [
     { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null as number | null },
     { id: "users" as const, label: "Users", icon: "users", badge: null as number | null },
@@ -2581,35 +2466,30 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     { id: "projects" as const, label: "Projects", icon: "layers", badge: null as number | null },
     { id: "equipment" as const, label: "Equipment", icon: "cpu", badge: pendingProposals > 0 ? pendingProposals : null as number | null },
     { id: "knowledge" as const, label: "Knowledge", icon: "book", badge: null as number | null },
-    { id: "pending_docs" as const, label: "Doc Proposals", icon: "fileText", badge: pendingDocs.length > 0 ? pendingDocs.length : null as number | null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null as number | null },
   ];
+  const btnBase: React.CSSProperties = { border: "none", borderRadius: 7, padding: "6px 8px", cursor: "pointer" };
 
   return (
     <>
       {selectedApp && <ApplicationDrawer app={selectedApp} onClose={() => setSelectedApp(null)} onAction={handleAction} />}
       {eventModal.open && <EventModal event={eventModal.event} onClose={() => setEventModal({ open: false, event: null })} onSave={handleSaveEvent} />}
       {projectModal.open && <ProjectModal project={projectModal.project} onClose={() => setProjectModal({ open: false, project: null })} onSave={handleSaveProject} />}
-
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ background: "#FDECF1", border: "1px solid #F9C3CE", borderRadius: 14, padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ color: "#E74C6F" }}><Icon name="shield" size={20} /></div>
           <div><div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Admin Panel</div><div style={{ fontSize: 12, color: TEXT_MID }}>Manage applications, users, events, projects, equipment, knowledge base and newsletter.</div></div>
         </div>
-
         {actionMessage && <div style={{ padding: "12px 18px", borderRadius: 10, background: actionMessage.type === "success" ? "#E6F9F5" : "#FDECF1", border: `1px solid ${actionMessage.type === "success" ? "#A3E4D7" : "#F9C3CE"}`, color: actionMessage.type === "success" ? "#0D9373" : "#D63563", fontSize: 13, fontWeight: 500 }}>{actionMessage.text}</div>}
-
-        {/* Tab bar */}
         <div style={{ display: "flex", gap: 4, background: "#F3F5F8", borderRadius: 12, padding: 4, flexWrap: "wrap" as const }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id as typeof tab)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 9, border: "none", background: tab === t.id ? CARD : "transparent", color: tab === t.id ? TEXT : TEXT_LIGHT, fontSize: 13, fontWeight: tab === t.id ? 700 : 500, cursor: "pointer", boxShadow: tab === t.id ? SHADOW : "none", transition: "all 0.15s ease" }}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 9, border: "none", background: tab === t.id ? CARD : "transparent", color: tab === t.id ? TEXT : TEXT_LIGHT, fontSize: 13, fontWeight: tab === t.id ? 700 : 500, cursor: "pointer", boxShadow: tab === t.id ? SHADOW : "none", transition: "all 0.15s ease" }}>
               <Icon name={t.icon} size={15} />{t.label}
               {t.badge != null && <span style={{ background: "#E74C6F", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, padding: "1px 7px" }}>{t.badge}</span>}
             </button>
           ))}
         </div>
 
-        {/* ── Applications ── */}
         {tab === "applications" && (
           <>
             <div style={{ display: "flex", gap: 8 }}>
@@ -2637,7 +2517,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </>
         )}
 
-        {/* ── Users ── */}
         {tab === "users" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2646,43 +2525,24 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             </div>
             {loadingUsers ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
               : users.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No users found.</div>
-              : (
-                <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 200px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
-                    <span>Email</span><span>Name</span><span>Organisation</span><span>Partnership Level</span>
+              : (<div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}><span>Email</span><span>Name</span><span>Partnership Level</span></div>
+                {users.map((u, i) => { const lbl = PARTNERSHIP_LABELS[u.partnership_level] || PARTNERSHIP_LABELS.viewer; return (
+                  <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 200px", padding: "16px 24px", borderBottom: i < users.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
+                    <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{u.email}</span>
+                    <span style={{ fontSize: 13, color: TEXT_MID }}>{u.full_name || "—"}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <select value={u.partnership_level} onChange={e => updateLevel(u.id, e.target.value as PartnershipLevel)} disabled={saving === u.id} style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${lbl.color}30`, background: lbl.bg, color: lbl.color, fontSize: 12, fontWeight: 700, cursor: "pointer", outline: "none", opacity: saving === u.id ? 0.6 : 1 }}>
+                        <option value="viewer">Viewer</option><option value="member">Member</option><option value="partner">Partner</option><option value="admin">Admin</option>
+                      </select>
+                      {saving === u.id && <span style={{ fontSize: 11, color: TEXT_LIGHT }}>Saving…</span>}
+                    </div>
                   </div>
-                  {users.map((u, i) => {
-                    const lbl = PARTNERSHIP_LABELS[u.partnership_level] || PARTNERSHIP_LABELS.viewer;
-                    return (
-                      <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 200px", padding: "16px 24px", borderBottom: i < users.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
-                        <span style={{ fontSize: 13, color: TEXT, fontWeight: 500 }}>{u.email}</span>
-                        <span style={{ fontSize: 13, color: TEXT_MID }}>{u.full_name || "—"}</span>
-                        {/* Organisation affiliation dropdown */}
-                        <select
-                          value={u.organisation_id || ""}
-                          onChange={e => updateUserOrg(u.id, e.target.value || null)}
-                          style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${BORDER}`, fontSize: 12, cursor: "pointer", outline: "none", maxWidth: 180, color: TEXT_MID }}
-                        >
-                          <option value="">No organisation</option>
-                          {allOrgs.map(org => (
-                            <option key={org.id} value={org.id}>{org.name}</option>
-                          ))}
-                        </select>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <select value={u.partnership_level} onChange={e => updateLevel(u.id, e.target.value as PartnershipLevel)} disabled={saving === u.id} style={{ padding: "6px 10px", borderRadius: 8, border: `1.5px solid ${lbl.color}30`, background: lbl.bg, color: lbl.color, fontSize: 12, fontWeight: 700, cursor: "pointer", outline: "none", opacity: saving === u.id ? 0.6 : 1 }}>
-                            <option value="viewer">Viewer</option><option value="member">Member</option><option value="partner">Partner</option><option value="admin">Admin</option>
-                          </select>
-                          {saving === u.id && <span style={{ fontSize: 11, color: TEXT_LIGHT }}>Saving…</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                ); })}
+              </div>)}
           </div>
         )}
 
-        {/* ── Events ── */}
         {tab === "events" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2709,7 +2569,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
-        {/* ── Projects ── */}
         {tab === "projects" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2736,7 +2595,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
-        {/* ── Equipment ── */}
         {tab === "equipment" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2744,7 +2602,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
               <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{proposals.length} total · {pendingProposals} pending</span>
             </div>
             {loadingProposals ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
-              : proposals.length === 0 ? (<div style={{ padding: 48, textAlign: "center" }}><div style={{ color: "#E8EDF3", marginBottom: 12 }}><Icon name="cpu" size={48} /></div><div style={{ fontSize: 15, fontWeight: 600, color: TEXT_MID, fontFamily: "'Sora', sans-serif" }}>No equipment proposals yet</div></div>)
+              : proposals.length === 0 ? (<div style={{ padding: 48, textAlign: "center" }}><div style={{ color: "#E8EDF3", marginBottom: 12 }}><Icon name="cpu" size={48} /></div><div style={{ fontSize: 15, fontWeight: 600, color: TEXT_MID, fontFamily: "'Sora', sans-serif" }}>No equipment proposals yet</div><div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 4 }}>Members and partners can propose equipment from the Distributed Lab section.</div></div>)
               : (<div>
                 <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 120px 160px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}><span>Equipment</span><span>Location</span><span>Category</span><span>Status</span><span>Actions</span></div>
                 {proposals.map((p, i) => {
@@ -2753,13 +2611,13 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
                   const statusBg = isApproved ? "#E6F9F5" : isPending ? "#FFF8E6" : "#FDECF1";
                   return (
                     <div key={p.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 100px 120px 160px", padding: "16px 24px", borderBottom: i < proposals.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
-                      <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{p.name}</div>{p.proposed_by_name && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>By {p.proposed_by_name}</div>}</div>
+                      <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{p.name}</div>{p.proposed_by_name && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>Proposed by {p.proposed_by_name}</div>}{p.description && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 1 }}>{p.description.slice(0, 60)}{p.description.length > 60 ? "…" : ""}</div>}</div>
                       <span style={{ fontSize: 12, color: TEXT_MID }}>{p.location}</span>
                       <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{p.category || "—"}</span>
                       <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: statusBg, color: statusColor, fontWeight: 700, textTransform: "capitalize" as const, width: "fit-content" }}>{p.status}</span>
                       <div style={{ display: "flex", gap: 6 }}>
                         {isPending && (<><button onClick={() => handleReviewProposal(p.id, "approved")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#0D9373", fontSize: 11, fontWeight: 700, cursor: "pointer", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>✓ Approve</button><button onClick={() => handleReviewProposal(p.id, "rejected")} disabled={reviewingProposal === p.id} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 11, fontWeight: 700, cursor: "pointer", opacity: reviewingProposal === p.id ? 0.6 : 1 }}>✗ Reject</button></>)}
-                        {!isPending && <button onClick={() => { if (confirm("Delete?")) handleDeleteProposal(p.id); }} style={{ ...btnBase, background: "#FDECF1", color: "#D63563" }}><Icon name="trash" size={14} /></button>}
+                        {!isPending && <button onClick={() => { if (confirm("Delete this proposal?")) handleDeleteProposal(p.id); }} style={{ ...btnBase, background: "#FDECF1", color: "#D63563" }}><Icon name="trash" size={14} /></button>}
                       </div>
                     </div>
                   );
@@ -2768,7 +2626,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
-        {/* ── Knowledge Documents (approved) ── */}
         {tab === "knowledge" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
@@ -2816,46 +2673,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
-        {/* ── Pending Document Proposals ── */}
-        {tab === "pending_docs" && (
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
-            <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Pending Document Proposals</h3>
-              <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{pendingDocs.length} pending</span>
-            </div>
-            {loadingPendingDocs ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
-              : pendingDocs.length === 0 ? (
-                <div style={{ padding: 48, textAlign: "center" }}>
-                  <div style={{ color: "#E8EDF3", marginBottom: 12 }}><Icon name="book" size={48} /></div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: TEXT_MID, fontFamily: "'Sora', sans-serif" }}>No pending proposals</div>
-                  <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 4 }}>Members and partners can propose documents from the Knowledge Base section.</div>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 160px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
-                    <span>Document</span><span>Category</span><span>Proposed By</span><span>Actions</span>
-                  </div>
-                  {pendingDocs.map((doc, i) => (
-                    <div key={doc.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 160px", padding: "16px 24px", borderBottom: i < pendingDocs.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{doc.title}</div>
-                        {doc.description && <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>{doc.description}</div>}
-                        {doc.url && <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: TEAL_DARK, textDecoration: "none" }}>View link →</a>}
-                      </div>
-                      <span style={{ fontSize: 12, color: TEXT_MID }}>{doc.category}</span>
-                      <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{doc.proposed_by_name || "Unknown"}</span>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button onClick={() => handleApproveDoc(doc.id)} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#0D9373", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>✓ Approve</button>
-                        <button onClick={() => handleRejectDoc(doc.id)} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>✗ Reject</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-          </div>
-        )}
-
-        {/* ── Newsletter ── */}
         {tab === "newsletter" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2884,7 +2701,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     </>
   );
 }
-
 
 function SectionWrapper({ sectionId, sectionName, partnershipLevel, children }: { sectionId: string; sectionName: string; partnershipLevel: PartnershipLevel; children: React.ReactNode }) {
   const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find(s => s.id === sectionId);
@@ -3053,11 +2869,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       case "knowledge":
         return (
           <SectionWrapper sectionId="knowledge" sectionName="Knowledge Base" partnershipLevel={partnershipLevel}>
-            <KnowledgeView
-              isAdmin={isAdmin}
-              currentUserId={user.sub}
-              currentUserName={user.display_name || user.full_name || user.email}
-            />
+            <KnowledgeView isAdmin={isAdmin} />
           </SectionWrapper>
         );
 

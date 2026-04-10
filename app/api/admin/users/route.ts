@@ -1,47 +1,69 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-// GET /api/admin/users
-// Returns all user profiles. Requires the requester to be an admin.
-export async function GET() {
-  // 1. Verify the requesting user is authenticated and is an admin
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  if (!claimsData?.claims) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { data: requesterProfile } = await supabase
-    .from("profiles")
-    .select("partnership_level")
-    .eq("id", claimsData.claims.sub)
-    .single();
-
-  if (!requesterProfile || requesterProfile.partnership_level !== "admin") {
-    return NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 });
-  }
-
-  // 2. Use the service role client to fetch all profiles
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    return NextResponse.json({ error: "Server misconfiguration: missing service role key" }, { status: 500 });
-  }
-
-  const adminClient = createAdminClient(
+const getClient = () =>
+  createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { data: profiles, error } = await adminClient
+// GET /api/admin/users — list all users with their profiles
+export async function GET() {
+  const { data, error } = await getClient()
     .from("profiles")
-    .select("id, email, full_name, partnership_level")
-    .order("email", { ascending: true });
+    .select("id, email, full_name, partnership_level, organisation_id, organisation_name")
+    .order("email");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ users: profiles });
+  return NextResponse.json({ users: data });
+}
+
+// PATCH /api/admin/users — update a user's partnership level or organisation
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, partnership_level, organisation_id } = body;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    }
+
+    const updatePayload: Record<string, unknown> = {};
+
+    if (partnership_level !== undefined) {
+      const validLevels = ["viewer", "member", "partner", "admin"];
+      if (!validLevels.includes(partnership_level)) {
+        return NextResponse.json({ error: "Invalid partnership level" }, { status: 400 });
+      }
+      updatePayload.partnership_level = partnership_level;
+    }
+
+    if (organisation_id !== undefined) {
+      // null means "remove affiliation"
+      updatePayload.organisation_id = organisation_id || null;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    }
+
+    const { data, error } = await getClient()
+      .from("profiles")
+      .update(updatePayload)
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ user: data });
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
 }
