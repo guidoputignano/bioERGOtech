@@ -585,7 +585,7 @@ function DashboardView({
         <button
           onClick={handleDismissBanner}
           title="Dismiss"
-          style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", cursor: "pointer", color: TEXT_LIGHT, padding: 4, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_LIGHT, padding: 4, borderRadius: 6, display: "flex", alignItems: "flex-start", flexShrink: 0, alignSelf: "flex-start" }}
         >
           <Icon name="x" size={15} />
         </button>
