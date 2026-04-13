@@ -30,7 +30,7 @@ export default function Taranto() {
               <a href="mailto:info@bioergotech.org" className="btn-primary">Get Involved</a>
             </div>
             <div className="flex justify-center">
-              <img src="/assets/images/Taranto/Taranto.webp" alt="Taranto Hub" className="rounded-lg shadow-xl w-full max-w-md" />
+              <img src="/assets/images/Taranto/Main/first.webp" alt="Taranto Hub" className="rounded-lg shadow-xl w-full max-w-md" />
             </div>
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function Taranto() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
-              <img src="/assets/images/Taranto/Hub.webp" alt="Taranto Biotech Hub" className="rounded-lg shadow-xl w-full max-w-md" />
+              <img src="/assets/images/Taranto/Collaborative/IMG_2756.webp" alt="Taranto Biotech Hub" className="rounded-lg shadow-xl w-full max-w-md" />
             </div>
             <div>
               <h2 className="section-title">A City Reinventing Itself</h2>
