@@ -74,7 +74,7 @@ function leadMailtoHref(lead: string): string {
 }
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-type Project = { id?: string; name: string; pillar: string; phase: string; status: string; lead: string; description: string; progress: number; color: string; is_public?: boolean; objectives?: string[]; update_notes?: string | null; created_by?: string | null; updated_at?: string | null; };
+type Project = { id?: string; name: string; pillar: string; phase: string; status: string; lead: string; lead_email?: string | null; lead_phone?: string | null; description: string; progress: number; color: string; is_public?: boolean; objectives?: string[]; update_notes?: string | null; created_by?: string | null; updated_at?: string | null; };
 type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
 type Organisation = { id?: string; name: string; org_type: string; location: string; country?: string | null; city?: string | null; website?: string | null; areas_of_interest?: string[]; is_active?: boolean; };
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
@@ -236,11 +236,11 @@ function EventModal({ event, onClose, onSave }: { event: Partial<Event> | null; 
 }
 
 // ─── PROJECT MODAL ────────────────────────────────────────────────────────────
-type ProjectFormState = { name: string; pillar: string; phase: string; status: string; lead: string; description: string; progress: number; color: string; is_public: boolean; };
-const EMPTY_PROJECT_FORM: ProjectFormState = { name: "", pillar: PROJECT_PILLARS[0], phase: "Planning", status: "on-track", lead: "", description: "", progress: 0, color: "#2EC4B6", is_public: true };
+type ProjectFormState = { name: string; pillar: string; phase: string; status: string; lead: string; lead_email: string; lead_phone: string; description: string; progress: number; color: string; is_public: boolean; };
+const EMPTY_PROJECT_FORM: ProjectFormState = { name: "", pillar: PROJECT_PILLARS[0], phase: "Planning", status: "on-track", lead: "", lead_email: "", lead_phone: "", description: "", progress: 0, color: "#2EC4B6", is_public: true };
 
 function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> | null; onClose: () => void; onSave: (p: Partial<Project>) => Promise<void>; }) {
-  const [form, setForm] = useState<ProjectFormState>(project ? { name: project.name || "", pillar: project.pillar || PROJECT_PILLARS[0], phase: project.phase || "Planning", status: project.status || "on-track", lead: project.lead || "", description: project.description || "", progress: project.progress ?? 0, color: project.color || "#2EC4B6", is_public: project.is_public ?? true } : { ...EMPTY_PROJECT_FORM });
+  const [form, setForm] = useState<ProjectFormState>(project ? { name: project.name || "", pillar: project.pillar || PROJECT_PILLARS[0], phase: project.phase || "Planning", status: project.status || "on-track", lead: project.lead || "", lead_email: project.lead_email || "", lead_phone: project.lead_phone || "", description: project.description || "", progress: project.progress ?? 0, color: project.color || "#2EC4B6", is_public: project.is_public ?? true } : { ...EMPTY_PROJECT_FORM });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!project?.id;
@@ -263,6 +263,10 @@ function ProjectModal({ project, onClose, onSave }: { project: Partial<Project> 
           {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
           <div><label style={modalLabelStyle}>Project Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. CranioTech Radar" style={modalInputStyle} /></div>
           <div><label style={modalLabelStyle}>Lead *</label><input value={form.lead} onChange={e => setForm(p => ({ ...p, lead: e.target.value }))} placeholder="e.g. Dr. Maria Rossi" style={modalInputStyle} /></div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div><label style={modalLabelStyle}>Lead Email</label><input value={form.lead_email} onChange={e => setForm(p => ({ ...p, lead_email: e.target.value }))} placeholder="lead@email.com" style={modalInputStyle} /></div>
+              <div><label style={modalLabelStyle}>Lead Phone</label><input value={form.lead_phone} onChange={e => setForm(p => ({ ...p, lead_phone: e.target.value }))} placeholder="+39 123 456 7890" style={modalInputStyle} /></div>
+            </div>
           <div><label style={modalLabelStyle}>Scientific Pillar</label><select value={form.pillar} onChange={e => setForm(p => ({ ...p, pillar: e.target.value }))} style={modalInputStyle}>{PROJECT_PILLARS.map(pl => (<option key={pl} value={pl}>{pl}</option>))}</select></div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={modalLabelStyle}>Phase</label><select value={form.phase} onChange={e => setForm(p => ({ ...p, phase: e.target.value }))} style={modalInputStyle}>{PROJECT_PHASES.map(ph => (<option key={ph} value={ph}>{ph}</option>))}</select></div>
@@ -699,11 +703,61 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
             </div>
             {/* CHANGE 2: Lead as mailto link */}
             <div style={{ fontSize: 13, color: TEXT_LIGHT }}>
-              {project.pillar} · Lead:{" "}
-              <a href={leadMailtoHref(project.lead)} style={{ color: TEAL_DARK, textDecoration: "none", fontWeight: 600 }} title={`Email ${project.lead}`}>
-                {project.lead}
-              </a>
-            </div>
+              {project.pillar} · Lead: <strong style={{ color: TEXT }}>{project.lead}</strong>
+              </div>
+              {/* Contact Lead button */}
+              <button
+                onClick={() => {
+                  const modal = document.getElementById("contact-lead-modal");
+                  if (modal) modal.style.display = "flex";
+                }}
+                style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+              >
+                <Icon name="mail" size={13} /> Contact Lead
+              </button>
+              {/* Contact Lead Modal */}
+              <div id="contact-lead-modal" style={{ display: "none", position: "fixed", inset: 0, zIndex: 500, alignItems: "center", justifyContent: "center" }}>
+                <div onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "none"; }} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
+                <div style={{ position: "relative", width: 440, background: CARD, borderRadius: 20, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", padding: 28, display: "flex", flexDirection: "column", gap: 16, zIndex: 501 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Contact Project Lead</div>
+                    <button onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "none"; }} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={15} /></button>
+                  </div>
+                  <div style={{ background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: TEAL_LIGHT, color: TEAL_DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700 }}>{project.lead?.charAt(0) || "L"}</div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{project.lead}</div>
+                        <div style={{ fontSize: 12, color: TEXT_LIGHT }}>Project Lead · {project.name}</div>
+                      </div>
+                    </div>
+                    {project.lead_email && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 8, borderTop: `1px solid ${BORDER}` }}>
+                        <Icon name="mail" size={14} />
+                        <a href={`mailto:${project.lead_email}`} style={{ fontSize: 13, color: TEAL_DARK, textDecoration: "none", fontWeight: 600 }}>{project.lead_email}</a>
+                      </div>
+                    )}
+                    {project.lead_phone && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Icon name="phone" size={14} />
+                        <a href={`tel:${project.lead_phone}`} style={{ fontSize: 13, color: TEXT_MID, textDecoration: "none" }}>{project.lead_phone}</a>
+                      </div>
+                    )}
+                    {!project.lead_email && !project.lead_phone && (
+                      <div style={{ fontSize: 13, color: TEXT_LIGHT, paddingTop: 8, borderTop: `1px solid ${BORDER}` }}>No contact details available. Ask an admin to add them.</div>
+                    )}
+                  </div>
+                  {project.lead_email && (
+                    <a
+                      href={`mailto:${project.lead_email}?subject=Re: ${encodeURIComponent(project.name)}`}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}
+                    >
+                      <Icon name="mail" size={14} /> Open Email
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div
           </div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID, flexShrink: 0 }}><Icon name="x" size={16} /></button>
         </div>

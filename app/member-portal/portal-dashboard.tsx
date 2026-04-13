@@ -490,15 +490,6 @@ function DashboardView({
 
   const onboarding = onboardingCopy[partnershipLevel];
 
-  const [bannerDismissed, setBannerDismissed] = useState(() => {
-    try { return localStorage.getItem(`onboarding_dismissed_${partnershipLevel}`) === "true"; }
-    catch { return false; }
-  });
-  const handleDismissBanner = () => {
-    try { localStorage.setItem(`onboarding_dismissed_${partnershipLevel}`, "true"); } catch {}
-    setBannerDismissed(true);
-  };
-
   const stats = [
     { label: "Active Projects", value: projects.length, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
     { label: "Member Organizations", value: members.length, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
@@ -507,7 +498,6 @@ function DashboardView({
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-{!bannerDismissed && (
             <div
         style={{
           background: CARD,
@@ -520,7 +510,6 @@ function DashboardView({
           alignItems: "flex-start",
           gap: 18,
           flexWrap: "wrap",
-          position: "relative",
         }}
       >
         <div style={{ maxWidth: 760 }}>
@@ -582,15 +571,7 @@ function DashboardView({
             </button>
           ))}
         </div>
-        <button
-          onClick={handleDismissBanner}
-          title="Dismiss"
-          style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_LIGHT, padding: 4, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "flex-start", flexShrink: 0 }}
-        >
-          <Icon name="x" size={15} />
-        </button>
       </div>
-)}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {stats.map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 22px", boxShadow: SHADOW, animation: `fadeUp 0.45s ease ${i * 0.08}s both` }}>
@@ -705,17 +686,12 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
             <div style={{ fontSize: 13, color: TEXT_LIGHT }}>
               {project.pillar} · Lead: <strong style={{ color: TEXT }}>{project.lead}</strong>
               </div>
-              {/* Contact Lead button */}
               <button
-                onClick={() => {
-                  const modal = document.getElementById("contact-lead-modal");
-                  if (modal) modal.style.display = "flex";
-                }}
+                onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "flex"; }}
                 style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
               >
                 <Icon name="mail" size={13} /> Contact Lead
               </button>
-              {/* Contact Lead Modal */}
               <div id="contact-lead-modal" style={{ display: "none", position: "fixed", inset: 0, zIndex: 500, alignItems: "center", justifyContent: "center" }}>
                 <div onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "none"; }} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
                 <div style={{ position: "relative", width: 440, background: CARD, borderRadius: 20, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", padding: 28, display: "flex", flexDirection: "column", gap: 16, zIndex: 501 }}>
@@ -748,10 +724,7 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
                     )}
                   </div>
                   {project.lead_email && (
-                    <a
-                      href={`mailto:${project.lead_email}?subject=Re: ${encodeURIComponent(project.name)}`}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}
-                    >
+                    <a href={`mailto:${project.lead_email}?subject=Re: ${encodeURIComponent(project.name)}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}>
                       <Icon name="mail" size={14} /> Open Email
                     </a>
                   )}
@@ -3175,7 +3148,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   {/* Logo row — logo links home, arrow toggles collapse */}
   <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
     <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-      <img src="/assets/images/Logo/short_logo.webp" alt="bioERGOtech" style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0 }} />
+      <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif", boxShadow: `0 2px 8px ${TEAL}33` }}>bE</div>
       {!collapsed && (
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>
