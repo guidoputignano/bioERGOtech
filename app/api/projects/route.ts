@@ -33,6 +33,8 @@ export async function POST(request: Request) {
         phase: body.phase?.trim(),
         status: body.status || "on-track",
         lead: body.lead?.trim(),
+        lead_email: body.lead_email?.trim() || null,
+        lead_phone: body.lead_phone?.trim() || null,
         description: body.description?.trim() || null,
         progress: Number(body.progress) || 0,
         color: body.color || "#2EC4B6",
@@ -73,29 +75,15 @@ export async function PATCH(request: Request) {
     if (fields.phase !== undefined) updatePayload.phase = fields.phase?.trim();
     if (fields.status !== undefined) updatePayload.status = fields.status;
     if (fields.lead !== undefined) updatePayload.lead = fields.lead?.trim();
-    if (fields.description !== undefined) {
-      updatePayload.description = fields.description?.trim() || null;
-    }
-    if (fields.progress !== undefined) {
-      updatePayload.progress = Number(fields.progress) || 0;
-    }
-    if (fields.color !== undefined) {
-      updatePayload.color = fields.color || "#2EC4B6";
-    }
-    if (fields.is_public !== undefined) {
-      updatePayload.is_public = fields.is_public;
-    }
-    if (fields.objectives !== undefined) {
-      updatePayload.objectives = Array.isArray(fields.objectives)
-        ? fields.objectives
-        : [];
-    }
-    if (fields.update_notes !== undefined) {
-      updatePayload.update_notes = fields.update_notes?.trim() || null;
-    }
-    if (fields.created_by !== undefined) {
-      updatePayload.created_by = fields.created_by || null;
-    }
+    if (fields.lead_email !== undefined) updatePayload.lead_email = fields.lead_email?.trim() || null;
+    if (fields.lead_phone !== undefined) updatePayload.lead_phone = fields.lead_phone?.trim() || null;
+    if (fields.description !== undefined) updatePayload.description = fields.description?.trim() || null;
+    if (fields.progress !== undefined) updatePayload.progress = Number(fields.progress) || 0;
+    if (fields.color !== undefined) updatePayload.color = fields.color || "#2EC4B6";
+    if (fields.is_public !== undefined) updatePayload.is_public = fields.is_public;
+    if (fields.objectives !== undefined) updatePayload.objectives = Array.isArray(fields.objectives) ? fields.objectives : [];
+    if (fields.update_notes !== undefined) updatePayload.update_notes = fields.update_notes?.trim() || null;
+    if (fields.created_by !== undefined) updatePayload.created_by = fields.created_by || null;
 
     const { data, error } = await getClient()
       .from("projects")
