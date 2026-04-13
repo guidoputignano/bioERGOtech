@@ -1707,9 +1707,30 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
             >
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
                 {/* Avatar */}
-                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-                  {m.name?.charAt(0) || "O"}
-                </div>
+                {m.website ? (
+                  <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "#F3F5F8", display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${BORDER}` }}>
+                    <img
+                      src={`https://logo.clearbit.com/${new URL(m.website.startsWith("http") ? m.website : `https://${m.website}`).hostname}`}
+                      alt={m.name}
+                      style={{ width: 32, height: 32, objectFit: "contain" }}
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = "none";
+                        if (target.parentElement) {
+                          target.parentElement.style.background = tbg[m.org_type] || TEAL_LIGHT;
+                          target.parentElement.style.color = tc[m.org_type] || TEAL;
+                          target.parentElement.style.fontSize = "14px";
+                          target.parentElement.style.fontWeight = "700";
+                          target.parentElement.innerHTML = m.name?.charAt(0) || "O";
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                    {m.name?.charAt(0) || "O"}
+                  </div>
+                )}
 
                 {/* Name + location */}
                 <div style={{ flex: 1, minWidth: 0 }}>

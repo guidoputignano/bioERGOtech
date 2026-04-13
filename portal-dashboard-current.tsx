@@ -486,6 +486,15 @@ function DashboardView({
 
   const onboarding = onboardingCopy[partnershipLevel];
 
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    try { return localStorage.getItem(`onboarding_dismissed_${partnershipLevel}`) === "true"; }
+    catch { return false; }
+  });
+  const handleDismissBanner = () => {
+    try { localStorage.setItem(`onboarding_dismissed_${partnershipLevel}`, "true"); } catch {}
+    setBannerDismissed(true);
+  };
+
   const stats = [
     { label: "Active Projects", value: projects.length, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
     { label: "Member Organizations", value: members.length, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
@@ -494,6 +503,7 @@ function DashboardView({
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+{!bannerDismissed && (
             <div
         style={{
           background: CARD,
@@ -506,6 +516,7 @@ function DashboardView({
           alignItems: "flex-start",
           gap: 18,
           flexWrap: "wrap",
+          position: "relative",
         }}
       >
         <div style={{ maxWidth: 760 }}>
@@ -567,7 +578,15 @@ function DashboardView({
             </button>
           ))}
         </div>
+        <button
+          onClick={handleDismissBanner}
+          title="Dismiss"
+          style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_LIGHT, padding: 4, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "flex-start", flexShrink: 0 }}
+        >
+          <Icon name="x" size={15} />
+        </button>
       </div>
+)}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {stats.map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 22px", boxShadow: SHADOW, animation: `fadeUp 0.45s ease ${i * 0.08}s both` }}>
