@@ -700,9 +700,7 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
             {/* CHANGE 2: Lead as mailto link */}
             <div style={{ fontSize: 13, color: TEXT_LIGHT }}>
               {project.pillar} · Lead:{" "}
-              <a href={leadMailtoHref(project.lead)} style={{ color: TEAL_DARK, textDecoration: "none", fontWeight: 600 }} title={`Email ${project.lead}`}>
-                {project.lead}
-              </a>
+              <a href={`mailto:info@bioergotech.org?subject=Contact request: ${encodeURIComponent(project.lead)}&body=Hi,%0A%0AI would like to get in touch with the lead of project "${encodeURIComponent(project.name)}": ${encodeURIComponent(project.lead)}.%0A%0AThank you.`} style={{ color: TEAL_DARK, textDecoration: "none", fontWeight: 600 }} title={`Contact ${project.lead}`}>{project.lead}</a>
             </div>
           </div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID, flexShrink: 0 }}><Icon name="x" size={16} /></button>
@@ -825,7 +823,6 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
     </div>
   );
 }
-
 function ProjectsView({
   projects,
   isAdmin,
