@@ -685,14 +685,14 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
             {/* CHANGE 2: Lead as mailto link */}
             <div style={{ fontSize: 13, color: TEXT_LIGHT }}>
               {project.pillar} · Lead: <strong style={{ color: TEXT }}>{project.lead}</strong>
-              </div>
-              <button
-                onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "flex"; }}
-                style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-              >
-                <Icon name="mail" size={13} /> Contact Lead
-              </button>
-              <div id="contact-lead-modal" style={{ display: "none", position: "fixed", inset: 0, zIndex: 500, alignItems: "center", justifyContent: "center" }}>
+            </div>
+            <button
+              onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "flex"; }}
+              style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              <Icon name="mail" size={13} /> Contact Lead
+            </button>
+            <div id="contact-lead-modal" style={{ display: "none", position: "fixed", inset: 0, zIndex: 500, alignItems: "center", justifyContent: "center" }}>
                 <div onClick={() => { const m = document.getElementById("contact-lead-modal"); if (m) m.style.display = "none"; }} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
                 <div style={{ position: "relative", width: 440, background: CARD, borderRadius: 20, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", padding: 28, display: "flex", flexDirection: "column", gap: 16, zIndex: 501 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -730,7 +730,6 @@ function ProjectDrawer({ project, isAdmin, onClose, onSave }: { project: Project
                   )}
                 </div>
               </div>
-            </div
           </div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID, flexShrink: 0 }}><Icon name="x" size={16} /></button>
         </div>
