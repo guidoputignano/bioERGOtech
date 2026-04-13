@@ -486,6 +486,15 @@ function DashboardView({
 
   const onboarding = onboardingCopy[partnershipLevel];
 
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    try { return localStorage.getItem(`onboarding_dismissed_${partnershipLevel}`) === "true"; }
+    catch { return false; }
+  });
+  const handleDismissBanner = () => {
+    try { localStorage.setItem(`onboarding_dismissed_${partnershipLevel}`, "true"); } catch {}
+    setBannerDismissed(true);
+  };
+
   const stats = [
     { label: "Active Projects", value: projects.length, icon: "layers", color: TEAL, bg: TEAL_LIGHT },
     { label: "Member Organizations", value: members.length, icon: "users", color: "#7C5CFC", bg: "#F0EDFF" },
@@ -494,6 +503,7 @@ function DashboardView({
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+{!bannerDismissed && (
             <div
         style={{
           background: CARD,
@@ -506,6 +516,7 @@ function DashboardView({
           alignItems: "flex-start",
           gap: 18,
           flexWrap: "wrap",
+          position: "relative",
         }}
       >
         <div style={{ maxWidth: 760 }}>
@@ -567,7 +578,15 @@ function DashboardView({
             </button>
           ))}
         </div>
+        <button
+          onClick={handleDismissBanner}
+          title="Dismiss"
+          style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", cursor: "pointer", color: TEXT_LIGHT, padding: 4, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <Icon name="x" size={15} />
+        </button>
       </div>
+)}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {stats.map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 22px", boxShadow: SHADOW, animation: `fadeUp 0.45s ease ${i * 0.08}s both` }}>
@@ -3102,7 +3121,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   {/* Logo row — logo links home, arrow toggles collapse */}
   <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
     <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-      <div style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif", boxShadow: `0 2px 8px ${TEAL}33` }}>bE</div>
+      <img src="/assets/images/Logo/short_logo.webp" alt="bioERGOtech" style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0 }} />
       {!collapsed && (
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>

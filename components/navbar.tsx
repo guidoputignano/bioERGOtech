@@ -41,15 +41,12 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
             <Image
-              src="/assets/images/Logo/short_logo.webp"
+              src="/assets/images/Logo/full_bioergotech_grey.webp"
               alt="bioERGOtech"
-              width={36}
+              width={160}
               height={36}
               style={{ objectFit: "contain" }}
             />
-            <span style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--dark)", fontFamily: "'Poppins', sans-serif" }}>
-              bioERGOtech
-            </span>
           </Link>
 
           {/* Desktop nav */}

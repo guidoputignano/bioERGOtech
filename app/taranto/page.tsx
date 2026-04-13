@@ -14,7 +14,7 @@ export default function Taranto() {
       <Navbar />
 
       {/* Hero */}
-      <section className="hero bg-light-gray" style={{ paddingTop: "70px" }}>
+      <section className="hero bg-light-gray" style={{ paddingTop: "120px", paddingBottom: "60px" }}>
         <div className="container mx-auto px-6 pt-20 pb-12 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
