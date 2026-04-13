@@ -19,7 +19,7 @@ const SHADOW_HOVER = "0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.05)";
 
 const PROJECT_COLORS = ["#2EC4B6","#7C5CFC","#E74C6F","#F0A500","#00B894","#4A7DFF","#FF6B6B","#A29BFE"];
 const PROJECT_PILLARS = ["Digital Twin Therapeutics","Synthetic Biology & Cell Engineering","Automated Biomanufacturing","Integrated Multi-Omics Analytics"];
-const PROJECT_PHASES = ["Planning","Discovery","Development","Validation","Execution","Completed"];
+const PROJECT_PHASES = ["Ideation","Planning","Discovery","Development","Validation","Execution","Production","Completed"];
 const PROJECT_STATUSES = ["on-track","at-risk","blocked"];
 const EVENT_TYPES = ["internal","national","international","online"];
 const EQUIPMENT_CATEGORIES = ["Flow Cytometry","Sequencing","Imaging","Spectroscopy","Cell Culture","Electroporation","Organoid","PCR","Other"];
