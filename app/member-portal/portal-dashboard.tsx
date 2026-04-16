@@ -2015,6 +2015,20 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
 }
 
 
+
+// ─── COIN TIER HELPER ─────────────────────────────────────────────────────────
+const COIN_TIERS = [
+  { name: "Catalyst",     min: 1000, color: "#F0A500", bg: "#FFF8E6", badge: "🟡" },
+  { name: "Collaborator", min: 500,  color: "#4A7DFF", bg: "#EBF1FF", badge: "🔵" },
+  { name: "Contributor",  min: 200,  color: "#00B894", bg: "#E6F9F5", badge: "🟢" },
+  { name: "Explorer",     min: 0,    color: "#8896A6", bg: "#F3F5F8", badge: "⚪" },
+];
+function getCoinTier(lifetime: number) {
+  return COIN_TIERS.find(t => lifetime >= t.min) || COIN_TIERS[3];
+}
+type CoinBalance = { user_id: string; balance: number; lifetime_earned: number; tier: string; };
+type CoinTransaction = { id: string; amount: number; reason: string; type: string; created_at: string; };
+
 // ─── ADMIN TYPES ──────────────────────────────────────────────────────────────
 type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; organisation_id?: string | null; };
 type Application = { id: string; email: string; full_name?: string; contact_role?: string; organisation_name?: string; organisation_type?: string; organisation_website?: string; country?: string; city?: string; areas_of_interest?: string[]; what_you_bring?: string; what_you_seek?: string; application_status: string; applied_at?: string; reviewed_at?: string; partnership_type?: string; admin_notes?: string; partnership_level: PartnershipLevel; };
@@ -2527,7 +2541,7 @@ function ApplicationDrawer({
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "newsletter">("applications");
+  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "newsletter">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -2558,6 +2572,10 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   // Pending document proposals
   const [pendingDocs, setPendingDocs] = useState<KnowledgeDocument[]>([]);
   const [loadingPendingDocs, setLoadingPendingDocs] = useState(true);
+  const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
+  const [loadingCoins, setLoadingCoins] = useState(true);
+  const [coinTopUp, setCoinTopUp] = useState<{ userId: string; amount: string; reason: string } | null>(null);
+  const [savingCoin, setSavingCoin] = useState(false);
 
   useEffect(() => {
     setLoadingApps(true);
@@ -2575,6 +2593,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     if (tab === "projects") { setLoadingProjects(true); fetch("/api/admin/projects").then(r => r.json()).then(d => { setAdminProjects(d.projects || []); setLoadingProjects(false); }).catch(() => setLoadingProjects(false)); }
     if (tab === "equipment") { setLoadingProposals(true); fetch("/api/admin/equipment").then(r => r.json()).then(d => { setProposals(d.proposals || []); setLoadingProposals(false); }).catch(() => setLoadingProposals(false)); }
     if (tab === "knowledge") { setLoadingKnowledge(true); fetch("/api/admin/knowledge").then(r => r.json()).then(d => { setKnowledgeDocs(d.documents || []); setLoadingKnowledge(false); }).catch(() => setLoadingKnowledge(false)); }
+    if (tab === "coins") { setLoadingCoins(true); fetch("/api/coins?all=true").then(r => r.json()).then(d => { setAllCoinBalances(d.balances || []); setLoadingCoins(false); }).catch(() => setLoadingCoins(false)); }
     if (tab === "pending_docs") { setLoadingPendingDocs(true); fetch("/api/admin/knowledge?pending=true").then(r => r.json()).then(d => { setPendingDocs(d.documents || []); setLoadingPendingDocs(false); }).catch(() => setLoadingPendingDocs(false)); }
   }, [tab]);
 
@@ -2646,6 +2665,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     { id: "equipment" as const, label: "Equipment", icon: "cpu", badge: pendingProposals > 0 ? pendingProposals : null as number | null },
     { id: "knowledge" as const, label: "Knowledge", icon: "book", badge: null as number | null },
     { id: "pending_docs" as const, label: "Doc Proposals", icon: "fileText", badge: pendingDocs.length > 0 ? pendingDocs.length : null as number | null },
+    { id: "coins" as const, label: "Coins", icon: "star", badge: null as number | null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null as number | null },
   ];
 
@@ -2920,6 +2940,76 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
         )}
 
         {/* ── Newsletter ── */}
+        {tab === "coins" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
+              <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Coin Balances</h3>
+                <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{allCoinBalances.length} members</span>
+              </div>
+              {loadingCoins ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
+                : allCoinBalances.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No coin balances yet.</div>
+                : (<div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
+                    <span>Email</span><span>Name</span><span>Balance</span><span>Lifetime</span><span>Tier</span><span>Top Up</span>
+                  </div>
+                  {allCoinBalances.map((cb, i) => {
+                    const tier = getCoinTier(cb.lifetime_earned);
+                    return (
+                      <div key={cb.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", padding: "14px 24px", borderBottom: i < allCoinBalances.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: TEXT }}>{cb.profiles?.email}</span>
+                        <span style={{ fontSize: 12, color: TEXT_MID }}>{cb.profiles?.full_name || "—"}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: cb.balance <= 0 ? "#E74C6F" : TEXT }}>{cb.balance}</span>
+                        <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{cb.lifetime_earned}</span>
+                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700, width: "fit-content" }}>{tier.badge} {cb.tier}</span>
+                        <button
+                          onClick={() => setCoinTopUp({ userId: cb.user_id, amount: "", reason: "" })}
+                          style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                        >+ Add Coins</button>
+                      </div>
+                    );
+                  })}
+                </div>)}
+            </div>
+          </div>
+        )}
+
+        {/* Coin Top-Up Modal */}
+        {coinTopUp && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div onClick={() => setCoinTopUp(null)} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
+            <div style={{ position: "relative", width: 400, background: CARD, borderRadius: 20, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 16, zIndex: 3001 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Add Coins</div>
+                <button onClick={() => setCoinTopUp(null)} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={15} /></button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div><label style={modalLabelStyle}>Amount</label><input type="number" value={coinTopUp.amount} onChange={e => setCoinTopUp(p => p ? { ...p, amount: e.target.value } : p)} placeholder="e.g. 100" style={modalInputStyle} /></div>
+                <div><label style={modalLabelStyle}>Reason</label><input value={coinTopUp.reason} onChange={e => setCoinTopUp(p => p ? { ...p, reason: e.target.value } : p)} placeholder="e.g. Manual top-up by admin" style={modalInputStyle} /></div>
+              </div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                <button onClick={() => setCoinTopUp(null)} style={{ padding: "9px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                <button
+                  onClick={async () => {
+                    if (!coinTopUp.amount || !coinTopUp.reason) return;
+                    setSavingCoin(true);
+                    try {
+                      const res = await fetch("/api/coins", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: coinTopUp.userId, amount: Number(coinTopUp.amount), reason: coinTopUp.reason, type: "admin" }) });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setAllCoinBalances(prev => prev.map(cb => cb.user_id === coinTopUp.userId ? { ...cb, balance: data.balance.balance, lifetime_earned: data.balance.lifetime_earned, tier: data.balance.tier } : cb));
+                        setCoinTopUp(null);
+                      }
+                    } catch {} finally { setSavingCoin(false); }
+                  }}
+                  disabled={savingCoin || !coinTopUp.amount || !coinTopUp.reason}
+                  style={{ padding: "9px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: savingCoin ? "default" : "pointer", opacity: savingCoin ? 0.7 : 1 }}
+                >{savingCoin ? "Saving…" : "Add Coins"}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {tab === "newsletter" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2976,12 +3066,15 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [addingProject, setAddingProject] = useState(false);
+  const [coinBalance, setCoinBalance] = useState<CoinBalance | null>(null);
 
   const fetchProjects = () => fetch("/api/projects").then(r => r.json()).then(d => setProjects(d.projects || []));
   const fetchEvents = () => fetch("/api/events").then(r => r.json()).then(d => setEvents(d.events || []));
 
   useEffect(() => {
     fetchProjects(); fetchEvents();
+    // Fetch coin balance
+    fetch(`/api/coins?userId=${user.sub}`).then(r => r.json()).then(d => { if (d.balance) setCoinBalance(d.balance); }).catch(() => {});
     fetch("/api/organisations").then(r => r.json()).then(d => setMembers(d.organisations || []));
     // Pure DB count — no static offset added
     fetch("/api/admin/equipment").then(r => r.json()).then(d => {
@@ -3214,6 +3307,13 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
             {user.display_name || user.full_name || user.email}
           </div>
           <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
+          {coinBalance !== null && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+              <span style={{ fontSize: 11 }}>🪙</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: getCoinTier(coinBalance.lifetime_earned).color }}>{coinBalance.balance} coins</span>
+              <span style={{ fontSize: 10, color: TEXT_LIGHT }}>· {coinBalance.tier}</span>
+            </div>
+          )}
         </div>
       )}
     </div>
