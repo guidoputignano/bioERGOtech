@@ -41,7 +41,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
             <Image
-              src="/assets/images/Logo/full_bioergotech_grey.webp"
+              src="/assets/images/Logo/full_bioergotech.webp"
               alt="bioERGOtech"
               width={160}
               height={36}
