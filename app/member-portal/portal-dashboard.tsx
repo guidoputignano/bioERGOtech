@@ -3142,10 +3142,14 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.error || "Failed to create project");
+                    const projectName = data.project?.name || project.name || "your project";
                     setAddingProject(false);
                     fetchProjects();
-                    fetchCoinBalance();
-                    showCoinToast(40, `You earned 40 coins for adding "${project.name}" to the bioERGOtech project catalogue!`);
+                    // Small delay to let coin award complete server-side before fetching
+                    setTimeout(() => {
+                      fetchCoinBalance();
+                      showCoinToast(40, `You earned 40 coins for adding "${projectName}" to the bioERGOtech project catalogue!`);
+                    }, 1000);
                   }}
                 />
               )}
@@ -3157,11 +3161,22 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                 onAddProject={() => setAddingProject(true)}
                 onEdit={(p) => setEditingProject(p)}
                 onDelete={async (id) => {
+                  // Find the project to check if current user is creator
+                  const proj = projects.find(p => p.id === id);
                   await fetch("/api/admin/projects", {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id }),
                   });
+                  // Deduct coins if creator is deleting their own project
+                  if (proj?.created_by === user.sub) {
+                    await fetch("/api/coins", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user.sub, amount: -40, reason: `Project removed: "${proj.name}"`, type: "spend" }),
+                    });
+                    setTimeout(() => fetchCoinBalance(), 500);
+                  }
                   fetchProjects();
                 }}
                 onSaveProjectDetails={async (payload) => {
