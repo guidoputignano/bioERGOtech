@@ -8,10 +8,17 @@ const getClient = () =>
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-// GET /api/admin/knowledge
-// - No params        → all APPROVED documents (docCounts on mount)
-// - ?category=X      → approved docs in that category
-// - ?pending=true    → all pending proposals (admin only)
+async function awardCoins(userId: string, amount: number, reason: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bioergotech.org";
+    await fetch(`${baseUrl}/api/coins`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, amount, reason, type: "earn" }),
+    });
+  } catch (e) { console.error("Failed to award coins:", e); }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
@@ -26,9 +33,7 @@ export async function GET(request: NextRequest) {
     query = query.eq("is_approved", false);
   } else {
     query = query.eq("is_approved", true);
-    if (category) {
-      query = query.eq("category", category);
-    }
+    if (category) query = query.eq("category", category);
   }
 
   const { data, error } = await query;
@@ -36,9 +41,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ documents: data });
 }
 
-// POST /api/admin/knowledge
-// is_admin_add: true  → approved immediately
-// is_admin_add: false → pending approval (member/partner proposal)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -77,12 +79,19 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH /api/admin/knowledge — approve or reject a proposal
+// PATCH — approve or reject proposal. Awards +30 coins to proposer when approved.
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
     const { id, is_approved } = body;
     if (!id) return NextResponse.json({ error: "Missing document id" }, { status: 400 });
+
+    // Fetch proposer before updating
+    const { data: existing } = await getClient()
+      .from("knowledge_documents")
+      .select("proposed_by, title")
+      .eq("id", id)
+      .single();
 
     const { data, error } = await getClient()
       .from("knowledge_documents")
@@ -92,13 +101,18 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Award coins to proposer on approval
+    if (is_approved && existing?.proposed_by) {
+      await awardCoins(existing.proposed_by, 30, `Knowledge contribution approved: "${existing.title}"`);
+    }
+
     return NextResponse.json({ document: data });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
 
-// DELETE /api/admin/knowledge — remove a document
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json();
