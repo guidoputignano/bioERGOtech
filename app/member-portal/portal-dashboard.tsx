@@ -2619,7 +2619,17 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const handleSaveEvent = async (event: Partial<Event>) => { const isEdit = !!event.id; const res = await fetch("/api/admin/events", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminEvents(prev => prev.map(e => e.id === event.id ? data.event : e)); else setAdminEvents(prev => [data.event, ...prev]); onEventsChanged?.(); };
   const handleDeleteEvent = async (id: string) => { const res = await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminEvents(prev => prev.filter(e => e.id !== id)); onEventsChanged?.(); } };
   const handleSaveProject = async (project: Partial<Project>) => { const isEdit = !!project.id; const res = await fetch("/api/admin/projects", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminProjects(prev => prev.map(p => p.id === project.id ? data.project : p)); else setAdminProjects(prev => [data.project, ...prev]); onProjectsChanged?.(); };
-  const handleDeleteProject = async (id: string) => { const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); } };
+  const handleDeleteProject = async (id: string) => {
+    const projectToDelete = adminProjects.find(p => p.id === id);
+    const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (res.ok) {
+      setAdminProjects(prev => prev.filter(p => p.id !== id));
+      onProjectsChanged?.();
+      if (projectToDelete?.created_by) {
+        await fetch("/api/coins", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: projectToDelete.created_by, amount: -40, reason: `Project removed: "${projectToDelete.name}"`, type: "spend" }) });
+      }
+    }
+  };
   const handleReviewProposal = async (id: string, status: "approved" | "rejected") => { setReviewingProposal(id); try { const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: "" }) }); const data = await res.json(); if (res.ok) setProposals(prev => prev.map(p => p.id === id ? data.proposal : p)); } finally { setReviewingProposal(null); } };
   const handleDeleteProposal = async (id: string) => { const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) setProposals(prev => prev.filter(p => p.id !== id)); };
 
@@ -3161,21 +3171,23 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                 onAddProject={() => setAddingProject(true)}
                 onEdit={(p) => setEditingProject(p)}
                 onDelete={async (id) => {
-                  // Find the project to check if current user is creator
                   const proj = projects.find(p => p.id === id);
                   await fetch("/api/admin/projects", {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id }),
                   });
-                  // Deduct coins if creator is deleting their own project
-                  if (proj?.created_by === user.sub) {
+                  // Always deduct coins from whoever created the project
+                  if (proj?.created_by) {
                     await fetch("/api/coins", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.sub, amount: -40, reason: `Project removed: "${proj.name}"`, type: "spend" }),
+                      body: JSON.stringify({ userId: proj.created_by, amount: -40, reason: `Project removed: "${proj.name}"`, type: "spend" }),
                     });
-                    setTimeout(() => fetchCoinBalance(), 500);
+                    if (proj.created_by === user.sub) {
+                      setTimeout(() => fetchCoinBalance(), 500);
+                      setTimeout(() => showCoinToast(-40, `40 coins deducted for removing "${proj.name}" from the project catalogue.`), 300);
+                    }
                   }
                   fetchProjects();
                 }}
