@@ -108,6 +108,7 @@ const navItems = [
   { id: "events", label: "Events", icon: "calendar" },
   { id: "members", label: "Members", icon: "users" },
   { id: "knowledge", label: "Knowledge Base", icon: "book" },
+  { id: "rewards", label: "Rewards", icon: "star" },
   { id: "admin", label: "Admin Panel", icon: "shield" },
 ];
 
@@ -136,6 +137,7 @@ const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
     edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
     trash: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
     logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    award: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
     star: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
     chevronLeft: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
@@ -2029,6 +2031,17 @@ function getCoinTier(lifetime: number) {
 type CoinBalance = { user_id: string; balance: number; lifetime_earned: number; tier: string; };
 type CoinTransaction = { id: string; amount: number; reason: string; type: string; created_at: string; };
 
+
+// ─── REDEMPTION CATALOGUE ─────────────────────────────────────────────────────
+const REDEMPTION_CATALOGUE = [
+  { id: "intro_1on1", label: "Request a 1:1 intro to another partner", cost: 150, icon: "users", color: "#7C5CFC", bg: "#F0EDFF", description: "Get a warm introduction to a partner of your choice facilitated by bioERGOtech." },
+  { id: "premium_kb", label: "Access a premium knowledge base resource", cost: 100, icon: "book", color: "#2EC4B6", bg: "#E8F8F6", description: "Unlock access to exclusive research, datasets, or proprietary resources in the Knowledge Base." },
+  { id: "priority_lab", label: "Priority lab slot booking", cost: 250, icon: "cpu", color: "#F0A500", bg: "#FFF8E6", description: "Jump the queue and secure priority access to Distributed Lab equipment and facilities." },
+  { id: "feature_project", label: "Feature your project on the portal homepage", cost: 400, icon: "star", color: "#E74C6F", bg: "#FDECF1", description: "Get your project highlighted on the bioERGOtech portal homepage for maximum visibility." },
+  { id: "nominate_upgrade", label: "Nominate someone for a partnership upgrade", cost: 600, icon: "award", color: "#00B894", bg: "#E6F9F5", description: "Nominate a colleague or partner for a tier upgrade within the bioERGOtech ecosystem." },
+  { id: "cobrand_event", label: "Co-brand an event with bioERGOtech", cost: 1000, icon: "calendar", color: "#4A7DFF", bg: "#EBF1FF", description: "Partner with bioERGOtech to co-host a branded event, workshop, or webinar." },
+];
+
 // ─── ADMIN TYPES ──────────────────────────────────────────────────────────────
 type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; organisation_id?: string | null; };
 type Application = { id: string; email: string; full_name?: string; contact_role?: string; organisation_name?: string; organisation_type?: string; organisation_website?: string; country?: string; city?: string; areas_of_interest?: string[]; what_you_bring?: string; what_you_seek?: string; application_status: string; applied_at?: string; reviewed_at?: string; partnership_type?: string; admin_notes?: string; partnership_level: PartnershipLevel; };
@@ -2619,17 +2632,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   const handleSaveEvent = async (event: Partial<Event>) => { const isEdit = !!event.id; const res = await fetch("/api/admin/events", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminEvents(prev => prev.map(e => e.id === event.id ? data.event : e)); else setAdminEvents(prev => [data.event, ...prev]); onEventsChanged?.(); };
   const handleDeleteEvent = async (id: string) => { const res = await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminEvents(prev => prev.filter(e => e.id !== id)); onEventsChanged?.(); } };
   const handleSaveProject = async (project: Partial<Project>) => { const isEdit = !!project.id; const res = await fetch("/api/admin/projects", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminProjects(prev => prev.map(p => p.id === project.id ? data.project : p)); else setAdminProjects(prev => [data.project, ...prev]); onProjectsChanged?.(); };
-  const handleDeleteProject = async (id: string) => {
-    const projectToDelete = adminProjects.find(p => p.id === id);
-    const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) {
-      setAdminProjects(prev => prev.filter(p => p.id !== id));
-      onProjectsChanged?.();
-      if (projectToDelete?.created_by) {
-        await fetch("/api/coins", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: projectToDelete.created_by, amount: -40, reason: `Project removed: "${projectToDelete.name}"`, type: "spend" }) });
-      }
-    }
-  };
+  const handleDeleteProject = async (id: string) => { const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); } };
   const handleReviewProposal = async (id: string, status: "approved" | "rejected") => { setReviewingProposal(id); try { const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: "" }) }); const data = await res.json(); if (res.ok) setProposals(prev => prev.map(p => p.id === id ? data.proposal : p)); } finally { setReviewingProposal(null); } };
   const handleDeleteProposal = async (id: string) => { const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) setProposals(prev => prev.filter(p => p.id !== id)); };
 
@@ -3050,6 +3053,176 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
 }
 
 
+
+// ─── REWARDS VIEW ─────────────────────────────────────────────────────────────
+function RewardsView({ coinBalance, currentUserId, onRedeem }: {
+  coinBalance: CoinBalance | null;
+  currentUserId: string;
+  onRedeem: (item: typeof REDEMPTION_CATALOGUE[0], newBalance: number) => void;
+}) {
+  const [redeeming, setRedeeming] = useState<string | null>(null);
+  const [confirmItem, setConfirmItem] = useState<typeof REDEMPTION_CATALOGUE[0] | null>(null);
+  const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
+  const [loadingTx, setLoadingTx] = useState(true);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    fetch(`/api/coins?userId=${currentUserId}`)
+      .then(r => r.json())
+      .then(d => { setTransactions(d.transactions || []); setLoadingTx(false); })
+      .catch(() => setLoadingTx(false));
+  }, [currentUserId]);
+
+  const handleRedeem = async (item: typeof REDEMPTION_CATALOGUE[0]) => {
+    if (!coinBalance || coinBalance.balance < item.cost) return;
+    setRedeeming(item.id);
+    try {
+      const res = await fetch("/api/coins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUserId, amount: -item.cost, reason: `Redeemed: ${item.label}`, type: "spend" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTransactions(prev => [{ id: Date.now().toString(), amount: -item.cost, reason: `Redeemed: ${item.label}`, type: "spend", created_at: new Date().toISOString() }, ...prev]);
+        onRedeem(item, data.balance.balance);
+        setConfirmItem(null);
+      }
+    } catch (e) { console.error(e); }
+    finally { setRedeeming(null); }
+  };
+
+  const tier = coinBalance ? getCoinTier(coinBalance.lifetime_earned) : COIN_TIERS[3];
+  const balance = coinBalance?.balance ?? 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* Balance card */}
+      <div style={{ background: "linear-gradient(135deg, #1A2332, #2C3E50)", borderRadius: 20, padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 13, color: "#8896A6", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.07em" }}>Your Coin Balance</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 48, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{balance}</span>
+            <span style={{ fontSize: 24 }}>🪙</span>
+          </div>
+          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, padding: "3px 12px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700 }}>{tier.badge} {tier.name}</span>
+            <span style={{ fontSize: 12, color: "#8896A6" }}>· {coinBalance?.lifetime_earned ?? 0} lifetime coins</span>
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 12, color: "#8896A6", marginBottom: 8 }}>Next tier</div>
+          {tier.name !== "Catalyst" && (() => {
+            const nextTier = COIN_TIERS[COIN_TIERS.findIndex(t => t.name === tier.name) - 1];
+            const progress = nextTier ? Math.min(100, ((coinBalance?.lifetime_earned ?? 0) / nextTier.min) * 100) : 100;
+            return (
+              <div>
+                <div style={{ fontSize: 12, color: nextTier?.color, fontWeight: 700, marginBottom: 6 }}>{nextTier?.name} ({nextTier?.min} coins)</div>
+                <div style={{ width: 160, height: 6, borderRadius: 6, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                  <div style={{ width: `${progress}%`, height: "100%", background: nextTier?.color, borderRadius: 6, transition: "width 0.5s ease" }} />
+                </div>
+                <div style={{ fontSize: 11, color: "#8896A6", marginTop: 4 }}>{nextTier ? nextTier.min - (coinBalance?.lifetime_earned ?? 0) : 0} coins to go</div>
+              </div>
+            );
+          })()}
+          {tier.name === "Catalyst" && <div style={{ fontSize: 13, color: "#F0A500", fontWeight: 700 }}>🏆 Maximum tier reached!</div>}
+        </div>
+      </div>
+
+      {/* Redemption catalogue */}
+      <div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 16 }}>Redeem Your Coins</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+          {REDEMPTION_CATALOGUE.map(item => {
+            const canAfford = balance >= item.cost;
+            return (
+              <div key={item.id} style={{ background: CARD, border: `1px solid ${canAfford ? BORDER : "#F3F5F8"}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12, boxShadow: SHADOW, opacity: canAfford ? 1 : 0.65 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name={item.icon} size={20} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", lineHeight: 1.3 }}>{item.label}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                      <span style={{ fontSize: 13 }}>🪙</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: item.color }}>{item.cost} coins</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.55 }}>{item.description}</div>
+                <button
+                  onClick={() => canAfford && setConfirmItem(item)}
+                  disabled={!canAfford || redeeming === item.id}
+                  style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: canAfford ? `linear-gradient(135deg, ${item.color}, ${item.color}CC)` : "#E8EDF3", color: canAfford ? "#fff" : TEXT_LIGHT, fontSize: 13, fontWeight: 700, cursor: canAfford ? "pointer" : "not-allowed", fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  {!canAfford ? `Need ${item.cost - balance} more coins` : redeeming === item.id ? "Processing…" : "Redeem"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Transaction history */}
+      <div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 16 }}>Transaction History</div>
+        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
+          {loadingTx ? (
+            <div style={{ padding: 32, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
+          ) : transactions.length === 0 ? (
+            <div style={{ padding: 32, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No transactions yet.</div>
+          ) : (
+            transactions.map((tx, i) => (
+              <div key={tx.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: i < transactions.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: tx.amount > 0 ? "#E6F9F5" : "#FDECF1", color: tx.amount > 0 ? "#00B894" : "#E74C6F", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
+                    {tx.amount > 0 ? "+" : "−"}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{tx.reason}</div>
+                    <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>{new Date(tx.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: tx.amount > 0 ? "#00B894" : "#E74C6F" }}>
+                  {tx.amount > 0 ? "+" : ""}{tx.amount} 🪙
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Confirmation modal */}
+      {confirmItem && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div onClick={() => setConfirmItem(null)} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
+          <div style={{ position: "relative", width: 440, background: CARD, borderRadius: 20, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 16, zIndex: 501 }}>
+            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Confirm Redemption</div>
+            <div style={{ background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 8 }}>{confirmItem.label}</div>
+              <div style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.55, marginBottom: 12 }}>{confirmItem.description}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 16 }}>🪙</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: confirmItem.color }}>{confirmItem.cost} coins</span>
+                <span style={{ fontSize: 13, color: TEXT_LIGHT }}>· Remaining: {balance - confirmItem.cost}</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setConfirmItem(null)} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button
+                onClick={() => handleRedeem(confirmItem)}
+                disabled={redeeming === confirmItem.id}
+                style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${confirmItem.color}, ${confirmItem.color}CC)`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+              >{redeeming === confirmItem.id ? "Processing…" : "Confirm & Redeem"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SectionWrapper({ sectionId, sectionName, partnershipLevel, children }: { sectionId: string; sectionName: string; partnershipLevel: PartnershipLevel; children: React.ReactNode }) {
   const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find(s => s.id === sectionId);
   if (lockedEntry) {
@@ -3171,23 +3344,21 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                 onAddProject={() => setAddingProject(true)}
                 onEdit={(p) => setEditingProject(p)}
                 onDelete={async (id) => {
+                  // Find the project to check if current user is creator
                   const proj = projects.find(p => p.id === id);
                   await fetch("/api/admin/projects", {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id }),
                   });
-                  // Always deduct coins from whoever created the project
-                  if (proj?.created_by) {
+                  // Deduct coins if creator is deleting their own project
+                  if (proj?.created_by === user.sub) {
                     await fetch("/api/coins", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: proj.created_by, amount: -40, reason: `Project removed: "${proj.name}"`, type: "spend" }),
+                      body: JSON.stringify({ userId: user.sub, amount: -40, reason: `Project removed: "${proj.name}"`, type: "spend" }),
                     });
-                    if (proj.created_by === user.sub) {
-                      setTimeout(() => fetchCoinBalance(), 500);
-                      setTimeout(() => showCoinToast(-40, `40 coins deducted for removing "${proj.name}" from the project catalogue.`), 300);
-                    }
+                    setTimeout(() => fetchCoinBalance(), 500);
                   }
                   fetchProjects();
                 }}
@@ -3253,6 +3424,18 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
               currentUserName={user.display_name || user.full_name || user.email}
             />
           </SectionWrapper>
+        );
+
+      case "rewards":
+        return (
+          <RewardsView
+            coinBalance={coinBalance}
+            currentUserId={user.sub}
+            onRedeem={(item, newBalance) => {
+              setCoinBalance(prev => prev ? { ...prev, balance: newBalance } : prev);
+              setTimeout(() => showCoinToast(-item.cost, `${item.cost} coins spent on: "${item.label}"`), 300);
+            }}
+          />
         );
 
       case "admin":
