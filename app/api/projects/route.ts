@@ -8,16 +8,45 @@ const getClient = () =>
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
+// Award coins directly via Supabase — no internal HTTP fetch
+async function awardCoins(userId: string, amount: number, reason: string) {
+  try {
+    const client = getClient();
+
+    // Get or create balance
+    const { data: existing } = await client
+      .from("coin_balances")
+      .select("balance, lifetime_earned")
+      .eq("user_id", userId)
+      .single();
+
+    const currentBalance = existing?.balance ?? 0;
+    const currentLifetime = existing?.lifetime_earned ?? 0;
+
+    await client.from("coin_balances").upsert({
+      user_id: userId,
+      balance: currentBalance + amount,
+      lifetime_earned: currentLifetime + amount,
+    }, { onConflict: "user_id" });
+
+    await client.from("coin_transactions").insert({
+      user_id: userId,
+      amount,
+      reason,
+      type: "earn",
+    });
+  } catch (e) {
+    console.error("Failed to award coins:", e);
+  }
+}
+
 export async function GET() {
   const { data, error } = await getClient()
     .from("projects")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ projects: data });
 }
 
@@ -47,8 +76,11 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Award +40 coins directly via Supabase
+    if (body.created_by) {
+      await awardCoins(body.created_by, 40, `Project created: "${body.name?.trim()}"`);
     }
 
     return NextResponse.json({ project: data });
@@ -62,9 +94,7 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { id, ...fields } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing project id" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "Missing project id" }, { status: 400 });
 
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -92,35 +122,6 @@ export async function PATCH(request: Request) {
       .select()
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ project: data });
   } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const { id } = await request.json();
-
-    if (!id) {
-      return NextResponse.json({ error: "Missing project id" }, { status: 400 });
-    }
-
-    const { error } = await getClient()
-      .from("projects")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
-}
