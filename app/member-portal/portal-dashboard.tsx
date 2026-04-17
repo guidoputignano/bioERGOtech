@@ -3067,14 +3067,22 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [addingProject, setAddingProject] = useState(false);
   const [coinBalance, setCoinBalance] = useState<CoinBalance | null>(null);
+  const [coinToast, setCoinToast] = useState<{ amount: number; reason: string } | null>(null);
 
+  const fetchCoinBalance = () => {
+    fetch(`/api/coins?userId=${user.sub}`).then(r => r.json()).then(d => { if (d.balance) setCoinBalance(d.balance); }).catch(() => {});
+  };
+  const showCoinToast = (amount: number, reason: string) => {
+    setCoinToast({ amount, reason });
+    setTimeout(() => setCoinToast(null), 5000);
+  };
   const fetchProjects = () => fetch("/api/projects").then(r => r.json()).then(d => setProjects(d.projects || []));
   const fetchEvents = () => fetch("/api/events").then(r => r.json()).then(d => setEvents(d.events || []));
 
   useEffect(() => {
     fetchProjects(); fetchEvents();
     // Fetch coin balance
-    fetch(`/api/coins?userId=${user.sub}`).then(r => r.json()).then(d => { if (d.balance) setCoinBalance(d.balance); }).catch(() => {});
+    fetchCoinBalance();
     fetch("/api/organisations").then(r => r.json()).then(d => setMembers(d.organisations || []));
     // Pure DB count — no static offset added
     fetch("/api/admin/equipment").then(r => r.json()).then(d => {
@@ -3136,6 +3144,8 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                     if (!res.ok) throw new Error(data.error || "Failed to create project");
                     setAddingProject(false);
                     fetchProjects();
+                    fetchCoinBalance();
+                    showCoinToast(40, `You earned 40 coins for adding "${project.name}" to the bioERGOtech project catalogue!`);
                   }}
                 />
               )}
@@ -3353,6 +3363,47 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           {renderContent()}
         </div>
       </div>
+
+
+      {/* ── Coin Toast Notification ── */}
+      {coinToast && (
+        <div style={{
+          position: "fixed",
+          bottom: 28,
+          right: 28,
+          zIndex: 9999,
+          background: "linear-gradient(135deg, #1A2332, #2C3E50)",
+          color: "#fff",
+          borderRadius: 16,
+          padding: "16px 22px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 14,
+          maxWidth: 360,
+          animation: "fadeUp 0.3s ease both",
+        }}>
+          <div style={{ fontSize: 28, flexShrink: 0 }}>🎉</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, fontFamily: "'Sora', sans-serif" }}>
+              +{coinToast.amount} coins earned!
+            </div>
+            <div style={{ fontSize: 13, color: "#B8C5D6", lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
+              {coinToast.reason}
+            </div>
+            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 11 }}>🪙</span>
+              <span style={{ fontSize: 12, color: "#2EC4B6", fontWeight: 700 }}>
+                {coinBalance ? `New balance: ${coinBalance.balance + coinToast.amount} coins` : "Check your coin balance"}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => setCoinToast(null)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#8896A6", padding: 0, flexShrink: 0, fontSize: 16, lineHeight: 1 }}
+          >✕</button>
+        </div>
+      )}
     </div>
   );
 } // ← closes BioERGOtechPortal
