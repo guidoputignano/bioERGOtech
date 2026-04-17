@@ -1661,6 +1661,33 @@ function MemberDrawer({ member, isAdmin, onClose, onEdit, onDelete }: { member: 
 }
 
 function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: boolean; }) {
+  const [membersTab, setMembersTab] = useState<"organisations" | "people">("organisations");
+  const [profiles, setProfiles] = useState<{ id: string; email: string; full_name?: string; partnership_level: string; coin_balance?: number; lifetime_earned?: number; tier?: string }[]>([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(false);
+
+  useEffect(() => {
+    if (membersTab === "people") {
+      setLoadingProfiles(true);
+      Promise.all([
+        fetch("/api/admin/users").then(r => r.json()),
+        fetch("/api/coins?all=true").then(r => r.json()),
+      ]).then(([usersData, coinsData]) => {
+        const balanceMap: Record<string, { balance: number; lifetime_earned: number; tier: string }> = {};
+        (coinsData.balances || []).forEach((cb: { user_id: string; balance: number; lifetime_earned: number; tier: string }) => {
+          balanceMap[cb.user_id] = { balance: cb.balance, lifetime_earned: cb.lifetime_earned, tier: cb.tier };
+        });
+        const enriched = (usersData.users || []).map((u: { id: string; email: string; full_name?: string; partnership_level: string }) => ({
+          ...u,
+          coin_balance: balanceMap[u.id]?.balance ?? 0,
+          lifetime_earned: balanceMap[u.id]?.lifetime_earned ?? 0,
+          tier: balanceMap[u.id]?.tier ?? "Explorer",
+        }));
+        setProfiles(enriched);
+        setLoadingProfiles(false);
+      }).catch(() => setLoadingProfiles(false));
+    }
+  }, [membersTab]);
+
   const tc: Record<string, string> = { Foundation: TEAL, University: "#7C5CFC", Startup: "#00B894", SME: "#F0A500", "Clinical Center": "#E74C6F", Investor: "#4A7DFF", "International Partner": "#F0A500" };
   const tbg: Record<string, string> = { Foundation: TEAL_LIGHT, University: "#F0EDFF", Startup: "#E6F9F5", SME: "#FFF8E6", "Clinical Center": "#FDECF1", Investor: "#EBF1FF", "International Partner": "#FFF8E6" };
   const [selectedMember, setSelectedMember] = useState<Organisation | null>(null);
@@ -1723,8 +1750,12 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
       {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>
-          Member Organisations
+          {membersTab === "organisations" ? "Member Organisations" : "Community Members"}
         </h3>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button onClick={() => setMembersTab("organisations")} style={{ padding: "6px 14px", borderRadius: 20, border: "none", background: membersTab === "organisations" ? TEAL : "#F3F5F8", color: membersTab === "organisations" ? "#fff" : TEXT_MID, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Organisations</button>
+          <button onClick={() => setMembersTab("people")} style={{ padding: "6px 14px", borderRadius: 20, border: "none", background: membersTab === "people" ? TEAL : "#F3F5F8", color: membersTab === "people" ? "#fff" : TEXT_MID, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>People</button>
+        </div>
         {isAdmin && (
           <button
             onClick={() => setOrganisationModal({})}
@@ -1736,7 +1767,43 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
       </div>
 
       {/* Cards */}
-      {(!memberList || memberList.length === 0) ? (
+      {membersTab === "people" ? (
+        <div>
+          {loadingProfiles ? (
+            <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading members…</div>
+          ) : profiles.length === 0 ? (
+            <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No members found.</div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+              {profiles.map((p) => {
+                const tier = getCoinTier(p.lifetime_earned ?? 0);
+                const levelColors: Record<string, { bg: string; color: string }> = { admin: { bg: "#FDECF1", color: "#E74C6F" }, partner: { bg: TEAL_LIGHT, color: TEAL_DARK }, member: { bg: "#F0EDFF", color: "#7C5CFC" } };
+                const lvl = levelColors[p.partnership_level] || levelColors.member;
+                return (
+                  <div key={p.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: SHADOW, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 42, height: 42, borderRadius: 12, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+                        {(p.full_name || p.email).charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{p.full_name || "—"}</div>
+                        <div style={{ fontSize: 12, color: TEXT_LIGHT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{p.email}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: lvl.bg, color: lvl.color, fontWeight: 700, textTransform: "capitalize" as const }}>{p.partnership_level}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700 }}>{tier.badge} {p.tier || "Explorer"}</span>
+                        <span style={{ fontSize: 11, color: TEXT_LIGHT }}>🪙 {p.coin_balance ?? 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (!memberList || memberList.length === 0) ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, boxShadow: SHADOW, height: 80, opacity: 0.4 }} />
