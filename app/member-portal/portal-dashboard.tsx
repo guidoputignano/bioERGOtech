@@ -1676,7 +1676,9 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
         (coinsData.balances || []).forEach((cb: { user_id: string; balance: number; lifetime_earned: number; tier: string }) => {
           balanceMap[cb.user_id] = { balance: cb.balance, lifetime_earned: cb.lifetime_earned, tier: cb.tier };
         });
-        const enriched = (usersData.users || []).map((u: { id: string; email: string; full_name?: string; partnership_level: string }) => ({
+        const filtered = (usersData.users || []).filter((u: { partnership_level: string }) => u.partnership_level !== "admin");
+                const enriched = filtered.map((u: { id: string; email: string; full_name?: string; partnership_level: string }) => ({
+        
           ...u,
           coin_balance: balanceMap[u.id]?.balance ?? 0,
           lifetime_earned: balanceMap[u.id]?.lifetime_earned ?? 0,
