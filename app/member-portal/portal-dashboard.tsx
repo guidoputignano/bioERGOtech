@@ -2623,7 +2623,7 @@ function ApplicationDrawer({
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "newsletter">("applications");
+  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -2654,6 +2654,8 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   // Pending document proposals
   const [pendingDocs, setPendingDocs] = useState<KnowledgeDocument[]>([]);
   const [loadingPendingDocs, setLoadingPendingDocs] = useState(true);
+  const [pendingRedemptions, setPendingRedemptions] = useState<{ id: string; user_email: string; user_name?: string; item_id: string; item_label: string; coins_spent: number; status: string; admin_notes?: string; created_at: string; actioned_at?: string }[]>([]);
+  const [loadingRedemptions, setLoadingRedemptions] = useState(true);
   const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
   const [loadingCoins, setLoadingCoins] = useState(true);
   const [coinTopUp, setCoinTopUp] = useState<{ userId: string; amount: string; reason: string } | null>(null);
@@ -2675,6 +2677,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     if (tab === "projects") { setLoadingProjects(true); fetch("/api/admin/projects").then(r => r.json()).then(d => { setAdminProjects(d.projects || []); setLoadingProjects(false); }).catch(() => setLoadingProjects(false)); }
     if (tab === "equipment") { setLoadingProposals(true); fetch("/api/admin/equipment").then(r => r.json()).then(d => { setProposals(d.proposals || []); setLoadingProposals(false); }).catch(() => setLoadingProposals(false)); }
     if (tab === "knowledge") { setLoadingKnowledge(true); fetch("/api/admin/knowledge").then(r => r.json()).then(d => { setKnowledgeDocs(d.documents || []); setLoadingKnowledge(false); }).catch(() => setLoadingKnowledge(false)); }
+    if (tab === "redemptions") { setLoadingRedemptions(true); fetch("/api/redemptions").then(r => r.json()).then(d => { setPendingRedemptions(d.requests || []); setLoadingRedemptions(false); }).catch(() => setLoadingRedemptions(false)); }
     if (tab === "coins") { setLoadingCoins(true); fetch("/api/coins?all=true").then(r => r.json()).then(d => { setAllCoinBalances(d.balances || []); setLoadingCoins(false); }).catch(() => setLoadingCoins(false)); }
     if (tab === "pending_docs") { setLoadingPendingDocs(true); fetch("/api/admin/knowledge?pending=true").then(r => r.json()).then(d => { setPendingDocs(d.documents || []); setLoadingPendingDocs(false); }).catch(() => setLoadingPendingDocs(false)); }
   }, [tab]);
@@ -2748,6 +2751,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
     { id: "knowledge" as const, label: "Knowledge", icon: "book", badge: null as number | null },
     { id: "pending_docs" as const, label: "Doc Proposals", icon: "fileText", badge: pendingDocs.length > 0 ? pendingDocs.length : null as number | null },
     { id: "coins" as const, label: "Coins", icon: "star", badge: null as number | null },
+    { id: "redemptions" as const, label: "Redemptions", icon: "award", badge: pendingRedemptions.length > 0 ? pendingRedemptions.length : null as number | null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null as number | null },
   ];
 
@@ -3092,6 +3096,68 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
 
+        {tab === "redemptions" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
+              <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Coin Redemption Requests</h3>
+                <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{pendingRedemptions.filter(r => r.status === "pending").length} pending</span>
+              </div>
+              {loadingRedemptions ? (
+                <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
+              ) : pendingRedemptions.length === 0 ? (
+                <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No redemption requests yet.</div>
+              ) : (
+                <div>
+                  {pendingRedemptions.map((req, i) => {
+                    const statusColors: Record<string, { bg: string; color: string }> = {
+                      pending: { bg: "#FFF8E6", color: "#F0A500" },
+                      actioned: { bg: "#E6F9F5", color: "#00B894" },
+                      declined: { bg: "#FDECF1", color: "#E74C6F" },
+                    };
+                    const sc = statusColors[req.status] || statusColors.pending;
+                    return (
+                      <div key={req.id} style={{ padding: "18px 24px", borderBottom: i < pendingRedemptions.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{req.item_label}</div>
+                            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginBottom: 6 }}>
+                              {req.user_name || req.user_email} · {new Date(req.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: sc.bg, color: sc.color, fontWeight: 700, textTransform: "capitalize" as const }}>{req.status}</span>
+                              <span style={{ fontSize: 12, color: TEXT_LIGHT }}>🪙 {req.coins_spent} coins</span>
+                            </div>
+                            {req.admin_notes && <div style={{ fontSize: 12, color: TEXT_MID, marginTop: 6, fontStyle: "italic" }}>Note: {req.admin_notes}</div>}
+                          </div>
+                          {req.status === "pending" && (
+                            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                              <button
+                                onClick={async () => {
+                                  const res = await fetch("/api/redemptions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: req.id, status: "actioned" }) });
+                                  if (res.ok) setPendingRedemptions(prev => prev.map(r => r.id === req.id ? { ...r, status: "actioned" } : r));
+                                }}
+                                style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#00B894", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                              >✓ Mark Actioned</button>
+                              <button
+                                onClick={async () => {
+                                  const res = await fetch("/api/redemptions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: req.id, status: "declined" }) });
+                                  if (res.ok) setPendingRedemptions(prev => prev.map(r => r.id === req.id ? { ...r, status: "declined" } : r));
+                                }}
+                                style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#E74C6F", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                              >✕ Decline</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {tab === "newsletter" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -3124,9 +3190,11 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
 
 
 // ─── REWARDS VIEW ─────────────────────────────────────────────────────────────
-function RewardsView({ coinBalance, currentUserId, onRedeem }: {
+function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem }: {
   coinBalance: CoinBalance | null;
   currentUserId: string;
+  userEmail: string;
+  userName?: string;
   onRedeem: (item: typeof REDEMPTION_CATALOGUE[0], newBalance: number) => void;
 }) {
   const [redeeming, setRedeeming] = useState<string | null>(null);
@@ -3156,6 +3224,12 @@ function RewardsView({ coinBalance, currentUserId, onRedeem }: {
         setTransactions(prev => [{ id: Date.now().toString(), amount: -item.cost, reason: `Redeemed: ${item.label}`, type: "spend", created_at: new Date().toISOString() }, ...prev]);
         onRedeem(item, data.balance.balance);
         setConfirmItem(null);
+        // Log redemption request for admin
+        await fetch("/api/redemptions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUserId, userEmail, userName, itemId: item.id, itemLabel: item.label, coinsSpent: item.cost }),
+        });
       }
     } catch (e) { console.error(e); }
     finally { setRedeeming(null); }
@@ -3500,6 +3574,8 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           <RewardsView
             coinBalance={coinBalance}
             currentUserId={user.sub}
+            userEmail={user.email}
+            userName={user.display_name || user.full_name}
             onRedeem={(item, newBalance) => {
               setCoinBalance(prev => prev ? { ...prev, balance: newBalance } : prev);
               setTimeout(() => showCoinToast(-item.cost, `${item.cost} coins spent on: "${item.label}"`), 300);
