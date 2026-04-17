@@ -10,12 +10,12 @@ const getClient = () =>
 
 async function awardCoins(userId: string, amount: number, reason: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bioergotech.org";
-    await fetch(`${baseUrl}/api/coins`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, amount, reason, type: "earn" }),
-    });
+    const client = getClient();
+    const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
+    const currentBalance = existing?.balance ?? 0;
+    const currentLifetime = existing?.lifetime_earned ?? 0;
+    await client.from("coin_balances").upsert({ user_id: userId, balance: currentBalance + amount, lifetime_earned: currentLifetime + amount }, { onConflict: "user_id" });
+    await client.from("coin_transactions").insert({ user_id: userId, amount, reason, type: "earn" });
   } catch (e) { console.error("Failed to award coins:", e); }
 }
 

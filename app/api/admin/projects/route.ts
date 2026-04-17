@@ -8,15 +8,36 @@ const getClient = () =>
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
+// Award coins directly via Supabase — no internal HTTP fetch
 async function awardCoins(userId: string, amount: number, reason: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bioergotech.org";
-    await fetch(`${baseUrl}/api/coins`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, amount, reason, type: "earn" }),
+    const client = getClient();
+
+    // Get or create balance
+    const { data: existing } = await client
+      .from("coin_balances")
+      .select("balance, lifetime_earned")
+      .eq("user_id", userId)
+      .single();
+
+    const currentBalance = existing?.balance ?? 0;
+    const currentLifetime = existing?.lifetime_earned ?? 0;
+
+    await client.from("coin_balances").upsert({
+      user_id: userId,
+      balance: currentBalance + amount,
+      lifetime_earned: currentLifetime + amount,
+    }, { onConflict: "user_id" });
+
+    await client.from("coin_transactions").insert({
+      user_id: userId,
+      amount,
+      reason,
+      type: "earn",
     });
-  } catch (e) { console.error("Failed to award coins:", e); }
+  } catch (e) {
+    console.error("Failed to award coins:", e);
+  }
 }
 
 export async function GET() {
@@ -29,7 +50,6 @@ export async function GET() {
   return NextResponse.json({ projects: data });
 }
 
-// POST — create project. Awards +40 coins to creator.
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -58,7 +78,7 @@ export async function POST(request: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Award +40 coins to project creator
+    // Award +40 coins directly via Supabase
     if (body.created_by) {
       await awardCoins(body.created_by, 40, `Project created: "${body.name?.trim()}"`);
     }
