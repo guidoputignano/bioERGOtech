@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { AttendanceModal } from "@/components/AttendanceModal";
 const MemberMap = dynamic(() => import("@/components/member-map"), { ssr: false });
 
 const TEAL = "#2EC4B6";
@@ -75,7 +76,7 @@ function leadMailtoHref(lead: string): string {
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type Project = { id?: string; name: string; pillar: string; phase: string; status: string; lead: string; lead_email?: string | null; lead_phone?: string | null; description: string; progress: number; color: string; is_public?: boolean; objectives?: string[]; update_notes?: string | null; created_by?: string | null; updated_at?: string | null; };
-type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; };
+type Event = { id?: string; title: string; event_date: string; event_type: string; location: string; description?: string; video_link?: string; is_public?: boolean; is_approved?: boolean; created_by?: string; };
 type Organisation = { id?: string; name: string; org_type: string; location: string; country?: string | null; city?: string | null; website?: string | null; areas_of_interest?: string[]; is_active?: boolean; };
 type Subscriber = { id: string; email: string; full_name: string; source: string; subscribed_at: string; is_active: boolean; };
 type EquipmentProposal = { id: string; name: string; category?: string; location: string; description?: string; proposed_by_email?: string; proposed_by_name?: string; contact_email?: string | null; contact_phone?: string | null; image_url?: string | null; status: string; admin_notes?: string; reviewed_at?: string; created_at: string; is_available?: boolean; utilization?: number; cost_savings_text?: string | null; bookings_count?: number; };
@@ -2624,7 +2625,7 @@ function ApplicationDrawer({
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
-function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; }) {
+function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; adminUserId?: string; }) {
   const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
@@ -2656,6 +2657,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
   // Pending document proposals
   const [pendingDocs, setPendingDocs] = useState<KnowledgeDocument[]>([]);
   const [loadingPendingDocs, setLoadingPendingDocs] = useState(true);
+  const [attendanceEvent, setAttendanceEvent] = useState<{ id: string; title: string; created_by?: string; event_date?: string } | null>(null);
   const [pendingRedemptions, setPendingRedemptions] = useState<{ id: string; user_email: string; user_name?: string; item_id: string; item_label: string; coins_spent: number; status: string; admin_notes?: string; created_at: string; actioned_at?: string }[]>([]);
   const [loadingRedemptions, setLoadingRedemptions] = useState(true);
   const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
@@ -2867,13 +2869,19 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
             {loadingEvents ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
               : adminEvents.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No events yet.</div>
               : (<div>
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}><span>Title</span><span>Date</span><span>Location</span><span>Type</span><span>Actions</span></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 120px 90px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}><span>Title</span><span>Date</span><span>Location</span><span>Type</span><span>Attendance</span><span>Actions</span></div>
                 {adminEvents.map((e, i) => (
-                  <div key={e.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 90px", padding: "14px 24px", borderBottom: i < adminEvents.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
+                  <div key={e.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 100px 140px 100px 120px 90px", padding: "14px 24px", borderBottom: i < adminEvents.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
                     <div><div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{e.title}</div>{!e.is_approved && <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: "#FFF8E6", color: "#C48700", fontWeight: 700 }}>Pending</span>}</div>
                     <span style={{ fontSize: 12, color: TEXT_MID }}>{e.event_date}</span>
                     <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{e.location}</span>
                     <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: e.event_type === "national" ? TEAL_LIGHT : "#F3F5F8", color: e.event_type === "national" ? TEAL_DARK : TEXT_LIGHT, fontWeight: 700, textTransform: "capitalize" as const, width: "fit-content" }}>{e.event_type}</span>
+                    <button
+                      onClick={() => setAttendanceEvent({ id: e.id!, title: e.title, created_by: e.created_by, event_date: e.event_date })}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      <Icon name="users" size={12} /> Mark
+                    </button>
                     <div style={{ display: "flex", gap: 6 }}><button onClick={() => setEventModal({ open: true, event: e })} style={{ ...btnBase, background: "#F3F5F8", color: TEXT_MID }}><Icon name="edit" size={14} /></button><button onClick={() => { if (confirm("Delete this event?")) handleDeleteEvent(e.id!); }} style={{ ...btnBase, background: "#FDECF1", color: "#D63563" }}><Icon name="trash" size={14} /></button></div>
                   </div>
                 ))}
@@ -3185,6 +3193,15 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
           </div>
         )}
       </div>
+
+      {/* Attendance Modal */}
+      {attendanceEvent && adminUserId && (
+        <AttendanceModal
+          event={attendanceEvent}
+          adminUserId={adminUserId}
+          onClose={() => setAttendanceEvent(null)}
+        />
+      )}
     </>
   );
 }
@@ -3930,7 +3947,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
         );
 
       case "admin":
-        return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} /> : null;
+        return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} adminUserId={user.sub} /> : null;
 
       default:
         return (
