@@ -593,7 +593,7 @@ function DashboardView({
         </button>
       </div>
     )}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+      <div className="portal-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
         {stats.map((s, i) => (
           <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "20px 22px", boxShadow: SHADOW, animation: `fadeUp 0.45s ease ${i * 0.08}s both` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -604,7 +604,7 @@ function DashboardView({
           </div>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 20 }}>
+      <div className="portal-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 20 }}>
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, boxShadow: SHADOW }}>
           <h3 style={{ margin: "0 0 18px", fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Active Projects</h3>
           {projects.slice(0, 4).map((p, i) => (
@@ -3616,10 +3616,22 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
         ::-webkit-scrollbar-thumb { background: #D5DAE3; border-radius: 10px; }
         ::placeholder { color: #A8B5C4; }
         button:hover { filter: brightness(0.97); }
+        @media (max-width: 768px) {
+          .portal-sidebar { display: none !important; }
+          .portal-main { margin-left: 0 !important; padding-bottom: 70px !important; }
+          .portal-bottom-nav { display: flex !important; }
+          .portal-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .portal-dashboard-grid { grid-template-columns: 1fr !important; }
+          .portal-header { padding: 16px 16px !important; }
+          .portal-content { padding: 16px 16px !important; }
+        }
+        @media (min-width: 769px) {
+          .portal-bottom-nav { display: none !important; }
+        }
       `}</style>
 
       {/* ── Sidebar ── */}
-<div style={{ width: collapsed ? 68 : 240, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "width 0.3s ease", flexShrink: 0, boxShadow: "1px 0 8px rgba(0,0,0,0.02)" }}>
+<div className="portal-sidebar" style={{ width: collapsed ? 68 : 240, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", transition: "width 0.3s ease", flexShrink: 0, boxShadow: "1px 0 8px rgba(0,0,0,0.02)" }}>
   
   {/* Logo row — logo links home, arrow toggles collapse */}
   <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
@@ -3692,7 +3704,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
 </div>
 
       {/* ── Main content ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="portal-main" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "16px 30px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.85)", backdropFilter: "blur(12px)" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 23, fontWeight: 800, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{sectionNames[activeNav]}</h1>
@@ -3719,6 +3731,28 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
         </div>
       </div>
 
+
+      {/* ── Mobile Bottom Navigation ── */}
+      <div className="portal-bottom-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200, background: "#fff", borderTop: `1px solid ${BORDER}`, padding: "8px 0", justifyContent: "space-around", alignItems: "center" }}>
+        {[
+          { id: "dashboard", icon: "grid", label: "Home" },
+          { id: "projects", icon: "layers", label: "Projects" },
+          { id: "lab", icon: "cpu", label: "Lab" },
+          { id: "events", icon: "calendar", label: "Events" },
+          { id: "members", icon: "users", label: "Members" },
+          { id: "rewards", icon: "star", label: "Rewards" },
+          ...(isAdmin ? [{ id: "admin", icon: "shield", label: "Admin" }] : []),
+        ].map(item => (
+          <button
+            key={item.id}
+            onClick={() => setActiveNav(item.id as typeof activeNav)}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", color: activeNav === item.id ? TEAL : TEXT_LIGHT, minWidth: 44 }}
+          >
+            <Icon name={item.icon} size={20} />
+            <span style={{ fontSize: 9, fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{item.label}</span>
+          </button>
+        ))}
+      </div>
 
       {/* ── Coin Toast Notification ── */}
       {coinToast && (
