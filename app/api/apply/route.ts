@@ -5,17 +5,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const required = [
-      "partnership_type",
-      "full_name",
-      "contact_role",
-      "email",
-      "organisation_name",
-      "organisation_type",
-      "country",
-      "city",
-    ];
-
+    const required = ["partnership_type", "full_name", "contact_role", "email", "organisation_name", "organisation_type", "country", "city"];
     for (const field of required) {
       if (!body[field]?.toString().trim()) {
         return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 });
@@ -23,9 +13,7 @@ export async function POST(request: Request) {
     }
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRoleKey) {
-      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
-    }
+    if (!serviceRoleKey) return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
 
     const adminClient = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,9 +39,7 @@ export async function POST(request: Request) {
         .select("id")
         .single();
 
-      if (!orgError && newOrg) {
-        organisation_id = newOrg.id;
-      }
+      if (!orgError && newOrg) organisation_id = newOrg.id;
     }
 
     const payload = {
@@ -75,6 +61,7 @@ export async function POST(request: Request) {
       mobile_phone: body.mobile_phone?.trim() || null,
       strategic_email: body.strategic_email?.trim() || null,
       tax_id: body.tax_id?.trim() || null,
+      referred_by: body.referred_by?.trim().toUpperCase() || null,
     };
 
     const { data: existing } = await adminClient
@@ -85,64 +72,30 @@ export async function POST(request: Request) {
 
     if (existing) {
       if (existing.application_status === "pending") {
-        return NextResponse.json(
-          { error: "An application for this email is already under review." },
-          { status: 409 }
-        );
+        return NextResponse.json({ error: "An application for this email is already under review." }, { status: 409 });
       }
-
       if (existing.application_status === "approved") {
-        return NextResponse.json(
-          { error: "This email already has an active membership. Please sign in." },
-          { status: 409 }
-        );
+        return NextResponse.json({ error: "This email already has an active membership. Please sign in." }, { status: 409 });
       }
-
       const { error: updateError } = await adminClient
         .from("applications")
-        .update({
-          ...payload,
-          application_status: "pending",
-          applied_at: new Date().toISOString(),
-          reviewed_at: null,
-          admin_notes: null,
-        })
+        .update({ ...payload, application_status: "pending", applied_at: new Date().toISOString(), reviewed_at: null, admin_notes: null })
         .eq("id", existing.id);
-
       if (updateError) throw new Error(updateError.message);
     } else {
       const { error: insertError } = await adminClient
         .from("applications")
-        .insert({
-          ...payload,
-          application_status: "pending",
-          applied_at: new Date().toISOString(),
-        });
-
+        .insert({ ...payload, application_status: "pending", applied_at: new Date().toISOString() });
       if (insertError) throw new Error(insertError.message);
     }
 
     if (body.newsletter_consent === true) {
-      await adminClient
-        .from("newsletter_subscribers")
-        .upsert(
-          {
-            email,
-            full_name: body.full_name.trim(),
-            source: "join-us-form",
-            is_active: true,
-            subscribed_at: new Date().toISOString(),
-          },
-          { onConflict: "email" }
-        );
+      await adminClient.from("newsletter_subscribers").upsert({ email, full_name: body.full_name.trim(), source: "join-us-form", is_active: true, subscribed_at: new Date().toISOString() }, { onConflict: "email" });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Application submission error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Submission failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Submission failed" }, { status: 500 });
   }
 }
