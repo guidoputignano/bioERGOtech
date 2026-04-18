@@ -3035,14 +3035,14 @@ function AdminPanel({ onEventsChanged, onProjectsChanged }: { onEventsChanged?: 
               </div>
               {loadingCoins ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
                 : allCoinBalances.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No coin balances yet.</div>
-                : (<div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
+                : (<div style={{ overflowX: "auto" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", minWidth: 640, padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
                     <span>Email</span><span>Name</span><span>Balance</span><span>Lifetime</span><span>Tier</span><span>Top Up</span>
                   </div>
                   {allCoinBalances.map((cb, i) => {
                     const tier = getCoinTier(cb.lifetime_earned);
                     return (
-                      <div key={cb.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", padding: "14px 24px", borderBottom: i < allCoinBalances.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
+                      <div key={cb.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", minWidth: 640, padding: "14px 24px", borderBottom: i < allCoinBalances.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
                         <span style={{ fontSize: 12, color: TEXT }}>{cb.profiles?.email}</span>
                         <span style={{ fontSize: 12, color: TEXT_MID }}>{cb.profiles?.full_name || "—"}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: cb.balance <= 0 ? "#E74C6F" : TEXT }}>{cb.balance}</span>
