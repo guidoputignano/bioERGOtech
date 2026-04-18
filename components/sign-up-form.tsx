@@ -16,15 +16,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-// Generates a strong password: uppercase + lowercase + numbers + symbols
 function generateStrongPassword(): string {
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   const lower = "abcdefghjkmnpqrstuvwxyz";
   const numbers = "23456789";
   const symbols = "!@#$%^&*-_=+?";
   const all = upper + lower + numbers + symbols;
-
-  // Guarantee at least one of each character class
   const required = [
     upper[Math.floor(Math.random() * upper.length)],
     upper[Math.floor(Math.random() * upper.length)],
@@ -34,22 +31,12 @@ function generateStrongPassword(): string {
     numbers[Math.floor(Math.random() * numbers.length)],
     symbols[Math.floor(Math.random() * symbols.length)],
   ];
-
-  // Fill remaining characters to reach length 14
-  const remaining = Array.from({ length: 7 }, () =>
-    all[Math.floor(Math.random() * all.length)]
-  );
-
-  // Shuffle combined array
-  return [...required, ...remaining]
-    .sort(() => Math.random() - 0.5)
-    .join("");
+  const remaining = Array.from({ length: 7 }, () => all[Math.floor(Math.random() * all.length)]);
+  return [...required, ...remaining].sort(() => Math.random() - 0.5).join("");
 }
 
-export function SignUpForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -87,7 +74,6 @@ export function SignUpForm({
       setIsLoading(false);
       return;
     }
-
     if (password.length < 8) {
       setError("Password must be at least 8 characters");
       setIsLoading(false);
@@ -95,14 +81,24 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/member-portal`,
+          data: { full_name: fullName.trim() },
         },
       });
       if (error) throw error;
+
+      // Update profile with full name immediately after signup
+      if (data.user && fullName.trim()) {
+        await supabase
+          .from("profiles")
+          .update({ full_name: fullName.trim(), updated_at: new Date().toISOString() })
+          .eq("id", data.user.id);
+      }
+
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
@@ -111,7 +107,6 @@ export function SignUpForm({
     }
   };
 
-  // Password strength indicator
   const getStrength = (pwd: string): { label: string; color: string; width: string } => {
     if (!pwd) return { label: "", color: "#E8EDF3", width: "0%" };
     let score = 0;
@@ -132,15 +127,28 @@ export function SignUpForm({
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardDescription>Create your bioERGOtech account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
 
+              {/* Full Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="full-name">Full Name *</Label>
+                <Input
+                  id="full-name"
+                  type="text"
+                  placeholder="Dr. Maria Rossi"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+
               {/* Email */}
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -154,21 +162,11 @@ export function SignUpForm({
               {/* Password */}
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Password *</Label>
                   <button
                     type="button"
                     onClick={handleGeneratePassword}
-                    style={{
-                      fontSize: 12,
-                      color: "#2EC4B6",
-                      fontWeight: 600,
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      textDecoration: "underline",
-                      textUnderlineOffset: 3,
-                    }}
+                    style={{ fontSize: 12, color: "#2EC4B6", fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 3 }}
                   >
                     Suggest strong password
                   </button>
@@ -179,79 +177,37 @@ export function SignUpForm({
                     type={showPassword ? "text" : "password"}
                     required
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setGeneratedPassword(null);
-                    }}
+                    onChange={(e) => { setPassword(e.target.value); setGeneratedPassword(null); }}
                     style={{ paddingRight: 40 }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: "absolute",
-                      right: 10,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "#8896A6",
-                      fontSize: 12,
-                      padding: 0,
-                    }}
+                    style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#8896A6", fontSize: 12, padding: 0 }}
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
 
-                {/* Password strength bar */}
                 {password && (
                   <div>
                     <div style={{ height: 4, borderRadius: 2, background: "#E8EDF3", overflow: "hidden" }}>
                       <div style={{ height: "100%", width: strength.width, background: strength.color, borderRadius: 2, transition: "width 0.3s ease" }} />
                     </div>
-                    <div style={{ fontSize: 11, color: strength.color, fontWeight: 600, marginTop: 4 }}>
-                      {strength.label}
-                    </div>
+                    <div style={{ fontSize: 11, color: strength.color, fontWeight: 600, marginTop: 4 }}>{strength.label}</div>
                   </div>
                 )}
 
-                {/* Generated password display */}
                 {generatedPassword && (
-                  <div style={{
-                    padding: "10px 14px",
-                    borderRadius: 10,
-                    background: "#E8F8F6",
-                    border: "1px solid #B2E8E2",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 10,
-                  }}>
+                  <div style={{ padding: "10px 14px", borderRadius: 10, background: "#E8F8F6", border: "1px solid #B2E8E2", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 11, color: "#1A9E92", fontWeight: 600, marginBottom: 3 }}>
-                        Generated password — save this somewhere safe
-                      </div>
-                      <div style={{ fontSize: 13, color: "#1A2332", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                        {generatedPassword}
-                      </div>
+                      <div style={{ fontSize: 11, color: "#1A9E92", fontWeight: 600, marginBottom: 3 }}>Generated password — save this somewhere safe</div>
+                      <div style={{ fontSize: 13, color: "#1A2332", fontFamily: "monospace", letterSpacing: "0.05em" }}>{generatedPassword}</div>
                     </div>
                     <button
                       type="button"
                       onClick={handleCopy}
-                      style={{
-                        padding: "5px 12px",
-                        borderRadius: 8,
-                        border: "1px solid #2EC4B6",
-                        background: copied ? "#2EC4B6" : "#fff",
-                        color: copied ? "#fff" : "#2EC4B6",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        transition: "all 0.2s",
-                      }}
+                      style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #2EC4B6", background: copied ? "#2EC4B6" : "#fff", color: copied ? "#fff" : "#2EC4B6", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0, transition: "all 0.2s" }}
                     >
                       {copied ? "Copied!" : "Copy"}
                     </button>
@@ -261,7 +217,7 @@ export function SignUpForm({
 
               {/* Repeat Password */}
               <div className="grid gap-2">
-                <Label htmlFor="repeat-password">Repeat Password</Label>
+                <Label htmlFor="repeat-password">Repeat Password *</Label>
                 <Input
                   id="repeat-password"
                   type={showPassword ? "text" : "password"}
@@ -277,18 +233,20 @@ export function SignUpForm({
                 )}
               </div>
 
+              <div style={{ padding: "10px 14px", borderRadius: 10, background: "#F7F9FC", border: "1px solid #E8EDF3", fontSize: 12, color: "#8896A6", lineHeight: 1.5 }}>
+                After signing up you can complete your profile — add your photo, organisation, research area, LinkedIn and more.
+              </div>
+
               {error && <p className="text-sm text-red-500">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </div>
 
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
-                Login
-              </Link>
+              <Link href="/auth/login" className="underline underline-offset-4">Login</Link>
             </div>
           </form>
         </CardContent>

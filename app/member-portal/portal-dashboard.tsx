@@ -109,6 +109,7 @@ const navItems = [
   { id: "members", label: "Members", icon: "users" },
   { id: "knowledge", label: "Knowledge Base", icon: "book" },
   { id: "rewards", label: "Rewards", icon: "star" },
+  { id: "profile", label: "My Profile", icon: "user" },
   { id: "admin", label: "Admin Panel", icon: "shield" },
 ];
 
@@ -137,6 +138,7 @@ const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
     edit: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
     trash: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
     logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+    user: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
     award: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
     star: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
@@ -3366,6 +3368,300 @@ function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem
   );
 }
 
+
+// ─── PROFILE VIEW ─────────────────────────────────────────────────────────────
+const SPECIALISATIONS = [
+  "Oncology", "Neurology", "Cardiology", "Genomics", "Proteomics",
+  "Bioinformatics", "Drug Discovery", "Medical Devices", "Digital Health",
+  "Synthetic Biology", "Biomanufacturing", "Clinical Trials", "Epidemiology",
+  "Immunology", "Regenerative Medicine", "AI in Healthcare", "Robotics",
+];
+
+const ORG_TYPES = ["University", "Hospital / Clinical Center", "Startup", "SME", "Foundation", "Research Institute", "Investor", "International Partner", "Other"];
+
+const YEARS_EXP = ["0-2 years", "3-5 years", "6-10 years", "11-20 years", "20+ years"];
+
+function ProfileView({ currentUserId, userEmail }: { currentUserId: string; userEmail: string }) {
+  const [profile, setProfile] = useState<Record<string, unknown>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<"personal" | "professional" | "ecosystem" | "visibility">("personal");
+
+  useEffect(() => {
+    fetch(`/api/profile?userId=${currentUserId}`)
+      .then(r => r.json())
+      .then(d => { setProfile(d.profile || {}); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [currentUserId]);
+
+  const set = (key: string, value: unknown) => setProfile(prev => ({ ...prev, [key]: value }));
+
+  const handleSave = async () => {
+    setSaving(true); setError(null); setSaved(false);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUserId, ...profile }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      setProfile(data.profile);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed to save"); }
+    finally { setSaving(false); }
+  };
+
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 14, color: TEXT, fontFamily: "'DM Sans', sans-serif", outline: "none", background: "#FAFBFC" };
+  const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6, display: "block" };
+  const sectionBtnStyle = (active: boolean): React.CSSProperties => ({ padding: "8px 18px", borderRadius: 20, border: "none", background: active ? TEAL : "#F3F5F8", color: active ? "#fff" : TEXT_MID, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" });
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>Loading profile…</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 800 }}>
+
+      {/* Profile header card */}
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 28, display: "flex", alignItems: "center", gap: 24, boxShadow: SHADOW, flexWrap: "wrap" as const }}>
+        {/* Avatar */}
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          {profile.profile_photo_url ? (
+            <img src={profile.profile_photo_url as string} alt="Profile" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: `3px solid ${TEAL_LIGHT}` }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+          ) : (
+            <div style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "#fff", fontFamily: "'Sora', sans-serif" }}>
+              {((profile.full_name as string) || userEmail).charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{(profile.full_name as string) || "Your Name"}</div>
+          <div style={{ fontSize: 14, color: TEXT_LIGHT, marginTop: 2 }}>{(profile.job_title as string) || "Add your job title"}</div>
+          <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 2 }}>{userEmail}</div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" as const }}>
+            {!!profile.country && <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: "#F3F5F8", color: TEXT_MID }}>📍 {profile.city ? `${profile.city as string}, ` : ""}{profile.country as string}</span>}
+            {!!profile.open_to_collaboration && <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: TEAL_LIGHT, color: TEAL_DARK, fontWeight: 600 }}>🤝 Open to collaboration</span>}
+            {!!profile.open_to_mentoring && <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: "#F0EDFF", color: "#7C5CFC", fontWeight: 600 }}>🎓 Open to mentoring</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Section tabs */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+        <button style={sectionBtnStyle(activeSection === "personal")} onClick={() => setActiveSection("personal")}>Personal</button>
+        <button style={sectionBtnStyle(activeSection === "professional")} onClick={() => setActiveSection("professional")}>Professional</button>
+        <button style={sectionBtnStyle(activeSection === "ecosystem")} onClick={() => setActiveSection("ecosystem")}>Ecosystem</button>
+        <button style={sectionBtnStyle(activeSection === "visibility")} onClick={() => setActiveSection("visibility")}>Visibility</button>
+      </div>
+
+      {/* Section content */}
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: 28, boxShadow: SHADOW }}>
+
+        {/* ── Personal ── */}
+        {activeSection === "personal" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>Personal Information</div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Full Name</label>
+                <input style={inputStyle} value={(profile.full_name as string) || ""} onChange={e => set("full_name", e.target.value)} placeholder="Dr. Maria Rossi" />
+              </div>
+              <div>
+                <label style={labelStyle}>Job Title</label>
+                <input style={inputStyle} value={(profile.job_title as string) || ""} onChange={e => set("job_title", e.target.value)} placeholder="Research Scientist" />
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Profile Photo URL</label>
+              <input style={inputStyle} value={(profile.profile_photo_url as string) || ""} onChange={e => set("profile_photo_url", e.target.value)} placeholder="https://example.com/photo.jpg" />
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 4 }}>Paste a direct link to your photo (LinkedIn, GitHub, personal site)</div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Bio / About</label>
+              <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 90 }} value={(profile.bio as string) || ""} onChange={e => set("bio", e.target.value)} placeholder="Brief description of your background, research interests, and goals…" />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Country</label>
+                <input style={inputStyle} value={(profile.country as string) || ""} onChange={e => set("country", e.target.value)} placeholder="Italy" />
+              </div>
+              <div>
+                <label style={labelStyle}>City</label>
+                <input style={inputStyle} value={(profile.city as string) || ""} onChange={e => set("city", e.target.value)} placeholder="Taranto" />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input style={inputStyle} value={(profile.phone as string) || ""} onChange={e => set("phone", e.target.value)} placeholder="+39 123 456 7890" />
+              </div>
+              <div>
+                <label style={labelStyle}>LinkedIn URL</label>
+                <input style={inputStyle} value={(profile.linkedin_url as string) || ""} onChange={e => set("linkedin_url", e.target.value)} placeholder="https://linkedin.com/in/yourname" />
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>ORCID ID</label>
+              <input style={inputStyle} value={(profile.orcid_id as string) || ""} onChange={e => set("orcid_id", e.target.value)} placeholder="0000-0000-0000-0000" />
+              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 4 }}>Your unique researcher identifier — <a href="https://orcid.org" target="_blank" rel="noopener noreferrer" style={{ color: TEAL_DARK }}>get one at orcid.org</a></div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Professional ── */}
+        {activeSection === "professional" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>Professional Background</div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Organisation Name</label>
+                <input style={inputStyle} value={(profile.organisation_name as string) || ""} onChange={e => set("organisation_name", e.target.value)} placeholder="University of Turin" />
+              </div>
+              <div>
+                <label style={labelStyle}>Organisation Type</label>
+                <select style={inputStyle} value={(profile.organisation_type as string) || ""} onChange={e => set("organisation_type", e.target.value)}>
+                  <option value="">Select type…</option>
+                  {ORG_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Department / Lab</label>
+                <input style={inputStyle} value={(profile.department as string) || ""} onChange={e => set("department", e.target.value)} placeholder="Dept. of Biomedical Sciences" />
+              </div>
+              <div>
+                <label style={labelStyle}>Years of Experience</label>
+                <select style={inputStyle} value={(profile.years_experience as string) || ""} onChange={e => set("years_experience", e.target.value)}>
+                  <option value="">Select…</option>
+                  {YEARS_EXP.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Organisation Website</label>
+              <input style={inputStyle} value={(profile.organisation_website as string) || ""} onChange={e => set("organisation_website", e.target.value)} placeholder="https://university.it" />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Specialisations (select all that apply)</label>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, marginTop: 4 }}>
+                {SPECIALISATIONS.map(s => {
+                  const selected = ((profile.areas_of_interest as string[]) || []).includes(s);
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        const current = (profile.areas_of_interest as string[]) || [];
+                        set("areas_of_interest", selected ? current.filter(x => x !== s) : [...current, s]);
+                      }}
+                      style={{ padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${selected ? TEAL : BORDER}`, background: selected ? TEAL_LIGHT : CARD, color: selected ? TEAL_DARK : TEXT_MID, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                    >{s}</button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Ecosystem ── */}
+        {activeSection === "ecosystem" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>Your Role in the Ecosystem</div>
+
+            <div>
+              <label style={labelStyle}>What you bring to bioERGOtech</label>
+              <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 90 }} value={(profile.what_you_bring as string) || ""} onChange={e => set("what_you_bring", e.target.value)} placeholder="Expertise, resources, network, technology…" />
+            </div>
+
+            <div>
+              <label style={labelStyle}>What you're looking for</label>
+              <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 90 }} value={(profile.what_you_seek as string) || ""} onChange={e => set("what_you_seek", e.target.value)} placeholder="Collaboration, funding, mentorship, facilities…" />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                <div
+                  onClick={() => set("open_to_collaboration", !profile.open_to_collaboration)}
+                  style={{ width: 44, height: 24, borderRadius: 12, background: profile.open_to_collaboration ? TEAL : "#D5DAE3", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}
+                >
+                  <div style={{ position: "absolute", top: 3, left: profile.open_to_collaboration ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }} />
+                </div>
+                <span style={{ fontSize: 14, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>Open to collaboration with other members</span>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                <div
+                  onClick={() => set("open_to_mentoring", !profile.open_to_mentoring)}
+                  style={{ width: 44, height: 24, borderRadius: 12, background: profile.open_to_mentoring ? "#7C5CFC" : "#D5DAE3", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}
+                >
+                  <div style={{ position: "absolute", top: 3, left: profile.open_to_mentoring ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }} />
+                </div>
+                <span style={{ fontSize: 14, color: TEXT, fontFamily: "'DM Sans', sans-serif" }}>Open to mentoring other members</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* ── Visibility ── */}
+        {activeSection === "visibility" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>Visibility Settings</div>
+            <div style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.6, marginBottom: 8 }}>Control what other members can see on your profile card in the Members section.</div>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "14px 18px", borderRadius: 12, border: `1px solid ${BORDER}`, background: "#FAFBFC" }}>
+              <div
+                onClick={() => set("show_email", !profile.show_email)}
+                style={{ width: 44, height: 24, borderRadius: 12, background: profile.show_email ? TEAL : "#D5DAE3", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}
+              >
+                <div style={{ position: "absolute", top: 3, left: profile.show_email ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Show email to other members</div>
+                <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2 }}>Your email address will be visible on your member card</div>
+              </div>
+            </label>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "14px 18px", borderRadius: 12, border: `1px solid ${BORDER}`, background: "#FAFBFC" }}>
+              <div
+                onClick={() => set("show_phone", !profile.show_phone)}
+                style={{ width: 44, height: 24, borderRadius: 12, background: profile.show_phone ? TEAL : "#D5DAE3", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}
+              >
+                <div style={{ position: "absolute", top: 3, left: profile.show_phone ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Show phone to other members</div>
+                <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2 }}>Your phone number will be visible on your member card</div>
+              </div>
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* Save button */}
+      {error && <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
+      {saved && <div style={{ padding: "12px 16px", borderRadius: 10, background: "#E6F9F5", color: "#00B894", fontSize: 13, fontWeight: 600 }}>✓ Profile saved successfully</div>}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        style={{ padding: "13px 28px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 14, fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.7 : 1, fontFamily: "'DM Sans', sans-serif", alignSelf: "flex-start" }}
+      >{saving ? "Saving…" : "Save Profile"}</button>
+    </div>
+  );
+}
+
 function SectionWrapper({ sectionId, sectionName, partnershipLevel, children }: { sectionId: string; sectionName: string; partnershipLevel: PartnershipLevel; children: React.ReactNode }) {
   const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find(s => s.id === sectionId);
   if (lockedEntry) {
@@ -3569,6 +3865,14 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           </SectionWrapper>
         );
 
+      case "profile":
+        return (
+          <ProfileView
+            currentUserId={user.sub}
+            userEmail={user.email}
+          />
+        );
+
       case "rewards":
         return (
           <RewardsView
@@ -3741,6 +4045,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           { id: "events", icon: "calendar", label: "Events" },
           { id: "members", icon: "users", label: "Members" },
           { id: "rewards", icon: "star", label: "Rewards" },
+          { id: "profile", icon: "user", label: "Profile" },
           ...(isAdmin ? [{ id: "admin", icon: "shield", label: "Admin" }] : []),
         ].map(item => (
           <button
