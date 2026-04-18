@@ -3712,6 +3712,24 @@ function ProfileView({ currentUserId, userEmail }: { currentUserId: string; user
       {/* Save button */}
       {error && <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
       {saved && <div style={{ padding: "12px 16px", borderRadius: 10, background: "#E6F9F5", color: "#00B894", fontSize: 13, fontWeight: 600 }}>✓ Profile saved successfully</div>}
+
+      {/* Referral Code Card */}
+      {!!profile.referral_code && (
+        <div style={{ background: "linear-gradient(135deg, #1A2332, #2C3E50)", borderRadius: 16, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" as const }}>
+          <div>
+            <div style={{ fontSize: 12, color: "#8896A6", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 6 }}>Your Referral Code</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", letterSpacing: "0.1em" }}>{profile.referral_code as string}</div>
+            <div style={{ fontSize: 12, color: "#8896A6", marginTop: 6 }}>Share this code with colleagues — you earn <span style={{ color: "#2EC4B6", fontWeight: 700 }}>+100 coins</span> when they join!</div>
+          </div>
+          <button
+            onClick={() => { navigator.clipboard.writeText(profile.referral_code as string); }}
+            style={{ padding: "10px 20px", borderRadius: 10, border: "1.5px solid #2EC4B6", background: "transparent", color: "#2EC4B6", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
+          >
+            📋 Copy Code
+          </button>
+        </div>
+      )}
+
       <button
         onClick={handleSave}
         disabled={saving}
