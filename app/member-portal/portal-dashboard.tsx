@@ -3387,6 +3387,8 @@ function ProfileView({ currentUserId, userEmail }: { currentUserId: string; user
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"personal" | "professional" | "ecosystem" | "visibility">("personal");
 
   useEffect(() => {
@@ -3397,6 +3399,25 @@ function ProfileView({ currentUserId, userEmail }: { currentUserId: string; user
   }, [currentUserId]);
 
   const set = (key: string, value: unknown) => setProfile(prev => ({ ...prev, [key]: value }));
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setUploadError("Photo must be under 2MB"); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setUploadError("Only JPEG, PNG or WebP allowed"); return; }
+    setUploadingPhoto(true); setUploadError(null);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const ext = file.name.split(".").pop();
+      const path = `${currentUserId}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      set("profile_photo_url", `${data.publicUrl}?t=${Date.now()}`);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed");
+    } finally { setUploadingPhoto(false); }
+  };
 
   const handleSave = async () => {
     setSaving(true); setError(null); setSaved(false);
@@ -3476,9 +3497,30 @@ function ProfileView({ currentUserId, userEmail }: { currentUserId: string; user
             </div>
 
             <div>
-              <label style={labelStyle}>Profile Photo URL</label>
-              <input style={inputStyle} value={(profile.profile_photo_url as string) || ""} onChange={e => set("profile_photo_url", e.target.value)} placeholder="https://example.com/photo.jpg" />
-              <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 4 }}>Paste a direct link to your photo (LinkedIn, GitHub, personal site)</div>
+              <label style={labelStyle}>Profile Photo</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" as const }}>
+                {/* Preview */}
+                <div style={{ width: 72, height: 72, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `2px solid ${BORDER}`, background: "#F3F5F8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {profile.profile_photo_url ? (
+                    <img src={profile.profile_photo_url as string} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  ) : (
+                    <span style={{ fontSize: 24, color: TEXT_LIGHT }}>👤</span>
+                  )}
+                </div>
+                {/* Upload button */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <label style={{ padding: "9px 18px", borderRadius: 10, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 13, fontWeight: 700, cursor: uploadingPhoto ? "default" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, opacity: uploadingPhoto ? 0.7 : 1 }}>
+                    <Icon name="user" size={15} />
+                    {uploadingPhoto ? "Uploading…" : "Upload Photo"}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={uploadingPhoto} onChange={async (e) => { const file = e.target.files?.[0]; if (file) await handlePhotoUpload(file); }} />
+                  </label>
+                  {!!profile.profile_photo_url && (
+                    <button onClick={() => set("profile_photo_url", "")} style={{ fontSize: 12, color: "#E74C6F", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>Remove photo</button>
+                  )}
+                  {uploadError && <div style={{ fontSize: 12, color: "#E74C6F" }}>{uploadError}</div>}
+                  <div style={{ fontSize: 11, color: TEXT_LIGHT }}>JPEG, PNG or WebP · Max 2MB</div>
+                </div>
+              </div>
             </div>
 
             <div>
