@@ -26,13 +26,11 @@ async function getAdminClient() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function awardCoins(client: any, userId: string, amount: number, reason: string) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const c = client as any;
-    const { data: existing } = await c.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
+    const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
     const currentBalance = existing?.balance ?? 0;
     const currentLifetime = existing?.lifetime_earned ?? 0;
-    await c.from("coin_balances").upsert({ user_id: userId, balance: currentBalance + amount, lifetime_earned: currentLifetime + amount }, { onConflict: "user_id" });
-    await c.from("coin_transactions").insert({ user_id: userId, amount, reason, type: "earn" });
+    await client.from("coin_balances").upsert({ user_id: userId, balance: currentBalance + amount, lifetime_earned: currentLifetime + amount }, { onConflict: "user_id" });
+    await client.from("coin_transactions").insert({ user_id: userId, amount, reason, type: "earn" });
   } catch (e) { console.error("Failed to award coins:", e); }
 }
 
@@ -83,7 +81,9 @@ export async function POST(request: Request) {
       }
     }
 
-    await client.from("applications").update({ application_status: "approved", reviewed_at: new Date().toISOString(), admin_notes: adminNotes ?? null }).eq("id", applicantId);
+    // Get admin's email for approved_by field
+    const { data: { user: adminUser } } = await (await (await import("@/lib/supabase/server")).createClient()).auth.getUser();
+    await client.from("applications").update({ application_status: "approved", reviewed_at: new Date().toISOString(), admin_notes: adminNotes ?? null, approved_by: adminUser?.email ?? null }).eq("id", applicantId);
 
     // ── Award +100 coins to referrer if referral code was used ──
     if (application.referred_by) {
