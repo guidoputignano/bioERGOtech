@@ -1799,7 +1799,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
                       <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: lvl.bg, color: lvl.color, fontWeight: 700, textTransform: "capitalize" as const }}>{p.partnership_level}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700 }}>{tier.badge} {p.tier || "Explorer"}</span>
-                        <span style={{ fontSize: 11, color: TEXT_LIGHT }}>🪙 {p.coin_balance ?? 0}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: TEXT_LIGHT }}><img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} /> {p.coin_balance ?? 0}</span>
                       </div>
                     </div>
                   </div>
@@ -3136,7 +3136,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: sc.bg, color: sc.color, fontWeight: 700, textTransform: "capitalize" as const }}>{req.status}</span>
-                              <span style={{ fontSize: 12, color: TEXT_LIGHT }}>🪙 {req.coins_spent} coins</span>
+                              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: TEXT_LIGHT }}><img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} /> {req.coins_spent} coins</span>
                             </div>
                             {req.admin_notes && <div style={{ fontSize: 12, color: TEXT_MID, marginTop: 6, fontStyle: "italic" }}>Note: {req.admin_notes}</div>}
                           </div>
@@ -3266,7 +3266,7 @@ function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem
           <div style={{ fontSize: 13, color: "#8896A6", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.07em" }}>Your Coin Balance</div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 48, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{balance}</span>
-            <span style={{ fontSize: 24 }}>🪙</span>
+            <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 32, height: 32, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
           </div>
           <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, padding: "3px 12px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700 }}>{tier.badge} {tier.name}</span>
@@ -3307,7 +3307,7 @@ function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", lineHeight: 1.3 }}>{item.label}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                      <span style={{ fontSize: 13 }}>🪙</span>
+                      <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 16, height: 16, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: item.color }}>{item.cost} coins</span>
                     </div>
                   </div>
@@ -3347,7 +3347,7 @@ function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem
                   </div>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: tx.amount > 0 ? "#00B894" : "#E74C6F" }}>
-                  {tx.amount > 0 ? "+" : ""}{tx.amount} 🪙
+                  {tx.amount > 0 ? "+" : ""}{tx.amount} <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
                 </div>
               </div>
             ))
@@ -3365,7 +3365,7 @@ function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem
               <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 8 }}>{confirmItem.label}</div>
               <div style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.55, marginBottom: 12 }}>{confirmItem.description}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 16 }}>🪙</span>
+                <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 20, height: 20, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
                 <span style={{ fontSize: 15, fontWeight: 700, color: confirmItem.color }}>{confirmItem.cost} coins</span>
                 <span style={{ fontSize: 13, color: TEXT_LIGHT }}>· Remaining: {balance - confirmItem.cost}</span>
               </div>
@@ -4067,7 +4067,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
           {coinBalance !== null && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
-              <span style={{ fontSize: 11 }}>🪙</span>
+              <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
               <span style={{ fontSize: 11, fontWeight: 700, color: getCoinTier(coinBalance.lifetime_earned).color }}>{coinBalance.balance} coins</span>
               <span style={{ fontSize: 10, color: TEXT_LIGHT }}>· {coinBalance.tier}</span>
             </div>
@@ -4163,7 +4163,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
               {coinToast.reason}
             </div>
             <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 11 }}>🪙</span>
+              <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
               <span style={{ fontSize: 12, color: "#2EC4B6", fontWeight: 700 }}>
                 {coinBalance ? `New balance: ${coinBalance.balance + coinToast.amount} coins` : "Check your coin balance"}
               </span>
