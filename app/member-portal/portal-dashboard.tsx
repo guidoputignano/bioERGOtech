@@ -1581,6 +1581,79 @@ function EventsView({ events, isAdmin, onEdit, onDelete }: { events: Event[]; is
 // ─── ORGANISATION MODAL ───────────────────────────────────────────────────────
 type OrganisationFormState = { name: string; org_type: string; location: string; country: string; city: string; website: string; areas_of_interest: string; is_active: boolean; };
 
+
+// ─── CITY DATABASE ────────────────────────────────────────────────────────────
+const CITY_MAP: Record<string, string[]> = {
+  "Afghanistan": ["Kabul","Kandahar","Herat","Mazar-i-Sharif"],
+  "Albania": ["Tirana","Durrës","Vlorë","Shkodër"],
+  "Algeria": ["Algiers","Oran","Constantine","Annaba"],
+  "Argentina": ["Buenos Aires","Córdoba","Rosario","Mendoza","La Plata"],
+  "Australia": ["Sydney","Melbourne","Brisbane","Perth","Adelaide","Canberra"],
+  "Austria": ["Vienna","Graz","Linz","Salzburg","Innsbruck"],
+  "Belgium": ["Brussels","Antwerp","Ghent","Bruges","Liège"],
+  "Brazil": ["São Paulo","Rio de Janeiro","Brasília","Salvador","Fortaleza","Manaus"],
+  "Canada": ["Toronto","Montreal","Vancouver","Calgary","Ottawa","Edmonton"],
+  "Chile": ["Santiago","Valparaíso","Concepción","Antofagasta"],
+  "China": ["Beijing","Shanghai","Guangzhou","Shenzhen","Chengdu","Wuhan","Hangzhou"],
+  "Colombia": ["Bogotá","Medellín","Cali","Barranquilla","Cartagena"],
+  "Croatia": ["Zagreb","Split","Rijeka","Osijek","Dubrovnik"],
+  "Czech Republic": ["Prague","Brno","Ostrava","Plzeň"],
+  "Denmark": ["Copenhagen","Aarhus","Odense","Aalborg"],
+  "Egypt": ["Cairo","Alexandria","Giza","Luxor","Aswan"],
+  "Ethiopia": ["Addis Ababa","Dire Dawa","Mekelle","Gondar"],
+  "Finland": ["Helsinki","Espoo","Tampere","Vantaa","Oulu"],
+  "France": ["Paris","Lyon","Marseille","Toulouse","Nice","Bordeaux","Nantes","Strasbourg","Lille"],
+  "Germany": ["Berlin","Munich","Hamburg","Frankfurt","Cologne","Stuttgart","Düsseldorf","Leipzig"],
+  "Ghana": ["Accra","Kumasi","Tamale","Cape Coast"],
+  "Greece": ["Athens","Thessaloniki","Patras","Heraklion"],
+  "Hungary": ["Budapest","Debrecen","Miskolc","Pécs"],
+  "India": ["Mumbai","Delhi","Bangalore","Hyderabad","Chennai","Kolkata","Pune","Ahmedabad"],
+  "Indonesia": ["Jakarta","Surabaya","Bandung","Medan","Semarang"],
+  "Iran": ["Tehran","Mashhad","Isfahan","Karaj","Shiraz"],
+  "Iraq": ["Baghdad","Basra","Mosul","Erbil"],
+  "Ireland": ["Dublin","Cork","Limerick","Galway","Waterford"],
+  "Israel": ["Tel Aviv","Jerusalem","Haifa","Beer Sheva"],
+  "Italy": ["Rome","Milan","Naples","Turin","Palermo","Genoa","Bologna","Florence","Venice","Bari","Taranto","Catania","Verona","Padua","Trieste"],
+  "Japan": ["Tokyo","Osaka","Yokohama","Nagoya","Sapporo","Fukuoka","Kyoto","Kobe"],
+  "Jordan": ["Amman","Zarqa","Irbid","Aqaba"],
+  "Kenya": ["Nairobi","Mombasa","Kisumu","Nakuru"],
+  "Kuwait": ["Kuwait City","Salmiya","Hawalli","Fahaheel"],
+  "Lebanon": ["Beirut","Tripoli","Sidon","Tyre"],
+  "Malaysia": ["Kuala Lumpur","George Town","Johor Bahru","Ipoh","Kota Kinabalu"],
+  "Mexico": ["Mexico City","Guadalajara","Monterrey","Puebla","Tijuana","Ciudad Juárez"],
+  "Morocco": ["Casablanca","Rabat","Fez","Marrakech","Tangier"],
+  "Netherlands": ["Amsterdam","Rotterdam","The Hague","Utrecht","Eindhoven"],
+  "New Zealand": ["Auckland","Wellington","Christchurch","Hamilton","Tauranga"],
+  "Nigeria": ["Lagos","Abuja","Kano","Ibadan","Port Harcourt"],
+  "Norway": ["Oslo","Bergen","Trondheim","Stavanger","Tromsø"],
+  "Pakistan": ["Karachi","Lahore","Islamabad","Faisalabad","Rawalpindi"],
+  "Peru": ["Lima","Arequipa","Trujillo","Chiclayo","Cusco"],
+  "Philippines": ["Manila","Quezon City","Davao","Cebu City","Zamboanga"],
+  "Poland": ["Warsaw","Kraków","Łódź","Wrocław","Poznań","Gdańsk"],
+  "Portugal": ["Lisbon","Porto","Braga","Coimbra","Funchal"],
+  "Qatar": ["Doha","Al Rayyan","Al Wakrah","Al Khor"],
+  "Romania": ["Bucharest","Cluj-Napoca","Timișoara","Iași","Constanța"],
+  "Russia": ["Moscow","Saint Petersburg","Novosibirsk","Yekaterinburg","Kazan"],
+  "Saudi Arabia": ["Riyadh","Jeddah","Mecca","Medina","Dammam"],
+  "Senegal": ["Dakar","Thiès","Kaolack","Ziguinchor"],
+  "Singapore": ["Singapore"],
+  "South Africa": ["Johannesburg","Cape Town","Durban","Pretoria","Port Elizabeth"],
+  "South Korea": ["Seoul","Busan","Incheon","Daegu","Daejeon"],
+  "Spain": ["Madrid","Barcelona","Valencia","Seville","Zaragoza","Málaga","Murcia","Bilbao"],
+  "Sweden": ["Stockholm","Gothenburg","Malmö","Uppsala","Västerås"],
+  "Switzerland": ["Zurich","Geneva","Basel","Bern","Lausanne","Zug","Lugano"],
+  "Tanzania": ["Dar es Salaam","Dodoma","Mwanza","Arusha"],
+  "Thailand": ["Bangkok","Chiang Mai","Pattaya","Hat Yai","Nonthaburi"],
+  "Tunisia": ["Tunis","Sfax","Sousse","Ettadhamen"],
+  "Turkey": ["Istanbul","Ankara","Izmir","Bursa","Adana","Antalya"],
+  "UAE": ["Dubai","Abu Dhabi","Sharjah","Al Ain","Ajman"],
+  "Uganda": ["Kampala","Gulu","Lira","Mbarara"],
+  "Ukraine": ["Kyiv","Kharkiv","Odessa","Dnipro","Lviv"],
+  "United Kingdom": ["London","Birmingham","Manchester","Glasgow","Liverpool","Leeds","Sheffield","Bristol","Edinburgh","Cardiff"],
+  "United States": ["New York","Los Angeles","Chicago","Houston","Phoenix","Philadelphia","San Antonio","San Diego","Dallas","San Jose","Austin","Jacksonville","Boston","Seattle","Denver","Washington DC","Nashville","Baltimore","Louisville","Portland","Atlanta","Miami","Minneapolis","Cleveland","Pittsburgh"],
+  "Vietnam": ["Ho Chi Minh City","Hanoi","Da Nang","Haiphong","Cần Thơ"],
+};
+
 function OrganisationModal({ organisation, onClose, onSave }: { organisation: Partial<Organisation> | null; onClose: () => void; onSave: (payload: Partial<Organisation>) => Promise<void>; }) {
   const [form, setForm] = useState<OrganisationFormState>({ name: organisation?.name || "", org_type: organisation?.org_type || "", location: organisation?.location || "", country: organisation?.country || "", city: organisation?.city || "", website: organisation?.website || "", areas_of_interest: Array.isArray(organisation?.areas_of_interest) ? organisation!.areas_of_interest!.join(", ") : "", is_active: organisation?.is_active ?? true });
   const [saving, setSaving] = useState(false);
@@ -1620,40 +1693,41 @@ function OrganisationModal({ organisation, onClose, onSave }: { organisation: Pa
 </div>
           <div>
             <label style={modalLabelStyle}>Country</label>
-            <input
-              list="country-list"
+            <select
               value={form.country}
               onChange={e => {
                 const newCountry = e.target.value;
                 setForm(p => ({
                   ...p,
                   country: newCountry,
-                  location: p.city ? `${p.city}, ${newCountry}` : newCountry,
+                  city: "",
+                  location: newCountry,
                 }));
               }}
-              placeholder="e.g. Italy"
               style={modalInputStyle}
-            />
-            <datalist id="country-list">
-              {["Afghanistan","Albania","Algeria","Argentina","Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Croatia","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kenya","Kuwait","Lebanon","Malaysia","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway","Pakistan","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia","Senegal","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Tanzania","Thailand","Tunisia","Turkey","UAE","Uganda","Ukraine","United Kingdom","United States","Vietnam"].map(c => <option key={c} value={c} />)}
-            </datalist>
+            >
+              <option value="">Select a country…</option>
+              {Object.keys(CITY_MAP).sort().map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
           <div>
             <label style={modalLabelStyle}>City</label>
-            <input
+            <select
               value={form.city}
+              disabled={!form.country}
               onChange={e => {
                 const newCity = e.target.value;
                 setForm(p => ({
                   ...p,
                   city: newCity,
-                  location: newCity && p.country ? `${newCity}, ${p.country}` : p.location,
+                  location: newCity && p.country ? `${newCity}, ${p.country}` : p.country,
                 }));
               }}
-              placeholder="e.g. Taranto"
-              disabled={!form.country}
               style={{ ...modalInputStyle, opacity: form.country ? 1 : 0.5 }}
-            />
+            >
+              <option value="">Select a city…</option>
+              {(CITY_MAP[form.country] || []).map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
           <div>
             <label style={modalLabelStyle}>Location <span style={{ fontSize: 10, color: TEXT_LIGHT, fontWeight: 400 }}>(auto-filled, editable)</span></label>
