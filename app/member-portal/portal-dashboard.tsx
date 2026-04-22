@@ -1736,8 +1736,26 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
     }
   }, [membersTab]);
 
-  const tc: Record<string, string> = { Foundation: TEAL, University: "#7C5CFC", Startup: "#00B894", SME: "#F0A500", "Clinical Center": "#E74C6F", Investor: "#4A7DFF", "International Partner": "#F0A500" };
-  const tbg: Record<string, string> = { Foundation: TEAL_LIGHT, University: "#F0EDFF", Startup: "#E6F9F5", SME: "#FFF8E6", "Clinical Center": "#FDECF1", Investor: "#EBF1FF", "International Partner": "#FFF8E6" };
+  const tc: Record<string, string> = {
+    Foundation: TEAL, foundation: TEAL,
+    University: "#7C5CFC", university: "#7C5CFC",
+    Startup: "#00B894", startup: "#00B894",
+    SME: "#F0A500", sme: "#F0A500",
+    "Clinical Center": "#E74C6F", hospital: "#E74C6F", clinical_center: "#E74C6F",
+    Investor: "#4A7DFF", investor: "#4A7DFF",
+    "International Partner": "#9B59B6", international_partner: "#9B59B6",
+    Other: "#8896A6", other: "#8896A6",
+  };
+  const tbg: Record<string, string> = {
+    Foundation: TEAL_LIGHT, foundation: TEAL_LIGHT,
+    University: "#F0EDFF", university: "#F0EDFF",
+    Startup: "#E6F9F5", startup: "#E6F9F5",
+    SME: "#FFF8E6", sme: "#FFF8E6",
+    "Clinical Center": "#FDECF1", hospital: "#FDECF1", clinical_center: "#FDECF1",
+    Investor: "#EBF1FF", investor: "#EBF1FF",
+    "International Partner": "#F5EEFF", international_partner: "#F5EEFF",
+    Other: "#F3F5F8", other: "#F3F5F8",
+  };
   const [selectedMember, setSelectedMember] = useState<Organisation | null>(null);
   const [organisationModal, setOrganisationModal] = useState<Partial<Organisation> | null>(null);
   const [memberList, setMemberList] = useState<Organisation[]>(members);

@@ -31,25 +31,40 @@ const PIN_SVG: Record<string, string> = {
   Foundation: `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
 };
 
+// Covers both capitalised (display) and lowercase (DB) values
 const TYPE_COLORS: Record<string, string> = {
-  Foundation: "#2EC4B6",
-  University: "#7C5CFC",
-  Startup: "#00B894",
-  SME: "#F0A500",
-  "Clinical Center": "#E74C6F",
-  Investor: "#4A7DFF",
-  "International Partner": "#F0A500",
+  foundation: "#2EC4B6", Foundation: "#2EC4B6",
+  university: "#7C5CFC", University: "#7C5CFC",
+  startup: "#00B894",    Startup: "#00B894",
+  sme: "#F0A500",        SME: "#F0A500",
+  hospital: "#E74C6F",   "Clinical Center": "#E74C6F", clinical_center: "#E74C6F",
+  investor: "#4A7DFF",   Investor: "#4A7DFF",
+  international_partner: "#9B59B6", "International Partner": "#9B59B6",
+  other: "#8896A6",      Other: "#8896A6",
 };
 
 const TYPE_BG: Record<string, string> = {
-  Foundation: "#E8F8F6",
-  University: "#F0EDFF",
-  Startup: "#E6F9F5",
-  SME: "#FFF8E6",
-  "Clinical Center": "#FDECF1",
-  Investor: "#EBF1FF",
-  "International Partner": "#FFF8E6",
+  foundation: "#E8F8F6", Foundation: "#E8F8F6",
+  university: "#F0EDFF", University: "#F0EDFF",
+  startup: "#E6F9F5",    Startup: "#E6F9F5",
+  sme: "#FFF8E6",        SME: "#FFF8E6",
+  hospital: "#FDECF1",   "Clinical Center": "#FDECF1", clinical_center: "#FDECF1",
+  investor: "#EBF1FF",   Investor: "#EBF1FF",
+  international_partner: "#F5EEFF", "International Partner": "#F5EEFF",
+  other: "#F3F5F8",      Other: "#F3F5F8",
 };
+
+// Display labels for legend
+const TYPE_LABELS: Record<string, string> = {
+  foundation: "Foundation", university: "University",
+  startup: "Startup", sme: "SME / Company",
+  hospital: "Hospital / Clinic", clinical_center: "Clinical Center",
+  investor: "Investor", international_partner: "Intl. Partner",
+  other: "Other",
+};
+
+// All unique types for legend
+const LEGEND_TYPES = ["foundation","university","startup","sme","hospital","investor","international_partner","other"];
 
 export default function MemberMap({ isAdmin = false }: { isAdmin?: boolean }) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -192,14 +207,23 @@ export default function MemberMap({ isAdmin = false }: { isAdmin?: boolean }) {
 
       {/* Legend */}
       {!loading && (
-        <div style={{ position: "absolute", bottom: 16, left: 16, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(8px)", borderRadius: 12, padding: "10px 14px", boxShadow: "0 2px 12px rgba(0,0,0,0.1)", border: "1px solid #E8EDF3", zIndex: 1000 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#8896A6", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 7, fontFamily: "'DM Sans',sans-serif" }}>Organisation Type</div>
-          {Object.entries(TYPE_COLORS).slice(0, 5).map(([type, color]) => (
-            <div key={type} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "#4A5568", fontFamily: "'DM Sans',sans-serif" }}>{type}</span>
-            </div>
-          ))}
+        <div style={{ position: "absolute", bottom: 16, left: 16, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(8px)", borderRadius: 12, padding: "10px 14px", boxShadow: "0 2px 12px rgba(0,0,0,0.1)", border: "1px solid #E8EDF3", zIndex: 1000, maxHeight: 320, overflowY: "auto" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#8896A6", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8, fontFamily: "'DM Sans',sans-serif" }}>Organisation Type</div>
+          {LEGEND_TYPES.map((type) => {
+            const color = TYPE_COLORS[type] || "#8896A6";
+            const svg = PIN_SVG[type] || null;
+            return (
+              <div key={type} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {svg
+                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: svg }} />
+                    : <span style={{ color: "white", fontSize: 10, fontWeight: 700 }}>?</span>
+                  }
+                </div>
+                <span style={{ fontSize: 11, color: "#4A5568", fontFamily: "'DM Sans',sans-serif" }}>{TYPE_LABELS[type]}</span>
+              </div>
+            );
+          })}
         </div>
       )}
 
