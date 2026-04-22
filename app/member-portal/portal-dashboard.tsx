@@ -151,6 +151,13 @@ const Icon = ({ name, size = 18 }: { name: string; size?: number }) => {
     mail: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
     link: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
+    rocket: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>,
+    briefcase: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+    hospital: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>,
+    graduationcap: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
+    trendingup: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+    heart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+    tag: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
   };
   return <>{icons[name] || null}</>;
 };
@@ -1581,79 +1588,6 @@ function EventsView({ events, isAdmin, onEdit, onDelete }: { events: Event[]; is
 // ─── ORGANISATION MODAL ───────────────────────────────────────────────────────
 type OrganisationFormState = { name: string; org_type: string; location: string; country: string; city: string; website: string; areas_of_interest: string; is_active: boolean; };
 
-
-// ─── CITY DATABASE ────────────────────────────────────────────────────────────
-const CITY_MAP: Record<string, string[]> = {
-  "Afghanistan": ["Kabul","Kandahar","Herat","Mazar-i-Sharif"],
-  "Albania": ["Tirana","Durrës","Vlorë","Shkodër"],
-  "Algeria": ["Algiers","Oran","Constantine","Annaba"],
-  "Argentina": ["Buenos Aires","Córdoba","Rosario","Mendoza","La Plata"],
-  "Australia": ["Sydney","Melbourne","Brisbane","Perth","Adelaide","Canberra"],
-  "Austria": ["Vienna","Graz","Linz","Salzburg","Innsbruck"],
-  "Belgium": ["Brussels","Antwerp","Ghent","Bruges","Liège"],
-  "Brazil": ["São Paulo","Rio de Janeiro","Brasília","Salvador","Fortaleza","Manaus"],
-  "Canada": ["Toronto","Montreal","Vancouver","Calgary","Ottawa","Edmonton"],
-  "Chile": ["Santiago","Valparaíso","Concepción","Antofagasta"],
-  "China": ["Beijing","Shanghai","Guangzhou","Shenzhen","Chengdu","Wuhan","Hangzhou"],
-  "Colombia": ["Bogotá","Medellín","Cali","Barranquilla","Cartagena"],
-  "Croatia": ["Zagreb","Split","Rijeka","Osijek","Dubrovnik"],
-  "Czech Republic": ["Prague","Brno","Ostrava","Plzeň"],
-  "Denmark": ["Copenhagen","Aarhus","Odense","Aalborg"],
-  "Egypt": ["Cairo","Alexandria","Giza","Luxor","Aswan"],
-  "Ethiopia": ["Addis Ababa","Dire Dawa","Mekelle","Gondar"],
-  "Finland": ["Helsinki","Espoo","Tampere","Vantaa","Oulu"],
-  "France": ["Paris","Lyon","Marseille","Toulouse","Nice","Bordeaux","Nantes","Strasbourg","Lille"],
-  "Germany": ["Berlin","Munich","Hamburg","Frankfurt","Cologne","Stuttgart","Düsseldorf","Leipzig"],
-  "Ghana": ["Accra","Kumasi","Tamale","Cape Coast"],
-  "Greece": ["Athens","Thessaloniki","Patras","Heraklion"],
-  "Hungary": ["Budapest","Debrecen","Miskolc","Pécs"],
-  "India": ["Mumbai","Delhi","Bangalore","Hyderabad","Chennai","Kolkata","Pune","Ahmedabad"],
-  "Indonesia": ["Jakarta","Surabaya","Bandung","Medan","Semarang"],
-  "Iran": ["Tehran","Mashhad","Isfahan","Karaj","Shiraz"],
-  "Iraq": ["Baghdad","Basra","Mosul","Erbil"],
-  "Ireland": ["Dublin","Cork","Limerick","Galway","Waterford"],
-  "Israel": ["Tel Aviv","Jerusalem","Haifa","Beer Sheva"],
-  "Italy": ["Rome","Milan","Naples","Turin","Palermo","Genoa","Bologna","Florence","Venice","Bari","Taranto","Catania","Verona","Padua","Trieste"],
-  "Japan": ["Tokyo","Osaka","Yokohama","Nagoya","Sapporo","Fukuoka","Kyoto","Kobe"],
-  "Jordan": ["Amman","Zarqa","Irbid","Aqaba"],
-  "Kenya": ["Nairobi","Mombasa","Kisumu","Nakuru"],
-  "Kuwait": ["Kuwait City","Salmiya","Hawalli","Fahaheel"],
-  "Lebanon": ["Beirut","Tripoli","Sidon","Tyre"],
-  "Malaysia": ["Kuala Lumpur","George Town","Johor Bahru","Ipoh","Kota Kinabalu"],
-  "Mexico": ["Mexico City","Guadalajara","Monterrey","Puebla","Tijuana","Ciudad Juárez"],
-  "Morocco": ["Casablanca","Rabat","Fez","Marrakech","Tangier"],
-  "Netherlands": ["Amsterdam","Rotterdam","The Hague","Utrecht","Eindhoven"],
-  "New Zealand": ["Auckland","Wellington","Christchurch","Hamilton","Tauranga"],
-  "Nigeria": ["Lagos","Abuja","Kano","Ibadan","Port Harcourt"],
-  "Norway": ["Oslo","Bergen","Trondheim","Stavanger","Tromsø"],
-  "Pakistan": ["Karachi","Lahore","Islamabad","Faisalabad","Rawalpindi"],
-  "Peru": ["Lima","Arequipa","Trujillo","Chiclayo","Cusco"],
-  "Philippines": ["Manila","Quezon City","Davao","Cebu City","Zamboanga"],
-  "Poland": ["Warsaw","Kraków","Łódź","Wrocław","Poznań","Gdańsk"],
-  "Portugal": ["Lisbon","Porto","Braga","Coimbra","Funchal"],
-  "Qatar": ["Doha","Al Rayyan","Al Wakrah","Al Khor"],
-  "Romania": ["Bucharest","Cluj-Napoca","Timișoara","Iași","Constanța"],
-  "Russia": ["Moscow","Saint Petersburg","Novosibirsk","Yekaterinburg","Kazan"],
-  "Saudi Arabia": ["Riyadh","Jeddah","Mecca","Medina","Dammam"],
-  "Senegal": ["Dakar","Thiès","Kaolack","Ziguinchor"],
-  "Singapore": ["Singapore"],
-  "South Africa": ["Johannesburg","Cape Town","Durban","Pretoria","Port Elizabeth"],
-  "South Korea": ["Seoul","Busan","Incheon","Daegu","Daejeon"],
-  "Spain": ["Madrid","Barcelona","Valencia","Seville","Zaragoza","Málaga","Murcia","Bilbao"],
-  "Sweden": ["Stockholm","Gothenburg","Malmö","Uppsala","Västerås"],
-  "Switzerland": ["Zurich","Geneva","Basel","Bern","Lausanne","Zug","Lugano"],
-  "Tanzania": ["Dar es Salaam","Dodoma","Mwanza","Arusha"],
-  "Thailand": ["Bangkok","Chiang Mai","Pattaya","Hat Yai","Nonthaburi"],
-  "Tunisia": ["Tunis","Sfax","Sousse","Ettadhamen"],
-  "Turkey": ["Istanbul","Ankara","Izmir","Bursa","Adana","Antalya"],
-  "UAE": ["Dubai","Abu Dhabi","Sharjah","Al Ain","Ajman"],
-  "Uganda": ["Kampala","Gulu","Lira","Mbarara"],
-  "Ukraine": ["Kyiv","Kharkiv","Odessa","Dnipro","Lviv"],
-  "United Kingdom": ["London","Birmingham","Manchester","Glasgow","Liverpool","Leeds","Sheffield","Bristol","Edinburgh","Cardiff"],
-  "United States": ["New York","Los Angeles","Chicago","Houston","Phoenix","Philadelphia","San Antonio","San Diego","Dallas","San Jose","Austin","Jacksonville","Boston","Seattle","Denver","Washington DC","Nashville","Baltimore","Louisville","Portland","Atlanta","Miami","Minneapolis","Cleveland","Pittsburgh"],
-  "Vietnam": ["Ho Chi Minh City","Hanoi","Da Nang","Haiphong","Cần Thơ"],
-};
-
 function OrganisationModal({ organisation, onClose, onSave }: { organisation: Partial<Organisation> | null; onClose: () => void; onSave: (payload: Partial<Organisation>) => Promise<void>; }) {
   const [form, setForm] = useState<OrganisationFormState>({ name: organisation?.name || "", org_type: organisation?.org_type || "", location: organisation?.location || "", country: organisation?.country || "", city: organisation?.city || "", website: organisation?.website || "", areas_of_interest: Array.isArray(organisation?.areas_of_interest) ? organisation!.areas_of_interest!.join(", ") : "", is_active: organisation?.is_active ?? true });
   const [saving, setSaving] = useState(false);
@@ -1693,41 +1627,40 @@ function OrganisationModal({ organisation, onClose, onSave }: { organisation: Pa
 </div>
           <div>
             <label style={modalLabelStyle}>Country</label>
-            <select
+            <input
+              list="country-list"
               value={form.country}
               onChange={e => {
                 const newCountry = e.target.value;
                 setForm(p => ({
                   ...p,
                   country: newCountry,
-                  city: "",
-                  location: newCountry,
+                  location: p.city ? `${p.city}, ${newCountry}` : newCountry,
                 }));
               }}
+              placeholder="e.g. Italy"
               style={modalInputStyle}
-            >
-              <option value="">Select a country…</option>
-              {Object.keys(CITY_MAP).sort().map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            />
+            <datalist id="country-list">
+              {["Afghanistan","Albania","Algeria","Argentina","Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Croatia","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kenya","Kuwait","Lebanon","Malaysia","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway","Pakistan","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia","Senegal","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Tanzania","Thailand","Tunisia","Turkey","UAE","Uganda","Ukraine","United Kingdom","United States","Vietnam"].map(c => <option key={c} value={c} />)}
+            </datalist>
           </div>
           <div>
             <label style={modalLabelStyle}>City</label>
-            <select
+            <input
               value={form.city}
-              disabled={!form.country}
               onChange={e => {
                 const newCity = e.target.value;
                 setForm(p => ({
                   ...p,
                   city: newCity,
-                  location: newCity && p.country ? `${newCity}, ${p.country}` : p.country,
+                  location: newCity && p.country ? `${newCity}, ${p.country}` : p.location,
                 }));
               }}
+              placeholder="e.g. Taranto"
+              disabled={!form.country}
               style={{ ...modalInputStyle, opacity: form.country ? 1 : 0.5 }}
-            >
-              <option value="">Select a city…</option>
-              {(CITY_MAP[form.country] || []).map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            />
           </div>
           <div>
             <label style={modalLabelStyle}>Location <span style={{ fontSize: 10, color: TEXT_LIGHT, fontWeight: 400 }}>(auto-filled, editable)</span></label>
@@ -1938,8 +1871,8 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
             >
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
                 {/* Avatar */}
-                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-                  {m.name?.charAt(0) || "O"}
+                <div style={{ width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: tbg[m.org_type] || TEAL_LIGHT, color: tc[m.org_type] || TEAL, flexShrink: 0 }}>
+                  {ORG_TYPE_ICON[m.org_type] ? <Icon name={ORG_TYPE_ICON[m.org_type]} size={20} /> : <span style={{ fontSize: 14, fontWeight: 700 }}>{m.name?.charAt(0) || "O"}</span>}
                 </div>
 
                 {/* Name + location */}
@@ -4294,3 +4227,33 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
     </div>
   );
 } // ← closes BioERGOtechPortal
+// ─── ORG TYPE ICON MAP ────────────────────────────────────────────────────────
+const ORG_TYPE_ICON: Record<string, string> = {
+  startup: "rocket",
+  sme: "briefcase",
+  hospital: "hospital",
+  "Clinical Center": "hospital",
+  clinical_center: "hospital",
+  university: "graduationcap",
+  investor: "trendingup",
+  international_partner: "globe",
+  foundation: "heart",
+  Foundation: "heart",
+  other: "tag",
+};
+
+// SVG strings for map pins (Leaflet divIcon uses HTML strings, not React)
+const ORG_TYPE_SVG: Record<string, string> = {
+  startup: `<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>`,
+  sme: `<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>`,
+  hospital: `<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>`,
+  clinical_center: `<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>`,
+  university: `<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>`,
+  investor: `<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>`,
+  international_partner: `<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>`,
+  foundation: `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
+  Foundation: `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
+  other: `<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>`,
+};
+
+
