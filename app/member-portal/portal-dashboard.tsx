@@ -1618,10 +1618,46 @@ function OrganisationModal({ organisation, onClose, onSave }: { organisation: Pa
     <option value="other">Other</option>
   </select>
 </div>
-          <div><label style={modalLabelStyle}>Location</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={modalInputStyle} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div><label style={modalLabelStyle}>Country</label><input value={form.country} onChange={e => setForm(p => ({ ...p, country: e.target.value }))} style={modalInputStyle} /></div>
-            <div><label style={modalLabelStyle}>City</label><input value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} style={modalInputStyle} /></div>
+          <div>
+            <label style={modalLabelStyle}>Country</label>
+            <input
+              list="country-list"
+              value={form.country}
+              onChange={e => {
+                const newCountry = e.target.value;
+                setForm(p => ({
+                  ...p,
+                  country: newCountry,
+                  location: p.city ? `${p.city}, ${newCountry}` : newCountry,
+                }));
+              }}
+              placeholder="e.g. Italy"
+              style={modalInputStyle}
+            />
+            <datalist id="country-list">
+              {["Afghanistan","Albania","Algeria","Argentina","Australia","Austria","Belgium","Brazil","Canada","Chile","China","Colombia","Croatia","Czech Republic","Denmark","Egypt","Ethiopia","Finland","France","Germany","Ghana","Greece","Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kenya","Kuwait","Lebanon","Malaysia","Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway","Pakistan","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia","Senegal","Singapore","South Africa","South Korea","Spain","Sweden","Switzerland","Tanzania","Thailand","Tunisia","Turkey","UAE","Uganda","Ukraine","United Kingdom","United States","Vietnam"].map(c => <option key={c} value={c} />)}
+            </datalist>
+          </div>
+          <div>
+            <label style={modalLabelStyle}>City</label>
+            <input
+              value={form.city}
+              onChange={e => {
+                const newCity = e.target.value;
+                setForm(p => ({
+                  ...p,
+                  city: newCity,
+                  location: newCity && p.country ? `${newCity}, ${p.country}` : p.location,
+                }));
+              }}
+              placeholder="e.g. Taranto"
+              disabled={!form.country}
+              style={{ ...modalInputStyle, opacity: form.country ? 1 : 0.5 }}
+            />
+          </div>
+          <div>
+            <label style={modalLabelStyle}>Location <span style={{ fontSize: 10, color: TEXT_LIGHT, fontWeight: 400 }}>(auto-filled, editable)</span></label>
+            <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="e.g. Taranto, Italy" style={modalInputStyle} />
           </div>
           <div><label style={modalLabelStyle}>Website</label><input value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} style={modalInputStyle} /></div>
           <div><label style={modalLabelStyle}>Areas of Interest</label><input value={form.areas_of_interest} onChange={e => setForm(p => ({ ...p, areas_of_interest: e.target.value }))} placeholder="Comma separated" style={modalInputStyle} /></div>
@@ -1698,6 +1734,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
   const [selectedMember, setSelectedMember] = useState<Organisation | null>(null);
   const [organisationModal, setOrganisationModal] = useState<Partial<Organisation> | null>(null);
   const [memberList, setMemberList] = useState<Organisation[]>(members);
+  const [mapKey, setMapKey] = useState(0);
   const [isOpeningEdit, setIsOpeningEdit] = useState(false);
 
   useEffect(() => { setMemberList(members); }, [members]);
@@ -1706,6 +1743,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
     const res = await fetch("/api/organisations");
     const data = await res.json();
     setMemberList(data.organisations || []);
+    setMapKey(k => k + 1);
   };
 
   const handleSaveOrganisation = async (payload: Partial<Organisation>) => {
@@ -1748,7 +1786,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
           <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{memberList.length} organisations</span>
         </div>
         <div style={{ position: "relative", zIndex: 1, borderRadius: 16, overflow: "hidden" }}>
-          <MemberMap />
+          <MemberMap key={mapKey} />
         </div>
       </div>
 

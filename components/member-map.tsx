@@ -88,7 +88,22 @@ export default function MemberMap({ isAdmin = false }: { isAdmin?: boolean }) {
         maxZoom: 18,
       }).addTo(map);
 
-      orgs.forEach((org) => {
+      // Add small jitter to avoid overlapping pins at same coordinates
+      const coordCount: Record<string, number> = {};
+      const jitteredOrgs = orgs.map(org => {
+        const key = `${org.lat?.toFixed(2)},${org.lng?.toFixed(2)}`;
+        coordCount[key] = (coordCount[key] || 0) + 1;
+        const idx = coordCount[key] - 1;
+        const jitter = idx === 0 ? 0 : 0.05;
+        const angle = (idx * 137.5 * Math.PI) / 180;
+        return {
+          ...org,
+          lat: (org.lat || 0) + (idx > 0 ? jitter * Math.cos(angle) : 0),
+          lng: (org.lng || 0) + (idx > 0 ? jitter * Math.sin(angle) : 0),
+        };
+      });
+
+      jitteredOrgs.forEach((org) => {
         if (!org.lat || !org.lng) return;
         const color = TYPE_COLORS[org.org_type] || "#2EC4B6";
         const bg = TYPE_BG[org.org_type] || "#E8F8F6";
