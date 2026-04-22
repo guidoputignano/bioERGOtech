@@ -4017,7 +4017,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   {/* Logo row — logo links home, arrow toggles collapse */}
   <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
     <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-      <img src="/assets/images/Logo/full_bioergotech.webp" alt="bioERGOtech" style={{ height: 36, width: "auto", objectFit: "contain", flexShrink: 0 }} />
+      <img src="/assets/images/Logo/full_bioergotech.webp" style={{ height: 36, width: "auto", objectFit: "contain", flexShrink: 0 }} />
       {!collapsed && (
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>
