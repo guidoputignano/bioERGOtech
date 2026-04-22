@@ -4061,7 +4061,11 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       </div>
       {!collapsed && (
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+          <div
+            onClick={() => setActiveNav("profile")}
+            style={{ fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, cursor: "pointer" }}
+            title="View your profile"
+          >
             {user.display_name || user.full_name || user.email}
           </div>
           <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
