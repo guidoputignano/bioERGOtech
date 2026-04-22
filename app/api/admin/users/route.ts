@@ -43,7 +43,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (organisation_id !== undefined) {
-      // null means "remove affiliation"
       updatePayload.organisation_id = organisation_id || null;
     }
 
@@ -63,6 +62,41 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ user: data });
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
+// DELETE /api/admin/users — delete a profile and auth user by id
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "User id is required" }, { status: 400 });
+    }
+
+    const client = getClient();
+
+    // Delete profile first
+    const { error: profileError } = await client
+      .from("profiles")
+      .delete()
+      .eq("id", id);
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
+
+    // Delete auth user (best-effort)
+    try {
+      await client.auth.admin.deleteUser(id);
+    } catch (e) {
+      console.error("Auth user deletion failed:", e);
+    }
+
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }

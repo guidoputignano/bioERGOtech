@@ -1736,26 +1736,8 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
     }
   }, [membersTab]);
 
-  const tc: Record<string, string> = {
-    Foundation: TEAL, foundation: TEAL,
-    University: "#7C5CFC", university: "#7C5CFC",
-    Startup: "#00B894", startup: "#00B894",
-    SME: "#F0A500", sme: "#F0A500",
-    "Clinical Center": "#E74C6F", hospital: "#E74C6F", clinical_center: "#E74C6F",
-    Investor: "#4A7DFF", investor: "#4A7DFF",
-    "International Partner": "#9B59B6", international_partner: "#9B59B6",
-    Other: "#8896A6", other: "#8896A6",
-  };
-  const tbg: Record<string, string> = {
-    Foundation: TEAL_LIGHT, foundation: TEAL_LIGHT,
-    University: "#F0EDFF", university: "#F0EDFF",
-    Startup: "#E6F9F5", startup: "#E6F9F5",
-    SME: "#FFF8E6", sme: "#FFF8E6",
-    "Clinical Center": "#FDECF1", hospital: "#FDECF1", clinical_center: "#FDECF1",
-    Investor: "#EBF1FF", investor: "#EBF1FF",
-    "International Partner": "#F5EEFF", international_partner: "#F5EEFF",
-    Other: "#F3F5F8", other: "#F3F5F8",
-  };
+  const tc: Record<string, string> = { Foundation: TEAL, University: "#7C5CFC", Startup: "#00B894", SME: "#F0A500", "Clinical Center": "#E74C6F", Investor: "#4A7DFF", "International Partner": "#F0A500" };
+  const tbg: Record<string, string> = { Foundation: TEAL_LIGHT, University: "#F0EDFF", Startup: "#E6F9F5", SME: "#FFF8E6", "Clinical Center": "#FDECF1", Investor: "#EBF1FF", "International Partner": "#FFF8E6" };
   const [selectedMember, setSelectedMember] = useState<Organisation | null>(null);
   const [organisationModal, setOrganisationModal] = useState<Partial<Organisation> | null>(null);
   const [memberList, setMemberList] = useState<Organisation[]>(members);
@@ -1848,7 +1830,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
                 const levelColors: Record<string, { bg: string; color: string }> = { admin: { bg: "#FDECF1", color: "#E74C6F" }, partner: { bg: TEAL_LIGHT, color: TEAL_DARK }, member: { bg: "#F0EDFF", color: "#7C5CFC" } };
                 const lvl = levelColors[p.partnership_level] || levelColors.member;
                 return (
-                  <div key={p.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: SHADOW, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div key={p.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: SHADOW, display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 42, height: 42, borderRadius: 12, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
                         {(p.full_name || p.email).charAt(0).toUpperCase()}
@@ -1865,6 +1847,20 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
                         <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: TEXT_LIGHT }}><img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} /> {p.coin_balance ?? 0}</span>
                       </div>
                     </div>
+                    {isAdmin && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Delete this member? This cannot be undone.")) return;
+                          const res = await fetch("/api/admin/users", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: p.id }) });
+                          if (res.ok) setProfiles(prev => prev.filter(m => m.id !== p.id));
+                          else alert("Failed to delete member.");
+                        }}
+                        style={{ position: "absolute", top: 10, right: 10, background: "#FDECF1", border: "none", borderRadius: 8, padding: "5px 7px", cursor: "pointer", color: "#D63563", display: "flex", alignItems: "center" }}
+                        title="Delete member"
+                      >
+                        <Icon name="trash" size={13} />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -4079,12 +4075,15 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   
   {/* Logo row — logo links home, arrow toggles collapse */}
   <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
-    <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-      <img src="/assets/images/Logo/full_bioergotech.webp" style={{ height: 36, width: "auto", objectFit: "contain", flexShrink: 0 }} />
+    <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
+      {collapsed ? (
+        <img src="/assets/images/Logo/short_logo.webp" alt="bioERGOtech" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
+      ) : (
+        <img src="/assets/images/Logo/full_bioergotech.webp" alt="bioERGOtech" style={{ height: 32, width: "auto", maxWidth: 160, objectFit: "contain", flexShrink: 0 }} />
+      )}
       {!collapsed && (
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>bio<span style={{ color: TEAL }}>ERGO</span>tech</div>
-          <div style={{ fontSize: 10, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 600 }}>Member Portal</div>
+        <div style={{ minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: 10, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 600, whiteSpace: "nowrap" as const }}>Member Portal</div>
         </div>
       )}
     </a>
