@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     siteName: "bioERGOtech Foundation",
     images: [
       {
-        url: "https://www.bioergotech.org/assets/images/og-image2.jpeg?v=2",
+        url: "https://www.bioergotech.org/assets/images/og-image-v2.jpg",
         width: 1200,
         height: 630,
         alt: "bioERGOtech Foundation",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: "bioERGOtech Foundation — Engineered Living Systems",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
-    images: ["https://www.bioergotech.org/assets/images/og-image2.jpg"],
+    images: ["https://www.bioergotech.org/assets/images/og-image-v2.jpg"],
   },
 };
 
