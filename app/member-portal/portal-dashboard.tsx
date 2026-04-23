@@ -4077,7 +4077,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   <div style={{ padding: collapsed ? "22px 14px" : "22px 22px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12 }}>
     <a href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
       {collapsed ? (
-        <img src="/assets/images/Logo/short_logo.webp" alt="bioERGOtech" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
+        <img src="/assets/images/Logo/short_logo.webp" alt="bioERGOtech" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0, display: "block" }} />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
           <img src="/assets/images/Logo/full_bioergotech.webp" alt="bioERGOtech" style={{ height: 38, width: "auto", maxWidth: 170, objectFit: "contain", flexShrink: 0 }} />

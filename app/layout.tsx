@@ -9,17 +9,40 @@ const siteUrl =
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL("https://www.bioergotech.org"),
   title: {
     default: "bioERGOtech Foundation",
     template: "%s | bioERGOtech Foundation",
   },
   description:
-    "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and multi-omics analytics across hubs in Taranto, Zurich, and Riyadh.",
+    "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
     apple: "/favicon.png",
+  },
+  openGraph: {
+    title: "bioERGOtech Foundation",
+    description:
+      "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
+    url: "https://www.bioergotech.org",
+    siteName: "bioERGOtech Foundation",
+    images: [
+      {
+        url: "https://www.bioergotech.org/assets/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "bioERGOtech Foundation",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "bioERGOtech Foundation",
+    description:
+      "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
+    images: ["https://www.bioergotech.org/assets/images/og-image.jpg"],
   },
 };
 
