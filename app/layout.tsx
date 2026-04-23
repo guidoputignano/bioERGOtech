@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     siteName: "bioERGOtech Foundation",
     images: [
       {
-        url: "https://www.bioergotech.org/assets/images/og-image.jpeg",
+        url: "https://www.bioergotech.org/assets/images/og-image.jpeg?v=2",
         width: 1200,
         height: 630,
         alt: "bioERGOtech Foundation",
