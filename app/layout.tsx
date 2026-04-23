@@ -11,7 +11,7 @@ const siteUrl =
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bioergotech.org"),
   title: {
-    default: "bioERGOtech Foundation",
+    default: "bioERGOtech Foundation — Engineered Living Systems",
     template: "%s | bioERGOtech Foundation",
   },
   description:
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     apple: "/favicon.png",
   },
   openGraph: {
-    title: "bioERGOtech Foundation",
+    title: "bioERGOtech Foundation — Engineered Living Systemsn",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
     url: "https://www.bioergotech.org",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "bioERGOtech Foundation",
+    title: "bioERGOtech Foundation — Engineered Living Systems",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
     images: ["https://www.bioergotech.org/assets/images/og-image.jpg"],
