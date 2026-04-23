@@ -22,14 +22,14 @@ export const metadata: Metadata = {
     apple: "/favicon.png",
   },
   openGraph: {
-    title: "bioERGOtech Foundation — Engineered Living Systemsn",
+    title: "bioERGOtech Foundation — Engineered Living Systems",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
     url: "https://www.bioergotech.org",
     siteName: "bioERGOtech Foundation",
     images: [
       {
-        url: "https://www.bioergotech.org/assets/images/og-image.jpeg?v=2",
+        url: "https://www.bioergotech.org/assets/images/og-image2.jpeg?v=2",
         width: 1200,
         height: 630,
         alt: "bioERGOtech Foundation",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: "bioERGOtech Foundation — Engineered Living Systems",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
-    images: ["https://www.bioergotech.org/assets/images/og-image.jpg"],
+    images: ["https://www.bioergotech.org/assets/images/og-image2.jpg"],
   },
 };
 
