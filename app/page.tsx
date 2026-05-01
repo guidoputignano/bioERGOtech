@@ -136,6 +136,10 @@ const HUBS = [
 export default function Home() {
   return (
     <>
+      <style>{`
+        .course-card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .course-card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,196,180,0.2); }
+      `}</style>
       <Navbar />
 
       {/* ── Hero ── */}
@@ -466,24 +470,13 @@ export default function Home() {
               style={{ textDecoration: "none" }}
             >
               <div
-                className="rounded-lg overflow-hidden h-full"
+                className="rounded-lg overflow-hidden h-full course-card-hover"
                 style={{
                   background:
                     "linear-gradient(135deg, #0D1B32 0%, #1a3a5c 100%)",
                   border: "1px solid rgba(0,196,180,0.3)",
                   display: "flex",
                   flexDirection: "column",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform =
-                    "translateY(-3px)";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow =
-                    "0 12px 32px rgba(0,196,180,0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.transform = "";
-                  (e.currentTarget as HTMLDivElement).style.boxShadow = "";
                 }}
               >
                 {/* Top teal accent bar */}
