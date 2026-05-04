@@ -80,7 +80,7 @@ export default function CourseSidebar({
               You are viewing the free introduction
             </div>
             <Link
-              href="/join-us"
+              href="/auth/sign-up"
               style={{
                 display: "block",
                 background: TEAL,

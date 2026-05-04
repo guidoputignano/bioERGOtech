@@ -80,7 +80,7 @@ export default function GateModal({ onClose }: GateModalProps) {
         </p>
 
         <Link
-          href="/join-us"
+          href="/auth/sign-up"
           style={{
             display: "block",
             background: "#00C4B4",
