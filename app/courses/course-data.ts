@@ -5,11 +5,11 @@ export interface Lesson {
   slug: string;
   phase: Phase;
   week: number;
-  number: string; // e.g. "1.1", "1.2a"
+  number: string;
   title: string;
-  duration: string; // e.g. "9 minutes"
+  duration: string;
   track: Track;
-  free: boolean; // true = accessible without login
+  free: boolean;
   description: string;
 }
 
@@ -38,15 +38,26 @@ export const COURSE_LESSONS: Lesson[] = [
     description: "Build an accurate mental model of AI — traditional software vs machine learning, what a model actually is, the transformer breakthrough, and where LLMs succeed and fail.",
   },
   {
-    slug: "lesson-1-2",
+    slug: "lesson-1-2a",
     phase: 1,
     week: 1,
-    number: "1.2",
-    title: "The Anatomy of an AI Agent",
+    number: "1.2a",
+    title: "From Prompts to Pipelines: The Anatomy of an AI Agent",
+    duration: "10 minutes",
+    track: "all",
+    free: false,
+    description: "What makes an AI agent fundamentally different from a chatbot. The five components every agent is built from: perception, planning, tool use, memory, and feedback loop — mapped onto a real-world example.",
+  },
+  {
+    slug: "lesson-1-2b",
+    phase: 1,
+    week: 1,
+    number: "1.2b",
+    title: "Inside the Machine: How LLMs Work and How to Host Them",
     duration: "12 minutes",
     track: "all",
     free: false,
-    description: "The five components of any agentic system: perception, memory, planning, tool use, and output verification.",
+    description: "What is actually happening inside an LLM — tokenisation, transformer architecture, and parameters. Then the practical question: cloud API vs running a model locally with Ollama.",
   },
   {
     slug: "lesson-1-3",
