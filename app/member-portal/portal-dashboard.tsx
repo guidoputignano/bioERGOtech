@@ -102,7 +102,8 @@ const PARTNERSHIP_LABELS: Record<PartnershipLevel, { label: string; color: strin
 };
 const LOCKED_SECTIONS: Record<PartnershipLevel, { id: string; requiredLevel: string }[]> = {
   viewer: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }, { id: "knowledge", requiredLevel: "Partner" }],
-  student: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }],`n  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "knowledge", requiredLevel: "Partner" }],
+  student: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }],
+  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "knowledge", requiredLevel: "Partner" }],
   partner: [], admin: [],
 };
 const navItems = [
@@ -421,6 +422,13 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
         { label: "View Dashboard", target: "dashboard" },
       ],
     },
+    student: {
+      title: "Welcome to the BioERGOtech Student Portal",
+      text: "You are enrolled as a student, You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
+      actions: [
+        { label: "Open Knowledge Base", target: "knowledge" },
+      ],
+    },
     member: {
       title: "Welcome to the member network",
       text: "You now have access to the ecosystem directory and shared events. A good place to start is to explore who is in the network and what events are coming up.",
@@ -476,6 +484,13 @@ function DashboardView({
       title: "Your access is currently limited",
       text: "You can view the dashboard for now. If you need broader access to members, events, projects, or knowledge resources, please contact the bioERGOtech team for an access upgrade.",
       actions: [{ label: "View Dashboard", target: "dashboard" }],
+    },
+    student: {
+      title: "Welcome to the BioERGOtech Student Portal",
+      text: "You are enrolled as a student You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
+      actions: [
+        { label: "Open Knowledge Base", target: "knowledge" },
+      ],
     },
     member: {
       title: "Welcome to the member network",
@@ -1960,7 +1975,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
 // ─── KNOWLEDGE VIEW ───────────────────────────────────────────────────────────
 
 // ─── KNOWLEDGE VIEW (with Propose Document for members/partners) ───────────────
-function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: boolean; currentUserId?: string; currentUserName?: string }) {
+function KnowledgeView({ isAdmin, currentUserId, currentUserName, partnershipLevel }: { isAdmin?: boolean; currentUserId?: string; currentUserName?: string; partnershipLevel?: string }) {
   const [docCounts, setDocCounts] = useState<Record<string, number>>({});
   const [selectedCategory, setSelectedCategory] = useState<typeof KNOWLEDGE_CATEGORIES[0] | null>(null);
   const [categoryDocs, setCategoryDocs] = useState<KnowledgeDocument[]>([]);
@@ -2134,7 +2149,7 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName }: { isAdmin?: 
         <input placeholder="Search the knowledge base..." style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
-        {KNOWLEDGE_CATEGORIES.map((c, i) => (
+        {(partnershipLevel === "student" ? KNOWLEDGE_CATEGORIES.filter(c => c.name === "Courses") : KNOWLEDGE_CATEGORIES).map((c, i) => (
           <div key={i} onClick={() => openCategory(c)} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, boxShadow: SHADOW, cursor: "pointer", transition: "box-shadow 0.2s ease" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = SHADOW_HOVER)} onMouseLeave={e => (e.currentTarget.style.boxShadow = SHADOW)}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: c.bg, color: c.color, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={c.icon} size={20} /></div>
@@ -4000,6 +4015,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
               isAdmin={isAdmin}
               currentUserId={user.sub}
               currentUserName={user.display_name || user.full_name || user.email}
+              partnershipLevel={partnershipLevel}
             />
           </SectionWrapper>
         );
