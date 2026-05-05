@@ -26,6 +26,7 @@ const EVENT_TYPES = ["internal","national","international","online"];
 const EQUIPMENT_CATEGORIES = ["Flow Cytometry","Sequencing","Imaging","Spectroscopy","Cell Culture","Electroporation","Organoid","PCR","Other"];
 
 const KNOWLEDGE_CATEGORIES = [
+  { name: "Courses", icon: "star", desc: "Agentic AI program lessons and course materials", color: "#00C4B4", bg: "#E6F9F7" },
   { name: "Regulatory Pathways", icon: "book", desc: "IVDR, MDR, EMA guidance documents", color: TEAL, bg: TEAL_LIGHT },
   { name: "Funding Programs", icon: "chart", desc: "NIDI, Mini-PIA, PIA, Horizon Europe guides", color: "#7C5CFC", bg: "#F0EDFF" },
   { name: "Technical Protocols", icon: "flask", desc: "Lab procedures and best practices", color: "#E74C6F", bg: "#FDECF1" },
@@ -83,23 +84,25 @@ type EquipmentProposal = { id: string; name: string; category?: string; location
 type LabStats = { utilization_text: string; utilization_sub: string; cost_savings_text: string; cost_savings_sub: string; bookings_text: string; bookings_sub: string; };
 type KnowledgeDocument = { id: string; title: string; category: string; description?: string; url?: string; doc_type?: string; is_public?: boolean; added_by?: string; created_at: string; is_approved?: boolean; proposed_by?: string | null; proposed_by_name?: string | null; };
 
-export type PartnershipLevel = "viewer" | "member" | "partner" | "admin";
+export type PartnershipLevel = "viewer" | "student" | "member" | "partner" | "admin";
 
 const PARTNERSHIP_ACCESS: Record<PartnershipLevel, string[]> = {
   viewer: ["dashboard"],
+  student: ["dashboard", "knowledge"],
   member: ["dashboard", "events", "members"],
   partner: ["dashboard", "projects", "lab", "events", "members", "knowledge"],
   admin: ["dashboard", "projects", "lab", "events", "members", "knowledge", "admin"],
 };
 const PARTNERSHIP_LABELS: Record<PartnershipLevel, { label: string; color: string; bg: string }> = {
   viewer: { label: "Viewer", color: "#8896A6", bg: "#F3F5F8" },
+  student: { label: "Student", color: "#00B4D8", bg: "#E0F7FA" },
   member: { label: "Member", color: "#0D9373", bg: "#E6F9F5" },
   partner: { label: "Partner", color: "#7C5CFC", bg: "#F0EDFF" },
   admin: { label: "Admin", color: "#E74C6F", bg: "#FDECF1" },
 };
 const LOCKED_SECTIONS: Record<PartnershipLevel, { id: string; requiredLevel: string }[]> = {
   viewer: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }, { id: "knowledge", requiredLevel: "Partner" }],
-  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "knowledge", requiredLevel: "Partner" }],
+  student: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }],`n  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "knowledge", requiredLevel: "Partner" }],
   partner: [], admin: [],
 };
 const navItems = [

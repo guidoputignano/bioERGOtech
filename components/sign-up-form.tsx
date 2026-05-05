@@ -35,6 +35,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const [emailStatus, setEmailStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [isStudent, setIsStudent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -82,8 +83,13 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         options: { emailRedirectTo: `${window.location.origin}/member-portal`, data: { full_name: fullName.trim() } },
       });
       if (error) throw error;
-      if (data.user && fullName.trim()) {
-        await supabase.from("profiles").update({ full_name: fullName.trim(), updated_at: new Date().toISOString() }).eq("id", data.user.id);
+      if (data.user) {
+        const profileUpdate: Record<string, string> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (fullName.trim()) profileUpdate.full_name = fullName.trim();
+        if (isStudent) profileUpdate.partnership_level = "student";
+        await supabase.from("profiles").update(profileUpdate).eq("id", data.user.id);
       }
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
@@ -162,6 +168,51 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 <Input id="repeat-password" type={showPassword ? "text" : "password"} required value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} />
                 {repeatPassword && password !== repeatPassword && <p style={{ fontSize: 12, color: "#E74C6F", margin: 0 }}>Passwords do not match</p>}
                 {repeatPassword && password === repeatPassword && <p style={{ fontSize: 12, color: "#2EC4B6", margin: 0 }}>✓ Passwords match</p>}
+              </div>
+
+              {/* ── Student checkbox ── */}
+              <div
+                onClick={() => setIsStudent(!isStudent)}
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: 10,
+                  border: `1.5px solid ${isStudent ? "#2EC4B6" : "#E8EDF3"}`,
+                  background: isStudent ? "#E8F8F6" : "#F7F9FC",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  transition: "all 0.2s",
+                  userSelect: "none",
+                }}
+              >
+                <div style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: 4,
+                  border: `2px solid ${isStudent ? "#2EC4B6" : "#CBD5E0"}`,
+                  background: isStudent ? "#2EC4B6" : "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: 1,
+                  transition: "all 0.2s",
+                }}>
+                  {isStudent && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: isStudent ? "#1A9E92" : "#1A2332", marginBottom: 3 }}>
+                    🎓 I am a student enrolling in the Agentic AI Program
+                  </div>
+                  <div style={{ fontSize: 12, color: "#8896A6", lineHeight: 1.5 }}>
+                    Tick this box to get immediate access to the Agentic AI course in the Knowledge Base. You can upgrade your membership later.
+                  </div>
+                </div>
               </div>
 
               <div style={{ padding: "10px 14px", borderRadius: 10, background: "#F7F9FC", border: "1px solid #E8EDF3", fontSize: 12, color: "#8896A6", lineHeight: 1.5 }}>
