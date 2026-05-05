@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface GateModalProps {
   onClose: () => void;
 }
 
 export default function GateModal({ onClose }: GateModalProps) {
+  const pathname = usePathname();
+  const loginHref = `/auth/login?returnTo=${encodeURIComponent(pathname)}`;
+  const signUpHref = `/auth/sign-up?returnTo=${encodeURIComponent(pathname)}`;
+
   return (
     <div
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -80,7 +85,7 @@ export default function GateModal({ onClose }: GateModalProps) {
         </p>
 
         <Link
-          href="/auth/sign-up"
+          href={signUpHref}
           style={{
             display: "block",
             background: "#00C4B4",
@@ -97,7 +102,7 @@ export default function GateModal({ onClose }: GateModalProps) {
         </Link>
 
         <Link
-          href="/auth/login"
+          href={loginHref}
           style={{
             display: "block",
             background: "transparent",

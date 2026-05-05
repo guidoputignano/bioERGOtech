@@ -424,7 +424,7 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
     },
     student: {
       title: "Welcome to the BioERGOtech Student Portal",
-      text: "You are enrolled as a student, You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
+      text: "You are enrolled as a student. You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
       actions: [
         { label: "Open Knowledge Base", target: "knowledge" },
       ],
@@ -487,7 +487,7 @@ function DashboardView({
     },
     student: {
       title: "Welcome to the BioERGOtech Student Portal",
-      text: "You are enrolled as a student You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
+      text: "You are enrolled as a student. You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
       actions: [
         { label: "Open Knowledge Base", target: "knowledge" },
       ],

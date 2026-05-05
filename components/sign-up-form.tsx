@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
 
 function generateStrongPassword(): string {
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -29,7 +29,7 @@ function generateStrongPassword(): string {
   return [...required, ...remaining].sort(() => Math.random() - 0.5).join("");
 }
 
-export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+function SignUpFormInner({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [emailStatus, setEmailStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
@@ -42,6 +42,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const emailCheckTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -84,14 +86,14 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       });
       if (error) throw error;
       if (data.user) {
-        const partnershipLevel = isStudent ? "student" : "viewer";
-        await supabase.from("profiles").update({
-          full_name: fullName.trim(),
-          partnership_level: partnershipLevel,
+        const profileUpdate: Record<string, string> = {
           updated_at: new Date().toISOString(),
-        }).eq("id", data.user.id);
+        };
+        if (fullName.trim()) profileUpdate.full_name = fullName.trim();
+        if (isStudent) profileUpdate.partnership_level = "student";
+        await supabase.from("profiles").update(profileUpdate).eq("id", data.user.id);
       }
-      router.push("/auth/sign-up-success");
+      router.push(returnTo ? `/auth/sign-up-success?returnTo=${encodeURIComponent(returnTo)}` : "/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally { setIsLoading(false); }
@@ -170,17 +172,48 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 {repeatPassword && password === repeatPassword && <p style={{ fontSize: 12, color: "#2EC4B6", margin: 0 }}>✓ Passwords match</p>}
               </div>
 
-              {/* Student checkbox */}
+              {/* ── Student checkbox ── */}
               <div
                 onClick={() => setIsStudent(!isStudent)}
-                style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", borderRadius: 12, border: `1.5px solid ${isStudent ? "#00B4D8" : "#E8EDF3"}`, background: isStudent ? "#E0F7FA" : "#FAFBFC", cursor: "pointer", transition: "all 0.2s" }}
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: 10,
+                  border: `1.5px solid ${isStudent ? "#2EC4B6" : "#E8EDF3"}`,
+                  background: isStudent ? "#E8F8F6" : "#F7F9FC",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  transition: "all 0.2s",
+                  userSelect: "none",
+                }}
               >
-                <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${isStudent ? "#00B4D8" : "#D1D5DB"}`, background: isStudent ? "#00B4D8" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                  {isStudent && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                <div style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: 4,
+                  border: `2px solid ${isStudent ? "#2EC4B6" : "#CBD5E0"}`,
+                  background: isStudent ? "#2EC4B6" : "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  marginTop: 1,
+                  transition: "all 0.2s",
+                }}>
+                  {isStudent && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </div>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: isStudent ? "#0077A8" : "#4A5568", margin: 0 }}>I am a student </p>
-                  <p style={{ fontSize: 12, color: "#8896A6", margin: "3px 0 0" }}>Grants access to the Courses section in the Knowledge Base portal.</p>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: isStudent ? "#1A9E92" : "#1A2332", marginBottom: 3 }}>
+                    🎓 I am a student enrolling in the Agentic AI Program
+                  </div>
+                  <div style={{ fontSize: 12, color: "#8896A6", lineHeight: 1.5 }}>
+                    Tick this box to get immediate access to the Agentic AI course in the Knowledge Base. You can upgrade your membership later.
+                  </div>
                 </div>
               </div>
 
@@ -201,5 +234,13 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function SignUpForm(props: React.ComponentPropsWithoutRef<"div">) {
+  return (
+    <Suspense>
+      <SignUpFormInner {...props} />
+    </Suspense>
   );
 }
