@@ -720,7 +720,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
             }}
           >
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => isAuthenticated ? window.location.href = "/courses/agentic-ai/lesson/lesson-1-1" : setShowModal(true)}
               style={{
                 display: "flex",
                 alignItems: "center",
