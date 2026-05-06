@@ -187,7 +187,7 @@ export default function CourseSidebar({
                         href={
                           lesson.slug === "introduction"
                             ? "/courses/agentic-ai"
-                            : `/courses/agentic-ai/${lesson.slug}`
+                            : `/courses/agentic-ai/lesson/${lesson.slug}`
                         }
                         style={{
                           fontSize: 12,
