@@ -2149,7 +2149,7 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName, partnershipLev
         <input placeholder="Search the knowledge base..." style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
-        {(partnershipLevel === "student" ? KNOWLEDGE_CATEGORIES.filter(c => c.name === "Courses") : KNOWLEDGE_CATEGORIES).map((c, i) => (
+        {KNOWLEDGE_CATEGORIES.map((c, i) => (
           <div key={i} onClick={() => openCategory(c)} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, boxShadow: SHADOW, cursor: "pointer", transition: "box-shadow 0.2s ease" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = SHADOW_HOVER)} onMouseLeave={e => (e.currentTarget.style.boxShadow = SHADOW)}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: c.bg, color: c.color, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={c.icon} size={20} /></div>
