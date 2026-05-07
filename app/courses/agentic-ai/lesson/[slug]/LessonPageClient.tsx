@@ -93,6 +93,20 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
   );
 }
 
+
+function SlideImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div style={{ margin: "24px 0", borderRadius: 12, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW }}>
+      <img
+        src={src}
+        alt={alt}
+        style={{ width: "100%", display: "block" }}
+        loading="lazy"
+      />
+    </div>
+  );
+}
+
 function ComparisonTable({ headers, rows }: { headers: string[]; rows: (string | React.ReactNode)[][] }) {
   return (
     <div style={{ overflowX: "auto", marginTop: 8 }}>
@@ -118,6 +132,7 @@ function Lesson_1_1() {
         <p style={p}>This lesson covers three things. By the end you should be able to define AI accurately in plain language, distinguish traditional software from machine learning and generative AI, and calibrate your own expectations. Both over-hype and under-estimation are equally unhelpful when it comes to building real systems.</p>
       </Section>
       <Section title="Two Ways to Build Intelligence">
+      <SlideImage src="/assets/courses/lesson-1-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Every piece of software that makes decisions is built using one of two fundamentally different approaches. Understanding this distinction is the foundation of everything that follows in this course.</p>
         <SubHeading>Traditional Software: Rules Written by Hand</SubHeading>
         <p style={p}>In traditional software, a human developer writes every decision in advance. If the user clicks <strong>X</strong>, do <strong>Y</strong>. Always. A spam filter built this way works by checking emails against a handcrafted list of suspicious keywords. This approach is predictable and reliable — but rigid. If a new type of spam appears that does not match any handcrafted rules, the filter fails.</p>
@@ -125,15 +140,18 @@ function Lesson_1_1() {
         <p style={p}>Machine learning takes a completely different approach. Instead of writing rules by hand, you show the system millions of labelled examples, and it extracts the patterns itself. A spam filter built this way was trained on millions of emails labelled as spam or not spam. It learned the patterns from the data. This makes the system flexible and adaptive — it improves with more data and can handle situations the developer never anticipated.</p>
       </Section>
       <Section title="What Exactly Is a Model?">
+      <SlideImage src="/assets/courses/lesson-1-1/slide-2.png" alt="Slide 2" />
         <p style={p}>A model is not a program in the traditional sense. It is a very large set of mathematical patterns — specifically, numerical weights extracted from data during training. You feed the system millions of examples. The system adjusts its internal parameters — billions of them — until it can reliably predict the correct output for each input. Once training is complete, those adjusted parameters are saved. That saved set of parameters is the model.</p>
         <KeyInsight>A model is not a program in the traditional sense. It is a very large set of mathematical patterns extracted from data. You cannot read it like code, but it behaves as though it has learned the rules.</KeyInsight>
       </Section>
       <Section title="From Machine Learning to Generative AI">
+      <SlideImage src="/assets/courses/lesson-1-1/slide-3.png" alt="Slide 3" />
         <p style={p}>Machine learning has been around for decades. The answer to what changed recently lies in a specific sequence of breakthroughs. In 2012, AlexNet demonstrated that deep learning could outperform every hand-engineered system. In 2017, the Transformer architecture was introduced in 'Attention Is All You Need' — every modern LLM is a transformer. From 2022 onwards, these models scaled to billions of parameters and were exposed to vast portions of the public internet during training.</p>
         <KeyInsight>The transformer (2017) powers every modern LLM. This jump is why agentic AI is possible now — and was not five years ago.</KeyInsight>
         <p style={p}>Traditional machine learning classifies and predicts — is this email spam? Generative AI creates new content — text, images, code — that did not exist before. The output is generated token by token based on patterns learned during training.</p>
       </Section>
       <Section title="What LLMs Are Good and Bad At">
+      <SlideImage src="/assets/courses/lesson-1-1/slide-4.png" alt="Slide 4" />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 8 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 10 }}>✅ What LLMs Are Very Good At</div>
@@ -150,7 +168,8 @@ function Lesson_1_1() {
         </div>
         <KeyInsight>Treat an LLM like a very fast, very well-read assistant who is occasionally overconfident. Verify important claims. Use it to speed up tasks you already understand.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Think of a piece of software you use every day. Based on what you learned in this lesson, is it traditional software, machine learning, or generative AI? How can you tell? Write 3–5 sentences connecting it to your own experience.</ReflectionPrompt>
+      <ReflectionPrompt>Think of a piece of software
+      <SlideImage src="/assets/courses/lesson-1-1/slide-5.png" alt="Slide 5" /> you use every day. Based on what you learned in this lesson, is it traditional software, machine learning, or generative AI? How can you tell? Write 3–5 sentences connecting it to your own experience.</ReflectionPrompt>
     </>
   );
 }
@@ -163,6 +182,7 @@ function Lesson_1_2a() {
         <p style={p}>Three goals. First, you will be able to explain clearly why an AI agent is fundamentally different from a chatbot. Second, you will know the names and definitions of the five components every agent is built from. Third, you will apply that framework to a real-world scenario and see how it maps onto something concrete.</p>
       </Section>
       <Section title="The Answer vs The Worker">
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-1.png" alt="Slide 1" />
         <SubHeading>What a chatbot does</SubHeading>
         <p style={p}>A chatbot operates on a simple loop: one question in, one answer out, done. Ask it what time it is in Tokyo and it tells you. Each exchange is independent. It has no memory of what was said before unless explicitly shown the history. It does not take action in the world. It does not call APIs. It responds and stops.</p>
         <SubHeading>What an agent does</SubHeading>
@@ -170,6 +190,7 @@ function Lesson_1_2a() {
         <CalloutBox label="The One-Sentence Test"><strong>The chatbot answers.</strong> One prompt → one response.<br /><strong>The agent works.</strong> One goal → many actions. Autonomous.</CalloutBox>
       </Section>
       <Section title="The Five Components of Every AI Agent">
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-2.png" alt="Slide 2" />
         <p style={p}>Every agent — simple or complex, no-code or full-code — is built from exactly five components.</p>
         <ComparisonTable
           headers={["#", "Component", "Definition"]}
@@ -183,6 +204,7 @@ function Lesson_1_2a() {
         />
       </Section>
       <Section title="Worked Example: The School Flu Sentinel">
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-3.png" alt="Slide 3" />
         <CalloutBox label="Scenario">An agent monitors a public health data feed every morning. When flu cases in the local region cross a threshold, it emails a bulletin to school administrators with recommended actions.</CalloutBox>
         {[
           { component: "Perception", desc: "Reads the public health feed every morning — today's local flu case count." },
@@ -198,7 +220,8 @@ function Lesson_1_2a() {
         ))}
         <KeyInsight>Five components. One agent. A task that used to require a human to check a website every morning now runs automatically, reliably, and without being prompted.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Pick one repetitive task from your week. Describe how an agent could handle it using all five components: What would it perceive? What would it plan? What tools would it use? What would it need to remember? How would it check its own work? Write one paragraph, 4–6 sentences. Be specific.</ReflectionPrompt>
+      <ReflectionPrompt>Pick one repetitive task
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-4.png" alt="Slide 4" /> from your week. Describe how an agent could handle it using all five components: What would it perceive? What would it plan? What tools would it use? What would it need to remember? How would it check its own work? Write one paragraph, 4–6 sentences. Be specific.</ReflectionPrompt>
     </>
   );
 }
@@ -215,6 +238,7 @@ function Lesson_1_2b() {
         <KeyInsight>LLMs don't read words — they read tokens. Every modern LLM has a context window — a maximum number of tokens it can process at once. GPT-4 holds ~128,000 tokens; Claude holds up to 200,000.</KeyInsight>
       </Section>
       <Section title="Step 2: The Transformer — Three Stages">
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-1.png" alt="Slide 1" />
         <p style={p}>Every modern LLM — Claude, GPT, Llama, Gemini — uses the same underlying architecture: the transformer, introduced in 2017. The name GPT literally stands for Generative Pre-trained Transformer.</p>
         <SubHeading>Stage 1 — Embedding</SubHeading>
         <p style={p}>Each token ID is looked up in an embedding table and converted into a vector of hundreds of numbers. These numbers encode the meaning and context of each word.</p>
@@ -224,6 +248,7 @@ function Lesson_1_2b() {
         <p style={p}>The final vector is mapped to a probability score for every token in the vocabulary. The model picks the most likely next token. This repeats until the answer is complete. This is why LLM responses are generated word by word.</p>
       </Section>
       <Section title="What Does '70 Billion Parameters' Actually Mean?">
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-2.png" alt="Slide 2" />
         <p style={p}>Parameters are the numbers inside the model — the values learned during training. More parameters means more capacity, but also more compute required to run the model.</p>
         <ComparisonTable
           headers={["Model", "Size", "Notes", "Hosting"]}
@@ -236,6 +261,7 @@ function Lesson_1_2b() {
         />
       </Section>
       <Section title="Two Ways to Run a Model">
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-3.png" alt="Slide 3" />
         <SubHeading>Online — Cloud API</SubHeading>
         <p style={p}>You send text to a remote server. Their hardware runs the model and returns the response. Advantages: no hardware needed, access to the largest models. Disadvantages: costs money per token, your data leaves your machine.</p>
         <p style={p}><strong>Services:</strong> Anthropic API · OpenAI API · Hugging Face Inference API</p>
@@ -243,7 +269,8 @@ function Lesson_1_2b() {
         <p style={p}>You download the model weights to your own computer and run them using Ollama. Advantages: completely free after setup, data never leaves your machine, works offline. Disadvantages: smaller models with less capability, requires decent hardware.</p>
         <CalloutBox label="Which Should You Use?" variant="tip">For most student projects: start with a cloud API. Switch to local if your project involves sensitive data, you need to work offline, or you want to avoid per-token costs for high-volume testing.</CalloutBox>
       </Section>
-      <ReflectionPrompt>Go to huggingface.co/models. Browse the text generation models and pick one open-source model. Read its model card and answer: What was it trained on and how many parameters does it have? Is it a good fit for an agent project? Would you run it online or locally? Why?</ReflectionPrompt>
+      <ReflectionPrompt>Go to huggingface.co/models
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-4.png" alt="Slide 4" />. Browse the text generation models and pick one open-source model. Read its model card and answer: What was it trained on and how many parameters does it have? Is it a good fit for an agent project? Would you run it online or locally? Why?</ReflectionPrompt>
     </>
   );
 }
@@ -304,6 +331,7 @@ function Lesson_2_1() {
         <p style={p}>Three things. First, why accountability in AI systems is more complex than in traditional software — using a concrete hospital scenario that reveals the gap clearly. Second, the three core ethical dimensions that apply to every agentic system: privacy and consent, bias and fairness, and transparency. Third, that ethical decisions are not separate from technical decisions — every architecture choice has ethical implications.</p>
       </Section>
       <Section title="The Accountability Gap — A Real Scenario">
+      <SlideImage src="/assets/courses/lesson-2-1/slide-1.png" alt="Slide 1" />
         <CalloutBox label="Scenario" variant="warning">A hospital deploys an agent that reads discharge letters and sends patients a plain-language checklist of follow-up actions. The agent misreads one letter and tells a patient they can stop taking a medication when the letter said the opposite. The patient follows the instruction and is readmitted two weeks later.</CalloutBox>
         <p style={p}>When something goes wrong in a system like this, the natural response is to ask who is responsible. In an AI agent system, the answer is genuinely complicated.</p>
         {[
@@ -320,6 +348,7 @@ function Lesson_2_1() {
         <KeyInsight>AI agents make decisions that were not explicitly programmed. When they cause harm, it can be impossible to trace exactly which training data or probabilistic step led to the error. This is not an excuse to avoid accountability — it is a reason to design accountability in from the start.</KeyInsight>
       </Section>
       <Section title="Three Core Ethical Dimensions">
+      <SlideImage src="/assets/courses/lesson-2-1/slide-2.png" alt="Slide 2" />
         <SubHeading>1. Privacy and Consent</SubHeading>
         <p style={p}>Every agent that processes personal data creates a privacy obligation. The questions are: What data does the agent actually need? Who consented to it being used? How long is it retained? Can users request deletion? Privacy is not just about preventing data breaches — it is about using only what you need for only as long as you need it.</p>
         <SubHeading>2. Bias and Fairness</SubHeading>
@@ -327,7 +356,8 @@ function Lesson_2_1() {
         <SubHeading>3. Transparency</SubHeading>
         <p style={p}>Can a user understand what the agent did and why? If your agent sends a message, makes a recommendation, or takes an action that affects someone — can that person request an explanation? Transparency is the bridge between AI capability and human trust. Without it, even a high-performing agent is difficult to use responsibly in high-stakes settings.</p>
       </Section>
-      <ReflectionPrompt>Think about an agent you could imagine building for a domain you care about. Name one specific privacy concern it raises, one potential bias in its data or training, and one transparency question a user might reasonably ask. For each — describe one design decision you could make to address it. Write 2–3 sentences per dimension.</ReflectionPrompt>
+      <ReflectionPrompt>Think about an agent you could imagine building
+      <SlideImage src="/assets/courses/lesson-2-1/slide-3.png" alt="Slide 3" /> for a domain you care about. Name one specific privacy concern it raises, one potential bias in its data or training, and one transparency question a user might reasonably ask. For each — describe one design decision you could make to address it. Write 2–3 sentences per dimension.</ReflectionPrompt>
     </>
   );
 }
@@ -340,6 +370,7 @@ function Lesson_2_2() {
         <p style={p}>Three things. Concrete examples of agents already generating commercial value in healthcare, legal, and customer operations. The distinction between the infrastructure layer and the application layer where products are built. And why the barrier to building something real is not technical or financial — it is the scarcity of domain knowledge combined with a specific problem worth solving.</p>
       </Section>
       <Section title="Three Industries Already Using Agents Commercially">
+      <SlideImage src="/assets/courses/lesson-2-2/slide-1.png" alt="Slide 1" />
         {[
           { industry: "Healthcare", examples: ["Triage agents read patient messages and route them to the right clinical team — processing in seconds what previously took hours of manual review.", "Claim processing agents read, categorise, and approve low-complexity insurance claims in minutes instead of days.", "Research agents scan thousands of published papers and surface relevant findings for a specific clinical experiment."] },
           { industry: "Legal", examples: ["Contract review agents read thousands of pages, flag clauses that deviate from standard terms, and produce risk summaries — a task that used to take a junior lawyer a week now takes an agent a few hours.", "Due diligence agents cross-reference filings, court records, and public data to surface risks before a deal closes."] },
@@ -356,13 +387,15 @@ function Lesson_2_2() {
         ))}
       </Section>
       <Section title="Infrastructure vs Application Layer">
+      <SlideImage src="/assets/courses/lesson-2-2/slide-2.png" alt="Slide 2" />
         <SubHeading>The Infrastructure Layer</SubHeading>
         <p style={p}>The infrastructure layer consists of the large language models themselves — Claude, GPT, Gemini, Llama — and the compute required to run them. Building at this layer requires hundreds of millions of dollars, vast datasets, and teams of ML researchers. This is not where student builders operate.</p>
         <SubHeading>The Application Layer</SubHeading>
         <p style={p}>The application layer is where products are built on top of the infrastructure. You do not need to understand how a transformer works to build a useful agent — just as you do not need to know how a database engine works to build a web app that uses one. The application layer is where domain knowledge becomes the primary differentiator. An agent that helps school nurses triage flu symptoms requires deep understanding of school health workflows — not a PhD in machine learning.</p>
         <KeyInsight>The real scarcity is not technical skill — it is domain knowledge combined with a specific problem worth solving. If you understand a domain well enough to recognise a problem that repeats, you have the most important ingredient.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Name one domain you know well — from school, family, volunteering, or personal experience. Describe one repetitive task in that domain that currently takes human time and attention. How would an agent handle it? What would be the measurable benefit? Write 3–5 sentences. This is the seed of your project brief.</ReflectionPrompt>
+      <ReflectionPrompt>Name one domain you know well
+      <SlideImage src="/assets/courses/lesson-2-2/slide-3.png" alt="Slide 3" /> — from school, family, volunteering, or personal experience. Describe one repetitive task in that domain that currently takes human time and attention. How would an agent handle it? What would be the measurable benefit? Write 3–5 sentences. This is the seed of your project brief.</ReflectionPrompt>
     </>
   );
 }
@@ -376,6 +409,7 @@ function Lesson_3_1() {
         <p style={p}>Read what the agent does. Identify who it helps and why it matters. Note what it needs to work. Answer the activation question.</p>
       </Section>
       <Section title="Healthcare Examples">
+      <SlideImage src="/assets/courses/lesson-3-1/slide-1.png" alt="Slide 1" />
         <ExampleCard number="01" title="Medication Reminder and Missed-Dose Alert">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Monitors a patient's medication schedule, sends reminders via SMS, and alerts a caregiver if a dose is missed for more than two hours.</p></div>
@@ -409,7 +443,8 @@ function Lesson_3_1() {
           </div>
         </ExampleCard>
       </Section>
-      <ReflectionPrompt>Which of these four examples connects most directly to a problem you have personally encountered or witnessed? Describe what you would change or extend to make it more useful for your specific context. Write 3–5 sentences.</ReflectionPrompt>
+      <ReflectionPrompt>Which of these four examples connects
+      <SlideImage src="/assets/courses/lesson-3-1/slide-2.png" alt="Slide 2" /> most directly to a problem you have personally encountered or witnessed? Describe what you would change or extend to make it more useful for your specific context. Write 3–5 sentences.</ReflectionPrompt>
     </>
   );
 }
@@ -452,7 +487,8 @@ function Lesson_3_2() {
           </div>
         </ExampleCard>
       </Section>
-      <ReflectionPrompt>Pick one of the four examples and describe a specific dataset or API it would need that you have not worked with before. How would you find out whether that data is publicly available and freely accessible? Write 2–3 sentences. The data sourcing question is one you will need to answer for your own project in Week 4.</ReflectionPrompt>
+      <ReflectionPrompt>Pick one of the four examples and describe a specific dataset
+      <SlideImage src="/assets/courses/lesson-3-2/slide-1.png" alt="Slide 1" /> or API it would need that you have not worked with before. How would you find out whether that data is publicly available and freely accessible? Write 2–3 sentences. The data sourcing question is one you will need to answer for your own project in Week 4.</ReflectionPrompt>
     </>
   );
 }
@@ -476,6 +512,7 @@ function Lesson_4_1() {
         ))}
       </Section>
       <Section title="Make vs n8n — How to Choose">
+      <SlideImage src="/assets/courses/lesson-4-1/slide-1.png" alt="Slide 1" />
         <ComparisonTable
           headers={["Feature", "Make", "n8n"]}
           rows={[
@@ -490,6 +527,7 @@ function Lesson_4_1() {
         <CalloutBox label="Recommendation" variant="tip">If you are completely new to automation, start with Make — the interface is more forgiving. If your project involves AI reasoning or multi-step logic, n8n gives you more control.</CalloutBox>
       </Section>
       <Section title="Your First Trigger — Step by Step">
+      <SlideImage src="/assets/courses/lesson-4-1/slide-2.png" alt="Slide 2" />
         <p style={p}>By the end of this session, you must have one working trigger connected to at least one action. Here is the minimum viable workflow for a student project:</p>
         {["Create a free account on Make.com or n8n.io", "Create a new scenario/workflow", "Add a trigger — a Webhook, a Schedule, or a Google Sheets 'New Row' trigger", "Add one action — send an email, write to a Google Sheet, or post a Slack message", "Run the trigger manually and verify the action fires", "Screenshot the workflow canvas and paste in your project log"].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -498,7 +536,8 @@ function Lesson_4_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After completing your first trigger: What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
+      <ReflectionPrompt>After completing your first trigger
+      <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Slide 3" />: What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -521,6 +560,7 @@ function Lesson_4_2() {
         ))}
       </Section>
       <Section title="What Is OpenClaw?">
+      <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Slide 1" />
         <p style={p}>OpenClaw is an open-source personal AI agent platform. Unlike cloud-only tools, it runs on your own machine — which means your data stays private, it works offline, and you have full control over what it does and what it can access. You interact with it through Telegram, giving you a conversational interface from day one without needing to build any front end.</p>
         {[
           ["Personal AI Agent", "A persistent agent that lives on your machine. You talk to it through Telegram. It remembers context, follows instructions, and can be given new capabilities."],
@@ -535,6 +575,7 @@ function Lesson_4_2() {
         ))}
       </Section>
       <Section title="Session Deliverables">
+      <SlideImage src="/assets/courses/lesson-4-2/slide-2.png" alt="Slide 2" />
         {["Install OpenClaw and complete the onboarding wizard", "Connect to a private Telegram bot", "Install one skill from ClawHub relevant to your project domain", "Set a domain-specific system prompt for your agent", "Send your agent a domain-relevant test message and screenshot the response"].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#4A7DFF", color: "#fff", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</div>
@@ -542,7 +583,8 @@ function Lesson_4_2() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After your first Telegram conversation with your agent: What skill did you install and why? What was the agent's response to your domain-specific test message? What would you want it to do differently? Write 3–4 sentences.</ReflectionPrompt>
+      <ReflectionPrompt>After your first Telegram conversation
+      <SlideImage src="/assets/courses/lesson-4-2/slide-3.png" alt="Slide 3" /> with your agent: What skill did you install and why? What was the agent's response to your domain-specific test message? What would you want it to do differently? Write 3–4 sentences.</ReflectionPrompt>
     </>
   );
 }
@@ -565,6 +607,7 @@ function Lesson_4_3() {
         ))}
       </Section>
       <Section title="What Is Agno?">
+      <SlideImage src="/assets/courses/lesson-4-3/slide-1.png" alt="Slide 1" />
         <p style={p}>Agno is a Python framework for building, running, and managing agentic software — from a single agent to multi-agent teams. It is lightweight, model-agnostic, and built around four core concepts.</p>
         <ComparisonTable
           headers={["Concept", "What It Is"]}
@@ -577,6 +620,7 @@ function Lesson_4_3() {
         />
       </Section>
       <Section title="Your First Agno Agent — 10 Lines">
+      <SlideImage src="/assets/courses/lesson-4-3/slide-2.png" alt="Slide 2" />
         <p style={p}>This is the complete code for a working agent with web search capability. Every line is annotated.</p>
         <CodeBlock>{`# Install first: pip install agno anthropic
 from agno.agent import Agent
@@ -593,7 +637,8 @@ agent = Agent(
 agent.print_response('What is Agno?', stream=True)`}</CodeBlock>
         <CalloutBox label="Session Deliverable" variant="tip">Run this agent from your terminal. Modify the instructions to match your project domain. Screenshot the output. Paste in your project log as environment setup proof.</CalloutBox>
       </Section>
-      <ReflectionPrompt>After running your first Agno agent: What did it return? What would you need to change about the model, tools, or instructions to make it useful for your specific project? Write 3–4 sentences in your project log.</ReflectionPrompt>
+      <ReflectionPrompt>After running your first Agno agent
+      <SlideImage src="/assets/courses/lesson-4-3/slide-3.png" alt="Slide 3" />: What did it return? What would you need to change about the model, tools, or instructions to make it useful for your specific project? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -607,6 +652,7 @@ function Lesson_4_4() {
         <CalloutBox label="Team Size">2–4 students per team. Solo projects are permitted only with mentor approval. Mixed-track teams are allowed — a Track A student and a Track C student can collaborate if the project suits both skill levels.</CalloutBox>
       </Section>
       <Section title="The Project Idea Brief — Six Sections">
+      <SlideImage src="/assets/courses/lesson-4-4/slide-1.png" alt="Slide 1" />
         <p style={p}>One page. Fill every section before submitting. Incomplete briefs are returned.</p>
         {[
           { num: "01", title: "The Problem", desc: "What specific problem are you solving? Who has it? How often? What happens when it is not solved?" },
@@ -625,7 +671,8 @@ function Lesson_4_4() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Before submitting your brief — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
+      <ReflectionPrompt>Before submitting your brief
+      <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Slide 2" /> — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
     </>
   );
 }
@@ -647,6 +694,7 @@ function Lesson_5_1() {
         ))}
       </Section>
       <Section title="The Five Architecture Questions">
+      <SlideImage src="/assets/courses/lesson-5-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Answer these before opening VSCode, Make, or n8n.</p>
         {[
           ["Q1 — What does the agent perceive?", "List every input: file types, API responses, user messages, database records, web content. If it is not in this list, the agent cannot act on it."],
@@ -662,6 +710,7 @@ function Lesson_5_1() {
         ))}
       </Section>
       <Section title="Common Architecture Mistakes">
+      <SlideImage src="/assets/courses/lesson-5-1/slide-2.png" alt="Slide 2" />
         {[
           ["Starting with the tool, not the problem.", "'We will use n8n because we know it.' Wrong starting point. Start with the problem and choose the tool that fits."],
           ["No human checkpoint in high-stakes outputs.", "Any agent that communicates with real users about health, money, or legal matters must have a human review step before output is delivered."],
@@ -674,7 +723,8 @@ function Lesson_5_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Answer the five architecture questions for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
+      <ReflectionPrompt>Answer the five architecture questions
+      <SlideImage src="/assets/courses/lesson-5-1/slide-3.png" alt="Slide 3" /> for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
     </>
   );
 }
@@ -687,6 +737,7 @@ function Lesson_5_2() {
         <CalloutBox label="What You Must Complete Today" variant="tip">One successful test run connected to your actual project domain, with a screenshot in your project log. The environment must be set up for your project — not a generic test.</CalloutBox>
       </Section>
       <Section title="Track A — Make / n8n: Project Scenario Setup">
+      <SlideImage src="/assets/courses/lesson-5-2/slide-1.png" alt="Slide 1" />
         <TrackBadge track="A" />
         {["Open your Make scenario or n8n workflow. Start a new scenario/workflow specifically for your project — not the test one from Week 4. Name it clearly.", "Connect your data source. Add your first trigger or data input node. Connect it now and verify it returns data.", "Add a placeholder for each action in your architecture. Do not wire logic yet — just add empty action nodes matching your architecture sketch.", "Test trigger with live data. Run the trigger manually. Confirm real data flows through.", "Screenshot and log. Screenshot the workflow canvas with nodes connected. Paste in your project log as environment setup proof."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -696,6 +747,7 @@ function Lesson_5_2() {
         ))}
       </Section>
       <Section title="Track B — OpenClaw / Hermes Agent: Project Agent Configuration">
+      <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Slide 2" />
         <TrackBadge track="B" />
         {["Create a project folder in VSCode named after your project.", "Set a domain-specific system prompt. Edit your agent's system prompt to match your project domain. Be specific — it affects every response.", "Install one relevant skill from ClawHub. Review the source code before installing. Connect and test via Telegram.", "Create a .env file for API keys. Never commit this file to GitHub — add .env to .gitignore.", "Send a domain-specific test message. Ask your agent something relevant to your project. Screenshot the conversation."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -705,6 +757,7 @@ function Lesson_5_2() {
         ))}
       </Section>
       <Section title="Track C — Agno: Project Agent Setup in VSCode">
+      <SlideImage src="/assets/courses/lesson-5-2/slide-3.png" alt="Slide 3" />
         <TrackBadge track="C" />
         {["Create a new project folder in VSCode. This is where all code, configuration, and logs will live.", "Create a virtual environment: python -m venv venv. Activate it. Install Agno: pip install agno.", "Create a .env file with your ANTHROPIC_API_KEY. Add .env to .gitignore.", "Write your project agent file. Start from the 10-line template from Lesson 4.3. Modify the model, tools, and instructions to match your project domain.", "Run a domain-specific test prompt. Screenshot the terminal output showing the agent's response. Paste in your project log."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -713,7 +766,8 @@ function Lesson_5_2() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After your environment session: What worked on the first try? What took longer than expected? Is there any part of your architecture that you now realise you cannot implement with your chosen track? If yes — flag it to your mentor before Week 6.</ReflectionPrompt>
+      <ReflectionPrompt>After your environment session
+      <SlideImage src="/assets/courses/lesson-5-2/slide-4.png" alt="Slide 4" />: What worked on the first try? What took longer than expected? Is there any part of your architecture that you now realise you cannot implement with your chosen track? If yes — flag it to your mentor before Week 6.</ReflectionPrompt>
     </>
   );
 }
@@ -737,6 +791,7 @@ function Lesson_6_1() {
         ))}
       </Section>
       <Section title="Five Build Principles — All Tracks">
+      <SlideImage src="/assets/courses/lesson-6-1/slide-1.png" alt="Slide 1" />
         {[
           ["01 — Build the happy path first.", "Get the single most important scenario working end to end before adding any other feature. One complete path beats three half-paths."],
           ["02 — One component at a time.", "Get the trigger working. Test it. Then add the first action. Test it. Then add the second. Do not wire everything and test at the end."],
@@ -750,7 +805,8 @@ function Lesson_6_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>At the end of this build session: Write two sentences describing exactly what your prototype does right now — not what it will do, what it does. Then write one sentence describing the next specific thing you need to add. Add both to your project log.</ReflectionPrompt>
+      <ReflectionPrompt>At the end of this build session
+      <SlideImage src="/assets/courses/lesson-6-1/slide-2.png" alt="Slide 2" />: Write two sentences describing exactly what your prototype does right now — not what it will do, what it does. Then write one sentence describing the next specific thing you need to add. Add both to your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -774,6 +830,7 @@ function Lesson_6_2() {
         ))}
       </Section>
       <Section title="Your Project README — Six Required Sections">
+      <SlideImage src="/assets/courses/lesson-6-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Start it now. Add to it every session. Your final README is part of the assessed submission.</p>
         {[
           ["01 — Project name and one-sentence description.", "What does this agent do, for whom, in one sentence. If you cannot write this sentence, the project scope is still unclear."],
@@ -792,7 +849,8 @@ function Lesson_6_2() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Complete sections 01–04 of your README today. For section 03, write the step-by-step description as if explaining it to someone who has never heard of your project. If you cannot explain it simply, the design is not clear enough yet.</ReflectionPrompt>
+      <ReflectionPrompt>Complete sections 01–04 of your README
+      <SlideImage src="/assets/courses/lesson-6-2/slide-2.png" alt="Slide 2" /> today. For section 03, write the step-by-step description as if explaining it to someone who has never heard of your project. If you cannot explain it simply, the design is not clear enough yet.</ReflectionPrompt>
     </>
   );
 }
@@ -816,6 +874,7 @@ function Lesson_7_1() {
         ))}
       </Section>
       <Section title="What Your Mentor Is Looking For — Four Lenses">
+      <SlideImage src="/assets/courses/lesson-7-1/slide-1.png" alt="Slide 1" />
         {[
           ["Scope realism.", "Is what you are trying to build achievable in two weeks? Mentors often help teams cut features that are not essential to the core demo — and this almost always makes the final product stronger."],
           ["Technical unblocking.", "What is the hardest technical problem you are facing? Mentors can suggest approaches, libraries, or workarounds."],
@@ -828,7 +887,8 @@ function Lesson_7_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After the mentor session: Update your architecture sketch to reflect any scope changes discussed. Document one specific decision you changed as a result of mentor feedback — and why. Set your Week 7–8 milestones in your project log within 24 hours of the call.</ReflectionPrompt>
+      <ReflectionPrompt>After the mentor session
+      <SlideImage src="/assets/courses/lesson-7-1/slide-2.png" alt="Slide 2" />: Update your architecture sketch to reflect any scope changes discussed. Document one specific decision you changed as a result of mentor feedback — and why. Set your Week 7–8 milestones in your project log within 24 hours of the call.</ReflectionPrompt>
     </>
   );
 }
@@ -852,6 +912,7 @@ function Lesson_7_2() {
         ))}
       </Section>
       <Section title="The Five Edge Case Tests">
+      <SlideImage src="/assets/courses/lesson-7-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Run all five. Document results honestly in your project log.</p>
         {[
           ["T1 — Empty input.", "What happens when the user sends nothing, or just whitespace? Does the agent crash, loop, or return a helpful message?"],
@@ -867,7 +928,8 @@ function Lesson_7_2() {
         ))}
         <KeyInsight>You do not need to fix all failures — but you must document all of them honestly. The edge case test results become the testing section of your final README.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Run all five edge case tests on your prototype. For each test, document: the input you used, what the agent returned, whether this is acceptable behaviour or a bug to fix, and if it is a bug — what you will do about it before Week 8. Add all results to your project log.</ReflectionPrompt>
+      <ReflectionPrompt>Run all five edge case tests
+      <SlideImage src="/assets/courses/lesson-7-2/slide-2.png" alt="Slide 2" /> on your prototype. For each test, document: the input you used, what the agent returned, whether this is acceptable behaviour or a bug to fix, and if it is a bug — what you will do about it before Week 8. Add all results to your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -890,6 +952,7 @@ function Lesson_8_1() {
         ))}
       </Section>
       <Section title="Recording Your Final Demo">
+      <SlideImage src="/assets/courses/lesson-8-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Three minutes maximum. Show the agent working. Narrate what it is doing and why it matters.</p>
         {[
           ["01 — State the problem in one sentence.", "'This agent solves X for Y.' Say it before showing anything."],
@@ -907,7 +970,8 @@ function Lesson_8_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Write your scope decision in your project log now: What is in the demo? What is cut? Record your demo this week. Watch it back once before submitting — the best demos are the ones where the builder clearly understands the limitations.</ReflectionPrompt>
+      <ReflectionPrompt>Write your scope decision
+      <SlideImage src="/assets/courses/lesson-8-1/slide-2.png" alt="Slide 2" /> in your project log now: What is in the demo? What is cut? Record your demo this week. Watch it back once before submitting — the best demos are the ones where the builder clearly understands the limitations.</ReflectionPrompt>
     </>
   );
 }
@@ -929,6 +993,7 @@ function Lesson_8_2() {
         />
       </Section>
       <Section title="Phase 3 Complete — You Built Something Real">
+      <SlideImage src="/assets/courses/lesson-8-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Four weeks ago you had an idea. Now you have a working prototype with documentation and ethics review.</p>
         {[
           "A working prototype — demonstrated in a recorded video",
@@ -942,7 +1007,8 @@ function Lesson_8_2() {
         ))}
         <KeyInsight>You do not need a perfect agent. You need an honest one — one whose limitations are named, whose design decisions are justified, and whose outputs are demonstrably real.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Write your final ethics review using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Add it to your README before final submission.</ReflectionPrompt>
+      <ReflectionPrompt>Write your final ethics review
+      <SlideImage src="/assets/courses/lesson-8-2/slide-2.png" alt="Slide 2" /> using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Add it to your README before final submission.</ReflectionPrompt>
     </>
   );
 }
@@ -969,6 +1035,7 @@ function CourseClosing() {
         ))}
       </Section>
       <Section title="What to Submit">
+      <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
         <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
         {[
           ["01", "Working Agent Prototype", "A link to your GitHub repository or a ZIP file containing all project files. The prototype must be runnable — include a README with setup instructions."],
@@ -986,6 +1053,7 @@ function CourseClosing() {
         ))}
       </Section>
       <Section title="Launch Pathways">
+      <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Slide 2" />
         <p style={p}>The best projects are selected for the Launch Pathway during the course closing session. Five options are available.</p>
         {[
           ["Incubator Referral", "Introduction to a bioERGOtech partner incubator for projects with commercial potential."],
@@ -1000,7 +1068,8 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
-      <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
+      <div style={{ background: `linear-gradient(135deg, ${NAVY}
+      <SlideImage src="/assets/courses/course-closing/slide-3.png" alt="Slide 3" /> 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>You started with an idea.</h2>
         <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, maxWidth: 480, margin: "0 auto" }}>You built something real. You thought carefully about what it means to build with AI. That combination — technical capability, domain knowledge, and ethical awareness — is genuinely rare and genuinely valuable.</p>
