@@ -130,28 +130,28 @@ function Lesson_1_1() {
     <>
       <Section title="What You Will Learn">
         <p style={p}>This lesson covers three things. By the end you should be able to define AI accurately in plain language, distinguish traditional software from machine learning and generative AI, and calibrate your own expectations. Both over-hype and under-estimation are equally unhelpful when it comes to building real systems.</p>
+      <SlideImage src="/assets/courses/lesson-1-1/slide-1.png" alt="Slide 1" />
       </Section>
       <Section title="Two Ways to Build Intelligence">
-      <SlideImage src="/assets/courses/lesson-1-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Every piece of software that makes decisions is built using one of two fundamentally different approaches. Understanding this distinction is the foundation of everything that follows in this course.</p>
         <SubHeading>Traditional Software: Rules Written by Hand</SubHeading>
         <p style={p}>In traditional software, a human developer writes every decision in advance. If the user clicks <strong>X</strong>, do <strong>Y</strong>. Always. A spam filter built this way works by checking emails against a handcrafted list of suspicious keywords. This approach is predictable and reliable — but rigid. If a new type of spam appears that does not match any handcrafted rules, the filter fails.</p>
         <SubHeading>AI / Machine Learning: Rules Learned from Examples</SubHeading>
         <p style={p}>Machine learning takes a completely different approach. Instead of writing rules by hand, you show the system millions of labelled examples, and it extracts the patterns itself. A spam filter built this way was trained on millions of emails labelled as spam or not spam. It learned the patterns from the data. This makes the system flexible and adaptive — it improves with more data and can handle situations the developer never anticipated.</p>
+      <SlideImage src="/assets/courses/lesson-1-1/slide-2.png" alt="Slide 2" />
       </Section>
       <Section title="What Exactly Is a Model?">
-      <SlideImage src="/assets/courses/lesson-1-1/slide-2.png" alt="Slide 2" />
         <p style={p}>A model is not a program in the traditional sense. It is a very large set of mathematical patterns — specifically, numerical weights extracted from data during training. You feed the system millions of examples. The system adjusts its internal parameters — billions of them — until it can reliably predict the correct output for each input. Once training is complete, those adjusted parameters are saved. That saved set of parameters is the model.</p>
         <KeyInsight>A model is not a program in the traditional sense. It is a very large set of mathematical patterns extracted from data. You cannot read it like code, but it behaves as though it has learned the rules.</KeyInsight>
+      <SlideImage src="/assets/courses/lesson-1-1/slide-3.png" alt="Slide 3" />
       </Section>
       <Section title="From Machine Learning to Generative AI">
-      <SlideImage src="/assets/courses/lesson-1-1/slide-3.png" alt="Slide 3" />
         <p style={p}>Machine learning has been around for decades. The answer to what changed recently lies in a specific sequence of breakthroughs. In 2012, AlexNet demonstrated that deep learning could outperform every hand-engineered system. In 2017, the Transformer architecture was introduced in 'Attention Is All You Need' — every modern LLM is a transformer. From 2022 onwards, these models scaled to billions of parameters and were exposed to vast portions of the public internet during training.</p>
         <KeyInsight>The transformer (2017) powers every modern LLM. This jump is why agentic AI is possible now — and was not five years ago.</KeyInsight>
         <p style={p}>Traditional machine learning classifies and predicts — is this email spam? Generative AI creates new content — text, images, code — that did not exist before. The output is generated token by token based on patterns learned during training.</p>
+      <SlideImage src="/assets/courses/lesson-1-1/slide-4.png" alt="Slide 4" />
       </Section>
       <Section title="What LLMs Are Good and Bad At">
-      <SlideImage src="/assets/courses/lesson-1-1/slide-4.png" alt="Slide 4" />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 8 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 10 }}>✅ What LLMs Are Very Good At</div>
@@ -167,9 +167,9 @@ function Lesson_1_1() {
           </div>
         </div>
         <KeyInsight>Treat an LLM like a very fast, very well-read assistant who is occasionally overconfident. Verify important claims. Use it to speed up tasks you already understand.</KeyInsight>
+      <SlideImage src="/assets/courses/lesson-1-1/slide-6.png" alt="Slide 6" />
       </Section>
-      <ReflectionPrompt>Think of a piece of software
-      <SlideImage src="/assets/courses/lesson-1-1/slide-5.png" alt="Slide 5" /> you use every day. Based on what you learned in this lesson, is it traditional software, machine learning, or generative AI? How can you tell? Write 3–5 sentences connecting it to your own experience.</ReflectionPrompt>
+      <ReflectionPrompt>Think of a piece of software you use every day. Based on what you learned in this lesson, is it traditional software, machine learning, or generative AI? How can you tell? Write 3–5 sentences connecting it to your own experience.</ReflectionPrompt>
     </>
   );
 }
@@ -178,11 +178,12 @@ function Lesson_1_1() {
 function Lesson_1_2a() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three goals. First, you will be able to explain clearly why an AI agent is fundamentally different from a chatbot. Second, you will know the names and definitions of the five components every agent is built from. Third, you will apply that framework to a real-world scenario and see how it maps onto something concrete.</p>
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-2.png" alt="Slide 2" />
       </Section>
       <Section title="The Answer vs The Worker">
-      <SlideImage src="/assets/courses/lesson-1-2a/slide-1.png" alt="Slide 1" />
         <SubHeading>What a chatbot does</SubHeading>
         <p style={p}>A chatbot operates on a simple loop: one question in, one answer out, done. Ask it what time it is in Tokyo and it tells you. Each exchange is independent. It has no memory of what was said before unless explicitly shown the history. It does not take action in the world. It does not call APIs. It responds and stops.</p>
         <SubHeading>What an agent does</SubHeading>
@@ -190,8 +191,9 @@ function Lesson_1_2a() {
         <CalloutBox label="The One-Sentence Test"><strong>The chatbot answers.</strong> One prompt → one response.<br /><strong>The agent works.</strong> One goal → many actions. Autonomous.</CalloutBox>
       </Section>
       <Section title="The Five Components of Every AI Agent">
-      <SlideImage src="/assets/courses/lesson-1-2a/slide-2.png" alt="Slide 2" />
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-3.png" alt="Slide 3" />
         <p style={p}>Every agent — simple or complex, no-code or full-code — is built from exactly five components.</p>
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-4.png" alt="Slide 4" />
         <ComparisonTable
           headers={["#", "Component", "Definition"]}
           rows={[
@@ -202,6 +204,7 @@ function Lesson_1_2a() {
             ["05", <strong key="f">Feedback Loop</strong>, "The agent checks its own output before considering the task complete. This is what prevents silent failures."],
           ]}
         />
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-5.png" alt="Slide 5" />
       </Section>
       <Section title="Worked Example: The School Flu Sentinel">
       <SlideImage src="/assets/courses/lesson-1-2a/slide-3.png" alt="Slide 3" />
@@ -218,10 +221,10 @@ function Lesson_1_2a() {
             <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65 }}>{desc}</div>
           </div>
         ))}
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-7.png" alt="Slide 7" /> 
         <KeyInsight>Five components. One agent. A task that used to require a human to check a website every morning now runs automatically, reliably, and without being prompted.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Pick one repetitive task
-      <SlideImage src="/assets/courses/lesson-1-2a/slide-4.png" alt="Slide 4" /> from your week. Describe how an agent could handle it using all five components: What would it perceive? What would it plan? What tools would it use? What would it need to remember? How would it check its own work? Write one paragraph, 4–6 sentences. Be specific.</ReflectionPrompt>
+      <ReflectionPrompt>Pick one repetitive task from your week. Describe how an agent could handle it using all five components: What would it perceive? What would it plan? What tools would it use? What would it need to remember? How would it check its own work? Write one paragraph, 4–6 sentences. Be specific.</ReflectionPrompt>
     </>
   );
 }
@@ -230,15 +233,17 @@ function Lesson_1_2a() {
 function Lesson_1_2b() {
   return (
     <>
+    <SlideImage src="/assets/courses/lesson-1-2b/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three things. What is actually happening inside an LLM — tokenisation, transformer architecture, and what 'parameters' really means. How to use a model via a cloud API. And how to run an open-source model on your own machine using Ollama — free, private, works completely offline.</p>
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-2.png" alt="Slide 2" />
       </Section>
       <Section title="Step 1: Tokenisation — Text Becomes Numbers">
         <p style={p}>The first thing that happens when you send a message to an LLM is that your text is broken apart into tokens. A token is roughly a word or part of a word. The sentence 'The agent scheduled a meeting' does not arrive at the model as letters or words — it arrives as a sequence of number IDs.</p>
         <KeyInsight>LLMs don't read words — they read tokens. Every modern LLM has a context window — a maximum number of tokens it can process at once. GPT-4 holds ~128,000 tokens; Claude holds up to 200,000.</KeyInsight>
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-3.png" alt="Slide 3" />
       </Section>
       <Section title="Step 2: The Transformer — Three Stages">
-      <SlideImage src="/assets/courses/lesson-1-2b/slide-1.png" alt="Slide 1" />
         <p style={p}>Every modern LLM — Claude, GPT, Llama, Gemini — uses the same underlying architecture: the transformer, introduced in 2017. The name GPT literally stands for Generative Pre-trained Transformer.</p>
         <SubHeading>Stage 1 — Embedding</SubHeading>
         <p style={p}>Each token ID is looked up in an embedding table and converted into a vector of hundreds of numbers. These numbers encode the meaning and context of each word.</p>
@@ -246,9 +251,9 @@ function Lesson_1_2b() {
         <p style={p}>A stack of transformer blocks processes the vectors. Each block runs Attention (which words matter most to each other?) and a feed-forward layer (pattern lookup from training). A large model may have 96 or more of these blocks stacked.</p>
         <SubHeading>Stage 3 — Language Model Head</SubHeading>
         <p style={p}>The final vector is mapped to a probability score for every token in the vocabulary. The model picks the most likely next token. This repeats until the answer is complete. This is why LLM responses are generated word by word.</p>
+       <SlideImage src="/assets/courses/lesson-1-2b/slide-4.png" alt="Slide 4" />
       </Section>
       <Section title="What Does '70 Billion Parameters' Actually Mean?">
-      <SlideImage src="/assets/courses/lesson-1-2b/slide-2.png" alt="Slide 2" />
         <p style={p}>Parameters are the numbers inside the model — the values learned during training. More parameters means more capacity, but also more compute required to run the model.</p>
         <ComparisonTable
           headers={["Model", "Size", "Notes", "Hosting"]}
@@ -259,18 +264,18 @@ function Lesson_1_2b() {
             ["Claude Sonnet 4.6", "~200B+", "Best quality", "Cloud-only. Pay per token via API"],
           ]}
         />
+       <SlideImage src="/assets/courses/lesson-1-2b/slide-5.png" alt="Slide 5" />
       </Section>
       <Section title="Two Ways to Run a Model">
-      <SlideImage src="/assets/courses/lesson-1-2b/slide-3.png" alt="Slide 3" />
         <SubHeading>Online — Cloud API</SubHeading>
         <p style={p}>You send text to a remote server. Their hardware runs the model and returns the response. Advantages: no hardware needed, access to the largest models. Disadvantages: costs money per token, your data leaves your machine.</p>
         <p style={p}><strong>Services:</strong> Anthropic API · OpenAI API · Hugging Face Inference API</p>
         <SubHeading>Local — Run on Your Machine</SubHeading>
         <p style={p}>You download the model weights to your own computer and run them using Ollama. Advantages: completely free after setup, data never leaves your machine, works offline. Disadvantages: smaller models with less capability, requires decent hardware.</p>
         <CalloutBox label="Which Should You Use?" variant="tip">For most student projects: start with a cloud API. Switch to local if your project involves sensitive data, you need to work offline, or you want to avoid per-token costs for high-volume testing.</CalloutBox>
+      <SlideImage src="/assets/courses/lesson-1-2b/slide-7.png" alt="Slide 7" />. 
       </Section>
-      <ReflectionPrompt>Go to huggingface.co/models
-      <SlideImage src="/assets/courses/lesson-1-2b/slide-4.png" alt="Slide 4" />. Browse the text generation models and pick one open-source model. Read its model card and answer: What was it trained on and how many parameters does it have? Is it a good fit for an agent project? Would you run it online or locally? Why?</ReflectionPrompt>
+      <ReflectionPrompt>Go to huggingface.co/models Browse the text generation models and pick one open-source model. Read its model card and answer: What was it trained on and how many parameters does it have? Is it a good fit for an agent project? Would you run it online or locally? Why?</ReflectionPrompt>
     </>
   );
 }
@@ -327,11 +332,12 @@ function Lesson_1_3() {
 function Lesson_2_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-2-1/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three things. First, why accountability in AI systems is more complex than in traditional software — using a concrete hospital scenario that reveals the gap clearly. Second, the three core ethical dimensions that apply to every agentic system: privacy and consent, bias and fairness, and transparency. Third, that ethical decisions are not separate from technical decisions — every architecture choice has ethical implications.</p>
+      <SlideImage src="/assets/courses/lesson-2-1/slide-2.png" alt="Slide 2" />
       </Section>
       <Section title="The Accountability Gap — A Real Scenario">
-      <SlideImage src="/assets/courses/lesson-2-1/slide-1.png" alt="Slide 1" />
         <CalloutBox label="Scenario" variant="warning">A hospital deploys an agent that reads discharge letters and sends patients a plain-language checklist of follow-up actions. The agent misreads one letter and tells a patient they can stop taking a medication when the letter said the opposite. The patient follows the instruction and is readmitted two weeks later.</CalloutBox>
         <p style={p}>When something goes wrong in a system like this, the natural response is to ask who is responsible. In an AI agent system, the answer is genuinely complicated.</p>
         {[
@@ -345,19 +351,20 @@ function Lesson_2_1() {
             <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
           </div>
         ))}
-        <KeyInsight>AI agents make decisions that were not explicitly programmed. When they cause harm, it can be impossible to trace exactly which training data or probabilistic step led to the error. This is not an excuse to avoid accountability — it is a reason to design accountability in from the start.</KeyInsight>
+        
+      <KeyInsight>AI agents make decisions that were not explicitly programmed. When they cause harm, it can be impossible to trace exactly which training data or probabilistic step led to the error. This is not an excuse to avoid accountability — it is a reason to design accountability in from the start.</KeyInsight>
+      <SlideImage src="/assets/courses/lesson-2-1/slide-3.png" alt="Slide 3" />
       </Section>
       <Section title="Three Core Ethical Dimensions">
-      <SlideImage src="/assets/courses/lesson-2-1/slide-2.png" alt="Slide 2" />
         <SubHeading>1. Privacy and Consent</SubHeading>
         <p style={p}>Every agent that processes personal data creates a privacy obligation. The questions are: What data does the agent actually need? Who consented to it being used? How long is it retained? Can users request deletion? Privacy is not just about preventing data breaches — it is about using only what you need for only as long as you need it.</p>
         <SubHeading>2. Bias and Fairness</SubHeading>
         <p style={p}>LLMs are trained on human-generated data — which contains human biases. An agent trained on English-language medical literature may perform worse for patients whose conditions are underrepresented in that literature. A hiring agent trained on historical data may systematically disadvantage candidates from certain backgrounds. The obligation is to identify which groups your agent affects and test whether its outputs are equitable across them.</p>
         <SubHeading>3. Transparency</SubHeading>
         <p style={p}>Can a user understand what the agent did and why? If your agent sends a message, makes a recommendation, or takes an action that affects someone — can that person request an explanation? Transparency is the bridge between AI capability and human trust. Without it, even a high-performing agent is difficult to use responsibly in high-stakes settings.</p>
+      <SlideImage src="/assets/courses/lesson-2-1/slide-5.png" alt="Slide 5" /> 
       </Section>
-      <ReflectionPrompt>Think about an agent you could imagine building
-      <SlideImage src="/assets/courses/lesson-2-1/slide-3.png" alt="Slide 3" /> for a domain you care about. Name one specific privacy concern it raises, one potential bias in its data or training, and one transparency question a user might reasonably ask. For each — describe one design decision you could make to address it. Write 2–3 sentences per dimension.</ReflectionPrompt>
+      <ReflectionPrompt>Think about an agent you could imagine building for a domain you care about. Name one specific privacy concern it raises, one potential bias in its data or training, and one transparency question a user might reasonably ask. For each — describe one design decision you could make to address it. Write 2–3 sentences per dimension.</ReflectionPrompt>
     </>
   );
 }
