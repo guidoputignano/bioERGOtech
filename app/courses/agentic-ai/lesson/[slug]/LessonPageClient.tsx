@@ -107,6 +107,45 @@ function SlideImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function YouTubeEmbed({ id, title, note }: { id: string; title: string; note?: string }) {
+  return (
+    <div style={{ margin: "24px 0" }}>
+      <div style={{
+        position: "relative", paddingBottom: "56.25%", height: 0,
+        borderRadius: 12, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW,
+      }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${id}`}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+        />
+      </div>
+      {note && (
+        <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 8, fontStyle: "italic", textAlign: "center" }}>
+          {note}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChannelLink({ handle, title, note }: { handle: string; title: string; note?: string }) {
+  return (
+    <div style={{ background: "#F0EDFF", border: `1px solid #7C5CFC`, borderLeft: `4px solid #7C5CFC`, borderRadius: "0 10px 10px 0", padding: "14px 18px", margin: "20px 0" }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#7C5CFC", marginBottom: 8 }}>📺 Recommended Channel</div>
+      <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65 }}>
+        <strong>{title}</strong>{note ? ` — ${note}` : ""}<br />
+        <a href={`https://www.youtube.com/@${handle}`} target="_blank" rel="noopener noreferrer" style={{ color: "#7C5CFC", fontWeight: 600 }}>
+          → Watch on YouTube: @{handle}
+        </a>
+      </div>
+    </div>
+  );
+}
+
+
 function ComparisonTable({ headers, rows }: { headers: string[]; rows: (string | React.ReactNode)[][] }) {
   return (
     <div style={{ overflowX: "auto", marginTop: 8 }}>
@@ -132,6 +171,7 @@ function Lesson_1_1() {
         <p style={p}>This lesson covers three things. By the end you should be able to define AI accurately in plain language, distinguish traditional software from machine learning and generative AI, and calibrate your own expectations. Both over-hype and under-estimation are equally unhelpful when it comes to building real systems.</p>
       <SlideImage src="/assets/courses/lesson-1-1/slide-1.png" alt="Slide 1" />
       </Section>
+      <YouTubeEmbed id="qpp1G0iEL_c" title="AI, ML, Deep Learning and Generative AI Explained — IBM Technology" note="Watch: AI vs Machine Learning vs Generative AI — IBM Technology (10 min)" />
       <Section title="Two Ways to Build Intelligence">
         <p style={p}>Every piece of software that makes decisions is built using one of two fundamentally different approaches. Understanding this distinction is the foundation of everything that follows in this course.</p>
         <SubHeading>Traditional Software: Rules Written by Hand</SubHeading>
@@ -206,6 +246,7 @@ function Lesson_1_2a() {
         />
       <SlideImage src="/assets/courses/lesson-1-2a/slide-5.png" alt="Slide 5" />
       </Section>
+      <YouTubeEmbed id="KrRD7r7y7NY" title="Andrew Ng: The Rise of AI Agents and Agentic Reasoning" note="Watch: Andrew Ng on AI Agents — BUILD 2024 Keynote (20 min)" />
       <Section title="Worked Example: The School Flu Sentinel">
       <SlideImage src="/assets/courses/lesson-1-2a/slide-3.png" alt="Slide 3" />
         <CalloutBox label="Scenario">An agent monitors a public health data feed every morning. When flu cases in the local region cross a threshold, it emails a bulletin to school administrators with recommended actions.</CalloutBox>
@@ -243,6 +284,7 @@ function Lesson_1_2b() {
         <KeyInsight>LLMs don't read words — they read tokens. Every modern LLM has a context window — a maximum number of tokens it can process at once. GPT-4 holds ~128,000 tokens; Claude holds up to 200,000.</KeyInsight>
       <SlideImage src="/assets/courses/lesson-1-2b/slide-3.png" alt="Slide 3" />
       </Section>
+      <YouTubeEmbed id="wjZofJX0v4M" title="But what is a GPT? Visual intro to transformers — 3Blue1Brown" note="Watch: Visual introduction to transformers — 3Blue1Brown (30 min, essential)" />
       <Section title="Step 2: The Transformer — Three Stages">
         <p style={p}>Every modern LLM — Claude, GPT, Llama, Gemini — uses the same underlying architecture: the transformer, introduced in 2017. The name GPT literally stands for Generative Pre-trained Transformer.</p>
         <SubHeading>Stage 1 — Embedding</SubHeading>
@@ -266,6 +308,7 @@ function Lesson_1_2b() {
         />
        <SlideImage src="/assets/courses/lesson-1-2b/slide-5.png" alt="Slide 5" />
       </Section>
+      <YouTubeEmbed id="ECR4oAwocjs" title="Transformers Explained Visually — Interactive Walkthrough" note="Watch: Transformer Explainer — Interactive Visual (10 min)" />
       <Section title="Two Ways to Run a Model">
         <SubHeading>Online — Cloud API</SubHeading>
         <p style={p}>You send text to a remote server. Their hardware runs the model and returns the response. Advantages: no hardware needed, access to the largest models. Disadvantages: costs money per token, your data leaves your machine.</p>
@@ -355,6 +398,7 @@ function Lesson_2_1() {
       <KeyInsight>AI agents make decisions that were not explicitly programmed. When they cause harm, it can be impossible to trace exactly which training data or probabilistic step led to the error. This is not an excuse to avoid accountability — it is a reason to design accountability in from the start.</KeyInsight>
       <SlideImage src="/assets/courses/lesson-2-1/slide-3.png" alt="Slide 3" />
       </Section>
+      <YouTubeEmbed id="wmyVODy_WD8" title="MIT 6.S191: AI Bias and Fairness" note="Watch: MIT lecture on algorithmic bias and fairness (first 20 min essential)" />
       <Section title="Three Core Ethical Dimensions">
         <SubHeading>1. Privacy and Consent</SubHeading>
         <p style={p}>Every agent that processes personal data creates a privacy obligation. The questions are: What data does the agent actually need? Who consented to it being used? How long is it retained? Can users request deletion? Privacy is not just about preventing data breaches — it is about using only what you need for only as long as you need it.</p>
@@ -362,8 +406,9 @@ function Lesson_2_1() {
         <p style={p}>LLMs are trained on human-generated data — which contains human biases. An agent trained on English-language medical literature may perform worse for patients whose conditions are underrepresented in that literature. A hiring agent trained on historical data may systematically disadvantage candidates from certain backgrounds. The obligation is to identify which groups your agent affects and test whether its outputs are equitable across them.</p>
         <SubHeading>3. Transparency</SubHeading>
         <p style={p}>Can a user understand what the agent did and why? If your agent sends a message, makes a recommendation, or takes an action that affects someone — can that person request an explanation? Transparency is the bridge between AI capability and human trust. Without it, even a high-performing agent is difficult to use responsibly in high-stakes settings.</p>
-      <SlideImage src="/assets/courses/lesson-2-1/slide-5.png" alt="Slide 5" /> 
+      <SlideImage src="/assets/courses/lesson-2-1/slide-5.png" alt="Slide 5" />
       </Section>
+      <YouTubeEmbed id="gV0_raKR2UQ" title="Algorithmic Bias and Fairness — Crash Course AI" note="Watch: Crash Course AI — five types of bias explained (12 min)" />
       <ReflectionPrompt>Think about an agent you could imagine building for a domain you care about. Name one specific privacy concern it raises, one potential bias in its data or training, and one transparency question a user might reasonably ask. For each — describe one design decision you could make to address it. Write 2–3 sentences per dimension.</ReflectionPrompt>
     </>
   );
@@ -376,6 +421,7 @@ function Lesson_2_2() {
       <Section title="What You Will Learn">
         <p style={p}>Three things. Concrete examples of agents already generating commercial value in healthcare, legal, and customer operations. The distinction between the infrastructure layer and the application layer where products are built. And why the barrier to building something real is not technical or financial — it is the scarcity of domain knowledge combined with a specific problem worth solving.</p>
       </Section>
+      <YouTubeEmbed id="K8Ros5RhJW4" title="How to Build and What to Build" note="Watch: How to build a product and what to build — recommended by bioERGOtech (starts at 24:16)" />
       <Section title="Three Industries Already Using Agents Commercially">
       <SlideImage src="/assets/courses/lesson-2-2/slide-1.png" alt="Slide 1" />
         {[
@@ -401,8 +447,8 @@ function Lesson_2_2() {
         <p style={p}>The application layer is where products are built on top of the infrastructure. You do not need to understand how a transformer works to build a useful agent — just as you do not need to know how a database engine works to build a web app that uses one. The application layer is where domain knowledge becomes the primary differentiator. An agent that helps school nurses triage flu symptoms requires deep understanding of school health workflows — not a PhD in machine learning.</p>
         <KeyInsight>The real scarcity is not technical skill — it is domain knowledge combined with a specific problem worth solving. If you understand a domain well enough to recognise a problem that repeats, you have the most important ingredient.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Name one domain you know well
-      <SlideImage src="/assets/courses/lesson-2-2/slide-3.png" alt="Slide 3" /> — from school, family, volunteering, or personal experience. Describe one repetitive task in that domain that currently takes human time and attention. How would an agent handle it? What would be the measurable benefit? Write 3–5 sentences. This is the seed of your project brief.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-2-2/slide-3.png" alt="Slide 3" />
+      <ReflectionPrompt>Name one domain you know well — from school, family, volunteering, or personal experience. Describe one repetitive task in that domain that currently takes human time and attention. How would an agent handle it? What would be the measurable benefit? Write 3–5 sentences. This is the seed of your project brief.</ReflectionPrompt>
     </>
   );
 }
@@ -411,6 +457,8 @@ function Lesson_2_2() {
 function Lesson_3_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-3-1/slide-1.png" alt="Lesson Overview" />
+      <YouTubeEmbed id="wUc6sVXHtAU" title="Top 10 Agentic AI Use Cases in Healthcare" note="Watch: Agentic AI use cases in healthcare — real clinical applications (20 min)" />
       <Section title="How to Use This Gallery">
         <p style={p}>For each example: understand the pattern, then ask yourself the activation question. The gallery is a tool for developing project instinct, not a reading exercise.</p>
         <p style={p}>Read what the agent does. Identify who it helps and why it matters. Note what it needs to work. Answer the activation question.</p>
@@ -450,8 +498,11 @@ function Lesson_3_1() {
           </div>
         </ExampleCard>
       </Section>
-      <ReflectionPrompt>Which of these four examples connects
-      <SlideImage src="/assets/courses/lesson-3-1/slide-2.png" alt="Slide 2" /> most directly to a problem you have personally encountered or witnessed? Describe what you would change or extend to make it more useful for your specific context. Write 3–5 sentences.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-3-1/slide-2.png" alt="Slide 2" />
+      <SlideImage src="/assets/courses/lesson-3-1/slide-3.png" alt="Slide 3" />
+      <SlideImage src="/assets/courses/lesson-3-1/slide-4.png" alt="Slide 4" />
+      <YouTubeEmbed id="onA_fi_q9jQ" title="How AI in Healthcare Transforms Patient Care" note="Watch: AI in healthcare — from concept to clinical reality (8 min)" />
+      <ReflectionPrompt>Which of these four examples connects most directly to a problem you have personally encountered or witnessed? Describe what you would change or extend to make it more useful for your specific context. Write 3–5 sentences.</ReflectionPrompt>
     </>
   );
 }
@@ -460,6 +511,8 @@ function Lesson_3_1() {
 function Lesson_3_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-3-2/slide-1.png" alt="Weekly Paper Digest" />
+      <YouTubeEmbed id="Trw9JyBJiyU" title="AI Agents: Collaboration in Real-Life Applications" note="Watch: AI agents for research and knowledge work (25 min)" />
       <Section title="Research and Science Examples">
         <ExampleCard number="01" title="Weekly Paper Digest">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
@@ -494,6 +547,8 @@ function Lesson_3_2() {
           </div>
         </ExampleCard>
       </Section>
+      <SlideImage src="/assets/courses/lesson-3-2/slide-2.png" alt="Contradiction Spotter" />
+      <SlideImage src="/assets/courses/lesson-3-2/slide-3.png" alt="Summary" />
       <ReflectionPrompt>Pick one of the four examples and describe a specific dataset
       <SlideImage src="/assets/courses/lesson-3-2/slide-1.png" alt="Slide 1" /> or API it would need that you have not worked with before. How would you find out whether that data is publicly available and freely accessible? Write 2–3 sentences. The data sourcing question is one you will need to answer for your own project in Week 4.</ReflectionPrompt>
     </>
@@ -505,6 +560,7 @@ function Lesson_4_1() {
   return (
     <>
       <TrackBadge track="A" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-1.png" alt="Lesson Overview" />
       <Section title="Before This Session — Pre-Session Requirements">
         <p style={p}>Complete all three before attending. This session is practical — it assumes you have watched the tutorials.</p>
         {[
@@ -518,6 +574,7 @@ function Lesson_4_1() {
           </div>
         ))}
       </Section>
+      <YouTubeEmbed id="Fy1UCBcgF2o" title="n8n Tutorial for Beginners: Build AI Automations" note="Watch: Build your first AI automation in n8n — step by step (30 min)" />
       <Section title="Make vs n8n — How to Choose">
       <SlideImage src="/assets/courses/lesson-4-1/slide-1.png" alt="Slide 1" />
         <ComparisonTable
@@ -533,6 +590,8 @@ function Lesson_4_1() {
         />
         <CalloutBox label="Recommendation" variant="tip">If you are completely new to automation, start with Make — the interface is more forgiving. If your project involves AI reasoning or multi-step logic, n8n gives you more control.</CalloutBox>
       </Section>
+      <SlideImage src="/assets/courses/lesson-4-1/slide-2.png" alt="Make vs n8n" />
+      <YouTubeEmbed id="rpNA_OPireI" title="n8n 101: The Ultimate Beginner's Guide" note="Watch: n8n 101 — concepts and first automation walkthrough (20 min)" />
       <Section title="Your First Trigger — Step by Step">
       <SlideImage src="/assets/courses/lesson-4-1/slide-2.png" alt="Slide 2" />
         <p style={p}>By the end of this session, you must have one working trigger connected to at least one action. Here is the minimum viable workflow for a student project:</p>
@@ -543,6 +602,11 @@ function Lesson_4_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Trigger Steps" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-4.png" alt="Actions" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-5.png" alt="Testing" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-6.png" alt="Canvas" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-7.png" alt="Summary" />
       <ReflectionPrompt>After completing your first trigger
       <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Slide 3" />: What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
@@ -554,6 +618,8 @@ function Lesson_4_2() {
   return (
     <>
       <TrackBadge track="B" />
+      <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Lesson Overview" />
+      <ChannelLink handle="simone_rizzo98" title="Simone Rizzo" note="practical agent building content recommended by bioERGOtech" />
       <Section title="Before This Session — Pre-Session Requirements">
         {[
           { num: "01", label: "OpenClaw Full Tutorial for Beginners — Step by Step (~30 min)", desc: "Search YouTube: 'OpenClaw full tutorial beginners'. Core tutorial covering installation, onboarding, skills, and Telegram connection. Watch fully." },
@@ -566,6 +632,7 @@ function Lesson_4_2() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-4-2/slide-2.png" alt="What Is OpenClaw" />
       <Section title="What Is OpenClaw?">
       <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Slide 1" />
         <p style={p}>OpenClaw is an open-source personal AI agent platform. Unlike cloud-only tools, it runs on your own machine — which means your data stays private, it works offline, and you have full control over what it does and what it can access. You interact with it through Telegram, giving you a conversational interface from day one without needing to build any front end.</p>
@@ -590,6 +657,9 @@ function Lesson_4_2() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-4-2/slide-5.png" alt="Deliverables" />
+      <SlideImage src="/assets/courses/lesson-4-2/slide-6.png" alt="Setup Steps" />
+      <SlideImage src="/assets/courses/lesson-4-2/slide-7.png" alt="Summary" />
       <ReflectionPrompt>After your first Telegram conversation
       <SlideImage src="/assets/courses/lesson-4-2/slide-3.png" alt="Slide 3" /> with your agent: What skill did you install and why? What was the agent's response to your domain-specific test message? What would you want it to do differently? Write 3–4 sentences.</ReflectionPrompt>
     </>
@@ -613,6 +683,7 @@ function Lesson_4_3() {
           </div>
         ))}
       </Section>
+      <YouTubeEmbed id="DiahQlVrnaw" title="Build AI Agents within 15 Minutes using Agno" note="Watch: Build your first Agno agent in 15 minutes (15 min)" />
       <Section title="What Is Agno?">
       <SlideImage src="/assets/courses/lesson-4-3/slide-1.png" alt="Slide 1" />
         <p style={p}>Agno is a Python framework for building, running, and managing agentic software — from a single agent to multi-agent teams. It is lightweight, model-agnostic, and built around four core concepts.</p>
@@ -644,8 +715,11 @@ agent = Agent(
 agent.print_response('What is Agno?', stream=True)`}</CodeBlock>
         <CalloutBox label="Session Deliverable" variant="tip">Run this agent from your terminal. Modify the instructions to match your project domain. Screenshot the output. Paste in your project log as environment setup proof.</CalloutBox>
       </Section>
-      <ReflectionPrompt>After running your first Agno agent
-      <SlideImage src="/assets/courses/lesson-4-3/slide-3.png" alt="Slide 3" />: What did it return? What would you need to change about the model, tools, or instructions to make it useful for your specific project? Write 3–4 sentences in your project log.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-4-3/slide-3.png" alt="10-Line Agent" />
+      <SlideImage src="/assets/courses/lesson-4-3/slide-4.png" alt="Tools and Memory" />
+      <SlideImage src="/assets/courses/lesson-4-3/slide-5.png" alt="Summary" />
+      <YouTubeEmbed id="C9rJiuLmYtY" title="Agno Tutorial: Build a Real AI Agent — RAG + Memory" note="Watch: Build a real AI agent with RAG and Memory in Agno (25 min)" />
+      <ReflectionPrompt>After running your first Agno agent: What did it return? What would you need to change about the model, tools, or instructions to make it useful for your specific project? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -678,8 +752,10 @@ function Lesson_4_4() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Before submitting your brief
-      <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Slide 2" /> — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Six Sections" />
+      <SlideImage src="/assets/courses/lesson-4-4/slide-3.png" alt="Problem Statement" />
+      <SlideImage src="/assets/courses/lesson-4-4/slide-4.png" alt="Brief Template" />
+      <ReflectionPrompt>Before submitting your brief — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
     </>
   );
 }
@@ -688,6 +764,8 @@ function Lesson_4_4() {
 function Lesson_5_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-5-1/slide-1.png" alt="Why Architecture Comes First" />
+      <YouTubeEmbed id="KrRD7r7y7NY" title="Andrew Ng: Agentic Design Patterns" note="Watch: Andrew Ng on planning, reflection, and tool use in agent design (20 min)" />
       <Section title="Why Architecture Comes First">
         {[
           ["Starting without a plan costs more time, not less.", "When you code before designing, you hit decision points you have not thought through. You stop, backtrack, redesign. The architecture sketch is faster than the debugging session it prevents."],
@@ -700,6 +778,7 @@ function Lesson_5_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-5-1/slide-2.png" alt="Five Architecture Questions" />
       <Section title="The Five Architecture Questions">
       <SlideImage src="/assets/courses/lesson-5-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Answer these before opening VSCode, Make, or n8n.</p>
@@ -716,6 +795,7 @@ function Lesson_5_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-5-1/slide-3.png" alt="Architecture Diagram" />
       <Section title="Common Architecture Mistakes">
       <SlideImage src="/assets/courses/lesson-5-1/slide-2.png" alt="Slide 2" />
         {[
@@ -730,6 +810,8 @@ function Lesson_5_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-5-1/slide-4.png" alt="Common Mistakes" />
+      <SlideImage src="/assets/courses/lesson-5-1/slide-5.png" alt="Summary" />
       <ReflectionPrompt>Answer the five architecture questions
       <SlideImage src="/assets/courses/lesson-5-1/slide-3.png" alt="Slide 3" /> for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
     </>
@@ -740,9 +822,11 @@ function Lesson_5_1() {
 function Lesson_5_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-5-2/slide-1.png" alt="Session Deliverable" />
       <Section title="Session Deliverable — All Tracks">
         <CalloutBox label="What You Must Complete Today" variant="tip">One successful test run connected to your actual project domain, with a screenshot in your project log. The environment must be set up for your project — not a generic test.</CalloutBox>
       </Section>
+      <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Track A Setup" />
       <Section title="Track A — Make / n8n: Project Scenario Setup">
       <SlideImage src="/assets/courses/lesson-5-2/slide-1.png" alt="Slide 1" />
         <TrackBadge track="A" />
@@ -753,6 +837,7 @@ function Lesson_5_2() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-5-2/slide-3.png" alt="Track B Setup" />
       <Section title="Track B — OpenClaw / Hermes Agent: Project Agent Configuration">
       <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Slide 2" />
         <TrackBadge track="B" />
@@ -763,6 +848,7 @@ function Lesson_5_2() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-5-2/slide-4.png" alt="Track C Setup" />
       <Section title="Track C — Agno: Project Agent Setup in VSCode">
       <SlideImage src="/assets/courses/lesson-5-2/slide-3.png" alt="Slide 3" />
         <TrackBadge track="C" />
@@ -783,6 +869,7 @@ function Lesson_5_2() {
 function Lesson_6_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-6-1/slide-1.png" alt="What Counts as a Prototype" />
       <Section title="What Counts as a Working Prototype?">
         {[
           { label: "ACCEPTED ✓", title: "Hardcoded Responses", desc: "Agent responds correctly to one specific input using a fixed answer. Proves the pipeline works end to end, even without real logic.", color: "#276749", bg: "#F0FFF4" },
@@ -797,6 +884,7 @@ function Lesson_6_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-6-1/slide-2.png" alt="Five Build Principles" />
       <Section title="Five Build Principles — All Tracks">
       <SlideImage src="/assets/courses/lesson-6-1/slide-1.png" alt="Slide 1" />
         {[
@@ -822,6 +910,7 @@ function Lesson_6_1() {
 function Lesson_6_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-6-2/slide-1.png" alt="Ethics Checklist" />
       <Section title="Mid-Build Ethics Checklist">
         <p style={p}>Answer each question honestly. If the answer is 'I don't know' — that is a red flag to address before Week 8.</p>
         {[
@@ -836,6 +925,7 @@ function Lesson_6_2() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-6-2/slide-2.png" alt="README Sections" />
       <Section title="Your Project README — Six Required Sections">
       <SlideImage src="/assets/courses/lesson-6-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Start it now. Add to it every session. Your final README is part of the assessed submission.</p>
@@ -866,6 +956,7 @@ function Lesson_6_2() {
 function Lesson_7_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-7-1/slide-1.png" alt="How to Prepare" />
       <Section title="How to Prepare for Your Mentor Session">
         <CalloutBox label="Rule">Come with three specific questions. Not 'is this good?' — that is not a question. 'We cannot get the API to return data when the input contains special characters — here is the error we are seeing' is a question.</CalloutBox>
         {[
@@ -880,6 +971,7 @@ function Lesson_7_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-7-1/slide-2.png" alt="Four Lenses" />
       <Section title="What Your Mentor Is Looking For — Four Lenses">
       <SlideImage src="/assets/courses/lesson-7-1/slide-1.png" alt="Slide 1" />
         {[
@@ -904,6 +996,8 @@ function Lesson_7_1() {
 function Lesson_7_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-7-2/slide-1.png" alt="How Agents Fail" />
+      <YouTubeEmbed id="HGS5LfyxLUU" title="The Complete Truth About AI Agents — Failure Modes" note="Watch: What AI agents actually can and cannot do — failure modes explained (15 min)" />
       <Section title="How Agents Fail — And What to Do About It">
         {[
           ["Input failure.", "User provides input the agent was not designed for — wrong language, wrong format, unexpected characters.", "Validate inputs early. Return a helpful error message. Never let unexpected input reach core logic without sanitisation."],
@@ -918,6 +1012,7 @@ function Lesson_7_2() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-7-2/slide-2.png" alt="Five Edge Case Tests" />
       <Section title="The Five Edge Case Tests">
       <SlideImage src="/assets/courses/lesson-7-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Run all five. Document results honestly in your project log.</p>
@@ -945,6 +1040,7 @@ function Lesson_7_2() {
 function Lesson_8_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-8-1/slide-1.png" alt="Final Scope Decision" />
       <Section title="The Final Scope Decision">
         <p style={p}>You have two weeks of build time left. Make the scope decision now — not in Week 10.</p>
         {[
@@ -958,6 +1054,7 @@ function Lesson_8_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-8-1/slide-2.png" alt="Recording Your Demo" />
       <Section title="Recording Your Final Demo">
       <SlideImage src="/assets/courses/lesson-8-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Three minutes maximum. Show the agent working. Narrate what it is doing and why it matters.</p>
@@ -987,6 +1084,7 @@ function Lesson_8_1() {
 function Lesson_8_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-8-2/slide-1.png" alt="Ethics Rubric" />
       <Section title="The Ethics Rubric — What Reviewers Will Read">
         <p style={p}>This is the same rubric mentors and reviewers use. Read it before writing your final ethics section.</p>
         <ComparisonTable
@@ -999,6 +1097,7 @@ function Lesson_8_2() {
           ]}
         />
       </Section>
+      <SlideImage src="/assets/courses/lesson-8-2/slide-2.png" alt="Phase 3 Complete" />
       <Section title="Phase 3 Complete — You Built Something Real">
       <SlideImage src="/assets/courses/lesson-8-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Four weeks ago you had an idea. Now you have a working prototype with documentation and ethics review.</p>
@@ -1024,6 +1123,7 @@ function Lesson_8_2() {
 function CourseClosing() {
   return (
     <>
+      <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="What You Have Learned" />
       <Section title="What You Have Learned Across Ten Weeks">
         {[
           { phase: "Phase 1 — Foundation (Weeks 1–2)", items: ["What AI agents are and how they differ from chatbots", "The five components of every agent: perception, planning, tool use, memory, feedback loop", "How LLMs work internally — tokenisation, transformers, parameters", "Online vs local model hosting — APIs and Ollama", "AI ethics and accountability — privacy, bias, transparency"] },
@@ -1041,6 +1141,7 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
       <Section title="What to Submit">
       <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
         <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
@@ -1059,6 +1160,8 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/course-closing/slide-3.png" alt="What to Submit" />
+      <SlideImage src="/assets/courses/course-closing/slide-4.png" alt="Submission Requirements" />
       <Section title="Launch Pathways">
       <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Slide 2" />
         <p style={p}>The best projects are selected for the Launch Pathway during the course closing session. Five options are available.</p>
@@ -1075,8 +1178,11 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
-      <div style={{ background: `linear-gradient(135deg, ${NAVY}
-      <SlideImage src="/assets/courses/course-closing/slide-3.png" alt="Slide 3" /> 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
+      <SlideImage src="/assets/courses/course-closing/slide-5.png" alt="Launch Pathways" />
+      <SlideImage src="/assets/courses/course-closing/slide-6.png" alt="Next Steps" />
+      <YouTubeEmbed id="K8Ros5RhJW4" title="What to Build and How — bioERGOtech Recommendation" note="Watch: Inspiration for what comes next — recommended by bioERGOtech" />
+      <SlideImage src="/assets/courses/course-closing/slide-7.png" alt="Closing" />
+      <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>You started with an idea.</h2>
         <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, maxWidth: 480, margin: "0 auto" }}>You built something real. You thought carefully about what it means to build with AI. That combination — technical capability, domain knowledge, and ethical awareness — is genuinely rare and genuinely valuable.</p>
