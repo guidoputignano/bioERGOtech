@@ -219,7 +219,6 @@ function Lesson_1_1() {
 function Lesson_1_2a() {
   return (
     <>
-      <SlideImage src="/assets/courses/lesson-1-2a/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three goals. First, you will be able to explain clearly why an AI agent is fundamentally different from a chatbot. Second, you will know the names and definitions of the five components every agent is built from. Third, you will apply that framework to a real-world scenario and see how it maps onto something concrete.</p>
       <SlideImage src="/assets/courses/lesson-1-2a/slide-2.png" alt="Slide 2" />
