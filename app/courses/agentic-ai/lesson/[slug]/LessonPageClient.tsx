@@ -1268,10 +1268,15 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
 
   const lessonIndex = COURSE_LESSONS.findIndex((l) => l.slug === lesson.slug);
   const prevLesson = lessonIndex > 0 ? COURSE_LESSONS[lessonIndex - 1] : null;
-  const nextLesson = lessonIndex < COURSE_LESSONS.length - 1 ? COURSE_LESSONS[lessonIndex + 1] : null;
+  const nextLesson =
+    lessonIndex < COURSE_LESSONS.length - 1
+      ? COURSE_LESSONS[lessonIndex + 1]
+      : null;
 
   const lessonHref = (l: Lesson) =>
-    l.slug === "introduction" ? "/courses/agentic-ai" : `/courses/agentic-ai/lesson/${l.slug}`;
+    l.slug === "introduction"
+      ? "/courses/agentic-ai"
+      : `/courses/agentic-ai/lesson/${l.slug}`;
 
   const ContentComponent = LESSON_CONTENT[lesson.slug];
 
@@ -1283,84 +1288,181 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #F7F9FC; }
       `}</style>
 
-      {/* Header bar */}
-      <div style={{ background: NAVY, color: "#fff", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" as const }}>
-        <Link href="/courses/agentic-ai" style={{ color: TEAL, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>← Course Home</Link>
+      <div
+        style={{
+          background: NAVY,
+          color: "#fff",
+          padding: "16px 24px",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          flexWrap: "wrap" as const,
+        }}
+      >
+        <Link
+          href="/courses/agentic-ai"
+          style={{
+            color: TEAL,
+            textDecoration: "none",
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          ← Course Home
+        </Link>
+
         <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Phase {lesson.phase} · Week {lesson.week}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+          Phase {lesson.phase} · Week {lesson.week}
+        </div>
+
         <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>⏱ {lesson.duration}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+          ⏱ {lesson.duration}
+        </div>
+
         {lesson.track !== "all" && (
           <>
             <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Track {lesson.track} only</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+              Track {lesson.track}
+            </div>
           </>
         )}
-        <div style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Lesson {lesson.number}</div>
       </div>
 
-      {/* Lesson title */}
-      <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, padding: "36px 24px 32px", color: "#fff", textAlign: "center" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: TEAL, marginBottom: 10 }}>Lesson {lesson.number}</div>
-        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: "clamp(20px, 4vw, 34px)", fontWeight: 800, color: "#fff", margin: 0, lineHeight: 1.2 }}>{lesson.title}</h1>
-      </div>
+      <div
+        style={{
+          maxWidth: 1280,
+          margin: "0 auto",
+          padding: "32px 24px",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) 340px",
+          gap: 32,
+          alignItems: "start",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          {ContentComponent ? <ContentComponent /> : null}
 
-      {/* Body */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px", display: "flex", gap: 40, alignItems: "flex-start" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {ContentComponent ? (
-            <ContentComponent />
-          ) : (
-            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 48, textAlign: "center", boxShadow: SHADOW }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🚧</div>
-              <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Lesson Coming Soon</h2>
-              <p style={{ fontSize: 15, color: TEXT_LIGHT }}>This lesson is being prepared. Check back soon.</p>
-            </div>
-          )}
-
-          {/* Prev / Next navigation */}
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginTop: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              marginTop: 8,
+              marginBottom: 24,
+            }}
+          >
             {prevLesson ? (
-              <Link href={lessonHref(prevLesson)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, textDecoration: "none", boxShadow: SHADOW, flex: 1 }}>
-                <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{prevLesson.number} — {prevLesson.title}</span>
-              </Link>
-            ) : <div />}
+              prevLesson.free || isAuthenticated ? (
+                <Link
+                  href={lessonHref(prevLesson)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    padding: "14px 20px",
+                    background: CARD,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    boxShadow: SHADOW,
+                    flex: 1,
+                  }}
+                >
+                  <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
+                    {prevLesson.number} — {prevLesson.title}
+                  </span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setShowModal(true)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    padding: "14px 20px",
+                    background: CARD,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    flex: 1,
+                    textAlign: "left" as const,
+                  }}
+                >
+                  <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
+                    {prevLesson.number} — {prevLesson.title}
+                  </span>
+                </button>
+              )
+            ) : (
+              <div style={{ flex: 1 }} />
+            )}
 
             {nextLesson ? (
               nextLesson.free || isAuthenticated ? (
-                <Link href={lessonHref(nextLesson)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: TEAL, border: `1px solid ${TEAL}`, borderRadius: 10, textDecoration: "none", boxShadow: SHADOW, flex: 1, textAlign: "right" as const }}>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Next →</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{nextLesson.number} — {nextLesson.title}</span>
+                <Link
+                  href={lessonHref(nextLesson)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    padding: "14px 20px",
+                    background: TEAL,
+                    border: `1px solid ${TEAL}`,
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    boxShadow: SHADOW,
+                    flex: 1,
+                    textAlign: "right" as const,
+                  }}
+                >
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                    Next →
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
+                    {nextLesson.number} — {nextLesson.title}
+                  </span>
                 </Link>
               ) : (
-                <button onClick={() => setShowModal(true)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: TEAL, border: `1px solid ${TEAL}`, borderRadius: 10, cursor: "pointer", flex: 1, textAlign: "right" as const }}>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Next →</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{nextLesson.number} — {nextLesson.title}</span>
+                <button
+                  onClick={() => setShowModal(true)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    padding: "14px 20px",
+                    background: TEAL,
+                    border: `1px solid ${TEAL}`,
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    flex: 1,
+                    textAlign: "right" as const,
+                  }}
+                >
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                    Next →
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
+                    {nextLesson.number} — {nextLesson.title}
+                  </span>
                 </button>
               )
             ) : null}
           </div>
+
+          <LessonSubmissionBox
+            lessonSlug={lesson.slug}
+            lessonTitle={lesson.title}
+            isAuthenticated={isAuthenticated}
+            onGateOpen={() => setShowModal(true)}
+          />
         </div>
 
-        {/* Lesson Submission Box */}
-          {isAuthenticated && (
-            <LessonSubmissionBox
-              lessonSlug={lesson.slug}
-              lessonTitle={lesson.title}
-              isAuthenticated={isAuthenticated}
-              onGateOpen={() => setShowModal(true)}
-            />
-          )}
-          {!isAuthenticated && (
-            <LessonSubmissionBox
-              lessonSlug={lesson.slug}
-              lessonTitle={lesson.title}
-              isAuthenticated={false}
-              onGateOpen={() => setShowModal(true)}
-            />
-          )}
-                <CourseSidebar
+        <CourseSidebar
           isAuthenticated={isAuthenticated}
           onLockedClick={() => setShowModal(true)}
         />
