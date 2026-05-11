@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Lesson, COURSE_LESSONS } from "../../../course-data";
 import CourseSidebar from "../../../CourseSidebar";
 import GateModal from "../../../GateModal";
+import LessonSubmissionBox from "../../../LessonSubmissionBox";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const TEAL = "#00C4B4";
@@ -328,11 +329,12 @@ function Lesson_1_3() {
   return (
     <>
       <Section title="What You Will Watch">
-        <p style={p}>Three demos, each covering a different domain and a different combination of the five components. After each demo, use the component breakdown to check your own reading of what just happened against the framework.</p>
+        <p style={p}>In the previous two lessons you learned what an AI agent is and how it is built. This lesson shows you real agents running in real systems. All three demos follow the same pattern: multiple AI agents working together, each with a specific role, coordinated by an orchestrator that decides which agent handles which part of the task.</p>
+        <p style={p}>As you watch each demo, use the five-component framework from Lesson 1.2a to identify what each agent is perceiving, planning, using, remembering, and checking. The goal is to train yourself to read what is happening underneath — not just to watch what the agent produces.</p>
         {[
-          { num: "1", title: "Browsing Agent", desc: "Watch an agent search ClinicalTrials.gov, read results, extract structured fields, and format output — without a single manual step." },
-          { num: "2", title: "Coding Agent", desc: "Watch an agent read a CSV, write Python, run it, catch its own error, fix it autonomously, and produce a chart. Spot the feedback loop." },
-          { num: "3", title: "Scheduling Agent", desc: "Watch an agent read three calendars, find a free slot, send an invite, and add a personal reminder — in under 30 seconds." },
+          { num: "1", title: "Weather + Travel Suitability Agents", desc: "Two agents collaborate inside an agentic workflow. One fetches weather data. The other evaluates whether conditions are suitable for travel. An orchestrator decides which agent runs when." },
+          { num: "2", title: "Multi-Agent Workflow in n8n", desc: "Multiple agents with assigned roles work together in n8n. Shows how an orchestrator delegates subtasks to specialist agents and assembles the final result." },
+          { num: "3", title: "Agentic AI with Multiple LLMs", desc: "Multiple agents powered by different LLMs collaborate step by step. Shows how agentic AI scales beyond a single model into a coordinated system." },
         ].map((d) => (
           <div key={d.num} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ width: 28, height: 28, borderRadius: "50%", background: NAVY, color: "#fff", fontWeight: 800, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{d.num}</div>
@@ -340,16 +342,38 @@ function Lesson_1_3() {
           </div>
         ))}
       </Section>
-      <Section title="Demo 1 — The Browsing Agent">
-        <CalloutBox label="Task Given to Agent">'Find three Italian clinical trials currently recruiting for lung cancer patients. Return their titles, locations, and contact emails.'</CalloutBox>
-        <p style={p}>The agent navigates to ClinicalTrials.gov, applies the correct search filters, reads the DOM of the results page, identifies the relevant fields, and formats three clean records. A search engine would have returned a page of links. The agent read those pages, extracted specific fields, and produced something the human can use immediately. That is the difference.</p>
+
+      <Section title="Demo 1 — Weather Agent + Travel Suitability Agent">
+        <p style={p}>Two AI agents are built separately, then combined into a single agentic workflow. The first agent fetches live weather data for any city. The second agent takes that weather data and decides whether conditions are suitable for travel based on temperature and humidity thresholds. An orchestrator coordinates which agent runs and passes outputs between them.</p>
+        <YouTubeEmbed id="3Tr2oQfrfn0" title="Multi-Agent Agentic Workflow: Weather + Travel Suitability" note="Watch: Two AI agents working together inside an orchestrated agentic workflow (13 min)" />
+        <CalloutBox label="What to Watch For">Notice the moment the orchestrator decides which agent to trigger — that is planning at the system level, not the agent level. Also notice how the output of Agent 1 becomes the input of Agent 2. This handoff is what makes it a multi-agent system rather than a single agent with two tools.</CalloutBox>
         <SubHeading>Component Breakdown</SubHeading>
         {[
-          ["Perception", "Reads ClinicalTrials.gov page content (the DOM of the web page)."],
-          ["Planning", "Decides which search filters to apply and which fields to extract from each result."],
-          ["Tool Use", "Calls the browser tool — navigates to the URL, searches, reads the page."],
-          ["Memory", "Holds the search results in context while formatting the output."],
-          ["Feedback Loop", "Checks that three results were found before returning. Retries with broader filters if fewer than three."],
+          ["Perception", "Agent 1 receives a city name as input and calls a live weather API. Agent 2 receives the weather JSON output from Agent 1."],
+          ["Planning", "The orchestrator decides which agent to trigger first and routes Agent 1's output to Agent 2 automatically."],
+          ["Tool Use", "Agent 1 calls the OpenWeatherMap API. Agent 2 runs a condition-checking script against temperature and humidity thresholds."],
+          ["Memory", "Each agent holds its inputs and outputs in context. The orchestrator maintains the full conversation state across both agents."],
+          ["Feedback Loop", "The system runs in supervised mode first — asking for human approval before triggering each agent. Then switched to autonomous — both agents run without intervention."],
+        ].map(([c, d]) => (
+          <div key={c as string} style={{ display: "flex", gap: 16, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ minWidth: 110, fontWeight: 700, color: TEAL, fontSize: 13 }}>{c}</div>
+            <div style={{ fontSize: 14, color: TEXT_MID }}>{d}</div>
+          </div>
+        ))}
+        <KeyInsight>The switch from supervised to autonomous mode is one of the most important concepts in agentic AI. Supervised means a human approves each action. Autonomous means the agent acts without waiting. Most production systems start supervised and move to autonomous once the agent's behaviour is verified.</KeyInsight>
+      </Section>
+
+      <Section title="Demo 2 — Multi-Agent Workflow in n8n">
+        <p style={p}>This demo shows multiple agents built in n8n — the same tool Track A students will use in Lesson 4.1. Each agent has a defined role. An orchestrator node routes tasks to the right agent based on the input. Watch how the no-code environment makes the agent architecture visible — you can see exactly what each agent is doing and when.</p>
+        <YouTubeEmbed id="o2Pubq36Pao" title="n8n AI Agent Tutorial: Building Multi-Agent Workflows" note="Watch: Multi-agent workflow in n8n — orchestrator routes tasks to specialist agents (20 min)" />
+        <CalloutBox label="Track A Note" variant="tip">This demo is built in n8n — exactly the tool you will use in Lesson 4.1. If the canvas looks complex now, it will look completely readable after Week 4. For now, focus on identifying the five components rather than the technical setup.</CalloutBox>
+        <SubHeading>Component Breakdown</SubHeading>
+        {[
+          ["Perception", "Each agent receives a structured input from the orchestrator — not raw user text, but a processed task definition."],
+          ["Planning", "The orchestrator node reads the incoming request and decides which specialist agent should handle it."],
+          ["Tool Use", "Each agent has its own tool set. One might call an API. Another might query a database. The orchestrator itself calls no external tools — it only routes."],
+          ["Memory", "n8n maintains the full execution context across the workflow — each agent can see what previous agents produced."],
+          ["Feedback Loop", "The orchestrator checks the output of each agent before passing it to the next. If a step fails, the workflow stops and flags the failure rather than continuing silently."],
         ].map(([c, d]) => (
           <div key={c as string} style={{ display: "flex", gap: 16, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ minWidth: 110, fontWeight: 700, color: TEAL, fontSize: 13 }}>{c}</div>
@@ -357,16 +381,33 @@ function Lesson_1_3() {
           </div>
         ))}
       </Section>
-      <Section title="Demo 2 — The Coding Agent">
-        <CalloutBox label="Task Given to Agent">'Read the attached CSV file and produce a bar chart showing total sales by region. Save the chart as a PNG.'</CalloutBox>
-        <p style={p}>The agent reads the CSV, writes Python code to parse and chart it, executes the code, reads the error message when it fails, fixes the bug autonomously, re-executes, and saves the PNG. The feedback loop is visible: the agent does not give up when the code fails — it reads the error and corrects itself.</p>
-        <KeyInsight>This is the feedback loop in action. The agent's output was its own error. It perceived it, planned a fix, and executed again. No human intervention.</KeyInsight>
+
+      <Section title="Demo 3 — Agentic AI with Multiple LLMs">
+        <p style={p}>This demo shows how agentic AI scales: instead of one model doing everything, different LLMs are assigned to different parts of the task based on their strengths. A reasoning model handles planning. A faster model handles data retrieval. The outputs are assembled into a final result. This is the architecture behind many real-world AI products.</p>
+        <YouTubeEmbed id="O0GNrvO7wD0" title="Using Agentic AI with Multiple LLMs — Step by Step" note="Watch: Multiple LLMs working as agents together — how orchestration scales (18 min)" />
+        <CalloutBox label="What to Watch For">Notice how no single model does everything. The division of labour between models is itself a design decision — and it directly affects cost, speed, and quality. This is the kind of architectural thinking you will apply in Lesson 5.1.</CalloutBox>
+        <SubHeading>Component Breakdown</SubHeading>
+        {[
+          ["Perception", "Each agent receives a specific, scoped input — not the full original request. The orchestrator preprocesses the input before routing it."],
+          ["Planning", "The orchestrator decides which LLM handles which subtask. This is itself a planning operation, often performed by a separate reasoning model."],
+          ["Tool Use", "Different agents call different tools. One searches the web. Another reads documents. Another generates a summary. Tools are assigned per agent, not shared globally."],
+          ["Memory", "A shared memory layer allows agents to read each other's outputs without the orchestrator having to relay everything manually."],
+          ["Feedback Loop", "Before the final output is delivered, a review agent checks it against the original request. This is a verification step at the system level — above any individual agent."],
+        ].map(([c, d]) => (
+          <div key={c as string} style={{ display: "flex", gap: 16, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ minWidth: 110, fontWeight: 700, color: TEAL, fontSize: 13 }}>{c}</div>
+            <div style={{ fontSize: 14, color: TEXT_MID }}>{d}</div>
+          </div>
+        ))}
+        <KeyInsight>A single agent is a feature. A coordinated team of agents is a system. The orchestrator is what turns a collection of agents into something that can solve complex, multi-step problems reliably.</KeyInsight>
       </Section>
-      <Section title="Demo 3 — The Scheduling Agent">
-        <CalloutBox label="Task Given to Agent">'Find a 45-minute slot this week where all three team members are free. Book it and send a calendar invite. Add a personal reminder for me 30 minutes before.'</CalloutBox>
-        <p style={p}>The agent reads three calendar APIs simultaneously, identifies overlapping free slots, selects the earliest that works, creates a calendar event via the Google Calendar API, sends invites to all three attendees, and creates a personal reminder. Total time: under 30 seconds. The equivalent manual process takes several minutes of checking and email exchanges.</p>
+
+      <Section title="After Watching — Reading a Multi-Agent System">
+        <p style={p}>You have now seen three multi-agent systems in action. Before moving on, try this: pick one of the three demos and map the entire system — not just one agent — onto the five components. Where does perception happen? At the agent level, the orchestrator level, or both? Where does the feedback loop sit — inside an agent, or above all of them?</p>
+        <p style={p}>These are the questions you will answer for your own project in Lesson 5.1. Starting to think about them now gives you a significant advantage when architecture design begins.</p>
       </Section>
-      <ReflectionPrompt>Pick one of the three demos. Write a short paragraph (3–5 sentences) describing what you found most surprising about how the agent worked. Then describe one scenario from your own life or field of interest where a similar agent could be useful. Be specific about what it would perceive, what it would do, and what the output would be.</ReflectionPrompt>
+
+      <ReflectionPrompt>Pick one of the three demos. Describe what the orchestrator is doing — not what the individual agents are doing, but what the orchestrator specifically decides and coordinates. Then describe one real-world scenario from your own domain where a multi-agent system with an orchestrator would be more powerful than a single agent alone. Be specific about what each agent would do and why one agent could not do it all.</ReflectionPrompt>
     </>
   );
 }
@@ -375,7 +416,6 @@ function Lesson_1_3() {
 function Lesson_2_1() {
   return (
     <>
-      <SlideImage src="/assets/courses/lesson-2-1/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three things. First, why accountability in AI systems is more complex than in traditional software — using a concrete hospital scenario that reveals the gap clearly. Second, the three core ethical dimensions that apply to every agentic system: privacy and consent, bias and fairness, and transparency. Third, that ethical decisions are not separate from technical decisions — every architecture choice has ethical implications.</p>
       <SlideImage src="/assets/courses/lesson-2-1/slide-2.png" alt="Slide 2" />
@@ -398,7 +438,7 @@ function Lesson_2_1() {
       <KeyInsight>AI agents make decisions that were not explicitly programmed. When they cause harm, it can be impossible to trace exactly which training data or probabilistic step led to the error. This is not an excuse to avoid accountability — it is a reason to design accountability in from the start.</KeyInsight>
       <SlideImage src="/assets/courses/lesson-2-1/slide-3.png" alt="Slide 3" />
       </Section>
-      <YouTubeEmbed id="wmyVODy_WD8" title="MIT 6.S191: AI Bias and Fairness" note="Watch: MIT lecture on algorithmic bias and fairness (first 20 min essential)" />
+      <YouTubeEmbed id="1mnke1iSmf0" title="What is Ethical AI?" note="Ethics of AI - Challenges and Responsibilities | The Knowledge Academy" />
       <Section title="Three Core Ethical Dimensions">
         <SubHeading>1. Privacy and Consent</SubHeading>
         <p style={p}>Every agent that processes personal data creates a privacy obligation. The questions are: What data does the agent actually need? Who consented to it being used? How long is it retained? Can users request deletion? Privacy is not just about preventing data breaches — it is about using only what you need for only as long as you need it.</p>
@@ -420,10 +460,10 @@ function Lesson_2_2() {
     <>
       <Section title="What You Will Learn">
         <p style={p}>Three things. Concrete examples of agents already generating commercial value in healthcare, legal, and customer operations. The distinction between the infrastructure layer and the application layer where products are built. And why the barrier to building something real is not technical or financial — it is the scarcity of domain knowledge combined with a specific problem worth solving.</p>
-      </Section>
+      <SlideImage src="/assets/courses/lesson-2-2/slide-1.png" alt="Slide 2" />
       <YouTubeEmbed id="K8Ros5RhJW4" title="How to Build and What to Build" note="Watch: How to build a product and what to build — recommended by bioERGOtech (starts at 24:16)" />
+      </Section>
       <Section title="Three Industries Already Using Agents Commercially">
-      <SlideImage src="/assets/courses/lesson-2-2/slide-1.png" alt="Slide 1" />
         {[
           { industry: "Healthcare", examples: ["Triage agents read patient messages and route them to the right clinical team — processing in seconds what previously took hours of manual review.", "Claim processing agents read, categorise, and approve low-complexity insurance claims in minutes instead of days.", "Research agents scan thousands of published papers and surface relevant findings for a specific clinical experiment."] },
           { industry: "Legal", examples: ["Contract review agents read thousands of pages, flag clauses that deviate from standard terms, and produce risk summaries — a task that used to take a junior lawyer a week now takes an agent a few hours.", "Due diligence agents cross-reference filings, court records, and public data to surface risks before a deal closes."] },
@@ -438,16 +478,16 @@ function Lesson_2_2() {
             ))}
           </div>
         ))}
+        <SlideImage src="/assets/courses/lesson-2-2/slide-3.png" alt="Slide 3" />
       </Section>
       <Section title="Infrastructure vs Application Layer">
-      <SlideImage src="/assets/courses/lesson-2-2/slide-2.png" alt="Slide 2" />
+      <SlideImage src="/assets/courses/lesson-2-2/slide-4.png" alt="Slide 4" />
         <SubHeading>The Infrastructure Layer</SubHeading>
         <p style={p}>The infrastructure layer consists of the large language models themselves — Claude, GPT, Gemini, Llama — and the compute required to run them. Building at this layer requires hundreds of millions of dollars, vast datasets, and teams of ML researchers. This is not where student builders operate.</p>
         <SubHeading>The Application Layer</SubHeading>
         <p style={p}>The application layer is where products are built on top of the infrastructure. You do not need to understand how a transformer works to build a useful agent — just as you do not need to know how a database engine works to build a web app that uses one. The application layer is where domain knowledge becomes the primary differentiator. An agent that helps school nurses triage flu symptoms requires deep understanding of school health workflows — not a PhD in machine learning.</p>
         <KeyInsight>The real scarcity is not technical skill — it is domain knowledge combined with a specific problem worth solving. If you understand a domain well enough to recognise a problem that repeats, you have the most important ingredient.</KeyInsight>
       </Section>
-      <SlideImage src="/assets/courses/lesson-2-2/slide-3.png" alt="Slide 3" />
       <ReflectionPrompt>Name one domain you know well — from school, family, volunteering, or personal experience. Describe one repetitive task in that domain that currently takes human time and attention. How would an agent handle it? What would be the measurable benefit? Write 3–5 sentences. This is the seed of your project brief.</ReflectionPrompt>
     </>
   );
@@ -1303,7 +1343,27 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
           </div>
         </div>
 
-        <CourseSidebar isAuthenticated={isAuthenticated} onLockedClick={() => setShowModal(true)} />
+        {/* Lesson Submission Box */}
+          {isAuthenticated && (
+            <LessonSubmissionBox
+              lessonSlug={lesson.slug}
+              lessonTitle={lesson.title}
+              isAuthenticated={isAuthenticated}
+              onGateOpen={() => setShowModal(true)}
+            />
+          )}
+          {!isAuthenticated && (
+            <LessonSubmissionBox
+              lessonSlug={lesson.slug}
+              lessonTitle={lesson.title}
+              isAuthenticated={false}
+              onGateOpen={() => setShowModal(true)}
+            />
+          )}
+                <CourseSidebar
+          isAuthenticated={isAuthenticated}
+          onLockedClick={() => setShowModal(true)}
+        />
       </div>
 
       {showModal && <GateModal onClose={() => setShowModal(false)} />}
