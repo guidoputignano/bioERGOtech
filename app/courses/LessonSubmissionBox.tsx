@@ -30,6 +30,7 @@ interface Props {
   lessonTitle: string;
   isAuthenticated: boolean;
   onGateOpen: () => void;
+  onSubmitted?: () => void;
 }
 
 export default function LessonSubmissionBox({
@@ -37,6 +38,7 @@ export default function LessonSubmissionBox({
   lessonTitle,
   isAuthenticated,
   onGateOpen,
+  onSubmitted,
 }: Props) {
   const [reflection, setReflection] = useState("");
   const [question, setQuestion] = useState("");
@@ -58,6 +60,7 @@ export default function LessonSubmissionBox({
         setReflection(data.submission.reflection ?? "");
         setQuestion(data.submission.question ?? "");
         setComment(data.submission.comment ?? "");
+        onSubmitted?.();
       }
     } catch {
       // silent
@@ -70,8 +73,8 @@ export default function LessonSubmissionBox({
 
   const handleSubmit = async () => {
     if (!isAuthenticated) { onGateOpen(); return; }
-    if (!reflection.trim() && !question.trim() && !comment.trim()) {
-      setError("Please fill in at least one field before submitting.");
+    if (!reflection.trim()) {
+      setError("Reflection is required. Please share your thoughts on this lesson before submitting.");
       return;
     }
     setSaving(true);
@@ -87,6 +90,7 @@ export default function LessonSubmissionBox({
       setExisting(data.submission);
       setSaved(true);
       setEditing(false);
+      onSubmitted?.();
       setTimeout(() => setSaved(false), 3000);
     } catch {
       setError("Network error. Please try again.");
@@ -214,6 +218,7 @@ export default function LessonSubmissionBox({
             value={reflection}
             onChange={setReflection}
             color={TEAL}
+            required
           />
           <FormField
             label="Question"
@@ -296,17 +301,19 @@ function FormField({
   value,
   onChange,
   color,
+  required,
 }: {
   label: string;
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
   color: string;
+  required?: boolean;
 }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <label style={{ display: "block", fontSize: 13, fontWeight: 700, color, marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>
-        {label} <span style={{ fontSize: 11, color: TEXT_LIGHT, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+        {label} {required ? <span style={{ fontSize: 11, color: "#E74C3C", fontWeight: 700 }}>*required</span> : <span style={{ fontSize: 11, color: TEXT_LIGHT, fontWeight: 400, textTransform: "none" as const, letterSpacing: 0 }}>(optional)</span>}
       </label>
       <textarea
         value={value}

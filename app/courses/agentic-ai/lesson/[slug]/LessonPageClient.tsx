@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Lesson, COURSE_LESSONS } from "../../../course-data";
 import CourseSidebar from "../../../CourseSidebar";
@@ -219,6 +219,7 @@ function Lesson_1_1() {
 function Lesson_1_2a() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three goals. First, you will be able to explain clearly why an AI agent is fundamentally different from a chatbot. Second, you will know the names and definitions of the five components every agent is built from. Third, you will apply that framework to a real-world scenario and see how it maps onto something concrete.</p>
       <SlideImage src="/assets/courses/lesson-1-2a/slide-2.png" alt="Slide 2" />
@@ -274,6 +275,7 @@ function Lesson_1_2a() {
 function Lesson_1_2b() {
   return (
     <>
+    <SlideImage src="/assets/courses/lesson-1-2b/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three things. What is actually happening inside an LLM — tokenisation, transformer architecture, and what 'parameters' really means. How to use a model via a cloud API. And how to run an open-source model on your own machine using Ollama — free, private, works completely offline.</p>
       <SlideImage src="/assets/courses/lesson-1-2b/slide-2.png" alt="Slide 2" />
@@ -495,12 +497,11 @@ function Lesson_2_2() {
 function Lesson_3_1() {
   return (
     <>
-      
-      
+      <SlideImage src="/assets/courses/lesson-3-1/slide-1.png" alt="Lesson Overview" />
+      <YouTubeEmbed id="wUc6sVXHtAU" title="Top 10 Agentic AI Use Cases in Healthcare" note="Watch: Agentic AI use cases in healthcare — real clinical applications (20 min)" />
       <Section title="How to Use This Gallery">
         <p style={p}>For each example: understand the pattern, then ask yourself the activation question. The gallery is a tool for developing project instinct, not a reading exercise.</p>
         <p style={p}>Read what the agent does. Identify who it helps and why it matters. Note what it needs to work. Answer the activation question.</p>
-      <YouTubeEmbed id="wUc6sVXHtAU" title="Top 10 Agentic AI Use Cases in Healthcare" note="Watch: Agentic AI use cases in healthcare — real clinical applications (20 min)" />
       </Section>
       <Section title="Healthcare Examples">
       <SlideImage src="/assets/courses/lesson-3-1/slide-1.png" alt="Slide 1" />
@@ -550,7 +551,7 @@ function Lesson_3_1() {
 function Lesson_3_2() {
   return (
     <>
-      
+      <SlideImage src="/assets/courses/lesson-3-2/slide-1.png" alt="Weekly Paper Digest" />
       <YouTubeEmbed id="Trw9JyBJiyU" title="AI Agents: Collaboration in Real-Life Applications" note="Watch: AI agents for research and knowledge work (25 min)" />
       <Section title="Research and Science Examples">
         <ExampleCard number="01" title="Weekly Paper Digest">
@@ -599,6 +600,7 @@ function Lesson_4_1() {
   return (
     <>
       <TrackBadge track="A" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-1.png" alt="Lesson Overview" />
       <Section title="Before This Session — Pre-Session Requirements">
         <p style={p}>Complete all three before attending. This session is practical — it assumes you have watched the tutorials.</p>
         {[
@@ -639,9 +641,14 @@ function Lesson_4_1() {
             <div style={{ fontSize: 14, color: TEXT_MID, paddingTop: 2 }}>{step}</div>
           </div>
         ))}
-        <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Slide 3" />: 
       </Section>
-      <ReflectionPrompt>After completing your first trigger What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Trigger Steps" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-4.png" alt="Actions" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-5.png" alt="Testing" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-6.png" alt="Canvas" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-7.png" alt="Summary" />
+      <ReflectionPrompt>After completing your first trigger
+      <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Slide 3" />: What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -651,6 +658,7 @@ function Lesson_4_2() {
   return (
     <>
       <TrackBadge track="B" />
+      <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Lesson Overview" />
       <ChannelLink handle="simone_rizzo98" title="Simone Rizzo" note="practical agent building content recommended by bioERGOtech" />
       <Section title="Before This Session — Pre-Session Requirements">
         {[
@@ -689,8 +697,11 @@ function Lesson_4_2() {
           </div>
         ))}
       </Section>
-
-      <ReflectionPrompt>After your first Telegram conversation with your agent: What skill did you install and why? What was the agent's response to your domain-specific test message? What would you want it to do differently? Write 3–4 sentences.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-4-2/slide-5.png" alt="Deliverables" />
+      <SlideImage src="/assets/courses/lesson-4-2/slide-6.png" alt="Setup Steps" />
+      <SlideImage src="/assets/courses/lesson-4-2/slide-7.png" alt="Summary" />
+      <ReflectionPrompt>After your first Telegram conversation
+      <SlideImage src="/assets/courses/lesson-4-2/slide-3.png" alt="Slide 3" /> with your agent: What skill did you install and why? What was the agent's response to your domain-specific test message? What would you want it to do differently? Write 3–4 sentences.</ReflectionPrompt>
     </>
   );
 }
@@ -744,7 +755,9 @@ agent = Agent(
 agent.print_response('What is Agno?', stream=True)`}</CodeBlock>
         <CalloutBox label="Session Deliverable" variant="tip">Run this agent from your terminal. Modify the instructions to match your project domain. Screenshot the output. Paste in your project log as environment setup proof.</CalloutBox>
       </Section>
-      
+      <SlideImage src="/assets/courses/lesson-4-3/slide-3.png" alt="10-Line Agent" />
+      <SlideImage src="/assets/courses/lesson-4-3/slide-4.png" alt="Tools and Memory" />
+      <SlideImage src="/assets/courses/lesson-4-3/slide-5.png" alt="Summary" />
       <YouTubeEmbed id="C9rJiuLmYtY" title="Agno Tutorial: Build a Real AI Agent — RAG + Memory" note="Watch: Build a real AI agent with RAG and Memory in Agno (25 min)" />
       <ReflectionPrompt>After running your first Agno agent: What did it return? What would you need to change about the model, tools, or instructions to make it useful for your specific project? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
@@ -760,7 +773,7 @@ function Lesson_4_4() {
         <CalloutBox label="Team Size">2–4 students per team. Solo projects are permitted only with mentor approval. Mixed-track teams are allowed — a Track A student and a Track C student can collaborate if the project suits both skill levels.</CalloutBox>
       </Section>
       <Section title="The Project Idea Brief — Six Sections">
-      <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Slide 2" />
+      <SlideImage src="/assets/courses/lesson-4-4/slide-1.png" alt="Slide 1" />
         <p style={p}>One page. Fill every section before submitting. Incomplete briefs are returned.</p>
         {[
           { num: "01", title: "The Problem", desc: "What specific problem are you solving? Who has it? How often? What happens when it is not solved?" },
@@ -779,7 +792,8 @@ function Lesson_4_4() {
           </div>
         ))}
       </Section>
-      
+      <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Six Sections" />
+      <SlideImage src="/assets/courses/lesson-4-4/slide-3.png" alt="Problem Statement" />
       <SlideImage src="/assets/courses/lesson-4-4/slide-4.png" alt="Brief Template" />
       <ReflectionPrompt>Before submitting your brief — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
     </>
@@ -790,8 +804,8 @@ function Lesson_4_4() {
 function Lesson_5_1() {
   return (
     <>
-     
-      
+      <SlideImage src="/assets/courses/lesson-5-1/slide-1.png" alt="Why Architecture Comes First" />
+      <YouTubeEmbed id="KrRD7r7y7NY" title="Andrew Ng: Agentic Design Patterns" note="Watch: Andrew Ng on planning, reflection, and tool use in agent design (20 min)" />
       <Section title="Why Architecture Comes First">
         {[
           ["Starting without a plan costs more time, not less.", "When you code before designing, you hit decision points you have not thought through. You stop, backtrack, redesign. The architecture sketch is faster than the debugging session it prevents."],
@@ -823,7 +837,7 @@ function Lesson_5_1() {
       </Section>
       <SlideImage src="/assets/courses/lesson-5-1/slide-3.png" alt="Architecture Diagram" />
       <Section title="Common Architecture Mistakes">
-      <SlideImage src="/assets/courses/lesson-5-1/slide-4.png" alt="Slide 4" />
+      <SlideImage src="/assets/courses/lesson-5-1/slide-2.png" alt="Slide 2" />
         {[
           ["Starting with the tool, not the problem.", "'We will use n8n because we know it.' Wrong starting point. Start with the problem and choose the tool that fits."],
           ["No human checkpoint in high-stakes outputs.", "Any agent that communicates with real users about health, money, or legal matters must have a human review step before output is delivered."],
@@ -835,10 +849,11 @@ function Lesson_5_1() {
             <div style={{ fontSize: 13, color: TEXT_MID }}>{fix}</div>
           </div>
         ))}
-        <YouTubeEmbed id="KrRD7r7y7NY" title="Andrew Ng: Agentic Design Patterns" note="Watch: Andrew Ng on planning, reflection, and tool use in agent design (20 min)" />
       </Section>
-      
-      <ReflectionPrompt>Answer the five architecture questions for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-5-1/slide-4.png" alt="Common Mistakes" />
+      <SlideImage src="/assets/courses/lesson-5-1/slide-5.png" alt="Summary" />
+      <ReflectionPrompt>Answer the five architecture questions
+      <SlideImage src="/assets/courses/lesson-5-1/slide-3.png" alt="Slide 3" /> for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
     </>
   );
 }
@@ -847,12 +862,13 @@ function Lesson_5_1() {
 function Lesson_5_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-5-2/slide-1.png" alt="Session Deliverable" />
       <Section title="Session Deliverable — All Tracks">
         <CalloutBox label="What You Must Complete Today" variant="tip">One successful test run connected to your actual project domain, with a screenshot in your project log. The environment must be set up for your project — not a generic test.</CalloutBox>
       </Section>
       <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Track A Setup" />
       <Section title="Track A — Make / n8n: Project Scenario Setup">
-      <SlideImage src="/assets/courses/lesson-5-2/slide-3.png" alt="Slide 3" />
+      <SlideImage src="/assets/courses/lesson-5-2/slide-1.png" alt="Slide 1" />
         <TrackBadge track="A" />
         {["Open your Make scenario or n8n workflow. Start a new scenario/workflow specifically for your project — not the test one from Week 4. Name it clearly.", "Connect your data source. Add your first trigger or data input node. Connect it now and verify it returns data.", "Add a placeholder for each action in your architecture. Do not wire logic yet — just add empty action nodes matching your architecture sketch.", "Test trigger with live data. Run the trigger manually. Confirm real data flows through.", "Screenshot and log. Screenshot the workflow canvas with nodes connected. Paste in your project log as environment setup proof."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -861,9 +877,9 @@ function Lesson_5_2() {
           </div>
         ))}
       </Section>
-      <SlideImage src="/assets/courses/lesson-5-2/slide-4.png" alt="Track B Setup" />
+      <SlideImage src="/assets/courses/lesson-5-2/slide-3.png" alt="Track B Setup" />
       <Section title="Track B — OpenClaw / Hermes Agent: Project Agent Configuration">
-      <SlideImage src="/assets/courses/lesson-5-2/slide-5.png" alt="Slide 5" />
+      <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Slide 2" />
         <TrackBadge track="B" />
         {["Create a project folder in VSCode named after your project.", "Set a domain-specific system prompt. Edit your agent's system prompt to match your project domain. Be specific — it affects every response.", "Install one relevant skill from ClawHub. Review the source code before installing. Connect and test via Telegram.", "Create a .env file for API keys. Never commit this file to GitHub — add .env to .gitignore.", "Send a domain-specific test message. Ask your agent something relevant to your project. Screenshot the conversation."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -883,7 +899,8 @@ function Lesson_5_2() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After your environment session What worked on the first try? What took longer than expected? Is there any part of your architecture that you now realise you cannot implement with your chosen track? If yes — flag it to your mentor before Week 6.</ReflectionPrompt>
+      <ReflectionPrompt>After your environment session
+      <SlideImage src="/assets/courses/lesson-5-2/slide-4.png" alt="Slide 4" />: What worked on the first try? What took longer than expected? Is there any part of your architecture that you now realise you cannot implement with your chosen track? If yes — flag it to your mentor before Week 6.</ReflectionPrompt>
     </>
   );
 }
@@ -892,6 +909,7 @@ function Lesson_5_2() {
 function Lesson_6_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-6-1/slide-1.png" alt="What Counts as a Prototype" />
       <Section title="What Counts as a Working Prototype?">
         {[
           { label: "ACCEPTED ✓", title: "Hardcoded Responses", desc: "Agent responds correctly to one specific input using a fixed answer. Proves the pipeline works end to end, even without real logic.", color: "#276749", bg: "#F0FFF4" },
@@ -922,7 +940,8 @@ function Lesson_6_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>At the end of this build session Write two sentences describing exactly what your prototype does right now — not what it will do, what it does. Then write one sentence describing the next specific thing you need to add. Add both to your project log.</ReflectionPrompt>
+      <ReflectionPrompt>At the end of this build session
+      <SlideImage src="/assets/courses/lesson-6-1/slide-2.png" alt="Slide 2" />: Write two sentences describing exactly what your prototype does right now — not what it will do, what it does. Then write one sentence describing the next specific thing you need to add. Add both to your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -931,6 +950,7 @@ function Lesson_6_1() {
 function Lesson_6_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-6-2/slide-1.png" alt="Ethics Checklist" />
       <Section title="Mid-Build Ethics Checklist">
         <p style={p}>Answer each question honestly. If the answer is 'I don't know' — that is a red flag to address before Week 8.</p>
         {[
@@ -966,7 +986,8 @@ function Lesson_6_2() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Complete sections 01–04 of your README today. For section 03, write the step-by-step description as if explaining it to someone who has never heard of your project. If you cannot explain it simply, the design is not clear enough yet.</ReflectionPrompt>
+      <ReflectionPrompt>Complete sections 01–04 of your README
+      <SlideImage src="/assets/courses/lesson-6-2/slide-2.png" alt="Slide 2" /> today. For section 03, write the step-by-step description as if explaining it to someone who has never heard of your project. If you cannot explain it simply, the design is not clear enough yet.</ReflectionPrompt>
     </>
   );
 }
@@ -975,6 +996,7 @@ function Lesson_6_2() {
 function Lesson_7_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-7-1/slide-1.png" alt="How to Prepare" />
       <Section title="How to Prepare for Your Mentor Session">
         <CalloutBox label="Rule">Come with three specific questions. Not 'is this good?' — that is not a question. 'We cannot get the API to return data when the input contains special characters — here is the error we are seeing' is a question.</CalloutBox>
         {[
@@ -1004,7 +1026,8 @@ function Lesson_7_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After the mentor session Update your architecture sketch to reflect any scope changes discussed. Document one specific decision you changed as a result of mentor feedback — and why. Set your Week 7–8 milestones in your project log within 24 hours of the call.</ReflectionPrompt>
+      <ReflectionPrompt>After the mentor session
+      <SlideImage src="/assets/courses/lesson-7-1/slide-2.png" alt="Slide 2" />: Update your architecture sketch to reflect any scope changes discussed. Document one specific decision you changed as a result of mentor feedback — and why. Set your Week 7–8 milestones in your project log within 24 hours of the call.</ReflectionPrompt>
     </>
   );
 }
@@ -1013,6 +1036,7 @@ function Lesson_7_1() {
 function Lesson_7_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-7-2/slide-1.png" alt="How Agents Fail" />
       <YouTubeEmbed id="HGS5LfyxLUU" title="The Complete Truth About AI Agents — Failure Modes" note="Watch: What AI agents actually can and cannot do — failure modes explained (15 min)" />
       <Section title="How Agents Fail — And What to Do About It">
         {[
@@ -1046,7 +1070,8 @@ function Lesson_7_2() {
         ))}
         <KeyInsight>You do not need to fix all failures — but you must document all of them honestly. The edge case test results become the testing section of your final README.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Run all five edge case tests on your prototype. For each test, document: the input you used, what the agent returned, whether this is acceptable behaviour or a bug to fix, and if it is a bug — what you will do about it before Week 8. Add all results to your project log.</ReflectionPrompt>
+      <ReflectionPrompt>Run all five edge case tests
+      <SlideImage src="/assets/courses/lesson-7-2/slide-2.png" alt="Slide 2" /> on your prototype. For each test, document: the input you used, what the agent returned, whether this is acceptable behaviour or a bug to fix, and if it is a bug — what you will do about it before Week 8. Add all results to your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -1055,6 +1080,7 @@ function Lesson_7_2() {
 function Lesson_8_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-8-1/slide-1.png" alt="Final Scope Decision" />
       <Section title="The Final Scope Decision">
         <p style={p}>You have two weeks of build time left. Make the scope decision now — not in Week 10.</p>
         {[
@@ -1088,7 +1114,8 @@ function Lesson_8_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>Write your scope decision in your project log now: What is in the demo? What is cut? Record your demo this week. Watch it back once before submitting — the best demos are the ones where the builder clearly understands the limitations.</ReflectionPrompt>
+      <ReflectionPrompt>Write your scope decision
+      <SlideImage src="/assets/courses/lesson-8-1/slide-2.png" alt="Slide 2" /> in your project log now: What is in the demo? What is cut? Record your demo this week. Watch it back once before submitting — the best demos are the ones where the builder clearly understands the limitations.</ReflectionPrompt>
     </>
   );
 }
@@ -1097,6 +1124,7 @@ function Lesson_8_1() {
 function Lesson_8_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-8-2/slide-1.png" alt="Ethics Rubric" />
       <Section title="The Ethics Rubric — What Reviewers Will Read">
         <p style={p}>This is the same rubric mentors and reviewers use. Read it before writing your final ethics section.</p>
         <ComparisonTable
@@ -1125,7 +1153,8 @@ function Lesson_8_2() {
         ))}
         <KeyInsight>You do not need a perfect agent. You need an honest one — one whose limitations are named, whose design decisions are justified, and whose outputs are demonstrably real.</KeyInsight>
       </Section>
-      <ReflectionPrompt>Write your final ethics review using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Add it to your README before final submission.</ReflectionPrompt>
+      <ReflectionPrompt>Write your final ethics review
+      <SlideImage src="/assets/courses/lesson-8-2/slide-2.png" alt="Slide 2" /> using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Add it to your README before final submission.</ReflectionPrompt>
     </>
   );
 }
@@ -1134,6 +1163,7 @@ function Lesson_8_2() {
 function CourseClosing() {
   return (
     <>
+      <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="What You Have Learned" />
       <Section title="What You Have Learned Across Ten Weeks">
         {[
           { phase: "Phase 1 — Foundation (Weeks 1–2)", items: ["What AI agents are and how they differ from chatbots", "The five components of every agent: perception, planning, tool use, memory, feedback loop", "How LLMs work internally — tokenisation, transformers, parameters", "Online vs local model hosting — APIs and Ollama", "AI ethics and accountability — privacy, bias, transparency"] },
@@ -1188,6 +1218,8 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/course-closing/slide-5.png" alt="Launch Pathways" />
+      <SlideImage src="/assets/courses/course-closing/slide-6.png" alt="Next Steps" />
       <YouTubeEmbed id="K8Ros5RhJW4" title="What to Build and How — bioERGOtech Recommendation" note="Watch: Inspiration for what comes next — recommended by bioERGOtech" />
       <SlideImage src="/assets/courses/course-closing/slide-7.png" alt="Closing" />
       <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
@@ -1233,18 +1265,23 @@ interface Props {
 
 export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = false }: Props) {
   const [showModal, setShowModal] = useState(gateOpen && !isAuthenticated);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Check if student already submitted this lesson
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch(`/api/courses/submissions?lesson_slug=${lesson.slug}`)
+      .then(r => r.json())
+      .then(d => { if (d.submission) setIsSubmitted(true); })
+      .catch(() => {});
+  }, [lesson.slug, isAuthenticated]);
 
   const lessonIndex = COURSE_LESSONS.findIndex((l) => l.slug === lesson.slug);
   const prevLesson = lessonIndex > 0 ? COURSE_LESSONS[lessonIndex - 1] : null;
-  const nextLesson =
-    lessonIndex < COURSE_LESSONS.length - 1
-      ? COURSE_LESSONS[lessonIndex + 1]
-      : null;
+  const nextLesson = lessonIndex < COURSE_LESSONS.length - 1 ? COURSE_LESSONS[lessonIndex + 1] : null;
 
   const lessonHref = (l: Lesson) =>
-    l.slug === "introduction"
-      ? "/courses/agentic-ai"
-      : `/courses/agentic-ai/lesson/${l.slug}`;
+    l.slug === "introduction" ? "/courses/agentic-ai" : `/courses/agentic-ai/lesson/${l.slug}`;
 
   const ContentComponent = LESSON_CONTENT[lesson.slug];
 
@@ -1256,184 +1293,82 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #F7F9FC; }
       `}</style>
 
-      <div
-        style={{
-          background: NAVY,
-          color: "#fff",
-          padding: "16px 24px",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          flexWrap: "wrap" as const,
-        }}
-      >
-        <Link
-          href="/courses/agentic-ai"
-          style={{
-            color: TEAL,
-            textDecoration: "none",
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          ← Course Home
-        </Link>
-
+      {/* Header bar */}
+      <div style={{ background: NAVY, color: "#fff", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" as const }}>
+        <Link href="/courses/agentic-ai" style={{ color: TEAL, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>← Course Home</Link>
         <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
-          Phase {lesson.phase} · Week {lesson.week}
-        </div>
-
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Phase {lesson.phase} · Week {lesson.week}</div>
         <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
-          ⏱ {lesson.duration}
-        </div>
-
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>⏱ {lesson.duration}</div>
         {lesson.track !== "all" && (
           <>
             <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
-              Track {lesson.track}
-            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Track {lesson.track} only</div>
           </>
         )}
+        <div style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Lesson {lesson.number}</div>
       </div>
 
-      <div
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "32px 24px",
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) 340px",
-          gap: 32,
-          alignItems: "start",
-        }}
-      >
-        <div style={{ minWidth: 0 }}>
-          {ContentComponent ? <ContentComponent /> : null}
+      {/* Lesson title */}
+      <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, padding: "36px 24px 32px", color: "#fff", textAlign: "center" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: TEAL, marginBottom: 10 }}>Lesson {lesson.number}</div>
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: "clamp(20px, 4vw, 34px)", fontWeight: 800, color: "#fff", margin: 0, lineHeight: 1.2 }}>{lesson.title}</h1>
+      </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 16,
-              marginTop: 8,
-              marginBottom: 24,
-            }}
-          >
-            {prevLesson ? (
-              prevLesson.free || isAuthenticated ? (
-                <Link
-                  href={lessonHref(prevLesson)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    padding: "14px 20px",
-                    background: CARD,
-                    border: `1px solid ${BORDER}`,
-                    borderRadius: 10,
-                    textDecoration: "none",
-                    boxShadow: SHADOW,
-                    flex: 1,
-                  }}
-                >
-                  <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
-                    {prevLesson.number} — {prevLesson.title}
-                  </span>
-                </Link>
-              ) : (
-                <button
-                  onClick={() => setShowModal(true)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    padding: "14px 20px",
-                    background: CARD,
-                    border: `1px solid ${BORDER}`,
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "left" as const,
-                  }}
-                >
-                  <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
-                    {prevLesson.number} — {prevLesson.title}
-                  </span>
-                </button>
-              )
-            ) : (
-              <div style={{ flex: 1 }} />
-            )}
+      {/* Body */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px", display: "flex", gap: 40, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {ContentComponent ? (
+            <ContentComponent />
+          ) : (
+            <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 48, textAlign: "center", boxShadow: SHADOW }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🚧</div>
+              <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Lesson Coming Soon</h2>
+              <p style={{ fontSize: 15, color: TEXT_LIGHT }}>This lesson is being prepared. Check back soon.</p>
+            </div>
+          )}
 
-            {nextLesson ? (
-              nextLesson.free || isAuthenticated ? (
-                <Link
-                  href={lessonHref(nextLesson)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    padding: "14px 20px",
-                    background: TEAL,
-                    border: `1px solid ${TEAL}`,
-                    borderRadius: 10,
-                    textDecoration: "none",
-                    boxShadow: SHADOW,
-                    flex: 1,
-                    textAlign: "right" as const,
-                  }}
-                >
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
-                    Next →
-                  </span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
-                    {nextLesson.number} — {nextLesson.title}
-                  </span>
-                </Link>
-              ) : (
-                <button
-                  onClick={() => setShowModal(true)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    padding: "14px 20px",
-                    background: TEAL,
-                    border: `1px solid ${TEAL}`,
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    flex: 1,
-                    textAlign: "right" as const,
-                  }}
-                >
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
-                    Next →
-                  </span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
-                    {nextLesson.number} — {nextLesson.title}
-                  </span>
-                </button>
-              )
-            ) : null}
-          </div>
-
+          {/* Submission Box */}
           <LessonSubmissionBox
             lessonSlug={lesson.slug}
             lessonTitle={lesson.title}
             isAuthenticated={isAuthenticated}
             onGateOpen={() => setShowModal(true)}
+            onSubmitted={() => setIsSubmitted(true)}
           />
+
+          {/* Prev / Submit / Next navigation bar */}
+          <div style={{ display: "flex", alignItems: "stretch", gap: 12, marginTop: 24 }}>
+            {/* Previous */}
+            {prevLesson ? (
+              <Link href={lessonHref(prevLesson)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, textDecoration: "none", boxShadow: SHADOW, flex: 1 }}>
+                <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{prevLesson.number} — {prevLesson.title}</span>
+              </Link>
+            ) : <div style={{ flex: 1 }} />}
+
+            {/* Next — locked until submitted */}
+            {nextLesson ? (
+              (nextLesson.free || isAuthenticated) && isSubmitted ? (
+                <Link href={lessonHref(nextLesson)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: TEAL, border: `1px solid ${TEAL}`, borderRadius: 10, textDecoration: "none", boxShadow: SHADOW, flex: 1, textAlign: "right" as const }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Next →</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{nextLesson.number} — {nextLesson.title}</span>
+                </Link>
+              ) : (
+                <div
+                  title={isAuthenticated ? "Submit your reflection to unlock the next lesson" : "Log in to continue"}
+                  style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: "#E2E8F0", border: `1px solid ${BORDER}`, borderRadius: 10, flex: 1, textAlign: "right" as const, cursor: "not-allowed", opacity: 0.6 }}
+                >
+                  <span style={{ fontSize: 11, color: TEXT_LIGHT }}>Next →</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: TEXT_LIGHT }}>{nextLesson.number} — {nextLesson.title}</span>
+                  <span style={{ fontSize: 11, color: TEXT_LIGHT }}>🔒 Submit reflection to unlock</span>
+                </div>
+              )
+            ) : null}
+          </div>
         </div>
 
-        <CourseSidebar
-          isAuthenticated={isAuthenticated}
-          onLockedClick={() => setShowModal(true)}
-        />
+        <CourseSidebar isAuthenticated={isAuthenticated} onLockedClick={() => setShowModal(true)} />
       </div>
 
       {showModal && <GateModal onClose={() => setShowModal(false)} />}
