@@ -2703,7 +2703,7 @@ function ApplicationDrawer({
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; adminUserId?: string; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter">("applications");
+  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter" | "submissions">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -2737,6 +2737,9 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
   const [attendanceEvent, setAttendanceEvent] = useState<{ id: string; title: string; created_by?: string; event_date?: string } | null>(null);
   const [pendingRedemptions, setPendingRedemptions] = useState<{ id: string; user_email: string; user_name?: string; item_id: string; item_label: string; coins_spent: number; status: string; admin_notes?: string; created_at: string; actioned_at?: string }[]>([]);
   const [loadingRedemptions, setLoadingRedemptions] = useState(true);
+  const [submissions, setSubmissions] = useState<{ id: string; lesson_slug: string; lesson_title: string; student_id: string; reflection: string | null; question: string | null; comment: string | null; admin_reply: string | null; replied_at: string | null; created_at: string; profiles: { full_name: string | null; email: string; } }[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+  const [submissionReply, setSubmissionReply] = useState<{ id: string; text: string } | null>(null);
   const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
   const [loadingCoins, setLoadingCoins] = useState(true);
   const [coinTopUp, setCoinTopUp] = useState<{ userId: string; amount: string; reason: string } | null>(null);
@@ -2758,6 +2761,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
     if (tab === "projects") { setLoadingProjects(true); fetch("/api/admin/projects").then(r => r.json()).then(d => { setAdminProjects(d.projects || []); setLoadingProjects(false); }).catch(() => setLoadingProjects(false)); }
     if (tab === "equipment") { setLoadingProposals(true); fetch("/api/admin/equipment").then(r => r.json()).then(d => { setProposals(d.proposals || []); setLoadingProposals(false); }).catch(() => setLoadingProposals(false)); }
     if (tab === "knowledge") { setLoadingKnowledge(true); fetch("/api/admin/knowledge").then(r => r.json()).then(d => { setKnowledgeDocs(d.documents || []); setLoadingKnowledge(false); }).catch(() => setLoadingKnowledge(false)); }
+    if (tab === "submissions") { setLoadingSubmissions(true); fetch("/api/admin/submissions").then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setLoadingSubmissions(false); }); }
     if (tab === "redemptions") { setLoadingRedemptions(true); fetch("/api/redemptions").then(r => r.json()).then(d => { setPendingRedemptions(d.requests || []); setLoadingRedemptions(false); }).catch(() => setLoadingRedemptions(false)); }
     if (tab === "coins") { setLoadingCoins(true); fetch("/api/coins?all=true").then(r => r.json()).then(d => { setAllCoinBalances(d.balances || []); setLoadingCoins(false); }).catch(() => setLoadingCoins(false)); }
     if (tab === "pending_docs") { setLoadingPendingDocs(true); fetch("/api/admin/knowledge?pending=true").then(r => r.json()).then(d => { setPendingDocs(d.documents || []); setLoadingPendingDocs(false); }).catch(() => setLoadingPendingDocs(false)); }
@@ -2833,7 +2837,8 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
     { id: "pending_docs" as const, label: "Doc Proposals", icon: "fileText", badge: pendingDocs.length > 0 ? pendingDocs.length : null as number | null },
     { id: "coins" as const, label: "Coins", icon: "star", badge: null as number | null },
     { id: "redemptions" as const, label: "Redemptions", icon: "award", badge: pendingRedemptions.length > 0 ? pendingRedemptions.length : null as number | null },
-    { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null as number | null },
+          { id: "submissions" as const, label: "Submissions", icon: "book", badge: null },
+    { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null },
   ];
 
   return (
@@ -3270,7 +3275,81 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
           </div>
         )}
       </div>
-
+      {tab === "submissions" && (
+          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
+            <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Course Submissions</h3>
+              <div style={{ display: "flex", gap: 12, fontSize: 12 }}>
+                <span style={{ color: "#E67E22", fontWeight: 600 }}>⏳ {submissions.filter(s => !s.admin_reply).length} pending</span>
+                <span style={{ color: TEAL, fontWeight: 600 }}>✓ {submissions.filter(s => s.admin_reply).length} replied</span>
+                <span style={{ color: TEXT_LIGHT }}>{submissions.length} total</span>
+              </div>
+            </div>
+            {loadingSubmissions ? (
+              <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>Loading…</div>
+            ) : submissions.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No submissions yet.</div>
+            ) : (
+              <div>
+                {submissions.map((s, i) => (
+                  <div key={s.id} style={{ padding: "20px 24px", borderBottom: i < submissions.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, fontWeight: 700, color: TEXT }}>{s.profiles?.full_name || s.profiles?.email || "Unknown"}</div>
+                        <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2 }}>{s.student_id} · {s.lesson_title} · {new Date(s.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: s.admin_reply ? TEAL_LIGHT : "#FFF8E6", color: s.admin_reply ? TEAL : "#E67E22" }}>
+                        {s.admin_reply ? "Replied" : "Pending"}
+                      </span>
+                    </div>
+                    {s.reflection && <div style={{ marginBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Reflection</span><p style={{ fontSize: 14, color: TEXT_MID, margin: "4px 0 0", lineHeight: 1.65 }}>{s.reflection}</p></div>}
+                    {s.question && <div style={{ marginBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: "#4A7DFF", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Question</span><p style={{ fontSize: 14, color: TEXT_MID, margin: "4px 0 0", lineHeight: 1.65 }}>{s.question}</p></div>}
+                    {s.comment && <div style={{ marginBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: "#9B59B6", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Comment</span><p style={{ fontSize: 14, color: TEXT_MID, margin: "4px 0 0", lineHeight: 1.65 }}>{s.comment}</p></div>}
+                    {s.admin_reply && (
+                      <div style={{ marginTop: 12, padding: "12px 16px", background: TEAL_LIGHT, borderRadius: 8, borderLeft: `3px solid ${TEAL}` }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, marginBottom: 4 }}>YOUR REPLY</div>
+                        <p style={{ fontSize: 14, color: TEXT_MID, margin: 0 }}>{s.admin_reply}</p>
+                      </div>
+                    )}
+                    <div style={{ marginTop: 14 }}>
+                      {submissionReply?.id === s.id ? (
+                        <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                          <textarea
+                            value={submissionReply.text}
+                            onChange={e => setSubmissionReply({ id: s.id, text: e.target.value })}
+                            placeholder="Write your reply to this student..."
+                            rows={3}
+                            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${TEAL}`, fontSize: 14, color: TEXT, resize: "vertical", outline: "none", fontFamily: "inherit", boxSizing: "border-box" as const }}
+                          />
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                              onClick={async () => {
+                                if (!submissionReply.text.trim()) return;
+                                const res = await fetch("/api/admin/submissions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: s.id, admin_reply: submissionReply.text, replied_by: adminUserId }) });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  setSubmissions(prev => prev.map(sub => sub.id === s.id ? { ...sub, admin_reply: data.submission.admin_reply, replied_at: data.submission.replied_at } : sub));
+                                  setSubmissionReply(null);
+                                }
+                              }}
+                              style={{ padding: "8px 18px", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                            >Send Reply</button>
+                            <button onClick={() => setSubmissionReply(null)} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, background: "transparent", color: TEXT_MID, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setSubmissionReply({ id: s.id, text: s.admin_reply || "" })}
+                          style={{ padding: "7px 16px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                        >{s.admin_reply ? "Edit Reply" : "Reply"}</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       {/* Attendance Modal */}
       {attendanceEvent && adminUserId && (
         <AttendanceModal
