@@ -1139,10 +1139,8 @@ function CourseClosing() {
         <SlideImage src="/assets/courses/course-closing/slide-4.png" alt="Launch Pathways" />
       </Section>
 
-      <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
-
       <Section title="What to Submit">
-        <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
+        <p style={p}>To receive your certificate, submit all four deliverables through the course GitHub Respository provided below.</p>
         {[
           ["01", "Working Agent Prototype", "A link to your GitHub repository in the bioERGOtech organisation. The prototype must be runnable — include a README with setup instructions."],
           ["02", "Demo Recording", "A 2–5 minute screen recording showing the agent working with real input. Upload to YouTube (unlisted) or Google Drive and include the link in your README."],
@@ -1249,6 +1247,7 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
+
       <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>You started with an idea.</h2>
