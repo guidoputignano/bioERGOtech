@@ -1246,8 +1246,8 @@ function CourseClosing() {
             </div>
           </div>
         ))}
+        <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
       </Section>
-
       <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>You started with an idea.</h2>
