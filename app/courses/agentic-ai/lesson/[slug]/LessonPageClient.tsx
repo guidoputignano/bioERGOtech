@@ -1119,6 +1119,7 @@ function Lesson_8_2() {
 function CourseClosing() {
   return (
     <>
+    <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
       <Section title="What You Have Learned Across Ten Weeks">
         {[
           { phase: "Phase 1 — Foundation (Weeks 1–2)", items: ["What AI agents are and how they differ from chatbots", "The five components of every agent: perception, planning, tool use, memory, feedback loop", "How LLMs work internally — tokenisation, transformers, parameters", "Online vs local model hosting — APIs and Ollama", "AI ethics and accountability — privacy, bias, transparency"] },
@@ -1135,12 +1136,12 @@ function CourseClosing() {
             ))}
           </div>
         ))}
+        <SlideImage src="/assets/courses/course-closing/slide-4.png" alt="Launch Pathways" />
       </Section>
 
       <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
 
       <Section title="What to Submit">
-        <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Submission Overview" />
         <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
         {[
           ["01", "Working Agent Prototype", "A link to your GitHub repository in the bioERGOtech organisation. The prototype must be runnable — include a README with setup instructions."],
@@ -1230,7 +1231,7 @@ function CourseClosing() {
       </Section>
 
       <Section title="Launch Pathways">
-        <SlideImage src="/assets/courses/course-closing/slide-4.png" alt="Launch Pathways" />
+        
         <p style={p}>The best projects are selected for the Launch Pathway during the course closing session. Five options are available.</p>
         {[
           ["Incubator Referral", "Introduction to a bioERGOtech partner incubator for projects with commercial potential."],
@@ -1248,10 +1249,6 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
-
-      <YouTubeEmbed id="K8Ros5RhJW4" title="What to Build and How — bioERGOtech Recommendation" note="Watch: Inspiration for what comes next — recommended by bioERGOtech" />
-      <SlideImage src="/assets/courses/course-closing/slide-7.png" alt="Closing" />
-
       <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>You started with an idea.</h2>
