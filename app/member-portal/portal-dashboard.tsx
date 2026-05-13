@@ -2737,7 +2737,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
   const [attendanceEvent, setAttendanceEvent] = useState<{ id: string; title: string; created_by?: string; event_date?: string } | null>(null);
   const [pendingRedemptions, setPendingRedemptions] = useState<{ id: string; user_email: string; user_name?: string; item_id: string; item_label: string; coins_spent: number; status: string; admin_notes?: string; created_at: string; actioned_at?: string }[]>([]);
   const [loadingRedemptions, setLoadingRedemptions] = useState(true);
-  const [submissions, setSubmissions] = useState<{ id: string; lesson_slug: string; lesson_title: string; student_id: string; reflection: string | null; question: string | null; comment: string | null; admin_reply: string | null; replied_at: string | null; created_at: string; profiles?: { full_name?: string | null; email: string; student_id?: string | null; } | null; }[]>([]);
+  const [submissions, setSubmissions] = useState<{ id: string; lesson_slug: string; lesson_title: string; student_id: string; reflection: string | null; question: string | null; comment: string | null; admin_reply: string | null; replied_at: string | null; created_at: string; user_id?: string; profiles?: { full_name?: string | null; email: string; student_id?: string | null; } | null; }[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
   const [submissionReply, setSubmissionReply] = useState<{ id: string; text: string } | null>(null);
   const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
@@ -3338,10 +3338,33 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                           </div>
                         </div>
                       ) : (
-                        <button
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+                         <button
                           onClick={() => setSubmissionReply({ id: s.id, text: s.admin_reply || "" })}
                           style={{ padding: "7px 16px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                         >{s.admin_reply ? "Edit Reply" : "Reply"}</button>
+
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`Issue certificate to ${s.profiles?.full_name || s.profiles?.email || "this student"}?`)) return;
+                            const userId = s.user_id || (s as { user_id?: string }).user_id;
+                            if (!userId) { alert("Cannot find user ID for this submission."); return; }
+                            const res = await fetch("/api/admin/approve-certificate", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ user_id: userId }),
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                              alert(`✓ Certificate sent to ${data.sentTo}\nCert ID: ${data.certId}`);
+                            } else {
+                              alert(`Error: ${data.error}`);
+                            }
+                          }}
+                          style={{ padding: "7px 16px", borderRadius: 8, border: "1.5px solid #00C896", background: "#E6F9F4", color: "#008F6B", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                        >🎓 Approve & Send Certificate</button>
+                      </div>
+
                       )}
                     </div>
                   </div>
