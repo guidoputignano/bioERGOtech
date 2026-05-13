@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -2737,7 +2737,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
   const [attendanceEvent, setAttendanceEvent] = useState<{ id: string; title: string; created_by?: string; event_date?: string } | null>(null);
   const [pendingRedemptions, setPendingRedemptions] = useState<{ id: string; user_email: string; user_name?: string; item_id: string; item_label: string; coins_spent: number; status: string; admin_notes?: string; created_at: string; actioned_at?: string }[]>([]);
   const [loadingRedemptions, setLoadingRedemptions] = useState(true);
-  const [submissions, setSubmissions] = useState<{ id: string; lesson_slug: string; lesson_title: string; student_id: string; reflection: string | null; question: string | null; comment: string | null; admin_reply: string | null; replied_at: string | null; created_at: string; profiles: { full_name: string | null; email: string; } }[]>([]);
+  const [submissions, setSubmissions] = useState<{ id: string; lesson_slug: string; lesson_title: string; student_id: string; reflection: string | null; question: string | null; comment: string | null; admin_reply: string | null; replied_at: string | null; created_at: string; profiles?: { full_name?: string | null; email: string; student_id?: string | null; } | null; }[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
   const [submissionReply, setSubmissionReply] = useState<{ id: string; text: string } | null>(null);
   const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
