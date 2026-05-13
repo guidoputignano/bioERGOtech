@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -172,17 +172,16 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
       {/* ── Hero ── */}
       <div
         style={{
-          background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`,
-          padding: "80px 24px 64px",
+          background: "#FFFFFF", borderBottom: `3px solid ${TEAL}`, borderLeft: `6px solid ${TEAL}`,
+          padding: "72px 24px 60px",
           textAlign: "center",
-          color: "#fff",
         }}
       >
         <div
           style={{
             display: "inline-block",
-            background: "rgba(0,196,180,0.15)",
-            border: "1px solid rgba(0,196,180,0.35)",
+            background: TEAL_LIGHT,
+            border: "1px solid " + TEAL,
             color: TEAL,
             fontSize: 11,
             fontWeight: 700,
@@ -215,7 +214,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
         <p
           style={{
             fontSize: 17,
-            color: "rgba(255,255,255,0.72)",
+            color: TEXT_MID,
             maxWidth: 540,
             margin: "0 auto 48px",
             lineHeight: 1.65,
@@ -250,7 +249,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
               >
                 {num}
               </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+              <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 2 }}>
                 {label}
               </div>
             </div>
