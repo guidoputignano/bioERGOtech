@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -170,7 +170,7 @@ function Lesson_1_1() {
     <>
       <Section title="What You Will Learn">
         <p style={p}>This lesson covers three things. By the end you should be able to define AI accurately in plain language, distinguish traditional software from machine learning and generative AI, and calibrate your own expectations. Both over-hype and under-estimation are equally unhelpful when it comes to building real systems.</p>
-      <SlideImage src="/assets/courses/lesson-1-1/slide-2.png" alt="Slide 2" />
+      <SlideImage src="/assets/courses/lesson-1-1/slide-1.png" alt="Slide 1" />
       </Section>
       <YouTubeEmbed id="qpp1G0iEL_c" title="AI, ML, Deep Learning and Generative AI Explained — IBM Technology" note="Watch: AI vs Machine Learning vs Generative AI — IBM Technology (10 min)" />
       <Section title="Two Ways to Build Intelligence">
@@ -193,7 +193,7 @@ function Lesson_1_1() {
       <SlideImage src="/assets/courses/lesson-1-1/slide-4.png" alt="Slide 4" />
       </Section>
       <Section title="What LLMs Are Good and Bad At">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 8 }}>
+        <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 8 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: TEAL, marginBottom: 10 }}>✅ What LLMs Are Very Good At</div>
             {["Summarising long documents quickly", "Drafting and editing written content", "Explaining complex ideas in plain language", "Writing, reviewing, and debugging code", "Translating between languages", "Answering questions from documents"].map((item) => (
@@ -208,6 +208,10 @@ function Lesson_1_1() {
           </div>
         </div>
         <KeyInsight>Treat an LLM like a very fast, very well-read assistant who is occasionally overconfident. Verify important claims. Use it to speed up tasks you already understand.</KeyInsight>
+        <SubHeading>Why Healthcare Is One of the Best Domains for LLMs</SubHeading>
+        <p style={p}>Healthcare is unusually text-heavy. A single hospital generates millions of words of structured and unstructured text every day — clinical notes, discharge letters, referral letters, insurance requests, adverse event reports, and research literature. Almost all of it requires reading, understanding, and extracting specific information.</p>
+        <p style={p}>This is precisely what LLMs are good at. A model that reads a 12-page clinical note and extracts the three most important follow-up actions is genuinely useful. A model that translates a dense discharge letter into plain language a patient can actually follow is solving a real, documented problem — failure to follow discharge instructions is one of the leading causes of 30-day hospital readmission.</p>
+        <p style={p}>The constraint in healthcare is not whether LLMs can help — it is whether they can be deployed safely, with appropriate human oversight and privacy protection. You will encounter both the opportunity and the constraint throughout this course.</p>
       <SlideImage src="/assets/courses/lesson-1-1/slide-6.png" alt="Slide 6" />
       </Section>
       <ReflectionPrompt>Think of a piece of software you use every day. Based on what you learned in this lesson, is it traditional software, machine learning, or generative AI? How can you tell? Write 3–5 sentences connecting it to your own experience.</ReflectionPrompt>
@@ -219,6 +223,7 @@ function Lesson_1_1() {
 function Lesson_1_2a() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-1-2a/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three goals. First, you will be able to explain clearly why an AI agent is fundamentally different from a chatbot. Second, you will know the names and definitions of the five components every agent is built from. Third, you will apply that framework to a real-world scenario and see how it maps onto something concrete.</p>
       <SlideImage src="/assets/courses/lesson-1-2a/slide-2.png" alt="Slide 2" />
@@ -265,6 +270,31 @@ function Lesson_1_2a() {
       <SlideImage src="/assets/courses/lesson-1-2a/slide-7.png" alt="Slide 7" /> 
         <KeyInsight>Five components. One agent. A task that used to require a human to check a website every morning now runs automatically, reliably, and without being prompted.</KeyInsight>
       </Section>
+
+      <Section title="White Box vs Black Box Agents">
+        <p style={p}>Not all agents work the same way under the hood. One of the most important distinctions in agent design — especially in scientific and medical domains — is whether the agent's reasoning is transparent and inspectable, or opaque and probabilistic.</p>
+        <SubHeading>Black Box Agents (LLM-based)</SubHeading>
+        <p style={p}>Most modern agents are built on large language models. When you ask the agent why it made a decision, it can explain its reasoning in natural language — but that explanation is itself generated by the model, not extracted from a verifiable internal process. You cannot trace the exact path from input to output. This makes LLM-based agents powerful but difficult to audit in safety-critical settings.</p>
+        <SubHeading>White Box Agents (Rule-based or Algorithmic)</SubHeading>
+        <p style={p}>A white box agent is one whose decision-making is fully transparent and inspectable. Every step of the reasoning can be traced, verified, and explained. Guido Putignano, bioERGOtech's director, described a real example from biomedical engineering research:</p>
+        <div style={{ background: "#F7F9FC", border: `1px solid ${BORDER}`, borderLeft: `4px solid ${NAVY}`, borderRadius: "0 10px 10px 0", padding: "16px 20px", margin: "16px 0" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: NAVY, marginBottom: 10 }}>White Box Agent Example — Biomedical Research</div>
+          {[
+            ["Perception", "The agent reads microscopy images of cells and extracts quantitative measurements — size, shape, intensity, and spatial distribution."],
+            ["Planning", "It runs a defined algorithm — a sequence of mathematical operations with no probabilistic guessing. Every decision point follows an explicit rule."],
+            ["Tool Use", "It calculates shear stress — the mechanical force exerted on cells — using established fluid dynamics equations applied to the extracted measurements."],
+            ["Memory", "It retains the previous state: what the measurements were in the last frame, so it can track changes over time and detect anomalies."],
+          ].map(([component, desc]) => (
+            <div key={component as string} style={{ display: "flex", gap: 14, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
+              <div style={{ minWidth: 100, fontWeight: 700, color: TEAL, fontSize: 13 }}>{component}</div>
+              <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+        <p style={p}>In this agent, you can audit every step. If the shear stress calculation is wrong, you can trace exactly which measurement was off, which formula was applied, and where the error occurred. This matters enormously in research and clinical contexts where results feed into publications or patient decisions.</p>
+        <KeyInsight>White box agents are preferred when auditability, regulatory compliance, or scientific reproducibility is required. Black box LLM agents are preferred when the task involves natural language, ambiguous inputs, or requires flexible reasoning. The best systems often combine both — an LLM for language understanding, and a deterministic algorithm for the critical calculation.</KeyInsight>
+      </Section>
+
       <ReflectionPrompt>Pick one repetitive task from your week. Describe how an agent could handle it using all five components: What would it perceive? What would it plan? What tools would it use? What would it need to remember? How would it check its own work? Write one paragraph, 4–6 sentences. Be specific.</ReflectionPrompt>
     </>
   );
@@ -274,6 +304,7 @@ function Lesson_1_2a() {
 function Lesson_1_2b() {
   return (
     <>
+    <SlideImage src="/assets/courses/lesson-1-2b/slide-1.png" alt="Slide 1" />
       <Section title="What You Will Learn">
         <p style={p}>Three things. What is actually happening inside an LLM — tokenisation, transformer architecture, and what 'parameters' really means. How to use a model via a cloud API. And how to run an open-source model on your own machine using Ollama — free, private, works completely offline.</p>
       <SlideImage src="/assets/courses/lesson-1-2b/slide-2.png" alt="Slide 2" />
@@ -440,6 +471,7 @@ function Lesson_2_1() {
       <Section title="Three Core Ethical Dimensions">
         <SubHeading>1. Privacy and Consent</SubHeading>
         <p style={p}>Every agent that processes personal data creates a privacy obligation. The questions are: What data does the agent actually need? Who consented to it being used? How long is it retained? Can users request deletion? Privacy is not just about preventing data breaches — it is about using only what you need for only as long as you need it.</p>
+        <CalloutBox label="The Hospital Data Problem" variant="warning">Hospitals are one of the richest sources of training data for AI systems — patient records, imaging scans, blood test results, clinical notes, and surgical outcomes accumulated over decades. This data is valuable. It is also deeply personal. In many documented cases, patient data has been shared with AI companies for model training without patients being explicitly informed, let alone having given meaningful consent. The argument made is usually that the data was "de-identified" — names and obvious identifiers removed. But re-identification from de-identified medical records has been demonstrated repeatedly in research. A patient's age, postcode, diagnosis, and admission date can be enough to uniquely identify them. When you build an agent that processes patient data — even indirectly — you are operating in this landscape. The consent question is not bureaucratic. It is substantive.</CalloutBox>
         <SubHeading>2. Bias and Fairness</SubHeading>
         <p style={p}>LLMs are trained on human-generated data — which contains human biases. An agent trained on English-language medical literature may perform worse for patients whose conditions are underrepresented in that literature. A hiring agent trained on historical data may systematically disadvantage candidates from certain backgrounds. The obligation is to identify which groups your agent affects and test whether its outputs are equitable across them.</p>
         <SubHeading>3. Transparency</SubHeading>
@@ -495,6 +527,7 @@ function Lesson_2_2() {
 function Lesson_3_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-3-1/slide-1.png" alt="Lesson Overview" />
       <YouTubeEmbed id="wUc6sVXHtAU" title="Top 10 Agentic AI Use Cases in Healthcare" note="Watch: Agentic AI use cases in healthcare — real clinical applications (20 min)" />
       <Section title="How to Use This Gallery">
         <p style={p}>For each example: understand the pattern, then ask yourself the activation question. The gallery is a tool for developing project instinct, not a reading exercise.</p>
@@ -503,7 +536,7 @@ function Lesson_3_1() {
       <Section title="Healthcare Examples">
       <SlideImage src="/assets/courses/lesson-3-1/slide-1.png" alt="Slide 1" />
         <ExampleCard number="01" title="Medication Reminder and Missed-Dose Alert">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Monitors a patient's medication schedule, sends reminders via SMS, and alerts a caregiver if a dose is missed for more than two hours.</p></div>
             <div><strong style={{ color: TEXT }}>Who it helps:</strong><p style={{ ...p, marginBottom: 0 }}>Elderly patients managing multiple medications. Their families who cannot be present for every dose.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Missed doses cause thousands of preventable hospital readmissions every year. A consistent reminder system costs pennies per day.</p></div>
@@ -511,7 +544,7 @@ function Lesson_3_1() {
           </div>
         </ExampleCard>
         <ExampleCard number="02" title="Discharge Letter Decoder">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Reads a hospital discharge letter, extracts key action items, and presents them as a plain-language checklist the patient can actually follow.</p></div>
             <div><strong style={{ color: TEXT }}>Who it helps:</strong><p style={{ ...p, marginBottom: 0 }}>Patients and families navigating post-hospital care. Discharge letters are written for clinicians, not patients.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Failure to follow discharge instructions is a leading cause of 30-day readmission. Most patients do not understand their own letters.</p></div>
@@ -519,7 +552,7 @@ function Lesson_3_1() {
           </div>
         </ExampleCard>
         <ExampleCard number="03" title="School Flu Sentinel">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Monitors public flu incidence data and automatically sends a bulletin to school administrators when regional thresholds are crossed.</p></div>
             <div><strong style={{ color: TEXT }}>Who it helps:</strong><p style={{ ...p, marginBottom: 0 }}>School health coordinators, parents, and public health teams who currently check data manually and inconsistently.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Early warning gives schools time to implement preventive measures before an outbreak becomes a closure.</p></div>
@@ -527,7 +560,7 @@ function Lesson_3_1() {
           </div>
         </ExampleCard>
         <ExampleCard number="04" title="Mental Health Check-In Agent">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Sends daily check-in questions about mood and sleep, tracks trends over time, and shares a weekly summary with a counsellor if patterns suggest distress.</p></div>
             <div><strong style={{ color: TEXT }}>Who it helps:</strong><p style={{ ...p, marginBottom: 0 }}>Students and young adults who would not proactively seek support.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Early detection of mental health decline dramatically improves outcomes.</p></div>
@@ -535,6 +568,9 @@ function Lesson_3_1() {
           </div>
         </ExampleCard>
       </Section>
+      <SlideImage src="/assets/courses/lesson-3-1/slide-2.png" alt="Slide 2" />
+      <SlideImage src="/assets/courses/lesson-3-1/slide-3.png" alt="Slide 3" />
+      <SlideImage src="/assets/courses/lesson-3-1/slide-4.png" alt="Slide 4" />
       <YouTubeEmbed id="onA_fi_q9jQ" title="How AI in Healthcare Transforms Patient Care" note="Watch: AI in healthcare — from concept to clinical reality (8 min)" />
       <ReflectionPrompt>Which of these four examples connects most directly to a problem you have personally encountered or witnessed? Describe what you would change or extend to make it more useful for your specific context. Write 3–5 sentences.</ReflectionPrompt>
     </>
@@ -545,10 +581,11 @@ function Lesson_3_1() {
 function Lesson_3_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-3-2/slide-1.png" alt="Weekly Paper Digest" />
       <YouTubeEmbed id="Trw9JyBJiyU" title="AI Agents: Collaboration in Real-Life Applications" note="Watch: AI agents for research and knowledge work (25 min)" />
       <Section title="Research and Science Examples">
         <ExampleCard number="01" title="Weekly Paper Digest">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Searches Semantic Scholar, arXiv, or PubMed for a specified topic, retrieves the five most-cited papers from the past month, and sends a structured weekly digest with title, abstract summary, and relevance score.</p></div>
             <div><strong style={{ color: TEXT }}>Who it helps:</strong><p style={{ ...p, marginBottom: 0 }}>University applicants, science students, teachers preparing lessons, and researchers who cannot read every new paper.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Staying current in a fast-moving field is a full-time job. An agent does the triage so the human can do the thinking.</p></div>
@@ -556,7 +593,7 @@ function Lesson_3_2() {
           </div>
         </ExampleCard>
         <ExampleCard number="02" title="Contradiction Spotter">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Given two datasets or papers on the same phenomenon, reads both, identifies claims that appear to contradict each other, and produces a structured comparison noting sample sizes, methods, and divergence points.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Contradictions in the literature are often where the most interesting science lives — and where the most dangerous misinformation originates.</p></div>
             <div><strong style={{ color: TEXT }}>What it needs:</strong><p style={{ ...p, marginBottom: 0 }}>Document parsing, a reasoning model, a comparison output template.</p></div>
@@ -564,7 +601,7 @@ function Lesson_3_2() {
           </div>
         </ExampleCard>
         <ExampleCard number="03" title="Bibliography Builder">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Accepts a list of URLs, DOIs, or uploaded PDFs. Retrieves metadata, formats citations in the chosen style (APA, MLA, Chicago), checks for duplicates, and exports a ready-to-use bibliography.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Citation formatting is pure mechanical work. An agent handles it in seconds instead of hours, with fewer errors.</p></div>
             <div><strong style={{ color: TEXT }}>What it needs:</strong><p style={{ ...p, marginBottom: 0 }}>A DOI/metadata API (CrossRef), a citation formatting library, a file export tool.</p></div>
@@ -572,7 +609,7 @@ function Lesson_3_2() {
           </div>
         </ExampleCard>
         <ExampleCard number="04" title="Climate Data Explainer">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
+          <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 14 }}>
             <div><strong style={{ color: TEXT }}>What it does:</strong><p style={{ ...p, marginBottom: 0 }}>Connected to open climate datasets (NASA, Copernicus, NOAA), answers plain-language questions like 'How has average July temperature in Rome changed since 1980?', generates a chart, and explains the trend accessibly.</p></div>
             <div><strong style={{ color: TEXT }}>Why it matters:</strong><p style={{ ...p, marginBottom: 0 }}>Climate data is publicly available but practically inaccessible to most people without technical skills. An agent closes that gap.</p></div>
             <div><strong style={{ color: TEXT }}>What it needs:</strong><p style={{ ...p, marginBottom: 0 }}>A public climate API, a data visualisation library, a language model for narration.</p></div>
@@ -580,7 +617,9 @@ function Lesson_3_2() {
           </div>
         </ExampleCard>
       </Section>
-      
+      <SlideImage src="/assets/courses/lesson-3-2/slide-2.png" alt="Contradiction Spotter" />
+      <SlideImage src="/assets/courses/lesson-3-2/slide-3.png" alt="Summary" />
+      <SlideImage src="/assets/courses/lesson-3-2/slide-1.png" alt="Slide 1" />
       <ReflectionPrompt>Pick one of the four examples and describe a specific dataset or API it would need that you have not worked with before. How would you find out whether that data is publicly available and freely accessible? Write 2–3 sentences. The data sourcing question is one you will need to answer for your own project in Week 4.</ReflectionPrompt>
     </>
   );
@@ -591,6 +630,7 @@ function Lesson_4_1() {
   return (
     <>
       <TrackBadge track="A" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-1.png" alt="Lesson Overview" />
       <Section title="Before This Session — Pre-Session Requirements">
         <p style={p}>Complete all three before attending. This session is practical — it assumes you have watched the tutorials.</p>
         {[
@@ -632,8 +672,13 @@ function Lesson_4_1() {
           </div>
         ))}
       </Section>
-      
-      <ReflectionPrompt>After completing your first trigger What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Trigger Steps" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-4.png" alt="Actions" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-5.png" alt="Testing" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-6.png" alt="Canvas" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-7.png" alt="Summary" />
+      <SlideImage src="/assets/courses/lesson-4-1/slide-3.png" alt="Slide 3" />
+      <ReflectionPrompt>After completing your first trigger: What did you build? What was harder than you expected? What would you want your agent to do next if you had one more hour? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -643,51 +688,77 @@ function Lesson_4_2() {
   return (
     <>
       <TrackBadge track="B" />
-      
       <ChannelLink handle="simone_rizzo98" title="Simone Rizzo" note="practical agent building content recommended by bioERGOtech" />
-      <SlideImage src="/assets/courses/lesson-4-2/slide-2.png" alt="Lesson Overview" />
-      <Section title="Before This Session — Pre-Session Requirements">
+      <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Lesson Overview" />
+
+      <Section title="What Is OpenClaw?">
+        <p style={p}>OpenClaw is an open-source personal AI agent platform launched in late 2025. It became one of the fastest-growing open-source projects in GitHub history — over 345,000 stars by early 2026. It solved a real problem: self-hosted AI agents that connect to the apps developers already use, work with every major model provider, and give teams a way to automate workflows without vendor lock-in.</p>
         {[
-          { num: "01", label: "OpenClaw Full Tutorial for Beginners — Step by Step (~30 min)", desc: "Search YouTube: 'OpenClaw full tutorial beginners'. Core tutorial covering installation, onboarding, skills, and Telegram connection. Watch fully." },
-          { num: "02", label: "The Ultimate Beginner's Guide to OpenClaw (written)", desc: "freecodecamp.org — Written companion tutorial, useful to reference during setup. Read before the session." },
-          { num: "03", label: "VSCode for Beginners (~15 min)", desc: "Search YouTube: 'VSCode beginners tutorial 2025'. Essential if new to VSCode — covers workspace, terminal, and extensions." },
+          ["Self-Hosted", "OpenClaw runs on your own machine. Your data stays private, it works offline, and you have full control over what it does."],
+          ["Skills System", "Capabilities are added as skills — small Python modules giving the agent new tools. The ClawHub marketplace has 13,000+ community-built skills."],
+          ["Telegram Interface", "You interact with your agent through a private Telegram bot. No need to build a UI — focus on the agent logic."],
+          ["Multi-Model", "Works with Claude, GPT, Gemini, Llama, and other model providers. You choose the model per skill."],
+        ].map(([title, desc]) => (
+          <div key={title as string} style={{ marginBottom: 14 }}>
+            <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 4 }}>{title}</div>
+            <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
+          </div>
+        ))}
+        <CalloutBox label="Security Note" variant="warning">In March 2026, OpenClaw experienced a significant security incident — nine critical CVEs in four days. A supply chain audit of ClawHub found malicious skills in the marketplace. If you use OpenClaw for a student project, use only skills from trusted sources and review source code before installing.</CalloutBox>
+      </Section>
+
+      <Section title="Hermes — The Evolution of OpenClaw">
+        <p style={p}>In February 2026, Nous Research shipped Hermes Agent — a new open-source agent framework built on a fundamentally different architectural principle. Where OpenClaw is stateless between sessions, Hermes is designed to get better at your specific workflows over time through a closed learning loop that runs after every task.</p>
+        <SlideImage src="/assets/courses/lesson-4-2/slide-2.png" alt="OpenClaw vs Hermes" />
+        <YouTubeEmbed id="1ve4Atbqmoo" title="Hermes Agent — What Makes It Different from OpenClaw" note="Watch: Hermes Agent — the evolution of OpenClaw explained (recommended by bioERGOtech)" />
+        {[
+          ["Self-Improving Memory", "After every task, Hermes runs a reflection loop that extracts what worked and what failed. The next time it encounters a similar task, it applies those learnings. OpenClaw does not do this."],
+          ["40+ Built-in Tools", "Ships with over 40 pre-installed tools — web search, code execution, file management, calendar, email. OpenClaw requires manual skill installation for most of these."],
+          ["VSCode Integration", "Deep integration with VSCode for coding workflows. Hermes can read, write, and debug code in your active project."],
+          ["Privacy Preserved", "Like OpenClaw, Hermes runs locally. Your data never leaves your machine."],
+        ].map(([title, desc]) => (
+          <div key={title as string} style={{ marginBottom: 14 }}>
+            <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 4 }}>{title}</div>
+            <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
+          </div>
+        ))}
+        <KeyInsight>OpenClaw gave people a self-hosted agent that connects to everything. Hermes took that foundation and added a brain that improves over time. For Track B students, Hermes is the recommended choice for your project — but understanding OpenClaw first gives you the conceptual foundation that makes Hermes make sense.</KeyInsight>
+      </Section>
+
+      <Section title="Before This Session — Pre-Session Requirements">
+        <SlideImage src="/assets/courses/lesson-4-2/slide-3.png" alt="Setup Requirements" />
+        {[
+          { num: "01", label: "VSCode for Beginners (~15 min)", desc: "Search YouTube: 'VSCode beginners tutorial 2025'. Essential if new to VSCode." },
+          { num: "02", label: "Hermes Agent Full Setup Tutorial", desc: "Search YouTube: 'Hermes Agent full tutorial 2026'. Watch before the session — covers installation, memory configuration, and first task." },
+          { num: "03", label: "OpenClaw Skills Introduction (~20 min)", desc: "Search YouTube: 'OpenClaw skills tutorial'. Useful background — the ClawHub skill concept transfers directly to Hermes." },
         ].map(({ num, label, desc }) => (
           <div key={num} style={{ display: "flex", gap: 14, padding: "12px 0", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#4A7DFF", color: "#fff", fontWeight: 800, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{num}</div>
             <div><strong style={{ color: TEXT, fontSize: 14 }}>{label}</strong><br /><span style={{ fontSize: 13, color: TEXT_MID }}>{desc}</span></div>
           </div>
         ))}
-      <SlideImage src="/assets/courses/lesson-4-2/slide-2.png" alt="What Is OpenClaw" />
       </Section>
-      <Section title="What Is OpenClaw?">
-      <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Slide 1" />
-        <p style={p}>OpenClaw is an open-source personal AI agent platform. Unlike cloud-only tools, it runs on your own machine — which means your data stays private, it works offline, and you have full control over what it does and what it can access. You interact with it through Telegram, giving you a conversational interface from day one without needing to build any front end.</p>
-        {[
-          ["Personal AI Agent", "A persistent agent that lives on your machine. You talk to it through Telegram. It remembers context, follows instructions, and can be given new capabilities."],
-          ["Skills System", "Capabilities are added as 'skills' — small Python modules that give the agent new tools. The ClawHub marketplace has community-built skills you can install."],
-          ["Privacy by Default", "Because OpenClaw runs locally, your data stays on your machine. For student projects involving sensitive data, this is a meaningful advantage over cloud-only tools."],
-          ["Telegram Interface", "You interact with your agent through a private Telegram bot. No need to build a UI — focus on the agent logic."],
-        ].map(([title, desc]) => (
-          <div key={title as string} style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 4 }}>{title}</div>
-            <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
-          </div>
-        ))}
-      </Section>
+
       <Section title="Session Deliverables">
-      <SlideImage src="/assets/courses/lesson-4-2/slide-2.png" alt="Slide 2" />
-        {["Install OpenClaw and complete the onboarding wizard", "Connect to a private Telegram bot", "Install one skill from ClawHub relevant to your project domain", "Set a domain-specific system prompt for your agent", "Send your agent a domain-relevant test message and screenshot the response"].map((step, i) => (
+        <SlideImage src="/assets/courses/lesson-4-2/slide-4.png" alt="Session Deliverables" />
+        {[
+          "Install Hermes Agent and complete the onboarding",
+          "Connect to a private Telegram bot or use the VSCode interface",
+          "Configure memory settings for your project domain",
+          "Run your first domain-specific task and review what Hermes logged to memory",
+          "Screenshot the memory log and paste in your project log as setup proof",
+        ].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#4A7DFF", color: "#fff", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</div>
             <div style={{ fontSize: 14, color: TEXT_MID, paddingTop: 2 }}>{step}</div>
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After your first Telegram conversation with your agent: What skill did you install and why? What was the agent's response to your domain-specific test message? What would you want it to do differently? Write 3–4 sentences.</ReflectionPrompt>
+
+      <ReflectionPrompt>After your first session with Hermes: What task did you run? What did Hermes log to memory? How is that different from what would have happened with a stateless agent like OpenClaw? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
   );
 }
-
 // ─── Lesson 4.3 ───────────────────────────────────────────────────────────────
 function Lesson_4_3() {
   return (
@@ -705,6 +776,7 @@ function Lesson_4_3() {
           </div>
         ))}
       </Section>
+      <YouTubeEmbed id="YKO-BPogmY0" title="OpenClaw x Agno — Building Agents with Both Frameworks" note="Watch: How Agno connects with OpenClaw — recommended by bioERGOtech" />
       <YouTubeEmbed id="DiahQlVrnaw" title="Build AI Agents within 15 Minutes using Agno" note="Watch: Build your first Agno agent in 15 minutes (15 min)" />
       <Section title="What Is Agno?">
       <SlideImage src="/assets/courses/lesson-4-3/slide-1.png" alt="Slide 1" />
@@ -737,6 +809,9 @@ agent = Agent(
 agent.print_response('What is Agno?', stream=True)`}</CodeBlock>
         <CalloutBox label="Session Deliverable" variant="tip">Run this agent from your terminal. Modify the instructions to match your project domain. Screenshot the output. Paste in your project log as environment setup proof.</CalloutBox>
       </Section>
+      <SlideImage src="/assets/courses/lesson-4-3/slide-3.png" alt="10-Line Agent" />
+      <SlideImage src="/assets/courses/lesson-4-3/slide-4.png" alt="Tools and Memory" />
+      <SlideImage src="/assets/courses/lesson-4-3/slide-5.png" alt="Summary" />
       <YouTubeEmbed id="C9rJiuLmYtY" title="Agno Tutorial: Build a Real AI Agent — RAG + Memory" note="Watch: Build a real AI agent with RAG and Memory in Agno (25 min)" />
       <ReflectionPrompt>After running your first Agno agent: What did it return? What would you need to change about the model, tools, or instructions to make it useful for your specific project? Write 3–4 sentences in your project log.</ReflectionPrompt>
     </>
@@ -771,6 +846,8 @@ function Lesson_4_4() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Six Sections" />
+      <SlideImage src="/assets/courses/lesson-4-4/slide-3.png" alt="Problem Statement" />
       <SlideImage src="/assets/courses/lesson-4-4/slide-4.png" alt="Brief Template" />
       <ReflectionPrompt>Before submitting your brief — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
     </>
@@ -781,9 +858,8 @@ function Lesson_4_4() {
 function Lesson_5_1() {
   return (
     <>
-      
-      <Section title="Why Architecture Comes First">
       <YouTubeEmbed id="KrRD7r7y7NY" title="Andrew Ng: Agentic Design Patterns" note="Watch: Andrew Ng on planning, reflection, and tool use in agent design (20 min)" />
+      <Section title="Why Architecture Comes First">
         {[
           ["Starting without a plan costs more time, not less.", "When you code before designing, you hit decision points you have not thought through. You stop, backtrack, redesign. The architecture sketch is faster than the debugging session it prevents."],
           ["Ethical decisions must be made at design time.", "Where does the human review step sit? What data does the agent actually need? What happens if it fails? These cannot be bolted on after the agent is built."],
@@ -795,9 +871,8 @@ function Lesson_5_1() {
           </div>
         ))}
       </Section>
-      <SlideImage src="/assets/courses/lesson-5-1/slide-2.png" alt="Five Architecture Questions" />
+      <SlideImage src="/assets/courses/lesson-5-1/slide-3.png" alt="Five Architecture Questions" />
       <Section title="The Five Architecture Questions">
-      <SlideImage src="/assets/courses/lesson-5-1/slide-4.png" alt="Slide 4" />
         <p style={p}>Answer these before opening VSCode, Make, or n8n.</p>
         {[
           ["Q1 — What does the agent perceive?", "List every input: file types, API responses, user messages, database records, web content. If it is not in this list, the agent cannot act on it."],
@@ -812,9 +887,8 @@ function Lesson_5_1() {
           </div>
         ))}
       </Section>
-      <SlideImage src="/assets/courses/lesson-5-1/slide-5.png" alt="Architecture Diagram" />
+      <SlideImage src="/assets/courses/lesson-5-1/slide-4.png" alt="Architecture Diagram" />
       <Section title="Common Architecture Mistakes">
-      
         {[
           ["Starting with the tool, not the problem.", "'We will use n8n because we know it.' Wrong starting point. Start with the problem and choose the tool that fits."],
           ["No human checkpoint in high-stakes outputs.", "Any agent that communicates with real users about health, money, or legal matters must have a human review step before output is delivered."],
@@ -826,9 +900,10 @@ function Lesson_5_1() {
             <div style={{ fontSize: 13, color: TEXT_MID }}>{fix}</div>
           </div>
         ))}
-        <SlideImage src="/assets/courses/lesson-5-1/slide-6.png" alt="Slide 6" />
       </Section>
-      <ReflectionPrompt>Answer the five architecture questions for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-5-1/slide-2.png" alt="Common Mistakes" />
+      <ReflectionPrompt>Answer the five architecture questions
+      for your project. Write your answers in your project log. If you cannot answer any of them — that is the gap your mentor needs to know about. Bring unanswered questions to your architecture review.</ReflectionPrompt>
     </>
   );
 }
@@ -842,6 +917,7 @@ function Lesson_5_2() {
       </Section>
       <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Track A Setup" />
       <Section title="Track A — Make / n8n: Project Scenario Setup">
+      <SlideImage src="/assets/courses/lesson-5-2/slide-1.png" alt="Slide 1" />
         <TrackBadge track="A" />
         {["Open your Make scenario or n8n workflow. Start a new scenario/workflow specifically for your project — not the test one from Week 4. Name it clearly.", "Connect your data source. Add your first trigger or data input node. Connect it now and verify it returns data.", "Add a placeholder for each action in your architecture. Do not wire logic yet — just add empty action nodes matching your architecture sketch.", "Test trigger with live data. Run the trigger manually. Confirm real data flows through.", "Screenshot and log. Screenshot the workflow canvas with nodes connected. Paste in your project log as environment setup proof."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -852,6 +928,7 @@ function Lesson_5_2() {
       </Section>
       <SlideImage src="/assets/courses/lesson-5-2/slide-3.png" alt="Track B Setup" />
       <Section title="Track B — OpenClaw / Hermes Agent: Project Agent Configuration">
+      <SlideImage src="/assets/courses/lesson-5-2/slide-2.png" alt="Slide 2" />
         <TrackBadge track="B" />
         {["Create a project folder in VSCode named after your project.", "Set a domain-specific system prompt. Edit your agent's system prompt to match your project domain. Be specific — it affects every response.", "Install one relevant skill from ClawHub. Review the source code before installing. Connect and test via Telegram.", "Create a .env file for API keys. Never commit this file to GitHub — add .env to .gitignore.", "Send a domain-specific test message. Ask your agent something relevant to your project. Screenshot the conversation."].map((step, i) => (
           <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${BORDER}` }}>
@@ -871,7 +948,8 @@ function Lesson_5_2() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>After your environment session What worked on the first try? What took longer than expected? Is there any part of your architecture that you now realise you cannot implement with your chosen track? If yes — flag it to your mentor before Week 6.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-5-2/slide-4.png" alt="Slide 4" />
+      <ReflectionPrompt>After your environment session: What worked on the first try? What took longer than expected? Is there any part of your architecture that you now realise you cannot implement with your chosen track? If yes — flag it to your mentor before Week 6.</ReflectionPrompt>
     </>
   );
 }
@@ -880,6 +958,7 @@ function Lesson_5_2() {
 function Lesson_6_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-6-1/slide-1.png" alt="What Counts as a Prototype" />
       <Section title="What Counts as a Working Prototype?">
         {[
           { label: "ACCEPTED ✓", title: "Hardcoded Responses", desc: "Agent responds correctly to one specific input using a fixed answer. Proves the pipeline works end to end, even without real logic.", color: "#276749", bg: "#F0FFF4" },
@@ -893,8 +972,8 @@ function Lesson_6_1() {
             <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
           </div>
         ))}
-        <SlideImage src="/assets/courses/lesson-6-1/slide-2.png" alt="Five Build Principles" />
       </Section>
+      <SlideImage src="/assets/courses/lesson-6-1/slide-2.png" alt="Five Build Principles" />
       <Section title="Five Build Principles — All Tracks">
       <SlideImage src="/assets/courses/lesson-6-1/slide-1.png" alt="Slide 1" />
         {[
@@ -910,7 +989,8 @@ function Lesson_6_1() {
           </div>
         ))}
       </Section>
-      <ReflectionPrompt>At the end of this build session Write two sentences describing exactly what your prototype does right now — not what it will do, what it does. Then write one sentence describing the next specific thing you need to add. Add both to your project log.</ReflectionPrompt>
+      <SlideImage src="/assets/courses/lesson-6-1/slide-2.png" alt="Slide 2" />
+      <ReflectionPrompt>At the end of this build session: Write two sentences describing exactly what your prototype does right now — not what it will do, what it does. Then write one sentence describing the next specific thing you need to add. Add both to your project log.</ReflectionPrompt>
     </>
   );
 }
@@ -919,6 +999,7 @@ function Lesson_6_1() {
 function Lesson_6_2() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-6-2/slide-1.png" alt="Ethics Checklist" />
       <Section title="Mid-Build Ethics Checklist">
         <p style={p}>Answer each question honestly. If the answer is 'I don't know' — that is a red flag to address before Week 8.</p>
         {[
@@ -935,6 +1016,7 @@ function Lesson_6_2() {
       </Section>
       <SlideImage src="/assets/courses/lesson-6-2/slide-2.png" alt="README Sections" />
       <Section title="Your Project README — Six Required Sections">
+      <SlideImage src="/assets/courses/lesson-6-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Start it now. Add to it every session. Your final README is part of the assessed submission.</p>
         {[
           ["01 — Project name and one-sentence description.", "What does this agent do, for whom, in one sentence. If you cannot write this sentence, the project scope is still unclear."],
@@ -953,6 +1035,8 @@ function Lesson_6_2() {
           </div>
         ))}
       </Section>
+      <CalloutBox label="⚠ Critical: Never Commit API Keys to GitHub" variant="warning">Your <strong>.env</strong> file contains your API keys. If you commit it to a public GitHub repository, those keys are exposed immediately — bots scan GitHub continuously for credentials. Before pushing: (1) confirm <strong>.env</strong> is in your <strong>.gitignore</strong>, (2) run <code style={{ background: "#F7F9FC", padding: "2px 6px", borderRadius: 4, fontFamily: "monospace", fontSize: 12 }}>git status</code> and confirm .env is not listed, (3) never hardcode API keys directly in code files, (4) if you have already committed a key — rotate it immediately in your provider dashboard.</CalloutBox>
+      <SlideImage src="/assets/courses/lesson-6-2/slide-2.png" alt="Slide 2" />
       <ReflectionPrompt>Complete sections 01–04 of your README today. For section 03, write the step-by-step description as if explaining it to someone who has never heard of your project. If you cannot explain it simply, the design is not clear enough yet.</ReflectionPrompt>
     </>
   );
@@ -962,6 +1046,7 @@ function Lesson_6_2() {
 function Lesson_7_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-7-1/slide-1.png" alt="How to Prepare" />
       <Section title="How to Prepare for Your Mentor Session">
         <CalloutBox label="Rule">Come with three specific questions. Not 'is this good?' — that is not a question. 'We cannot get the API to return data when the input contains special characters — here is the error we are seeing' is a question.</CalloutBox>
         {[
@@ -978,6 +1063,7 @@ function Lesson_7_1() {
       </Section>
       <SlideImage src="/assets/courses/lesson-7-1/slide-2.png" alt="Four Lenses" />
       <Section title="What Your Mentor Is Looking For — Four Lenses">
+      <SlideImage src="/assets/courses/lesson-7-1/slide-1.png" alt="Slide 1" />
         {[
           ["Scope realism.", "Is what you are trying to build achievable in two weeks? Mentors often help teams cut features that are not essential to the core demo — and this almost always makes the final product stronger."],
           ["Technical unblocking.", "What is the hardest technical problem you are facing? Mentors can suggest approaches, libraries, or workarounds."],
@@ -990,6 +1076,7 @@ function Lesson_7_1() {
           </div>
         ))}
       </Section>
+      <SlideImage src="/assets/courses/lesson-7-1/slide-2.png" alt="Slide 2" />
       <ReflectionPrompt>After the mentor session: Update your architecture sketch to reflect any scope changes discussed. Document one specific decision you changed as a result of mentor feedback — and why. Set your Week 7–8 milestones in your project log within 24 hours of the call.</ReflectionPrompt>
     </>
   );
@@ -999,9 +1086,9 @@ function Lesson_7_1() {
 function Lesson_7_2() {
   return (
     <>
-      
+      <SlideImage src="/assets/courses/lesson-7-2/slide-1.png" alt="How Agents Fail" />
+      <YouTubeEmbed id="HGS5LfyxLUU" title="The Complete Truth About AI Agents — Failure Modes" note="Watch: What AI agents actually can and cannot do — failure modes explained (15 min)" />
       <Section title="How Agents Fail — And What to Do About It">
-        <YouTubeEmbed id="HGS5LfyxLUU" title="The Complete Truth About AI Agents — Failure Modes" note="Watch: What AI agents actually can and cannot do — failure modes explained (15 min)" />
         {[
           ["Input failure.", "User provides input the agent was not designed for — wrong language, wrong format, unexpected characters.", "Validate inputs early. Return a helpful error message. Never let unexpected input reach core logic without sanitisation."],
           ["Tool failure.", "An API returns an error, rate limit, or timeout.", "Wrap every tool call in error handling. Log the failure. Retry with backoff. If retries fail — escalate to a human or return a clear failure message."],
@@ -1017,6 +1104,7 @@ function Lesson_7_2() {
       </Section>
       <SlideImage src="/assets/courses/lesson-7-2/slide-2.png" alt="Five Edge Case Tests" />
       <Section title="The Five Edge Case Tests">
+      <SlideImage src="/assets/courses/lesson-7-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Run all five. Document results honestly in your project log.</p>
         {[
           ["T1 — Empty input.", "What happens when the user sends nothing, or just whitespace? Does the agent crash, loop, or return a helpful message?"],
@@ -1032,6 +1120,7 @@ function Lesson_7_2() {
         ))}
         <KeyInsight>You do not need to fix all failures — but you must document all of them honestly. The edge case test results become the testing section of your final README.</KeyInsight>
       </Section>
+      <SlideImage src="/assets/courses/lesson-7-2/slide-2.png" alt="Slide 2" />
       <ReflectionPrompt>Run all five edge case tests on your prototype. For each test, document: the input you used, what the agent returned, whether this is acceptable behaviour or a bug to fix, and if it is a bug — what you will do about it before Week 8. Add all results to your project log.</ReflectionPrompt>
     </>
   );
@@ -1041,6 +1130,7 @@ function Lesson_7_2() {
 function Lesson_8_1() {
   return (
     <>
+      <SlideImage src="/assets/courses/lesson-8-1/slide-1.png" alt="Final Scope Decision" />
       <Section title="The Final Scope Decision">
         <p style={p}>You have two weeks of build time left. Make the scope decision now — not in Week 10.</p>
         {[
@@ -1056,6 +1146,7 @@ function Lesson_8_1() {
       </Section>
       <SlideImage src="/assets/courses/lesson-8-1/slide-2.png" alt="Recording Your Demo" />
       <Section title="Recording Your Final Demo">
+      <SlideImage src="/assets/courses/lesson-8-1/slide-1.png" alt="Slide 1" />
         <p style={p}>Three minutes maximum. Show the agent working. Narrate what it is doing and why it matters.</p>
         {[
           ["01 — State the problem in one sentence.", "'This agent solves X for Y.' Say it before showing anything."],
@@ -1073,6 +1164,24 @@ function Lesson_8_1() {
           </div>
         ))}
       </Section>
+      <Section title="Using Claude to Polish Your Demo Presentation">
+        <p style={p}>Recording a 3-minute demo is a technical task. Presenting it well is a communication task. Claude can help with both — from structuring your narrative to cleaning up your README and generating slide content.</p>
+        {[
+          ["Structure your narrative", "Give Claude your agent description and ask it to write a 3-minute presentation script following the five-step demo structure from this lesson."],
+          ["Clean up your README", "Paste your README into Claude and ask it to improve clarity, fix grammar, and flag any missing sections. Your README is a public document."],
+          ["Generate slide content", "Use Claude Design (claude.ai/design) to create visual slides for your demo. Describe what you want each slide to show and Claude generates it."],
+          ["Prepare for questions", "Ask Claude to anticipate the three hardest questions a reviewer might ask, then help you prepare honest, specific answers."],
+        ].map(([task, desc]) => (
+          <div key={task as string} style={{ padding: "12px 0", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 4 }}>{task}</div>
+            <div style={{ fontSize: 14, color: TEXT_MID }}>{desc}</div>
+          </div>
+        ))}
+        <YouTubeEmbed id="uLJp_4XCNIg" title="Claude For PowerPoint Tutorial" note="Watch: How to use Claude to build and design your presentation (10 min)" />
+        <YouTubeEmbed id="SNBmsSxQOvY" title="Create Stunning Slide Decks with Claude Design" note="Watch: Claude Design — create slides, animated visuals, and dashboards (15 min)" />
+        <CalloutBox label="One Important Limit" variant="warning">Claude will produce well-structured content about your project — but it does not know what your agent actually does. Always verify that any Claude-generated content is technically accurate before including it in your submission.</CalloutBox>
+      </Section>
+      <SlideImage src="/assets/courses/lesson-8-1/slide-2.png" alt="Slide 2" />
       <ReflectionPrompt>Write your scope decision in your project log now: What is in the demo? What is cut? Record your demo this week. Watch it back once before submitting — the best demos are the ones where the builder clearly understands the limitations.</ReflectionPrompt>
     </>
   );
@@ -1082,7 +1191,7 @@ function Lesson_8_1() {
 function Lesson_8_2() {
   return (
     <>
-
+      <SlideImage src="/assets/courses/lesson-8-2/slide-1.png" alt="Ethics Rubric" />
       <Section title="The Ethics Rubric — What Reviewers Will Read">
         <p style={p}>This is the same rubric mentors and reviewers use. Read it before writing your final ethics section.</p>
         <ComparisonTable
@@ -1097,6 +1206,7 @@ function Lesson_8_2() {
       </Section>
       <SlideImage src="/assets/courses/lesson-8-2/slide-2.png" alt="Phase 3 Complete" />
       <Section title="Phase 3 Complete — You Built Something Real">
+      <SlideImage src="/assets/courses/lesson-8-2/slide-1.png" alt="Slide 1" />
         <p style={p}>Four weeks ago you had an idea. Now you have a working prototype with documentation and ethics review.</p>
         {[
           "A working prototype — demonstrated in a recorded video",
@@ -1110,6 +1220,7 @@ function Lesson_8_2() {
         ))}
         <KeyInsight>You do not need a perfect agent. You need an honest one — one whose limitations are named, whose design decisions are justified, and whose outputs are demonstrably real.</KeyInsight>
       </Section>
+      <SlideImage src="/assets/courses/lesson-8-2/slide-2.png" alt="Slide 2" />
       <ReflectionPrompt>Write your final ethics review using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Add it to your README before final submission.</ReflectionPrompt>
     </>
   );
@@ -1119,7 +1230,7 @@ function Lesson_8_2() {
 function CourseClosing() {
   return (
     <>
-    <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
+      <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="What You Have Learned" />
       <Section title="What You Have Learned Across Ten Weeks">
         {[
           { phase: "Phase 1 — Foundation (Weeks 1–2)", items: ["What AI agents are and how they differ from chatbots", "The five components of every agent: perception, planning, tool use, memory, feedback loop", "How LLMs work internally — tokenisation, transformers, parameters", "Online vs local model hosting — APIs and Ollama", "AI ethics and accountability — privacy, bias, transparency"] },
@@ -1136,14 +1247,14 @@ function CourseClosing() {
             ))}
           </div>
         ))}
-        <SlideImage src="/assets/courses/course-closing/slide-4.png" alt="Launch Pathways" />
       </Section>
-
+      <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
       <Section title="What to Submit">
-        <p style={p}>To receive your certificate, submit all four deliverables through the course GitHub Respository provided below.</p>
+      <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
+        <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
         {[
-          ["01", "Working Agent Prototype", "A link to your GitHub repository in the bioERGOtech organisation. The prototype must be runnable — include a README with setup instructions."],
-          ["02", "Demo Recording", "A 2–5 minute screen recording showing the agent working with real input. Upload to YouTube (unlisted) or Google Drive and include the link in your README."],
+          ["01", "Working Agent Prototype", "A link to your GitHub repository or a ZIP file containing all project files. The prototype must be runnable — include a README with setup instructions."],
+          ["02", "Demo Recording", "A 2–5 minute screen recording showing the agent working with real input. Upload to YouTube (unlisted) or Google Drive and include the link."],
           ["03", "Project README", "The six-section README completed during Phases 2 and 3. Minimum 400 words. Include your edge case test results."],
           ["04", "Ethics Review", "The four-dimension ethics review. This is assessed separately from the README — submit it as a standalone section or document."],
         ].map(({ "0": num, "1": title, "2": desc }) => (
@@ -1156,80 +1267,10 @@ function CourseClosing() {
           </div>
         ))}
       </Section>
-
-      <Section title="How to Upload Your Project to GitHub">
-        <p style={p}>
-          Before submitting, you must upload your completed project to the bioERGOtech GitHub organisation. This is where all student projects from this cohort will be collected, reviewed, and made available for the Launch Pathway.
-        </p>
-        <CalloutBox label="bioERGOtech Student Repository">
-          All projects are uploaded to:{" "}
-          <a href="https://github.com/orgs/bioERGOtech/repositories" target="_blank" rel="noopener noreferrer" style={{ color: TEAL, fontWeight: 700 }}>
-            github.com/bioERGOtech
-          </a>
-          <br />You will need a free GitHub account. Create one at github.com if you do not have one — it takes two minutes.
-        </CalloutBox>
-
-        <SubHeading>Method 1 — Browser Upload (Track A — No-Code)</SubHeading>
-        <p style={p}>
-          No terminal required. Go to the bioERGOtech repository, click <strong>Add file → Upload files</strong>, drag your project folder in, write a short commit message, and click <strong>Commit changes</strong>.
-        </p>
-        <YouTubeEmbed id="tlu5e0TxSzo" title="How to upload files and folders to GitHub — GitHub for beginners" note="Watch: Two easy methods to upload your project folder to GitHub (8 min) — Track A recommended method" />
-
-        <SubHeading>Method 2 — VS Code Upload (Track B — Low-Code)</SubHeading>
-        <p style={p}>
-          Push your project directly from VS Code without touching the terminal. Open your project folder in VS Code, click the Source Control icon, initialise the repository, stage all files, write your commit message, and publish to GitHub.
-        </p>
-        <YouTubeEmbed id="vzedMW54N9Q" title="How to Upload Project to GitHub Using VS Code — Step by Step 2025" note="Watch: Push your project to GitHub directly from VS Code (10 min) — Track B recommended method" />
-
-        <SubHeading>Method 3 — Git Command Line (Track C — Full-Code)</SubHeading>
-        <p style={p}>
-          Track C students should use Git from the terminal — the same workflow professional developers use every day. Navigate to your project folder, initialise a Git repository, add your files, commit, and push.
-        </p>
-        <YouTubeEmbed id="JL4-eOusYBk" title="How to Upload Your Project to GitHub Using Git — Step by Step 2025" note="Watch: Full Git workflow from the terminal — step by step (12 min) — Track C recommended method" />
-
-        <SubHeading>Step-by-Step — All Tracks</SubHeading>
-        <CalloutBox label="Complete Upload Checklist" variant="tip">
-          {[
-            "Create a free GitHub account at github.com if you do not have one",
-            "Go to github.com/orgs/bioERGOtech/repositories and find the student projects repository",
-            "Fork the repository to your own GitHub account — click Fork in the top right",
-            "Create a folder named after your project inside the fork (e.g. flu-sentinel-agent)",
-            "Upload all your project files into that folder using your chosen method above",
-            "Make sure your README.md and ethics-review.md are in the root of your folder",
-            "Submit a Pull Request to the main bioERGOtech repository with a one-sentence description of your project",
-            "Your mentor will review and merge your submission — that completes the upload requirement",
-          ].map((step, i) => (
-            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
-              <div style={{ width: 22, height: 22, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{i + 1}</div>
-              <span style={{ color: TEXT_MID, lineHeight: 1.55 }}>{step}</span>
-            </div>
-          ))}
-        </CalloutBox>
-
-        <CalloutBox label="What Must Be in Your Upload">
-          Your project folder must contain all four of the following or your submission is incomplete:
-          <div style={{ marginTop: 10 }}>
-            {[
-              ["Working prototype", "Your agent code, workflow export, or n8n/Make scenario file"],
-              ["README.md", "The six-section document completed in Lesson 6.2 — minimum 400 words"],
-              ["Ethics review", "The four-dimension review completed in Lesson 8.2"],
-              ["Demo link", "A link to your 2–5 minute screen recording inside the README"],
-            ].map(([item, desc]) => (
-              <div key={item as string} style={{ display: "flex", gap: 10, padding: "5px 0", fontSize: 14 }}>
-                <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0 }}>✓</span>
-                <span style={{ color: TEXT_MID }}><strong style={{ color: TEXT }}>{item}</strong> — {desc}</span>
-              </div>
-            ))}
-          </div>
-        </CalloutBox>
-
-        <KeyInsight>
-          Uploading to GitHub is not just a submission requirement — it is your first act as an open-source contributor. Your project will be publicly visible to the bioERGOtech network, potential collaborators, and anyone who reviews your profile for university or employment. Write your README as if a stranger will read it, because they will.
-        </KeyInsight>
-      </Section>
-
+      <SlideImage src="/assets/courses/course-closing/slide-3.png" alt="What to Submit" />
+      <SlideImage src="/assets/courses/course-closing/slide-4.png" alt="Submission Requirements" />
       <Section title="Launch Pathways">
-        
+      <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Slide 2" />
         <p style={p}>The best projects are selected for the Launch Pathway during the course closing session. Five options are available.</p>
         {[
           ["Incubator Referral", "Introduction to a bioERGOtech partner incubator for projects with commercial potential."],
@@ -1240,20 +1281,45 @@ function CourseClosing() {
         ].map(([title, desc]) => (
           <div key={title as string} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: `1px solid ${BORDER}` }}>
             <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0 }}>→</span>
-            <div>
-              <strong style={{ color: TEXT, fontSize: 14 }}>{title}</strong>
-              <p style={{ ...p, marginBottom: 0, marginTop: 2 }}>{desc}</p>
-            </div>
+            <div><strong style={{ color: TEXT, fontSize: 14 }}>{title}</strong><p style={{ ...p, marginBottom: 0, marginTop: 2 }}>{desc}</p></div>
           </div>
         ))}
-        <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
       </Section>
-      <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
+      <SlideImage src="/assets/courses/course-closing/slide-5.png" alt="Launch Pathways" />
+      <SlideImage src="/assets/courses/course-closing/slide-6.png" alt="Next Steps" />
+      <YouTubeEmbed id="K8Ros5RhJW4" title="What to Build and How — bioERGOtech Recommendation" note="Watch: Inspiration for what comes next — recommended by bioERGOtech" />
+      <SlideImage src="/assets/courses/course-closing/slide-7.png" alt="Closing" />
+      
+      <Section title="How to Submit Your Project">
+        <p style={p}>To complete the course, upload your project to GitHub and share the link in your final submission. Create your own repository and share the link — this keeps your work in your own GitHub profile, which is more useful for your portfolio than a shared folder.</p>
+        <SubHeading>Method 1 — Browser Upload (Track A)</SubHeading>
+        <YouTubeEmbed id="tlu5e0TxSzo" title="How to upload files and folders to GitHub" note="Watch: Upload your project folder to GitHub — Track A recommended method (8 min)" />
+        <SubHeading>Method 2 — VS Code Upload (Track B)</SubHeading>
+        <YouTubeEmbed id="vzedMW54N9Q" title="How to Upload Project to GitHub Using VS Code 2025" note="Watch: Push your project to GitHub from VS Code — Track B recommended method (10 min)" />
+        <SubHeading>Method 3 — Git Command Line (Track C)</SubHeading>
+        <YouTubeEmbed id="JL4-eOusYBk" title="How to Upload Project to GitHub Using Git 2025" note="Watch: Full Git terminal workflow — Track C recommended method (12 min)" />
+        <CalloutBox label="Submission Steps — All Tracks" variant="tip">
+          {[
+            "Create a free GitHub account at github.com if you do not have one",
+            "Create a new repository — name it after your project (e.g. flu-sentinel-agent)",
+            "Upload your project files using the method for your track above",
+            "Make sure README.md and ethics-review.md are in the root of your repository",
+            "Copy your repository URL (e.g. github.com/yourname/flu-sentinel-agent)",
+            "Paste the link in your final submission form — that is all that is required",
+          ].map((step, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{i + 1}</div>
+              <span style={{ color: TEXT_MID, lineHeight: 1.55 }}>{step}</span>
+            </div>
+          ))}
+        </CalloutBox>
+        <KeyInsight>Uploading to GitHub is not just a submission requirement — it is your first act as an open-source contributor. Your project will be publicly visible to the bioERGOtech network and anyone who reviews your profile for university or employment.</KeyInsight>
+      </Section>
+
+<div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1a3a5c 100%)`, borderRadius: 14, padding: 36, textAlign: "center", color: "#fff", marginBottom: 24 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10 }}>You started with an idea.</h2>
-        <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, maxWidth: 480, margin: "0 auto" }}>
-          You built something real. You uploaded it for the world to see. You thought carefully about what it means to build with AI. That combination — technical capability, domain knowledge, and ethical awareness — is genuinely rare and genuinely valuable.
-        </p>
+        <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, maxWidth: 480, margin: "0 auto" }}>You built something real. You thought carefully about what it means to build with AI. That combination — technical capability, domain knowledge, and ethical awareness — is genuinely rare and genuinely valuable.</p>
       </div>
     </>
   );
@@ -1295,7 +1361,6 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
   const [showModal, setShowModal] = useState(gateOpen && !isAuthenticated);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Check if student already submitted this lesson
   useEffect(() => {
     if (!isAuthenticated) return;
     fetch(`/api/courses/submissions?lesson_slug=${lesson.slug}`)
@@ -1319,10 +1384,20 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #F7F9FC; }
+        .lesson-body { display: flex; gap: 40px; align-items: flex-start; }
+        .lesson-content { flex: 1; min-width: 0; }
+        .lesson-sidebar { display: block; }
+        @media (max-width: 768px) {
+          .lesson-body { flex-direction: column; gap: 0; }
+          .lesson-sidebar { display: none; }
+          .lesson-title h1 { font-size: 22px !important; }
+          .lesson-nav { flex-direction: column !important; }
+          .grid-2col { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* Header bar */}
-      <div style={{ background: NAVY, color: "#fff", padding: "16px 24px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" as const }}>
+      <div style={{ background: NAVY, color: "#fff", padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" as const }}>
         <Link href="/courses/agentic-ai" style={{ color: TEAL, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>← Course Home</Link>
         <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.2)" }} />
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Phase {lesson.phase} · Week {lesson.week}</div>
@@ -1344,8 +1419,8 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
       </div>
 
       {/* Body */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px", display: "flex", gap: 40, alignItems: "flex-start" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="lesson-body" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <div className="lesson-content">
           {ContentComponent ? (
             <ContentComponent />
           ) : (
@@ -1365,9 +1440,8 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
             onSubmitted={() => setIsSubmitted(true)}
           />
 
-          {/* Prev / Submit / Next navigation bar */}
-          <div style={{ display: "flex", alignItems: "stretch", gap: 12, marginTop: 24 }}>
-            {/* Previous */}
+          {/* Prev / Next navigation */}
+          <div className="lesson-nav" style={{ display: "flex", alignItems: "stretch", gap: 12, marginTop: 24 }}>
             {prevLesson ? (
               <Link href={lessonHref(prevLesson)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, textDecoration: "none", boxShadow: SHADOW, flex: 1 }}>
                 <span style={{ fontSize: 11, color: TEXT_LIGHT }}>← Previous</span>
@@ -1375,7 +1449,6 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
               </Link>
             ) : <div style={{ flex: 1 }} />}
 
-            {/* Next — locked until submitted */}
             {nextLesson ? (
               (nextLesson.free || isAuthenticated) && isSubmitted ? (
                 <Link href={lessonHref(nextLesson)} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "14px 20px", background: TEAL, border: `1px solid ${TEAL}`, borderRadius: 10, textDecoration: "none", boxShadow: SHADOW, flex: 1, textAlign: "right" as const }}>
@@ -1396,7 +1469,8 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
           </div>
         </div>
 
-        <CourseSidebar isAuthenticated={isAuthenticated} onLockedClick={() => setShowModal(true)} />
+        <div className="lesson-sidebar"><CourseSidebar isAuthenticated={isAuthenticated} onLockedClick={() => setShowModal(true)} />
+      </div>
       </div>
 
       {showModal && <GateModal onClose={() => setShowModal(false)} />}
