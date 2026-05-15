@@ -94,6 +94,12 @@ export function SiteFooter() {
             <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.9rem", lineHeight: 1.7 }}>
               <p style={{ marginBottom: "8px" }}>
                 <i className="fas fa-envelope" style={{ marginRight: "8px", color: "var(--primary)" }} />
+                <Link href="/contact" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>
+                  Contact Us
+                </Link>
+              </p>
+              <p style={{ marginBottom: "8px" }}>
+                <i className="fas fa-envelope" style={{ marginRight: "8px", color: "var(--primary)" }} />
                 <a href="mailto:info@bioergotech.org" style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none" }}>
                   info@bioergotech.org
                 </a>
