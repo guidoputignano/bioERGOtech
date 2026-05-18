@@ -4087,6 +4087,27 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
     return cnt;
   }, [contacts]);
 
+  // Hot leads = email_status is Hot/Call/MoU/Signed OR response_status is Hot
+  const hotLeadsCount = useMemo(() =>
+    contacts.filter(c =>
+      ["Hot","Call Scheduled","Call Done","MoU Sent","Signed"].includes(c.email_status) ||
+      c.response_status === "Hot"
+    ).length
+  , [contacts]);
+
+  // Replied = email_status is Replied/Hot/Warm OR any response_status is set
+  const repliedCount = useMemo(() =>
+    contacts.filter(c =>
+      ["Replied","Hot","Warm"].includes(c.email_status) ||
+      (c.response_status && c.response_status !== "Cold")
+    ).length
+  , [contacts]);
+
+  // MoU pipeline = MoU Sent or Signed
+  const mouCount = useMemo(() =>
+    contacts.filter(c => ["MoU Sent","Signed"].includes(c.email_status || "")).length
+  , [contacts]);
+
   const handleSync = async () => {
     const url = sheetUrl.trim();
     if (!url) { setSyncMsg("Please enter your Google Sheets CSV URL first"); return; }
@@ -4230,9 +4251,9 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
         {[
           { label: "Total", value: contacts.length, color: TEAL },
           { label: "Sent", value: pipeline["Sent"] || 0, color: "#1A6DD4" },
-          { label: "Replied", value: (pipeline["Replied"] || 0) + (pipeline["Hot"] || 0) + (pipeline["Warm"] || 0), color: "#008F6B" },
-          { label: "Hot leads", value: (pipeline["Hot"] || 0) + (pipeline["Call Scheduled"] || 0) + (pipeline["Call Done"] || 0), color: "#E89C1A" },
-          { label: "MoU pipeline", value: (pipeline["MoU Sent"] || 0) + (pipeline["Signed"] || 0), color: "#6B4BCC" },
+          { label: "Replied", value: repliedCount, color: "#008F6B" },
+          { label: "Hot leads", value: hotLeadsCount, color: "#E89C1A" },
+          { label: "MoU pipeline", value: mouCount, color: "#6B4BCC" },
         ].map((s) => (
           <div key={s.label} style={{ ...cardStyle, padding: 16, borderLeft: `3px solid ${s.color}` }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: s.color, fontFamily: "'Sora', sans-serif" }}>{s.value}</div>
