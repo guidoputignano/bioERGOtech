@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { AttendanceModal } from "@/components/AttendanceModal";
 const MemberMap = dynamic(() => import("@/components/member-map"), { ssr: false });
@@ -115,6 +115,7 @@ const navItems = [
   { id: "knowledge", label: "Knowledge Base", icon: "book" },
   { id: "rewards", label: "Rewards", icon: "star" },
   { id: "profile", label: "My Profile", icon: "user" },
+  { id: "outreach", label: "Outreach", icon: "mail" },
   { id: "admin", label: "Admin Panel", icon: "shield" },
 ];
 
@@ -3918,6 +3919,653 @@ function ProfileView({ currentUserId, userEmail }: { currentUserId: string; user
   );
 }
 
+// Types
+interface OutreachContact {
+  id: string;
+  country: string | null;
+  name: string;
+  type: string | null;
+  city: string | null;
+  field_of_interest: string | null;
+  contact_person: string | null;
+  email: string | null;
+  website: string | null;
+  category: string | null;
+  email_status: string;
+  response_status: string | null;
+  follow_up_date: string | null;
+  call_status: string | null;
+  mou_status: string | null;
+  notes: string | null;
+  assigned_to: string | null;
+  sent_date: string | null;
+}
+
+interface OutreachLog {
+  id: string;
+  contact_name: string;
+  contact_email: string;
+  country: string | null;
+  subject: string | null;
+  status: "sent" | "failed";
+  error_message: string | null;
+  created_at: string;
+}
+
+// Constants
+const OUTREACH_TEMPLATES = {
+  partnership: {
+    subj: "Partnership Opportunity — bioERGOtech Foundation",
+    body: `Dear {{name}},\n\nI am writing on behalf of the bioERGOtech Foundation, a non-profit organisation based in Taranto, Italy, dedicated to ergonomic health, assistive technology, AI-assisted clinical tools, and human-centred healthcare across the Mediterranean region.\n\nWe are building a network of partner institutions and believe {{institution}} would be an outstanding collaborator. Our current initiatives span AI-assisted clinical decision support, patient empowerment programmes, and cross-border research partnerships with a focus on Horizon Europe funding.\n\nWould you be open to an introductory call at your convenience?\n\nWith warm regards,\nGuido Putignano\nDirector, bioERGOtech Foundation\nwww.bioergotech.org`,
+  },
+  research: {
+    subj: "Research Collaboration Invitation — bioERGOtech Foundation",
+    body: `Dear {{name}},\n\nThe bioERGOtech Foundation is seeking research partners for our 2025–2026 programme on AI-assisted clinical tools and human factors in healthcare.\n\nGiven the expertise of {{institution}}, we believe there is strong potential for a joint research initiative — particularly in ergonomics, assistive technology, and health informatics. We would welcome the opportunity to discuss a possible Memorandum of Understanding or joint Horizon Europe application.\n\nBest regards,\nGuido Putignano\nDirector, bioERGOtech Foundation`,
+  },
+  patient: {
+    subj: "Invitation to Join the bioERGOtech Patient Network",
+    body: `Dear {{name}},\n\nThe bioERGOtech Foundation is building a pan-Mediterranean patient association network to amplify patient voices in health technology design and policy advocacy.\n\nWe would like to formally invite {{institution}} to become a founding member. Membership is free — our goal is simply to ensure patients and carers are represented in everything we build.\n\nWe look forward to hearing from you.\n\nWarmly,\nGuido Putignano\nDirector, bioERGOtech Foundation`,
+  },
+  embassy: {
+    subj: "Letter of Introduction — bioERGOtech Foundation",
+    body: `Your Excellency,\n\nI write to introduce the bioERGOtech Foundation, a non-profit registered in Taranto, Italy, operating at the intersection of health technology, ergonomic research, and international collaboration across the Mediterranean basin.\n\nWe are seeking to establish formal dialogue with {{institution}} to explore opportunities for scientific exchange and joint visibility at Mediterranean health forums.\n\nWe would be honoured to meet at a time of your convenience.\n\nRespectfully,\nGuido Putignano\nDirector, bioERGOtech Foundation`,
+  },
+  custom: { subj: "", body: "" },
+};
+
+const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  "Not contacted": { bg: "#F3F5F8", color: "#8896A6" },
+  Sent:            { bg: "#E6F0FD", color: "#1A6DD4" },
+  Opened:          { bg: "#EDE8FB", color: "#6B4BCC" },
+  Replied:         { bg: "#E6F9F4", color: "#008F6B" },
+  Hot:             { bg: "#D0F5EA", color: "#007A5A" },
+  Warm:            { bg: "#E6F9F4", color: "#008F6B" },
+  "Call Scheduled":{ bg: "#FDF3DD", color: "#9A6500" },
+  "Call Done":     { bg: "#FDF3DD", color: "#9A6500" },
+  "MoU Sent":      { bg: "#C5F0E0", color: "#005C3D" },
+  Signed:          { bg: "#008F6B", color: "#FFFFFF" },
+  Cold:            { bg: "#F0F0F0", color: "#8A8A8A" },
+  "Bad email":     { bg: "#FDECEA", color: "#D63563" },
+};
+
+function outreachStatusPill(status: string) {
+  const s = STATUS_COLORS[status] || STATUS_COLORS["Not contacted"];
+  return (
+    <span style={{ padding: "2px 9px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: s.bg, color: s.color, whiteSpace: "nowrap" as const }}>
+      {status}
+    </span>
+  );
+}
+
+function guessCategory(type: string | null): string {
+  if (!type) return "Other";
+  const t = type.toLowerCase();
+  if (t.includes("universit") || t.includes("college") || t.includes("faculty")) return "University";
+  if (t.includes("research") || t.includes("institute") || t.includes("hospital") || t.includes("chu") || t.includes("clcc") || t.includes("inserm")) return "Research Centre";
+  if (t.includes("patient") || (t.includes("assoc") && (t.includes("malade") || t.includes("disease")))) return "Patient Association";
+  if (t.includes("medical") || t.includes("society") || t.includes("order") || t.includes("filière")) return "Medical Association";
+  if (t.includes("embassy") || t.includes("consulate") || t.includes("mission")) return "Embassy";
+  return "Other";
+}
+
+const CAT_COLORS: Record<string, { bg: string; color: string }> = {
+  University:           { bg: "#E8F1FB", color: "#1A5DA8" },
+  "Research Centre":    { bg: "#E6F7EE", color: "#1A7A40" },
+  "Patient Association":{ bg: "#FDF0E6", color: "#B54F0A" },
+  "Medical Association":{ bg: "#F3ECFB", color: "#6B2DA8" },
+  Embassy:              { bg: "#EFF1F5", color: "#3D5580" },
+  Other:                { bg: "#F0F2F5", color: "#6B7A8D" },
+};
+
+function OutreachView({ adminUserId }: { adminUserId: string }) {
+  const [tab, setTab] = useState<"overview" | "contacts" | "compose" | "log">("overview");
+  const [contacts, setContacts] = useState<OutreachContact[]>([]);
+  const [filtered, setFiltered] = useState<OutreachContact[]>([]);
+  const [logs, setLogs] = useState<OutreachLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [filterCountry, setFilterCountry] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterCat, setFilterCat] = useState("");
+  const [drawerContact, setDrawerContact] = useState<OutreachContact | null>(null);
+  const [drawerSaving, setDrawerSaving] = useState(false);
+  const [drawerFields, setDrawerFields] = useState<Partial<OutreachContact>>({});
+  const [template, setTemplate] = useState<keyof typeof OUTREACH_TEMPLATES>("partnership");
+  const [emailSubject, setEmailSubject] = useState(OUTREACH_TEMPLATES.partnership.subj);
+  const [emailBody, setEmailBody] = useState(OUTREACH_TEMPLATES.partnership.body);
+  const [senderName, setSenderName] = useState("Guido Putignano · bioERGOtech Foundation");
+  const [sending, setSending] = useState(false);
+  const [sendProgress, setSendProgress] = useState({ done: 0, total: 0, sent: 0, failed: 0 });
+  const [sendMsg, setSendMsg] = useState("");
+  const [sheetUrl, setSheetUrl] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("be_outreach_sheetUrl") || "" : ""
+  );
+
+  const fetchContacts = useCallback(() => {
+    setLoading(true);
+    fetch("/api/admin/outreach/contacts")
+      .then((r) => r.json())
+      .then((d) => { setContacts(d.contacts || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const fetchLogs = useCallback(() => {
+    fetch("/api/admin/outreach/send")
+      .then((r) => r.json())
+      .then((d) => setLogs(d.logs || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { fetchContacts(); fetchLogs(); }, [fetchContacts, fetchLogs]);
+
+  // Apply filters
+  useEffect(() => {
+    let f = contacts;
+    if (filterCountry) f = f.filter((c) => c.country === filterCountry);
+    if (filterStatus)  f = f.filter((c) => (c.email_status || "Not contacted") === filterStatus);
+    if (filterCat)     f = f.filter((c) => guessCategory(c.type) === filterCat);
+    if (search) {
+      const q = search.toLowerCase();
+      f = f.filter((c) =>
+        [c.name, c.contact_person, c.email, c.country, c.city, c.field_of_interest, c.type]
+          .join(" ").toLowerCase().includes(q)
+      );
+    }
+    setFiltered(f);
+  }, [contacts, filterCountry, filterStatus, filterCat, search]);
+
+  const countries = useMemo(() => [...new Set(contacts.map((c) => c.country).filter(Boolean))].sort() as string[], [contacts]);
+  const statuses  = ["Not contacted","Sent","Opened","Replied","Hot","Warm","Call Scheduled","Call Done","MoU Sent","Signed","Cold"];
+
+  // Pipeline counts
+  const pipeline = useMemo(() => {
+    const cnt: Record<string, number> = {};
+    contacts.forEach((c) => { const s = c.email_status || "Not contacted"; cnt[s] = (cnt[s] || 0) + 1; });
+    return cnt;
+  }, [contacts]);
+
+  const handleSync = async () => {
+    const url = sheetUrl.trim();
+    if (!url) { setSyncMsg("Please enter your Google Sheets CSV URL first"); return; }
+    if (typeof window !== "undefined") localStorage.setItem("be_outreach_sheetUrl", url);
+    setSyncing(true); setSyncMsg("Syncing from Google Sheets…");
+    try {
+      const r = await fetch("/api/admin/outreach/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      setSyncMsg(`✓ ${d.synced} contacts synced successfully`);
+      fetchContacts();
+    } catch (e) {
+      setSyncMsg(`Failed: ${e instanceof Error ? e.message : "Unknown error"}`);
+    } finally { setSyncing(false); }
+  };
+
+  // Drawer
+  const openDrawer = (c: OutreachContact) => {
+    setDrawerContact(c);
+    setDrawerFields({
+      email_status:    c.email_status,
+      response_status: c.response_status || "",
+      follow_up_date:  c.follow_up_date || "",
+      call_status:     c.call_status || "",
+      mou_status:      c.mou_status || "",
+      notes:           c.notes || "",
+      assigned_to:     c.assigned_to || "",
+    });
+  };
+
+  const saveDrawer = async () => {
+    if (!drawerContact) return;
+    setDrawerSaving(true);
+    try {
+      const r = await fetch("/api/admin/outreach/contacts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: drawerContact.id, ...drawerFields }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        setContacts((prev) => prev.map((c) => c.id === d.contact.id ? { ...c, ...d.contact } : c));
+        setDrawerContact(null);
+      }
+    } finally { setDrawerSaving(false); }
+  };
+
+  // Compose
+  const setTpl = (key: keyof typeof OUTREACH_TEMPLATES) => {
+    setTemplate(key);
+    setEmailSubject(OUTREACH_TEMPLATES[key].subj);
+    setEmailBody(OUTREACH_TEMPLATES[key].body);
+  };
+
+  const merge = (text: string, c: OutreachContact) => {
+    const name = c.contact_person ? c.contact_person.split(",")[0].trim().split(" ").slice(-1)[0] : "Sir/Madam";
+    return text
+      .replace(/\{\{name\}\}/g, name)
+      .replace(/\{\{institution\}\}/g, c.name || "your institution")
+      .replace(/\{\{country\}\}/g, c.country || "");
+  };
+
+  const preview = useMemo(() => {
+    const arr = [...selected];
+    if (!arr.length) return "Select contacts and write a template to preview.";
+    const c = contacts.find((x) => x.id === arr[0]);
+    if (!c) return "Contact not found.";
+    return `To: ${c.email || "(no email)"}\nSubject: ${merge(emailSubject, c)}\n\n${merge(emailBody, c)}`;
+  }, [selected, contacts, emailSubject, emailBody]);
+
+  const handleSend = async () => {
+    if (!selected.size) { setSendMsg("Select contacts first."); return; }
+    const toSend = contacts.filter((c) => selected.has(c.id) && c.email?.includes("@"));
+    if (!toSend.length) { setSendMsg("No selected contacts have valid email addresses."); return; }
+    if (!confirm(`Send to ${toSend.length} contacts?`)) return;
+
+    setSending(true);
+    setSendProgress({ done: 0, total: toSend.length, sent: 0, failed: 0 });
+    setSendMsg("");
+
+    // Send in batches of 10 to keep the request size manageable
+    const batchSize = 10;
+    let totalSent = 0; let totalFailed = 0;
+    for (let i = 0; i < toSend.length; i += batchSize) {
+      const batch = toSend.slice(i, i + batchSize);
+      const r = await fetch("/api/admin/outreach/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contacts: batch, subject: emailSubject, body: emailBody, senderName, sentBy: adminUserId }),
+      });
+      const d = await r.json();
+      totalSent   += d.sent   ?? 0;
+      totalFailed += d.failed ?? 0;
+      setSendProgress({ done: i + batch.length, total: toSend.length, sent: totalSent, failed: totalFailed });
+    }
+
+    setSendMsg(`Campaign complete — ${totalSent} sent · ${totalFailed} failed`);
+    setSending(false);
+    fetchContacts();
+    fetchLogs();
+  };
+
+  // ── Shared style helpers
+  const cardStyle: React.CSSProperties = { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: SHADOW };
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "8px 12px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, color: TEXT, fontFamily: "'DM Sans', sans-serif", outline: "none", background: "#FAFBFC" };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 5, display: "block" };
+  const tabBtn = (id: typeof tab): React.CSSProperties => ({
+    padding: "8px 18px", borderRadius: 20, border: "none",
+    background: tab === id ? TEAL : "#F3F5F8",
+    color: tab === id ? "#fff" : TEXT_MID,
+    fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+  });
+
+  // ── OVERVIEW TAB ──────────────────────────────────────────────────────────
+  const renderOverview = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Sync card */}
+      <div style={{ ...cardStyle }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Google Sheets Sync</div>
+        <div style={{ fontSize: 13, color: TEXT_LIGHT, marginBottom: 12 }}>Paste your published CSV URL and sync your contact list into the portal database.</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
+          <input
+            style={{ ...inputStyle, flex: 1, minWidth: 280 }}
+            value={sheetUrl}
+            onChange={(e) => setSheetUrl(e.target.value)}
+            placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+          />
+          <button onClick={handleSync} disabled={syncing} style={{ padding: "8px 20px", borderRadius: 10, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: syncing ? 0.7 : 1, whiteSpace: "nowrap" as const }}>
+            {syncing ? "Syncing…" : "⟳ Sync Now"}
+          </button>
+        </div>
+        {syncMsg && <div style={{ marginTop: 10, fontSize: 13, color: syncMsg.startsWith("✓") ? "#008F6B" : "#D63563" }}>{syncMsg}</div>}
+      </div>
+
+      {/* Stats row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+        {[
+          { label: "Total", value: contacts.length, color: TEAL },
+          { label: "Sent", value: pipeline["Sent"] || 0, color: "#1A6DD4" },
+          { label: "Replied", value: (pipeline["Replied"] || 0) + (pipeline["Hot"] || 0) + (pipeline["Warm"] || 0), color: "#008F6B" },
+          { label: "Hot leads", value: (pipeline["Hot"] || 0) + (pipeline["Call Scheduled"] || 0) + (pipeline["Call Done"] || 0), color: "#E89C1A" },
+          { label: "MoU pipeline", value: (pipeline["MoU Sent"] || 0) + (pipeline["Signed"] || 0), color: "#6B4BCC" },
+        ].map((s) => (
+          <div key={s.label} style={{ ...cardStyle, padding: 16, borderLeft: `3px solid ${s.color}` }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: s.color, fontFamily: "'Sora', sans-serif" }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginTop: 3 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pipeline chart */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ ...cardStyle }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 14, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>Pipeline</div>
+          {Object.entries(pipeline).filter(([, v]) => v > 0).map(([status, count]) => {
+            const sc = STATUS_COLORS[status] || STATUS_COLORS["Not contacted"];
+            const pct = Math.round((count / contacts.length) * 100);
+            return (
+              <div key={status} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: `1px solid ${BORDER}` }}>
+                <div style={{ width: 120, fontSize: 12, color: TEXT_MID, flexShrink: 0 }}>{status}</div>
+                <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#F3F5F8", overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: sc.color, borderRadius: 3 }} />
+                </div>
+                <div style={{ width: 30, fontSize: 11, color: TEXT_LIGHT, textAlign: "right" as const, fontFamily: "'DM Mono', monospace" }}>{count}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ ...cardStyle }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 14, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>Countries</div>
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
+            {countries.map((c) => {
+              const n = contacts.filter((x) => x.country === c).length;
+              return (
+                <span key={c} style={{ background: "#F3F5F8", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "3px 8px", fontSize: 11, color: TEXT_MID }}>
+                  <span style={{ fontWeight: 700, color: TEAL, fontFamily: "'DM Mono', monospace" }}>{n}</span> {c}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── CONTACTS TAB ──────────────────────────────────────────────────────────
+  const renderContacts = () => (
+    <div style={{ display: "flex", gap: 16, height: "calc(100vh - 280px)", minHeight: 400 }}>
+      {/* Sidebar filters */}
+      <div style={{ width: 200, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div>
+          <span style={labelStyle}>Country</span>
+          <select style={inputStyle} value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)}>
+            <option value="">All countries</option>
+            {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <span style={labelStyle}>Status</span>
+          <select style={inputStyle} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            <option value="">All statuses</option>
+            {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <span style={labelStyle}>Category</span>
+          <select style={inputStyle} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+            <option value="">All categories</option>
+            {["University","Research Centre","Patient Association","Medical Association","Embassy","Other"].map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        {selected.size > 0 && (
+          <div style={{ background: "#E6F9F4", border: `1px solid ${TEAL}30`, borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: TEAL }}>{selected.size} selected</div>
+            <button onClick={() => { setTab("compose"); }} style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              ✉ Compose
+            </button>
+            <button onClick={() => setSelected(new Set())} style={{ marginTop: 4, width: "100%", padding: "6px 0", borderRadius: 8, border: `1px solid ${BORDER}`, background: "none", color: TEXT_MID, fontSize: 12, cursor: "pointer" }}>
+              Clear
+            </button>
+          </div>
+        )}
+        <button onClick={() => { filtered.forEach((c) => setSelected((prev) => { const n = new Set(prev); n.add(c.id); return n; })); }} style={{ padding: "7px 0", borderRadius: 8, border: `1px solid ${BORDER}`, background: "none", color: TEXT_MID, fontSize: 12, cursor: "pointer" }}>
+          Select all visible
+        </button>
+      </div>
+
+      {/* Table */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16 }}>
+        <div style={{ padding: "10px 14px", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 10, alignItems: "center" }}>
+          <input
+            style={{ ...inputStyle, flex: 1 }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search institution, contact, email, country…"
+          />
+          <span style={{ fontSize: 12, color: TEXT_LIGHT, whiteSpace: "nowrap" as const, fontFamily: "'DM Mono', monospace" }}>{filtered.length}/{contacts.length}</span>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>Loading contacts…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>
+              {contacts.length === 0 ? "No contacts yet — sync your Google Sheet above." : "No results for current filters."}
+            </div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: "#F8FAFB" }}>
+                  <th style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.05em", borderBottom: `1px solid ${BORDER}`, width: 32 }}>
+                    <input type="checkbox" style={{ accentColor: TEAL }} onChange={(e) => { if (e.target.checked) filtered.forEach((c) => setSelected((p) => { const n = new Set(p); n.add(c.id); return n; })); else setSelected(new Set()); }} />
+                  </th>
+                  {["Country","Institution","Type","Contact","Email","Status"].map((h) => (
+                    <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.05em", borderBottom: `1px solid ${BORDER}` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.slice(0, 400).map((c) => {
+                  const isSel = selected.has(c.id);
+                  const cat = guessCategory(c.type);
+                  const cc = CAT_COLORS[cat] || CAT_COLORS.Other;
+                  return (
+                    <tr key={c.id} onClick={() => openDrawer(c)} style={{ cursor: "pointer", background: isSel ? "#F0FAF7" : "transparent" }}>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30` }} onClick={(e) => e.stopPropagation()}>
+                        <input type="checkbox" checked={isSel} style={{ accentColor: TEAL }} onChange={(e) => setSelected((prev) => { const n = new Set(prev); e.target.checked ? n.add(c.id) : n.delete(c.id); return n; })} />
+                      </td>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30`, color: TEXT_MID, fontSize: 11 }}>{c.country || "—"}</td>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30`, color: TEXT, fontWeight: 500, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{c.name}</td>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30` }}>
+                        <span style={{ padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: cc.bg, color: cc.color }}>
+                          {cat}
+                        </span>
+                      </td>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30`, color: TEXT_LIGHT, fontSize: 11, maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{c.contact_person || "—"}</td>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30`, color: TEXT_LIGHT, fontSize: 11 }}>{c.email ? (c.email.length > 26 ? c.email.slice(0, 24) + "…" : c.email) : "—"}</td>
+                      <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDER}30` }}>{outreachStatusPill(c.email_status || "Not contacted")}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Contact drawer */}
+      {drawerContact && (
+        <>
+          <div onClick={() => setDrawerContact(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 400 }} />
+          <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, width: 400, background: "#fff", borderLeft: `1px solid ${BORDER}`, zIndex: 401, display: "flex", flexDirection: "column", boxShadow: "-4px 0 20px rgba(0,0,0,0.1)" }}>
+            <div style={{ padding: "18px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{drawerContact.name}</div>
+                <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 3 }}>{[drawerContact.country, guessCategory(drawerContact.type)].filter(Boolean).join(" · ")}</div>
+              </div>
+              <button onClick={() => setDrawerContact(null)} style={{ background: "none", border: "none", color: TEXT_LIGHT, cursor: "pointer", fontSize: 18 }}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><span style={labelStyle}>Contact person</span><div style={{ fontSize: 13, color: TEXT }}>{drawerContact.contact_person || "—"}</div></div>
+                <div><span style={labelStyle}>City</span><div style={{ fontSize: 13, color: TEXT }}>{drawerContact.city || "—"}</div></div>
+              </div>
+              <div><span style={labelStyle}>Email</span><div style={{ fontSize: 13, color: TEXT }}>{drawerContact.email || "—"}</div></div>
+              {drawerContact.website && <div><span style={labelStyle}>Website</span><a href={drawerContact.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: TEAL }}>{drawerContact.website}</a></div>}
+              <div><span style={labelStyle}>Field of interest</span><div style={{ fontSize: 12, color: TEXT_MID, lineHeight: 1.5 }}>{drawerContact.field_of_interest || "—"}</div></div>
+
+              <div>
+                <span style={labelStyle}>Status</span>
+                <select style={inputStyle} value={drawerFields.email_status || "Not contacted"} onChange={(e) => setDrawerFields((p) => ({ ...p, email_status: e.target.value }))}>
+                  {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <span style={labelStyle}>Reply classification</span>
+                <select style={inputStyle} value={drawerFields.response_status || ""} onChange={(e) => setDrawerFields((p) => ({ ...p, response_status: e.target.value }))}>
+                  <option value="">—</option>
+                  {["Hot","Warm","Question","Redirect","Cold"].map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <span style={labelStyle}>Follow-up date</span>
+                  <input type="date" style={inputStyle} value={drawerFields.follow_up_date || ""} onChange={(e) => setDrawerFields((p) => ({ ...p, follow_up_date: e.target.value }))} />
+                </div>
+                <div>
+                  <span style={labelStyle}>Call status</span>
+                  <input type="text" style={inputStyle} value={drawerFields.call_status || ""} placeholder="e.g. Scheduled 2025-06-01" onChange={(e) => setDrawerFields((p) => ({ ...p, call_status: e.target.value }))} />
+                </div>
+              </div>
+              <div>
+                <span style={labelStyle}>MoU status</span>
+                <select style={inputStyle} value={drawerFields.mou_status || ""} onChange={(e) => setDrawerFields((p) => ({ ...p, mou_status: e.target.value }))}>
+                  <option value="">—</option>
+                  {["Not started","Draft in progress","Draft sent","Under review","Signed"].map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <span style={labelStyle}>Notes</span>
+                <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 80 }} value={drawerFields.notes || ""} onChange={(e) => setDrawerFields((p) => ({ ...p, notes: e.target.value }))} />
+              </div>
+              <button onClick={saveDrawer} disabled={drawerSaving} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: drawerSaving ? 0.7 : 1 }}>
+                {drawerSaving ? "Saving…" : "Save changes"}
+              </button>
+              <button onClick={() => { setSelected((p) => { const n = new Set(p); n.add(drawerContact.id); return n; }); setDrawerContact(null); setTab("compose"); }} style={{ padding: "9px 0", borderRadius: 10, border: `1px solid ${TEAL}`, background: "none", color: TEAL, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                ✉ Compose email for this contact
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  // ── COMPOSE TAB ───────────────────────────────────────────────────────────
+  const renderCompose = () => (
+    <div style={{ display: "flex", gap: 16, height: "calc(100vh - 280px)", minHeight: 500 }}>
+      <div style={{ width: 240, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ ...cardStyle, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 10 }}>Template</div>
+          {(["partnership","research","patient","embassy","custom"] as const).map((k) => (
+            <button key={k} onClick={() => setTpl(k)} style={{ display: "block", width: "100%", textAlign: "left" as const, padding: "8px 10px", marginBottom: 4, borderRadius: 8, border: `1px solid ${template === k ? TEAL : BORDER}`, background: template === k ? "#E6F9F4" : "none", color: template === k ? TEAL : TEXT_MID, fontSize: 12, fontWeight: template === k ? 700 : 500, cursor: "pointer" }}>
+              {{partnership:"Partnership outreach",research:"Research collaboration",patient:"Patient network",embassy:"Embassy / Diplomatic",custom:"Custom"}[k]}
+            </button>
+          ))}
+        </div>
+        <div style={{ ...cardStyle, padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>Audience</div>
+          <div style={{ fontSize: 13, color: TEXT }}><span style={{ color: TEAL, fontWeight: 700, fontFamily: "'DM Mono', monospace" }}>{selected.size}</span> contacts selected</div>
+          <div style={{ marginTop: 8, maxHeight: 140, overflowY: "auto", fontSize: 12, color: TEXT_LIGHT, lineHeight: 1.8 }}>
+            {[...selected].slice(0, 8).map((id) => { const c = contacts.find((x) => x.id === id); return c ? <div key={id}>{c.name} <span style={{ color: TEXT_LIGHT }}>({c.country})</span></div> : null; })}
+            {selected.size > 8 && <div style={{ color: TEAL }}>+{selected.size - 8} more</div>}
+          </div>
+          <button onClick={() => setTab("contacts")} style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: 8, border: `1px solid ${BORDER}`, background: "none", color: TEXT_MID, fontSize: 12, cursor: "pointer" }}>
+            ← Change selection
+          </button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
+        <div style={{ ...cardStyle }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 14 }}>Email</div>
+          <div style={{ marginBottom: 10 }}>
+            <span style={labelStyle}>Subject line</span>
+            <input style={inputStyle} value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} placeholder="Subject…" />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <span style={labelStyle}>Sender name</span>
+            <input style={inputStyle} value={senderName} onChange={(e) => setSenderName(e.target.value)} />
+          </div>
+          <div>
+            <span style={labelStyle}>Body — use {"{{name}}"}, {"{{institution}}"}, {"{{country}}"} as merge fields</span>
+            <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 180, lineHeight: 1.6 }} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{ ...cardStyle }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 10 }}>Preview — first selected contact</div>
+          <pre style={{ background: "#F8FAFB", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, fontSize: 12, lineHeight: 1.7, color: TEXT_MID, whiteSpace: "pre-wrap", fontFamily: "'DM Mono', monospace", margin: 0 }}>{preview}</pre>
+        </div>
+
+        {sendMsg && <div style={{ padding: "10px 14px", borderRadius: 10, background: sendMsg.includes("complete") ? "#E6F9F4" : "#FDECEA", color: sendMsg.includes("complete") ? "#008F6B" : "#D63563", fontSize: 13 }}>{sendMsg}</div>}
+
+        {sending && (
+          <div>
+            <div style={{ height: 4, background: "#F3F5F8", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ width: `${sendProgress.total > 0 ? (sendProgress.done / sendProgress.total) * 100 : 0}%`, height: "100%", background: TEAL, borderRadius: 2, transition: "width 0.3s" }} />
+            </div>
+            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 6, fontFamily: "'DM Mono', monospace" }}>
+              Sending {sendProgress.done}/{sendProgress.total} · {sendProgress.sent} sent · {sendProgress.failed} failed
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <button onClick={handleSend} disabled={sending || selected.size === 0} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: TEAL, color: "#fff", fontSize: 14, fontWeight: 700, cursor: sending ? "default" : "pointer", opacity: (sending || selected.size === 0) ? 0.5 : 1 }}>
+            {sending ? "Sending…" : `✉ Send to ${selected.size} contacts`}
+          </button>
+          <span style={{ fontSize: 12, color: TEXT_LIGHT }}>Server-side via Resend · rate-limited · logged to database</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── LOG TAB ───────────────────────────────────────────────────────────────
+  const renderLog = () => (
+    <div style={{ ...cardStyle, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>Send log — all time</div>
+        <div style={{ fontSize: 12, color: TEXT_LIGHT, fontFamily: "'DM Mono', monospace" }}>{logs.length} entries</div>
+      </div>
+      <div style={{ maxHeight: "calc(100vh - 350px)", overflowY: "auto" }}>
+        {logs.length === 0 ? (
+          <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>No emails sent yet.</div>
+        ) : logs.map((l) => (
+          <div key={l.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 20px", borderBottom: `1px solid ${BORDER}30`, fontSize: 12 }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: l.status === "sent" ? TEAL : "#D63563", flexShrink: 0 }} />
+            <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, color: TEXT, fontWeight: 500 }}>{l.contact_name}</div>
+            <div style={{ color: TEXT_LIGHT, width: 90, flexShrink: 0 }}>{l.country}</div>
+            <div style={{ color: TEXT_LIGHT, width: 120, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{l.contact_email}</div>
+            <div style={{ color: TEXT_LIGHT, fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>{new Date(l.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} {new Date(l.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</div>
+            {l.error_message && <div style={{ color: "#D63563", fontSize: 11, flexShrink: 0 }}>{l.error_message.slice(0, 30)}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── MAIN RENDER ───────────────────────────────────────────────────────────
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button style={tabBtn("overview")} onClick={() => setTab("overview")}>Overview</button>
+        <button style={tabBtn("contacts")} onClick={() => setTab("contacts")}>
+          Contacts {contacts.length > 0 && <span style={{ marginLeft: 6, background: tab === "contacts" ? "rgba(255,255,255,0.3)" : "#E0E5EC", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{contacts.length}</span>}
+        </button>
+        <button style={tabBtn("compose")} onClick={() => setTab("compose")}>
+          Compose {selected.size > 0 && <span style={{ marginLeft: 6, background: tab === "compose" ? "rgba(255,255,255,0.3)" : "#E0E5EC", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{selected.size} selected</span>}
+        </button>
+        <button style={tabBtn("log")} onClick={() => setTab("log")}>
+          Send Log {logs.length > 0 && <span style={{ marginLeft: 6, background: tab === "log" ? "rgba(255,255,255,0.3)" : "#E0E5EC", borderRadius: 10, padding: "1px 7px", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{logs.length}</span>}
+        </button>
+      </div>
+
+      {tab === "overview"  && renderOverview()}
+      {tab === "contacts"  && renderContacts()}
+      {tab === "compose"   && renderCompose()}
+      {tab === "log"       && renderLog()}
+    </div>
+  );
+}
+// ─── END OutreachView ─────────────────────────────────────────────────────────
+
 function SectionWrapper({ sectionId, sectionName, partnershipLevel, children }: { sectionId: string; sectionName: string; partnershipLevel: PartnershipLevel; children: React.ReactNode }) {
   const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find(s => s.id === sectionId);
   if (lockedEntry) {
@@ -3975,7 +4623,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const canManageAllProjects = partnershipLevel === "admin";
   const accessibleSections = PARTNERSHIP_ACCESS[partnershipLevel] || PARTNERSHIP_ACCESS.viewer;
   const levelInfo = PARTNERSHIP_LABELS[partnershipLevel] || PARTNERSHIP_LABELS.viewer;
-  const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", admin: "Admin Panel" };
+  const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", outreach: "Outreach & MoU Pipeline", admin: "Admin Panel" };
   const visibleNav = navItems.filter(item => { if (item.id === "admin") return isAdmin; return true; });
 
   const handleSaveEventInline = async (event: Partial<Event>) => { const res = await fetch("/api/admin/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); if (res.ok) { fetchEvents(); setEditingEvent(null); } };
@@ -4144,6 +4792,15 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           />
         );
 
+      case "outreach":
+        return isAdmin ? (
+          <OutreachView adminUserId={user.sub} />
+        ) : (
+          <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>
+            Admin access required for Outreach.
+          </div>
+        );
+
       case "admin":
         return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} adminUserId={user.sub} /> : null;
 
@@ -4308,7 +4965,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           { id: "members", icon: "users", label: "Members" },
           { id: "rewards", icon: "star", label: "Rewards" },
           { id: "profile", icon: "user", label: "Profile" },
-          ...(isAdmin ? [{ id: "admin", icon: "shield", label: "Admin" }] : []),
+          ...(isAdmin ? [{ id: "outreach", icon: "mail", label: "Outreach" }, { id: "admin", icon: "shield", label: "Admin" }] : []),
         ].map(item => (
           <button
             key={item.id}
