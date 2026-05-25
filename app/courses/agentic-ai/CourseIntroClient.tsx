@@ -169,94 +169,40 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
         details summary::-webkit-details-marker { display: none; }
       `}</style>
 
-      {/* ── Hero ── */}
-      <div
-        style={{
-          background: "#00C896",
-          padding: "72px 24px 60px",
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-block",
-            background: "rgba(255,255,255,0.2)",
-            border: "1px solid rgba(255,255,255,0.5)",
-            color: TEAL,
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            padding: "5px 14px",
-            borderRadius: 20,
-            marginBottom: 20,
-          }}
-        >
-          🆓 Free Program · Open Enrollment
+            {/* ── Hero ── */}
+      <div style={{ background: '#00C896', padding: '80px 24px 0', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Dot pattern overlay */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.09) 1px, transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
+        {/* Badge */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '6px 16px', borderRadius: 20, marginBottom: 28, position: 'relative', zIndex: 1 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
+          Free Program · Open Enrollment
         </div>
-
-        <h1
-          style={{
-            fontFamily: "'Sora', sans-serif",
-            fontSize: "clamp(28px, 5vw, 48px)",
-            fontWeight: 800,
-            lineHeight: 1.15,
-            marginBottom: 16,
-            maxWidth: 700,
-            margin: "0 auto 16px",
-            color: "#fff",
-          }}
-        >
+        {/* H1 */}
+        <h1 style={{ fontFamily: "'Sora', sans-serif", fontSize: 'clamp(30px, 5vw, 52px)', fontWeight: 800, lineHeight: 1.12, margin: '0 auto 20px', maxWidth: 720, color: '#fff', position: 'relative', zIndex: 1 }}>
           Agentic AI{" "}
-          <span style={{ color: "#fff" }}>High School Innovation Program</span>
+          <span style={{ color: '#0A1628' }}>High School</span>
+          <br />Innovation Program
         </h1>
-
-        <p
-          style={{
-            fontSize: 17,
-            color: "rgba(255,255,255,0.85)",
-            maxWidth: 540,
-            margin: "0 auto 48px",
-            lineHeight: 1.65,
-          }}
-        >
-          Go from understanding what AI agents are to building and demonstrating
-          a working prototype — no prior coding experience required.
+        {/* Subtitle */}
+        <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.82)', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
+          Go from understanding what AI agents are to building and demonstrating a working prototype — no prior coding experience required.
         </p>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 48,
-            flexWrap: "wrap",
-          }}
-        >
+        {/* Stats card */}
+        <div style={{ display: 'inline-flex', background: '#fff', borderRadius: '20px 20px 0 0', padding: '28px 0', boxShadow: '0 -8px 40px rgba(0,0,0,0.12)', position: 'relative', zIndex: 2 }}>
           {[
-            { num: "10", label: "Weeks" },
-            { num: "21+", label: "Lessons" },
-            { num: "3", label: "Technical Tracks" },
-            { num: "100%", label: "Free Forever" },
-          ].map(({ num, label }) => (
-            <div key={label} style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontFamily: "'Sora', sans-serif",
-                  fontSize: 30,
-                  fontWeight: 800,
-                  color: TEAL,
-                }}
-              >
-                {num}
-              </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
-                {label}
-              </div>
+            { num: '10',   label: 'Weeks' },
+            { num: '21+',  label: 'Lessons' },
+            { num: '3',    label: 'Technical Tracks' },
+            { num: '100%', label: 'Free Forever' },
+          ].map(({ num, label }, i) => (
+            <div key={label} style={{ textAlign: 'center', padding: '0 44px', borderLeft: i > 0 ? '1px solid #E2E8F0' : 'none' }}>
+              <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 34, fontWeight: 800, color: '#0A1628', lineHeight: 1 }}>{num}</div>
+              <div style={{ fontSize: 11, color: '#718096', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, marginTop: 6 }}>{label}</div>
             </div>
           ))}
         </div>
       </div>
-
       {/* ── Body ── */}
       <div
         style={{
