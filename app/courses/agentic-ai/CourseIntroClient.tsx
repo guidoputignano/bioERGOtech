@@ -66,7 +66,7 @@ function DefBlock({
       style={{
         borderLeft: `3px solid ${TEAL}`,
         padding: "12px 16px",
-        background: "rgba(255,255,255,0.2)",
+        background: TEAL_LIGHT,
         borderRadius: "0 8px 8px 0",
         marginBottom: 12,
       }}
@@ -82,7 +82,7 @@ function DefBlock({
       >
         {title}
       </div>
-      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.65 }}>
+      <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65 }}>
         {children}
       </div>
     </div>
