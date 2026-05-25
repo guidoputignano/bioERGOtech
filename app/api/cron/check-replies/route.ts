@@ -180,11 +180,15 @@ async function sendWhatsAppAlert(contact: Record<string, unknown>, classificatio
 // ── Main cron handler ──────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  // Security: only allow Vercel cron or requests with correct secret
-  const authHeader = req.headers.get("authorization");
+  // Security: accept secret via Authorization header OR ?secret= query param
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (cronSecret) {
+    const authHeader = req.headers.get("authorization");
+    const querySecret = req.nextUrl.searchParams.get("secret");
+    const valid = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;
+    if (!valid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   // Check all required env vars
@@ -311,10 +315,175 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // ── DAY 7 FOLLOW-UP ────────────────────────────────────────────────────────
+    const followup1Results: Array<Record<string, unknown>> = [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
+
+    const { data: needsFollowup1 } = await db
+      .from("outreach_contacts")
+      .select("id, name, email, country, contact_person, field_of_interest, email_status, followup1_sent_date")
+      .eq("email_status", "Sent")
+      .lte("sent_date", sevenDaysAgoStr)
+      .is("followup1_sent_date", null)
+      .not("email", "is", null)
+      .limit(50);
+
+    if (needsFollowup1?.length) {
+      for (const contact of needsFollowup1) {
+        if (!contact.email?.includes("@")) continue;
+        try {
+          const contactName = (contact.contact_person as string || "")
+            .split(",")[0].trim().split(" ").slice(-1)[0] || "Sir/Madam";
+          const instName = (contact.name as string) || "your institution";
+          const field = (contact.field_of_interest as string) || "your field";
+
+          const subject = `Following up – bioERGOtech Foundation × ${instName}`;
+          const body = `Dear ${contactName},
+
+I wanted to follow up on my previous note, understanding inboxes fill up quickly.
+
+We are currently building our partner network around three active fronts: computational oncology, synthetic biology for cell therapy, and AI-assisted biomanufacturing. I believe ${instName} could contribute meaningfully to at least one of these, and in return gain early access to our research outputs and co-authorship opportunities.
+
+If any of that resonates, I would welcome a 20-minute call. You can book directly at a time that works for you: https://calendar.app.google/ReFcV36FbsdH1DtZ7
+
+Either way, thank you for your time.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+bioergotech.org`;
+
+          const resendKey  = process.env.RESEND_API_KEY;
+          const fromEmail  = process.env.RESEND_FROM_EMAIL || "outreach@bioergotech.org";
+          if (!resendKey) continue;
+
+          const sendRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${resendKey}` },
+            body: JSON.stringify({
+              from: `Guido Putignano · bioERGOtech Foundation <${fromEmail}>`,
+              to: [contact.email as string],
+              subject,
+              text: body,
+            }),
+          });
+
+          if (sendRes.ok) {
+            await db.from("outreach_contacts").update({
+              email_status: "Follow-up 1",
+              followup1_sent_date: new Date().toISOString().split("T")[0],
+            }).eq("id", contact.id);
+
+            await db.from("outreach_sends").insert({
+              contact_id:    contact.id,
+              contact_name:  contact.name,
+              contact_email: contact.email,
+              country:       contact.country,
+              subject,
+              body_preview:  body.slice(0, 200),
+              status:        "sent",
+            });
+
+            followup1Results.push({ contact: contact.name, type: "Day 7 follow-up" });
+          }
+        } catch (e) {
+          console.error(`Follow-up 1 error for ${contact.name}:`, e);
+        }
+        await new Promise(r => setTimeout(r, 600));
+      }
+    }
+
+    // ── DAY 21 FOLLOW-UP ───────────────────────────────────────────────────────
+    const followup2Results: Array<Record<string, unknown>> = [];
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().split("T")[0];
+
+    const { data: needsFollowup2 } = await db
+      .from("outreach_contacts")
+      .select("id, name, email, country, contact_person, field_of_interest, email_status, followup2_sent_date")
+      .eq("email_status", "Follow-up 1")
+      .lte("followup1_sent_date", fourteenDaysAgoStr)
+      .is("followup2_sent_date", null)
+      .not("email", "is", null)
+      .limit(50);
+
+    if (needsFollowup2?.length) {
+      for (const contact of needsFollowup2) {
+        if (!contact.email?.includes("@")) continue;
+        try {
+          const contactName = (contact.contact_person as string || "")
+            .split(",")[0].trim().split(" ").slice(-1)[0] || "Sir/Madam";
+          const instName = (contact.name as string) || "your institution";
+
+          const subject = `Following up – bioERGOtech Foundation × ${instName}`;
+          const body = `Dear ${contactName},
+
+I wanted to follow up on my previous note, understanding inboxes fill up quickly.
+
+We are currently building our partner network around three active fronts: computational oncology, synthetic biology for cell therapy, and AI-assisted biomanufacturing. I believe ${instName} could contribute meaningfully to at least one of these, and in return gain early access to our research outputs and co-authorship opportunities.
+
+If any of that resonates, I would welcome a 20-minute call. You can book directly at a time that works for you: https://calendar.app.google/ReFcV36FbsdH1DtZ7
+
+Either way, thank you for your time.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+bioergotech.org`;
+
+          const resendKey = process.env.RESEND_API_KEY;
+          const fromEmail = process.env.RESEND_FROM_EMAIL || "outreach@bioergotech.org";
+          if (!resendKey) continue;
+
+          const sendRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${resendKey}` },
+            body: JSON.stringify({
+              from: `Guido Putignano · bioERGOtech Foundation <${fromEmail}>`,
+              to: [contact.email as string],
+              subject,
+              text: body,
+            }),
+          });
+
+          if (sendRes.ok) {
+            await db.from("outreach_contacts").update({
+              email_status: "Follow-up 2",
+              followup2_sent_date: new Date().toISOString().split("T")[0],
+            }).eq("id", contact.id);
+
+            await db.from("outreach_sends").insert({
+              contact_id:    contact.id,
+              contact_name:  contact.name,
+              contact_email: contact.email,
+              country:       contact.country,
+              subject,
+              body_preview:  body.slice(0, 200),
+              status:        "sent",
+            });
+
+            followup2Results.push({ contact: contact.name, type: "Day 21 follow-up" });
+          }
+        } catch (e) {
+          console.error(`Follow-up 2 error for ${contact.name}:`, e);
+        }
+        await new Promise(r => setTimeout(r, 600));
+      }
+    }
+
     return NextResponse.json({
       checked: true,
-      newReplies: results.length,
+      newReplies:  results.length,
+      followup1:   followup1Results.length,
+      followup2:   followup2Results.length,
       results,
+      followup1Results,
+      followup2Results,
       timestamp: new Date().toISOString(),
     });
 

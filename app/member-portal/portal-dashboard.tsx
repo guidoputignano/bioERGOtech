@@ -3954,21 +3954,81 @@ interface OutreachLog {
 
 // Constants
 const OUTREACH_TEMPLATES = {
-  partnership: {
-    subj: "Partnership Opportunity — bioERGOtech Foundation",
-    body: `Dear {{name}},\n\nI am writing on behalf of the bioERGOtech Foundation, a non-profit organisation based in Taranto, Italy, dedicated to ergonomic health, assistive technology, AI-assisted clinical tools, and human-centred healthcare across the Mediterranean region.\n\nWe are building a network of partner institutions and believe {{institution}} would be an outstanding collaborator. Our current initiatives span AI-assisted clinical decision support, patient empowerment programmes, and cross-border research partnerships with a focus on Horizon Europe funding.\n\nWould you be open to an introductory call at your convenience?\n\nWith warm regards,\nGuido Putignano\nDirector, bioERGOtech Foundation\nwww.bioergotech.org`,
+  cold: {
+    subj: "Collaboration opportunity – bioERGOtech Foundation × {{institution}}",
+    body: `Dear {{name}},
+
+I am reaching out because {{institution}}\'s work in {{field}} resonates with the direction we are building at the bioERGOtech Foundation.
+
+We are a non-profit based in Italy, working at the intersection of cellular therapeutics, synthetic biology, and AI. Our mission is to build the digital workforce that accelerates the development of engineered living systems, with patient outcomes as the ultimate measure of success. Active projects include oncological algorithms, a gastric cancer organoid platform, and AI-driven biomanufacturing.
+
+We are expanding our partner network and believe {{institution}} could play a meaningful role, whether as a scientific contributor shaping our research directions or as a voice ensuring our work reflects real clinical and patient needs.
+
+Would you be open to a short introductory call to explore whether there is a basis for collaboration?
+
+If you are interested, we can provide a summary document for your review.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+bioergotech.org`,
   },
-  research: {
-    subj: "Research Collaboration Invitation — bioERGOtech Foundation",
-    body: `Dear {{name}},\n\nThe bioERGOtech Foundation is seeking research partners for our 2025–2026 programme on AI-assisted clinical tools and human factors in healthcare.\n\nGiven the expertise of {{institution}}, we believe there is strong potential for a joint research initiative — particularly in ergonomics, assistive technology, and health informatics. We would welcome the opportunity to discuss a possible Memorandum of Understanding or joint Horizon Europe application.\n\nBest regards,\nGuido Putignano\nDirector, bioERGOtech Foundation`,
+  followup: {
+    subj: "Following up – bioERGOtech Foundation × {{institution}}",
+    body: `Dear {{name}},
+
+I wanted to follow up on my previous note, understanding inboxes fill up quickly.
+
+We are currently building our partner network around three active fronts: computational oncology, synthetic biology for cell therapy, and AI-assisted biomanufacturing. I believe {{institution}} could contribute meaningfully to at least one of these, and in return gain early access to our research outputs and co-authorship opportunities.
+
+If any of that resonates, I would welcome a 20-minute call. You can book directly at a time that works for you: https://calendar.app.google/ReFcV36FbsdH1DtZ7
+
+Either way, thank you for your time.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+bioergotech.org`,
   },
-  patient: {
-    subj: "Invitation to Join the bioERGOtech Patient Network",
-    body: `Dear {{name}},\n\nThe bioERGOtech Foundation is building a pan-Mediterranean patient association network to amplify patient voices in health technology design and policy advocacy.\n\nWe would like to formally invite {{institution}} to become a founding member. Membership is free — our goal is simply to ensure patients and carers are represented in everything we build.\n\nWe look forward to hearing from you.\n\nWarmly,\nGuido Putignano\nDirector, bioERGOtech Foundation`,
+  afterreply: {
+    subj: "Re: Collaboration opportunity – bioERGOtech Foundation × {{institution}}",
+    body: `Dear {{name}},
+
+Thank you for your reply, I am glad this resonated.
+
+I would love to schedule a short video call to introduce the Foundation properly and hear more about {{institution}}\'s priorities in {{field}}. The goal would simply be to understand whether there is a natural fit and, if so, sketch out what a first step might look like.
+
+You can book a time directly here: https://calendar.app.google/ReFcV36FbsdH1DtZ7
+
+Looking forward to speaking with you.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+bioergotech.org`,
   },
-  embassy: {
-    subj: "Letter of Introduction — bioERGOtech Foundation",
-    body: `Your Excellency,\n\nI write to introduce the bioERGOtech Foundation, a non-profit registered in Taranto, Italy, operating at the intersection of health technology, ergonomic research, and international collaboration across the Mediterranean basin.\n\nWe are seeking to establish formal dialogue with {{institution}} to explore opportunities for scientific exchange and joint visibility at Mediterranean health forums.\n\nWe would be honoured to meet at a time of your convenience.\n\nRespectfully,\nGuido Putignano\nDirector, bioERGOtech Foundation`,
+  aftercall: {
+    subj: "Next steps – bioERGOtech Foundation × {{institution}}",
+    body: `Dear {{name}},
+
+Thank you for the call. It was genuinely valuable to hear more about {{institution}}\'s work in {{field}} and to share where the bioERGOtech Foundation is heading.
+
+Based on our conversation, I believe there is a real basis for a structured collaboration. As a concrete next step, I would like to propose drafting a Memorandum of Understanding that outlines the areas of shared interest and the form of engagement that makes sense for both sides.
+
+This would not commit either party to specific deliverables at this stage. It simply formalises the intent to collaborate and gives us a shared reference point as we develop joint initiatives.
+
+I will prepare a draft and share it with you for review. If there are specific priorities or constraints on your end that I should factor in, please do let me know.
+
+Looking forward to building this together.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+bioergotech.org`,
   },
   custom: { subj: "", body: "" },
 };
@@ -4032,10 +4092,12 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
   const [filterCat, setFilterCat] = useState("");
   const [drawerContact, setDrawerContact] = useState<OutreachContact | null>(null);
   const [drawerSaving, setDrawerSaving] = useState(false);
+  const [sendingDocuSign, setSendingDocuSign] = useState(false);
+  const [docuSignMsg, setDocuSignMsg] = useState("");
   const [drawerFields, setDrawerFields] = useState<Partial<OutreachContact>>({});
-  const [template, setTemplate] = useState<keyof typeof OUTREACH_TEMPLATES>("partnership");
-  const [emailSubject, setEmailSubject] = useState(OUTREACH_TEMPLATES.partnership.subj);
-  const [emailBody, setEmailBody] = useState(OUTREACH_TEMPLATES.partnership.body);
+  const [template, setTemplate] = useState<keyof typeof OUTREACH_TEMPLATES>("cold");
+  const [emailSubject, setEmailSubject] = useState(OUTREACH_TEMPLATES.cold.subj);
+  const [emailBody, setEmailBody] = useState(OUTREACH_TEMPLATES.cold.body);
   const [senderName, setSenderName] = useState("Guido Putignano · bioERGOtech Foundation");
   const [sending, setSending] = useState(false);
   const [sendProgress, setSendProgress] = useState({ done: 0, total: 0, sent: 0, failed: 0 });
@@ -4046,7 +4108,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
 
   const fetchContacts = useCallback(() => {
     setLoading(true);
-    fetch("/api/admin/outreach/contacts")
+    fetch("/api/admin/outreach/contacts?limit=5000")
       .then((r) => r.json())
       .then((d) => { setContacts(d.contacts || []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -4171,7 +4233,9 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
     return text
       .replace(/\{\{name\}\}/g, name)
       .replace(/\{\{institution\}\}/g, c.name || "your institution")
-      .replace(/\{\{country\}\}/g, c.country || "");
+      .replace(/\{\{country\}\}/g, c.country || "")
+      .replace(/\{\{field\}\}/g, c.field_of_interest || "your field")
+      .replace(/\{\{field of interest\}\}/g, c.field_of_interest || "your field");
   };
 
   const preview = useMemo(() => {
@@ -4457,6 +4521,51 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
               <button onClick={saveDrawer} disabled={drawerSaving} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: drawerSaving ? 0.7 : 1 }}>
                 {drawerSaving ? "Saving…" : "Save changes"}
               </button>
+              <button onClick={async () => {
+                const url = `/api/admin/outreach/mou?contactId=${drawerContact.id}`;
+                const r = await fetch(url);
+                if (!r.ok) { const d = await r.json(); alert("MoU generation failed: " + (d.error || "Unknown error")); return; }
+                const blob = await r.blob();
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = `bioERGOtech_MoU_${drawerContact.name.slice(0,30).replace(/[^a-zA-Z0-9]/g,"_")}.docx`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                setContacts((prev) => prev.map((c) => c.id === drawerContact.id ? { ...c, mou_status: "Draft in progress" } : c));
+              }} style={{ padding: "9px 0", borderRadius: 10, border: `1px solid #6B4BCC`, background: "rgba(107,75,204,0.06)", color: "#6B4BCC", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                📄 Generate MoU (.docx)
+              </button>
+              <button
+                onClick={async () => {
+                  const signerEmail = drawerContact.email || prompt("Signer email address?");
+                  if (!signerEmail) return;
+                  const signerName = drawerContact.contact_person || prompt("Signer full name?");
+                  if (!signerName) return;
+                  if (!confirm(`Send MoU to ${signerName} (${signerEmail}) for e-signature via DocuSign?`)) return;
+                  setSendingDocuSign(true); setDocuSignMsg("");
+                  try {
+                    const r = await fetch("/api/admin/outreach/docusign", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ contactId: drawerContact.id, signerEmail, signerName }),
+                    });
+                    const d = await r.json();
+                    if (!r.ok) { setDocuSignMsg("❌ " + (d.error || "Failed")); return; }
+                    setDocuSignMsg("✅ Sent — " + signerEmail);
+                    setContacts((prev) => prev.map((c) => c.id === drawerContact.id ? { ...c, mou_status: "MoU Sent", email_status: "MoU Sent" } : c));
+                  } catch (e) { setDocuSignMsg("❌ " + (e instanceof Error ? e.message : "Error")); }
+                  finally { setSendingDocuSign(false); }
+                }}
+                disabled={sendingDocuSign}
+                style={{ padding: "9px 0", borderRadius: 10, border: "1px solid #E89C1A", background: "rgba(232,156,26,0.06)", color: "#9A6500", fontSize: 13, fontWeight: 700, cursor: sendingDocuSign ? "not-allowed" : "pointer", opacity: sendingDocuSign ? 0.7 : 1 }}
+              >
+                {sendingDocuSign ? "Sending to DocuSign…" : "✍ Send for e-signature (DocuSign)"}
+              </button>
+              {docuSignMsg && (
+                <div style={{ fontSize: 12, padding: "8px 12px", borderRadius: 8, background: docuSignMsg.startsWith("✅") ? "#E6F9F4" : "#FDECEA", color: docuSignMsg.startsWith("✅") ? "#008F6B" : "#D63563" }}>
+                  {docuSignMsg}
+                </div>
+              )}
               <button onClick={() => { setSelected((p) => { const n = new Set(p); n.add(drawerContact.id); return n; }); setDrawerContact(null); setTab("compose"); }} style={{ padding: "9px 0", borderRadius: 10, border: `1px solid ${TEAL}`, background: "none", color: TEAL, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 ✉ Compose email for this contact
               </button>
@@ -4473,9 +4582,9 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
       <div style={{ width: 240, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ ...cardStyle, padding: 16 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 10 }}>Template</div>
-          {(["partnership","research","patient","embassy","custom"] as const).map((k) => (
+          {(["cold","followup","afterreply","aftercall","custom"] as const).map((k) => (
             <button key={k} onClick={() => setTpl(k)} style={{ display: "block", width: "100%", textAlign: "left" as const, padding: "8px 10px", marginBottom: 4, borderRadius: 8, border: `1px solid ${template === k ? TEAL : BORDER}`, background: template === k ? "#E6F9F4" : "none", color: template === k ? TEAL : TEXT_MID, fontSize: 12, fontWeight: template === k ? 700 : 500, cursor: "pointer" }}>
-              {{partnership:"Partnership outreach",research:"Research collaboration",patient:"Patient network",embassy:"Embassy / Diplomatic",custom:"Custom"}[k]}
+              {{"cold":"Cold outreach","followup":"Follow-up (no reply)","afterreply":"After reply — book call","aftercall":"After call — propose MoU","custom":"Custom"}[k]}
             </button>
           ))}
         </div>
@@ -4504,7 +4613,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
             <input style={inputStyle} value={senderName} onChange={(e) => setSenderName(e.target.value)} />
           </div>
           <div>
-            <span style={labelStyle}>Body — use {"{{name}}"}, {"{{institution}}"}, {"{{country}}"} as merge fields</span>
+            <span style={labelStyle}>Body — merge fields: {"{{name}}"}, {"{{institution}}"}, {"{{field}}"}, {"{{country}}"}</span>
             <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 180, lineHeight: 1.6 }} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} />
           </div>
         </div>

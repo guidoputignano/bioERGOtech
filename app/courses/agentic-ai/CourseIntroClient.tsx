@@ -66,7 +66,7 @@ function DefBlock({
       style={{
         borderLeft: `3px solid ${TEAL}`,
         padding: "12px 16px",
-        background: TEAL_LIGHT,
+        background: "rgba(255,255,255,0.2)",
         borderRadius: "0 8px 8px 0",
         marginBottom: 12,
       }}
@@ -82,7 +82,7 @@ function DefBlock({
       >
         {title}
       </div>
-      <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65 }}>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.65 }}>
         {children}
       </div>
     </div>
@@ -172,7 +172,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
       {/* ── Hero ── */}
       <div
         style={{
-          background: "#FFFFFF", borderBottom: `3px solid ${TEAL}`, borderLeft: `6px solid ${TEAL}`,
+          background: "#00C896",
           padding: "72px 24px 60px",
           textAlign: "center",
         }}
@@ -180,8 +180,8 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
         <div
           style={{
             display: "inline-block",
-            background: TEAL_LIGHT,
-            border: "1px solid " + TEAL,
+            background: "rgba(255,255,255,0.2)",
+            border: "1px solid rgba(255,255,255,0.5)",
             color: TEAL,
             fontSize: 11,
             fontWeight: 700,
@@ -208,13 +208,13 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           }}
         >
           Agentic AI{" "}
-          <span style={{ color: TEAL }}>High School Innovation Program</span>
+          <span style={{ color: "#fff" }}>High School Innovation Program</span>
         </h1>
 
         <p
           style={{
             fontSize: 17,
-            color: TEXT_MID,
+            color: "rgba(255,255,255,0.85)",
             maxWidth: 540,
             margin: "0 auto 48px",
             lineHeight: 1.65,
@@ -249,7 +249,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
               >
                 {num}
               </div>
-              <div style={{ fontSize: 13, color: TEXT_LIGHT, marginTop: 2 }}>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
                 {label}
               </div>
             </div>
@@ -274,13 +274,13 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           {/* Introduction */}
           <Block>
             <BlockTitle>Introduction</BlockTitle>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 14 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 14 }}>
               This course will teach you about agentic AI — autonomous systems that perceive
               information, plan actions, use tools, remember context, and verify their own
               results — using real tools and frameworks including Make, n8n, OpenClaw, Hermes
               Agent, and Agno.
             </p>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 14 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 14 }}>
               The program is built around a single conviction: the most powerful thing a high
               school student can do in the current moment is learn to build AI agents that
               solve genuine problems in domains they care about. You do not need a university
@@ -288,7 +288,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
               worth solving, and the ability to think carefully about what you are building
               and why.
             </p>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>
               This course is completely free, without ads, and open to any student accepted
               into the program.
             </p>
@@ -297,7 +297,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           {/* Understanding Agentic AI */}
           <Block>
             <BlockTitle>Understanding Agentic AI</BlockTitle>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 16 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 16 }}>
               While this course introduces the foundations of artificial intelligence and large
               language models, its core focus is agentic AI — a specific and rapidly growing
               area that has transformed what is possible with software.
@@ -334,7 +334,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           {/* Course Phases */}
           <Block>
             <BlockTitle>What to Expect</BlockTitle>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 20 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 20 }}>
               The program is divided into four phases across ten weeks:
             </p>
             <div style={{ overflowX: "auto" }}>
@@ -408,7 +408,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
                         style={{
                           padding: "12px 14px",
                           borderBottom: `1px solid ${BORDER}`,
-                          color: TEXT_MID,
+                          color: "rgba(255,255,255,0.85)",
                           background: i % 2 === 1 ? "#FAFBFC" : "transparent",
                           verticalAlign: "top",
                           whiteSpace: "nowrap",
@@ -433,7 +433,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
                         style={{
                           padding: "12px 14px",
                           borderBottom: `1px solid ${BORDER}`,
-                          color: TEXT_MID,
+                          color: "rgba(255,255,255,0.85)",
                           background: i % 2 === 1 ? "#FAFBFC" : "transparent",
                           verticalAlign: "top",
                         }}
@@ -450,7 +450,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           {/* Technical Tracks */}
           <Block>
             <BlockTitle>Three Technical Tracks</BlockTitle>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 20 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 20 }}>
               All tracks cover the same conceptual content in Phases 1 and 2. Track-specific
               content begins in Week 4. Choose the track that matches your current skill level.
             </p>
@@ -501,7 +501,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           {/* Who Is This For */}
           <Block>
             <BlockTitle>Who Is This Course For?</BlockTitle>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 20 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 20 }}>
               This course is built around the belief that domain knowledge — understanding
               healthcare, research, education, or any other real-world field — is at least as
               valuable as technical skill when it comes to building agents that matter.
@@ -522,7 +522,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
                   "Have a problem that might benefit from automation or intelligent assistance",
                   "Can commit 4–6 hours per week across 10 weeks",
                 ].map((item) => (
-                  <div key={item} style={{ display: "flex", gap: 8, fontSize: 14, color: TEXT_MID, padding: "5px 0" }}>
+                  <div key={item} style={{ display: "flex", gap: 8, fontSize: 14, color: "rgba(255,255,255,0.85)", padding: "5px 0" }}>
                     <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0 }}>✓</span>
                     {item}
                   </div>
@@ -537,7 +537,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
                   "Want AI theory without building anything — this is project-first",
                   "Are not yet comfortable using a computer for sustained work",
                 ].map((item) => (
-                  <div key={item} style={{ display: "flex", gap: 8, fontSize: 14, color: TEXT_MID, padding: "5px 0" }}>
+                  <div key={item} style={{ display: "flex", gap: 8, fontSize: 14, color: "rgba(255,255,255,0.85)", padding: "5px 0" }}>
                     <span style={{ color: "#E67E22", fontWeight: 700, flexShrink: 0 }}>⚠</span>
                     {item}
                   </div>
@@ -549,7 +549,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
           {/* What You Will Build */}
           <Block>
             <BlockTitle>What You Will Build</BlockTitle>
-            <p style={{ fontSize: 15, color: TEXT_MID, lineHeight: 1.7, marginBottom: 20 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, marginBottom: 20 }}>
               Every student produces four deliverables that constitute a genuine portfolio item.
             </p>
             {[
@@ -677,7 +677,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
                   style={{
                     padding: "14px 18px",
                     fontSize: 14,
-                    color: TEXT_MID,
+                    color: "rgba(255,255,255,0.85)",
                     borderTop: `1px solid ${BORDER}`,
                     lineHeight: 1.65,
                   }}

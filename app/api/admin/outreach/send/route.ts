@@ -31,6 +31,23 @@ export async function POST(request: Request) {
     const resend = new Resend(apiKey);
     const db = getDB();
 
+    // Fetch the bioERGOtech intro PDF for attachment
+    let pdfAttachment: { filename: string; content: string } | null = null;
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.bioergotech.org";
+      const pdfRes = await fetch(`${siteUrl}/assets/docs/bioergotech-intro.pdf`);
+      if (pdfRes.ok) {
+        const pdfBuffer = await pdfRes.arrayBuffer();
+        const pdfBase64 = Buffer.from(pdfBuffer).toString("base64");
+        pdfAttachment = {
+          filename: "bioERGOtech-Foundation-Introduction.pdf",
+          content: pdfBase64,
+        };
+      }
+    } catch (e) {
+      console.warn("Could not load PDF attachment:", e);
+    }
+
     const results: Array<{ id: string; name: string; email: string; status: "sent" | "failed"; error?: string }> = [];
 
     for (const contact of contacts) {
@@ -53,12 +70,25 @@ export async function POST(request: Request) {
         .replace(/\{\{country\}\}/g, contact.country || "");
 
       try {
-        const { error: sendError } = await resend.emails.send({
+        const emailPayload: {
+          from: string;
+          to: string[];
+          subject: string;
+          text: string;
+          attachments?: Array<{ filename: string; content: string }>;
+        } = {
           from: `${senderName || "bioERGOtech Foundation"} <${fromEmail}>`,
           to: [contact.email],
           subject: finalSubject,
           text: finalBody,
-        });
+        };
+
+        // Attach the bioERGOtech intro PDF if loaded successfully
+        if (pdfAttachment) {
+          emailPayload.attachments = [pdfAttachment];
+        }
+
+        const { error: sendError } = await resend.emails.send(emailPayload);
 
         if (sendError) throw new Error(sendError.message);
 

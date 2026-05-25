@@ -9,34 +9,47 @@ const getClient = () =>
   );
 
 // GET /api/admin/outreach/contacts
-// Query params: ?country=X&status=Y&category=Z&search=Q&limit=500
+// Fetches ALL contacts using range-based pagination to bypass Supabase's 1000-row default cap
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const country  = searchParams.get("country");
   const status   = searchParams.get("status");
   const category = searchParams.get("category");
   const search   = searchParams.get("search");
-  const limit    = parseInt(searchParams.get("limit") || "1000");
 
-  let query = getClient()
-    .from("outreach_contacts")
-    .select("*")
-    .order("country", { ascending: true })
-    .order("name", { ascending: true })
-    .limit(limit);
+  const db = getClient();
+  let allContacts: Record<string, unknown>[] = [];
+  const PAGE_SIZE = 1000;
+  let from = 0;
 
-  if (country)  query = query.eq("country", country);
-  if (status)   query = query.eq("email_status", status);
-  if (category) query = query.eq("category", category);
-  if (search) {
-    query = query.or(
-      `name.ilike.%${search}%,contact_person.ilike.%${search}%,email.ilike.%${search}%,country.ilike.%${search}%,field_of_interest.ilike.%${search}%`
-    );
+  // Paginate through all rows — Supabase caps at 1000 per request by default
+  while (true) {
+    let query = db
+      .from("outreach_contacts")
+      .select("*")
+      .order("country", { ascending: true })
+      .order("name",    { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (country)  query = query.eq("country", country);
+    if (status)   query = query.eq("email_status", status);
+    if (category) query = query.eq("category", category);
+    if (search) {
+      query = query.or(
+        `name.ilike.%${search}%,contact_person.ilike.%${search}%,email.ilike.%${search}%,country.ilike.%${search}%,field_of_interest.ilike.%${search}%`
+      );
+    }
+
+    const { data, error } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data || data.length === 0) break;
+
+    allContacts = [...allContacts, ...data];
+    if (data.length < PAGE_SIZE) break;   // last page reached
+    from += PAGE_SIZE;
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ contacts: data, total: data?.length ?? 0 });
+  return NextResponse.json({ contacts: allContacts, total: allContacts.length });
 }
 
 // POST /api/admin/outreach/contacts
