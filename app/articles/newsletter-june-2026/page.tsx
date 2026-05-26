@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Newsletter — Founding Edition, June 2026 | bioERGOtech",
-  description:
-    "bioERGOtech is live. Read our founding newsletter — covering our launch, research pillars, first members, and upcoming events.",
+  description: "bioERGOtech is live. Read our founding newsletter covering our launch, research pillars, first members, and upcoming events.",
 };
 
 export default function NewsletterJune2026() {
@@ -12,8 +11,10 @@ export default function NewsletterJune2026() {
       <div style={{ maxWidth: 640, margin: "0 auto" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
-          *{box-sizing:border-box;}
+          .nl *{box-sizing:border-box;}
           .nl{max-width:640px;margin:0 auto;font-family:'DM Sans',sans-serif;color:#1A2332;}
+
+          /* HERO */
           .hero{background:#071410;padding:0;overflow:hidden;border-radius:10px 10px 0 0;position:relative;}
           .hero-topbar{display:flex;justify-content:space-between;align-items:center;padding:9px 28px;border-bottom:1px solid #1a3028;}
           .hero-topbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#3a6050;}
@@ -26,35 +27,45 @@ export default function NewsletterJune2026() {
           .hero-rule{height:1px;background:linear-gradient(90deg,#1D9E75 0%,transparent 100%);margin-bottom:20px;opacity:.35;}
           .hero-headline{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;line-height:1.2;margin-bottom:10px;}
           .hero-sub{font-size:13px;color:#7aab93;line-height:1.75;max-width:520px;}
-          .body{background:#fff;padding:0 28px;}
-          .section{padding:26px 0;border-bottom:.5px solid #E2E8F0;}
-          .section:last-child{border-bottom:none;}
+
+          /* BODY — hardcoded, no CSS vars */
+          .nl-body{background:#ffffff;padding:0 28px;}
+          .nl-section{padding:26px 0;border-bottom:.5px solid #E2E8F0;}
+          .nl-section:last-child{border-bottom:none;}
           .section-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#1D9E75;font-weight:600;margin-bottom:8px;}
           .teal-rule{width:32px;height:2px;background:#1D9E75;margin-bottom:10px;border-radius:1px;}
           .section-title{font-family:'DM Serif Display',serif;font-size:21px;color:#1A2332;margin-bottom:12px;line-height:1.25;}
-          .body-text{font-size:13.5px;color:#4A5568;line-height:1.8;}
+          .body-text{font-size:13.5px;color:#4A5568;line-height:1.8;margin:0;}
           .body-text+.body-text{margin-top:10px;}
+
+          /* HUBS */
           .hubs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
           .hub{background:#E1F5EE;border:.5px solid #9FE1CB;border-radius:6px;padding:10px 12px;display:flex;align-items:flex-start;gap:8px;}
           .hub-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;flex-shrink:0;margin-top:4px;}
           .hub-city{font-size:11.5px;font-weight:600;color:#085041;}
           .hub-role{font-size:10px;color:#0F6E56;margin-top:1px;}
+
+          /* PILLARS */
           .pillars-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
           .pillar-card{background:#F8FAFB;border:.5px solid #E2E8F0;border-radius:8px;overflow:hidden;}
           .pillar-top{background:#1D9E75;padding:12px 14px 10px;}
           .pillar-num{font-size:9px;font-weight:600;letter-spacing:.12em;color:#9FE1CB;margin-bottom:4px;}
           .pillar-name{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;line-height:1.25;}
           .pillar-body{padding:12px 14px;}
-          .pillar-desc{font-size:11.5px;color:#4A5568;line-height:1.7;}
+          .pillar-desc{font-size:11.5px;color:#4A5568;line-height:1.7;margin:0;}
           .pillars-strip{background:#071410;border-radius:6px;padding:11px 16px;margin-top:10px;font-size:11px;color:#5DCAA5;text-align:center;letter-spacing:.02em;font-style:italic;}
+
+          /* EVENT */
           .event-card{background:#E1F5EE;border:.5px solid #9FE1CB;border-radius:8px;padding:18px 20px;margin-top:16px;display:flex;gap:18px;position:relative;overflow:hidden;}
           .event-accent{position:absolute;left:0;top:0;bottom:0;width:4px;background:#1D9E75;}
           .event-icon{flex-shrink:0;width:44px;height:44px;background:#1D9E75;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;}
           .event-title{font-family:'DM Serif Display',serif;font-size:15px;color:#071410;margin-bottom:4px;}
           .event-meta{font-size:10.5px;color:#0F6E56;font-weight:600;letter-spacing:.04em;margin-bottom:8px;}
-          .event-desc{font-size:12px;color:#085041;line-height:1.7;}
+          .event-desc{font-size:12px;color:#085041;line-height:1.7;margin:0;}
           .event-cta{display:inline-block;margin-top:10px;font-size:10.5px;font-weight:600;color:#1D9E75;letter-spacing:.04em;}
           .event-eye{background:#fff;border:.5px solid #9FE1CB;border-radius:20px;padding:4px 12px;display:inline-block;font-size:10px;color:#0F6E56;font-weight:600;letter-spacing:.06em;margin-bottom:10px;}
+
+          /* MEMBERS */
           .members-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
           .member-card{background:#F8FAFB;border:.5px solid #E2E8F0;border-radius:8px;overflow:hidden;}
           .member-head{background:#071410;padding:14px;}
@@ -63,11 +74,13 @@ export default function NewsletterJune2026() {
           .member-loc{font-size:10px;color:#3a6050;}
           .member-badge{background:#0F6E56;color:#9FE1CB;font-size:9px;font-weight:600;letter-spacing:.06em;padding:3px 8px;border-radius:4px;display:inline-block;margin-top:6px;}
           .member-body-wrap{padding:12px 14px;}
-          .member-desc{font-size:11.5px;color:#4A5568;line-height:1.7;}
+          .member-desc{font-size:11.5px;color:#4A5568;line-height:1.7;margin:0;}
           .member-fit{margin-top:10px;padding-top:8px;border-top:.5px solid #E2E8F0;}
           .member-fit-label{font-size:9px;font-weight:600;letter-spacing:.1em;color:#1D9E75;text-transform:uppercase;margin-bottom:3px;}
-          .member-fit-text{font-size:10.5px;color:#4A5568;font-style:italic;line-height:1.6;}
-          .footer{background:#071410;padding:20px 28px;border-radius:0 0 10px 10px;}
+          .member-fit-text{font-size:10.5px;color:#4A5568;font-style:italic;line-height:1.6;margin:0;}
+
+          /* FOOTER */
+          .nl-footer{background:#071410;padding:20px 28px;border-radius:0 0 10px 10px;}
           .footer-logo{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:5px;}
           .footer-logo .tl{color:#1D9E75;}
           .footer-logo .wt{color:#fff;}
@@ -75,6 +88,7 @@ export default function NewsletterJune2026() {
           .footer-links a{font-size:10px;color:#5DCAA5;text-decoration:none;letter-spacing:.04em;}
           .footer-rule{height:.5px;background:#1a3028;margin-bottom:10px;}
           .footer-meta{font-size:10px;color:#3a6050;line-height:1.7;}
+
           @media(max-width:500px){
             .hubs{grid-template-columns:1fr;}
             .pillars-grid{grid-template-columns:1fr;}
@@ -105,14 +119,14 @@ export default function NewsletterJune2026() {
           </div>
 
           {/* BODY */}
-          <div className="body">
+          <div className="nl-body">
 
-            <div className="section">
+            <div className="nl-section">
               <div className="section-label">The beginning</div>
               <div className="teal-rule" />
               <div className="section-title">bioERGOtech is officially live.</div>
               <p className="body-text">Founded on <strong>12 April 2025</strong> in Taranto, Puglia, Fondazione bioERGOtech ETS is a participation foundation under the Italian Third Sector Code (D.Lgs. 117/2017). Its mission is clear: accelerate healthcare innovation through digital scientists, and transform concrete clinical needs into sustainable commercial solutions.</p>
-              <p className="body-text">bioERGOtech operates as a collaborative ecosystem bringing together specialised companies, research institutions, healthcare professionals, and entrepreneurs. Three strategic hubs anchor the network.</p>
+              <p className="body-text" style={{ marginTop: 10 }}>bioERGOtech operates as a collaborative ecosystem bringing together specialised companies, research institutions, healthcare professionals, and entrepreneurs. Three strategic hubs anchor the network.</p>
               <div className="hubs">
                 <div className="hub"><div className="hub-dot" /><div><div className="hub-city">Taranto, Italy</div><div className="hub-role">Experimental Hub</div></div></div>
                 <div className="hub"><div className="hub-dot" /><div><div className="hub-city">Zurich, Switzerland</div><div className="hub-role">Talent &amp; Innovation Hub</div></div></div>
@@ -120,10 +134,10 @@ export default function NewsletterJune2026() {
               </div>
             </div>
 
-            <div className="section">
-              <div className="section-label">Research framework</div>
+            <div className="nl-section">
+              <div className="section-label">Scientific pillars</div>
               <div className="teal-rule" />
-              <div className="section-title">Four pillars. One integrated system.</div>
+              <div className="section-title">The four pillars of our science.</div>
               <p className="body-text">bioERGOtech organises its research across four integrated pillars. Each is powerful on its own. Together, they form a single system for creating predictable, manufacturable, controllable living medicines.</p>
               <div className="pillars-grid">
                 <div className="pillar-card">
@@ -146,7 +160,7 @@ export default function NewsletterJune2026() {
               <div className="pillars-strip">Digital twins predict the design &nbsp;·&nbsp; Synthetic biology engineers it &nbsp;·&nbsp; Automation produces it &nbsp;·&nbsp; Multi-omics validates it</div>
             </div>
 
-            <div className="section">
+            <div className="nl-section">
               <div className="section-label">Members only</div>
               <div className="teal-rule" />
               <div className="section-title">Something is coming for our members.</div>
@@ -164,7 +178,7 @@ export default function NewsletterJune2026() {
               </div>
             </div>
 
-            <div className="section">
+            <div className="nl-section">
               <div className="section-label">Member spotlight</div>
               <div className="teal-rule" />
               <div className="section-title">Welcome to the first two members.</div>
@@ -181,7 +195,7 @@ export default function NewsletterJune2026() {
                     <p className="member-desc">Founded in 2008 in Bari, Predict Healthcare commercialises advanced diagnostic imaging systems including ultrasound and radiology platforms. As an authorised GE Healthcare distributor for Puglia and a provider of turnkey radiology departments, the company bridges clinical infrastructure and cutting-edge technology. It also brings holographic and robotic tools into educational settings, recognising knowledge access as a community value.</p>
                     <div className="member-fit">
                       <div className="member-fit-label">Ecosystem fit</div>
-                      <div className="member-fit-text">Clinical diagnostics infrastructure · Regional healthcare access · Medical imaging technology</div>
+                      <p className="member-fit-text">Clinical diagnostics infrastructure · Regional healthcare access · Medical imaging technology</p>
                     </div>
                   </div>
                 </div>
@@ -196,7 +210,7 @@ export default function NewsletterJune2026() {
                     <p className="member-desc">Operating from Carosino (Taranto) since the early 1980s, Priver designs and builds industrial systems and plants across hydraulics, pneumatics, electromechanics, and automation. An Authorised Inspection Centre for Rossi Spa gearmotors, Priver invests in what it defines as secular trends: hydrogen, electrification, and thermal management. Since 2023, its headquarters run entirely on a self-produced 134-module photovoltaic grid.</p>
                     <div className="member-fit">
                       <div className="member-fit-label">Ecosystem fit</div>
-                      <div className="member-fit-text">Automation &amp; process engineering · Industrial sustainability · Biomanufacturing infrastructure support</div>
+                      <p className="member-fit-text">Automation &amp; process engineering · Industrial sustainability · Biomanufacturing infrastructure support</p>
                     </div>
                   </div>
                 </div>
@@ -206,7 +220,7 @@ export default function NewsletterJune2026() {
           </div>
 
           {/* FOOTER */}
-          <div className="footer">
+          <div className="nl-footer">
             <div className="footer-logo">
               <span className="wt">bio</span><span className="tl">ERGO</span><span className="wt">tech</span>
             </div>
