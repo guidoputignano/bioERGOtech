@@ -4,6 +4,14 @@ import Link from "next/link";
 
 const NEWS_ITEMS = [
   {
+    img: "/assets/images/Home/News/newsletter_june2026.webp",
+    alt: "bioERGOtech Newsletter — Founding Edition",
+    date: "June 2026",
+    title: "Newsletter — Founding Edition",
+    desc: "bioERGOtech is live. Read our founding newsletter covering our launch, research pillars, first members, and upcoming events.",
+    href: "/articles/newsletter-june-2026",
+  },
+    {
     img: "/assets/images/Home/News/Guido_Walter.webp",
     alt: "GenoGra",
     date: "February 16, 2026",
