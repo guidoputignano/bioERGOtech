@@ -14,18 +14,18 @@ export default function NewsletterJune2026() {
           @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
           *{box-sizing:border-box;}
           .nl{max-width:640px;margin:0 auto;font-family:'DM Sans',sans-serif;color:#1A2332;}
-          .hero{background:#071410;padding:0;overflow:hidden;border-radius:10px 10px 0 0;position:relative;}
-          .hero-topbar{display:flex;justify-content:space-between;align-items:center;padding:9px 28px;border-bottom:1px solid #1a3028;}
-          .hero-topbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#3a6050;}
+          .hero{background:#fff;padding:0;overflow:hidden;border-radius:10px 10px 0 0;position:relative;border-top:5px solid #00C896;}
+          .hero-topbar{display:flex;justify-content:space-between;align-items:center;padding:9px 28px;border-bottom:1px solid #E2E8F0;background:#F5F8F6;}
+          .hero-topbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6B8F7A;font-weight:600;}
           .hero-body{padding:28px 28px 32px;position:relative;}
-          .teal-bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:#1D9E75;}
+          .teal-bar{position:absolute;left:0;top:0;bottom:0;width:5px;background:#00C896;}
           .logo-row{display:flex;align-items:baseline;gap:0;margin-bottom:4px;}
-          .logo-bio,.logo-tech{font-family:'DM Serif Display',serif;font-size:32px;color:#fff;}
-          .logo-ergo{font-family:'DM Serif Display',serif;font-size:32px;color:#1D9E75;}
-          .issue-tag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#3a6050;margin-bottom:22px;margin-top:2px;}
-          .hero-rule{height:1px;background:linear-gradient(90deg,#1D9E75 0%,transparent 100%);margin-bottom:20px;opacity:.35;}
-          .hero-headline{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;line-height:1.2;margin-bottom:10px;}
-          .hero-sub{font-size:13px;color:#7aab93;line-height:1.75;max-width:520px;}
+          .logo-bio,.logo-tech{font-family:'DM Serif Display',serif;font-size:36px;color:#0A1628;}
+          .logo-ergo{font-family:'DM Serif Display',serif;font-size:36px;color:#00C896;}
+          .issue-tag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#008F6B;margin-bottom:22px;margin-top:6px;font-weight:700;background:#E6F9F4;display:inline-block;padding:3px 10px;border-radius:10px;}
+          .hero-rule{height:2px;background:linear-gradient(90deg,#00C896 0%,transparent 100%);margin-bottom:20px;}
+          .hero-headline{font-family:'DM Serif Display',serif;font-size:32px;color:#0A1628;line-height:1.2;margin-bottom:10px;font-style:italic;}
+          .hero-sub{font-size:14px;color:#4A5568;line-height:1.8;max-width:520px;}
           .body{background:#fff;padding:0 28px;}
           .section{padding:26px 0;border-bottom:.5px solid #E2E8F0;}
           .section:last-child{border-bottom:none;}
@@ -46,7 +46,7 @@ export default function NewsletterJune2026() {
           .pillar-name{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;line-height:1.25;}
           .pillar-body{padding:12px 14px;}
           .pillar-desc{font-size:11.5px;color:#4A5568;line-height:1.7;}
-          .pillars-strip{background:#071410;border-radius:6px;padding:11px 16px;margin-top:10px;font-size:11px;color:#5DCAA5;text-align:center;letter-spacing:.02em;font-style:italic;}
+          .pillars-strip{background:#E6F9F4;border:1px solid #D0E8DF;border-radius:6px;padding:11px 16px;margin-top:10px;font-size:11px;color:#008F6B;text-align:center;letter-spacing:.02em;font-style:italic;}
           .event-card{background:#E1F5EE;border:.5px solid #9FE1CB;border-radius:8px;padding:18px 20px;margin-top:16px;display:flex;gap:18px;position:relative;overflow:hidden;}
           .event-accent{position:absolute;left:0;top:0;bottom:0;width:4px;background:#1D9E75;}
           .event-title{font-family:'DM Serif Display',serif;font-size:15px;color:#071410;margin-bottom:4px;}
@@ -56,24 +56,24 @@ export default function NewsletterJune2026() {
           .event-eye{background:#fff;border:.5px solid #9FE1CB;border-radius:20px;padding:4px 12px;display:inline-block;font-size:10px;color:#0F6E56;font-weight:600;letter-spacing:.06em;margin-bottom:10px;}
           .members-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
           .member-card{background:#F8FAFB;border:.5px solid #E2E8F0;border-radius:8px;overflow:hidden;}
-          .member-head{background:#071410;padding:14px;}
+          .member-head{background:#F5F8F6;padding:14px;border-bottom:2px solid #00C896;}
           .member-num{display:inline-block;background:#1D9E75;color:#fff;font-size:9px;font-weight:600;border-radius:12px;padding:2px 8px;margin-bottom:6px;letter-spacing:.06em;}
-          .member-name{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;margin-bottom:3px;}
-          .member-loc{font-size:10px;color:#3a6050;}
-          .member-badge{background:#0F6E56;color:#9FE1CB;font-size:9px;font-weight:600;letter-spacing:.06em;padding:3px 8px;border-radius:4px;display:inline-block;margin-top:6px;}
+          .member-name{font-family:'DM Serif Display',serif;font-size:15px;color:#0A1628;margin-bottom:3px;}
+          .member-loc{font-size:10px;color:#6B8F7A;}
+          .member-badge{background:#E6F9F4;color:#008F6B;border:1px solid #00C896;font-size:9px;font-weight:600;letter-spacing:.06em;padding:3px 8px;border-radius:4px;display:inline-block;margin-top:6px;}
           .member-body-wrap{padding:12px 14px;}
           .member-desc{font-size:11.5px;color:#4A5568;line-height:1.7;}
           .member-fit{margin-top:10px;padding-top:8px;border-top:.5px solid #E2E8F0;}
           .member-fit-label{font-size:9px;font-weight:600;letter-spacing:.1em;color:#1D9E75;text-transform:uppercase;margin-bottom:3px;}
           .member-fit-text{font-size:10.5px;color:#4A5568;font-style:italic;line-height:1.6;}
-          .footer{background:#071410;padding:20px 28px;border-radius:0 0 10px 10px;}
+          .footer{background:#fff;padding:20px 28px;border-radius:0 0 10px 10px;border-top:4px solid #00C896;}
           .footer-logo{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:5px;}
-          .footer-logo .tl{color:#1D9E75;}
-          .footer-logo .wt{color:#fff;}
+          .footer-logo .tl{color:#00C896;}
+          .footer-logo .wt{color:#0A1628;}
           .footer-links{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
-          .footer-links a{font-size:10px;color:#5DCAA5;text-decoration:none;letter-spacing:.04em;}
-          .footer-rule{height:.5px;background:#1a3028;margin-bottom:10px;}
-          .footer-meta{font-size:10px;color:#3a6050;line-height:1.7;}
+          .footer-links a{font-size:10px;color:#00A87D;text-decoration:none;letter-spacing:.04em;}
+          .footer-rule{height:.5px;background:#D0E8DF;margin-bottom:10px;}
+          .footer-meta{font-size:10px;color:#6B7B8D;line-height:1.7;}
         `}</style>
 
         <div className="nl">
