@@ -11,6 +11,14 @@ const NEWS_ITEMS = [
     desc: "bioERGOtech is live. Read our founding newsletter covering our launch, research pillars, first members, and upcoming events.",
     href: "/articles/newsletter-june-2026",
   },
+  {
+    img: "/assets/images/News/Priver/priver-welcome.webp",
+    alt: "Priver joins the bioERGOtech Foundation",
+    date: "May 31, 2026",
+    title: "Priver Joins the Foundation",
+    desc: "The Taranto engineering company joins the ecosystem, bringing four decades of motion control, fluid power, and computing-infrastructure expertise.",
+    href: "/articles/news-priver-joins-2026",
+  },
     {
     img: "/assets/images/Home/News/Guido_Walter.webp",
     alt: "GenoGra",
