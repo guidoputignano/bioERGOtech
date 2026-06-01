@@ -6,6 +6,10 @@ import path from "path";
 import type { Metadata } from "next";
 
 const articleMeta: Record<string, { title: string; description: string }> = {
+  "news-priver-joins-2026": {
+    title: "Priver Joins the Foundation - bioERGOtech",
+    description: "Priver, the Taranto engineering company, joins the bioERGOtech ecosystem, bringing four decades of motion control, fluid power, and computing-infrastructure expertise.",
+  },
   "news-genogra-preseed-2026": {
     title: "GenoGra Closes €1M Pre-Seed Round - bioERGOtech",
     description: "GenoGra, the B2B startup redefining genomic analysis, closes a €1M pre-seed round.",
