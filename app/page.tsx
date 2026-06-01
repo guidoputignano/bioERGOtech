@@ -10,6 +10,7 @@ const NEWS_ITEMS = [
     title: "Newsletter — Founding Edition",
     desc: "bioERGOtech is live. Read our founding newsletter covering our launch, research pillars, first members, and upcoming events.",
     href: "/articles/newsletter-june-2026",
+    cover: "newsletter" as const,
   },
   {
     img: "/assets/images/News/Priver/priver-welcome.webp",
@@ -616,11 +617,72 @@ export default function Home() {
                 key={item.href}
                 className="bg-white rounded-lg shadow-lg overflow-hidden"
               >
-                <img
-                  src={item.img}
-                  alt={item.alt}
-                  className="w-full h-48 object-cover"
-                />
+                {"cover" in item && item.cover === "newsletter" ? (
+                  <div
+                    className="w-full h-48 relative overflow-hidden flex flex-col items-center justify-center"
+                    style={{
+                      background:
+                        "radial-gradient(120% 120% at 100% 0%, #D8FBF1 0%, #F4FFFC 45%, #ffffff 100%)",
+                    }}
+                  >
+                    {/* soft brand arc accent */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: -70,
+                        top: -70,
+                        width: 200,
+                        height: 200,
+                        borderRadius: "50%",
+                        background:
+                          "radial-gradient(circle, rgba(16,216,176,0.18) 0%, rgba(16,216,176,0) 70%)",
+                      }}
+                    />
+                    {/* eyebrow */}
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        color: "#088A74",
+                        marginBottom: 16,
+                        zIndex: 1,
+                      }}
+                    >
+                      Issue #1 · Founding Edition
+                    </div>
+                    {/* real brand logo */}
+                    <img
+                      src="/assets/images/Logo/full_bioergotech.webp"
+                      alt="bioERGOtech"
+                      style={{
+                        width: 196,
+                        maxWidth: "70%",
+                        height: "auto",
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* bottom accent bar */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 4,
+                        background:
+                          "linear-gradient(90deg, #10D8B0 0%, #088A74 100%)",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={item.img}
+                    alt={item.alt}
+                    className="w-full h-48 object-cover"
+                  />
+                )}
                 <div className="p-6">
                   <div
                     className="text-sm mb-2"
