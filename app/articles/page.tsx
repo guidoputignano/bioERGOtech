@@ -10,6 +10,15 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: "news-predict-healthcare-joins-2026",
+    img: "/assets/images/News/Predict/predict-welcome.webp",
+    date: "May 31, 2026",
+    title: "Predict Healthcare Joins the Foundation",
+    desc: "The Apulian leader in in-vivo diagnostics and medical imaging joins the ecosystem, bringing clinical depth, imaging technology, and a clear ambition to move closer to biotech.",
+    author: "bioERGOtech Foundation",
+    readTime: "4 min read",
+  },
+  {
     slug: "news-priver-joins-2026",
     img: "/assets/images/News/Priver/priver-welcome.webp",
     date: "May 31, 2026",

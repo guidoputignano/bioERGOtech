@@ -6,6 +6,10 @@ import path from "path";
 import type { Metadata } from "next";
 
 const articleMeta: Record<string, { title: string; description: string }> = {
+  "news-predict-healthcare-joins-2026": {
+    title: "Predict Healthcare Joins the Foundation - bioERGOtech",
+    description: "Predict Healthcare, the Apulian leader in in-vivo diagnostics and medical imaging, joins the bioERGOtech Foundation.",
+  },
   "news-priver-joins-2026": {
     title: "Priver Joins the Foundation - bioERGOtech",
     description: "Priver, the Taranto engineering company, joins the bioERGOtech ecosystem, bringing four decades of motion control, fluid power, and computing-infrastructure expertise.",
