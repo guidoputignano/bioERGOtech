@@ -13,6 +13,14 @@ const NEWS_ITEMS = [
     cover: "newsletter" as const,
   },
   {
+    img: "/assets/images/News/Predict/predict-welcome.webp",
+    alt: "Predict Healthcare joins the bioERGOtech Foundation",
+    date: "May 31, 2026",
+    title: "Predict Healthcare Joins the Foundation",
+    desc: "The Apulian leader in in-vivo diagnostics and medical imaging joins the ecosystem, bringing clinical depth and imaging technology.",
+    href: "/articles/news-predict-healthcare-joins-2026",
+  },
+  {
     img: "/assets/images/News/Priver/priver-welcome.webp",
     alt: "Priver joins the bioERGOtech Foundation",
     date: "May 31, 2026",
