@@ -10,6 +10,15 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: "news-priver-joins-2026",
+    img: "/assets/images/News/Priver/priver-welcome.webp",
+    date: "May 31, 2026",
+    title: "Priver Joins the Foundation",
+    desc: "The Taranto engineering company joins the bioERGOtech ecosystem, bringing four decades of motion control, fluid power, and the thermal and computing-infrastructure expertise a digital workforce depends on.",
+    author: "bioERGOtech Foundation",
+    readTime: "5 min read",
+  },
+  {
     slug: "news-genogra-preseed-2026",
     img: "/assets/images/Home/News/Guido_Walter.webp",
     date: "February 16, 2026",
