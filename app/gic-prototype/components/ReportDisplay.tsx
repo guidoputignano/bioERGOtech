@@ -82,6 +82,33 @@ export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {
         return;
       }
 
+      // Markdown table rows — render as clean list items instead
+      if (raw.startsWith("|") && raw.endsWith("|")) {
+        // Skip separator rows like |---|---|
+        if (raw.match(/^\|[\s\-\|]+\|$/)) {
+          return;
+        }
+        const cells = raw
+          .split("|")
+          .filter((c) => c.trim())
+          .map((c) => c.trim());
+        // Skip header rows
+        if (cells.every((c) => c.match(/^(Indagine|Necessità|Riferimento|Investigation)$/i))) {
+          elements.push(
+            <div key={i} className="grid grid-cols-3 gap-2 text-xs font-semibold text-[#0B2545] uppercase tracking-wide mt-4 mb-1 pb-1 border-b border-gray-200">
+              {cells.map((c, j) => <span key={j}>{c}</span>)}
+            </div>
+          );
+          return;
+        }
+        elements.push(
+          <div key={i} className="grid grid-cols-3 gap-2 text-sm text-gray-700 py-1.5 border-b border-gray-100">
+            {cells.map((c, j) => <span key={j} className="leading-relaxed">{c}</span>)}
+          </div>
+        );
+        return;
+      }
+
       // Main section headers
       if (
         raw.match(/^[\d]+\.\s*(SINTESI CLINICA|PROPOSTA TERAPEUTICA|INDAGINI MANCANTI|NOTE PER LA DISCUSSIONE)/i) ||
