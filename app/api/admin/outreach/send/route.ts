@@ -28,25 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "RESEND_API_KEY not configured in environment variables" }, { status: 500 });
     }
 
-    const resend = new Resend(apiKey);
     const db = getDB();
-
-    // Fetch the bioERGOtech intro PDF for attachment
-    let pdfAttachment: { filename: string; content: string } | null = null;
-    try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.bioergotech.org";
-      const pdfRes = await fetch(`${siteUrl}/assets/docs/bioergotech-intro.pdf`);
-      if (pdfRes.ok) {
-        const pdfBuffer = await pdfRes.arrayBuffer();
-        const pdfBase64 = Buffer.from(pdfBuffer).toString("base64");
-        pdfAttachment = {
-          filename: "bioERGOtech-Foundation-Introduction.pdf",
-          content: pdfBase64,
-        };
-      }
-    } catch (e) {
-      console.warn("Could not load PDF attachment:", e);
-    }
 
     const results: Array<{ id: string; name: string; email: string; status: "sent" | "failed"; error?: string }> = [];
 
@@ -58,16 +40,60 @@ export async function POST(request: Request) {
 
       // Merge tags
       const contactName = contact.contact_person
-        ? contact.contact_person.split(",")[0].trim().split(" ").slice(-1)[0]
+        ? (() => {
+          const _raw = (contact.contact_person || "").split(",")[0].trim();
+          const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+          return _m ? _m[0].trim() : _raw;
+        })()
         : "Sir/Madam";
-      const finalSubject = subject
+      // field_of_interest (kept for other templates if needed, not used in cold outreach)
+      const fieldRaw = contact.field_of_interest?.trim() || "";
+
+      // Normalise special characters — handle both Unicode and already-corrupted UTF-8 bytes
+      const clean = (s: string) => s
+        // Fix corrupted UTF-8 sequences — match â€ + ANY following char (incl curly quotes)
+        .replace(/â€[“”„‘’‚"'–—]/g, "-")
+        .replace(/â€/g, "'")   // corrupted apostrophe
+        .replace(/â€/g, "-")          // catch any remaining â€ sequence
+        .replace(/Ã©/g, "e")          // corrupted é
+        .replace(/Ã¼/g, "u")          // corrupted ü
+        .replace(/Ã¶/g, "o")          // corrupted ö
+        .replace(/Ã¤/g, "a")          // corrupted ä
+        // Proper Unicode replacements
+        .replace(/\u2013/g, "-").replace(/\u2014/g, "-")
+        .replace(/\u2018|\u2019/g, "'")
+        .replace(/\u201C|\u201D/g, '"')
+        // Accent normalisation
+        .normalize("NFKD").replace(/[^\x00-\x7F]/g, (c) => {
+          const map: Record<string, string> = {
+            "à":"a","á":"a","â":"a","ã":"a","ä":"a","å":"a",
+            "è":"e","é":"e","ê":"e","ë":"e","ì":"i","í":"i",
+            "ï":"i","ò":"o","ó":"o","ô":"o","ö":"o","ù":"u",
+            "ú":"u","ü":"u","ý":"y","ñ":"n","ç":"c","ß":"ss",
+            "ø":"o","æ":"ae","þ":"th","Ä":"A","Ö":"O","Ü":"U",
+            "É":"E","Á":"A","Í":"I","Ó":"O","Ú":"U","Ñ":"N",
+            "ł":"l","Ł":"L","ś":"s","Ś":"S","ż":"z","Ż":"Z",
+            "ź":"z","Ź":"Z","ń":"n","Ń":"N","ć":"c","Ć":"C",
+          };
+          return map[c] || "";
+        });
+
+      const instName    = clean(contact.name || "your institution");
+      const openingLine = `I am reaching out because ${instName}'s work resonates with the direction we are building at the bioERGOtech Foundation.`;
+      const finalSubject = clean(subject
         .replace(/\{\{name\}\}/g, contactName)
-        .replace(/\{\{institution\}\}/g, contact.name || "your institution")
-        .replace(/\{\{country\}\}/g, contact.country || "");
-      const finalBody = body
+        .replace(/\{\{institution\}\}/g, instName)
+        .replace(/\{\{country\}\}/g, contact.country || "")
+        .replace(/\{\{field of interest\}\}/g, fieldRaw)
+        .replace(/\{\{field\}\}/g, fieldRaw)
+        .replace(/\{\{opening_line\}\}/g, openingLine));
+      const finalBody = clean(body
         .replace(/\{\{name\}\}/g, contactName)
-        .replace(/\{\{institution\}\}/g, contact.name || "your institution")
-        .replace(/\{\{country\}\}/g, contact.country || "");
+        .replace(/\{\{institution\}\}/g, instName)
+        .replace(/\{\{country\}\}/g, contact.country || "")
+        .replace(/\{\{field of interest\}\}/g, fieldRaw)
+        .replace(/\{\{field\}\}/g, fieldRaw)
+        .replace(/\{\{opening_line\}\}/g, openingLine));
 
       try {
         const emailPayload: {
@@ -83,14 +109,16 @@ export async function POST(request: Request) {
           text: finalBody,
         };
 
-        // Attach the bioERGOtech intro PDF if loaded successfully
-        if (pdfAttachment) {
-          emailPayload.attachments = [pdfAttachment];
+
+        const sendRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+          body: JSON.stringify(emailPayload),
+        });
+        if (!sendRes.ok) {
+          const errData = await sendRes.json().catch(() => ({}));
+          throw new Error(errData.message || errData.name || `Resend error ${sendRes.status}`);
         }
-
-        const { error: sendError } = await resend.emails.send(emailPayload);
-
-        if (sendError) throw new Error(sendError.message);
 
         // Update contact status in DB
         await db

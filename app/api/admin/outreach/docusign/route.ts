@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     // Create DocuSign envelope
     const envelope = {
-      emailSubject: `Memorandum of Understanding — bioERGOtech Foundation × ${contact.name}`,
+      emailSubject: `MoU — bioERGOtech × ${(contact.name || "Partner").slice(0, 60)}`.slice(0, 100),
       emailBlurb: `Dear ${signerName},\n\nPlease find attached the draft Memorandum of Understanding from the bioERGOtech Foundation. You can review and sign the document electronically using the link below.\n\nIf you have any questions, please contact Guido Putignano at info@bioergotech.org.\n\nWith warm regards,\nGuido Putignano\nPresident, bioERGOtech Foundation`,
       documents: [{
         documentBase64: mouBase64,

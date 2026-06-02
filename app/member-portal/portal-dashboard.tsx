@@ -3958,7 +3958,7 @@ const OUTREACH_TEMPLATES = {
     subj: "Collaboration opportunity – bioERGOtech Foundation × {{institution}}",
     body: `Dear {{name}},
 
-I am reaching out because {{institution}}\'s work in {{field}} resonates with the direction we are building at the bioERGOtech Foundation.
+I am reaching out because {{institution}}\'s work resonates with the direction we are building at the bioERGOtech Foundation.
 
 We are a non-profit based in Italy, working at the intersection of cellular therapeutics, synthetic biology, and AI. Our mission is to build the digital workforce that accelerates the development of engineered living systems, with patient outcomes as the ultimate measure of success. Active projects include oncological algorithms, a gastric cancer organoid platform, and AI-driven biomanufacturing.
 
@@ -3998,7 +3998,7 @@ bioergotech.org`,
 
 Thank you for your reply, I am glad this resonated.
 
-I would love to schedule a short video call to introduce the Foundation properly and hear more about {{institution}}\'s priorities in {{field}}. The goal would simply be to understand whether there is a natural fit and, if so, sketch out what a first step might look like.
+I would love to schedule a short video call to introduce the Foundation properly and hear more about {{institution}}\'s priorities. The goal would simply be to understand whether there is a natural fit and, if so, sketch out what a first step might look like.
 
 You can book a time directly here: https://calendar.app.google/ReFcV36FbsdH1DtZ7
 
@@ -4014,7 +4014,7 @@ bioergotech.org`,
     subj: "Next steps – bioERGOtech Foundation × {{institution}}",
     body: `Dear {{name}},
 
-Thank you for the call. It was genuinely valuable to hear more about {{institution}}\'s work in {{field}} and to share where the bioERGOtech Foundation is heading.
+Thank you for the call. It was genuinely valuable to hear more about {{institution}}\'s work and to share where the bioERGOtech Foundation is heading.
 
 Based on our conversation, I believe there is a real basis for a structured collaboration. As a concrete next step, I would like to propose drafting a Memorandum of Understanding that outlines the areas of shared interest and the form of engagement that makes sense for both sides.
 
@@ -4093,6 +4093,9 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
   const [drawerContact, setDrawerContact] = useState<OutreachContact | null>(null);
   const [drawerSaving, setDrawerSaving] = useState(false);
   const [sendingDocuSign, setSendingDocuSign] = useState(false);
+  const [sendingMoU, setSendingMoU] = useState(false);
+  const [mouSendMsg, setMoUSendMsg] = useState("");
+  const [includeAddendum, setIncludeAddendum] = useState(true);
   const [docuSignMsg, setDocuSignMsg] = useState("");
   const [drawerFields, setDrawerFields] = useState<Partial<OutreachContact>>({});
   const [template, setTemplate] = useState<keyof typeof OUTREACH_TEMPLATES>("cold");
@@ -4184,6 +4187,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
       setSyncMsg(`✓ ${d.synced} contacts synced successfully`);
+      setSelected(new Set());
       fetchContacts();
     } catch (e) {
       setSyncMsg(`Failed: ${e instanceof Error ? e.message : "Unknown error"}`);
@@ -4229,13 +4233,23 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
   };
 
   const merge = (text: string, c: OutreachContact) => {
-    const name = c.contact_person ? c.contact_person.split(",")[0].trim().split(" ").slice(-1)[0] : "Sir/Madam";
+    const name = c.contact_person ? (() => {
+      const _raw = c.contact_person.split(",")[0].trim();
+      const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+      return _m ? _m[0].trim() : _raw;
+    })() : "Sir/Madam";
+    const fieldRaw   = c.field_of_interest?.trim() || "";
+    const instName   = c.name || "your institution";
+    const openingLine = fieldRaw
+      ? `I am reaching out because ${instName}'s work in ${fieldRaw} resonates with the direction we are building at the bioERGOtech Foundation.`
+      : `I am reaching out to explore a potential collaboration with ${instName}.`;
     return text
       .replace(/\{\{name\}\}/g, name)
-      .replace(/\{\{institution\}\}/g, c.name || "your institution")
+      .replace(/\{\{institution\}\}/g, instName)
       .replace(/\{\{country\}\}/g, c.country || "")
-      .replace(/\{\{field\}\}/g, c.field_of_interest || "your field")
-      .replace(/\{\{field of interest\}\}/g, c.field_of_interest || "your field");
+      .replace(/\{\{field\}\}/g, fieldRaw)
+      .replace(/\{\{field of interest\}\}/g, fieldRaw)
+      .replace(/\{\{opening_line\}\}/g, openingLine);
   };
 
   const preview = useMemo(() => {
@@ -4266,9 +4280,12 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contacts: batch, subject: emailSubject, body: emailBody, senderName, sentBy: adminUserId }),
       });
-      const d = await r.json();
-      totalSent   += d.sent   ?? 0;
-      totalFailed += d.failed ?? 0;
+      const text = await r.text();
+      let d: Record<string, unknown> = {};
+      try { d = JSON.parse(text); } catch { setSendMsg(`❌ Server error: ${text.slice(0, 100)}`); setSending(false); return; }
+      if (!r.ok || d.error) { setSendMsg(`❌ ${d.error || r.statusText}`); setSending(false); return; }
+      totalSent   += (d.sent   as number) ?? 0;
+      totalFailed += (d.failed as number) ?? 0;
       setSendProgress({ done: i + batch.length, total: toSend.length, sent: totalSent, failed: totalFailed });
     }
 
@@ -4402,6 +4419,13 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
         <button onClick={() => { filtered.forEach((c) => setSelected((prev) => { const n = new Set(prev); n.add(c.id); return n; })); }} style={{ padding: "7px 0", borderRadius: 8, border: `1px solid ${BORDER}`, background: "none", color: TEXT_MID, fontSize: 12, cursor: "pointer" }}>
           Select all visible
         </button>
+        <button onClick={() => {
+          filtered
+            .filter(c => !c.email_status || c.email_status === "Not contacted")
+            .forEach(c => setSelected(prev => { const n = new Set(prev); n.add(c.id); return n; }));
+        }} style={{ padding: "7px 0", borderRadius: 8, border: `1px solid ${TEAL}`, background: "rgba(46,196,182,0.06)", color: TEAL, fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+          ✓ Select uncontacted only
+        </button>
       </div>
 
       {/* Table */}
@@ -4521,8 +4545,16 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
               <button onClick={saveDrawer} disabled={drawerSaving} style={{ padding: "10px 0", borderRadius: 10, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: drawerSaving ? 0.7 : 1 }}>
                 {drawerSaving ? "Saving…" : "Save changes"}
               </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+                <input type="checkbox" id="addendum-toggle" checked={includeAddendum}
+                  onChange={e => setIncludeAddendum(e.target.checked)}
+                  style={{ cursor: "pointer", width: 14, height: 14 }} />
+                <label htmlFor="addendum-toggle" style={{ fontSize: 12, color: TEXT_MID, cursor: "pointer" }}>
+                  Include Addendum template in MoU
+                </label>
+              </div>
               <button onClick={async () => {
-                const url = `/api/admin/outreach/mou?contactId=${drawerContact.id}`;
+                const url = `/api/admin/outreach/mou?contactId=${drawerContact.id}&addendum=${includeAddendum}`;
                 const r = await fetch(url);
                 if (!r.ok) { const d = await r.json(); alert("MoU generation failed: " + (d.error || "Unknown error")); return; }
                 const blob = await r.blob();
@@ -4535,35 +4567,32 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
               }} style={{ padding: "9px 0", borderRadius: 10, border: `1px solid #6B4BCC`, background: "rgba(107,75,204,0.06)", color: "#6B4BCC", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 📄 Generate MoU (.docx)
               </button>
+
               <button
                 onClick={async () => {
-                  const signerEmail = drawerContact.email || prompt("Signer email address?");
-                  if (!signerEmail) return;
-                  const signerName = drawerContact.contact_person || prompt("Signer full name?");
-                  if (!signerName) return;
-                  if (!confirm(`Send MoU to ${signerName} (${signerEmail}) for e-signature via DocuSign?`)) return;
-                  setSendingDocuSign(true); setDocuSignMsg("");
+                  if (!confirm(`Send MoU to ${drawerContact.contact_person || drawerContact.name} at ${drawerContact.email}?\n\nGuido will be CC'd on the email.`)) return;
+                  setSendingMoU(true); setMoUSendMsg("");
                   try {
-                    const r = await fetch("/api/admin/outreach/docusign", {
+                    const r = await fetch("/api/admin/outreach/mou/send", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ contactId: drawerContact.id, signerEmail, signerName }),
+                      body: JSON.stringify({ contactId: drawerContact.id, includeAddendum }),
                     });
                     const d = await r.json();
-                    if (!r.ok) { setDocuSignMsg("❌ " + (d.error || "Failed")); return; }
-                    setDocuSignMsg("✅ Sent — " + signerEmail);
+                    if (!r.ok) { setMoUSendMsg("❌ " + (d.error || "Failed")); return; }
+                    setMoUSendMsg("✅ MoU sent to " + drawerContact.email);
                     setContacts((prev) => prev.map((c) => c.id === drawerContact.id ? { ...c, mou_status: "MoU Sent", email_status: "MoU Sent" } : c));
-                  } catch (e) { setDocuSignMsg("❌ " + (e instanceof Error ? e.message : "Error")); }
-                  finally { setSendingDocuSign(false); }
+                  } catch (e) { setMoUSendMsg("❌ " + (e instanceof Error ? e.message : "Error")); }
+                  finally { setSendingMoU(false); }
                 }}
-                disabled={sendingDocuSign}
-                style={{ padding: "9px 0", borderRadius: 10, border: "1px solid #E89C1A", background: "rgba(232,156,26,0.06)", color: "#9A6500", fontSize: 13, fontWeight: 700, cursor: sendingDocuSign ? "not-allowed" : "pointer", opacity: sendingDocuSign ? 0.7 : 1 }}
+                disabled={sendingMoU}
+                style={{ padding: "9px 0", borderRadius: 10, border: "1px solid #6B4BCC", background: "rgba(107,75,204,0.06)", color: "#6B4BCC", fontSize: 13, fontWeight: 700, cursor: sendingMoU ? "not-allowed" : "pointer", opacity: sendingMoU ? 0.7 : 1 }}
               >
-                {sendingDocuSign ? "Sending to DocuSign…" : "✍ Send for e-signature (DocuSign)"}
+                {sendingMoU ? "Sending MoU…" : "📨 Send MoU via email"}
               </button>
-              {docuSignMsg && (
-                <div style={{ fontSize: 12, padding: "8px 12px", borderRadius: 8, background: docuSignMsg.startsWith("✅") ? "#E6F9F4" : "#FDECEA", color: docuSignMsg.startsWith("✅") ? "#008F6B" : "#D63563" }}>
-                  {docuSignMsg}
+              {mouSendMsg && (
+                <div style={{ fontSize: 12, padding: "8px 12px", borderRadius: 8, background: mouSendMsg.startsWith("✅") ? "#E6F9F4" : "#FDECEA", color: mouSendMsg.startsWith("✅") ? "#008F6B" : "#D63563" }}>
+                  {mouSendMsg}
                 </div>
               )}
               <button onClick={() => { setSelected((p) => { const n = new Set(p); n.add(drawerContact.id); return n; }); setDrawerContact(null); setTab("compose"); }} style={{ padding: "9px 0", borderRadius: 10, border: `1px solid ${TEAL}`, background: "none", color: TEAL, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
@@ -4613,7 +4642,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
             <input style={inputStyle} value={senderName} onChange={(e) => setSenderName(e.target.value)} />
           </div>
           <div>
-            <span style={labelStyle}>Body — merge fields: {"{{name}}"}, {"{{institution}}"}, {"{{field}}"}, {"{{country}}"}</span>
+            <span style={labelStyle}>Body — merge fields: {"{{name}}"}, {"{{institution}}"}, {"{{field}}"}, {"{{country}}"}, {"{{opening_line}}"}</span>
             <textarea style={{ ...inputStyle, resize: "vertical" as const, minHeight: 180, lineHeight: 1.6 }} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} />
           </div>
         </div>
@@ -4623,6 +4652,19 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
           <pre style={{ background: "#F8FAFB", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, fontSize: 12, lineHeight: 1.7, color: TEXT_MID, whiteSpace: "pre-wrap", fontFamily: "'DM Mono', monospace", margin: 0 }}>{preview}</pre>
         </div>
 
+        {/* Warning if any selected contacts were already contacted */}
+        {(() => {
+          const alreadyContacted = [...selected]
+            .map(id => contacts.find(c => c.id === id))
+            .filter(c => c && c.email_status && c.email_status !== "Not contacted").length;
+          if (alreadyContacted === 0) return null;
+          return (
+            <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDF3DD", border: "1px solid #E89C1A40", fontSize: 13, color: "#9A6500", display: "flex", alignItems: "center", gap: 8 }}>
+              <span>⚠️</span>
+              <span><strong>{alreadyContacted} of {selected.size} selected contacts</strong> have already been contacted (status is not "Not contacted"). They will receive a duplicate email if you proceed. Consider deselecting them or using the Follow-up template instead.</span>
+            </div>
+          );
+        })()}
         {sendMsg && <div style={{ padding: "10px 14px", borderRadius: 10, background: sendMsg.includes("complete") ? "#E6F9F4" : "#FDECEA", color: sendMsg.includes("complete") ? "#008F6B" : "#D63563", fontSize: 13 }}>{sendMsg}</div>}
 
         {sending && (

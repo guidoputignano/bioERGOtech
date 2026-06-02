@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Sanitise corrupted UTF-8 sequences from Google Sheets
+function cleanText(s: string): string {
+  if (!s) return s;
+  return s
+    .replace(/â€[“”„‘’‚‛]/g, "-")
+    .replace(/â€/g, "-")
+    .replace(/Ã«/g, "e").replace(/Ã©/g, "e")
+    .replace(/Ã¼/g, "u").replace(/Ã¶/g, "o")
+    .replace(/Ã¤/g, "a").replace(/Ã±/g, "n")
+    .replace(/Ã­/g, "i").replace(/Ã¸/g, "o")
+    .replace(/Å/g, "l").replace(/Å/g, "s")
+    .replace(/Å¼/g, "z").replace(/Å/g, "S");
+}
+
 const getDB = () =>
   createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,6 +82,17 @@ function getHeader(headers: Array<{name: string; value: string}>, name: string):
 
 // ── Claude classifier ──────────────────────────────────────────────────────
 
+// Keyword-based fallback classifier — always works without API
+function classifyByKeywords(body: string): "Hot" | "Warm" | "Cold" | "Question" | "OOO" | "Redirect" {
+  const b = body.toLowerCase();
+  if (/out of office|i am away|on vacation|on leave|auto.?reply|will be back/i.test(b)) return "OOO";
+  if (/not interested|not relevant|not the right|please remove|unsubscribe|no thank/i.test(b)) return "Cold";
+  if (/forward|forwarding|contact .* instead|you should reach|better person/i.test(b)) return "Redirect";
+  if (/\?|what is|how does|can you|could you|tell me more|more information|more details/i.test(b)) return "Question";
+  if (/interested|happy to|love to|let.s (talk|meet|connect|schedule)|sounds (great|interesting|good)|yes|call|meeting|discuss|collaborate/i.test(b)) return "Hot";
+  return "Warm";
+}
+
 async function classifyReply(emailBody: string, institutionName: string): Promise<{
   classification: "Hot" | "Warm" | "Cold" | "Question" | "OOO" | "Redirect";
   reason: string;
@@ -75,7 +100,8 @@ async function classifyReply(emailBody: string, institutionName: string): Promis
 }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return { classification: "Warm", reason: "No Claude API key — defaulted to Warm", suggestedReply: "" };
+    const cls = classifyByKeywords(emailBody);
+    return { classification: cls, reason: "Keyword classification (no API key)", suggestedReply: "" };
   }
 
   const prompt = `You are the outreach assistant for bioERGOtech Foundation, a non-profit in Taranto, Italy focused on ergonomics, AI health tools, and Mediterranean research partnerships.
@@ -111,18 +137,22 @@ Classification guide:
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 600,
         messages: [{ role: "user", content: prompt }],
       }),
     });
     const data = await res.json();
+    if (data.error) throw new Error(`Anthropic API: ${data.error.message || JSON.stringify(data.error)}`);
     const text = data.content?.[0]?.text || "";
+    if (!text) throw new Error(`Empty response. Model: ${data.model}, Stop: ${data.stop_reason}`);
     const clean = text.replace(/```json|```/g, "").trim();
     return JSON.parse(clean);
   } catch (e) {
-    console.error("Claude classify error:", e);
-    return { classification: "Warm", reason: "Classification failed", suggestedReply: "" };
+    const errMsg = e instanceof Error ? e.message : String(e);
+    console.error("Claude classify error:", errMsg);
+    const fallback = classifyByKeywords(emailBody);
+    return { classification: fallback, reason: `Keyword fallback (API error: ${errMsg})`, suggestedReply: "" };
   }
 }
 
@@ -204,20 +234,20 @@ export async function GET(req: NextRequest) {
     const accessToken = await getGmailAccessToken();
     const db = getDB();
 
-    // Search for unread emails that are replies (subject starts with Re:)
-    // Only look at emails received in the last 24 hours to avoid processing old mail
-    const since = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
-    const searchQuery = `is:unread subject:Re: after:${since}`;
+    // Search for unread reply emails in inbox
+    // Using label:inbox to avoid sent/drafts, and subject:Re to catch replies
+    const searchQuery = `is:unread in:inbox subject:Re:`;
 
     const listRes = await gmailFetch(
       `/users/${process.env.GMAIL_USER}/messages?q=${encodeURIComponent(searchQuery)}&maxResults=20`,
       accessToken
     );
 
-    if (!listRes.messages?.length) {
-      return NextResponse.json({ checked: true, newReplies: 0, message: "No new unread replies found" });
-    }
+    // If no new replies, skip reply processing but still run follow-up logic below
+    const hasReplies = !!(listRes.messages?.length);
 
+    // Process replies only if there are new messages
+    if (hasReplies) {
     // Load all contact emails from DB for matching
     const { data: allContacts } = await db
       .from("outreach_contacts")
@@ -315,6 +345,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    } // end if (hasReplies)
+
     // ── DAY 7 FOLLOW-UP ────────────────────────────────────────────────────────
     const followup1Results: Array<Record<string, unknown>> = [];
     const sevenDaysAgo = new Date();
@@ -334,9 +366,12 @@ export async function GET(req: NextRequest) {
       for (const contact of needsFollowup1) {
         if (!contact.email?.includes("@")) continue;
         try {
-          const contactName = (contact.contact_person as string || "")
-            .split(",")[0].trim().split(" ").slice(-1)[0] || "Sir/Madam";
-          const instName = (contact.name as string) || "your institution";
+          const contactName = (() => {
+            const _raw = ((contact.contact_person as string) || "").split(",")[0].trim();
+            const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+            return _m ? _m[0].trim() : _raw;
+          })() || "Sir/Madam";
+          const instName = cleanText((contact.name as string) || "your institution");
           const field = (contact.field_of_interest as string) || "your field";
 
           const subject = `Following up – bioERGOtech Foundation × ${instName}`;
@@ -415,9 +450,12 @@ bioergotech.org`;
       for (const contact of needsFollowup2) {
         if (!contact.email?.includes("@")) continue;
         try {
-          const contactName = (contact.contact_person as string || "")
-            .split(",")[0].trim().split(" ").slice(-1)[0] || "Sir/Madam";
-          const instName = (contact.name as string) || "your institution";
+          const contactName = (() => {
+            const _raw = ((contact.contact_person as string) || "").split(",")[0].trim();
+            const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+            return _m ? _m[0].trim() : _raw;
+          })() || "Sir/Madam";
+          const instName = cleanText((contact.name as string) || "your institution");
 
           const subject = `Following up – bioERGOtech Foundation × ${instName}`;
           const body = `Dear ${contactName},

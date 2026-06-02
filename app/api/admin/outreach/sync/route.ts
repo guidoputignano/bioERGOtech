@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         const v = parseCSVLine(line);
         return {
           country:            v[0]?.trim()  || null,
-          name:               v[1]?.trim()  || "Unknown",
+          name:               cleanText(v[1]?.trim()  || "Unknown"),
           type:               v[2]?.trim()  || null,
           city:               v[3]?.trim()  || null,
           field_of_interest:  v[4]?.trim()  || null,
@@ -157,6 +157,21 @@ export async function POST(request: Request) {
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Sync failed" }, { status: 500 });
   }
+}
+
+// Sanitise corrupted UTF-8 sequences that can arrive from Google Sheets CSV
+function cleanText(s: string): string {
+  if (!s) return s;
+  return s
+    .replace(/â€[“”„‘’‚‛"']/g, "-")
+    .replace(/â€/g, "-")
+    .replace(/Ã«/g, "e").replace(/Ã©/g, "e")
+    .replace(/Ã¼/g, "u").replace(/Ã¶/g, "o")
+    .replace(/Ã¤/g, "a").replace(/Ã±/g, "n")
+    .replace(/Ã­/g, "i").replace(/Ã¸/g, "o")
+    .replace(/Å/g, "l").replace(/Å/g, "s")
+    .replace(/Å¼/g, "z").replace(/Å¾/g, "z")
+    .replace(/Ã¥/g, "a").replace(/Ã/g, "A");
 }
 
 // GET /api/admin/outreach/sync — return last sync stats

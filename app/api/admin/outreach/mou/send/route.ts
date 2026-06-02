@@ -1,13 +1,14 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import fs from "fs";
-import path from "path";
+import { Packer } from "docx";
 import {
   AlignmentType, BorderStyle, Document, Header, Footer, ImageRun,
-  LevelFormat, Packer, Paragraph, ShadingType, Table, TableCell,
+  LevelFormat, Paragraph, ShadingType, Table, TableCell,
   TableRow, TextRun, WidthType,
 } from "docx";
+import fs from "fs";
+import path from "path";
 
 const getDB = () =>
   createClient(
@@ -15,31 +16,6 @@ const getDB = () =>
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
-
-interface MoUContact {
-  id: string;
-  name: string;
-  country: string | null;
-  type: string | null;
-  city: string | null;
-  field_of_interest: string | null;
-  contact_person: string | null;
-  email: string | null;
-  category: string | null;
-}
-
-function detectTemplateKey(contact: MoUContact): string {
-  const cat = ((contact.category || contact.type || "")).toLowerCase();
-  if (cat.includes("universit") || cat.includes("college") || cat.includes("faculty")) return "university";
-  if (cat.includes("hospital") || cat.includes("clinic") || cat.includes("chu") || cat.includes("archet") || cat.includes("clcc")) return "hospital";
-  if (cat.includes("patient")) return "patient_association";
-  if (cat.includes("medical") || cat.includes("society") || cat.includes("order")) return "medical_association";
-  return "research_centre";
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// ── docx imports at top of file ──
 
 // ── Brand colours ────────────────────────────────────────────
 const BRAND_TEXT = "1A2332";  // bioERGOtech dark text
@@ -53,7 +29,7 @@ const PAGE_W   = 11906;
 const MARGIN   = 1701;
 const CONTENT_W = PAGE_W - 2 * MARGIN; // 8504 DXA
 
-// logoData is passed in as a parameter to buildMoU
+
 
 // ── Text helpers ─────────────────────────────────────────────
 const R = (text, opts = {}) =>
@@ -628,45 +604,95 @@ function buildMoU(contact, templateKey, logoData = null, includeAddendum = true)
   });
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const contactId        = searchParams.get("contactId");
-  const templateOverride = searchParams.get("templateType") || null;
-  const includeAddendum  = searchParams.get("addendum") !== "false";
-
-  if (!contactId) return NextResponse.json({ error: "contactId required" }, { status: 400 });
-
-  const { data: contact, error } = await getDB()
-    .from("outreach_contacts")
-    .select("id, name, country, type, city, field_of_interest, contact_person, email, category")
-    .eq("id", contactId)
-    .single();
-
-  if (error || !contact) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
-
-  const templateKey = templateOverride || detectTemplateKey(contact as MoUContact);
-
-  let logoData: Buffer | null = null;
+// POST /api/admin/outreach/mou/send
+export async function POST(req: NextRequest) {
   try {
-    const logoPath = path.join(process.cwd(), "public", "assets", "images", "Logo", "bioergotech-logo.png");
-    if (fs.existsSync(logoPath)) logoData = fs.readFileSync(logoPath);
-  } catch { /* logo is optional */ }
+    const { contactId, includeAddendum = true } = await req.json();
+    if (!contactId) return NextResponse.json({ error: "contactId required" }, { status: 400 });
 
-  try {
-    const doc    = buildMoU(contact as MoUContact, templateKey, logoData, includeAddendum);
+    const db = getDB();
+    const { data: contact, error } = await db
+      .from("outreach_contacts")
+      .select("id, name, email, country, contact_person, field_of_interest, category, type, city")
+      .eq("id", contactId)
+      .single();
+
+    if (error || !contact) return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    if (!contact.email) return NextResponse.json({ error: "Contact has no email address" }, { status: 400 });
+
+    // Detect template and generate document directly
+    const templateKey = (() => {
+      const cat = ((contact.category || contact.type || "")).toLowerCase();
+      if (cat.includes("universit") || cat.includes("college") || cat.includes("faculty")) return "university";
+      if (cat.includes("hospital") || cat.includes("clinic") || cat.includes("chu")) return "hospital";
+      if (cat.includes("patient")) return "patient_association";
+      if (cat.includes("medical") || cat.includes("society") || cat.includes("order")) return "medical_association";
+      return "research_centre";
+    })();
+
+    let logoData = null;
+    try {
+      const logoPath = path.join(process.cwd(), "public", "assets", "images", "Logo", "bioergotech-logo.png");
+      if (fs.existsSync(logoPath)) logoData = fs.readFileSync(logoPath);
+    } catch { /* logo optional */ }
+
+    const doc    = buildMoU(contact, templateKey, logoData, includeAddendum);
     const buffer = await Packer.toBuffer(doc);
-    const safeName = (contact.name || "MoU").replace(/[^a-zA-Z0-9\s-]/g, "").trim().replace(/\s+/g, "_").slice(0, 40);
+    const safeName = (contact.name || "Partner").replace(/[^a-zA-Z0-9\s-]/g, "").trim().replace(/\s+/g, "_").slice(0, 40);
     const filename = `bioERGOtech_MoU_${safeName}_${new Date().getFullYear()}.docx`;
-    await getDB().from("outreach_contacts").update({ mou_status: "Draft in progress" }).eq("id", contactId);
-    return new NextResponse(buffer as unknown as BodyInit, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Length": String(buffer.length),
-      },
+
+    // Greeting name
+    const contactName = (contact.contact_person || "")
+      .split(",")[0].split(" — ")[0].split(" - ")[0].trim() || "Sir/Madam";
+
+    const subject = `Memorandum of Understanding — bioERGOtech Foundation × ${(contact.name || "").slice(0, 55)}`.slice(0, 100);
+    const body = `Dear ${contactName},
+
+Following our recent conversation, I am pleased to share the draft Memorandum of Understanding between ${contact.name} and the bioERGOtech Foundation.
+
+The document outlines the proposed framework for our collaboration. This MoU does not create binding financial obligations at this stage — it formalises our mutual intent to work together as we develop joint initiatives.
+
+Please review the document at your convenience. If you have any comments or questions, do not hesitate to contact me. Once both parties are satisfied, we can arrange for formal signatures.
+
+I look forward to building this collaboration with you.
+
+With warm regards,
+
+Guido Putignano
+President, bioERGOtech Foundation
+info@bioergotech.org
+bioergotech.org`;
+
+    const resendKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "outreach@bioergotech.org";
+    const alertEmail = process.env.ALERT_EMAIL;
+    if (!resendKey) return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
+
+    const sendRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${resendKey}` },
+      body: JSON.stringify({
+        from:        `Guido Putignano · bioERGOtech Foundation <${fromEmail}>`,
+        to:          [contact.email],
+        cc:          alertEmail ? [alertEmail] : [],
+        subject,
+        text:        body,
+        attachments: [{ filename, content: buffer.toString("base64") }],
+      }),
     });
+
+    if (!sendRes.ok) {
+      const err = await sendRes.json();
+      return NextResponse.json({ error: `Send failed: ${err.message || JSON.stringify(err)}` }, { status: 500 });
+    }
+
+    await db.from("outreach_contacts").update({ mou_status: "MoU Sent", email_status: "MoU Sent" }).eq("id", contactId);
+    await db.from("outreach_sends").insert({ contact_email: contact.email, contact_name: contact.name, country: contact.country, subject, body_preview: body.slice(0, 200), status: "sent" });
+
+    return NextResponse.json({ success: true, message: `MoU sent to ${contact.email}` });
+
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Generation failed" }, { status: 500 });
+    console.error("[MoU Send Error]", e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Send failed" }, { status: 500 });
   }
 }
