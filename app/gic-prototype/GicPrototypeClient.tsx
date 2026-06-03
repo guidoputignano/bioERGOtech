@@ -24,6 +24,7 @@ export type ReportData = {
   model: string;
   duration_seconds: number;
   timestamp: string;
+  case_data?: CaseData;
 };
 
 export default function GicPrototypeClient() {
@@ -48,7 +49,8 @@ export default function GicPrototypeClient() {
       }
 
       const data = await response.json();
-      setReportData(data);
+      // Attach original case data so PDF generator has full context
+      setReportData({ ...data, case_data: caseData });
       setStep("report");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred");
@@ -89,7 +91,8 @@ export default function GicPrototypeClient() {
               Generating GIC Pre-Analysis Report
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              Searching AIOM and ESMO guidelines · Checking investigation completeness · Drafting clinical proposal
+              Searching AIOM and ESMO guidelines · Checking investigation
+              completeness · Drafting clinical proposal
             </p>
             <p className="text-xs text-gray-400 mt-3">
               This may take 30–120 seconds
