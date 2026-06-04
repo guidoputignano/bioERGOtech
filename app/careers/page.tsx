@@ -16,10 +16,11 @@ export default function Careers() {
       <section className="hero bg-light-gray" style={{ paddingTop: "70px" }}>
         <div className="container mx-auto px-6 pt-20 pb-12 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-            We Hire Builders
+            Build a career that{" "}
+            <span style={{ color: "var(--primary)" }}>reaches patients</span>
           </h1>
           <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            We don&apos;t just look at where you studied. We care about what you&apos;ve built, what you want to build, and why it matters to you.
+            We don&apos;t just look at where you studied. We care about what you&apos;ve built, what you want to build next, and the patients your work could reach.
           </p>
         </div>
       </section>
