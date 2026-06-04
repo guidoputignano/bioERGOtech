@@ -35,7 +35,7 @@ export default function Careers() {
                 bioERGOtech is built by people who combine deep technical expertise with a genuine commitment to impact. We look for individuals who are self-directed, intellectually curious, and driven by the opportunity to turn science into solutions that reach patients.
               </p>
               <p className="text-lg mb-6 text-gray-700">
-                We value demonstrated output over credentials. Show us what you&apos;ve shipped, published, built, or led — and tell us what you&apos;re determined to achieve next.
+                We value demonstrated output over credentials. Show us what you&apos;ve shipped, published, built, or led, and tell us what you&apos;re determined to achieve next.
               </p>
               <p className="text-lg text-gray-700 font-semibold" style={{ borderLeft: "4px solid var(--primary)", paddingLeft: "16px" }}>
                 &ldquo;We are looking for people who think like scientists and act like entrepreneurs.&rdquo;

@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "About Us - bioERGOtech Foundation",
-  description: "Learn about the bioERGOtech Foundation — our mission, team, scientific advisory board, and vision for advancing Engineered Living Systems.",
+  description: "Learn about the bioERGOtech Foundation: our mission, team, scientific advisory board, and vision for advancing Engineered Living Systems.",
 };
 
 export default function AboutUs() {
@@ -21,7 +21,7 @@ export default function AboutUs() {
             <span style={{ color: "var(--primary)" }}>reaches people</span>
           </h1>
           <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            bioERGOtech is a foundation — and an ecosystem of researchers, founders, clinicians and partners — building Engineered Living Systems that move from the lab to real patient impact.
+            bioERGOtech is a foundation, and an ecosystem of researchers, founders, clinicians and partners, building Engineered Living Systems that move from the lab to real patient impact.
           </p>
         </div>
       </section>
@@ -56,7 +56,7 @@ export default function AboutUs() {
                 The healthcare industry faces a critical gap: while groundbreaking research happens in laboratories worldwide, too many life-saving innovations never reach the patients who need them. Promising technologies remain trapped in academic settings instead of transforming lives.
               </p>
               <p className="text-lg mb-6 text-gray-700">
-                bioERGOtech was founded to close that gap. We advance <strong>Engineered Living Systems</strong> — turning cells into predictable, manufacturable, and controllable living medicines — through four integrated scientific pillars: digital twin therapeutics, synthetic biology, automated biomanufacturing, and multi-omics analytics.
+                bioERGOtech was founded to close that gap. We advance <strong>Engineered Living Systems</strong>, turning cells into predictable, manufacturable, and controllable living medicines, through four integrated scientific pillars: digital twin therapeutics, synthetic biology, automated biomanufacturing, and multi-omics analytics.
               </p>
               <p className="text-lg text-gray-700 font-semibold">
                 We believe breakthrough science must become breakthrough medicine.
@@ -76,7 +76,7 @@ export default function AboutUs() {
             <div className="order-2 md:order-1">
               <h2 className="section-title">How We Work</h2>
               <p className="text-lg mb-6 text-gray-700" style={{ borderLeft: "4px solid var(--primary)", paddingLeft: "16px" }}>
-                We are a not-for-profit foundation with commercial ambition — built to serve patients, powered by innovation.
+                We are a not-for-profit foundation with commercial ambition, built to serve patients, powered by innovation.
               </p>
               <p className="text-lg mb-4 text-gray-700">bioERGOtech operates through a dual model designed to bridge the lab-to-market gap:</p>
               <ul className="space-y-4 text-lg text-gray-700">
@@ -108,7 +108,7 @@ export default function AboutUs() {
               <div className="md:col-span-3">
                 <i className="fas fa-quote-left text-3xl mb-4 block opacity-50" style={{ color: "var(--primary)" }} />
                 <p className="text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-4">
-                  We founded bioERGOtech because we saw too many life-saving innovations trapped between the lab bench and the patient bedside. Our mission is not to make research incrementally better — it is to make it fundamentally smarter, so that breakthroughs reach the people who need them most.
+                  We founded bioERGOtech because we saw too many life-saving innovations trapped between the lab bench and the patient bedside. Our mission is not to make research incrementally better. It is to make it fundamentally smarter, so that breakthroughs reach the people who need them most.
                 </p>
                 <p className="text-lg font-semibold text-gray-800">Guido Putignano</p>
                 <p style={{ color: "var(--primary)" }}>President &amp; Founder, bioERGOtech Foundation</p>
@@ -208,7 +208,7 @@ export default function AboutUs() {
         <div className="container mx-auto px-6">
           <h2 className="section-title block">Be Part of What We&apos;re Building</h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
-            Whether you&apos;re a researcher, innovator, healthcare professional, or supporter — there&apos;s a place for you in the bioERGOtech ecosystem.
+            Whether you&apos;re a researcher, innovator, healthcare professional, or supporter, there&apos;s a place for you in the bioERGOtech ecosystem.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link href="/join-us" className="btn-primary">Join Us</Link>

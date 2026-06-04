@@ -7,8 +7,8 @@ import Link from "next/link";
 const HERO_STATS = [
   { num: "4", label: "Active projects" },
   { num: "3", label: "Startups in the portfolio" },
-  { num: "ZES", label: "Taranto tax benefits" },
-  { num: "2026", label: "Mediterranean Games" },
+  { num: "3", label: "Innovation hubs" },
+  { num: "6+", label: "Countries reached" },
 ];
 
 /* ── How it works — three low-friction steps ── */
@@ -16,17 +16,17 @@ const STEPS = [
   {
     num: "1",
     title: "Book an exploratory call",
-    desc: "15 minutes with the Foundation team. No commitment — we simply work out together whether there's a fit.",
+    desc: "Fifteen minutes with the Foundation team, with no commitment. Together we understand whether there is a fit.",
   },
   {
     num: "2",
     title: "We shape your profile",
-    desc: "Based on who you are — startup, company, hospital, investor — we map what you can get and what you could bring to the ecosystem.",
+    desc: "Based on who you are, whether a startup, company, hospital or investor, we map what you can access and what you might contribute to the ecosystem.",
   },
   {
     num: "3",
     title: "You enter the ecosystem",
-    desc: "Onboarding, access to resources, introductions to the members who matter to you. Operational from day one, not after months of paperwork.",
+    desc: "Onboarding, access to resources and introductions to the members most relevant to you. Operational from the first day, not after months of paperwork.",
   },
 ];
 
@@ -95,7 +95,7 @@ const HUBS = [
     city: "Taranto",
     status: "Operational",
     operational: true,
-    desc: "Our headquarters, with a physical Startup Hub and the Distributed Lab. A Special Economic Zone with real tax benefits.",
+    desc: "Our founding home, with a physical Startup Hub and the Distributed Lab. A Special Economic Zone with real tax benefits.",
     tags: ["Startup Hub", "Distributed Lab", "ZES", "Med Games 2026"],
     href: "/taranto",
   },
@@ -117,9 +117,10 @@ const HUBS = [
   },
 ];
 
-/* ── Momentum — most recent real outputs. Update as new ones ship. ── */
-const MOMENTUM = [
+/* ── Recent updates — most recent real outputs. Update as new ones ship. ── */
+const UPDATES = [
   {
+    img: "/assets/images/Home/News/newsletter_june2026.webp",
     date: "June 2026",
     category: "Publication",
     title: "Founding Edition newsletter is live",
@@ -127,6 +128,7 @@ const MOMENTUM = [
     href: "/articles/newsletter-june-2026",
   },
   {
+    img: "/assets/images/News/Predict/predict-welcome.webp",
     date: "May 2026",
     category: "Project",
     title: "Predict Healthcare joins the Foundation",
@@ -134,6 +136,7 @@ const MOMENTUM = [
     href: "/articles/news-predict-healthcare-joins-2026",
   },
   {
+    img: "/assets/images/Home/News/Guido_Walter.webp",
     date: "February 2026",
     category: "Project",
     title: "GenoGra closes €1M pre-seed round",
@@ -152,45 +155,55 @@ const COMMUNITY = [
 export default function Home() {
   return (
     <>
+      <style>{`
+        .course-card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .course-card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(46,196,182,0.18); }
+      `}</style>
       <Navbar />
 
       {/* ── Hero ── */}
       <section className="hero" id="home" style={{ paddingTop: "120px" }}>
-        <div className="container mx-auto px-6 pt-8 pb-12 relative z-10">
-          <div className="max-w-4xl">
-            <p
-              className="text-sm font-bold uppercase mb-5"
-              style={{ color: "var(--primary)", letterSpacing: "0.08em" }}
-            >
-              bioERGOtech Foundation ETS · Taranto, Puglia
-            </p>
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-              The ecosystem that takes your medical solution{" "}
-              <span style={{ color: "var(--primary)" }}>from the lab to the market</span>
-            </h1>
-            <p className="text-xl mb-8 text-gray-700 max-w-3xl">
-              Shared infrastructure, a validated clinical network and access to
-              regional and European funding — without the cost of doing it all on
-              your own.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mb-14">
-              <Link href="#for-you" className="btn-primary text-center">
-                See what you get →
-              </Link>
-              <Link href="/about-us" className="btn-outline text-center">
-                Explore active projects
-              </Link>
+        <div className="container mx-auto px-6 pt-8 pb-20 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="order-2 md:order-1">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
+                The ecosystem that takes your medical solution{" "}
+                <span style={{ color: "var(--primary)" }}>from the lab to the market</span>
+              </h1>
+              <p className="text-xl mb-8 text-gray-700">
+                Shared infrastructure, a validated clinical network and access to
+                regional and European funding, without the cost of doing it all
+                on your own.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="#for-you" className="btn-primary text-center">
+                  See what you get →
+                </Link>
+                <Link href="/about-us" className="btn-outline text-center">
+                  Explore active projects
+                </Link>
+              </div>
             </div>
+            <div className="order-1 md:order-2 flex justify-center">
+              <img
+                src="/assets/images/Home/Automation.webp"
+                alt="Automated biomanufacturing inside the bioERGOtech ecosystem"
+                className="rounded-lg shadow-xl w-full max-w-md"
+              />
+            </div>
+          </div>
 
-            {/* Traction stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {HERO_STATS.map((s) => (
-                <div key={s.label}>
-                  <div className="stat-number">{s.num}</div>
-                  <div className="stat-label">{s.label}</div>
-                </div>
-              ))}
-            </div>
+          {/* Traction stats */}
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-10"
+            style={{ borderTop: "1px solid var(--border-color)" }}
+          >
+            {HERO_STATS.map((s) => (
+              <div key={s.label}>
+                <div className="stat-number">{s.num}</div>
+                <div className="stat-label">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -203,7 +216,7 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <h2 className="section-title">How it works</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Three steps to go from curious to part of the ecosystem.
+            Three steps, from a first conversation to full membership.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {STEPS.map((step) => (
@@ -227,9 +240,8 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <h2 className="section-title">What you find inside the ecosystem</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-8">
-            Concrete resources you can put to work. The badges show what is
-            guaranteed by the Foundation versus what the community makes
-            available.
+            Concrete resources you can put to work. The badges indicate what the
+            Foundation provides directly and what the community makes available.
           </p>
 
           {/* Legend */}
@@ -283,10 +295,11 @@ export default function Home() {
       {/* ── Hubs ── */}
       <section className="section bg-light-gray" id="hubs">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">Where the ecosystem lives</h2>
+          <h2 className="section-title">Where the ecosystem grows</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            One operational home and two strategic frontiers — described honestly
-            for what they are today.
+            Our network spans one operational home today, with two strategic
+            frontiers in development. Taranto is where we started. Our ambitions
+            reach further.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HUBS.map((hub) => (
@@ -327,36 +340,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Momentum ── */}
-      <section className="section" id="momentum">
+      {/* ── Recent updates ── */}
+      <section className="section" id="updates">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">Momentum</h2>
+          <h2 className="section-title">Recent updates</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Proof the Foundation ships real output — projects, publications and
-            new members.
+            A selection of recent milestones from across the ecosystem.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {MOMENTUM.map((item) => (
+            {UPDATES.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="card-sm"
-                style={{ padding: 24, display: "block" }}
+                className="bg-white rounded-lg shadow-lg overflow-hidden block course-card-hover"
               >
-                <div className="flex items-center gap-3 mb-3 text-sm">
-                  <span style={{ color: "var(--text-light)" }}>{item.date}</span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: "var(--primary-light)", color: "var(--primary-dark)" }}
-                  >
-                    {item.category}
+                <img src={item.img} alt={item.title} className="w-full h-44 object-cover" />
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-3 text-sm">
+                    <span style={{ color: "var(--text-light)" }}>{item.date}</span>
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full"
+                      style={{ background: "var(--primary-light)", color: "var(--primary-dark)" }}
+                    >
+                      {item.category}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-800">{item.title}</h3>
+                  <p className="text-gray-600 text-sm mb-3">{item.desc}</p>
+                  <span className="font-semibold text-sm" style={{ color: "var(--primary)" }}>
+                    Read more →
                   </span>
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">{item.title}</h3>
-                <p className="text-gray-600 text-sm mb-3">{item.desc}</p>
-                <span className="font-semibold text-sm" style={{ color: "var(--primary)" }}>
-                  Read more →
-                </span>
               </Link>
             ))}
           </div>
@@ -373,8 +387,8 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <h2 className="section-title">Who&apos;s already part of it</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Real members and partners — each shown with the kind of relationship
-            we have, because honest social proof is the only kind worth showing.
+            Organisations already building alongside us, each shown with the
+            nature of our relationship.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {COMMUNITY.map((m) => (
@@ -393,11 +407,12 @@ export default function Home() {
       <section className="section" style={{ background: "var(--primary-light)" }}>
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 max-w-3xl mx-auto">
-            2026 founding memberships are open — free for seed-stage startups.
+            Founding memberships for 2026 are now open.
           </h2>
           <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-            Book a 15-minute call. We&apos;ll work out together whether there&apos;s a
-            fit — no commitment, no pressure.
+            Membership is free for seed-stage startups. Book a fifteen-minute
+            call and we will explore together whether there is a fit, with no
+            commitment.
           </p>
           <Link href="/contact" className="btn-primary">
             Book an exploratory call →
