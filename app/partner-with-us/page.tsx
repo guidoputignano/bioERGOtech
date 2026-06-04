@@ -17,11 +17,16 @@ export default function PartnerWithUs() {
       <section className="hero bg-light-gray" style={{ paddingTop: "70px" }}>
         <div className="container mx-auto px-6 pt-20 pb-12 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-            Build What Matters, Together
+            Plug into a{" "}
+            <span style={{ color: "var(--primary)" }}>validated innovation pipeline</span>
           </h1>
-          <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            We partner with organizations that share our commitment to transforming healthcare through science, technology, and purposeful collaboration.
+          <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
+            Hospitals, universities, pharma and investors join the ecosystem for early access to vetted ventures, shared infrastructure, and research collaborations that reach patients faster.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/join-us" className="btn-primary text-center">Become a partner</Link>
+            <Link href="/contact" className="btn-outline text-center">Start a conversation</Link>
+          </div>
         </div>
       </section>
 
