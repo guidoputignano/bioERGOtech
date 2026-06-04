@@ -7,8 +7,8 @@ import Link from "next/link";
 const HERO_STATS = [
   { num: "4", label: "Active projects" },
   { num: "3", label: "Startups in the portfolio" },
-  { num: "ZES", label: "Taranto tax benefits" },
-  { num: "2026", label: "Mediterranean Games" },
+  { num: "3", label: "Innovation hubs" },
+  { num: "6+", label: "Countries reached" },
 ];
 
 /* ── How it works — three low-friction steps ── */
