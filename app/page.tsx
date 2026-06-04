@@ -2,6 +2,12 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { SegmentTabs } from "@/components/segment-tabs";
 import Link from "next/link";
+import type { CSSProperties } from "react";
+
+/* The global main.css overrides --primary-light with a harsh saturated mint
+   (#61ffe0). We pin it back to a soft, on-brand tint for the homepage so every
+   tinted surface (tabs, icon tiles, tags, the closing CTA) stays gentle. */
+const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
 /* ── Hero traction stats — keep these reflecting real, current numbers ── */
 const HERO_STATS = [
@@ -118,7 +124,16 @@ const HUBS = [
 ];
 
 /* ── Recent updates — most recent real outputs. Update as new ones ship. ── */
-const UPDATES = [
+type Update = {
+  img: string;
+  date: string;
+  category: string;
+  title: string;
+  desc: string;
+  href: string;
+  cover?: "newsletter";
+};
+const UPDATES: Update[] = [
   {
     img: "/assets/images/Home/News/newsletter_june2026.webp",
     date: "June 2026",
@@ -126,6 +141,7 @@ const UPDATES = [
     title: "Founding Edition newsletter is live",
     desc: "Our launch, research pillars, first members and upcoming events.",
     href: "/articles/newsletter-june-2026",
+    cover: "newsletter",
   },
   {
     img: "/assets/images/News/Predict/predict-welcome.webp",
@@ -161,9 +177,10 @@ export default function Home() {
       `}</style>
       <Navbar />
 
+      <div style={SOFT_BRAND}>
       {/* ── Hero ── */}
       <section className="hero" id="home" style={{ paddingTop: "120px" }}>
-        <div className="container mx-auto px-6 pt-8 pb-20 relative z-10">
+        <div className="container mx-auto px-6 pt-8 pb-40 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
@@ -194,10 +211,7 @@ export default function Home() {
           </div>
 
           {/* Traction stats */}
-          <div
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-10"
-            style={{ borderTop: "1px solid var(--border-color)" }}
-          >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-14">
             {HERO_STATS.map((s) => (
               <div key={s.label}>
                 <div className="stat-number">{s.num}</div>
@@ -354,7 +368,58 @@ export default function Home() {
                 href={item.href}
                 className="bg-white rounded-lg shadow-lg overflow-hidden block course-card-hover"
               >
-                <img src={item.img} alt={item.title} className="w-full h-44 object-cover" />
+                {item.cover === "newsletter" ? (
+                  <div
+                    className="w-full h-44 relative overflow-hidden flex flex-col items-center justify-center"
+                    style={{
+                      background:
+                        "radial-gradient(120% 120% at 100% 0%, #D8FBF1 0%, #F4FFFC 45%, #ffffff 100%)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: -70,
+                        top: -70,
+                        width: 200,
+                        height: 200,
+                        borderRadius: "50%",
+                        background:
+                          "radial-gradient(circle, rgba(16,216,176,0.18) 0%, rgba(16,216,176,0) 70%)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        color: "#088A74",
+                        marginBottom: 16,
+                        zIndex: 1,
+                      }}
+                    >
+                      Issue #1 · Founding Edition
+                    </div>
+                    <img
+                      src="/assets/images/Logo/full_bioergotech.webp"
+                      alt="bioERGOtech"
+                      style={{ width: 196, maxWidth: "70%", height: "auto", zIndex: 1 }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 4,
+                        background: "linear-gradient(90deg, #10D8B0 0%, #088A74 100%)",
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <img src={item.img} alt={item.title} className="w-full h-44 object-cover" />
+                )}
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-3 text-sm">
                     <span style={{ color: "var(--text-light)" }}>{item.date}</span>
@@ -419,6 +484,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      </div>
 
       <SiteFooter />
     </>
