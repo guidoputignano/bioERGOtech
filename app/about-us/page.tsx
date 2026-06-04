@@ -17,10 +17,11 @@ export default function AboutUs() {
       <section className="hero bg-light-gray" id="home" style={{ paddingTop: "70px" }}>
         <div className="container mx-auto px-6 pt-20 pb-12 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-            Engineering the Future of Living Medicine
+            We turn biotech&apos;s promise into care that{" "}
+            <span style={{ color: "var(--primary)" }}>reaches people</span>
           </h1>
           <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            A foundation transforming living cells into precisely controllable therapeutic agents through the convergence of synthetic biology, AI, and automated biomanufacturing.
+            bioERGOtech is a foundation — and an ecosystem of researchers, founders, clinicians and partners — building Engineered Living Systems that move from the lab to real patient impact.
           </p>
         </div>
       </section>

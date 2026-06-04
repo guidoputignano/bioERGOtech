@@ -19,15 +19,19 @@ export default function BuildWithUs() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1">
               <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-                Build the Future of <span style={{ color: "var(--primary)" }}>Living Medicine</span>
+                Go from idea to company —{" "}
+                <span style={{ color: "var(--primary)" }}>without going it alone</span>
               </h1>
               <p className="text-xl mb-4 text-gray-700">
-                Turn your healthcare innovation into a thriving company. We provide the infrastructure, mentorship, funding access, and partnerships to get you there.
+                Shared infrastructure, a clinical network to validate your work, hands-on funding support and mentorship — so you can focus on the science while we help carry the rest.
               </p>
               <p className="text-lg mb-8 text-gray-600 italic">
                 Nothing is too early stage. If you have an idea that can improve patient lives, we&apos;re all ears.
               </p>
-              <a href="mailto:build@bioergotech.org" className="btn-primary text-center">Apply Now</a>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a href="mailto:build@bioergotech.org" className="btn-primary text-center">Apply Now</a>
+                <Link href="/contact" className="btn-outline text-center">Talk to the team</Link>
+              </div>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
               <div className="order-1 md:order-2 flex justify-center">
