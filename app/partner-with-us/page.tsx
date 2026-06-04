@@ -130,7 +130,7 @@ export default function PartnerWithUs() {
               <h2 className="section-title">What We Bring to Partnerships</h2>
               <ul className="space-y-4 text-lg text-gray-700">
                 {[
-                  { title: "Scientific Depth", desc: "Four integrated research pillars — digital twin therapeutics, synthetic biology, automated biomanufacturing, and multi-omics analytics." },
+                  { title: "Scientific Depth", desc: "Four integrated research pillars: digital twin therapeutics, synthetic biology, automated biomanufacturing, and multi-omics analytics." },
                   { title: "AI & Automation Expertise", desc: "In-house AI development capabilities and access to cutting-edge automated laboratory platforms." },
                   { title: "Clinical Connectivity", desc: "Established relationships with hospitals, patient groups, and clinical research centres across Europe and the Middle East." },
                   { title: "Ecosystem Access", desc: "A global network of investors, entrepreneurs, regulators, and scientific leaders." },

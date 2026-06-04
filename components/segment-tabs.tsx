@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 /**
- * "You're in the right place if…" — the section that answers
- * "is this for me?" in about 20 seconds. Each segment shows a context
- * card (who you are + what to do) next to a "what you get" card.
+ * "You're in the right place if…" — the section that helps each visitor
+ * recognise themselves and see what membership offers them. Each segment
+ * shows a context card (who you are + what to do) next to a "what you get"
+ * card.
  *
- * Per the Foundation's direction, we deliberately do NOT show fees here —
+ * Per the Foundation's direction, we deliberately do NOT show fees here:
  * the focus is the value a member receives, not the price of entry.
  */
 
@@ -30,15 +31,15 @@ const SEGMENTS: Segment[] = [
     title: "You're building a healthcare venture",
     destination: "For Innovators",
     scenario:
-      "You have an idea or an early-stage company and need infrastructure, clinical validation, and capital to grow — without burning your runway on overhead.",
+      "You have an idea or an early-stage company and need infrastructure, clinical validation and capital to grow, without spending your runway on overhead.",
     primaryCta: { label: "Start building", href: "/build-with-us" },
     secondaryCta: { label: "Apply now", href: "/join-us" },
     benefits: [
       { icon: "fa-flask", text: "Shared lab space and bookable equipment" },
       { icon: "fa-hospital", text: "A clinical network to validate your solution" },
-      { icon: "fa-coins", text: "Hands-on support for NIDI, Mini-PIA, ZES & EU grants" },
+      { icon: "fa-coins", text: "Hands-on support for NIDI, Mini-PIA, ZES and EU grants" },
       { icon: "fa-user-tie", text: "Mentorship and a Board of Advisors" },
-      { icon: "fa-toolbox", text: "Email, 1TB storage, Google Ads credit & Canva Pro" },
+      { icon: "fa-toolbox", text: "Email, 1TB storage, Google Ads credit and Canva Pro" },
       { icon: "fa-handshake", text: "Warm introductions to our investor network" },
     ],
   },
@@ -48,7 +49,7 @@ const SEGMENTS: Segment[] = [
     title: "You want to innovate beyond your core",
     destination: "For Innovators",
     scenario:
-      "You're an established company or SME looking to open a new health-tech line, tap external R&D capacity, or connect with startups and talent.",
+      "You are an established company or SME looking to open a new health-tech line, tap external R&D capacity, or connect with startups and talent.",
     primaryCta: { label: "Build with us", href: "/build-with-us" },
     secondaryCta: { label: "Talk to the team", href: "/contact" },
     benefits: [
@@ -66,7 +67,7 @@ const SEGMENTS: Segment[] = [
     title: "You want early access to what's next",
     destination: "For Partners",
     scenario:
-      "You're a hospital or clinical center that wants first access to validated innovations and meaningful research collaborations.",
+      "You are a hospital or clinical centre that wants first access to validated innovations and meaningful research collaborations.",
     primaryCta: { label: "Become a partner", href: "/partner-with-us" },
     secondaryCta: { label: "Start a conversation", href: "/contact" },
     benefits: [
@@ -84,7 +85,7 @@ const SEGMENTS: Segment[] = [
     title: "You want research to reach patients",
     destination: "For Partners",
     scenario:
-      "You're a university or research institute seeking to translate discoveries into impact and to connect academia with industry.",
+      "You are a university or research institute seeking to translate discoveries into impact and to connect academia with industry.",
     primaryCta: { label: "Become a partner", href: "/partner-with-us" },
     secondaryCta: { label: "Start a conversation", href: "/contact" },
     benefits: [
@@ -102,7 +103,7 @@ const SEGMENTS: Segment[] = [
     title: "You want vetted, de-risked deal flow",
     destination: "For Partners",
     scenario:
-      "You're an impact investor looking for curated, de-risked opportunities in European health-tech — backed by real validation.",
+      "You are an impact investor looking for curated, de-risked opportunities in European health-tech, backed by real validation.",
     primaryCta: { label: "Explore the ecosystem", href: "/partner-with-us" },
     secondaryCta: { label: "Request a briefing", href: "/contact" },
     benefits: [
@@ -120,7 +121,7 @@ const SEGMENTS: Segment[] = [
     title: "You want a research and validation partner",
     destination: "For Partners",
     scenario:
-      "You're a pharma, biotech, or CRO seeking research partnerships, added validation capacity, or a direct line into emerging innovation.",
+      "You are a pharma, biotech or CRO seeking research partnerships, added validation capacity, or a direct line into emerging innovation.",
     primaryCta: { label: "Become a partner", href: "/partner-with-us" },
     secondaryCta: { label: "Start a conversation", href: "/contact" },
     benefits: [
@@ -143,8 +144,8 @@ export function SegmentTabs() {
       <div className="container mx-auto px-6">
         <h2 className="section-title">You&apos;re in the right place if…</h2>
         <p className="text-lg text-gray-700 max-w-3xl mb-8">
-          Whoever you are, the ecosystem is built around what you need. Pick the
-          profile that fits you best.
+          Whoever you are, the ecosystem is built around what you need. Choose
+          the profile that fits you best.
         </p>
 
         {/* Tab pills */}
@@ -188,11 +189,8 @@ export function SegmentTabs() {
             </div>
           </div>
 
-          {/* Right — what you get */}
-          <div
-            className="card"
-            style={{ background: "var(--primary-light)", borderColor: "transparent" }}
-          >
+          {/* Right — what you get (soft on-brand surface, teal kept as accent) */}
+          <div className="card" style={{ background: "var(--bg-light)" }}>
             <span
               className="text-xs font-bold uppercase text-gray-500"
               style={{ letterSpacing: "0.08em" }}
@@ -204,7 +202,13 @@ export function SegmentTabs() {
                 <li key={b.text} className="flex items-start gap-3">
                   <span
                     className="icon-circle icon-circle-primary"
-                    style={{ width: 38, height: 38, borderRadius: 10, background: "#fff" }}
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 10,
+                      background: "#fff",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    }}
                   >
                     <i className={`fas ${b.icon}`} style={{ color: "var(--primary)" }} />
                   </span>

@@ -19,11 +19,11 @@ export default function BuildWithUs() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1">
               <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-                Go from idea to company —{" "}
+                Go from idea to company,{" "}
                 <span style={{ color: "var(--primary)" }}>without going it alone</span>
               </h1>
               <p className="text-xl mb-4 text-gray-700">
-                Shared infrastructure, a clinical network to validate your work, hands-on funding support and mentorship — so you can focus on the science while we help carry the rest.
+                Shared infrastructure, a clinical network to validate your work, hands-on funding support and mentorship, so you can focus on the science while we help carry the rest.
               </p>
               <p className="text-lg mb-8 text-gray-600 italic">
                 Nothing is too early stage. If you have an idea that can improve patient lives, we&apos;re all ears.
@@ -62,13 +62,13 @@ export default function BuildWithUs() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                num: "1", title: "Validate", duration: "3 — 6 months",
+                num: "1", title: "Validate", duration: "3 to 6 months",
                 desc: "Test your concept against real clinical needs. We help you determine whether your idea solves a meaningful problem before you commit to building a company.",
                 items: ["Clinical need assessment with our healthcare network", "Technical feasibility review by our scientific team", "Market landscape analysis and competitive positioning", "Mentorship from domain experts and entrepreneurs"],
                 note: "For: researchers with promising ideas, academics exploring commercialization, teams at concept stage.",
               },
               {
-                num: "2", title: "Incubate", duration: "6 — 12 months",
+                num: "2", title: "Incubate", duration: "6 to 12 months",
                 desc: "Build your company with dedicated resources. We provide the infrastructure, team, and strategic support to go from validated concept to minimum viable product.",
                 items: ["Access to laboratory facilities and technical infrastructure", "Dedicated mentorship from biotech and AI experts", "Regulatory and compliance guidance", "Introductions to our investor network", "Spin-off support and company formation"],
                 note: "For: validated teams ready to build, spin-offs from our research partnerships, BioShot competition winners.",
@@ -138,7 +138,7 @@ export default function BuildWithUs() {
         <div className="container mx-auto px-6">
           <h2 className="section-title text-center block">Our Portfolio</h2>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto text-center mb-12">
-            Four companies across diagnostics, digital health, medical devices, and robotics — spanning three continents.
+            Four companies across diagnostics, digital health, medical devices, and robotics, spanning three continents.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
