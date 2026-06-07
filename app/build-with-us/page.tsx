@@ -42,7 +42,7 @@ export default function BuildWithUs() {
   <div style={{ width: "100%", maxWidth: "520px" }}>
     <Image
       src="/assets/images/Build-with-us/Build_with_us.webp"
-      alt="Build With Us"
+      alt="Build a biotech startup with the bioERGOtech Foundation"
       width={6240}
       height={4160}
       priority
@@ -115,7 +115,7 @@ export default function BuildWithUs() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
-              <Image src="/assets/images/Build-with-us/Acceleration_Program.webp" alt="Our Support" width={3464} height={2309} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/Build-with-us/Acceleration_Program.webp" alt="The bioERGOtech acceleration program for biotech startups" width={3464} height={2309} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
             <div>
               <h2 className="section-title">What We Provide</h2>
@@ -185,7 +185,7 @@ export default function BuildWithUs() {
               </ul>
             </div>
             <div className="flex justify-center">
-              <Image src="/assets/images/Build-with-us/ventures.jpg" alt="Types of Ventures" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/Build-with-us/ventures.jpg" alt="Types of biotech ventures supported by bioERGOtech" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>

@@ -15,6 +15,31 @@ const organisation = {
   logo: `${BASE}/favicon.png`,
   description:
     "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Taranto",
+    addressRegion: "Puglia",
+    addressCountry: "IT",
+  },
+  foundingLocation: {
+    "@type": "Place",
+    name: "Taranto, Italy",
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "info@bioergotech.org",
+    contactType: "general inquiries",
+    areaServed: "Europe",
+  },
+  knowsAbout: [
+    "Synthetic biology",
+    "Biotechnology",
+    "Engineered Living Systems",
+    "Automated biomanufacturing",
+    "Cell therapy",
+    "AI-driven laboratory automation",
+  ],
+  areaServed: "Europe",
   sameAs: [
     "https://www.linkedin.com/company/bioergotech",
   ],

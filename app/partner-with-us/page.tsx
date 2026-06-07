@@ -124,7 +124,7 @@ export default function PartnerWithUs() {
             <div className="flex justify-center">
               <Image
                 src="/assets/images/Partner-With-Us/Partner.webp"
-                alt="Partnership"
+                alt="Healthcare and research partnership at the bioERGOtech Foundation"
                 width={6240}
                 height={4160}
                 sizes="(max-width: 768px) 100vw, 448px"

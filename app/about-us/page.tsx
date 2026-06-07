@@ -65,7 +65,7 @@ export default function AboutUs() {
               </p>
             </div>
             <div className="flex justify-center">
-              <Image src="/assets/images/About-us/1.png" alt="Lab research" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/About-us/1.png" alt="Researchers at work in a bioERGOtech synthetic biology lab" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function AboutUs() {
               </ul>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
-              <Image src="/assets/images/About-us/2.png" alt="Collaboration" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/About-us/2.png" alt="Scientists and founders collaborating in the bioERGOtech ecosystem" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>

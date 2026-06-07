@@ -32,7 +32,7 @@ export default function Taranto() {
               <a href="mailto:info@bioergotech.org" className="btn-primary">Get Involved</a>
             </div>
             <div className="flex justify-center">
-              <Image src="/assets/images/Taranto/Main/first.webp" alt="Taranto Hub" width={6164} height={4109} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/Taranto/Main/first.webp" alt="The bioERGOtech biotech hub in Taranto, Southern Italy" width={6164} height={4109} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>
@@ -43,7 +43,7 @@ export default function Taranto() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
-              <Image src="/assets/images/Taranto/Collaborative/IMG_2756.webp" alt="Taranto Biotech Hub" width={6240} height={4160} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/Taranto/Collaborative/IMG_2756.webp" alt="Inside the bioERGOtech Taranto biotech hub" width={6240} height={4160} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
             <div>
               <h2 className="section-title">A City Reinventing Itself</h2>
@@ -51,7 +51,12 @@ export default function Taranto() {
                 Taranto has long been known for its industrial past. Today, it is becoming a symbol of transformation, from heavy industry to knowledge economy, from environmental challenge to scientific opportunity.
               </p>
               <p className="text-lg mb-6 text-gray-700">
-                The bioERGOtech Taranto Hub is at the heart of this transformation. By establishing a world-class biotechnology centre in Southern Italy, we are creating jobs, training talent, attracting investment, and positioning Taranto as a European hub for life sciences innovation.
+                The bioERGOtech Taranto Hub is at the heart of this transformation. By establishing a world-class biotechnology centre in Southern Italy, we are creating jobs, training talent, attracting investment, and positioning Taranto as a European hub for life sciences innovation. Founders can{" "}
+                <Link href="/build-with-us" className="font-semibold" style={{ color: "var(--primary)" }}>build a biotech startup</Link>{" "}
+                with us, and organisations can{" "}
+                <Link href="/partner-with-us" className="font-semibold" style={{ color: "var(--primary)" }}>partner with the Foundation</Link>{" "}
+                or{" "}
+                <Link href="/join-us" className="font-semibold" style={{ color: "var(--primary)" }}>join the ecosystem</Link>.
               </p>
               <p className="text-lg text-gray-700">
                 Our hub is home to the annual <strong>Taranto Biotech Days</strong> and the <strong>BioShot</strong> competition, bringing together over 1,200 participants including world-class researchers from Stanford, ETH Zürich, EPFL, and dozens of other institutions.
