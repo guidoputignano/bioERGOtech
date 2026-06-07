@@ -3,9 +3,11 @@ import { SiteFooter } from "@/components/site-footer";
 import GicPrototypeClient from "./GicPrototypeClient";
 
 export const metadata = {
-  title: "GIC Decision Support — Prototype",
+  title: "GIC Decision Support, Prototype",
   description:
     "AI-assisted pre-analysis for GIC oncology tumour board sessions. Powered by AIOM and ESMO guidelines.",
+  // Internal prototype tool: keep it out of search results.
+  robots: { index: false, follow: false },
 };
 
 export default function GicPrototypePage() {

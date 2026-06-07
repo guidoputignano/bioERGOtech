@@ -117,8 +117,56 @@ export default async function ArticlePage({
     notFound();
   }
 
+  const meta = articleMeta[slug];
+  const url = `https://www.bioergotech.org/articles/${slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: meta.title,
+    description: meta.description,
+    mainEntityOfPage: url,
+    url,
+    image: "https://www.bioergotech.org/assets/images/og-image-v2.jpg",
+    author: { "@type": "Organization", name: "bioERGOtech Foundation" },
+    publisher: {
+      "@type": "Organization",
+      name: "bioERGOtech Foundation",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.bioergotech.org/favicon.png",
+      },
+    },
+  };
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.bioergotech.org",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Articles",
+        item: "https://www.bioergotech.org/articles",
+      },
+      { "@type": "ListItem", position: 3, name: meta.title, item: url },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Navbar />
       <div style={{ paddingTop: "70px" }}>
         <link rel="stylesheet" href="/assets/css/index.css" />

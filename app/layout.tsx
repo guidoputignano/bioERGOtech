@@ -1,5 +1,16 @@
 import type { Metadata } from "next";
+import { Poppins } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+
+// Self-host Poppins via next/font: removes the render-blocking Google Fonts
+// request and prevents layout shift. Exposed as a CSS variable so the existing
+// stylesheets can keep referencing it.
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 import CookieBanner from "@/components/cookie-banner";
 import NewsletterPopup from "@/components/newsletter-popup";
 import { StructuredData } from "@/components/structured-data";
@@ -72,28 +83,19 @@ export default function RootLayout({
         />
 
         {/* =========================================
-            FONTS
-        ========================================= */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-
-        {/* =========================================
             ICONS & STYLES
+            Poppins is now self-hosted via next/font. Leaflet CSS is
+            scoped to the member map component that uses it.
         ========================================= */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
         />
         <link rel="stylesheet" href="/assets/css/main.css" />
         <link rel="stylesheet" href="/assets/css/article.css" />
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
       </head>
-      <body className="antialiased">
+      <body className={`antialiased ${poppins.variable}`}>
         <StructuredData />
         <ThemeProvider
           attribute="class"

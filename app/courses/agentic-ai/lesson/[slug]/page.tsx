@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props) {
   const lesson = COURSE_LESSONS.find((l) => l.slug === slug);
   return {
     title: lesson
-      ? `${lesson.number} — ${lesson.title} | bioERGOtech`
+      ? `${lesson.number}: ${lesson.title} | bioERGOtech`
       : "Lesson | bioERGOtech",
   };
 }

@@ -20,7 +20,7 @@ html {
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: var(--font-poppins), 'Poppins', sans-serif;
     background-color: var(--light);
     color: var(--dark);
     margin: 0;

@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+// Leaflet styles are scoped to this component (the only place a map renders)
+// instead of being loaded on every page from the root layout.
+import "leaflet/dist/leaflet.css";
 
 interface Organisation {
   id: string;

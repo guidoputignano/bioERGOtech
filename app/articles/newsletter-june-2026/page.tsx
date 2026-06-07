@@ -3,8 +3,9 @@ import { SiteFooter } from "@/components/site-footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Newsletter — Founding Edition, June 2026 | bioERGOtech",
+  title: "Newsletter: Founding Edition, June 2026 | bioERGOtech",
   description: "bioERGOtech is live. Read our founding newsletter covering our launch, research pillars, first members, and upcoming events.",
+  alternates: { canonical: "/articles/newsletter-june-2026" },
 };
 
 export default function NewsletterJune2026() {
