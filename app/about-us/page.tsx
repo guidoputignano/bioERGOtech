@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Us - bioERGOtech Foundation",
-  description: "Learn about the bioERGOtech Foundation: our mission, team, scientific advisory board, and vision for advancing Engineered Living Systems.",
+  title: { absolute: "About bioERGOtech | A Synthetic Biology Foundation" },
+  description: "bioERGOtech is a foundation building Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, with innovation hubs in Taranto, Zurich, and Riyadh.",
   alternates: { canonical: "/about-us" },
 };
 
@@ -23,7 +23,7 @@ export default function AboutUs() {
             <span style={{ color: "var(--primary)" }}>reaches people</span>
           </h1>
           <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            bioERGOtech is a foundation, and an ecosystem of researchers, founders, clinicians and partners, building Engineered Living Systems that move from the lab to real patient impact.
+            bioERGOtech is a foundation, and an ecosystem of researchers, founders, clinicians and partners, building Engineered Living Systems through synthetic biology and AI-driven automation that move from the lab to real patient impact.
           </p>
         </div>
       </section>

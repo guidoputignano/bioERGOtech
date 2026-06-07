@@ -12,7 +12,7 @@ export const metadata: Metadata = {
       "bioERGOtech Foundation: The Biotech Ecosystem From Lab to Market",
   },
   description:
-    "bioERGOtech Foundation is the ecosystem that takes your medical solution from the lab to the market. Shared lab infrastructure, a validated clinical network, and access to regional and European funding.",
+    "bioERGOtech Foundation is the biotech ecosystem that takes your medical solution from the lab to the market. Synthetic biology, shared lab infrastructure, a validated clinical network, and access to regional and European funding.",
   alternates: { canonical: "/" },
   openGraph: {
     title:

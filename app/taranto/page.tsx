@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Taranto Hub - bioERGOtech Foundation",
-  description: "The bioERGOtech Foundation's founding innovation hub in Taranto, Southern Italy, developing core technologies at the intersection of biotech and industrial heritage.",
+  title: { absolute: "Taranto Biotech Hub | Synthetic Biology in Southern Italy" },
+  description: "The bioERGOtech Foundation's biotech hub in Taranto, Puglia. We develop synthetic biology, automated biomanufacturing, and cell therapies in the heart of Southern Italy's innovation ecosystem.",
   alternates: { canonical: "/taranto" },
 };
 
@@ -27,7 +27,7 @@ export default function Taranto() {
                 The Taranto Innovation Hub
               </h1>
               <p className="text-xl mb-8 text-gray-700">
-                Our founding innovation hub in Southern Italy — where we are developing and testing our core technologies at the intersection of biotech and industrial heritage.
+                Our founding biotech hub in Taranto, in the Puglia region of Southern Italy. We develop and test our core technologies in synthetic biology and automated biomanufacturing, at the intersection of biotech and industrial heritage.
               </p>
               <a href="mailto:info@bioergotech.org" className="btn-primary">Get Involved</a>
             </div>
@@ -48,13 +48,13 @@ export default function Taranto() {
             <div>
               <h2 className="section-title">A City Reinventing Itself</h2>
               <p className="text-lg mb-6 text-gray-700">
-                Taranto has long been known for its industrial past. Today, it is becoming a symbol of transformation — from heavy industry to knowledge economy, from environmental challenge to scientific opportunity.
+                Taranto has long been known for its industrial past. Today, it is becoming a symbol of transformation, from heavy industry to knowledge economy, from environmental challenge to scientific opportunity.
               </p>
               <p className="text-lg mb-6 text-gray-700">
                 The bioERGOtech Taranto Hub is at the heart of this transformation. By establishing a world-class biotechnology centre in Southern Italy, we are creating jobs, training talent, attracting investment, and positioning Taranto as a European hub for life sciences innovation.
               </p>
               <p className="text-lg text-gray-700">
-                Our hub is home to the annual <strong>Taranto Biotech Days</strong> and the <strong>BioShot</strong> competition — bringing together over 1,200 participants including world-class researchers from Stanford, ETH Zürich, EPFL, and dozens of other institutions.
+                Our hub is home to the annual <strong>Taranto Biotech Days</strong> and the <strong>BioShot</strong> competition, bringing together over 1,200 participants including world-class researchers from Stanford, ETH Zürich, EPFL, and dozens of other institutions.
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function Taranto() {
         <div className="container mx-auto px-6">
           <h2 className="section-title block">Get Involved with Taranto</h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
-            Whether you want to collaborate on research, attend our events, or support the hub — we&apos;d love to hear from you.
+            Whether you want to collaborate on research, attend our events, or support the hub, we&apos;d love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a href="mailto:info@bioergotech.org" className="btn-primary">Contact Us</a>

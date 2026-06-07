@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Build With Us - bioERGOtech Foundation",
-  description: "Build breakthrough biotech projects with the bioERGOtech Foundation. We provide infrastructure, mentorship, funding access, and partnerships.",
+  title: { absolute: "Build With Us | Biotech Startup Support in Southern Italy" },
+  description: "Build a biotech or deeptech startup with the bioERGOtech Foundation. Shared lab infrastructure, a clinical validation network, EU and regional funding support, and mentorship in Southern Italy.",
   alternates: { canonical: "/build-with-us" },
 };
 

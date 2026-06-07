@@ -8,7 +8,7 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
-  title: "Member Portal - bioERGOtech Foundation",
+  title: "Member Portal",
   description:
     "Access the bioERGOtech Foundation member portal. Manage projects, connect with ecosystem members, and access shared resources.",
 };

@@ -4,7 +4,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Careers - bioERGOtech Foundation",
+  title: "Careers",
   description: "Join bioERGOtech Foundation as a builder. We hire for what you've built, what you want to build, and why it matters.",
   alternates: { canonical: "/careers" },
 };

@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Articles - bioERGOtech Foundation",
+  title: "Biotech News and Insights",
   description: "News, stories, and insights from the bioERGOtech Foundation, covering biotech innovation, team journeys, and ecosystem milestones.",
   alternates: { canonical: "/articles" },
 };

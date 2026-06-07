@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Agentic AI High School Innovation Program | bioERGOtech Foundation",
+  title: "Agentic AI High School Innovation Program",
   description:
     "A free ten-week course taking you from understanding AI agents to building a working prototype. No prior experience required.",
   openGraph: {

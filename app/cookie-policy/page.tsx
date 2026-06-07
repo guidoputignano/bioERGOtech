@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy - bioERGOtech Foundation",
+  title: "Cookie Policy",
   description: "Cookie Policy for the bioERGOtech Foundation website.",
 };
 

@@ -5,8 +5,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Partner With Us - bioERGOtech Foundation",
-  description: "Partner with the bioERGOtech Foundation to advance healthcare innovation through strategic collaboration across research, clinical, and industry ecosystems.",
+  title: { absolute: "Partner With Us | Biotech and Healthcare Innovation in Italy" },
+  description: "Partner with the bioERGOtech Foundation. Hospitals, universities, pharma, and investors gain early access to vetted biotech ventures, shared infrastructure, and clinical research collaborations.",
   alternates: { canonical: "/partner-with-us" },
 };
 
