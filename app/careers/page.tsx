@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -43,7 +44,7 @@ export default function Careers() {
               </p>
             </div>
             <div className="flex justify-center">
-              <img src="/assets/images/Careers/Careers.webp" alt="Careers at bioERGOtech" className="rounded-lg shadow-xl w-full max-w-md" />
+              <Image src="/assets/images/Careers/products.webp" alt="Careers at bioERGOtech" width={6000} height={4000} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>

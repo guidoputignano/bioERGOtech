@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -39,10 +40,14 @@ export default function BuildWithUs() {
   <div style={{ width: "100%", maxWidth: "520px" }}>
     <div className="order-1 md:order-2 flex justify-center">
   <div style={{ width: "100%", maxWidth: "520px" }}>
-    <img
+    <Image
       src="/assets/images/Build-with-us/Build_with_us.webp"
       alt="Build With Us"
-      className="rounded-lg shadow-xl w-full object-cover"
+      width={6240}
+      height={4160}
+      priority
+      sizes="(max-width: 768px) 100vw, 520px"
+      className="rounded-lg shadow-xl w-full h-auto object-cover"
     />
   </div>
 </div>
@@ -110,7 +115,7 @@ export default function BuildWithUs() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
-              <img src="/assets/images/Build-with-us/Acceleration_Program.webp" alt="Our Support" className="rounded-lg shadow-xl w-full max-w-md" />
+              <Image src="/assets/images/Build-with-us/Acceleration_Program.webp" alt="Our Support" width={3464} height={2309} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
             <div>
               <h2 className="section-title">What We Provide</h2>
@@ -180,7 +185,7 @@ export default function BuildWithUs() {
               </ul>
             </div>
             <div className="flex justify-center">
-              <img src="/assets/images/Build-with-us/ventures.jpg" alt="Types of Ventures" className="rounded-lg shadow-xl w-full max-w-md" />
+              <Image src="/assets/images/Build-with-us/ventures.jpg" alt="Types of Ventures" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>

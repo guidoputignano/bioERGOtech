@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -121,10 +122,13 @@ export default function PartnerWithUs() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center">
-              <img
+              <Image
                 src="/assets/images/Partner-With-Us/Partner.webp"
                 alt="Partnership"
-                className="rounded-lg shadow-xl w-full max-w-md"
+                width={6240}
+                height={4160}
+                sizes="(max-width: 768px) 100vw, 448px"
+                className="rounded-lg shadow-xl w-full h-auto max-w-md"
               />
             </div>
             <div>

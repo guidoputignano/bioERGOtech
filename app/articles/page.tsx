@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -134,7 +135,9 @@ export default function Articles() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {articles.map((a) => (
               <article key={a.slug} className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col">
-                <img src={a.img} alt={a.title} className="w-full h-52 object-cover" />
+                <div className="relative w-full h-52">
+                  <Image src={a.img} alt={a.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
+                </div>
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                     <span style={{ color: "var(--primary)" }}>{a.date}</span>

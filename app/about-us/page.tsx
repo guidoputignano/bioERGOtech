@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -64,7 +65,7 @@ export default function AboutUs() {
               </p>
             </div>
             <div className="flex justify-center">
-              <img src="/assets/images/About-us/1.png" alt="Lab research" className="rounded-lg shadow-xl w-full max-w-md" />
+              <Image src="/assets/images/About-us/1.png" alt="Lab research" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>
@@ -92,7 +93,7 @@ export default function AboutUs() {
               </ul>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
-              <img src="/assets/images/About-us/2.png" alt="Collaboration" className="rounded-lg shadow-xl w-full max-w-md" />
+              <Image src="/assets/images/About-us/2.png" alt="Collaboration" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>
@@ -104,7 +105,7 @@ export default function AboutUs() {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
               <div className="md:col-span-1 flex justify-center">
-                <img src="/assets/images/About-us/Guido-Putignano.png" className="w-40 h-40 rounded-full shadow-lg" alt="Guido Putignano" />
+                <Image src="/assets/images/About-us/Guido-Putignano.png" width={160} height={160} className="w-40 h-40 rounded-full shadow-lg object-cover" alt="Guido Putignano" />
               </div>
               <div className="md:col-span-3">
                 <i className="fas fa-quote-left text-3xl mb-4 block opacity-50" style={{ color: "var(--primary)" }} />
@@ -159,7 +160,7 @@ export default function AboutUs() {
                 { img: "/assets/images/About-us/Giacomo-Ferrazzini.png", name: "Giacomo Ferrazzini", role: "Scientific Projects Lead", desc: "Medical student at ETH Zurich and USI, combining advanced medical training with leadership in health science initiatives." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
-                  <img src={p.img} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
+                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
                   <h4 className="text-xl font-semibold">{p.name}</h4>
                   <p style={{ color: "var(--primary)" }}>{p.role}</p>
                   <p className="text-gray-600 mt-2">{p.desc}</p>
@@ -178,7 +179,7 @@ export default function AboutUs() {
                 { img: "/assets/images/launch_event/Ale_Basso.webp", name: "Alessandro Basso", role: "Innovator", desc: "Leading figure in Italy's digital healthcare landscape, particularly in telemedicine and innovative health service delivery." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
-                  <img src={p.img} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
+                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
                   <h4 className="text-xl font-semibold">{p.name}</h4>
                   <p style={{ color: "var(--primary)" }}>{p.role}</p>
                   <p className="text-gray-600 mt-2">{p.desc}</p>

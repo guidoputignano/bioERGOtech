@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { SegmentTabs } from "@/components/segment-tabs";
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
@@ -220,10 +221,14 @@ export default function Home() {
               </div>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
-              <img
+              <Image
                 src="/assets/images/Home/Automation.webp"
                 alt="Automated biomanufacturing inside the bioERGOtech ecosystem"
-                className="rounded-lg shadow-xl w-full max-w-md"
+                width={1536}
+                height={1024}
+                priority
+                sizes="(max-width: 768px) 100vw, 448px"
+                className="rounded-lg shadow-xl w-full h-auto max-w-md"
               />
             </div>
           </div>
@@ -419,9 +424,11 @@ export default function Home() {
                     >
                       Issue #1 · Founding Edition
                     </div>
-                    <img
+                    <Image
                       src="/assets/images/Logo/full_bioergotech.webp"
                       alt="bioERGOtech"
+                      width={196}
+                      height={48}
                       style={{ width: 196, maxWidth: "70%", height: "auto", zIndex: 1 }}
                     />
                     <div
@@ -436,7 +443,9 @@ export default function Home() {
                     />
                   </div>
                 ) : (
-                  <img src={item.img} alt={item.title} className="w-full h-44 object-cover" />
+                  <div className="relative w-full h-44">
+                    <Image src={item.img} alt={item.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" />
+                  </div>
                 )}
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-3 text-sm">
