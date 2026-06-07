@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Careers - bioERGOtech Foundation",
   description: "Join bioERGOtech Foundation as a builder. We hire for what you've built, what you want to build, and why it matters.",
+  alternates: { canonical: "/careers" },
 };
 
 export default function Careers() {

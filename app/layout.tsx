@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import CookieBanner from "@/components/cookie-banner";
 import NewsletterPopup from "@/components/newsletter-popup";
+import { StructuredData } from "@/components/structured-data";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bioergotech.org"),
   title: {
-    default: "bioERGOtech Foundation — Engineered Living Systems",
+    default: "bioERGOtech Foundation: Engineered Living Systems",
     template: "%s | bioERGOtech Foundation",
   },
   description:
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     apple: "/favicon.png",
   },
   openGraph: {
-    title: "bioERGOtech Foundation — Engineered Living Systems",
+    title: "bioERGOtech Foundation: Engineered Living Systems",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
     url: "https://www.bioergotech.org",
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "bioERGOtech Foundation — Engineered Living Systems",
+    title: "bioERGOtech Foundation: Engineered Living Systems",
     description:
       "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
     images: ["https://www.bioergotech.org/assets/images/og-image-v2.jpg"],
@@ -93,6 +94,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        <StructuredData />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

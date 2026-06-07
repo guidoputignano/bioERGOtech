@@ -1,4 +1,12 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Thank You',
+  description: 'Thank you for contacting the bioERGOtech Foundation.',
+  robots: { index: false, follow: true },
+  alternates: { canonical: '/contact/thank-you' },
+};
 
 export default function ContactThankYouPage() {
   return (

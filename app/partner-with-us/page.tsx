@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Partner With Us - bioERGOtech Foundation",
   description: "Partner with the bioERGOtech Foundation to advance healthcare innovation through strategic collaboration across research, clinical, and industry ecosystems.",
+  alternates: { canonical: "/partner-with-us" },
 };
 
 export default function PartnerWithUs() {

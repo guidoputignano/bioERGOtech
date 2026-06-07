@@ -5,7 +5,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Taranto Hub - bioERGOtech Foundation",
-  description: "The bioERGOtech Foundation's founding innovation hub in Taranto, Southern Italy — developing core technologies at the intersection of biotech and industrial heritage.",
+  description: "The bioERGOtech Foundation's founding innovation hub in Taranto, Southern Italy, developing core technologies at the intersection of biotech and industrial heritage.",
+  alternates: { canonical: "/taranto" },
 };
 
 export default function Taranto() {

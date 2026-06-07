@@ -5,7 +5,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Articles - bioERGOtech Foundation",
-  description: "News, stories, and insights from the bioERGOtech Foundation — covering biotech innovation, team journeys, and ecosystem milestones.",
+  description: "News, stories, and insights from the bioERGOtech Foundation, covering biotech innovation, team journeys, and ecosystem milestones.",
+  alternates: { canonical: "/articles" },
 };
 
 const articles = [

@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Us - bioERGOtech Foundation",
   description: "Learn about the bioERGOtech Foundation: our mission, team, scientific advisory board, and vision for advancing Engineered Living Systems.",
+  alternates: { canonical: "/about-us" },
 };
 
 export default function AboutUs() {

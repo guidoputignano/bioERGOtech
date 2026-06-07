@@ -3,6 +3,24 @@ import { SiteFooter } from "@/components/site-footer";
 import { SegmentTabs } from "@/components/segment-tabs";
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    absolute:
+      "bioERGOtech Foundation: The Biotech Ecosystem From Lab to Market",
+  },
+  description:
+    "bioERGOtech Foundation is the ecosystem that takes your medical solution from the lab to the market. Shared lab infrastructure, a validated clinical network, and access to regional and European funding.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title:
+      "bioERGOtech Foundation: The Biotech Ecosystem From Lab to Market",
+    description:
+      "Shared lab infrastructure, a validated clinical network, and access to regional and European funding. The ecosystem that takes your medical solution from the lab to the market.",
+    url: "https://www.bioergotech.org",
+  },
+};
 
 /* The global main.css overrides --primary-light with a harsh saturated mint
    (#61ffe0). We pin it back to a soft, on-brand tint for the homepage so every

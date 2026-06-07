@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import type { Metadata } from "next";
 
-const articleMeta: Record<string, { title: string; description: string }> = {
+export const articleMeta: Record<string, { title: string; description: string }> = {
   "news-predict-healthcare-joins-2026": {
     title: "Predict Healthcare Joins the Foundation - bioERGOtech",
     description: "Predict Healthcare, the Apulian leader in in-vivo diagnostics and medical imaging, joins the bioERGOtech Foundation.",
@@ -64,7 +64,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const meta = articleMeta[slug];
   if (!meta) return { title: "Article - bioERGOtech" };
-  return { title: meta.title, description: meta.description };
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: `/articles/${slug}` },
+    openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url: `https://www.bioergotech.org/articles/${slug}`,
+      type: "article",
+    },
+  };
 }
 
 function getArticleContent(slug: string): string | null {
