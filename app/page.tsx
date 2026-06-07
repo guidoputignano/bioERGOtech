@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { SegmentTabs } from "@/components/segment-tabs";
+import { FaqSection } from "@/components/faq-section";
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -494,6 +495,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── FAQ ── */}
+      <FaqSection />
 
       {/* ── Final CTA ── */}
       <section className="section" style={{ background: "var(--primary-light)" }}>
