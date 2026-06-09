@@ -23,7 +23,7 @@ const PROJECT_PILLARS = ["Digital Twin Therapeutics","Synthetic Biology & Cell E
 const PROJECT_PHASES = ["Ideation","Planning","Discovery","Development","Validation","Execution","Production","Completed"];
 const PROJECT_STATUSES = ["on-track","at-risk","blocked"];
 const EVENT_TYPES = ["internal","national","international","online"];
-const EQUIPMENT_CATEGORIES = ["Flow Cytometry","Sequencing","Imaging","Spectroscopy","Cell Culture","Electroporation","Organoid","PCR","Physical space","Service","Lab capability","Other"];
+const EQUIPMENT_CATEGORIES = ["Flow Cytometry","Sequencing","Imaging","Spectroscopy","Cell Culture","Electroporation","Organoid","PCR","Other"];
 
 const KNOWLEDGE_CATEGORIES = [
   { name: "Courses", icon: "star", desc: "Agentic AI program lessons and course materials", color: "#00C4B4", bg: "#E6F9F7" },
@@ -34,40 +34,6 @@ const KNOWLEDGE_CATEGORIES = [
   { name: "Onboarding", icon: "users", desc: "New member guides and welcome materials", color: "#00B894", bg: "#E6F9F5" },
   { name: "Webinar Archive", icon: "globe", desc: "Expert webinar recordings and slides", color: "#4A7DFF", bg: "#EBF1FF" },
 ];
-
-// ─── MEMBER BENEFITS ──────────────────────────────────────────────────────────
-// Benefits included with every membership, shown under "Included with
-// membership" in the Resources section. Stored in the Supabase "member_benefits"
-// table (admin-editable, same flat shape as this type) and fetched via
-// /api/admin/member-benefits. This constant is the seed and the offline fallback
-// used until the migration runs, following the KNOWLEDGE_CATEGORIES pattern.
-// action_type "active": already provisioned, shows an Active badge plus a link
-// (action_href for external, action_nav_to for an internal portal section).
-// "request": shows a "Request access" button that opens a pre-filled email.
-type MemberBenefit = {
-  id?: string;
-  name: string;
-  icon: string;
-  color: string;
-  bg: string;
-  description: string;
-  detail: string;
-  action_type: "active" | "request";
-  action_label?: string | null;
-  action_href?: string | null;
-  action_nav_to?: string | null;
-  sort_order?: number;
-  is_active?: boolean;
-};
-const MEMBER_BENEFITS: MemberBenefit[] = [
-  { name: "Professional email", icon: "mail", color: TEAL, bg: TEAL_LIGHT, description: "A branded mailbox on the foundation domain.", detail: "Your own @bioergotech.org address.", action_type: "request" },
-  { name: "Cloud storage", icon: "inbox", color: "#4A7DFF", bg: "#EBF1FF", description: "Shared and personal space for your work.", detail: "Up to 1TB on Google Drive.", action_type: "request" },
-  { name: "Canva Pro", icon: "edit", color: "#7C5CFC", bg: "#F0EDFF", description: "Design tool for decks, posters, and social assets.", detail: "Full Canva Pro seat.", action_type: "request" },
-  { name: "Google Ads grant", icon: "trendingup", color: "#00B894", bg: "#E6F9F5", description: "Nonprofit ad credits for outreach campaigns.", detail: "Up to €120k per year in ad spend.", action_type: "request" },
-  { name: "Outreach tool", icon: "globe", color: "#F0A500", bg: "#FFF8E6", description: "Manage partner outreach and the MoU pipeline.", detail: "Open the Outreach workspace.", action_type: "active", action_label: "Open Outreach", action_nav_to: "outreach" },
-  { name: "Computing access", icon: "cpu", color: "#E74C6F", bg: "#FDECF1", description: "Shared compute for analysis and model work.", detail: "Request access to network compute.", action_type: "request" },
-];
-const BENEFIT_ICON_CHOICES = ["mail", "inbox", "edit", "trendingup", "globe", "cpu", "star", "book", "flask", "layers", "chart", "users", "award", "shield"];
 
 function generateProjectObjectives(project: Partial<Project>): string[] {
   const name = project.name?.trim() || "this project";
@@ -123,7 +89,7 @@ export type PartnershipLevel = "viewer" | "student" | "member" | "partner" | "ad
 const PARTNERSHIP_ACCESS: Record<PartnershipLevel, string[]> = {
   viewer: ["dashboard"],
   student: ["dashboard", "knowledge"],
-  member: ["dashboard", "lab", "events", "members"],
+  member: ["dashboard", "events", "members"],
   partner: ["dashboard", "projects", "lab", "events", "members", "knowledge"],
   admin: ["dashboard", "projects", "lab", "events", "members", "knowledge", "admin"],
 };
@@ -137,13 +103,13 @@ const PARTNERSHIP_LABELS: Record<PartnershipLevel, { label: string; color: strin
 const LOCKED_SECTIONS: Record<PartnershipLevel, { id: string; requiredLevel: string }[]> = {
   viewer: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }, { id: "knowledge", requiredLevel: "Partner" }],
   student: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }],
-  member: [{ id: "knowledge", requiredLevel: "Partner" }],
+  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "knowledge", requiredLevel: "Partner" }],
   partner: [], admin: [],
 };
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: "grid" },
   { id: "projects", label: "Projects", icon: "layers" },
-  { id: "lab", label: "Resources", icon: "cpu" },
+  { id: "lab", label: "Distributed Lab", icon: "cpu" },
   { id: "events", label: "Events", icon: "calendar" },
   { id: "members", label: "Members", icon: "users" },
   { id: "knowledge", label: "Knowledge Base", icon: "book" },
@@ -346,7 +312,7 @@ function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userE
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const handle = async () => {
-    if (!form.name.trim() || !form.location.trim()) { setError("Resource name and location are required."); return; }
+    if (!form.name.trim() || !form.location.trim()) { setError("Equipment name and location are required."); return; }
     setSaving(true); setError(null);
     try {
       const res = await fetch("/api/admin/equipment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, proposed_by_email: userEmail, proposed_by_name: userName }) });
@@ -361,7 +327,7 @@ function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userE
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
       <div style={{ position: "relative", width: 500, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden", animation: "fadeUp 0.2s ease both" }}>
         <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div><div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Propose a Resource</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>Share a resource or service with the network</div></div>
+          <div><div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Propose Equipment</div><div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>Submit a machine for the Distributed Lab network</div></div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
         </div>
         {success ? (
@@ -375,11 +341,11 @@ function ProposeEquipmentModal({ userEmail, userName, onClose, onSave }: { userE
           <>
             <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
               {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
-              <div><label style={modalLabelStyle}>Resource Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Confocal Microscope, Meeting Room, Grant-writing support" style={modalInputStyle} /></div>
+              <div><label style={modalLabelStyle}>Equipment Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Confocal Microscope Leica SP8" style={modalInputStyle} /></div>
               <div><label style={modalLabelStyle}>Category</label><select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}><option value="">Select a category…</option>{EQUIPMENT_CATEGORIES.map(c => (<option key={c} value={c}>{c}</option>))}</select></div>
               <div><label style={modalLabelStyle}>Location / Hub *</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="e.g. Taranto Lab A or Zurich UZH" style={modalInputStyle} /></div>
-              <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Describe the resource or service, its capabilities and availability…" style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
-              <div style={{ padding: "12px 16px", borderRadius: 10, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, fontSize: 12, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>Your proposal will be reviewed by the admin team. Once approved, the resource will appear in the network.</div>
+              <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Describe the equipment, its capabilities and availability…" style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
+              <div style={{ padding: "12px 16px", borderRadius: 10, background: TEAL_LIGHT, border: `1px solid ${TEAL_MUTED}`, fontSize: 12, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>Your proposal will be reviewed by the admin team. Once approved, the equipment will appear in the Distributed Lab network.</div>
             </div>
             <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
@@ -400,7 +366,7 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!equipment?.id;
   const handle = async () => {
-    if (!form.name.trim() || !form.location.trim()) { setError("Resource name and location are required."); return; }
+    if (!form.name.trim() || !form.location.trim()) { setError("Equipment name and location are required."); return; }
     setSaving(true); setError(null);
     try { await onSave({ ...(isEdit ? { id: equipment!.id } : { is_admin_add: true }), ...form, status: "approved" }); onClose(); }
     catch (e) { setError(e instanceof Error ? e.message : "Failed to save equipment."); }
@@ -411,12 +377,12 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
       <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
       <div style={{ position: "relative", width: 620, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden" }}>
         <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{isEdit ? "Edit Resource" : "Add Resource"}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{isEdit ? "Edit Equipment" : "Add Equipment"}</div>
           <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
         </div>
         <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "70vh", overflowY: "auto" }}>
           {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
-          <div><label style={modalLabelStyle}>Resource Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={modalInputStyle} /></div>
+          <div><label style={modalLabelStyle}>Equipment Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={modalInputStyle} /></div>
           <div><label style={modalLabelStyle}>Category</label><select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={modalInputStyle}><option value="">Select a category…</option>{EQUIPMENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
           <div><label style={modalLabelStyle}>Location *</label><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={modalInputStyle} /></div>
           <div><label style={modalLabelStyle}>Description</label><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...modalInputStyle, resize: "vertical" as const }} /></div>
@@ -434,7 +400,7 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
         </div>
         <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
-          <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : isEdit ? "Save Changes" : "Add Resource"}</button>
+          <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : isEdit ? "Save Changes" : "Add Equipment"}</button>
         </div>
       </div>
     </div>
@@ -1260,73 +1226,7 @@ function EquipmentDrawer({ equipment, isAdmin, onClose, onEdit, onDelete }: { eq
         </div>
         <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", gap: 12 }}>
           <button onClick={onClose} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Close</button>
-          {isAdmin && <div style={{ display: "flex", gap: 10 }}><button onClick={() => onEdit?.(equipment)} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Edit</button><button onClick={() => { if (confirm("Delete this resource?")) onDelete?.(equipment.id); }} style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Delete</button></div>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── MEMBER BENEFIT MODAL (admin add / edit) ──────────────────────────────────
-function BenefitModal({ benefit, onClose, onSave }: { benefit: Partial<MemberBenefit> | null; onClose: () => void; onSave: (payload: Partial<MemberBenefit>) => Promise<void>; }) {
-  const [form, setForm] = useState({
-    name: benefit?.name || "",
-    description: benefit?.description || "",
-    detail: benefit?.detail || "",
-    icon: benefit?.icon || "star",
-    color: benefit?.color || "#2EC4B6",
-    bg: benefit?.bg || "#E6FAF8",
-    action_type: (benefit?.action_type as "active" | "request") || "request",
-    action_label: benefit?.action_label || "",
-    action_href: benefit?.action_href || "",
-    action_nav_to: benefit?.action_nav_to || "",
-    sort_order: benefit?.sort_order ?? 0,
-    is_active: benefit?.is_active ?? true,
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const isEdit = !!benefit?.id;
-  const handle = async () => {
-    if (!form.name.trim()) { setError("Benefit name is required."); return; }
-    setSaving(true); setError(null);
-    try { await onSave({ ...(isEdit ? { id: benefit!.id } : {}), ...form }); onClose(); }
-    catch (e) { setError(e instanceof Error ? e.message : "Failed to save benefit."); }
-    finally { setSaving(false); }
-  };
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 210, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.45)", backdropFilter: "blur(3px)" }} />
-      <div style={{ position: "relative", width: 560, background: CARD, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflow: "hidden" }}>
-        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>{isEdit ? "Edit Benefit" : "Add Benefit"}</div>
-          <button onClick={onClose} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={16} /></button>
-        </div>
-        <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 14, maxHeight: "70vh", overflowY: "auto" }}>
-          {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", color: "#D63563", fontSize: 13 }}>{error}</div>}
-          <div><label style={modalLabelStyle}>Name *</label><input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Professional email" style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Description</label><input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Short description" style={modalInputStyle} /></div>
-          <div><label style={modalLabelStyle}>Benefit detail</label><input value={form.detail} onChange={e => setForm(p => ({ ...p, detail: e.target.value }))} placeholder="e.g. Up to 1TB on Google Drive" style={modalInputStyle} /></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <div><label style={modalLabelStyle}>Icon</label><select value={form.icon} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))} style={modalInputStyle}>{BENEFIT_ICON_CHOICES.map(ic => <option key={ic} value={ic}>{ic}</option>)}</select></div>
-            <div><label style={modalLabelStyle}>Icon color</label><input value={form.color} onChange={e => setForm(p => ({ ...p, color: e.target.value }))} placeholder="#2EC4B6" style={modalInputStyle} /></div>
-            <div><label style={modalLabelStyle}>Icon background</label><input value={form.bg} onChange={e => setForm(p => ({ ...p, bg: e.target.value }))} placeholder="#E6FAF8" style={modalInputStyle} /></div>
-          </div>
-          <div><label style={modalLabelStyle}>Action</label><select value={form.action_type} onChange={e => setForm(p => ({ ...p, action_type: e.target.value as "active" | "request" }))} style={modalInputStyle}><option value="request">Request access (email)</option><option value="active">Active (link)</option></select></div>
-          {form.action_type === "active" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <div><label style={modalLabelStyle}>Button label</label><input value={form.action_label} onChange={e => setForm(p => ({ ...p, action_label: e.target.value }))} placeholder="Open" style={modalInputStyle} /></div>
-              <div><label style={modalLabelStyle}>External URL</label><input value={form.action_href} onChange={e => setForm(p => ({ ...p, action_href: e.target.value }))} placeholder="https://..." style={modalInputStyle} /></div>
-              <div><label style={modalLabelStyle}>Portal section</label><input value={form.action_nav_to} onChange={e => setForm(p => ({ ...p, action_nav_to: e.target.value }))} placeholder="e.g. outreach" style={modalInputStyle} /></div>
-            </div>
-          )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "end" }}>
-            <div><label style={modalLabelStyle}>Display order</label><input type="number" value={form.sort_order} onChange={e => setForm(p => ({ ...p, sort_order: Number(e.target.value) }))} style={modalInputStyle} /></div>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: TEXT_MID, fontFamily: "'DM Sans', sans-serif", paddingBottom: 10 }}><input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} /> Active (visible to members)</label>
-          </div>
-        </div>
-        <div style={{ padding: "16px 28px", borderTop: `1px solid ${BORDER}`, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>Cancel</button>
-          <button onClick={handle} disabled={saving} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: saving ? "default" : "pointer", fontFamily: "'DM Sans', sans-serif", opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : isEdit ? "Save Changes" : "Add Benefit"}</button>
+          {isAdmin && <div style={{ display: "flex", gap: 10 }}><button onClick={() => onEdit?.(equipment)} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Edit</button><button onClick={() => { if (confirm("Delete this equipment item?")) onDelete?.(equipment.id); }} style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#FDECF1", color: "#D63563", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Delete</button></div>}
         </div>
       </div>
     </div>
@@ -1335,17 +1235,10 @@ function BenefitModal({ benefit, onClose, onSave }: { benefit: Partial<MemberBen
 
 // ─── LAB VIEW ─────────────────────────────────────────────────────────────────
 
-function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { userEmail: string; userName: string; isAdmin?: boolean; canContribute?: boolean; onNavigate?: (section: string) => void; }) {
-  // Partners and admins can contribute to the shared network. Members can view
-  // and request, but the propose/add action stays gated.
-  const mayContribute = canContribute ?? isAdmin ?? false;
+function LabView({ userEmail, userName, isAdmin }: { userEmail: string; userName: string; isAdmin?: boolean; }) {
   const [proposing, setProposing] = useState(false);
   const [equipmentModal, setEquipmentModal] = useState<Partial<EquipmentProposal> | null>(null);
   const [approvedEquipment, setApprovedEquipment] = useState<EquipmentProposal[]>([]);
-  // Member benefits — fetched from DB, falling back to the seed constant until
-  // the migration runs or if the table is unavailable.
-  const [benefits, setBenefits] = useState<MemberBenefit[]>(MEMBER_BENEFITS);
-  const [benefitModal, setBenefitModal] = useState<Partial<MemberBenefit> | null>(null);
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentProposal | null>(null);
   const [editingStats, setEditingStats] = useState(false);
   const [search, setSearch] = useState("");
@@ -1384,45 +1277,10 @@ function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { 
     finally { setLabStatsLoading(false); }
   };
 
-  // Fetch member benefits. Admins get every card (including hidden ones), others
-  // get only active cards. Keeps the seed constant if the table is empty/missing.
-  const fetchBenefits = async () => {
-    try {
-      const res = await fetch(`/api/admin/member-benefits${isAdmin ? "?all=true" : ""}`);
-      const data = await res.json();
-      if (res.ok && Array.isArray(data.benefits) && data.benefits.length > 0) {
-        setBenefits(data.benefits);
-      }
-    } catch {}
-  };
-
   useEffect(() => {
     fetchEquipment();
     fetchLabStats();
-    fetchBenefits();
   }, []);
-
-  const handleSaveBenefit = async (payload: Partial<MemberBenefit>) => {
-    const isEdit = !!payload.id;
-    const res = await fetch("/api/admin/member-benefits", {
-      method: isEdit ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to save benefit");
-    await fetchBenefits();
-  };
-
-  const handleDeleteBenefit = async (id: string) => {
-    if (!confirm("Delete this benefit?")) return;
-    await fetch("/api/admin/member-benefits", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    await fetchBenefits();
-  };
 
   const filteredEquipment = approvedEquipment.filter(e =>
     [e.name, e.location, e.category, e.description]
@@ -1548,73 +1406,13 @@ function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { 
           onDelete={handleDeleteEquipment}
         />
       )}
-      {benefitModal !== null && (
-        <BenefitModal
-          benefit={benefitModal}
-          onClose={() => setBenefitModal(null)}
-          onSave={async (payload) => { await handleSaveBenefit(payload); setBenefitModal(null); }}
-        />
-      )}
-
-      {/* ── Part A: Included with membership ── */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Included with membership</div>
-          <div style={{ fontSize: 13, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>Tools and services that come with your bioERGOtech membership.</div>
-        </div>
-        {isAdmin && (
-          <button onClick={() => setBenefitModal({})} style={{ padding: "9px 16px", borderRadius: 10, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" as const }}>
-            <Icon name="plus" size={14} /> Add Benefit
-          </button>
-        )}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
-        {benefits.map(b => (
-          <div key={b.id ?? b.name} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 22, boxShadow: SHADOW, display: "flex", flexDirection: "column", gap: 12, opacity: b.is_active === false ? 0.55 : 1 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: b.bg, color: b.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name={b.icon} size={20} /></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {b.action_type === "active" && (
-                  <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: 20, fontWeight: 700, background: "#E6F9F5", color: "#0D9373", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>Active</span>
-                )}
-                {isAdmin && b.id && (
-                  <>
-                    <button onClick={() => setBenefitModal(b)} style={{ background: "#F3F5F8", border: "none", borderRadius: 6, padding: "5px 6px", cursor: "pointer", color: TEXT_MID }}><Icon name="edit" size={13} /></button>
-                    <button onClick={() => handleDeleteBenefit(b.id!)} style={{ background: "#FDECF1", border: "none", borderRadius: 6, padding: "5px 6px", cursor: "pointer", color: "#D63563" }}><Icon name="trash" size={13} /></button>
-                  </>
-                )}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 4 }}>{b.name}</div>
-              {b.description && <div style={{ fontSize: 13, color: TEXT_MID, lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>{b.description}</div>}
-            </div>
-            {b.detail && <div style={{ fontSize: 12, color: TEXT_LIGHT, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", marginTop: "auto" }}>{b.detail}</div>}
-            {b.action_type === "active" ? (
-              b.action_nav_to ? (
-                <button onClick={() => onNavigate?.(b.action_nav_to!)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", borderRadius: 10, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>{b.action_label || "Open"} <Icon name="chevronRight" size={14} /></button>
-              ) : (
-                <a href={b.action_href || "#"} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", borderRadius: 10, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}><Icon name="link" size={14} /> {b.action_label || "Open"}</a>
-              )
-            ) : (
-              <a href={`mailto:info@bioergotech.org?subject=${encodeURIComponent(`Access request: ${b.name}`)}&body=${encodeURIComponent(`Hi,\n\nI would like to request access to ${b.name}${b.detail ? ` (${b.detail})` : ""}.\n\nThanks,\n${userName}`)}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}><Icon name="mail" size={14} /> Request access</a>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* ── Part B: Shared by the network ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
-        <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Shared by the network</div>
-        <div style={{ fontSize: 13, color: TEXT_LIGHT, fontFamily: "'DM Sans', sans-serif" }}>Resources and services that members make available across the network: physical space, lab capabilities, equipment, and services.</div>
-      </div>
 
       {/* Toolbar */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 14, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 18px", background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: SHADOW }}>
           <span style={{ color: TEXT_LIGHT }}><Icon name="search" size={16} /></span>
           <input
-            placeholder="Search resources and services..."
+            placeholder="Search equipment..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ background: "transparent", border: "none", outline: "none", color: TEXT, flex: 1, fontSize: 13 }}
@@ -1625,16 +1423,16 @@ function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { 
             onClick={() => setEquipmentModal({})}
             style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" as const }}
           >
-            <Icon name="plus" size={14} /> Add Resource
+            <Icon name="plus" size={14} /> Add Equipment
           </button>
-        ) : mayContribute ? (
+        ) : (
           <button
             onClick={() => setProposing(true)}
             style={{ padding: "11px 20px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" as const }}
           >
-            <Icon name="plus" size={14} /> Propose Resource
+            <Icon name="plus" size={14} /> Propose Equipment
           </button>
-        ) : null}
+        )}
       </div>
 
       {/* Info banner */}
@@ -1643,10 +1441,8 @@ function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { 
           <span style={{ color: TEAL_DARK, flexShrink: 0 }}><Icon name="cpu" size={16} /></span>
           <span style={{ fontSize: 13, color: TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>
             {isAdmin
-              ? "Add resources and services directly to the network, or edit existing shared items."
-              : mayContribute
-                ? "Have a resource or service to share? Click Propose Resource to submit it for admin approval."
-                : "Browse resources and services shared across the network. Book what you need from the list below."}
+              ? "Add equipment directly to the Distributed Lab, or edit existing shared equipment."
+              : "Have equipment to share? Click Propose Equipment to submit it for admin approval."}
           </span>
         </div>
         {isAdmin && !editingStats && (
@@ -1729,7 +1525,7 @@ function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { 
       {/* Equipment table */}
       <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px 140px 100px", padding: "14px 24px", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700, background: "#FAFBFC", fontFamily: "'DM Sans', sans-serif" }}>
-          <span>Resource</span>
+          <span>Equipment</span>
           <span>Location</span>
           <span>Status</span>
           <span>Utilization</span>
@@ -1739,8 +1535,8 @@ function LabView({ userEmail, userName, isAdmin, canContribute, onNavigate }: { 
         {filteredEquipment.length === 0 ? (
           <div style={{ padding: "40px 24px", textAlign: "center", color: TEXT_LIGHT, fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
             {isAdmin
-              ? "No resources yet. Use the Add Resource button above."
-              : "No shared resources or services in the network yet."}
+              ? "No equipment yet. Use the Add Equipment button above."
+              : "No approved equipment in the network yet."}
           </div>
         ) : (
           filteredEquipment.map((e, i) => (
@@ -4306,6 +4102,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
   const [emailSubject, setEmailSubject] = useState(OUTREACH_TEMPLATES.cold.subj);
   const [emailBody, setEmailBody] = useState(OUTREACH_TEMPLATES.cold.body);
   const [senderName, setSenderName] = useState("Guido Putignano · bioERGOtech Foundation");
+  const [bccEmail, setBccEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sendProgress, setSendProgress] = useState({ done: 0, total: 0, sent: 0, failed: 0 });
   const [sendMsg, setSendMsg] = useState("");
@@ -4482,7 +4279,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
       const r = await fetch("/api/admin/outreach/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contacts: batch, subject: emailSubject, body: emailBody, senderName, sentBy: adminUserId }),
+        body: JSON.stringify({ contacts: batch, subject: emailSubject, body: emailBody, senderName, sentBy: adminUserId, bcc: bccEmail.trim() || null }),
       });
       const text = await r.text();
       let d: Record<string, unknown> = {};
@@ -4494,6 +4291,7 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
     }
 
     setSendMsg(`Campaign complete — ${totalSent} sent · ${totalFailed} failed`);
+      setBccEmail(""); // Clear BCC after send
     setSending(false);
     fetchContacts();
     fetchLogs();
@@ -4708,7 +4506,15 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
                 <div><span style={labelStyle}>Contact person</span><div style={{ fontSize: 13, color: TEXT }}>{drawerContact.contact_person || "—"}</div></div>
                 <div><span style={labelStyle}>City</span><div style={{ fontSize: 13, color: TEXT }}>{drawerContact.city || "—"}</div></div>
               </div>
-              <div><span style={labelStyle}>Email</span><div style={{ fontSize: 13, color: TEXT }}>{drawerContact.email || "—"}</div></div>
+              <div>
+                <span style={labelStyle}>Email</span>
+                <input
+                  style={inputStyle}
+                  value={drawerFields.email ?? drawerContact.email ?? ""}
+                  onChange={(e) => setDrawerFields((p) => ({ ...p, email: e.target.value }))}
+                  placeholder="email@institution.org"
+                />
+              </div>
               {drawerContact.website && <div><span style={labelStyle}>Website</span><a href={drawerContact.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: TEAL }}>{drawerContact.website}</a></div>}
               <div><span style={labelStyle}>Field of interest</span><div style={{ fontSize: 12, color: TEXT_MID, lineHeight: 1.5 }}>{drawerContact.field_of_interest || "—"}</div></div>
 
@@ -4844,6 +4650,10 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
           <div style={{ marginBottom: 10 }}>
             <span style={labelStyle}>Sender name</span>
             <input style={inputStyle} value={senderName} onChange={(e) => setSenderName(e.target.value)} />
+          <div>
+            <span style={labelStyle}>BCC (optional — for alternative email address)</span>
+            <input style={inputStyle} value={bccEmail} onChange={(e) => setBccEmail(e.target.value)} placeholder="e.g. drmonahamdy@yahoo.com" />
+          </div>
           </div>
           <div>
             <span style={labelStyle}>Body — merge fields: {"{{name}}"}, {"{{institution}}"}, {"{{field}}"}, {"{{country}}"}, {"{{opening_line}}"}</span>
@@ -4999,7 +4809,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const canManageAllProjects = partnershipLevel === "admin";
   const accessibleSections = PARTNERSHIP_ACCESS[partnershipLevel] || PARTNERSHIP_ACCESS.viewer;
   const levelInfo = PARTNERSHIP_LABELS[partnershipLevel] || PARTNERSHIP_LABELS.viewer;
-  const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Member Resources", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", outreach: "Outreach & MoU Pipeline", admin: "Admin Panel" };
+  const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", outreach: "Outreach & MoU Pipeline", admin: "Admin Panel" };
   const visibleNav = navItems.filter(item => { if (item.id === "admin") return isAdmin; return true; });
 
   const handleSaveEventInline = async (event: Partial<Event>) => { const res = await fetch("/api/admin/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); if (res.ok) { fetchEvents(); setEditingEvent(null); } };
@@ -5098,8 +4908,8 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
 
       case "lab":
         return (
-          <SectionWrapper sectionId="lab" sectionName="Member Resources" partnershipLevel={partnershipLevel}>
-            <LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} isAdmin={isAdmin} canContribute={partnershipLevel === "partner" || isAdmin} onNavigate={setActiveNav} />
+          <SectionWrapper sectionId="lab" sectionName="Distributed Lab" partnershipLevel={partnershipLevel}>
+            <LabView userEmail={user.email} userName={user.display_name || user.full_name || user.email} isAdmin={isAdmin} />
           </SectionWrapper>
         );
 

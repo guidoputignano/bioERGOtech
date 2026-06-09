@@ -70,9 +70,9 @@ export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {
         return;
       }
 
-      if (
-        raw.match(/^[\d]+\.\s*(SINTESI CLINICA|PROPOSTA TERAPEUTICA|INDAGINI MANCANTI|NOTE PER LA DISCUSSIONE)/i) ||
-        raw.match(/^(SINTESI CLINICA|PROPOSTA TERAPEUTICA|INDAGINI MANCANTI|NOTE PER LA DISCUSSIONE)/i)
+     if (
+        raw.match(/^[\d]+\.\s*(SINTESI CLINICA|PASSAGGI|INDAGINI MANCANTI|NOTE PER LA DISCUSSIONE)/i) ||
+        raw.match(/^(SINTESI CLINICA|PASSAGGI|INDAGINI MANCANTI|NOTE PER LA DISCUSSIONE)/i)
       ) {
         elements.push(
           <div key={i} className="mt-8 mb-3">
@@ -135,7 +135,16 @@ export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {
         );
         return;
       }
-
+      // Fonte / source citation line
+      if (raw.match(/^Fonte:/i) || raw.match(/^Rilevanza:/i)) {
+        const isRilevanza = raw.match(/^Rilevanza:/i);
+        elements.push(
+          <div key={i} className={`text-xs mt-1 mb-2 ml-4 ${isRilevanza ? "text-gray-500 italic" : "text-[#0D7E8A] font-medium"}`}>
+            {raw}
+          </div>
+        );
+        return;
+      }
       if (raw.startsWith(">")) {
         const content = raw.replace(/^>\s*[-–]?\s*/, "").trim();
         if (!content) return;

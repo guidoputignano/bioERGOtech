@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+import path from "path";
 
 const getDB = () =>
   createClient(
@@ -13,7 +14,7 @@ const getDB = () =>
 // Body: { contacts: Contact[], subject: string, body: string, senderName: string, sentBy: string }
 export async function POST(request: Request) {
   try {
-    const { contacts, subject, body, senderName, sentBy } = await request.json();
+    const { contacts, subject, body, senderName, sentBy, bcc } = await request.json();
 
     if (!contacts?.length) {
       return NextResponse.json({ error: "No contacts provided" }, { status: 400 });
@@ -27,6 +28,18 @@ export async function POST(request: Request) {
     if (!apiKey) {
       return NextResponse.json({ error: "RESEND_API_KEY not configured in environment variables" }, { status: 500 });
     }
+
+    // Load intro PDF from public folder (filesystem read — no HTTP call)
+    let pdfAttachment: { filename: string; content: string } | null = null;
+    try {
+      const pdfPath = path.join(process.cwd(), "public", "assets", "docs", "bioergotech-intro.pdf");
+      if (fs.existsSync(pdfPath)) {
+        pdfAttachment = {
+          filename: "bioERGOtech-Foundation-Introduction.pdf",
+          content: fs.readFileSync(pdfPath).toString("base64"),
+        };
+      }
+    } catch { /* PDF is optional */ }
 
     const db = getDB();
 
@@ -105,6 +118,7 @@ export async function POST(request: Request) {
         } = {
           from: `${senderName || "bioERGOtech Foundation"} <${fromEmail}>`,
           to: [contact.email],
+          ...(bcc ? { bcc: [bcc] } : {}),
           subject: finalSubject,
           text: finalBody,
         };
@@ -113,7 +127,10 @@ export async function POST(request: Request) {
         const sendRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify(emailPayload),
+          body: JSON.stringify({
+            ...emailPayload,
+            ...(pdfAttachment ? { attachments: [pdfAttachment] } : {}),
+          }),
         });
         if (!sendRes.ok) {
           const errData = await sendRes.json().catch(() => ({}));

@@ -234,9 +234,10 @@ export async function GET(req: NextRequest) {
     const accessToken = await getGmailAccessToken();
     const db = getDB();
 
-    // Search for unread reply emails in inbox
-    // Using label:inbox to avoid sent/drafts, and subject:Re to catch replies
-    const searchQuery = `is:unread in:inbox subject:Re:`;
+    // Search ALL replies in last 7 days across all folders
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const sinceDate = `${since7d.getFullYear()}/${String(since7d.getMonth()+1).padStart(2,'0')}/${String(since7d.getDate()).padStart(2,'0')}`;
+    const searchQuery = `subject:Re: after:${sinceDate} -from:me`;
 
     const listRes = await gmailFetch(
       `/users/${process.env.GMAIL_USER}/messages?q=${encodeURIComponent(searchQuery)}&maxResults=20`,
@@ -283,10 +284,14 @@ export async function GET(req: NextRequest) {
         }
 
         // Don't reprocess if already classified as Hot/Call/MoU/Signed
-        const alreadyAdvanced = ["Hot","Call Scheduled","Call Done","MoU Sent","Signed"].includes(
+        const alreadyAdvanced = ["Call Scheduled","Call Done","MoU Sent","Signed"].includes(
           contact.email_status as string
         );
         if (alreadyAdvanced) continue;
+
+        // Skip if this exact Gmail message was already processed
+        const existingNotes = (contact.notes as string) || "";
+        if (existingNotes.includes(`[msgid:${msg.id}]`)) continue;
 
         // Get email body
         const body = extractEmailBody(fullMsg.payload || {});
@@ -311,7 +316,7 @@ export async function GET(req: NextRequest) {
           response_status: classification,
           notes: [
             contact.notes || "",
-            `[Auto] ${new Date().toLocaleDateString("en-GB")} — ${classification}: ${reason}`,
+            `[Auto] ${new Date().toLocaleDateString("en-GB")} — ${classification}: ${reason} [msgid:${msg.id}]`,
             suggestedReply ? `Suggested reply: ${suggestedReply.slice(0, 200)}…` : "",
           ].filter(Boolean).join("\n\n"),
         }).eq("id", contact.id);
