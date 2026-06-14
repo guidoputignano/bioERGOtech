@@ -12,7 +12,6 @@ import {
   SESSIONS,
   ARCHIVE_MODE,
   RELATORI,
-  RELATORI_COMING_SOON,
   MODERATORE,
   CONFRONTO,
   STATS,
@@ -180,11 +179,8 @@ export default function EventPage() {
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
             <h2 className="section-title">Giorno 1 . Giovedì 11 dicembre . Iacovone, Taranto</h2>
-            <p className="text-lg text-gray-700 max-w-3xl mb-4">
+            <p className="text-lg text-gray-700 max-w-3xl mb-10">
               Mattina, programma scientifico (9:00 . 13:00). Scienziati, medici e campioni dello sport a confronto.
-            </p>
-            <p className="text-sm mb-10" style={{ color: "var(--text-light)" }}>
-              Programma in aggiornamento. Altri relatori sono in via di conferma.
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
@@ -197,49 +193,18 @@ export default function EventPage() {
                       fill
                       sizes="96px"
                       className="rounded-full object-cover"
-                      style={{ filter: r.confermato ? undefined : "grayscale(1)", opacity: r.confermato ? 1 : 0.85 }}
                     />
                   </div>
                   <h3 className="font-semibold text-gray-800 text-sm leading-tight">{r.nome}</h3>
-                  {r.confermato ? (
-                    <p className="text-xs text-gray-600 mt-1">{r.ruolo}</p>
-                  ) : (
-                    <span className="badge mt-2 inline-block" style={{ background: "#FEF3DC", color: "#B7791F", fontSize: "0.6rem" }}>
-                      In attesa di conferma
-                    </span>
-                  )}
+                  <p className="text-xs text-gray-600 mt-1">{r.ruolo}</p>
                 </div>
               ))}
-
-              {RELATORI_COMING_SOON && (
-                <div
-                  className="card-sm text-center flex flex-col items-center justify-center"
-                  style={{ padding: 18, borderStyle: "dashed", background: "var(--bg-light)" }}
-                >
-                  <div
-                    style={{
-                      width: 96,
-                      height: 96,
-                      margin: "0 auto 12px",
-                      borderRadius: "50%",
-                      border: "2px dashed var(--primary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <i className="fas fa-ellipsis text-2xl" style={{ color: "var(--primary)" }} />
-                  </div>
-                  <h3 className="font-semibold text-gray-800 text-sm">Coming soon</h3>
-                  <p className="text-xs text-gray-600 mt-1">Altri relatori in arrivo</p>
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
               <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
                 <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                  <Image src={MODERATORE.img} alt={MODERATORE.nome} fill sizes="72px" className="rounded-full object-cover" style={{ filter: MODERATORE.confermato ? undefined : "grayscale(1)", opacity: MODERATORE.confermato ? 1 : 0.85 }} />
+                  <Image src={MODERATORE.img} alt={MODERATORE.nome} fill sizes="72px" className="rounded-full object-cover" />
                 </div>
                 <div>
                   <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
@@ -247,27 +212,17 @@ export default function EventPage() {
                   </span>
                   <h3 className="font-semibold text-gray-800 mt-2">{MODERATORE.nome}</h3>
                   <p className="text-sm text-gray-600">{MODERATORE.ruolo}</p>
-                  {!MODERATORE.confermato && (
-                    <span className="badge mt-2 inline-block" style={{ background: "#FEF3DC", color: "#B7791F", fontSize: "0.6rem" }}>
-                      In attesa di conferma
-                    </span>
-                  )}
                 </div>
               </div>
               <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
                 <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                  <Image src={CONFRONTO.img} alt="Francesco Montervino" fill sizes="72px" className="rounded-full object-cover" style={{ filter: CONFRONTO.confermato ? undefined : "grayscale(1)", opacity: CONFRONTO.confermato ? 1 : 0.85 }} />
+                  <Image src={CONFRONTO.img} alt="Francesco Montervino" fill sizes="72px" className="rounded-full object-cover" />
                 </div>
                 <div>
                   <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
                     {CONFRONTO.titolo}
                   </span>
                   <p className="text-sm text-gray-600 mt-2">{CONFRONTO.testo}</p>
-                  {!CONFRONTO.confermato && (
-                    <span className="badge mt-2 inline-block" style={{ background: "#FEF3DC", color: "#B7791F", fontSize: "0.6rem" }}>
-                      In attesa di conferma
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
