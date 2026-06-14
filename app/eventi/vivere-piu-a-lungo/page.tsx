@@ -86,7 +86,7 @@ export default function EventPage() {
       <div style={SOFT_BRAND} className="event-page">
         {/* ── Hero ── */}
         <section className="hero" style={{ paddingTop: "120px" }}>
-          <div className="container mx-auto px-6 pt-8 pb-16 relative z-10">
+          <div className="container mx-auto px-6 pt-8 pb-28 relative z-10">
             <div className="max-w-3xl">
               <div
                 style={{
@@ -164,7 +164,7 @@ export default function EventPage() {
         {/* ── Giorno 1 ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">Giorno 1 . Giovedi 11 dicembre . Iacovone, Taranto</h2>
+            <h2 className="section-title">Giorno 1 . Giovedì 11 dicembre . Iacovone, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-4">
               Mattina, programma scientifico (9:00 . 13:00). Scienziati, medici e campioni dello sport a confronto.
             </p>
@@ -271,7 +271,7 @@ export default function EventPage() {
         {/* ── Giorno 2 ── */}
         <section className="section">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">Giorno 2 . Venerdi 12 dicembre . Camera di Commercio, Taranto</h2>
+            <h2 className="section-title">Giorno 2 . Venerdì 12 dicembre . Camera di Commercio, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-8">
               Le startup. Otto startup presentano i loro progetti a investitori, partner e istituzioni. Focus su pitch e networking.
             </p>
@@ -293,10 +293,10 @@ export default function EventPage() {
           </div>
         </section>
 
-        {/* ── Perche partecipare ── */}
+        {/* ── Perché partecipare ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">Perche partecipare</h2>
+            <h2 className="section-title">Perché partecipare</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               {PERCHE_PARTECIPARE.map((p) => (
                 <div key={p.titolo} className="card-sm flex items-start gap-4" style={{ padding: 24 }}>
@@ -326,7 +326,7 @@ export default function EventPage() {
                 ) : (
                   <>
                     <p className="text-lg text-gray-700 mb-6">
-                      La partecipazione e gratuita e i posti sono limitati. Scegli la categoria e una o piu sessioni. Riceverai un&apos;email di conferma con il codice e il QR per il check-in.
+                      La partecipazione è gratuita e i posti sono limitati. Scegli la categoria e una o più sessioni. Riceverai un&apos;email di conferma con il codice e il QR per il check-in.
                     </p>
                     <ul className="space-y-3">
                       {SESSIONS.map((s) => (

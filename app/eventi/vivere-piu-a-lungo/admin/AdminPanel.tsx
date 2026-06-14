@@ -83,7 +83,7 @@ export function AdminPanel() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Detector = (window as any).BarcodeDetector;
     if (!Detector) {
-      setScanError("Lo scanner non e supportato da questo browser. Cerca il codice manualmente.");
+      setScanError("Lo scanner non è supportato da questo browser. Cerca il codice manualmente.");
       return;
     }
     try {

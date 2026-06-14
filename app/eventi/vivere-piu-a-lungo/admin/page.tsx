@@ -37,7 +37,7 @@ export default async function EventAdminPage() {
             <div className="card max-w-md mx-auto text-center">
               <h1 className="text-2xl font-bold text-gray-800 mb-2">Accesso riservato</h1>
               <p className="text-gray-600 mb-6">
-                Questa area e riservata allo staff della Fondazione. Accedi con un account admin.
+                Questa area è riservata allo staff della Fondazione. Accedi con un account admin.
               </p>
               <Link href="/auth/login" className="btn-primary inline-block">
                 Accedi
