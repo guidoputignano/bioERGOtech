@@ -485,10 +485,10 @@ export default function Home() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             <div className="md:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden block course-card-hover">
-              <div className="w-full h-48 flex flex-col justify-end p-8" style={{ background: "linear-gradient(135deg, #071410 0%, #0a2a1f 100%)" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3a6050", marginBottom: 8 }}>Free Program · Open Enrollment</div>
+              <div className="w-full h-48 flex flex-col justify-end p-8" style={{ background: "linear-gradient(135deg, #00C896 0%, #1D9E75 100%)" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.78)", marginBottom: 8 }}>Free Program · Open Enrollment</div>
                 <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.2, margin: 0 }}>
-                  Agentic AI <span style={{ color: "#1D9E75" }}>High School</span> Innovation Program
+                  Agentic AI <span style={{ color: "#0A1628" }}>High School</span> Innovation Program
                 </h3>
               </div>
               <div className="p-6">
