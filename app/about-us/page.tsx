@@ -174,11 +174,11 @@ export default function AboutUs() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 { img: "/assets/images/About-us/Alessia-Soru.webp", name: "Alessia Soru", role: "Scientific Projects Lead", desc: "PhD student in Oncology, Hematology and Pathology at the University of Bologna, and Board Member of Women&Tech® ETS." },
-                { img: "/assets/images/About-us/Saria-Miccoli.webp", name: "Saria Miccoli", role: "Communication Lead", desc: "Leads the Foundation's outreach and external communications." },
-                { img: "/assets/images/About-us/Olufemi-Olusola.webp", name: "Olufemi Olusola", role: "Scientific Projects Lead", desc: "Contributes to the Foundation's research-driven scientific initiatives." },
-                { img: "/assets/images/About-us/Luigi-Fantini.webp", name: "Luigi Fantini", role: "Strategy Lead", desc: "Supports the Foundation's strategic direction and partnerships." },
-                { img: "/assets/images/About-us/Oscar-Carrisi.webp", name: "Oscar Carrisi", role: "Strategy Lead", desc: "Supports the Foundation's strategic planning and growth." },
-                { img: "/assets/images/About-us/Mario-Tagarelli.webp", name: "Mario Tagarelli", role: "Auditor", desc: "Responsible for the Foundation's financial oversight and compliance." },
+                { img: "/assets/images/About-us/Saria-Miccoli.webp", name: "Saria Miccoli", role: "Communication Lead", desc: "Experienced designer who shapes the Foundation's visual identity and communications." },
+                { img: "/assets/images/About-us/Olufemi-Olusola.webp", name: "Olufemi Olusola", role: "Scientific Projects Lead", desc: "Biostatistician working at the intersection of agentic AI, clinical data, and digital twin therapeutics." },
+                { img: "/assets/images/About-us/Luigi-Fantini.webp", name: "Luigi Fantini", role: "Strategy Lead", desc: "Sales and outreach specialist who has built a career on connecting with people and reaching new markets." },
+                { img: "/assets/images/About-us/Oscar-Carrisi.webp", name: "Oscar Carrisi", role: "Strategy Lead", desc: "CEO at Priver and a strategy expert focused on growth and market positioning." },
+                { img: "/assets/images/About-us/Mario-Tagarelli.webp", name: "Mario Tagarelli", role: "Auditor", desc: "Career auditor responsible for the Foundation's financial oversight and compliance." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
                   <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
@@ -198,7 +198,7 @@ export default function AboutUs() {
                 { img: "/assets/images/About-us/Daniela-Marotto.webp", name: "Daniela Marotto", role: "Doctor", desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care." },
                 { img: "/assets/images/About-us/Pasquale-Persico.webp", name: "Pasquale Persico", role: "Market Access", desc: "Market access and pharma strategy expertise at Gilead Sciences, covering regulatory and reimbursement pathways." },
                 { img: "/assets/images/About-us/Roberto-De-Ponti.webp", name: "Roberto De Ponti", role: "Investor", desc: "Managing Director and General Partner at 3B Future Health Fund, a healthcare and biotech venture fund investing in pharmaceuticals and therapeutics at seed and Series A stages." },
-                { img: "/assets/images/About-us/Domenico-Amalfitano.webp", name: "Domenico Amalfitano", role: "Advisor", desc: "Advisory board member supporting the Foundation's scientific and strategic direction." },
+                { img: "/assets/images/About-us/Domenico-Amalfitano.webp", name: "Domenico Amalfitano", role: "Policy", desc: "Politician working at the intersection of complex systems and society." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
                   <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
