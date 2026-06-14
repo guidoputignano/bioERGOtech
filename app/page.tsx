@@ -521,6 +521,44 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Upcoming event callout ── */}
+      <section className="section bg-light-gray" id="event">
+        <div className="container mx-auto px-6">
+          <div
+            className="rounded-xl overflow-hidden grid grid-cols-1 md:grid-cols-2"
+            style={{ background: "#fff", boxShadow: "var(--shadow)" }}
+          >
+            <div
+              className="p-8 md:p-10 flex flex-col justify-center"
+              style={{ background: "linear-gradient(135deg, #00C896 0%, #1D9E75 100%)" }}
+            >
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", marginBottom: 10 }}>
+                Evento · Taranto · 11 e 12 dicembre 2026
+              </div>
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: "#fff", lineHeight: 1.2, margin: 0 }}>
+                Vivere più a lungo: sport e intelligenza artificiale
+              </h3>
+              <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 15, marginTop: 12, lineHeight: 1.6 }}>
+                Due giornate con scienziati, medici e campioni dello sport. Iscrizione gratuita, posti limitati.
+              </p>
+            </div>
+            <div className="p-8 md:p-10 flex flex-col justify-center">
+              <div className="flex flex-wrap gap-6 mb-6">
+                {[["8", "Relatori"], ["10", "Progetti"], ["8", "Startup"]].map(([num, label]) => (
+                  <div key={label}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: "var(--primary)", fontFamily: "'Sora', sans-serif" }}>{num}</div>
+                    <div style={{ fontSize: 12, color: "#718096" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              <Link href="/eventi/vivere-piu-a-lungo" className="btn-primary inline-block text-center">
+                Scopri l&apos;evento e iscriviti →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Who's already part of it ── */}
       <section className="section bg-light-gray" id="community">
         <div className="container mx-auto px-6">

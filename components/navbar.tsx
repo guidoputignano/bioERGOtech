@@ -12,6 +12,7 @@ const navLinks = [
   { href: "/build-with-us", label: "For Innovators" },
   { href: "/partner-with-us", label: "For Partners" },
   { href: "/articles", label: "Articles" },
+  { href: "/eventi/vivere-piu-a-lungo", label: "Eventi" },
   { href: "/careers", label: "Careers" },
 ];
 
