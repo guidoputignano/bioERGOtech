@@ -478,7 +478,7 @@ export default function Home() {
 
 
       {/* ── Agentic AI Course ── */}
-      <section className="section" id="courses">
+      <section className="section bg-light-gray" id="courses">
         <div className="container mx-auto px-6">
           <h2 className="section-title">Learn to build AI agents</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
@@ -523,7 +523,7 @@ export default function Home() {
       </section>
 
       {/* ── Upcoming event callout ── */}
-      <section className="section bg-light-gray" id="event">
+      <section className="section" id="event">
         <div className="container mx-auto px-6">
           <div
             className="rounded-xl overflow-hidden grid grid-cols-1 md:grid-cols-2"
