@@ -105,7 +105,7 @@ export default function AboutUs() {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
               <div className="md:col-span-1 flex justify-center">
-                <Image src="/assets/images/About-us/Guido-Putignano.png" width={160} height={160} className="w-40 h-40 rounded-full shadow-lg object-cover" alt="Guido Putignano" />
+                <Image src="/assets/images/About-us/Guido-Putignano.webp" width={160} height={160} className="w-40 h-40 rounded-full shadow-lg object-cover" alt="Guido Putignano" />
               </div>
               <div className="md:col-span-3">
                 <i className="fas fa-quote-left text-3xl mb-4 block opacity-50" style={{ color: "var(--primary)" }} />
@@ -153,14 +153,35 @@ export default function AboutUs() {
             <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Leadership</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { img: "/assets/images/About-us/Guido-Putignano.png", name: "Guido Putignano", role: "President", desc: "Specialized in computational biology, with experience in engineering and AI-driven biomedical solutions." },
-                { img: "/assets/images/About-us/Mimma-Leone.png", name: "Mimma Leone", role: "Board Member", desc: "Legal expert and entrepreneur focused on advancing educational and university projects." },
-                { img: "/assets/images/About-us/Carmine-Pisano.png", name: "Carmine Pisano", role: "Board Member", desc: "Expert in public administration and urban development, specializing in digital transformation." },
-                { img: "/assets/images/About-us/Sara_Masella.png", name: "Sara Masella", role: "Board Member", desc: "Specialized in education, integrating new technologies to create engaging learning experiences." },
-                { img: "/assets/images/About-us/Giacomo-Ferrazzini.png", name: "Giacomo Ferrazzini", role: "Scientific Projects Lead", desc: "Medical student at ETH Zurich and USI, combining advanced medical training with leadership in health science initiatives." },
+                { img: "/assets/images/About-us/Guido-Putignano.webp", name: "Guido Putignano", role: "President", desc: "Specialized in computational biology, with experience in engineering and AI-driven biomedical solutions." },
+                { img: "/assets/images/About-us/Mimma-Leone.webp", name: "Mimma Leone", role: "Board Member", desc: "Legal expert and entrepreneur focused on advancing educational and university projects." },
+                { img: "/assets/images/About-us/Carmine-Pisano.webp", name: "Carmine Pisano", role: "Board Member", desc: "Expert in public administration and urban development, specializing in digital transformation." },
+                { img: "/assets/images/About-us/Giacomo-Ferrazzini.webp", name: "Giacomo Ferrazzini", role: "Scientific Projects Lead", desc: "Medical student at ETH Zurich and USI, combining advanced medical training with leadership in health science initiatives." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
-                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
+                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
+                  <h4 className="text-xl font-semibold">{p.name}</h4>
+                  <p style={{ color: "var(--primary)" }}>{p.role}</p>
+                  <p className="text-gray-600 mt-2">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Team Members */}
+          <div className="mb-16">
+            <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Team Members</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { img: "/assets/images/About-us/Alessia-Soru.webp", name: "Alessia Soru", role: "Scientific Projects Lead", desc: "PhD student in Oncology, Hematology and Pathology at the University of Bologna, and Board Member of Women&Tech® ETS." },
+                { img: "/assets/images/About-us/Saria-Miccoli.webp", name: "Saria Miccoli", role: "Communication Lead", desc: "Experienced designer who shapes the Foundation's visual identity and communications." },
+                { img: "/assets/images/About-us/Olufemi-Olusola.webp", name: "Olufemi Olusola", role: "Scientific Projects Lead", desc: "Biostatistician working at the intersection of agentic AI, clinical data, and digital twin therapeutics." },
+                { img: "/assets/images/About-us/Luigi-Fantini.webp", name: "Luigi Fantini", role: "Strategy Lead", desc: "Sales and outreach specialist who has built a career on connecting with people and reaching new markets." },
+                { img: "/assets/images/About-us/Oscar-Carrisi.webp", name: "Oscar Carrisi", role: "Strategy Lead", desc: "CEO at Priver and a strategy expert focused on growth and market positioning." },
+                { img: "/assets/images/About-us/Mario-Tagarelli.webp", name: "Mario Tagarelli", role: "Auditor", desc: "Career auditor responsible for the Foundation's financial oversight and compliance." },
+              ].map((p) => (
+                <div key={p.name} className="card text-center">
+                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
                   <h4 className="text-xl font-semibold">{p.name}</h4>
                   <p style={{ color: "var(--primary)" }}>{p.role}</p>
                   <p className="text-gray-600 mt-2">{p.desc}</p>
@@ -174,12 +195,13 @@ export default function AboutUs() {
             <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Advisory Board</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { img: "/assets/images/launch_event/Daniela.webp", name: "Daniela Marotto", role: "Doctor", desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care." },
-                { img: "/assets/images/About-us/Francesco-Giuri.png", name: "Francesco Giuri", role: "Innovator", desc: "Innovation expert recognized for active leadership in European grants and projects focused on startups." },
-                { img: "/assets/images/launch_event/Ale_Basso.webp", name: "Alessandro Basso", role: "Innovator", desc: "Leading figure in Italy's digital healthcare landscape, particularly in telemedicine and innovative health service delivery." },
+                { img: "/assets/images/About-us/Daniela-Marotto.webp", name: "Daniela Marotto", role: "Doctor", desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care." },
+                { img: "/assets/images/About-us/Pasquale-Persico.webp", name: "Pasquale Persico", role: "Market Access", desc: "Market access and pharma strategy expertise at Gilead Sciences, covering regulatory and reimbursement pathways." },
+                { img: "/assets/images/About-us/Roberto-De-Ponti.webp", name: "Roberto De Ponti", role: "Investor", desc: "Managing Director and General Partner at 3B Future Health Fund, a healthcare and biotech venture fund investing in pharmaceuticals and therapeutics at seed and Series A stages." },
+                { img: "/assets/images/About-us/Domenico-Amalfitano.webp", name: "Domenico Amalfitano", role: "Policy", desc: "Politician working at the intersection of complex systems and society." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
-                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={p.name} />
+                  <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
                   <h4 className="text-xl font-semibold">{p.name}</h4>
                   <p style={{ color: "var(--primary)" }}>{p.role}</p>
                   <p className="text-gray-600 mt-2">{p.desc}</p>
