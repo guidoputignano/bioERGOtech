@@ -224,7 +224,7 @@ export default function EventPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
               <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
                 <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                  <Image src={MODERATORE.img} alt={MODERATORE.nome} fill sizes="72px" className="rounded-full object-cover" />
+                  <Image src={MODERATORE.img} alt={MODERATORE.nome} fill sizes="72px" className="rounded-full object-cover" style={{ filter: MODERATORE.confermato ? undefined : "grayscale(1)", opacity: MODERATORE.confermato ? 1 : 0.85 }} />
                 </div>
                 <div>
                   <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
@@ -232,17 +232,27 @@ export default function EventPage() {
                   </span>
                   <h3 className="font-semibold text-gray-800 mt-2">{MODERATORE.nome}</h3>
                   <p className="text-sm text-gray-600">{MODERATORE.ruolo}</p>
+                  {!MODERATORE.confermato && (
+                    <span className="badge mt-2 inline-block" style={{ background: "#FEF3DC", color: "#B7791F", fontSize: "0.6rem" }}>
+                      In attesa di conferma
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
                 <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                  <Image src={CONFRONTO.img} alt="Francesco Montervino" fill sizes="72px" className="rounded-full object-cover" />
+                  <Image src={CONFRONTO.img} alt="Francesco Montervino" fill sizes="72px" className="rounded-full object-cover" style={{ filter: CONFRONTO.confermato ? undefined : "grayscale(1)", opacity: CONFRONTO.confermato ? 1 : 0.85 }} />
                 </div>
                 <div>
                   <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
                     {CONFRONTO.titolo}
                   </span>
                   <p className="text-sm text-gray-600 mt-2">{CONFRONTO.testo}</p>
+                  {!CONFRONTO.confermato && (
+                    <span className="badge mt-2 inline-block" style={{ background: "#FEF3DC", color: "#B7791F", fontSize: "0.6rem" }}>
+                      In attesa di conferma
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
