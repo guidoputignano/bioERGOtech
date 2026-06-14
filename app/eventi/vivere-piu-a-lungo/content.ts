@@ -25,15 +25,15 @@ export const EVENT = {
   occhiello: "Fondazione bioERGOtech . Taranto",
   titolo: "Vivere più a lungo: sport e intelligenza artificiale",
   sottotitolo:
-    "Una mattinata di confronto su come lo sport, la robotica e l'intelligenza artificiale possono allungare e migliorare la vita, con scienziati, medici e campioni dello sport.",
+    "Una giornata di confronto su come lo sport, la robotica e l'intelligenza artificiale possono allungare e migliorare la vita, con scienziati, medici e campioni dello sport.",
   tagline:
     "Due giornate, un unico obiettivo: mettere insieme scienza, sport, giovani e impresa per vivere più a lungo e meglio.",
   organizzatore: "Fondazione bioERGOtech",
   citta: "Taranto",
   /** Etichette pronte per l'uso nei box informativi dell'hero. */
   dataLabel: "11 e 12 dicembre 2026",
-  orarioLabel: "Giorno 1: 9:00 . 13:00",
-  luogoLabel: "Giorno 1: Iacovone, Taranto. Giorno 2: Camera di Commercio, Taranto",
+  orarioLabel: "Giorno 1: 9:00 . 18:00. Giorno 2: 9:30 . 13:30",
+  luogoLabel: "Giorno 1: Iacovone, Taranto. Giorno 2: Teatro Fusco, Taranto",
   /** Date ISO per i dati strutturati schema.org Event. */
   startDateISO: "2026-12-11T09:00:00+01:00",
   endDateISO: "2026-12-12T18:00:00+01:00",
@@ -42,8 +42,7 @@ export const EVENT = {
 } as const;
 
 export type SessionSlug =
-  | "giorno-1-mattina"
-  | "giorno-1-pomeriggio"
+  | "giorno-1"
   | "giorno-2";
 
 export type EventSession = {
@@ -62,40 +61,28 @@ export type EventSession = {
 /** Le "avenue" iscrivibili. Un iscritto può sceglierne una o più. */
 export const SESSIONS: EventSession[] = [
   {
-    slug: "giorno-1-mattina",
-    titolo: "Giorno 1, mattina. Programma scientifico",
+    slug: "giorno-1",
+    titolo: "Giorno 1. Ospiti e progetti dei ragazzi",
     giorno: 1,
     giornoLabel: "Giovedì 11 dicembre",
     dataLabel: "11 dicembre 2026",
-    orario: "9:00 . 13:00",
+    orario: "9:00 . 18:00",
     luogo: "Iacovone, Taranto",
     capienza: 300,
     descrizione:
-      "Scienziati, medici e campioni dello sport a confronto su robotica, intelligenza artificiale e longevità.",
-  },
-  {
-    slug: "giorno-1-pomeriggio",
-    titolo: "Giorno 1, pomeriggio. I progetti dei ragazzi",
-    giorno: 1,
-    giornoLabel: "Giovedì 11 dicembre",
-    dataLabel: "11 dicembre 2026",
-    orario: "14:30 . 18:00",
-    luogo: "Iacovone, Taranto",
-    capienza: 200,
-    descrizione:
-      "Dieci gruppi di ragazzi presentano i dieci migliori progetti. Una giuria proclama il vincitore. In palio un viaggio a New York.",
+      "Una sola giornata allo stadio Iacovone. Prima gli ospiti: scienziati, medici e campioni dello sport a confronto su robotica, IA e longevità. Poi i ragazzi presentano i dieci migliori progetti e una giuria proclama il vincitore. In palio un viaggio a New York.",
   },
   {
     slug: "giorno-2",
-    titolo: "Giorno 2. Startup, pitch e networking",
+    titolo: "Giorno 2. Startup e concerto",
     giorno: 2,
     giornoLabel: "Venerdì 12 dicembre",
     dataLabel: "12 dicembre 2026",
     orario: "9:30 . 13:30",
-    luogo: "Camera di Commercio, Taranto",
+    luogo: "Teatro Fusco, Taranto",
     capienza: 150,
     descrizione:
-      "Otto startup presentano i loro progetti a investitori, partner e istituzioni.",
+      "Otto startup presentano i loro progetti a investitori, partner e istituzioni. A seguire, il concerto.",
   },
 ];
 
@@ -143,7 +130,7 @@ export const RELATORI = [
 
 export const MODERATORE = {
   nome: "Massimo Caputi",
-  ruolo: "Giornalista e telecronista sportivo. Modera la mattinata.",
+  ruolo: "Giornalista e telecronista sportivo. Modera il confronto con gli ospiti.",
   img: `${SPEAKER_IMG}/massimo-caputi.webp`,
 };
 
@@ -187,7 +174,7 @@ export const PERCHE_PARTECIPARE = [
 export const FAQ = [
   {
     q: "Quando e dove si svolge l'evento?",
-    a: "L'evento si tiene l'11 e 12 dicembre 2026 a Taranto. Il giorno 1 al Iacovone, il giorno 2 alla Camera di Commercio.",
+    a: "L'evento si tiene l'11 e 12 dicembre 2026 a Taranto. Il giorno 1 allo stadio Iacovone, il giorno 2 al Teatro Fusco.",
   },
   {
     q: "Quanto costa partecipare?",

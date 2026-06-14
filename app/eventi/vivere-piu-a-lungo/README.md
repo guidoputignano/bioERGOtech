@@ -14,7 +14,7 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   nuove richieste.
 - `EVENT`: occhiello, titolo, sottotitolo, date e orari (etichette + ISO per
   i dati strutturati), luoghi, immagine Open Graph.
-- `SESSIONS`: le tre sessioni iscrivibili, con `capienza`. Le stesse capienze
+- `SESSIONS`: le due sessioni iscrivibili (una per giornata), con `capienza`. Le stesse capienze
   sono seminate nella migrazione SQL (tabella `event_sessions`), che resta la
   fonte di verita per il conteggio posti a runtime. Se cambi una capienza,
   aggiornala anche con una `update` su `event_sessions`.
@@ -22,7 +22,10 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
 
 ## Database
 
-Migrazione: `supabase/migrations/20261001000000_create_event_registrations.sql`
+Migrazioni:
+`supabase/migrations/20261001000000_create_event_registrations.sql` (schema)
+e `supabase/migrations/20261101000000_update_event_sessions.sql` (riallinea
+le sessioni: giorno 1 unico al Iacovone, giorno 2 al Teatro Fusco con concerto).
 
 Crea tre tabelle dedicate (`event_sessions`, `event_registrations`,
 `event_registration_sessions`), una RPC atomica `event_register` con controllo
