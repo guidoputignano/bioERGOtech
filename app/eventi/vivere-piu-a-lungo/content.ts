@@ -129,30 +129,22 @@ export const CONSENSO_PRIVACY_TESTO =
 /** Cartella delle foto relatori (già ottimizzate in webp). */
 const SPEAKER_IMG = "/assets/images/eventi/vivere-piu-a-lungo";
 
-/**
- * Relatori del programma scientifico. Imposta `confermato: false` per chi
- * non ha ancora dato conferma: in pagina compare il badge "In attesa di
- * conferma" al posto del ruolo pieno.
- */
+/** Relatori del programma scientifico. */
 export const RELATORI = [
-  { nome: "Giorgio Ventre", ruolo: "Direttore Scientifico, Apple Developer Academy", img: `${SPEAKER_IMG}/giorgio-ventre.webp`, confermato: false },
-  { nome: "Bruno Siciliano", ruolo: "Professore di Robotica, Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp`, confermato: false },
-  { nome: "Daniele Pucci", ruolo: "Robotica e IA, Istituto Italiano di Tecnologia", img: `${SPEAKER_IMG}/daniele-pucci.webp`, confermato: false },
-  { nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani", img: `${SPEAKER_IMG}/daniela-marotto.webp`, confermato: false },
-  { nome: "Franco Piovella", ruolo: "Angiologo, esperto di malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp`, confermato: false },
-  { nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp`, confermato: false },
-  { nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp`, confermato: false },
-  { nome: "Dott. Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp`, confermato: false },
+  { nome: "Giorgio Ventre", ruolo: "Direttore Scientifico, Apple Developer Academy", img: `${SPEAKER_IMG}/giorgio-ventre.webp` },
+  { nome: "Bruno Siciliano", ruolo: "Professore di Robotica, Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp` },
+  { nome: "Daniele Pucci", ruolo: "Robotica e IA, Istituto Italiano di Tecnologia", img: `${SPEAKER_IMG}/daniele-pucci.webp` },
+  { nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani", img: `${SPEAKER_IMG}/daniela-marotto.webp` },
+  { nome: "Franco Piovella", ruolo: "Angiologo, esperto di malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
+  { nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
+  { nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
+  { nome: "Dott. Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
 ];
-
-/** Quando true, mostra una card "Coming soon" in fondo ai relatori. */
-export const RELATORI_COMING_SOON = true;
 
 export const MODERATORE = {
   nome: "Massimo Caputi",
   ruolo: "Giornalista e telecronista sportivo. Modera la mattinata.",
   img: `${SPEAKER_IMG}/massimo-caputi.webp`,
-  confermato: false,
 };
 
 export const CONFRONTO = {
@@ -160,7 +152,6 @@ export const CONFRONTO = {
   testo:
     "Francesco Montervino, ex capitano del Napoli, in dialogo con il prof. Bruno Siciliano.",
   img: `${SPEAKER_IMG}/francesco-montervino.webp`,
-  confermato: false,
 };
 
 export const STATS = [
