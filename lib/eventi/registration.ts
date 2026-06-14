@@ -45,15 +45,15 @@ const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 /**
  * Valida l'input lato server. Ritorna un messaggio d'errore (in italiano) o
- * null se tutto e valido. La stessa validazione vale lato client.
+ * null se tutto è valido. La stessa validazione vale lato client.
  */
 export function validateRegistration(
   input: Partial<RegistrationInput>,
   allowedSlugs: string[],
 ): string | null {
   if (input.website && input.website.trim() !== "") return "Richiesta non valida.";
-  if (!input.nome?.trim()) return "Il nome e obbligatorio.";
-  if (!input.cognome?.trim()) return "Il cognome e obbligatorio.";
+  if (!input.nome?.trim()) return "Il nome è obbligatorio.";
+  if (!input.cognome?.trim()) return "Il cognome è obbligatorio.";
   if (!input.email?.trim() || !isEmail(input.email.trim()))
     return "Inserisci un indirizzo email valido.";
   if (!input.categoria || !VALID_CATEGORIE.has(input.categoria))

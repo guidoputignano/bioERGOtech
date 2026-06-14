@@ -1,11 +1,11 @@
 /**
  * Punto UNICO di configurazione del modulo evento.
  *
- * Tutto cio che cambia tra un'edizione e l'altra (date, orari, luoghi,
- * capienze, relatori, modalita archivio) vive qui. Non serve cercare nel
- * markup. Le capienze qui sono la fonte di verita per il display. La
+ * Tutto ciò che cambia tra un'edizione e l'altra (date, orari, luoghi,
+ * capienze, relatori, modalità archivio) vive qui. Non serve cercare nel
+ * markup. Le capienze qui sono la fonte di verità per il display. La
  * migrazione SQL semina le stesse capienze nella tabella event_sessions,
- * che resta la fonte di verita per il conteggio dei posti a runtime.
+ * che resta la fonte di verità per il conteggio dei posti a runtime.
  *
  * Per archiviare l'evento dopo la sua conclusione, imposta ARCHIVE_MODE a
  * true. I form spariscono, resta il recap, e nessun dato viene cancellato.
@@ -23,11 +23,11 @@ export const SITE_URL =
 
 export const EVENT = {
   occhiello: "Fondazione bioERGOtech . Taranto",
-  titolo: "Vivere piu a lungo: sport e intelligenza artificiale",
+  titolo: "Vivere più a lungo: sport e intelligenza artificiale",
   sottotitolo:
     "Una mattinata di confronto su come lo sport, la robotica e l'intelligenza artificiale possono allungare e migliorare la vita, con scienziati, medici e campioni dello sport.",
   tagline:
-    "Due giornate, un unico obiettivo: mettere insieme scienza, sport, giovani e impresa per vivere piu a lungo e meglio.",
+    "Due giornate, un unico obiettivo: mettere insieme scienza, sport, giovani e impresa per vivere più a lungo e meglio.",
   organizzatore: "Fondazione bioERGOtech",
   citta: "Taranto",
   /** Etichette pronte per l'uso nei box informativi dell'hero. */
@@ -37,7 +37,7 @@ export const EVENT = {
   /** Date ISO per i dati strutturati schema.org Event. */
   startDateISO: "2026-12-11T09:00:00+01:00",
   endDateISO: "2026-12-12T18:00:00+01:00",
-  /** Immagine Open Graph dedicata (riusa un asset gia presente nel sito). */
+  /** Immagine Open Graph dedicata (riusa un asset già presente nel sito). */
   ogImage: "/assets/images/Home/Automation.webp",
 } as const;
 
@@ -59,25 +59,25 @@ export type EventSession = {
   descrizione: string;
 };
 
-/** Le "avenue" iscrivibili. Un iscritto puo sceglierne una o piu. */
+/** Le "avenue" iscrivibili. Un iscritto può sceglierne una o più. */
 export const SESSIONS: EventSession[] = [
   {
     slug: "giorno-1-mattina",
     titolo: "Giorno 1, mattina. Programma scientifico",
     giorno: 1,
-    giornoLabel: "Giovedi 11 dicembre",
+    giornoLabel: "Giovedì 11 dicembre",
     dataLabel: "11 dicembre 2026",
     orario: "9:00 . 13:00",
     luogo: "Iacovone, Taranto",
     capienza: 300,
     descrizione:
-      "Scienziati, medici e campioni dello sport a confronto su robotica, intelligenza artificiale e longevita.",
+      "Scienziati, medici e campioni dello sport a confronto su robotica, intelligenza artificiale e longevità.",
   },
   {
     slug: "giorno-1-pomeriggio",
     titolo: "Giorno 1, pomeriggio. I progetti dei ragazzi",
     giorno: 1,
-    giornoLabel: "Giovedi 11 dicembre",
+    giornoLabel: "Giovedì 11 dicembre",
     dataLabel: "11 dicembre 2026",
     orario: "14:30 . 18:00",
     luogo: "Iacovone, Taranto",
@@ -89,7 +89,7 @@ export const SESSIONS: EventSession[] = [
     slug: "giorno-2",
     titolo: "Giorno 2. Startup, pitch e networking",
     giorno: 2,
-    giornoLabel: "Venerdi 12 dicembre",
+    giornoLabel: "Venerdì 12 dicembre",
     dataLabel: "12 dicembre 2026",
     orario: "9:30 . 13:30",
     luogo: "Camera di Commercio, Taranto",
@@ -102,11 +102,11 @@ export const SESSIONS: EventSession[] = [
 export const sessionBySlug = (slug: string): EventSession | undefined =>
   SESSIONS.find((s) => s.slug === slug);
 
-/** Categorie di iscritto. value finisce nel database, label e per la UI. */
+/** Categorie di iscritto. value finisce nel database, label è per la UI. */
 export const CATEGORIE = [
   { value: "studente", label: "Studente" },
   { value: "scuola_docente", label: "Scuola / Docente referente" },
-  { value: "autorita", label: "Autorita / Istituzione" },
+  { value: "autorita", label: "Autorità / Istituzione" },
   { value: "startup", label: "Startup" },
   { value: "investitore_partner", label: "Investitore / Partner" },
   { value: "pubblico", label: "Pubblico generale" },
@@ -119,14 +119,14 @@ export const categoriaLabel = (value: string): string =>
 
 /** Testo del consenso marketing, registrato a database con timestamp. */
 export const CONSENSO_MARKETING_TESTO =
-  "Acconsento a ricevere comunicazioni e materiale informativo della Fondazione bioERGOtech sulle sue iniziative, eventi e attivita. Potro revocare il consenso in qualsiasi momento.";
+  "Acconsento a ricevere comunicazioni e materiale informativo della Fondazione bioERGOtech sulle sue iniziative, eventi e attività. Potrò revocare il consenso in qualsiasi momento.";
 
 export const CONSENSO_PRIVACY_TESTO =
   "Ho letto l'informativa e acconsento al trattamento dei miei dati personali per la gestione dell'iscrizione e dell'evento.";
 
-/* ── Contenuti di sola presentazione (programma, stats, perche, FAQ) ── */
+/* ── Contenuti di sola presentazione (programma, stats, perché, FAQ) ── */
 
-/** Cartella delle foto relatori (gia ottimizzate in webp). */
+/** Cartella delle foto relatori (già ottimizzate in webp). */
 const SPEAKER_IMG = "/assets/images/eventi/vivere-piu-a-lungo";
 
 /**
@@ -200,15 +200,15 @@ export const FAQ = [
   },
   {
     q: "Quanto costa partecipare?",
-    a: "La partecipazione e gratuita. L'iscrizione e obbligatoria perche i posti sono limitati.",
+    a: "La partecipazione è gratuita. L'iscrizione è obbligatoria perché i posti sono limitati.",
   },
   {
-    q: "A chi e rivolto?",
-    a: "A studenti, scuole, autorita, startup, investitori, partner e al pubblico generale interessato a sport, salute e intelligenza artificiale.",
+    q: "A chi è rivolto?",
+    a: "A studenti, scuole, autorità, startup, investitori, partner e al pubblico generale interessato a sport, salute e intelligenza artificiale.",
   },
   {
     q: "Posso iscrivermi a una sola giornata?",
-    a: "Si. Puoi scegliere una o piu sessioni. Per ciascuna sessione vale la capienza disponibile.",
+    a: "Sì. Puoi scegliere una o più sessioni. Per ciascuna sessione vale la capienza disponibile.",
   },
   {
     q: "Come funziona il check-in in loco?",

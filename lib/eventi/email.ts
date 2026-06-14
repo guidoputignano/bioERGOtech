@@ -49,7 +49,7 @@ export function confirmationEmailHtml(input: ConfirmationEmailInput): string {
     </div>
 
     <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
-      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Ciao ${nome}, la tua iscrizione e confermata.</h2>
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Ciao ${nome}, la tua iscrizione è confermata.</h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
         Grazie per esserti iscritto. Ecco il riepilogo delle sessioni scelte. Porta con te il codice qui sotto per il check-in in loco.
       </p>

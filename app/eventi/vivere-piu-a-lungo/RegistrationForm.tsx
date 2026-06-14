@@ -57,7 +57,7 @@ function RegistrationFormInner() {
     { codice: string; sessions: { slug: string; status: SessionStatus }[] } | null
   >(null);
 
-  // Precompila i dati se l'utente e gia loggato nel Member Portal.
+  // Precompila i dati se l'utente è già loggato nel Member Portal.
   useEffect(() => {
     (async () => {
       const supabase = createClient();
@@ -320,7 +320,7 @@ function RegistrationFormInner() {
       <div className="grid gap-3">
         <FieldLabel htmlFor="sessioni">Sessioni *</FieldLabel>
         <p style={{ fontSize: 13, color: "var(--text-light)", margin: 0 }}>
-          Seleziona una o piu sessioni a cui vuoi partecipare.
+          Seleziona una o più sessioni a cui vuoi partecipare.
         </p>
         {SESSIONS.map((s) => {
           const seat = seats[s.slug];
