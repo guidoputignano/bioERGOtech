@@ -181,7 +181,7 @@ const UPDATES: Update[] = [
   },
 ];
 
-/* ── Who's already part of it — actual Foundation members, with their logos ── */
+/* ── Who made it? — actual Foundation members, with their logos ── */
 const COMMUNITY = [
   { name: "G-Gravity", logo: "/assets/images/Members/g-gravity.webp" },
   { name: "Predict Life Care", logo: "/assets/images/Members/predict-life-care.webp" },
@@ -564,10 +564,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Who's already part of it ── */}
+      {/* ── Who made it? ── */}
       <section className="section bg-light-gray" id="community">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">Who&apos;s already part of it</h2>
+          <h2 className="section-title">Who made it?</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
             The first members of the Foundation, already building alongside us.
             More to come soon.
