@@ -126,26 +126,39 @@ export const CONSENSO_PRIVACY_TESTO =
 
 /* ── Contenuti di sola presentazione (programma, stats, perche, FAQ) ── */
 
+/** Cartella delle foto relatori (gia ottimizzate in webp). */
+const SPEAKER_IMG = "/assets/images/eventi/vivere-piu-a-lungo";
+
+/**
+ * Relatori del programma scientifico. Imposta `confermato: false` per chi
+ * non ha ancora dato conferma: in pagina compare il badge "In attesa di
+ * conferma" al posto del ruolo pieno.
+ */
 export const RELATORI = [
-  { nome: "Giorgio Ventre", ruolo: "Direttore Scientifico, Apple Developer Academy" },
-  { nome: "Bruno Siciliano", ruolo: "Professore di Robotica, Federico II" },
-  { nome: "Daniele Pucci", ruolo: "Robotica e IA, Istituto Italiano di Tecnologia" },
-  { nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani" },
-  { nome: "Franco Piovella", ruolo: "Angiologo, esperto di malattie tromboemboliche" },
-  { nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio" },
-  { nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati" },
-  { nome: "Dott. Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti" },
+  { nome: "Giorgio Ventre", ruolo: "Direttore Scientifico, Apple Developer Academy", img: `${SPEAKER_IMG}/giorgio-ventre.webp`, confermato: true },
+  { nome: "Bruno Siciliano", ruolo: "Professore di Robotica, Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp`, confermato: true },
+  { nome: "Daniele Pucci", ruolo: "Robotica e IA, Istituto Italiano di Tecnologia", img: `${SPEAKER_IMG}/daniele-pucci.webp`, confermato: true },
+  { nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani", img: `${SPEAKER_IMG}/daniela-marotto.webp`, confermato: true },
+  { nome: "Franco Piovella", ruolo: "Angiologo, esperto di malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp`, confermato: true },
+  { nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp`, confermato: true },
+  { nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp`, confermato: true },
+  { nome: "Dott. Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp`, confermato: true },
 ];
+
+/** Quando true, mostra una card "Coming soon" in fondo ai relatori. */
+export const RELATORI_COMING_SOON = true;
 
 export const MODERATORE = {
   nome: "Massimo Caputi",
   ruolo: "Giornalista e telecronista sportivo. Modera la mattinata.",
+  img: `${SPEAKER_IMG}/massimo-caputi.webp`,
 };
 
 export const CONFRONTO = {
   titolo: "Confronto",
   testo:
     "Francesco Montervino, ex capitano del Napoli, in dialogo con il prof. Bruno Siciliano.",
+  img: `${SPEAKER_IMG}/francesco-montervino.webp`,
 };
 
 export const STATS = [

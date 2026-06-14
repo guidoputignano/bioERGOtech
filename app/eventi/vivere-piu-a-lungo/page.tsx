@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { RegistrationForm } from "./RegistrationForm";
@@ -11,6 +12,7 @@ import {
   SESSIONS,
   ARCHIVE_MODE,
   RELATORI,
+  RELATORI_COMING_SOON,
   MODERATORE,
   CONFRONTO,
   STATS,
@@ -75,9 +77,13 @@ export default function EventPage() {
   return (
     <>
       <EventJsonLd />
+      <style>{`
+        .event-page .section-title { padding-bottom: 26px; margin-bottom: 2rem; }
+        .event-page .section-title::after { width: 72px; height: 4px; }
+      `}</style>
       <Navbar />
 
-      <div style={SOFT_BRAND}>
+      <div style={SOFT_BRAND} className="event-page">
         {/* ── Hero ── */}
         <section className="hero" style={{ paddingTop: "120px" }}>
           <div className="container mx-auto px-6 pt-8 pb-16 relative z-10">
@@ -159,34 +165,85 @@ export default function EventPage() {
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
             <h2 className="section-title">Giorno 1 . Giovedi 11 dicembre . Iacovone, Taranto</h2>
-            <p className="text-lg text-gray-700 max-w-3xl mb-10">
+            <p className="text-lg text-gray-700 max-w-3xl mb-4">
               Mattina, programma scientifico (9:00 . 13:00). Scienziati, medici e campioni dello sport a confronto.
             </p>
+            <p className="text-sm mb-10" style={{ color: "var(--text-light)" }}>
+              Programma in aggiornamento. Altri relatori sono in via di conferma.
+            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
               {RELATORI.map((r) => (
-                <div key={r.nome} className="card-sm flex items-start gap-4" style={{ padding: 20 }}>
-                  <span className="icon-circle icon-circle-primary" style={{ width: 44, height: 44, flexShrink: 0 }}>
-                    <i className="fas fa-microphone-lines" />
-                  </span>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">{r.nome}</h3>
-                    <p className="text-sm text-gray-600">{r.ruolo}</p>
+                <div key={r.nome} className="card-sm text-center" style={{ padding: 18 }}>
+                  <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 12px" }}>
+                    <Image
+                      src={r.img}
+                      alt={r.nome}
+                      fill
+                      sizes="96px"
+                      className="rounded-full object-cover"
+                      style={{ filter: r.confermato ? undefined : "grayscale(1)", opacity: r.confermato ? 1 : 0.85 }}
+                    />
                   </div>
+                  <h3 className="font-semibold text-gray-800 text-sm leading-tight">{r.nome}</h3>
+                  {r.confermato ? (
+                    <p className="text-xs text-gray-600 mt-1">{r.ruolo}</p>
+                  ) : (
+                    <span className="badge mt-2 inline-block" style={{ background: "#FEF3DC", color: "#B7791F", fontSize: "0.6rem" }}>
+                      In attesa di conferma
+                    </span>
+                  )}
                 </div>
               ))}
+
+              {RELATORI_COMING_SOON && (
+                <div
+                  className="card-sm text-center flex flex-col items-center justify-center"
+                  style={{ padding: 18, borderStyle: "dashed", background: "var(--bg-light)" }}
+                >
+                  <div
+                    style={{
+                      width: 96,
+                      height: 96,
+                      margin: "0 auto 12px",
+                      borderRadius: "50%",
+                      border: "2px dashed var(--primary)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <i className="fas fa-ellipsis text-2xl" style={{ color: "var(--primary)" }} />
+                  </div>
+                  <h3 className="font-semibold text-gray-800 text-sm">Coming soon</h3>
+                  <p className="text-xs text-gray-600 mt-1">Altri relatori in arrivo</p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-              <div className="card" style={{ borderTop: "4px solid var(--primary)" }}>
-                <h3 className="font-semibold text-gray-800 mb-1">Moderatore</h3>
-                <p className="text-gray-600">
-                  <strong>{MODERATORE.nome}</strong>. {MODERATORE.ruolo}
-                </p>
+              <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
+                <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
+                  <Image src={MODERATORE.img} alt={MODERATORE.nome} fill sizes="72px" className="rounded-full object-cover" />
+                </div>
+                <div>
+                  <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
+                    Moderatore
+                  </span>
+                  <h3 className="font-semibold text-gray-800 mt-2">{MODERATORE.nome}</h3>
+                  <p className="text-sm text-gray-600">{MODERATORE.ruolo}</p>
+                </div>
               </div>
-              <div className="card" style={{ borderTop: "4px solid var(--primary)" }}>
-                <h3 className="font-semibold text-gray-800 mb-1">{CONFRONTO.titolo}</h3>
-                <p className="text-gray-600">{CONFRONTO.testo}</p>
+              <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
+                <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
+                  <Image src={CONFRONTO.img} alt="Francesco Montervino" fill sizes="72px" className="rounded-full object-cover" />
+                </div>
+                <div>
+                  <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
+                    {CONFRONTO.titolo}
+                  </span>
+                  <p className="text-sm text-gray-600 mt-2">{CONFRONTO.testo}</p>
+                </div>
               </div>
             </div>
 
