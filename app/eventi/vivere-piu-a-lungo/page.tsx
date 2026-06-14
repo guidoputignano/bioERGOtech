@@ -87,24 +87,39 @@ export default function EventPage() {
         {/* ── Hero ── */}
         <section className="hero" style={{ paddingTop: "120px" }}>
           <div className="container mx-auto px-6 pt-8 pb-28 relative z-10">
-            <div className="max-w-3xl">
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: "var(--primary-dark)",
-                  marginBottom: 16,
-                }}
-              >
-                {EVENT.occhiello}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-10">
+              <div className="order-2 md:order-1">
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "var(--primary-dark)",
+                    marginBottom: 16,
+                  }}
+                >
+                  {EVENT.occhiello}
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
+                  {EVENT.titolo}
+                </h1>
+                <p className="text-xl text-gray-700">{EVENT.sottotitolo}</p>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
-                {EVENT.titolo}
-              </h1>
-              <p className="text-xl mb-8 text-gray-700">{EVENT.sottotitolo}</p>
+              <div className="order-1 md:order-2 flex justify-center">
+                <Image
+                  src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
+                  alt="Il pubblico durante una giornata dell'evento della Fondazione bioERGOtech a Taranto"
+                  width={1200}
+                  height={800}
+                  priority
+                  sizes="(max-width: 768px) 100vw, 560px"
+                  className="rounded-lg shadow-xl w-full h-auto"
+                />
+              </div>
+            </div>
 
+            <div className="max-w-3xl">
               {/* Box informativi */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 {[
