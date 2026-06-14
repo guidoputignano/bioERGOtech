@@ -180,7 +180,7 @@ export default function EventPage() {
           <div className="container mx-auto px-6">
             <h2 className="section-title">Giorno 1 . Giovedì 11 dicembre . Iacovone, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-10">
-              Mattina, programma scientifico (9:00 . 13:00). Scienziati, medici e campioni dello sport a confronto.
+              Una sola giornata allo stadio Iacovone (9:00 . 18:00). Prima gli ospiti: scienziati, medici e campioni dello sport a confronto. Poi i ragazzi con i loro progetti.
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
@@ -229,10 +229,10 @@ export default function EventPage() {
 
             <div className="card" style={{ background: "var(--primary-light)" }}>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                Pomeriggio . I progetti dei ragazzi
+                I progetti dei ragazzi
               </h3>
               <p className="text-gray-700">
-                Dieci gruppi di ragazzi presentano i dieci migliori progetti. Una giuria, composta dagli sponsor dei progetti, valuta le idee e proclama il vincitore. Premio al miglior progetto: un viaggio a New York.
+                Dopo gli ospiti, sempre allo stadio Iacovone, dieci gruppi di ragazzi presentano i dieci migliori progetti. Una giuria, composta dagli sponsor dei progetti, valuta le idee e proclama il vincitore. Premio al miglior progetto: un viaggio a New York.
               </p>
             </div>
           </div>
@@ -241,15 +241,15 @@ export default function EventPage() {
         {/* ── Giorno 2 ── */}
         <section className="section">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">Giorno 2 . Venerdì 12 dicembre . Camera di Commercio, Taranto</h2>
+            <h2 className="section-title">Giorno 2 . Venerdì 12 dicembre . Teatro Fusco, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-8">
-              Le startup. Otto startup presentano i loro progetti a investitori, partner e istituzioni. Focus su pitch e networking.
+              Prima le startup. Otto startup presentano i loro progetti a investitori, partner e istituzioni. A seguire, il concerto.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
-                { icon: "fa-rocket", t: "8 startup", d: "Progetti selezionati in pitch." },
-                { icon: "fa-handshake", t: "Pitch & networking", d: "Investitori, partner e istituzioni." },
-                { icon: "fa-building-columns", t: "Camera di Commercio", d: "Sede del giorno 2, Taranto." },
+                { icon: "fa-rocket", t: "8 startup", d: "Progetti in pitch a investitori, partner e istituzioni." },
+                { icon: "fa-music", t: "Concerto", d: "A seguire, musica dal vivo per chiudere le due giornate." },
+                { icon: "fa-building-columns", t: "Teatro Fusco", d: "Sede del giorno 2, Taranto." },
               ].map((c) => (
                 <div key={c.t} className="card-sm" style={{ padding: 24 }}>
                   <span className="icon-circle icon-circle-primary" style={{ width: 48, height: 48 }}>
