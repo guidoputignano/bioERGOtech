@@ -181,11 +181,12 @@ const UPDATES: Update[] = [
   },
 ];
 
-/* ── Who's already part of it — named, with the type of relationship ── */
+/* ── Who's already part of it — actual Foundation members, with their logos ── */
 const COMMUNITY = [
-  { name: "Predict Healthcare", relation: "Active member", color: "#0F6E56", bg: "#E1F5EE" },
-  { name: "Priver", relation: "Active member", color: "#0F6E56", bg: "#E1F5EE" },
-  { name: "GenoGra", relation: "Portfolio startup", color: "#5A6B7B", bg: "#EEF1F5" },
+  { name: "G-Gravity", logo: "/assets/images/Members/g-gravity.webp" },
+  { name: "Predict Life Care", logo: "/assets/images/Members/predict-life-care.webp" },
+  { name: "Priver", logo: "/assets/images/Members/priver.webp" },
+  { name: "SafesPro", logo: "/assets/images/Members/safespro.webp" },
 ];
 
 export default function Home() {
@@ -551,9 +552,13 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <Link href="/eventi/vivere-piu-a-lungo" className="btn-primary inline-block text-center">
-                Scopri l&apos;evento e iscriviti →
-              </Link>
+              <span
+                className="btn-primary inline-block text-center"
+                style={{ opacity: 0.7, cursor: "default", pointerEvents: "none" }}
+                aria-disabled="true"
+              >
+                Updates coming soon
+              </span>
             </div>
           </div>
         </div>
@@ -564,15 +569,29 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <h2 className="section-title">Who&apos;s already part of it</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Organisations already building alongside us, each shown with the
-            nature of our relationship.
+            The first members of the Foundation, already building alongside us.
+            More to come soon.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {COMMUNITY.map((m) => (
-              <div key={m.name} className="card-sm text-center" style={{ padding: 28 }}>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">{m.name}</h3>
-                <span className="badge" style={{ background: m.bg, color: m.color }}>
-                  {m.relation}
+              <div
+                key={m.name}
+                className="card-sm flex flex-col items-center justify-center"
+                style={{ padding: 28 }}
+              >
+                <Image
+                  src={m.logo}
+                  alt={`${m.name}, member of the bioERGOtech Foundation`}
+                  width={800}
+                  height={300}
+                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 240px"
+                  className="w-full h-auto max-w-[200px] object-contain"
+                />
+                <span
+                  className="badge mt-5"
+                  style={{ background: "#E1F5EE", color: "#0F6E56" }}
+                >
+                  Active member
                 </span>
               </div>
             ))}
