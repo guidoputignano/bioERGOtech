@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     // Load intro PDF from public folder (filesystem read — no HTTP call)
     let pdfAttachment: { filename: string; content: string } | null = null;
     try {
-      const pdfPath = path.join(process.cwd(), "public", "assets", "docs", "bioergotech-intro.pdf");
+      const pdfPath = path.join(process.cwd(), "intro.pdf");
       if (fs.existsSync(pdfPath)) {
         pdfAttachment = {
           filename: "bioERGOtech-Foundation-Introduction.pdf",
