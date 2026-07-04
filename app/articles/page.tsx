@@ -12,6 +12,15 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: "news-hands-on-experience-gap-2026",
+    img: "/assets/images/Home/Automation.webp",
+    date: "July 4, 2026",
+    title: "The Hands-On Experience Gap: Are Digital Scientists Replacing the Field Work Biotech Researchers Need?",
+    desc: "Automation is moving into the biotech lab. Drawing on mathematician Alfio Quarteroni, we ask whether digital scientists risk replacing the hands-on experience young researchers need to become true experts.",
+    author: "bioERGOtech Foundation",
+    readTime: "9 min read",
+  },
+  {
     slug: "news-predict-healthcare-joins-2026",
     img: "/assets/images/News/Predict/predict-welcome.webp",
     date: "May 31, 2026",

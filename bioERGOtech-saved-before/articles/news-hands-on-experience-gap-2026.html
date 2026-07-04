@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Hands-On Experience Gap: Are Digital Scientists Replacing the Field Work Biotech Researchers Need?</title>
+    <link rel="icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link rel="shortcut icon" href="/assets/images/Logo/short_logo.webp" type="image/x-icon">
+    <link rel="stylesheet" href="/assets/css/article.css">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Automation is moving into the biotech lab. Drawing on mathematician Alfio Quarteroni, we ask whether digital scientists risk replacing the hands-on experience young researchers need to become true experts.">
+    <link rel="canonical" href="https://www.bioergotech.org/articles/news-hands-on-experience-gap-2026">
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="The Hands-On Experience Gap: Are Digital Scientists Replacing the Field Work Biotech Researchers Need?">
+    <meta property="og:description" content="Automation is moving into the biotech lab. Drawing on mathematician Alfio Quarteroni, we ask whether digital scientists risk replacing the hands-on experience young researchers need to become true experts.">
+    <meta property="og:image" content="https://www.bioergotech.org/assets/images/Home/Automation.webp">
+    <meta property="og:url" content="https://www.bioergotech.org/articles/news-hands-on-experience-gap-2026">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="bioERGOtech Foundation">
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The Hands-On Experience Gap: Are Digital Scientists Replacing the Field Work Biotech Researchers Need?">
+    <meta name="twitter:description" content="Automation is moving into the biotech lab. Drawing on mathematician Alfio Quarteroni, we ask whether digital scientists risk replacing the hands-on experience young researchers need.">
+    <meta name="twitter:image" content="https://www.bioergotech.org/assets/images/Home/Automation.webp">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<style>
+/* ============================================================
+   Scoped styles for the Hands-On Experience Gap feature.
+   Everything is namespaced under .hoe-article so it renders
+   consistently without depending on utility-class generation.
+   ============================================================ */
+.hoe-article {
+    --hoe-teal: #2EC4B6;
+    --hoe-teal-dark: #1A9E92;
+    --hoe-ink: #1A2332;
+    --hoe-body: #4A5568;
+    --hoe-soft: #F7F9FC;
+    --hoe-line: #E8EDF3;
+    color: var(--hoe-body);
+    background: #fff;
+}
+.hoe-article * { box-sizing: border-box; }
+
+/* Hero */
+.hoe-hero {
+    background: linear-gradient(135deg, #13d6b0 0%, #0d9488 100%);
+    color: #fff;
+    padding: 5.5rem 1.5rem 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.hoe-hero-inner { max-width: 56rem; margin: 0 auto; position: relative; z-index: 1; }
+.hoe-eyebrow {
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: .72rem;
+    font-weight: 600;
+    color: rgba(255,255,255,.9);
+    border: 1px solid rgba(255,255,255,.45);
+    border-radius: 999px;
+    padding: .38rem .95rem;
+    margin-bottom: 1.4rem;
+}
+.hoe-hero h1 { color: #fff; font-size: 2.15rem; line-height: 1.2; font-weight: 700; margin: 0 0 1rem; }
+.hoe-hero .hoe-sub { font-size: 1.12rem; line-height: 1.6; color: rgba(255,255,255,.93); max-width: 44rem; margin: 0 auto 1.7rem; }
+.hoe-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.25rem; font-size: .9rem; color: rgba(255,255,255,.92); }
+.hoe-meta span { display: inline-flex; align-items: center; gap: .45rem; }
+@media (min-width: 768px) { .hoe-hero h1 { font-size: 2.9rem; } }
+
+/* Body */
+.hoe-body { max-width: 52rem; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
+.hoe-body p { font-size: 1.09rem; line-height: 1.85; color: var(--hoe-body); margin: 0 0 1.3rem; }
+.hoe-body strong { color: var(--hoe-ink); font-weight: 600; }
+.hoe-body h2 {
+    font-size: 1.65rem; line-height: 1.28; color: var(--hoe-ink); font-weight: 700;
+    margin: 2.9rem 0 1.15rem; padding-bottom: .6rem; position: relative;
+}
+.hoe-body h2::after {
+    content: ""; position: absolute; left: 0; bottom: 0;
+    width: 44px; height: 3px; background: var(--hoe-teal); border-radius: 2px;
+}
+
+/* Lead */
+.hoe-lead { background: var(--hoe-soft); border-left: 4px solid var(--hoe-teal); border-radius: 12px; padding: 1.6rem 1.8rem; margin-bottom: 2.2rem; }
+.hoe-lead p { font-size: 1.16rem; line-height: 1.75; color: var(--hoe-ink); margin: 0; font-weight: 500; }
+
+/* Figure */
+.hoe-figure { margin: 2.3rem 0; }
+.hoe-figure img { width: 100%; border-radius: 14px; box-shadow: 0 10px 30px rgba(16,24,40,.12); display: block; }
+.hoe-figure figcaption { font-size: .85rem; color: #8896A6; margin-top: .75rem; text-align: center; line-height: 1.5; }
+
+/* Pull quote */
+.hoe-pull { margin: 2.5rem 0; padding: 1.7rem 1.9rem; border-radius: 14px; background: linear-gradient(135deg, rgba(46,196,182,.10), rgba(13,148,136,.06)); border: 1px solid rgba(46,196,182,.28); }
+.hoe-pull blockquote { margin: 0; font-size: 1.3rem; line-height: 1.5; font-weight: 600; color: var(--hoe-ink); }
+.hoe-pull .hoe-cite { display: block; margin-top: 1rem; font-size: .92rem; font-weight: 600; color: var(--hoe-teal-dark); }
+
+/* Q&A */
+.hoe-qa { background: #fff; border: 1px solid var(--hoe-line); border-radius: 14px; padding: 1.5rem 1.7rem; margin-bottom: 1.15rem; box-shadow: 0 4px 18px rgba(16,24,40,.05); }
+.hoe-qa .hoe-q { display: block; font-weight: 600; color: var(--hoe-teal-dark); margin-bottom: .75rem; font-size: 1.02rem; line-height: 1.5; }
+.hoe-qa p { margin: 0; }
+.hoe-qa p + p { margin-top: .9rem; }
+
+/* Callout */
+.hoe-callout { background: var(--hoe-soft); border: 1px solid var(--hoe-line); border-radius: 14px; padding: 1.6rem 1.75rem; margin: 2.3rem 0; }
+.hoe-callout h3 { font-size: 1.06rem; color: var(--hoe-ink); font-weight: 700; margin: 0 0 .7rem; display: flex; align-items: center; gap: .55rem; }
+.hoe-callout h3 i { color: var(--hoe-teal); }
+.hoe-callout p:last-child { margin-bottom: 0; }
+.hoe-callout ul { margin: 0; padding-left: 1.2rem; }
+.hoe-callout li { font-size: 1.05rem; line-height: 1.7; margin-bottom: .55rem; color: var(--hoe-body); }
+.hoe-callout li:last-child { margin-bottom: 0; }
+.hoe-callout li strong { color: var(--hoe-ink); }
+
+/* Conclusion */
+.hoe-conc { background: linear-gradient(135deg, #13d6b0 0%, #0d9488 100%); color: #fff; border-radius: 16px; padding: 2.5rem 2rem; margin: 3rem 0 1.5rem; text-align: center; }
+.hoe-conc h2 { color: #fff; font-size: 1.55rem; margin: 0 0 1rem; padding: 0; }
+.hoe-conc h2::after { display: none; }
+.hoe-conc p { color: rgba(255,255,255,.95); font-size: 1.1rem; line-height: 1.72; margin: 0 auto; max-width: 42rem; }
+
+/* Source note */
+.hoe-source { border-top: 1px solid var(--hoe-line); margin-top: 2.6rem; padding-top: 1.5rem; padding-bottom: 1rem; }
+.hoe-source p { font-size: .9rem; line-height: 1.7; color: #8896A6; margin: 0; }
+.hoe-source strong { color: var(--hoe-body); }
+</style>
+
+<div class="hoe-article">
+
+    <!-- Hero -->
+    <header class="hoe-hero hero-gradient">
+        <div class="hoe-hero-inner">
+            <span class="hoe-eyebrow">Insight</span>
+            <h1>The Hands-On Experience Gap</h1>
+            <p class="hoe-sub">Are digital scientists replacing the field work biotech researchers need? A reflection with mathematician Alfio Quarteroni on the experience young scientists still have to earn.</p>
+            <div class="hoe-meta">
+                <span><i class="fas fa-calendar"></i> July 4, 2026</span>
+                <span><i class="fas fa-user"></i> By bioERGOtech Foundation</span>
+                <span><i class="fas fa-clock"></i> 9 min read</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="hoe-body">
+
+        <!-- Lead -->
+        <div class="hoe-lead">
+            <p>Artificial intelligence is moving into the laboratory. Robotic arms pipette, algorithms read images, models predict an outcome before a single experiment runs. It is a welcome shift, and one the bioERGOtech Foundation actively pursues through AI-driven automation. Yet one of the world's leading applied mathematicians has raised a quieter concern that sits close to our values: if machines absorb the repetitive, hands-on tasks where young researchers once learned their craft, we risk raising a generation of scientists who never build the experience that makes an expert.</p>
+        </div>
+
+        <figure class="hoe-figure">
+            <img src="/assets/images/Home/Automation.webp" alt="A robotic arm handling a sample in a laboratory while a scientist works in the background">
+            <figcaption>Automation now performs the repetitive bench tasks that once formed a young scientist's first years of training.</figcaption>
+        </figure>
+
+        <p>Alfio Quarteroni is professor emeritus at the Politecnico di Milano and the EPFL in Lausanne, and one of Italy's most prominent applied mathematicians. He built, with his team, the first mathematical model of the human heart, and his recent book, <em>L'Intelligenza Creata. L'AI e il nostro futuro</em> (Hoepli, 2025), maps where artificial intelligence is taking us. Across a set of recent conversations, he keeps returning to a distinction that is easy to lose in the noise: artificial intelligence is not one thing, and it is not magic. It is a human construction of mathematics, data, energy, infrastructure, and responsibility. That sober framing leads him to a warning worth hearing.</p>
+
+        <h2>The warning</h2>
+
+        <p>The tension is not between humans and machines. It is inside the way we introduce the machines. When we hand automated systems the tasks that used to be a beginner's apprenticeship, we quietly close the door those beginners walked through to become experts.</p>
+
+        <div class="hoe-pull">
+            <blockquote>"In companies the temptation is growing to entrust automated systems with the most repetitive or standardizable activities, reducing the opportunity for young people to gain experience in the field. If this dynamic consolidates, over time we risk creating a generation of professionals who never had the chance to build the skills needed to become true experts."</blockquote>
+            <span class="hoe-cite">Alfio Quarteroni</span>
+        </div>
+
+        <p>His point is not a rejection of technology. It is a condition attached to it. As he puts it, technology can strengthen the human being, but without concrete paths of training and experience, the central role of the human being risks weakening. For a field like biotechnology, where judgment is built at the bench and in the field over years, that condition is not a detail. It is the whole game.</p>
+
+        <h2>What the machines themselves teach us</h2>
+
+        <p>Here is the part that should give us pause. The very systems we are handing the work to did not learn from a manual. They learned by doing. Asked how a machine actually learns, Quarteroni reaches for an image from the building site.</p>
+
+        <div class="hoe-qa">
+            <span class="hoe-q">How does the machine learn?</span>
+            <p>"Like a bricklayer who has watched houses being built for years, and after seeing a thousand of them understands how it is done, without reading a manual. Machines, in machine learning, learn like the bricklayer. Not through theoretical manuals, but through concrete experience, repeated and accumulated in the data."</p>
+        </div>
+
+        <div class="hoe-qa">
+            <span class="hoe-q">So the data are the experience?</span>
+            <p>"The data are the vehicle that carries the experience, the way it is encoded so a machine can understand it. If you want a neural network to learn to diagnose a tumour, you do not give it Italian literature. You give it thousands of medical images labelled with the diagnoses made by specialists. This is why machine learning is craftsmanship. You have to know exactly which experience you are giving, which data you are encoding, and which network to use."</p>
+            <p>"The decision about which data to use is profoundly human. It is a choice of responsibility."</p>
+        </div>
+
+        <p>Read that back against the warning and the paradox is hard to miss. We are building machines that become competent the way an apprentice does, through patient, accumulated, hands-on experience. At the same time we are tempted to remove exactly that experience from the humans who will have to design those machines, choose their training data, and check their answers. You cannot judge whether a model was trained on good data if you have never generated data yourself at the bench. You cannot catch a plausible but wrong result if you have never watched the real process succeed and fail with your own hands.</p>
+
+        <h2>Not all intelligence is a chatbot</h2>
+
+        <p>Part of the confusion, Quarteroni argues, comes from collapsing all of artificial intelligence into the chatbot we talk to. He calls that identification a serious mistake. A generative model is built to produce plausible, fluent language, not certified truth. The narrow systems that read a radiograph, detect a fraud, or predict a machine failure are built to entirely different and far stricter standards.</p>
+
+        <div class="hoe-callout">
+            <h3><i class="fas fa-microscope"></i> Why this matters for biotech</h3>
+            <p>When a model reads a medical image, Quarteroni notes, you want absolute reliability, precise diagnosis, no creative freedom, and zero margin of error. That is a different discipline from a conversational tool that trades in plausibility. Knowing the difference changes which system you trust, for which task, and how hard you check it. And checking well is itself a skill you learn by doing.</p>
+        </div>
+
+        <p>The same logic runs through the data. As he told <em>Il Sole 24 Ore</em>, if the data are incomplete, disordered, or poorly collected, even the most sophisticated algorithms produce weak results. Artificial intelligence amplifies the quality of what it receives. His ordering is deliberate: before the algorithm comes the well-collected data. Someone has to collect that data well, carefully, and in contact with the real phenomenon. That is hands-on work, and it does not disappear because a model sits downstream of it.</p>
+
+        <h2>AI as accelerator, not replacement</h2>
+
+        <figure class="hoe-figure">
+            <img src="/assets/images/Home/Approach.webp" alt="A research laboratory augmented with artificial intelligence data overlays and robotic systems">
+            <figcaption>Used well, artificial intelligence widens the space a small team can explore. It does not remove the scientist from the discovery.</figcaption>
+        </figure>
+
+        <p>None of this makes Quarteroni a skeptic of AI in the lab. He points to AlphaFold, which predicted protein structures that had resisted biology for decades, and to Halicin, the antibiotic a neural network surfaced in 2020 by screening tens of millions of compounds, effective even against strains resistant to existing drugs. His reading of these successes is precise: artificial intelligence does not replace scientists. It lets them explore enormous spaces of possibility, millions or billions of molecules, that would be impossible to analyse by traditional means. In that sense it becomes a powerful accelerator of scientific discovery.</p>
+
+        <p>But he adds the caveat that defines the whole argument. The real scientific discovery still requires something more: intuition, the capacity to interpret, and an understanding of what the results actually mean. Those capacities are not downloaded. They are grown, slowly, through direct contact with the work.</p>
+
+        <h2>The last mile belongs to those who have done the work</h2>
+
+        <p>Quarteroni describes a decisive stretch he calls the last mile. Artificial intelligence can analyse vast quantities of information, spot patterns, and suggest solutions. The final decision, though, always belongs to the human, because only the human knows the context, understands the purpose of the action, and can take responsibility for the consequences. The system, by contrast, has a structural limit: it has no awareness, it does not know why it produced a given answer, and it holds no ethical principles. The human being brings experience, critical sense, and responsibility.</p>
+
+        <p>The uncomfortable implication is simple. The last mile is only walkable by someone who has walked the earlier miles. Judgment under uncertainty, the sense for when a result is too clean to be true, the instinct for what to check next: these are earned hands-on. Remove the early years of doing, and the person who is supposed to own the last mile arrives without the legs to walk it.</p>
+
+        <h2>Where the Foundation stands</h2>
+
+        <p>The bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design. That last phrase carries the weight. We adopt automation to remove drudgery and to widen what a small team can attempt, not to remove people from the bench. Our answer to the experience gap is integration, not substitution.</p>
+
+        <div class="hoe-callout">
+            <h3><i class="fas fa-flask"></i> Integration, not substitution</h3>
+            <ul>
+                <li><strong>Keep young researchers hands-on.</strong> At the bench, in the field, close to the messy reality that data can only ever represent.</li>
+                <li><strong>Make them fluent in AI as a tool.</strong> So they command the model and interrogate its answers, rather than defer to them.</li>
+                <li><strong>Bridge research and real-world impact.</strong> Pairing junior scientists with mentors and with industry problems that demand judgment, not just output.</li>
+            </ul>
+        </div>
+
+        <p>Quarteroni's own advice to young people entering the field reads almost like a mission statement for this approach: study mathematics, physics, and computer science well, but stay open to the problems of the real world. Innovation is often born precisely at the meeting of different disciplines, when a solid theoretical training confronts concrete problems to solve. Colleagues trace his own limits-aware, concrete view of technology partly to his rural upbringing, a culture accustomed to confronting limits, timing, and material reality. Concrete before abstract. Problem before promise.</p>
+
+        <p>It is telling that when he speaks to enterprises, he lands in the same place. Artificial intelligence, he insists, does not decide the destiny of companies. At most it calculates some of their trajectories. The rest still depends on the people who decide. For a foundation that invests in people and in a territory, that is not a caveat. It is the point.</p>
+
+        <!-- Conclusion -->
+        <div class="hoe-conc">
+            <h2>Hands still in the work</h2>
+            <p>So, are digital scientists replacing the field work biotech researchers need? They do not have to. The danger is not the robotic arm or the model. It is quietly removing the hands-on years in which a scientist becomes one. The machines we are building learned by doing. The people who build them, question them, and answer for them must learn the same way. We intend to keep it that way: artificial intelligence at full power, and human hands still in the work.</p>
+        </div>
+
+        <!-- Source note -->
+        <div class="hoe-source">
+            <p>This feature draws on an extended interview with Alfio Quarteroni by Federica Spampinato, and on his recent conversations in <strong>Il Sole 24 Ore</strong> (Michele Kettmaier) and <strong>La Stampa</strong> (Antonio Lo Campo), together with his book <em>L'Intelligenza Creata. L'AI e il nostro futuro</em> (Hoepli, 2025). Alfio Quarteroni is professor emeritus at the Politecnico di Milano and the EPFL in Lausanne, founder of MOX and president of MOXOFF, and the author of the first mathematical model of the human heart. Translations from the Italian are our own.</p>
+        </div>
+
+    </div>
+</div>
+
+<div id="site-footer"></div>
+
+</body>
+</html>
