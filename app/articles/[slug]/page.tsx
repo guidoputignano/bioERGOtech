@@ -6,6 +6,10 @@ import path from "path";
 import type { Metadata } from "next";
 
 export const articleMeta: Record<string, { title: string; description: string }> = {
+  "news-hands-on-experience-gap-2026": {
+    title: "The Hands-On Experience Gap: Are Digital Scientists Replacing Field Work?",
+    description: "Drawing on mathematician Alfio Quarteroni, we ask whether digital scientists risk replacing the hands-on experience young biotech researchers need to become true experts.",
+  },
   "news-predict-healthcare-joins-2026": {
     title: "Predict Healthcare Joins the Foundation",
     description: "Predict Healthcare, the Apulian leader in in-vivo diagnostics and medical imaging, joins the bioERGOtech Foundation.",
