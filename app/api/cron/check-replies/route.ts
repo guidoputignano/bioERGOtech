@@ -252,7 +252,7 @@ export async function GET(req: NextRequest) {
     // Load all contact emails from DB for matching
     const { data: allContacts } = await db
       .from("outreach_contacts")
-      .select("id, name, email, country, contact_person, field_of_interest, email_status, response_status");
+      .select("id, name, email, country, contact_person, field_of_interest, email_status, response_status, funnel_stage");
 
     const contactEmailMap = new Map<string, Record<string, unknown>>();
     (allContacts || []).forEach(c => {
@@ -320,6 +320,18 @@ export async function GET(req: NextRequest) {
             suggestedReply ? `Suggested reply: ${suggestedReply.slice(0, 200)}…` : "",
           ].filter(Boolean).join("\n\n"),
         }).eq("id", contact.id);
+
+        // Inbound reply detected: if this lead was in the MoU follow-up cadence,
+        // move it to warm_response and cancel its pending follow-ups.
+        if (newEmailStatus === "Replied" && contact.funnel_stage === "mou_sent") {
+          await db.from("outreach_contacts").update({ funnel_stage: "warm_response" }).eq("id", contact.id);
+          await db.from("mou_followups").update({ status: "responded" }).eq("lead_id", contact.id).eq("status", "pending");
+          await db.from("mou_followup_log").insert({
+            lead_id: contact.id,
+            actor: "system",
+            message_summary: "Inbound reply detected — follow-ups cancelled",
+          });
+        }
 
         // Send alerts for Hot and Warm leads (not OOO/Cold)
         if (["Hot", "Warm", "Question"].includes(classification)) {
