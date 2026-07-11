@@ -686,7 +686,12 @@ bioergotech.org`;
       return NextResponse.json({ error: `Send failed: ${err.message || JSON.stringify(err)}` }, { status: 500 });
     }
 
-    await db.from("outreach_contacts").update({ mou_status: "MoU Sent", email_status: "MoU Sent" }).eq("id", contactId);
+    await db.from("outreach_contacts").update({
+      mou_status: "MoU Sent",
+      email_status: "MoU Sent",
+      funnel_stage: "mou_sent",
+      mou_sent_at: new Date().toISOString(),
+    }).eq("id", contactId);
     await db.from("outreach_sends").insert({ contact_email: contact.email, contact_name: contact.name, country: contact.country, subject, body_preview: body.slice(0, 200), status: "sent" });
 
     return NextResponse.json({ success: true, message: `MoU sent to ${contact.email}` });

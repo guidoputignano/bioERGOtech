@@ -3952,6 +3952,28 @@ interface OutreachLog {
   created_at: string;
 }
 
+interface MouFollowup {
+  id: string;
+  lead_id: string;
+  scheduled_for: string;
+  cadence_step: number;
+  channel: "email" | "call" | "manual";
+  status: "pending" | "sent" | "skipped" | "responded";
+  sent_at: string | null;
+  notes: string | null;
+  created_at: string;
+  days_outstanding: number;
+  contact: {
+    id: string;
+    name: string;
+    email: string | null;
+    country: string | null;
+    contact_person: string | null;
+    mou_sent_at: string | null;
+    funnel_stage: string | null;
+  } | null;
+}
+
 // Constants
 const OUTREACH_TEMPLATES = {
   cold: {
@@ -4109,6 +4131,8 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
   const [sheetUrl, setSheetUrl] = useState(
     typeof window !== "undefined" ? localStorage.getItem("be_outreach_sheetUrl") || "" : ""
   );
+  const [mouFollowups, setMouFollowups] = useState<MouFollowup[]>([]);
+  const [mouQueueOpen, setMouQueueOpen] = useState(true);
 
   const fetchContacts = useCallback(() => {
     setLoading(true);
@@ -4125,7 +4149,14 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
       .catch(() => {});
   }, []);
 
-  useEffect(() => { fetchContacts(); fetchLogs(); }, [fetchContacts, fetchLogs]);
+  const fetchMouFollowups = useCallback(() => {
+    fetch("/api/admin/outreach/mou-followups")
+      .then((r) => r.json())
+      .then((d) => setMouFollowups(d.followups || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { fetchContacts(); fetchLogs(); fetchMouFollowups(); }, [fetchContacts, fetchLogs, fetchMouFollowups]);
 
   // Apply filters
   useEffect(() => {
@@ -4173,6 +4204,26 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
   const mouCount = useMemo(() =>
     contacts.filter(c => ["MoU Sent","Signed"].includes(c.email_status || "")).length
   , [contacts]);
+
+  const pendingMouFollowups = useMemo(
+    () => mouFollowups.filter((f) => f.status === "pending"),
+    [mouFollowups]
+  );
+  const oldestFollowupDays = useMemo(
+    () => pendingMouFollowups.reduce((max, f) => Math.max(max, f.days_outstanding), 0),
+    [pendingMouFollowups]
+  );
+
+  const markFollowedUp = async (followupId: string) => {
+    try {
+      await fetch("/api/admin/outreach/mou-followups", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ followup_id: followupId, actor: "Olufemi", new_status: "sent" }),
+      });
+      fetchMouFollowups();
+    } catch { /* ignore */ }
+  };
 
   const handleSync = async () => {
     const url = sheetUrl.trim();
@@ -4330,17 +4381,24 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
       </div>
 
       {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 }}>
         {[
           { label: "Total", value: contacts.length, color: TEAL },
           { label: "Sent", value: pipeline["Sent"] || 0, color: "#1A6DD4" },
           { label: "Replied", value: repliedCount, color: "#008F6B" },
           { label: "Hot leads", value: hotLeadsCount, color: "#E89C1A" },
           { label: "MoU pipeline", value: mouCount, color: "#6B4BCC" },
+          {
+            label: "Follow-ups due",
+            value: pendingMouFollowups.length,
+            color: pendingMouFollowups.length > 0 ? "#D63563" : TEAL,
+            sub: pendingMouFollowups.length > 0 ? `oldest ${oldestFollowupDays} days` : undefined,
+          },
         ].map((s) => (
           <div key={s.label} style={{ ...cardStyle, padding: 16, borderLeft: `3px solid ${s.color}` }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: s.color, fontFamily: "'Sora', sans-serif" }}>{s.value}</div>
             <div style={{ fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.06em", marginTop: 3 }}>{s.label}</div>
+            {s.sub && <div style={{ fontSize: 11, color: "#D63563", marginTop: 2 }}>{s.sub}</div>}
           </div>
         ))}
       </div>
@@ -4378,6 +4436,67 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
           </div>
         </div>
       </div>
+
+      {/* MoU Follow-up Queue */}
+      {pendingMouFollowups.length > 0 && (
+        <div style={{ ...cardStyle }}>
+          <div
+            onClick={() => setMouQueueOpen(!mouQueueOpen)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+              MoU Follow-up Queue <span style={{ color: "#D63563", fontFamily: "'DM Mono', monospace" }}>({pendingMouFollowups.length})</span>
+            </div>
+            <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{mouQueueOpen ? "▲ Collapse" : "▼ Expand"}</span>
+          </div>
+
+          {mouQueueOpen && (
+            <div style={{ marginTop: 14, overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: TEXT_LIGHT, textTransform: "uppercase" as const, fontSize: 10, letterSpacing: "0.05em" }}>
+                    <th style={{ padding: "6px 8px" }}>Institution</th>
+                    <th style={{ padding: "6px 8px" }}>Contact</th>
+                    <th style={{ padding: "6px 8px" }}>Country</th>
+                    <th style={{ padding: "6px 8px" }}>Days Outstanding</th>
+                    <th style={{ padding: "6px 8px" }}>Step</th>
+                    <th style={{ padding: "6px 8px" }}>Channel</th>
+                    <th style={{ padding: "6px 8px" }}>Scheduled For</th>
+                    <th style={{ padding: "6px 8px" }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingMouFollowups.map((f) => (
+                    <tr
+                      key={f.id}
+                      style={{
+                        borderTop: `1px solid ${BORDER}`,
+                        background: f.days_outstanding > 30 ? "#FDECEF" : "transparent",
+                      }}
+                    >
+                      <td style={{ padding: "8px", fontWeight: 600, color: TEXT }}>{f.contact?.name || "—"}</td>
+                      <td style={{ padding: "8px", color: TEXT_MID }}>{f.contact?.contact_person || "—"}</td>
+                      <td style={{ padding: "8px", color: TEXT_MID }}>{f.contact?.country || "—"}</td>
+                      <td style={{ padding: "8px", color: TEXT_MID, fontFamily: "'DM Mono', monospace" }}>{f.days_outstanding}</td>
+                      <td style={{ padding: "8px", color: TEXT_MID }}>{f.cadence_step}</td>
+                      <td style={{ padding: "8px", color: TEXT_MID, textTransform: "capitalize" as const }}>{f.channel}</td>
+                      <td style={{ padding: "8px", color: TEXT_MID }}>{new Date(f.scheduled_for).toLocaleDateString("en-GB")}</td>
+                      <td style={{ padding: "8px" }}>
+                        <button
+                          onClick={() => markFollowedUp(f.id)}
+                          style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" as const }}
+                        >
+                          Mark followed up
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
