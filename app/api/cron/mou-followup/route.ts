@@ -10,7 +10,9 @@ const getDB = () =>
   );
 
 function firstName(contactPerson: string | null): string {
-  const raw = (contactPerson || "").split(",")[0].trim();
+  const raw = (contactPerson || "")
+    .split(",")[0].split(" — ")[0].split(" - ")[0].trim();
+  if (!raw) return "Sir/Madam";
   const m = raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-]*(?:\s+[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-]*){0,2})/i);
   return (m ? m[0].trim() : raw) || "Sir/Madam";
 }
