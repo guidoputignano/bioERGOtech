@@ -642,8 +642,13 @@ export async function POST(req: NextRequest) {
     const filename = `bioERGOtech_MoU_${safeName}_${new Date().getFullYear()}.docx`;
 
     // Greeting name
-    const contactName = (contact.contact_person || "")
-      .split(",")[0].split(" — ")[0].split(" - ")[0].trim() || "Sir/Madam";
+    const contactName = (() => {
+      const _raw = ((contact.contact_person as string) || "")
+        .split(",")[0].split(" — ")[0].split(" - ")[0].trim();
+      if (!_raw) return "Sir/Madam";
+      const _m = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-]*(?:\s+[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-]*){0,2})/i);
+      return (_m ? _m[0].trim() : _raw) || "Sir/Madam";
+    })();
 
     const subject = `Memorandum of Understanding — bioERGOtech Foundation × ${(contact.name || "").slice(0, 55)}`.slice(0, 100);
     const body = `Dear ${contactName},

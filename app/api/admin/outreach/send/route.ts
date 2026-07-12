@@ -52,13 +52,13 @@ export async function POST(request: Request) {
       }
 
       // Merge tags
-      const contactName = contact.contact_person
-        ? (() => {
-          const _raw = (contact.contact_person || "").split(",")[0].trim();
-          const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
-          return _m ? _m[0].trim() : _raw;
-        })()
-        : "Sir/Madam";
+      const contactName = (() => {
+        const _raw = ((contact.contact_person as string) || "")
+          .split(",")[0].split(" \u2014 ")[0].split(" - ")[0].trim();
+        if (!_raw) return "Sir/Madam";
+        const _m = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+        return (_m ? _m[0].trim() : _raw) || "Sir/Madam";
+      })();
       // field_of_interest (kept for other templates if needed, not used in cold outreach)
       const fieldRaw = contact.field_of_interest?.trim() || "";
 

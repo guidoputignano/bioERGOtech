@@ -384,10 +384,12 @@ export async function GET(req: NextRequest) {
         if (!contact.email?.includes("@")) continue;
         try {
           const contactName = (() => {
-            const _raw = ((contact.contact_person as string) || "").split(",")[0].trim();
-            const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
-            return _m ? _m[0].trim() : _raw;
-          })() || "Sir/Madam";
+            const _raw = ((contact.contact_person as string) || "")
+              .split(",")[0].split(" \u2014 ")[0].split(" - ")[0].trim();
+            if (!_raw) return "Sir/Madam";
+            const _m = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+            return (_m ? _m[0].trim() : _raw) || "Sir/Madam";
+          })();
           const instName = cleanText((contact.name as string) || "your institution");
           const field = (contact.field_of_interest as string) || "your field";
 
@@ -468,10 +470,12 @@ bioergotech.org`;
         if (!contact.email?.includes("@")) continue;
         try {
           const contactName = (() => {
-            const _raw = ((contact.contact_person as string) || "").split(",")[0].trim();
-            const _m   = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
-            return _m ? _m[0].trim() : _raw;
-          })() || "Sir/Madam";
+            const _raw = ((contact.contact_person as string) || "")
+              .split(",")[0].split(" \u2014 ")[0].split(" - ")[0].trim();
+            if (!_raw) return "Sir/Madam";
+            const _m = _raw.match(/^((?:Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Dott\.|Pr\.)\s+)?([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*(?:\s+[A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\-]*){0,2})/i);
+            return (_m ? _m[0].trim() : _raw) || "Sir/Madam";
+          })();
           const instName = cleanText((contact.name as string) || "your institution");
 
           const subject = `Following up – bioERGOtech Foundation × ${instName}`;
