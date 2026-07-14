@@ -10,7 +10,7 @@
 create table if not exists navigator_rules (
   id uuid primary key default gen_random_uuid(),
   org_type text not null,        -- 'hospital' | 'university' | 'startup' | 'pharma' | 'ngo' | 'government'
-  region text,                   -- free-text country name as typed by the visitor (see note below), or 'EU', or null = any
+  region text,                   -- exact country name from the fixed dropdown list (see note below), or 'EU', or null = any
   stage text,                    -- 'idea' | 'early' | 'established', or null = any
   scheme_name text not null,     -- e.g. 'NIDI', 'Mini-PIA', 'ZES', 'Horizon Europe'
   scheme_description text,       -- one plain-language sentence shown to the visitor
@@ -24,7 +24,7 @@ comment on table navigator_rules is
   'Editable eligibility rule set. Each row = one condition-to-scheme mapping. Reviewed and maintained by Foundation leadership, not just engineering.';
 
 comment on column navigator_rules.region is
-  'Matched case-insensitively against the free-text country the visitor typed (e.g. "Italy"), not an ISO code — the region question in the Navigator flow is a plain text field. Use "EU" to match any EU member state (see lib/navigator/rules-engine.ts for the member list). Spell region names the same way visitors are likely to type them.';
+  'Matched case-insensitively against the exact country name selected from the Navigator''s region dropdown (e.g. "Italy"), not an ISO code — see lib/navigator/countries.ts for the fixed list of options. Use "EU" to match any EU member state (see lib/navigator/countries.ts EU_MEMBER_STATES for the member list).';
 
 -- 2. Every completed Navigator session
 create table if not exists navigator_sessions (

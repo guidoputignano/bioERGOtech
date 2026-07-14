@@ -1,7 +1,14 @@
 // Question flow for the Grant & Funding Eligibility Navigator.
 // Kept as plain data so the flow/wording can be edited without touching component logic.
 
-export type QuestionType = "single" | "multi" | "text" | "email";
+import { COUNTRIES } from "./countries";
+
+// "select" renders as a native dropdown (see app/navigator/page.tsx) rather
+// than the option-pill buttons used for "single" — reserved for questions
+// with too many options to lay out as pills (e.g. the country list), matching
+// the <select className={inputClass}> pattern already used for organisation
+// type in app/join-us/page.tsx.
+export type QuestionType = "single" | "multi" | "text" | "email" | "select";
 
 export interface QuestionOption {
   value: string;
@@ -43,10 +50,11 @@ export const NAVIGATOR_QUESTIONS: NavigatorQuestion[] = [
   },
   {
     id: "region",
-    type: "text",
-    prompt: "Which country or region do you primarily operate in?",
+    type: "select",
+    prompt: "Which country do you primarily operate in?",
     helpText: "This affects eligibility for region-specific schemes (e.g. EU or Italy-specific incentives).",
     required: true,
+    options: COUNTRIES.map((c) => ({ value: c, label: c })),
   },
   {
     id: "stage",

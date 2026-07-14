@@ -242,6 +242,23 @@ function QuestionBlock({
           placeholder={question.type === "email" ? "you@organisation.org" : "Type your answer"}
         />
       )}
+
+      {question.type === "select" && question.options && (
+        <select
+          className={inputClass}
+          value={typeof value === "string" ? value : ""}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          <option value="" disabled>
+            Select a country…
+          </option>
+          {question.options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }
