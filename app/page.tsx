@@ -599,6 +599,28 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Grant & Funding Eligibility Navigator ── */}
+      <section className="section" id="navigator">
+        <div className="container mx-auto px-6">
+          <div className="card" style={{ padding: 40, display: "flex", flexWrap: "wrap", gap: 32, alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ maxWidth: 560 }}>
+              <span className="badge badge-primary mb-3">Free tool</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
+                Not sure which grants you qualify for?
+              </h2>
+              <p className="text-gray-600">
+                Answer a few questions about your organisation and get an instant readout of which
+                funding and grant schemes — NIDI, Mini-PIA, ZES, Horizon Europe, and more — you may
+                be eligible for.
+              </p>
+            </div>
+            <Link href="/navigator" className="btn-primary" style={{ textDecoration: "none", whiteSpace: "nowrap" }}>
+              Check your eligibility →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ ── */}
       <FaqSection />
 
