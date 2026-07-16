@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
       !answers.organisation_name?.trim() ||
       !answers.org_type ||
       !answers.region?.trim() ||
-      !answers.stage
+      !answers.stage ||
+      (answers.region.trim() === "Italy" && !answers.italy_subregion)
     ) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
         organisation_name: answers.organisation_name.trim(),
         org_type: answers.org_type,
         region: answers.region.trim(),
+        italy_subregion: answers.italy_subregion ?? null,
         stage: answers.stage,
         interest_areas: answers.interest_areas,
         existing_support: answers.existing_support,
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
 
     const notesLines = [
       `[Navigator] Submitted ${new Date().toLocaleDateString("en-GB")}`,
+      ...(answers.italy_subregion ? [`Italy sub-region: ${answers.italy_subregion}`] : []),
       `Stage: ${answers.stage}`,
       `Interests: ${interestLabels.join(", ") || "—"}`,
       `Goals: ${goalLabels.join(", ") || "—"}`,

@@ -57,6 +57,19 @@ export const NAVIGATOR_QUESTIONS: NavigatorQuestion[] = [
     options: COUNTRIES.map((c) => ({ value: c, label: c })),
   },
   {
+    id: "italy_subregion",
+    type: "single",
+    prompt: "Where in Italy are you based?",
+    helpText: "A few of our schemes are specific to Puglia or the Province of Taranto.",
+    required: true,
+    showIf: { questionId: "region", equals: "Italy" },
+    options: [
+      { value: "taranto", label: "Province of Taranto" },
+      { value: "puglia", label: "Puglia (elsewhere)" },
+      { value: "other", label: "Another Italian region" },
+    ],
+  },
+  {
     id: "stage",
     type: "single",
     prompt: "What stage are you at?",
