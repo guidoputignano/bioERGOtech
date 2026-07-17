@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Building2,
   Globe2,
@@ -356,6 +356,28 @@ function QuestionBlock({
 
 function NavigatorResults({ schemes, email }: { schemes: EligibleScheme[]; email: string }) {
   const hasMatches = schemes.length > 0;
+
+  // Fire the Google Ads conversion exactly once, when the visitor actually
+  // reaches this screen after a successful submission — not on page load of
+  // /navigator, not on the button click. Reaching results is the meaningful
+  // completion regardless of whether any scheme matched, so this fires for
+  // both the populated and empty-match states (see `hasMatches` above,
+  // which only affects what's rendered below, not whether this fires).
+  //
+  // The `useRef` guard (on top of the empty dependency array) protects
+  // against React Strict Mode's dev-only double-invocation of effects,
+  // which would otherwise double-count this conversion in development.
+  const hasFiredConversion = useRef(false);
+  useEffect(() => {
+    if (hasFiredConversion.current) return;
+    hasFiredConversion.current = true;
+
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "conversion", { send_to: "AW-17391421551/WsWCCLW5-tEcEO-Q8ORA" });
+    } else if (process.env.NODE_ENV !== "production") {
+      console.warn("[Navigator] gtag is not available — conversion event was not sent.");
+    }
+  }, []);
 
   return (
     <>
