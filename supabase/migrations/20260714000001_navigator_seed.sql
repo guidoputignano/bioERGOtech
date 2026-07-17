@@ -1,4 +1,13 @@
 -- =========================================================
+-- ⚠️  HISTORICAL / SUPERSEDED — DO NOT RUN.
+-- =========================================================
+-- This file is kept only for migration history. The real, Director-approved
+-- eligibility data now lives in 20260717000000_navigator_consolidated_
+-- authoritative.sql, which supersedes this file for any fresh database
+-- setup. Running THIS file would load illustrative placeholder rows over
+-- real data — see supabase/migrations/README.md before running anything in
+-- this folder.
+-- =========================================================
 -- ⚠️  PLACEHOLDER seed data for navigator_rules — STRUCTURE ONLY.
 -- =========================================================
 -- DO NOT RUN THIS FILE AGAINST PRODUCTION. These rows are illustrative
