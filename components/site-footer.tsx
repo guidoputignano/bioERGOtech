@@ -75,6 +75,7 @@ export function SiteFooter() {
                 { href: "/join-us", label: "Join Us" },
                 { href: "/partner-with-us", label: "Partner With Us" },
                 { href: "/build-with-us", label: "Build With Us" },
+                { href: "/navigator", label: "Grant & Funding Navigator" },
                 { href: "/careers", label: "Careers" },
               ].map((l) => (
                 <li key={l.href} style={{ marginBottom: "10px" }}>
