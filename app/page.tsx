@@ -534,7 +534,7 @@ export default function Home() {
               style={{ background: "linear-gradient(135deg, #00C896 0%, #1D9E75 100%)" }}
             >
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", marginBottom: 10 }}>
-                Evento · Taranto · 11 e 12 dicembre 2026
+                Evento · Taranto · 10 e 11 dicembre 2026
               </div>
               <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: "#fff", lineHeight: 1.2, margin: 0 }}>
                 Vivere più a lungo: sport e intelligenza artificiale
@@ -545,20 +545,19 @@ export default function Home() {
             </div>
             <div className="p-8 md:p-10 flex flex-col justify-center">
               <div className="flex flex-wrap gap-6 mb-6">
-                {[["8", "Relatori"], ["10", "Progetti"], ["8", "Startup"]].map(([num, label]) => (
+                {[["7", "Panel"], ["10", "Progetti"], ["3", "Premi"]].map(([num, label]) => (
                   <div key={label}>
                     <div style={{ fontSize: 26, fontWeight: 800, color: "var(--primary)", fontFamily: "'Sora', sans-serif" }}>{num}</div>
                     <div style={{ fontSize: 12, color: "#718096" }}>{label}</div>
                   </div>
                 ))}
               </div>
-              <span
+              <Link
+                href="/eventi/vivere-piu-a-lungo"
                 className="btn-primary inline-block text-center"
-                style={{ opacity: 0.7, cursor: "default", pointerEvents: "none" }}
-                aria-disabled="true"
               >
-                Updates coming soon
-              </span>
+                Scopri il programma e iscriviti →
+              </Link>
             </div>
           </div>
         </div>

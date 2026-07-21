@@ -11,9 +11,9 @@ import {
   SITE_URL,
   SESSIONS,
   ARCHIVE_MODE,
+  PANEL,
   RELATORI,
-  MODERATORE,
-  CONFRONTO,
+  MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
   FAQ,
@@ -178,11 +178,32 @@ export default function EventPage() {
         {/* ── Giorno 1 ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">Giorno 1 . Giovedì 11 dicembre . Iacovone, Taranto</h2>
+            <h2 className="section-title">Giorno 1 . Giovedì 10 dicembre . PalaMazzola, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-10">
-              Una sola giornata allo stadio Iacovone (9:00 . 18:00). Prima gli ospiti: scienziati, medici e campioni dello sport a confronto. Poi i ragazzi con i loro progetti.
+              Una giornata al PalaMazzola (9:00 . 16:00). Sette panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi. Nel pomeriggio, il concerto aperto al pubblico.
             </p>
 
+            {/* I sette panel, per tema */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-5">I sette panel della giornata</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+              {PANEL.map((p) => (
+                <div key={p.n} className="card-sm flex items-start gap-4" style={{ padding: 20 }}>
+                  <span
+                    className="icon-circle icon-circle-primary"
+                    style={{ width: 40, height: 40, flexShrink: 0, fontWeight: 800 }}
+                  >
+                    {p.n}
+                  </span>
+                  <div>
+                    <h4 className="font-semibold text-gray-800 text-sm leading-tight">{p.titolo}</h4>
+                    <p className="text-xs text-gray-600 mt-1">{p.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Relatori e ospiti con foto */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-5">Relatori e ospiti</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
               {RELATORI.map((r) => (
                 <div key={r.nome} className="card-sm text-center" style={{ padding: 18 }}>
@@ -203,26 +224,28 @@ export default function EventPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
               <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
-                <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                  <Image src={MODERATORE.img} alt={MODERATORE.nome} fill sizes="72px" className="rounded-full object-cover" />
-                </div>
+                <span className="icon-circle icon-circle-primary" style={{ width: 56, height: 56, flexShrink: 0 }}>
+                  <i className="fas fa-microphone text-xl" />
+                </span>
                 <div>
                   <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
-                    Moderatore
+                    Moderatrice
                   </span>
-                  <h3 className="font-semibold text-gray-800 mt-2">{MODERATORE.nome}</h3>
-                  <p className="text-sm text-gray-600">{MODERATORE.ruolo}</p>
+                  <h3 className="font-semibold text-gray-800 mt-2">{MODERATRICE.nome}</h3>
+                  <p className="text-sm text-gray-600">{MODERATRICE.ruolo}</p>
                 </div>
               </div>
               <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
-                <div style={{ position: "relative", width: 72, height: 72, flexShrink: 0 }}>
-                  <Image src={CONFRONTO.img} alt="Francesco Montervino" fill sizes="72px" className="rounded-full object-cover" />
-                </div>
+                <span className="icon-circle icon-circle-primary" style={{ width: 56, height: 56, flexShrink: 0 }}>
+                  <i className="fas fa-music text-xl" />
+                </span>
                 <div>
                   <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
-                    {CONFRONTO.titolo}
+                    Concerto
                   </span>
-                  <p className="text-sm text-gray-600 mt-2">{CONFRONTO.testo}</p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Nel pomeriggio, musica dal vivo al PalaMazzola, aperta al pubblico presente.
+                  </p>
                 </div>
               </div>
             </div>
@@ -232,7 +255,7 @@ export default function EventPage() {
                 I progetti dei ragazzi
               </h3>
               <p className="text-gray-700">
-                Dopo gli ospiti, sempre allo stadio Iacovone, dieci gruppi di ragazzi presentano i dieci migliori progetti. Una giuria, composta dagli sponsor dei progetti, valuta le idee e proclama il vincitore. Premio al miglior progetto: un viaggio a New York.
+                Tra un panel e l&apos;altro, dieci gruppi di ragazzi presentano i loro progetti in tre blocchi, con pochi minuti a testa tra pitch e domande. Una commissione valuta le idee e proclama il gruppo vincitore.
               </p>
             </div>
           </div>
@@ -241,15 +264,15 @@ export default function EventPage() {
         {/* ── Giorno 2 ── */}
         <section className="section">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">Giorno 2 . Venerdì 12 dicembre . Teatro Fusco, Taranto</h2>
+            <h2 className="section-title">Giorno 2 . Venerdì 11 dicembre . Teatro Fusco, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-8">
-              Prima le startup. Otto startup presentano i loro progetti a investitori, partner e istituzioni. A seguire, il concerto.
+              Uno showcase di innovazione: startup, spin-off universitari, centri di ricerca e progetti del territorio presentano le loro soluzioni a investitori, partner e istituzioni. A seguire la premiazione e il concerto di chiusura.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
-                { icon: "fa-rocket", t: "8 startup", d: "Progetti in pitch a investitori, partner e istituzioni." },
-                { icon: "fa-music", t: "Concerto", d: "A seguire, musica dal vivo per chiudere le due giornate." },
-                { icon: "fa-building-columns", t: "Teatro Fusco", d: "Sede del giorno 2, Taranto." },
+                { icon: "fa-lightbulb", t: "Showcase di innovazione", d: "Startup, spin-off universitari, centri di ricerca e progetti del territorio in vetrina." },
+                { icon: "fa-trophy", t: "Premiazione", d: "Tre premi assegnati da una commissione dedicata." },
+                { icon: "fa-music", t: "Concerto", d: "Musica dal vivo per chiudere le due giornate." },
               ].map((c) => (
                 <div key={c.t} className="card-sm" style={{ padding: 24 }}>
                   <span className="icon-circle icon-circle-primary" style={{ width: 48, height: 48 }}>
