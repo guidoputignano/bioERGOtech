@@ -23,9 +23,13 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
 ## Database
 
 Migrazioni:
-`supabase/migrations/20261001000000_create_event_registrations.sql` (schema)
-e `supabase/migrations/20261101000000_update_event_sessions.sql` (riallinea
-le sessioni: giorno 1 unico al Iacovone, giorno 2 al Teatro Fusco con concerto).
+`supabase/migrations/20261001000000_create_event_registrations.sql` (schema),
+`supabase/migrations/20261101000000_update_event_sessions.sql` (prima
+riallineamento delle sessioni) e
+`supabase/migrations/20261201000000_update_event_sessions_palamazzola.sql`
+(programma aggiornato: date 10 e 11 dicembre, giorno 1 al PalaMazzola con
+panel e progetti dei ragazzi, giorno 2 al Teatro Fusco come showcase di
+innovazione con premiazione e concerto).
 
 Crea tre tabelle dedicate (`event_sessions`, `event_registrations`,
 `event_registration_sessions`), una RPC atomica `event_register` con controllo
