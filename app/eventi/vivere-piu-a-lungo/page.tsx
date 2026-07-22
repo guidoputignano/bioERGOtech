@@ -11,7 +11,7 @@ import {
   SITE_URL,
   SESSIONS,
   ARCHIVE_MODE,
-  PANEL,
+  PROGRAMMA_GIORNO1,
   RELATORI,
   MODERATRICE,
   STATS,
@@ -183,24 +183,78 @@ export default function EventPage() {
               Una giornata al PalaMazzola (9:00 . 16:00). Sette panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi. Nel pomeriggio, il concerto aperto al pubblico.
             </p>
 
-            {/* I sette panel, per tema */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-5">I sette panel della giornata</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
-              {PANEL.map((p) => (
-                <div key={p.n} className="card-sm flex items-start gap-4" style={{ padding: 20 }}>
-                  <span
-                    className="icon-circle icon-circle-primary"
-                    style={{ width: 40, height: 40, flexShrink: 0, fontWeight: 800 }}
-                  >
-                    {p.n}
-                  </span>
-                  <div>
-                    <h4 className="font-semibold text-gray-800 text-sm leading-tight">{p.titolo}</h4>
-                    <p className="text-xs text-gray-600 mt-1">{p.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* Programma della mattina, come linea del tempo */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">Il programma della mattina</h3>
+            <p className="text-sm text-gray-600 mb-8">
+              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore.
+            </p>
+            <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 780 }}>
+              {PROGRAMMA_GIORNO1.map((v, i) => {
+                const isPanel = v.tipo === "panel";
+                const last = i === PROGRAMMA_GIORNO1.length - 1;
+                const kicker =
+                  v.tipo === "pausa" ? "Pausa" : v.tipo === "premiazione" ? "Premiazione" : "Ragazzi";
+                return (
+                  <li key={i} className="relative flex gap-4 sm:gap-5" style={{ paddingBottom: last ? 0 : 22 }}>
+                    {/* Linea verticale che collega i nodi. */}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        left: 22,
+                        width: 2,
+                        background: "var(--primary-light)",
+                        zIndex: 0,
+                        top: i === 0 ? 23 : 0,
+                        ...(last ? { height: 23 } : { bottom: 0 }),
+                      }}
+                    />
+                    {/* Nodo. */}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: "relative",
+                        zIndex: 1,
+                        flexShrink: 0,
+                        width: 46,
+                        height: 46,
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: 800,
+                        fontSize: 16,
+                        background: isPanel ? "var(--primary)" : "#fff",
+                        color: isPanel ? "#fff" : "var(--primary)",
+                        border: isPanel ? "none" : "2px solid var(--primary-light)",
+                        boxShadow: isPanel ? "0 4px 12px rgba(46,196,182,0.35)" : "none",
+                      }}
+                    >
+                      {isPanel ? v.n : <i className={`fas ${v.icona}`} />}
+                    </span>
+                    {/* Contenuto. */}
+                    <div
+                      className={isPanel ? "card-sm flex-1" : "flex-1"}
+                      style={isPanel ? { padding: "14px 18px" } : { padding: "9px 2px" }}
+                    >
+                      {isPanel ? (
+                        <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.56rem" }}>
+                          Panel {v.n}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-light)" }}>
+                          {kicker}
+                        </span>
+                      )}
+                      <h4 className="font-semibold text-gray-800 leading-tight" style={{ marginTop: isPanel ? 6 : 3, fontSize: 15 }}>
+                        {v.titolo}
+                      </h4>
+                      <p className="text-gray-600" style={{ fontSize: 13, marginTop: 2 }}>{v.desc}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
 
             {/* Relatori e ospiti con foto */}
             <h3 className="text-lg font-semibold text-gray-800 mb-5">Relatori e ospiti</h3>
