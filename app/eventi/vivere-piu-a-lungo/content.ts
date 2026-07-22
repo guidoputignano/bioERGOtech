@@ -117,18 +117,35 @@ export const CONSENSO_PRIVACY_TESTO =
 const SPEAKER_IMG = "/assets/images/eventi/vivere-piu-a-lungo";
 
 /**
- * I sette panel del giorno 1. Ogni panel dura circa 25 minuti: gli ospiti
- * dialogano su un tema, senza slide. Qui pubblichiamo solo i temi, la fonte
- * di verità del programma resta il piano organizzativo interno.
+ * Il programma della mattina del giorno 1, come sequenza. Sette panel da circa
+ * 25 minuti (dialogo sul tema, senza slide) si alternano ai blocchi di
+ * presentazione dei ragazzi e a un coffee break. Qui pubblichiamo temi e
+ * ritmo, non gli orari puntuali: la fonte di verità resta il piano interno.
+ *
+ * `tipo` distingue i panel (nodo numerato) dalle voci di raccordo (nodo con
+ * icona). `n` e `icona` sono valorizzati in base al tipo.
  */
-export const PANEL = [
-  { n: 1, titolo: "Salute, prevenzione e sport", desc: "Prevenzione, trombosi e la vita dell'atleta." },
-  { n: 2, titolo: "Regole, professioni e istituzioni", desc: "Normativa, dati sanitari e ruolo delle professioni." },
-  { n: 3, titolo: "Il gesto atletico e la macchina", desc: "Sport e robotica a confronto." },
-  { n: 4, titolo: "Sport, disabilità e inclusione", desc: "Come lo sport cambia la vita dei ragazzi con disabilità." },
-  { n: 5, titolo: "Il corpo che si rigenera", desc: "Reumatologia, recupero e ritorno alla performance." },
-  { n: 6, titolo: "Scienza, tecnologia e nuove generazioni", desc: "Divulgazione, talento e formazione dei ragazzi." },
-  { n: 7, titolo: "Vivere più a lungo", desc: "Oncologia, longevità e sport." },
+export type ProgrammaVoce = {
+  tipo: "panel" | "ragazzi" | "pausa" | "premiazione";
+  n?: number;
+  icona?: string;
+  titolo: string;
+  desc: string;
+};
+
+export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
+  { tipo: "panel", n: 1, titolo: "Salute, prevenzione e sport", desc: "Prevenzione, trombosi e la vita dell'atleta." },
+  { tipo: "panel", n: 2, titolo: "Regole, professioni e istituzioni", desc: "Normativa, dati sanitari e ruolo delle professioni." },
+  { tipo: "ragazzi", icona: "fa-users", titolo: "Progetti dei ragazzi, primo blocco", desc: "I primi gruppi salgono sul palco con le loro idee." },
+  { tipo: "panel", n: 3, titolo: "Il gesto atletico e la macchina", desc: "Sport e robotica a confronto." },
+  { tipo: "panel", n: 4, titolo: "Sport, disabilità e inclusione", desc: "Come lo sport cambia la vita dei ragazzi con disabilità." },
+  { tipo: "pausa", icona: "fa-mug-hot", titolo: "Coffee break", desc: "Pausa e networking per pubblico e partecipanti." },
+  { tipo: "ragazzi", icona: "fa-users", titolo: "Progetti dei ragazzi, secondo blocco", desc: "Altri gruppi presentano, con lo stesso format." },
+  { tipo: "panel", n: 5, titolo: "Il corpo che si rigenera", desc: "Reumatologia, recupero e ritorno alla performance." },
+  { tipo: "panel", n: 6, titolo: "Scienza, tecnologia e nuove generazioni", desc: "Divulgazione, talento e formazione dei ragazzi." },
+  { tipo: "ragazzi", icona: "fa-users", titolo: "Progetti dei ragazzi, terzo blocco", desc: "Gli ultimi gruppi chiudono la gara." },
+  { tipo: "panel", n: 7, titolo: "Vivere più a lungo", desc: "Oncologia, longevità e sport." },
+  { tipo: "premiazione", icona: "fa-trophy", titolo: "Proclamazione del gruppo vincitore", desc: "La commissione valuta i progetti e premia il migliore." },
 ];
 
 /** Relatori e ospiti confermati con foto, presenti nei panel del giorno 1. */
