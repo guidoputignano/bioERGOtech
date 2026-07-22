@@ -373,7 +373,7 @@ function NavigatorResults({ schemes, email }: { schemes: EligibleScheme[]; email
     hasFiredConversion.current = true;
 
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("event", "conversion", { send_to: "AW-17391421551/WsWCCLW5-tEcEO-Q8ORA" });
+      window.gtag("event", "conversion", { send_to: "AW-17391421551/WzWCCLW5-tEcEO-Q8ORA" });
     } else if (process.env.NODE_ENV !== "production") {
       console.warn("[Navigator] gtag is not available — conversion event was not sent.");
     }
