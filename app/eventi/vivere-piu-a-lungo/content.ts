@@ -125,10 +125,14 @@ export type Relatore = {
 };
 
 /**
- * Relatori e ospiti confermati, nell'ordine in cui salgono sul palco. La
- * griglia della pagina segue questo ordine, così le foto raccontano la
- * scaletta e non un elenco slegato dal programma. Per spostare un relatore
- * basta cambiare il suo `id` nel panel corrispondente, qui sotto.
+ * Anagrafica dei relatori con foto. È un registro a chiave: l'ordine di questo
+ * array non decide nulla a schermo, serve solo a tenerlo leggibile, e infatti
+ * lo teniamo nell'ordine in cui salgono sul palco.
+ *
+ * Chi appare dove lo decide PROGRAMMA_GIORNO1: ogni voce elenca gli `id` dei
+ * suoi relatori nel campo `relatori`, e la pagina mostra i volti dentro la card
+ * del panel, in quell'ordine. Per spostare qualcuno da un panel a un altro
+ * basta spostare il suo `id` là sotto, senza toccare questo array.
  */
 export const RELATORI: Relatore[] = [
   { id: "piovella", nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
