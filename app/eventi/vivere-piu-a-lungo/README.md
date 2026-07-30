@@ -18,7 +18,46 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   sono seminate nella migrazione SQL (tabella `event_sessions`), che resta la
   fonte di verita per il conteggio posti a runtime. Se cambi una capienza,
   aggiornala anche con una `update` su `event_sessions`.
-- `CATEGORIE`, testi dei consensi, relatori, FAQ, stats: solo presentazione.
+- `CATEGORIE`, testi dei consensi, FAQ, stats: solo presentazione.
+
+## Programma e relatori del giorno 1
+
+Due strutture in `content.ts`, con una sola fonte di verita:
+
+- `ANAGRAFICA`: nome, ruolo e foto di ogni relatore o ospite, indicizzati per
+  id. Nessun ordine implicito.
+- `PROGRAMMA_GIORNO1`: la scaletta in sequenza. Ogni voce e un `panel`
+  numerato o un `raccordo` (apertura, blocchi dei ragazzi, coffee break,
+  premiazione, lunch, concerto). I panel elencano gli id in `relatori`, i
+  raccordi indicano la platea in `con`.
+
+`RELATORI` non e un elenco a mano: e derivato dal programma, quindi l'ordine
+in pagina segue sempre la scaletta e un nome non puo restare disallineato.
+Per aggiungere una persona bastano due passaggi:
+
+1. aggiungi la voce in `ANAGRAFICA`, con la foto in
+   `public/assets/images/eventi/vivere-piu-a-lungo/`;
+2. metti il suo id nell'array `relatori` del panel in cui interviene.
+
+Gli id sono tipizzati (`RelatoreId`): un id sbagliato non compila.
+
+### Foto dei relatori
+
+Formato atteso: webp quadrato 480x480, circa 10 a 25 KB. Le foto sono servite
+a 96 px dall'ottimizzatore di Next, quindi 480 px bastano anche su schermi a
+densita alta. Da un originale grande (per esempio un png 1254x1254):
+
+```bash
+python3 - <<'PY'
+from PIL import Image
+Image.open("Nome Cognome.png").convert("RGB") \
+     .resize((480, 480), Image.LANCZOS) \
+     .save("nome-cognome.webp", "WEBP", quality=82, method=6)
+PY
+```
+
+Non committare i png originali: pesano qualche MB a testa e finirebbero nel
+bundle di deploy senza essere mai serviti.
 
 ## Database
 
