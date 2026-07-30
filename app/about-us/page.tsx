@@ -162,6 +162,7 @@ export default function AboutUs() {
                 { img: "/assets/images/About-us/Olufemi-Olusola.webp", name: "Olufemi Olusola", role: "Scientific Projects Lead", desc: "Biostatistician working at the intersection of agentic AI, clinical data, and digital twin therapeutics." },
                 { img: "/assets/images/About-us/Luigi-Fantini.webp", name: "Luigi Fantini", role: "Strategy Lead", desc: "Sales and outreach specialist who has built a career on connecting with people and reaching new markets." },
                 { img: "/assets/images/About-us/Oscar-Carrisi.webp", name: "Oscar Carrisi", role: "Strategy Lead", desc: "CEO at Priver and a strategy expert focused on growth and market positioning." },
+                { img: "/assets/images/About-us/Margherita-Basile.webp", name: "Margherita Basile", role: "Lawyer", desc: "Lawyer advising the Foundation on governance, contracts, and regulatory compliance." },
                 { img: "/assets/images/About-us/Mario-Tagarelli.webp", name: "Mario Tagarelli", role: "Auditor", desc: "Career auditor responsible for the Foundation's financial oversight and compliance." },
               ].map((p) => (
                 <div key={p.name} className="card text-center">
