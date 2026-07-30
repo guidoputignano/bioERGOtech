@@ -14,8 +14,8 @@ import {
   PROGRAMMA_GIORNO1,
   ETICHETTA_VOCE,
   nomiVoce,
+  relatoriVoce,
   RELATORI,
-  panelDiRelatore,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -171,7 +171,7 @@ export default function EventPage() {
         {/* ── Stats ── */}
         <section className="section-sm">
           <div className="container mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
               {STATS.map((s) => (
                 <div key={s.label} className="text-center">
                   <div className="stat-number">{s.num}</div>
@@ -190,18 +190,40 @@ export default function EventPage() {
               Una giornata al PalaMazzola (9:00 . 16:00). Sette panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi. Nel pomeriggio, il concerto aperto al pubblico.
             </p>
 
-            {/* Programma del giorno 1, come linea del tempo */}
+            {/* Moderatrice della giornata, prima del programma che conduce */}
+            <div
+              className="card-sm flex items-center gap-4 mb-10"
+              style={{ padding: 18, maxWidth: 420, borderLeft: "4px solid var(--primary)" }}
+            >
+              <span className="icon-circle icon-circle-primary" style={{ width: 48, height: 48, flexShrink: 0 }}>
+                <i className="fas fa-microphone text-lg" />
+              </span>
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-light)" }}>
+                  Moderatrice
+                </span>
+                <h4 className="font-semibold text-gray-800" style={{ fontSize: 15, marginTop: 2 }}>{MODERATRICE.nome}</h4>
+                <p className="text-gray-600" style={{ fontSize: 13 }}>{MODERATRICE.ruolo}</p>
+              </div>
+            </div>
+
+            {/* Programma del giorno 1: una sola linea del tempo, con i volti nei panel */}
             <h3 className="text-lg font-semibold text-gray-800 mb-1">Il programma della giornata</h3>
             <p className="text-sm text-gray-600 mb-8">
-              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore e al concerto.
+              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore e al concerto. Per ogni panel trovi chi sale sul palco.
             </p>
-            <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 780 }}>
+            <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 880 }}>
               {PROGRAMMA_GIORNO1.map((v, i) => {
                 const isPanel = v.tipo === "panel";
                 const last = i === PROGRAMMA_GIORNO1.length - 1;
-                const nomi = nomiVoce(v);
+                const relatori = relatoriVoce(v);
+                const ospiti = v.ospiti ?? [];
                 return (
-                  <li key={i} className="relative flex gap-4 sm:gap-5" style={{ paddingBottom: last ? 0 : 22 }}>
+                  <li
+                    key={i}
+                    className="relative flex gap-4 sm:gap-5"
+                    style={{ paddingBottom: last ? 0 : isPanel ? 26 : 20 }}
+                  >
                     {/* Linea verticale che collega i nodi. */}
                     <span
                       aria-hidden="true"
@@ -215,7 +237,9 @@ export default function EventPage() {
                         ...(last ? { height: 23 } : { bottom: 0 }),
                       }}
                     />
-                    {/* Nodo. */}
+                    {/* Nodo. I panel portano un disco pieno numerato, le voci di
+                        raccordo un pallino piu piccolo, centrato nello stesso slot
+                        da 46px per non spostare la linea verticale. */}
                     <span
                       aria-hidden="true"
                       style={{
@@ -224,24 +248,52 @@ export default function EventPage() {
                         flexShrink: 0,
                         width: 46,
                         height: 46,
-                        borderRadius: "50%",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontWeight: 800,
-                        fontSize: 16,
-                        background: isPanel ? "var(--primary)" : "#fff",
-                        color: isPanel ? "#fff" : "var(--primary)",
-                        border: isPanel ? "none" : "2px solid var(--primary-light)",
-                        boxShadow: isPanel ? "0 4px 12px rgba(46,196,182,0.35)" : "none",
                       }}
                     >
-                      {isPanel ? v.n : <i className={`fas ${v.icona}`} />}
+                      {isPanel ? (
+                        <span
+                          style={{
+                            width: 46,
+                            height: 46,
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 800,
+                            fontSize: 16,
+                            background: "var(--primary)",
+                            color: "#fff",
+                            boxShadow: "0 4px 12px rgba(46,196,182,0.35)",
+                          }}
+                        >
+                          {v.n}
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 11,
+                            background: "#fff",
+                            color: "var(--primary)",
+                            border: "2px solid var(--primary-light)",
+                          }}
+                        >
+                          <i className={`fas ${v.icona}`} />
+                        </span>
+                      )}
                     </span>
                     {/* Contenuto. */}
                     <div
                       className={isPanel ? "card-sm flex-1" : "flex-1"}
-                      style={isPanel ? { padding: "14px 18px" } : { padding: "9px 2px" }}
+                      style={isPanel ? { padding: "16px 20px 18px" } : { padding: "9px 2px" }}
                     >
                       {isPanel ? (
                         <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.56rem" }}>
@@ -256,91 +308,62 @@ export default function EventPage() {
                         {v.titolo}
                       </h4>
                       <p className="text-gray-600" style={{ fontSize: 13, marginTop: 2 }}>{v.desc}</p>
-                      {nomi.length > 0 && (
-                        <p style={{ fontSize: 12, fontWeight: 500, marginTop: 8, color: "var(--primary-dark)" }}>
-                          <i
-                            className="fas fa-microphone"
-                            style={{ fontSize: 11, opacity: 0.7, marginRight: 6 }}
-                            aria-hidden="true"
-                          />
-                          {nomi.join(" . ")}
-                        </p>
+
+                      {/* Nei panel i protagonisti hanno un volto. Nelle voci di
+                          raccordo restano una riga di nomi, per non appesantire. */}
+                      {isPanel && (relatori.length > 0 || ospiti.length > 0) ? (
+                        <ul
+                          className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
+                          style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}
+                        >
+                          {relatori.map((r) => (
+                            <li key={r.id} className="flex items-center gap-3">
+                              <span style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+                                <Image
+                                  src={r.img}
+                                  alt={r.nome}
+                                  fill
+                                  sizes="52px"
+                                  className="rounded-full object-cover"
+                                />
+                              </span>
+                              <span>
+                                <span className="block font-semibold text-gray-800" style={{ fontSize: 13, lineHeight: 1.25 }}>
+                                  {r.nome}
+                                </span>
+                                <span className="block text-gray-600" style={{ fontSize: 11, lineHeight: 1.35, marginTop: 2 }}>
+                                  {r.ruolo}
+                                </span>
+                              </span>
+                            </li>
+                          ))}
+                          {ospiti.map((o) => (
+                            <li key={o} className="flex items-center gap-3">
+                              <span
+                                className="icon-circle icon-circle-primary"
+                                style={{ width: 52, height: 52, flexShrink: 0 }}
+                                aria-hidden="true"
+                              >
+                                <i className="fas fa-users" />
+                              </span>
+                              <span className="font-semibold text-gray-800" style={{ fontSize: 13, lineHeight: 1.25 }}>
+                                {o}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        nomiVoce(v).length > 0 && (
+                          <p style={{ fontSize: 12, fontWeight: 500, marginTop: 6, color: "var(--primary-dark)" }}>
+                            {nomiVoce(v).join(" . ")}
+                          </p>
+                        )
                       )}
                     </div>
                   </li>
                 );
               })}
             </ol>
-
-            {/* Relatori e ospiti con foto, nell'ordine in cui salgono sul palco */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">Relatori e ospiti</h3>
-            <p className="text-sm text-gray-600 mb-5">
-              In ordine di scaletta. Il badge indica il panel in cui ciascuno interviene.
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
-              {RELATORI.map((r) => {
-                const panel = panelDiRelatore(r.id);
-                return (
-                  <div
-                    key={r.id}
-                    className="card-sm text-center"
-                    style={{ padding: 18, display: "flex", flexDirection: "column" }}
-                  >
-                    <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 12px" }}>
-                      <Image
-                        src={r.img}
-                        alt={r.nome}
-                        fill
-                        sizes="96px"
-                        className="rounded-full object-cover"
-                      />
-                    </div>
-                    <h4 className="font-semibold text-gray-800 text-sm leading-tight">{r.nome}</h4>
-                    <p className="text-xs text-gray-600 mt-1">{r.ruolo}</p>
-                    {panel && (
-                      /* marginTop auto: i badge restano allineati in fondo alla riga
-                         anche quando i ruoli occupano un numero diverso di righe. */
-                      <div style={{ marginTop: "auto", paddingTop: 10 }}>
-                        <span
-                          className="badge"
-                          style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.56rem" }}
-                        >
-                          Panel {panel}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-              <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
-                <span className="icon-circle icon-circle-primary" style={{ width: 56, height: 56, flexShrink: 0 }}>
-                  <i className="fas fa-microphone text-xl" />
-                </span>
-                <div>
-                  <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
-                    Moderatrice
-                  </span>
-                  <h3 className="font-semibold text-gray-800 mt-2">{MODERATRICE.nome}</h3>
-                  <p className="text-sm text-gray-600">{MODERATRICE.ruolo}</p>
-                </div>
-              </div>
-              <div className="card flex items-center gap-4" style={{ borderTop: "4px solid var(--primary)" }}>
-                <span className="icon-circle icon-circle-primary" style={{ width: 56, height: 56, flexShrink: 0 }}>
-                  <i className="fas fa-music text-xl" />
-                </span>
-                <div>
-                  <span className="badge" style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.6rem" }}>
-                    Concerto
-                  </span>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Nel pomeriggio, musica dal vivo al PalaMazzola, aperta al pubblico presente.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             <div className="card" style={{ background: "var(--primary-light)" }}>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">

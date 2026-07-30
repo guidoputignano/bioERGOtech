@@ -141,8 +141,8 @@ export const RELATORI: Relatore[] = [
   { id: "marotto", nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani", img: `${SPEAKER_IMG}/daniela-marotto.webp` },
   { id: "montano", nome: "Aldo Montano", ruolo: "Campione olimpico di scherma", img: `${SPEAKER_IMG}/aldo-montano.webp` },
   { id: "bortuzzo", nome: "Manuel Bortuzzo", ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024", img: `${SPEAKER_IMG}/manuel-bortuzzo.webp` },
-  { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Professore e divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp` },
-  { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Ginnastica ritmica, campionessa mondiale e bronzo olimpico", img: `${SPEAKER_IMG}/sofia-raffaeli.webp` },
+  { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp` },
+  { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp` },
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "galante", nome: "Fabio Galante", ruolo: "Ex difensore di Inter e Torino", img: `${SPEAKER_IMG}/fabio-galante.webp` },
 ];
@@ -283,22 +283,17 @@ export const ETICHETTA_VOCE: Record<ProgrammaVoce["tipo"], string> = {
 
 const RELATORE_BY_ID = new Map(RELATORI.map((r) => [r.id, r]));
 
-/** Nomi da mostrare sotto una voce: prima i relatori con foto, poi gli ospiti. */
+/** I relatori con foto di una voce, risolti dagli id. Alimentano i volti nei panel. */
+export const relatoriVoce = (v: ProgrammaVoce): Relatore[] =>
+  (v.relatori ?? [])
+    .map((id) => RELATORE_BY_ID.get(id))
+    .filter((r): r is Relatore => Boolean(r));
+
+/** Nomi in riga, per le voci di raccordo che non mostrano i volti. */
 export const nomiVoce = (v: ProgrammaVoce): string[] => [
-  ...(v.relatori ?? []).map((id) => RELATORE_BY_ID.get(id)?.nome ?? id),
+  ...relatoriVoce(v).map((r) => r.nome),
   ...(v.ospiti ?? []),
 ];
-
-const PANEL_BY_RELATORE = new Map<string, number>(
-  PROGRAMMA_GIORNO1.flatMap((v) =>
-    v.tipo === "panel" && v.n
-      ? (v.relatori ?? []).map((id) => [id, v.n as number] as [string, number])
-      : []
-  )
-);
-
-/** Numero del panel in cui interviene il relatore, per il badge sulla card. */
-export const panelDiRelatore = (id: string): number | undefined => PANEL_BY_RELATORE.get(id);
 
 /** Moderatrice del giorno 1 al PalaMazzola. */
 export const MODERATRICE = {
@@ -306,9 +301,11 @@ export const MODERATRICE = {
   ruolo: "Giornalista Rai. Modera la prima giornata al PalaMazzola.",
 };
 
+/** Panel e relatori sono contati dai dati, così non divergono dal programma. */
 export const STATS = [
   { num: "2", label: "Giornate" },
-  { num: "7", label: "Panel" },
+  { num: String(PROGRAMMA_GIORNO1.filter((v) => v.tipo === "panel").length), label: "Panel" },
+  { num: String(RELATORI.length), label: "Relatori e ospiti" },
   { num: "10", label: "Progetti dei ragazzi" },
   { num: "3", label: "Premi" },
 ];
