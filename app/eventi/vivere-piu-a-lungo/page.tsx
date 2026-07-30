@@ -13,6 +13,7 @@ import {
   ARCHIVE_MODE,
   PROGRAMMA_GIORNO1,
   RELATORI,
+  relatoreById,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -34,6 +35,12 @@ export const metadata: Metadata = {
 
 // Tinta morbida coerente con la homepage.
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
+
+/** "Anna, Bruno e Carla". Usato per elencare chi è sul palco in un panel. */
+function elencoNomi(nomi: string[]): string {
+  if (nomi.length < 2) return nomi.join("");
+  return `${nomi.slice(0, -1).join(", ")} e ${nomi[nomi.length - 1]}`;
+}
 
 function EventJsonLd() {
   const jsonLd = {
@@ -183,17 +190,18 @@ export default function EventPage() {
               Una giornata al PalaMazzola (9:00 . 16:00). Sette panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi. Nel pomeriggio, il concerto aperto al pubblico.
             </p>
 
-            {/* Programma della mattina, come linea del tempo */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">Il programma della mattina</h3>
+            {/* Programma della giornata, come linea del tempo */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">Come si svolge la giornata</h3>
             <p className="text-sm text-gray-600 mb-8">
-              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore.
+              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore. Per ogni panel trovi chi sale sul palco.
             </p>
-            <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 780 }}>
+            <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 820 }}>
               {PROGRAMMA_GIORNO1.map((v, i) => {
                 const isPanel = v.tipo === "panel";
                 const last = i === PROGRAMMA_GIORNO1.length - 1;
-                const kicker =
-                  v.tipo === "pausa" ? "Pausa" : v.tipo === "premiazione" ? "Premiazione" : "Ragazzi";
+                const nomi = (v.relatori ?? [])
+                  .map((id) => relatoreById(id)?.nome)
+                  .filter((n): n is string => Boolean(n));
                 return (
                   <li key={i} className="relative flex gap-4 sm:gap-5" style={{ paddingBottom: last ? 0 : 22 }}>
                     {/* Linea verticale che collega i nodi. */}
@@ -243,34 +251,71 @@ export default function EventPage() {
                         </span>
                       ) : (
                         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-light)" }}>
-                          {kicker}
+                          {v.kicker}
                         </span>
                       )}
                       <h4 className="font-semibold text-gray-800 leading-tight" style={{ marginTop: isPanel ? 6 : 3, fontSize: 15 }}>
                         {v.titolo}
                       </h4>
                       <p className="text-gray-600" style={{ fontSize: 13, marginTop: 2 }}>{v.desc}</p>
+                      {/* Chi è sul palco: i nomi nei panel, la platea nelle voci di raccordo. */}
+                      {(nomi.length > 0 || v.con) && (
+                        <p
+                          className={nomi.length > 0 ? "text-gray-700 font-medium" : "text-gray-500"}
+                          style={{ fontSize: 12.5, marginTop: 6, display: "flex", alignItems: "baseline", gap: 7 }}
+                        >
+                          <i
+                            className={`fas ${nomi.length > 0 ? "fa-microphone-lines" : "fa-user-group"}`}
+                            style={{ color: "var(--primary)", fontSize: 11, flexShrink: 0 }}
+                            aria-hidden="true"
+                          />
+                          <span>{nomi.length > 0 ? elencoNomi(nomi) : v.con}</span>
+                        </p>
+                      )}
                     </div>
                   </li>
                 );
               })}
             </ol>
 
-            {/* Relatori e ospiti con foto */}
-            <h3 className="text-lg font-semibold text-gray-800 mb-5">Relatori e ospiti</h3>
+            {/* Relatori e ospiti, nell'ordine in cui salgono sul palco */}
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">Relatori e ospiti</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Medici, ricercatori, campioni dello sport e istituzioni, in ordine di intervento.
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
               {RELATORI.map((r) => (
-                <div key={r.nome} className="card-sm text-center" style={{ padding: 18 }}>
-                  <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 12px" }}>
-                    <Image
-                      src={r.img}
-                      alt={r.nome}
-                      fill
-                      sizes="96px"
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-gray-800 text-sm leading-tight">{r.nome}</h3>
+                <div key={r.id} className="card-sm text-center" style={{ padding: 18 }}>
+                  {r.img ? (
+                    <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 12px" }}>
+                      <Image
+                        src={r.img}
+                        alt={r.nome}
+                        fill
+                        sizes="96px"
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <span
+                      className="icon-circle icon-circle-primary"
+                      style={{ width: 96, height: 96, borderRadius: "50%", margin: "0 auto 12px" }}
+                      aria-hidden="true"
+                    >
+                      <i className={`fas ${r.icona} text-2xl`} />
+                    </span>
+                  )}
+                  {r.panel && (
+                    <span
+                      className="badge"
+                      style={{ background: "var(--primary-light)", color: "var(--primary-dark)", fontSize: "0.56rem" }}
+                    >
+                      Panel {r.panel}
+                    </span>
+                  )}
+                  <h3 className="font-semibold text-gray-800 text-sm leading-tight" style={{ marginTop: r.panel ? 8 : 0 }}>
+                    {r.nome}
+                  </h3>
                   <p className="text-xs text-gray-600 mt-1">{r.ruolo}</p>
                 </div>
               ))}
@@ -298,7 +343,7 @@ export default function EventPage() {
                     Concerto
                   </span>
                   <p className="text-sm text-gray-600 mt-2">
-                    Nel pomeriggio, musica dal vivo al PalaMazzola, aperta al pubblico presente.
+                    Dopo la premiazione, musica dal vivo al PalaMazzola. Il lunch è riservato agli invitati, il concerto è aperto al pubblico presente.
                   </p>
                 </div>
               </div>
@@ -309,7 +354,7 @@ export default function EventPage() {
                 I progetti dei ragazzi
               </h3>
               <p className="text-gray-700">
-                Tra un panel e l&apos;altro, dieci gruppi di ragazzi presentano i loro progetti in tre blocchi, con pochi minuti a testa tra pitch e domande. Una commissione valuta le idee e proclama il gruppo vincitore.
+                Tra un panel e l&apos;altro, dieci gruppi di ragazzi presentano i loro progetti in tre blocchi. Tre minuti a testa: due di pitch e uno di domande. Una commissione valuta le idee e proclama il gruppo vincitore.
               </p>
             </div>
           </div>

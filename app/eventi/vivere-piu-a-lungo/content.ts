@@ -117,47 +117,264 @@ export const CONSENSO_PRIVACY_TESTO =
 const SPEAKER_IMG = "/assets/images/eventi/vivere-piu-a-lungo";
 
 /**
- * Il programma della mattina del giorno 1, come sequenza. Sette panel da circa
- * 25 minuti (dialogo sul tema, senza slide) si alternano ai blocchi di
- * presentazione dei ragazzi e a un coffee break. Qui pubblichiamo temi e
- * ritmo, non gli orari puntuali: la fonte di verità resta il piano interno.
+ * Anagrafica di relatori e ospiti, indicizzata per id. Qui non c'è ordine: la
+ * sequenza con cui compaiono in pagina la decide il programma, così l'elenco
+ * pubblicato non può divergere dalla scaletta.
  *
- * `tipo` distingue i panel (nodo numerato) dalle voci di raccordo (nodo con
- * icona). `n` e `icona` sono valorizzati in base al tipo.
+ * `img` è una foto quadrata 480x480 in webp. Quando l'ospite è un gruppo e non
+ * una persona, al posto della foto usiamo `icona` (Font Awesome).
+ */
+const ANAGRAFICA = {
+  "franco-piovella": {
+    nome: "Franco Piovella",
+    ruolo: "Angiologo, malattie tromboemboliche",
+    img: `${SPEAKER_IMG}/franco-piovella.webp`,
+  },
+  "agostino-abbagnale": {
+    nome: "Agostino Abbagnale",
+    ruolo: "Tre volte campione olimpico di canottaggio",
+    img: `${SPEAKER_IMG}/agostino-abbagnale.webp`,
+  },
+  "andrea-mandelli": {
+    nome: "Andrea Mandelli",
+    ruolo: "Presidente FOFI, Federazione degli Ordini dei Farmacisti",
+    img: `${SPEAKER_IMG}/andrea-mandelli.webp`,
+  },
+  "simona-loizzo": {
+    nome: "On. Simona Loizzo",
+    ruolo: "Camera dei Deputati, Commissione Affari sociali",
+    img: `${SPEAKER_IMG}/simona-loizzo.webp`,
+  },
+  "francesco-montervino": {
+    nome: "Francesco Montervino",
+    ruolo: "Ex capitano del Napoli",
+    img: `${SPEAKER_IMG}/francesco-montervino.webp`,
+  },
+  "bruno-siciliano": {
+    nome: "Bruno Siciliano",
+    ruolo: "Robotica, Università Federico II",
+    img: `${SPEAKER_IMG}/bruno-siciliano.webp`,
+  },
+  "mariangela-tari": {
+    nome: "Mariangela Tarì",
+    ruolo: "Scrittrice, presidente de La casa di Sofia",
+    img: `${SPEAKER_IMG}/mariangela-tari.webp`,
+  },
+  insuperabili: {
+    nome: "Squadra Insuperabili",
+    ruolo: "Scuola di calcio per ragazzi con disabilità",
+    icona: "fa-futbol",
+  },
+  "daniela-marotto": {
+    nome: "Daniela Marotto",
+    ruolo: "Reumatologa, Collegio Reumatologi Italiani",
+    img: `${SPEAKER_IMG}/daniela-marotto.webp`,
+  },
+  "aldo-montano": {
+    nome: "Aldo Montano",
+    ruolo: "Campione olimpico di sciabola",
+    img: `${SPEAKER_IMG}/aldo-montano.webp`,
+  },
+  "manuel-bortuzzo": {
+    nome: "Manuel Bortuzzo",
+    ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024",
+    img: `${SPEAKER_IMG}/manuel-bortuzzo.webp`,
+  },
+  "vincenzo-schettini": {
+    nome: "Vincenzo Schettini",
+    ruolo: "Divulgatore scientifico, La fisica che ci piace",
+    img: `${SPEAKER_IMG}/vincenzo-schettini.webp`,
+  },
+  "sofia-raffaeli": {
+    nome: "Sofia Raffaeli",
+    ruolo: "Campionessa mondiale di ginnastica ritmica",
+    img: `${SPEAKER_IMG}/sofia-raffaeli.webp`,
+  },
+  "mario-franchini": {
+    nome: "Mario Franchini",
+    ruolo: "Oncologo medico",
+    img: `${SPEAKER_IMG}/mario-franchini.webp`,
+  },
+  "fabio-galante": {
+    nome: "Fabio Galante",
+    ruolo: "Ex difensore di Inter, Torino e Livorno",
+    img: `${SPEAKER_IMG}/fabio-galante.webp`,
+  },
+} as const satisfies Record<string, { nome: string; ruolo: string; img?: string; icona?: string }>;
+
+/** Chiavi valide per collegare una persona a una voce del programma. */
+export type RelatoreId = keyof typeof ANAGRAFICA;
+
+/**
+ * Il programma del giorno 1, come sequenza. Sette panel da circa 25 minuti
+ * (dialogo sul tema, senza slide) si alternano ai blocchi di presentazione dei
+ * ragazzi, al coffee break e alla premiazione, fino al lunch e al concerto.
+ * Qui pubblichiamo temi, persone e ritmo, non gli orari puntuali: la fonte di
+ * verità sugli orari resta il piano interno.
+ *
+ * `tipo` distingue i panel (nodo numerato in tinta) dalle voci di raccordo
+ * (nodo con icona ed etichetta `kicker`). `relatori` elenca chi è sul palco;
+ * `con` copre i casi in cui a partecipare non è una persona con foto.
  */
 export type ProgrammaVoce = {
-  tipo: "panel" | "ragazzi" | "pausa" | "premiazione";
+  tipo: "panel" | "raccordo";
+  /** Numero del panel. Solo per `tipo: "panel"`. */
   n?: number;
+  /** Icona del nodo. Solo per `tipo: "raccordo"`. */
   icona?: string;
+  /** Etichetta sopra il titolo. Solo per `tipo: "raccordo"`. */
+  kicker?: string;
   titolo: string;
   desc: string;
+  relatori?: RelatoreId[];
+  con?: string;
 };
 
 export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
-  { tipo: "panel", n: 1, titolo: "Salute, prevenzione e sport", desc: "Prevenzione, trombosi e la vita dell'atleta." },
-  { tipo: "panel", n: 2, titolo: "Regole, professioni e istituzioni", desc: "Normativa, dati sanitari e ruolo delle professioni." },
-  { tipo: "ragazzi", icona: "fa-users", titolo: "Progetti dei ragazzi, primo blocco", desc: "I primi gruppi salgono sul palco con le loro idee." },
-  { tipo: "panel", n: 3, titolo: "Il gesto atletico e la macchina", desc: "Sport e robotica a confronto." },
-  { tipo: "panel", n: 4, titolo: "Sport, disabilità e inclusione", desc: "Come lo sport cambia la vita dei ragazzi con disabilità." },
-  { tipo: "pausa", icona: "fa-mug-hot", titolo: "Coffee break", desc: "Pausa e networking per pubblico e partecipanti." },
-  { tipo: "ragazzi", icona: "fa-users", titolo: "Progetti dei ragazzi, secondo blocco", desc: "Altri gruppi presentano, con lo stesso format." },
-  { tipo: "panel", n: 5, titolo: "Il corpo che si rigenera", desc: "Reumatologia, recupero e ritorno alla performance." },
-  { tipo: "panel", n: 6, titolo: "Scienza, tecnologia e nuove generazioni", desc: "Divulgazione, talento e formazione dei ragazzi." },
-  { tipo: "ragazzi", icona: "fa-users", titolo: "Progetti dei ragazzi, terzo blocco", desc: "Gli ultimi gruppi chiudono la gara." },
-  { tipo: "panel", n: 7, titolo: "Vivere più a lungo", desc: "Oncologia, longevità e sport." },
-  { tipo: "premiazione", icona: "fa-trophy", titolo: "Proclamazione del gruppo vincitore", desc: "La commissione valuta i progetti e premia il migliore." },
+  {
+    tipo: "raccordo",
+    icona: "fa-flag",
+    kicker: "Apertura",
+    titolo: "Apertura e saluti istituzionali",
+    desc: "Benvenuto, presentazione della giornata e della gara dei ragazzi.",
+    con: "Comitato organizzatore e istituzioni",
+  },
+  {
+    tipo: "panel",
+    n: 1,
+    titolo: "Salute, prevenzione e sport",
+    desc: "Trombosi, prevenzione e vita dell'atleta.",
+    relatori: ["franco-piovella", "agostino-abbagnale"],
+  },
+  {
+    tipo: "panel",
+    n: 2,
+    titolo: "Regole, professioni e istituzioni",
+    desc: "Normativa, dati sanitari e ruolo delle professioni.",
+    relatori: ["andrea-mandelli", "simona-loizzo"],
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-users",
+    kicker: "Ragazzi, primo blocco",
+    titolo: "Progetti dei gruppi 1-4",
+    desc: "Quattro presentazioni da tre minuti: due di pitch e uno di domande.",
+    con: "Gruppi 1-4 e commissione",
+  },
+  {
+    tipo: "panel",
+    n: 3,
+    titolo: "Il gesto atletico e la macchina",
+    desc: "Confronto tra sport e robotica.",
+    relatori: ["francesco-montervino", "bruno-siciliano"],
+  },
+  {
+    tipo: "panel",
+    n: 4,
+    titolo: "Sport, disabilità e inclusione",
+    desc: "Come lo sport aiuta i ragazzi con disabilità.",
+    relatori: ["mariangela-tari", "insuperabili"],
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-mug-hot",
+    kicker: "Pausa",
+    titolo: "Coffee break",
+    desc: "Stacco e networking per pubblico e partecipanti.",
+    con: "Tutti",
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-users",
+    kicker: "Ragazzi, secondo blocco",
+    titolo: "Progetti dei gruppi 5-7",
+    desc: "Tre presentazioni da tre minuti, stesso format del primo blocco.",
+    con: "Gruppi 5-7 e commissione",
+  },
+  {
+    tipo: "panel",
+    n: 5,
+    titolo: "Il corpo che si rigenera",
+    desc: "Reumatologia, recupero e ritorno alla performance.",
+    relatori: ["daniela-marotto", "aldo-montano", "manuel-bortuzzo"],
+  },
+  {
+    tipo: "panel",
+    n: 6,
+    titolo: "Scienza, tecnologia e nuove generazioni",
+    desc: "Divulgazione, talento e formazione dei ragazzi.",
+    relatori: ["vincenzo-schettini", "sofia-raffaeli"],
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-users",
+    kicker: "Ragazzi, terzo blocco",
+    titolo: "Progetti dei gruppi 8-10",
+    desc: "Ultime tre presentazioni da tre minuti.",
+    con: "Gruppi 8-10 e commissione",
+  },
+  {
+    tipo: "panel",
+    n: 7,
+    titolo: "Vivere più a lungo",
+    desc: "Oncologia, longevità e sport.",
+    relatori: ["mario-franchini", "fabio-galante"],
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-trophy",
+    kicker: "Premiazione",
+    titolo: "Deliberazione e proclamazione del gruppo vincitore",
+    desc: "Verdetto della commissione sui dieci gruppi, premiazione e foto ufficiali.",
+    con: "Commissione, i dieci gruppi e il Comitato",
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-person-walking",
+    kicker: "Trasferimento",
+    titolo: "Deflusso verso il lunch",
+    desc: "Spazio di recupero sui tempi e spostamento verso il lunch.",
+    con: "Tutti",
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-utensils",
+    kicker: "Lunch",
+    titolo: "Lunch su invito",
+    desc: "Riservato ai soli invitati.",
+    con: "Relatori, ospiti, partner e sponsor",
+  },
+  {
+    tipo: "raccordo",
+    icona: "fa-music",
+    kicker: "Concerto",
+    titolo: "Concerto al PalaMazzola",
+    desc: "Momento musicale aperto al pubblico presente.",
+    con: "Artista da definire",
+  },
 ];
 
-/** Relatori e ospiti confermati con foto, presenti nei panel del giorno 1. */
-export const RELATORI = [
-  { nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
-  { nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
-  { nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
-  { nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
-  { nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani", img: `${SPEAKER_IMG}/daniela-marotto.webp` },
-  { nome: "Bruno Siciliano", ruolo: "Robotica, Università Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp` },
-  { nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
-];
+export type Relatore = {
+  id: RelatoreId;
+  nome: string;
+  ruolo: string;
+  img?: string;
+  icona?: string;
+  /** Numero del panel in cui interviene, quando è un panel. */
+  panel?: number;
+};
+
+/**
+ * Relatori e ospiti nell'ordine in cui salgono sul palco. Derivato dal
+ * programma: aggiungere una persona a un panel la fa comparire anche qui, al
+ * punto giusto, senza toccare due elenchi.
+ */
+export const RELATORI: Relatore[] = PROGRAMMA_GIORNO1.flatMap((voce) =>
+  (voce.relatori ?? []).map((id) => ({ id, panel: voce.n, ...ANAGRAFICA[id] })),
+);
+
+export const relatoreById = (id: RelatoreId): Relatore | undefined =>
+  RELATORI.find((r) => r.id === id);
 
 /** Moderatrice del giorno 1 al PalaMazzola. */
 export const MODERATRICE = {
