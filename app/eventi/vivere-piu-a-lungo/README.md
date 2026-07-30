@@ -18,7 +18,18 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   sono seminate nella migrazione SQL (tabella `event_sessions`), che resta la
   fonte di verita per il conteggio posti a runtime. Se cambi una capienza,
   aggiornala anche con una `update` su `event_sessions`.
-- `CATEGORIE`, testi dei consensi, relatori, FAQ, stats: solo presentazione.
+- `CATEGORIE`, testi dei consensi, FAQ, stats: solo presentazione.
+- `RELATORI` e `PROGRAMMA_GIORNO1`: i relatori hanno un `id` stabile e la
+  scaletta li richiama per `id` nel campo `relatori` della voce di programma
+  (`ospiti` per i nomi senza foto: gruppi, squadre, istituzioni). Per spostare
+  un relatore da un panel a un altro basta spostare il suo `id`: la pagina
+  aggiorna sia la scaletta sia il badge "Panel N" sulla sua card. L'ordine
+  della griglia foto e' quello dell'array `RELATORI`, quindi tienilo allineato
+  all'ordine di palco.
+- Foto relatori: `public/assets/images/eventi/vivere-piu-a-lungo/`, webp
+  lossy 480x480 (circa 10 KB a foto). Se aggiungi un ritratto, convertilo con
+  lo stesso formato prima di committarlo: i PNG a piena risoluzione pesano
+  centinaia di volte tanto e finirebbero nel bundle statico.
 
 ## Database
 
