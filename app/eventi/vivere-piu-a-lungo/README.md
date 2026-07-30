@@ -19,13 +19,17 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   fonte di verita per il conteggio posti a runtime. Se cambi una capienza,
   aggiornala anche con una `update` su `event_sessions`.
 - `CATEGORIE`, testi dei consensi, FAQ, stats: solo presentazione.
-- `RELATORI` e `PROGRAMMA_GIORNO1`: i relatori hanno un `id` stabile e la
-  scaletta li richiama per `id` nel campo `relatori` della voce di programma
-  (`ospiti` per i nomi senza foto: gruppi, squadre, istituzioni). Per spostare
-  un relatore da un panel a un altro basta spostare il suo `id`: la pagina
-  aggiorna sia la scaletta sia il badge "Panel N" sulla sua card. L'ordine
-  della griglia foto e' quello dell'array `RELATORI`, quindi tienilo allineato
-  all'ordine di palco.
+- `RELATORI` e `PROGRAMMA_GIORNO1`: ogni relatore ha un `id` stabile e la
+  scaletta lo richiama per `id` nel campo `relatori` della voce di programma
+  (`ospiti` per i nomi senza foto: gruppi, squadre, istituzioni). Il programma
+  del giorno 1 e' un blocco unico: i volti compaiono dentro la card del panel
+  in cui intervengono, non c'e' una seconda griglia di relatori da tenere
+  allineata. Per spostare qualcuno da un panel a un altro basta spostare il suo
+  `id`, e la pagina segue. L'ordine dell'array `RELATORI` non guida piu il
+  layout: conta solo l'ordine degli `id` dentro ogni voce di programma.
+- `STATS`: il numero di panel e di relatori e' calcolato dai dati, quindi non
+  puo' divergere dal programma. Se aggiungi una voce o un relatore, i contatori
+  si aggiornano da soli.
 - Foto relatori: `public/assets/images/eventi/vivere-piu-a-lungo/`, webp
   lossy 480x480 (circa 10 KB a foto). Se aggiungi un ritratto, convertilo con
   lo stesso formato prima di committarlo: i PNG a piena risoluzione pesano
