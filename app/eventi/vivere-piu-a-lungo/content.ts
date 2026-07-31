@@ -122,17 +122,31 @@ export type Relatore = {
   nome: string;
   ruolo: string;
   img: string;
+  /**
+   * Chi non ha ancora autorizzato l'uso di nome e foto. La scheda resta qui,
+   * completa, ma la persona non compare da nessuna parte sulla pagina: niente
+   * volto nel panel, niente nome in riga, fuori dal contatore e fuori dai dati
+   * strutturati. Quando l'autorizzazione arriva basta togliere questa riga.
+   */
+  daAutorizzare?: boolean;
 };
 
 /**
- * Relatori e ospiti confermati, nell'ordine in cui salgono sul palco. La
- * griglia della pagina segue questo ordine, così le foto raccontano la
- * scaletta e non un elenco slegato dal programma. Per spostare un relatore
- * basta cambiare il suo `id` nel panel corrispondente, qui sotto.
+ * Anagrafica dei relatori con foto. È un registro a chiave: l'ordine di questo
+ * array non decide nulla a schermo, serve solo a tenerlo leggibile, e infatti
+ * lo teniamo nell'ordine in cui salgono sul palco.
+ *
+ * Chi appare dove lo decide PROGRAMMA_GIORNO1: ogni voce elenca gli `id` dei
+ * suoi relatori nel campo `relatori`, e la pagina mostra i volti dentro la card
+ * del panel, in quell'ordine. Per spostare qualcuno da un panel a un altro
+ * basta spostare il suo `id` là sotto, senza toccare questo array.
+ *
+ * Questo è il registro completo, autorizzati e non. Quello che la pagina
+ * pubblica è RELATORI_PUBBLICI, qui sotto.
  */
 export const RELATORI: Relatore[] = [
   { id: "piovella", nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
-  { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
+  { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp`, daAutorizzare: true },
   { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
   { id: "loizzo", nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
   { id: "montervino", nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
@@ -142,7 +156,7 @@ export const RELATORI: Relatore[] = [
   { id: "montano", nome: "Aldo Montano", ruolo: "Campione olimpico di scherma", img: `${SPEAKER_IMG}/aldo-montano.webp` },
   { id: "bortuzzo", nome: "Manuel Bortuzzo", ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024", img: `${SPEAKER_IMG}/manuel-bortuzzo.webp` },
   { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp` },
-  { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp` },
+  { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "galante", nome: "Fabio Galante", ruolo: "Ex difensore di Inter e Torino", img: `${SPEAKER_IMG}/fabio-galante.webp` },
 ];
@@ -180,14 +194,14 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 1,
     titolo: "Salute, prevenzione e sport",
-    desc: "Trombosi, prevenzione e la vita dell'atleta.",
+    desc: "Come si riconosce e si previene il rischio tromboembolico, e che cosa cambia quando il corpo è quello di chi si allena ogni giorno. Dalla diagnosi precoce alle abitudini che proteggono la circolazione, anche lontano dall'agonismo.",
     relatori: ["piovella", "abbagnale"],
   },
   {
     tipo: "panel",
     n: 2,
     titolo: "Regole, professioni e istituzioni",
-    desc: "Normativa, dati sanitari e ruolo delle professioni.",
+    desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Un confronto tra ordine professionale e legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
     relatori: ["mandelli", "loizzo"],
   },
   {
@@ -200,14 +214,14 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 3,
     titolo: "Il gesto atletico e la macchina",
-    desc: "Sport e robotica a confronto.",
+    desc: "Che cosa impara un robot osservando un atleta, e che cosa impara un atleta dalla misura del proprio movimento. Equilibrio, coordinazione e tempi di reazione letti dalla robotica, fino ai limiti che la macchina ancora non supera.",
     relatori: ["montervino", "siciliano"],
   },
   {
     tipo: "panel",
     n: 4,
     titolo: "Sport, disabilità e inclusione",
-    desc: "Come lo sport cambia la vita dei ragazzi con disabilità.",
+    desc: "Che cosa succede quando una squadra si apre davvero: autonomia, fiducia e legami che nascono in campo prima che nei percorsi di cura. Le esperienze di chi accompagna ragazzi con disabilità, raccontate da chi le vive ogni giorno.",
     relatori: ["tari"],
     ospiti: ["Squadra Insuperabili", "Ragazzi de La casa di Sofia"],
   },
@@ -227,14 +241,14 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 5,
     titolo: "Il corpo che si rigenera",
-    desc: "Reumatologia, recupero e ritorno alla performance.",
+    desc: "Il percorso che porta dall'infortunio o dalla diagnosi al ritorno in attività: tempi reali, terapie e la parte meno visibile del recupero, quella mentale. Reumatologia e testimonianze sportive a confronto su che cosa significa ricominciare.",
     relatori: ["marotto", "montano", "bortuzzo"],
   },
   {
     tipo: "panel",
     n: 6,
     titolo: "Scienza, tecnologia e nuove generazioni",
-    desc: "Divulgazione, talento e formazione dei ragazzi.",
+    desc: "Come si accende la curiosità scientifica e come si tiene viva quando lo studio si fa difficile. Divulgazione, disciplina e talento: che cosa serve davvero ai ragazzi per costruirsi un percorso, dentro e fuori dall'aula.",
     relatori: ["schettini", "raffaeli"],
   },
   {
@@ -247,7 +261,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 7,
     titolo: "Vivere più a lungo",
-    desc: "Oncologia, longevità e sport.",
+    desc: "Il tema che dà il titolo alla giornata: quanto pesano davvero prevenzione, movimento e diagnosi precoce sugli anni che viviamo e su come li viviamo. Oncologia e sport si incontrano sulle scelte quotidiane che fanno la differenza.",
     relatori: ["franchini", "galante"],
   },
   {
@@ -281,7 +295,17 @@ export const ETICHETTA_VOCE: Record<ProgrammaVoce["tipo"], string> = {
   concerto: "Concerto",
 };
 
-const RELATORE_BY_ID = new Map(RELATORI.map((r) => [r.id, r]));
+/**
+ * I relatori che possiamo pubblicare. È l'unica lista che la pagina deve usare:
+ * volti nei panel, nomi in riga, contatore delle stats e `performer` nei dati
+ * strutturati passano tutti di qui, così un nome non autorizzato non può
+ * sfuggire da una sola di quelle strade.
+ */
+export const RELATORI_PUBBLICI = RELATORI.filter((r) => !r.daAutorizzare);
+
+// Costruita sui soli autorizzati: un id in attesa non risolve, e la voce di
+// programma che lo cita mostra semplicemente gli altri.
+const RELATORE_BY_ID = new Map(RELATORI_PUBBLICI.map((r) => [r.id, r]));
 
 /** I relatori con foto di una voce, risolti dagli id. Alimentano i volti nei panel. */
 export const relatoriVoce = (v: ProgrammaVoce): Relatore[] =>
@@ -295,17 +319,18 @@ export const nomiVoce = (v: ProgrammaVoce): string[] => [
   ...(v.ospiti ?? []),
 ];
 
-/** Moderatrice del giorno 1 al PalaMazzola. */
+/** Moderatrice del giorno 1 al PalaMazzola. Foto nella stessa cartella dei relatori. */
 export const MODERATRICE = {
   nome: "Simona Rolandi",
   ruolo: "Giornalista Rai. Modera la prima giornata al PalaMazzola.",
+  img: `${SPEAKER_IMG}/simona-rolandi.webp`,
 };
 
 /** Panel e relatori sono contati dai dati, così non divergono dal programma. */
 export const STATS = [
   { num: "2", label: "Giornate" },
   { num: String(PROGRAMMA_GIORNO1.filter((v) => v.tipo === "panel").length), label: "Panel" },
-  { num: String(RELATORI.length), label: "Relatori e ospiti" },
+  { num: String(RELATORI_PUBBLICI.length), label: "Relatori e ospiti" },
   { num: "10", label: "Progetti dei ragazzi" },
   { num: "3", label: "Premi" },
 ];

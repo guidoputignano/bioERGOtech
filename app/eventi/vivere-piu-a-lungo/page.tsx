@@ -15,7 +15,7 @@ import {
   ETICHETTA_VOCE,
   nomiVoce,
   relatoriVoce,
-  RELATORI,
+  RELATORI_PUBBLICI,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -59,7 +59,7 @@ function EventJsonLd() {
       name: EVENT.organizzatore,
       url: SITE_URL,
     },
-    performer: [...RELATORI.map((r) => r.nome), MODERATRICE.nome].map((name) => ({
+    performer: [...RELATORI_PUBBLICI.map((r) => r.nome), MODERATRICE.nome].map((name) => ({
       "@type": "Person",
       name,
     })),
@@ -195,8 +195,14 @@ export default function EventPage() {
               className="card-sm flex items-center gap-4 mb-10"
               style={{ padding: 18, maxWidth: 420, borderLeft: "4px solid var(--primary)" }}
             >
-              <span className="icon-circle icon-circle-primary" style={{ width: 48, height: 48, flexShrink: 0 }}>
-                <i className="fas fa-microphone text-lg" />
+              <span style={{ position: "relative", width: 48, height: 48, flexShrink: 0 }}>
+                <Image
+                  src={MODERATRICE.img}
+                  alt={MODERATRICE.nome}
+                  fill
+                  sizes="48px"
+                  className="rounded-full object-cover"
+                />
               </span>
               <div>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-light)" }}>
