@@ -379,4 +379,8 @@ export const FAQ = [
     q: "Come funziona il check-in in loco?",
     a: "Dopo l'iscrizione ricevi un'email di conferma con un codice e un QR code. Al desk lo mostri allo staff per il check-in della sessione.",
   },
+  {
+    q: "Come faccio a presentare la mia startup nello Showcase del giorno 2?",
+    a: "Con il bando di partecipazione, una selezione pubblica aperta a team di ricerca, spin-off universitari, startup, PMI innovative e imprese. Ci sono tre categorie, un premio per ciascuna e fino a 15 progetti ammessi al palco. La candidatura è gratuita e si presenta dalla pagina del bando. Iscriversi all'evento e candidarsi al bando sono due cose distinte: chi si candida deve comunque iscriversi alla giornata.",
+  },
 ];
