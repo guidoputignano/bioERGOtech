@@ -113,6 +113,17 @@ timestamp e testo, e l'iscritto finisce anche in `newsletter_subscribers`
 Ogni iscritto ha un codice univoco e un QR (`/api/eventi/qr/<codice>`),
 inclusi nell'email e nel biglietto online (`/eventi/vivere-piu-a-lungo/biglietto/<codice>`).
 
+## Bando dello Showcase (giorno 2)
+
+Il bando di partecipazione allo Showcase di Innovazione e un sotto modulo con
+la stessa impostazione: `app/eventi/vivere-piu-a-lungo/bando/`, con la sua
+configurazione, il suo form, il suo pannello di istruttoria e la sua
+migrazione. Iscriversi all'evento e candidarsi al bando restano due cose
+distinte: chi si candida deve comunque iscriversi alla giornata.
+
+Dettagli in `bando/README.md`. `ARCHIVE_MODE` vale anche per il bando: a
+evento archiviato le candidature risultano chiuse.
+
 ## Archiviare o rimuovere
 
 - Archiviare: `ARCHIVE_MODE = true` in `content.ts`.

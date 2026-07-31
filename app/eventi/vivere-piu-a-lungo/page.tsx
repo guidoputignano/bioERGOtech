@@ -21,6 +21,13 @@ import {
   PERCHE_PARTECIPARE,
   FAQ,
 } from "./content";
+// Solo etichette costanti: la pagina dell'evento resta statica, lo stato
+// della finestra di candidatura lo calcola la pagina del bando.
+import {
+  BANDO_PATH,
+  CANDIDATURE_APERTURA_LABEL,
+  CANDIDATURE_SCADENZA_LABEL,
+} from "./bando/content";
 
 export const metadata: Metadata = {
   title: `${EVENT.titolo} . Fondazione bioERGOtech`,
@@ -152,6 +159,9 @@ export default function EventPage() {
                   </Link>
                   <Link href="?cat=startup#iscrizione" className="btn-outline text-center">
                     Iscriviti come startup/partner
+                  </Link>
+                  <Link href={BANDO_PATH} className="btn-outline text-center">
+                    Candidati con la tua startup
                   </Link>
                 </div>
               )}
@@ -404,6 +414,40 @@ export default function EventPage() {
                 </div>
               ))}
             </div>
+
+            {/* Bando di partecipazione allo Showcase */}
+            {!ARCHIVE_MODE && (
+              <div
+                className="card mt-8 flex flex-col md:flex-row md:items-center gap-6"
+                style={{ borderLeft: "4px solid var(--primary)" }}
+              >
+                <div className="flex-1">
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--primary-dark)",
+                    }}
+                  >
+                    Bando di partecipazione
+                  </span>
+                  <h3 className="text-xl font-semibold text-gray-800 mt-2 mb-2">
+                    Porta il tuo progetto sul palco dello Showcase
+                  </h3>
+                  <p className="text-gray-700 text-sm">
+                    Startup, spin-off universitari, team di ricerca e imprese innovative possono
+                    candidarsi alla selezione pubblica. Tre categorie, tre premi, fino a 15 progetti
+                    sul palco. La partecipazione è gratuita. Candidature dal{" "}
+                    {CANDIDATURE_APERTURA_LABEL} al {CANDIDATURE_SCADENZA_LABEL}.
+                  </p>
+                </div>
+                <Link href={BANDO_PATH} className="btn-primary text-center whitespace-nowrap">
+                  Leggi il bando
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
