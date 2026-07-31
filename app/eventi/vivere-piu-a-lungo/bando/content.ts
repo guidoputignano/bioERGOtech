@@ -54,14 +54,27 @@ export const CANDIDATURE_APERTURA_LABEL = "1 settembre 2026";
 export const CANDIDATURE_SCADENZA_LABEL = "31 ottobre 2026, ore 23:59";
 
 /**
- * Apre il form prima della data ufficiale. Serve solo se gli organizzatori
- * decidono di anticipare la raccolta delle candidature rispetto al calendario
- * pubblicato. Lasciato a false, il sito resta allineato al bando.
+ * Apre il form prima della data ufficiale del calendario. Gli organizzatori
+ * hanno deciso di anticipare la raccolta delle candidature, facoltà che
+ * l'art. 13 riserva loro, quindi il modulo è attivo da subito e la scadenza
+ * resta quella pubblicata.
+ *
+ * Rimettila a false per tornare al calendario del bando: pagina, form, API
+ * ed etichette si riallineano da sole, non c'è altro da toccare.
  *
  * Lo staff con ruolo admin vede e usa il form anche a finestra chiusa, senza
  * bisogno di questa flag: serve per provare il flusso end to end.
  */
-export const FORZA_APERTURA = false;
+export const FORZA_APERTURA = true;
+
+/**
+ * Che cosa scrivere dove il bando annuncia l'apertura. Con la raccolta
+ * anticipata, ripetere "dal 1 settembre" contraddirebbe un modulo che è già
+ * lì, compilabile.
+ */
+export const APERTURA_LABEL_EFFETTIVA = FORZA_APERTURA
+  ? "candidature già aperte"
+  : CANDIDATURE_APERTURA_LABEL;
 
 export type StatoCandidature = "non_aperto" | "aperto" | "chiuso";
 
@@ -285,7 +298,7 @@ export const VIDEO_DURATA_MAX = "due minuti";
 /* ── Art. 5. Calendario ───────────────────────────────────────────────── */
 
 export const CALENDARIO = [
-  { fase: "Apertura delle candidature", data: CANDIDATURE_APERTURA_LABEL },
+  { fase: "Apertura delle candidature", data: APERTURA_LABEL_EFFETTIVA },
   { fase: "Termine per la presentazione", data: CANDIDATURE_SCADENZA_LABEL },
   { fase: "Istruttoria di ammissibilità", data: "1 . 10 novembre 2026" },
   { fase: "Comunicazione degli ammessi allo Showcase", data: "entro il 20 novembre 2026" },
