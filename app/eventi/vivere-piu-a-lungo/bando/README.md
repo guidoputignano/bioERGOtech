@@ -31,9 +31,18 @@ API ed email:
 - `CANDIDATURE_APERTURA_ISO` / `CANDIDATURE_SCADENZA_ISO`: la finestra di
   candidatura dell'art. 5, con fuso orario esplicito. Fuori dalla finestra il
   form non compare e le API rifiutano invii e caricamenti.
-- `FORZA_APERTURA`: mettila a `true` per aprire il form prima della data
-  ufficiale. Serve solo se gli organizzatori anticipano rispetto al calendario
-  pubblicato: lasciata a `false`, il sito resta allineato al bando.
+- `FORZA_APERTURA`: apre il form prima della data del calendario. **Oggi e a
+  `true`**: gli organizzatori hanno scelto di anticipare la raccolta delle
+  candidature, facolta che l'art. 13 riserva loro. La scadenza resta quella
+  pubblicata, e la finestra continua a chiudersi da sola il 31 ottobre.
+  Rimettila a `false` per tornare al calendario del bando: pagina, form, API,
+  etichette del calendario e blocco nella pagina dell'evento si riallineano da
+  soli, non c'e altro da toccare.
+- `APERTURA_LABEL_EFFETTIVA`: quello che il sito scrive dove il bando annuncia
+  l'apertura. Con la raccolta anticipata diventa "candidature gia aperte",
+  perche ripetere "dal 1 settembre" accanto a un modulo gia compilabile
+  sarebbe una contraddizione. La legge la riga del calendario, e quindi anche
+  l'email di conferma.
 - `CATEGORIE_BANDO`, `AMBITI`, `ALLEGATI`, `CALENDARIO`, `PREMI`, `CRITERI`,
   `COMMISSIONE`, `CONTATTI`, `FAQ_BANDO`: i contenuti degli articoli del bando.
   La pagina pubblica li rende, non li duplica.

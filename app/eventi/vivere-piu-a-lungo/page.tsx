@@ -21,12 +21,14 @@ import {
   PERCHE_PARTECIPARE,
   FAQ,
 } from "./content";
-// Solo etichette costanti: la pagina dell'evento resta statica, lo stato
-// della finestra di candidatura lo calcola la pagina del bando.
+// Niente `statoCandidature()` qui: dipende dall'ora e congelerebbe questa
+// pagina statica allo stato del giorno del deploy. FORZA_APERTURA invece e
+// una costante di build, quindi si puo leggere senza perdere la staticita.
 import {
   BANDO_PATH,
   CANDIDATURE_APERTURA_LABEL,
   CANDIDATURE_SCADENZA_LABEL,
+  FORZA_APERTURA,
 } from "./bando/content";
 
 export const metadata: Metadata = {
@@ -439,12 +441,14 @@ export default function EventPage() {
                   <p className="text-gray-700 text-sm">
                     Startup, spin-off universitari, team di ricerca e imprese innovative possono
                     candidarsi alla selezione pubblica. Tre categorie, tre premi, fino a 15 progetti
-                    sul palco. La partecipazione è gratuita. Candidature dal{" "}
-                    {CANDIDATURE_APERTURA_LABEL} al {CANDIDATURE_SCADENZA_LABEL}.
+                    sul palco. La partecipazione è gratuita.{" "}
+                    {FORZA_APERTURA
+                      ? `Candidature aperte fino al ${CANDIDATURE_SCADENZA_LABEL}.`
+                      : `Candidature dal ${CANDIDATURE_APERTURA_LABEL} al ${CANDIDATURE_SCADENZA_LABEL}.`}
                   </p>
                 </div>
                 <Link href={BANDO_PATH} className="btn-primary text-center whitespace-nowrap">
-                  Leggi il bando
+                  {FORZA_APERTURA ? "Candidati ora" : "Leggi il bando"}
                 </Link>
               </div>
             )}
