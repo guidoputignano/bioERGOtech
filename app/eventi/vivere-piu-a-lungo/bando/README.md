@@ -13,6 +13,7 @@ markup.
 | --- | --- |
 | Configurazione | `app/eventi/vivere-piu-a-lungo/bando/content.ts` |
 | Pagina pubblica | `app/eventi/vivere-piu-a-lungo/bando/page.tsx` |
+| Indice appiccicato | `app/eventi/vivere-piu-a-lungo/bando/BandoIndice.tsx` |
 | Form di candidatura | `app/eventi/vivere-piu-a-lungo/bando/BandoForm.tsx` |
 | Pannello istruttoria | `app/eventi/vivere-piu-a-lungo/bando/admin/` |
 | Invio candidatura | `app/api/eventi/bando/route.ts` |
@@ -50,10 +51,39 @@ API ed email:
   congelati a database insieme alla candidatura, nel campo
   `dichiarazioni_testo`. Se un domani cambiamo una formula, resta agli atti
   quella che il proponente ha letto.
+- `SEZIONI_BANDO`: le voci dell'indice appiccicato sotto il menu. Gli `id`
+  sono quelli delle sezioni della pagina: cambiarne uno qui senza cambiarlo
+  nel markup rompe l'ancora.
 - `STATI_CANDIDATURA`: gli stati dell'istruttoria e i colori del pannello.
 
 `ARCHIVE_MODE` del modulo evento vale anche qui: a evento archiviato le
 candidature risultano chiuse.
+
+## Stile della pagina
+
+Il foglio di stile della pagina pubblica sta in cima a `page.tsx`, nella
+costante `STILE`, e vale solo sotto `.bando-page`. Due cose da sapere prima di
+toccarlo:
+
+- `/assets/css/main.css` viene caricato **dopo** `globals.css` e ne riscrive
+  `.section`, `.card` e soprattutto `.section-title`, a cui assegna
+  `display: inline-block` e `color: var(--primary)`. Su una pagina con un
+  occhiello sopra ogni titolo questo faceva finire occhiello e titolo sulla
+  stessa riga, con il titolo in un teal che sul bianco non arriva al contrasto
+  minimo. `STILE` rimette quelle regole come le vuole il design system, senza
+  toccare le altre pagine.
+- Per lo stesso motivo `main.css` ridefinisce anche `--primary` e
+  `--primary-light`. Sotto `.bando-page` fissiamo `--primary-dark` a un teal
+  profondo (`#0A7A66`) e lo usiamo per tutto ciò che si legge, lasciando il
+  teal pieno a icone, barre e bordi.
+- La regola `.container` di `globals.css` arriva dopo le utility di Tailwind,
+  quindi su un elemento `.container` le classi `pt-*` e `pb-*` non attaccano:
+  lo spazio verticale del hero è dato per nome in `STILE`.
+
+Da sapere anche quando si scrive il testo: il compilatore JSX toglie lo spazio
+in testa a un blocco di testo che va a capo. Dopo un'espressione, se la frase
+prosegue su più righe, lo spazio va scritto come `{" "}`, altrimenti in pagina
+si legge "500.000 euroriprende".
 
 ## Anteprima per lo staff
 
