@@ -27,9 +27,19 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   allineata. Per spostare qualcuno da un panel a un altro basta spostare il suo
   `id`, e la pagina segue. L'ordine dell'array `RELATORI` non guida piu il
   layout: conta solo l'ordine degli `id` dentro ogni voce di programma.
+- `daAutorizzare: true` su un relatore: chi non ha ancora dato il consenso
+  all'uso di nome e foto resta in `RELATORI`, con la scheda gia' pronta, ma
+  non compare da nessuna parte sulla pagina. La pagina legge
+  `RELATORI_PUBBLICI`, che e' `RELATORI` senza chi e' in attesa, e da li'
+  passano volti, nomi in riga, contatore delle stats e `performer` nei dati
+  strutturati: un nome non autorizzato non puo' sfuggire da una sola di quelle
+  strade. Puoi lasciare il suo `id` nella voce di programma, non risolve e il
+  panel mostra gli altri. Quando l'autorizzazione arriva, togli la riga e
+  ricompare ovunque.
 - `STATS`: il numero di panel e di relatori e' calcolato dai dati, quindi non
   puo' divergere dal programma. Se aggiungi una voce o un relatore, i contatori
-  si aggiornano da soli.
+  si aggiornano da soli. Il contatore dei relatori conta i soli autorizzati,
+  quindi cresce da se' quando togli un `daAutorizzare`.
 - Foto relatori: `public/assets/images/eventi/vivere-piu-a-lungo/`, webp
   lossy 480x480 (circa 10 KB a foto). Se aggiungi un ritratto, convertilo con
   lo stesso formato prima di committarlo: i PNG a piena risoluzione pesano

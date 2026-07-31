@@ -15,7 +15,7 @@ import {
   ETICHETTA_VOCE,
   nomiVoce,
   relatoriVoce,
-  RELATORI,
+  RELATORI_PUBBLICI,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -59,7 +59,7 @@ function EventJsonLd() {
       name: EVENT.organizzatore,
       url: SITE_URL,
     },
-    performer: [...RELATORI.map((r) => r.nome), MODERATRICE.nome].map((name) => ({
+    performer: [...RELATORI_PUBBLICI.map((r) => r.nome), MODERATRICE.nome].map((name) => ({
       "@type": "Person",
       name,
     })),
