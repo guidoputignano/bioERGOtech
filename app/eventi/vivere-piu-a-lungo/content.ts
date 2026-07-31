@@ -299,10 +299,11 @@ export const nomiVoce = (v: ProgrammaVoce): string[] => [
   ...(v.ospiti ?? []),
 ];
 
-/** Moderatrice del giorno 1 al PalaMazzola. */
+/** Moderatrice del giorno 1 al PalaMazzola. Foto nella stessa cartella dei relatori. */
 export const MODERATRICE = {
   nome: "Simona Rolandi",
   ruolo: "Giornalista Rai. Modera la prima giornata al PalaMazzola.",
+  img: `${SPEAKER_IMG}/simona-rolandi.webp`,
 };
 
 /** Panel e relatori sono contati dai dati, così non divergono dal programma. */
