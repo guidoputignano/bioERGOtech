@@ -17,11 +17,13 @@ import {
   EVENT_SLUG,
   FAQ_LICEI,
   IMPEGNI_ISTITUTO,
+  ISCRIZIONE_PATH,
   LICEI,
   LICEI_PATH,
   MODALITA,
   PREMI_LICEI,
   PROVINCIA,
+  REFERENTE_PATH,
   SITE_URL,
   adesioniAperte,
 } from "./content";
@@ -663,9 +665,44 @@ export default async function LiceiPage() {
                 </ul>
 
                 <p className="lc-nota" style={{ marginTop: 26 }}>
-                  In questa fase non chiediamo i nomi degli studenti, solo quanti prevedete di
-                  coinvolgere. Le autorizzazioni dei genitori restano cartacee e in custodia
-                  all&apos;istituto: il sito non le raccoglie e non le conserva.
+                  Qui non chiediamo i nomi degli studenti, solo quanti prevedete di coinvolgere. Le
+                  autorizzazioni dei genitori restano cartacee e in custodia all&apos;istituto: il
+                  sito non le raccoglie e non le conserva.
+                </p>
+
+                {/* Chi arriva qui e uno studente ha sbagliato pagina: questo modulo
+                    e del docente. Va detto, non lasciato capire. */}
+                <div
+                  style={{
+                    marginTop: 26,
+                    background: "#F4F8FF",
+                    border: "1px solid #D6E4FA",
+                    borderRadius: 12,
+                    padding: 16,
+                    fontSize: 13.5,
+                    color: "#28456F",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  <strong>Sei uno studente?</strong> Questo modulo è del tuo docente. Tu ti iscrivi{" "}
+                  <Link
+                    href={ISCRIZIONE_PATH}
+                    style={{ color: "#1D4E89", fontWeight: 700, textDecoration: "underline" }}
+                  >
+                    da questa pagina
+                  </Link>
+                  , con il codice dell&apos;istituto che ti dà lui.
+                </div>
+
+                {/* Il referente che torna dopo aver aderito cerca il suo codice e il
+                    modulo di autorizzazione: entrambi sono nella sua area. */}
+                <p className="lc-nota" style={{ marginTop: 18 }}>
+                  Ha già aderito?{" "}
+                  <Link href={REFERENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                    La sua area riservata è qui
+                  </Link>
+                  : ci trova il codice dell&apos;istituto, il modulo di autorizzazione da far
+                  firmare e le iscrizioni dei suoi studenti da confermare.
                 </p>
               </div>
 

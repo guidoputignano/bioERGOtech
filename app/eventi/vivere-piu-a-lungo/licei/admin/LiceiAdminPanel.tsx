@@ -201,6 +201,39 @@ export function LiceiAdminPanel() {
             <span style={{ fontSize: 12, color: "var(--text-light)" }}>Salvataggio…</span>
           )}
         </div>
+
+        <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "18px 0" }} />
+
+        <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+          Iscrizione degli studenti
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Separata dalle adesioni, e parte chiusa di proposito: aprirla prima che i referenti
+          abbiano il codice significa una pagina che respinge tutti quelli che ci arrivano. Da
+          aprire quando gli istituti confermati sono abbastanza.
+        </p>
+        <div className="flex flex-wrap gap-3 items-end">
+          <label style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text-light)" }}>
+            Stato
+            <select
+              value={config.stato_iscrizioni ?? "chiuse"}
+              onChange={(e) => salvaConfig({ stato_iscrizioni: e.target.value })}
+              style={{ ...selectStyle, minWidth: 200 }}
+            >
+              <option value="chiuse">Chiuse</option>
+              <option value="aperte">Aperte</option>
+            </select>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text-light)", flex: "1 1 240px" }}>
+            Scadenza delle iscrizioni
+            <Input
+              key={`scad-isc-${config.scadenza_iscrizioni_label ?? ""}`}
+              defaultValue={config.scadenza_iscrizioni_label ?? ""}
+              placeholder="Es. 15 ottobre 2026"
+              onBlur={(e) => salvaConfig({ scadenza_iscrizioni_label: e.target.value })}
+            />
+          </label>
+        </div>
       </div>
 
       {/* Conteggi */}
