@@ -22,11 +22,13 @@ import {
   CAMPI_PROGETTO,
   CRITERI_LICEI,
   LICEI,
+  LICEI_PATH,
   NOTA_CONSEGNA,
   NOTA_MATERIALI,
   SQUADRA_MAX,
   SQUADRA_MIN,
   SQUADRA_NOME_MAX,
+  STUDENTE_PATH,
   TITOLO_MAX,
   statoProgettoColore,
   statoProgettoLabel,
@@ -58,7 +60,20 @@ const VUOTO: ProgettoInput = {
   link_materiali: "",
 };
 
-export function StudenteConsole() {
+/**
+ * Quale parte mostrare. La pagina autonoma le mostra tutte; dentro il corso
+ * ogni lezione mostra la sua, cosi lo studente trova la squadra dove gli si
+ * chiede di formarla e la consegna dove gli si chiede di consegnare.
+ */
+export type SezioneStudente = "tutto" | "squadra" | "progetto";
+
+export function StudenteConsole({
+  sezione = "tutto",
+  intestazione = true,
+}: {
+  sezione?: SezioneStudente;
+  intestazione?: boolean;
+} = {}) {
   const [dati, setDati] = useState<Qualsiasi>(null);
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
@@ -187,27 +202,36 @@ export function StudenteConsole() {
   if (loading) return <p className="text-gray-600">Caricamento…</p>;
 
   if (errore && !dati) {
+    // Incorporato in una lezione non si mostra niente: chi non e nel percorso
+    // licei sta leggendo il corso per conto suo, e un riquadro d'errore su un
+    // bando che non lo riguarda e solo rumore.
+    if (sezione !== "tutto") return null;
     return (
       <div className="card text-center" style={{ padding: 40 }}>
         <h2 className="text-xl font-bold text-gray-800 mb-2">Area non disponibile</h2>
         <p className="text-gray-600 mb-5">{errore}</p>
-        <Link href={LICEI.titolo ? "/eventi/vivere-piu-a-lungo/licei" : "#"} className="btn-outline inline-block">
+        <Link href={LICEI_PATH} className="btn-outline inline-block">
           Torna al bando
         </Link>
       </div>
     );
   }
 
+  const mostraSquadra = sezione === "tutto" || sezione === "squadra";
+  const mostraProgetto = sezione === "tutto" || sezione === "progetto";
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">
-          Ciao {dati?.iscrizione?.nome}
-        </h1>
-        <p className="text-sm text-gray-600">
-          {dati?.istituto} . classe {dati?.iscrizione?.classe}
-        </p>
-      </div>
+      {intestazione && (
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Ciao {dati?.iscrizione?.nome}
+          </h1>
+          <p className="text-sm text-gray-600">
+            {dati?.istituto} . classe {dati?.iscrizione?.classe}
+          </p>
+        </div>
+      )}
 
       {avviso && (
         <div
@@ -226,7 +250,7 @@ export function StudenteConsole() {
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
 
       {/* ══ Senza squadra ══ */}
-      {!squadra && (
+      {!squadra && mostraSquadra && (
         <>
           <div className="card" style={{ padding: 22 }}>
             <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 16 }}>
@@ -310,8 +334,25 @@ export function StudenteConsole() {
         </>
       )}
 
+      {/* ══ Senza squadra, ma serve il progetto ══ */}
+      {!squadra && !mostraSquadra && mostraProgetto && (
+        <div className="card" style={{ padding: 22 }}>
+          <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 16 }}>
+            Prima la squadra
+          </h2>
+          <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: 0 }}>
+            Il progetto si consegna in squadra, quindi finché non ne hai una non c&apos;è dove
+            scriverlo. La formi alla lezione 4.4, oppure dalla{" "}
+            <Link href={STUDENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+              tua area
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+
       {/* ══ Con squadra ══ */}
-      {squadra && (
+      {squadra && mostraSquadra && (
         <>
           <div className="card" style={{ padding: 22 }}>
             <div className="flex flex-wrap items-start justify-between gap-4" style={{ marginBottom: 16 }}>
@@ -416,9 +457,25 @@ export function StudenteConsole() {
                 </button>
               </div>
             )}
-          </div>
 
-          {/* ══ Progetto ══ */}
+            {/* Chi vede questa scheda dentro la lezione 4.4 non ha il modulo
+                di consegna sotto: senza questa riga non saprebbe dove sia. */}
+            {!mostraProgetto && (
+              <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.7, margin: "14px 0 0" }}>
+                Il progetto si scrive e si consegna alla lezione di chiusura del corso, oppure dalla{" "}
+                <Link href={STUDENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                  tua area
+                </Link>
+                . Qui c&apos;è la squadra.
+              </p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ══ Progetto ══ */}
+      {squadra && mostraProgetto && (
+        <>
           {consegnato ? (
             <div className="card" style={{ padding: 26, textAlign: "center" }}>
               <span className="icon-circle icon-circle-primary" style={{ width: 56, height: 56, margin: "0 auto" }}>

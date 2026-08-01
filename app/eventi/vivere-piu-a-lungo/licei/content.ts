@@ -661,3 +661,33 @@ export const SESSIONE_FINALISTI = "giorno-1";
 
 export const NOTA_ISCRIZIONE_UFFICIO =
   "Iscrive all'evento del 10 dicembre tutti i componenti confermati delle squadre finaliste. L'operazione si può ripetere senza creare doppioni: chi risulta già iscritto viene lasciato dov'è.";
+
+/* ── Podio (art. 6) ───────────────────────────────────────────────────── */
+
+/**
+ * Il premio che spetta a una posizione, o null se quella posizione non e sul
+ * podio. I dieci che salgono sul palco sono tutti finalisti, ma solo i primi
+ * tre ricevono un premio: tenere separate le due cose evita che qualcuno
+ * legga "finalista" come "premiato" e lo dica a una famiglia.
+ */
+export const premioPerPosizione = (posizione: number | null | undefined) =>
+  posizione == null ? null : PREMI_LICEI.find((p) => p.posizione === posizione) ?? null;
+
+/**
+ * Il podio si decide DOPO le presentazioni dal palco, non prima.
+ *
+ * L'evento dura due giorni: il 10 dicembre i dieci gruppi presentano, l'11
+ * c'e la premiazione. Fra i due momenti la Commissione rivede il criterio
+ * "Qualita della presentazione", che sui materiali consegnati si puo solo
+ * stimare e dal vivo si vede davvero. Per questo le schede si riaprono: la
+ * classifica scritta serve a scegliere i dieci, il podio arriva dopo.
+ */
+export const NOTA_PODIO =
+  "La classifica scritta sceglie i dieci che salgono sul palco. Il podio si assegna dopo le presentazioni del 10 dicembre, quando la Commissione ha rivisto la qualità dell'esposizione: fino ad allora le posizioni 1, 2 e 3 restano una proposta.";
+
+/**
+ * Nota mostrata al commissario sul criterio della presentazione. Senza,
+ * darebbe un voto definitivo su una cosa che non ha ancora visto.
+ */
+export const NOTA_CRITERIO_PRESENTAZIONE =
+  "Sui materiali consegnati questo criterio si può solo stimare. Lo rivedrà dopo le presentazioni dal palco: le schede si riaprono apposta.";

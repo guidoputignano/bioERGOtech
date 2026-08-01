@@ -29,6 +29,7 @@ import {
   CRITERI_LICEI,
   CRITERIO_DIRIMENTE_LICEI,
   LICEI,
+  NOTA_CRITERIO_PRESENTAZIONE,
   NOTA_VALUTAZIONE_INDIPENDENTE,
   ruoloCommissioneLabel,
 } from "../content";
@@ -318,6 +319,14 @@ export function CommissioneConsole() {
                               <div style={{ fontSize: 11.5, color: "var(--text-light)", lineHeight: 1.5 }}>
                                 {c.desc}
                               </div>
+                              {/* Questo criterio si giudica davvero solo dal
+                                  vivo: senza avvisarlo, darebbe un voto
+                                  definitivo su una cosa non ancora vista. */}
+                              {c.campo === "p_presentazione" && (
+                                <div style={{ fontSize: 11.5, color: "#8A6100", lineHeight: 1.5, marginTop: 3 }}>
+                                  {NOTA_CRITERIO_PRESENTAZIONE}
+                                </div>
+                              )}
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                               <input

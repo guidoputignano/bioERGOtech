@@ -435,3 +435,60 @@ export function confermaEmailHtml(input: ConfermaEmailInput): string {
     </div>
   </div>`;
 }
+
+export type ReferenteConsegnaEmailInput = {
+  referente: string;
+  istituto: string;
+  squadra: string;
+  titolo: string;
+  componenti: string[];
+};
+
+export function referenteConsegnaEmailSubject(squadra: string): string {
+  return `Progetto consegnato: ${squadra} . ${LICEI.titolo}`;
+}
+
+/**
+ * Avviso al docente referente quando una squadra del suo istituto consegna.
+ *
+ * Serve perche il referente e l'unico che puo accorgersi in tempo di chi non
+ * ha consegnato. Vederlo entrando nella sua area presuppone che ci entri, e
+ * a novembre, fra scrutini e consigli di classe, non e un presupposto che si
+ * possa dare per buono.
+ */
+export function referenteConsegnaEmailHtml(input: ReferenteConsegnaEmailInput): string {
+  const { referente, istituto, squadra, titolo, componenti } = input;
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Una vostra squadra ha consegnato.</h2>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Gentile ${referente}, la squadra <strong>${squadra}</strong> di ${istituto} ha depositato il
+        suo progetto. Da questo momento non è più modificabile: è la versione che la Commissione
+        leggerà.
+      </p>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:22px;margin-bottom:24px;">
+        <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Il progetto</p>
+        <p style="color:#0A1628;font-size:16px;font-weight:700;margin:0 0 14px;line-height:1.5;">${titolo}</p>
+        <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Componenti</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0;">${componenti.join(" . ")}</p>
+      </div>
+
+      <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0 0 24px;">
+        Nella sua area trova tutte le squadre del vostro istituto, con quelle che hanno consegnato e
+        quelle che non lo hanno ancora fatto. È l'unico posto dove si vede chi è rimasto indietro
+        mentre c'è ancora tempo per andarlo a cercare.
+      </p>
+
+      <div style="text-align:center;margin-bottom:8px;">
+        <a href="${SITE_URL}${REFERENTE_PATH}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
+          La sua area
+        </a>
+      </div>
+      ${chiusura()}
+    </div>
+  </div>`;
+}

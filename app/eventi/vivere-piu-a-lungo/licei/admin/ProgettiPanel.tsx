@@ -22,6 +22,9 @@ import {
   AMBITI_PROGETTO,
   LICEI,
   NOTA_ISCRIZIONE_UFFICIO,
+  NOTA_PODIO,
+  PREMI_LICEI,
+  premioPerPosizione,
   SQUADRA_MAX,
   SQUADRA_MIN,
 } from "../content";
@@ -232,6 +235,45 @@ export function ProgettiPanel() {
     }
   };
 
+  /**
+   * Mette un progetto su una posizione del podio.
+   *
+   * Se quella posizione era di qualcun altro i due si scambiano, invece di
+   * lasciare il precedente senza posizione: durante una premiazione si
+   * corregge un ordine, non si toglie qualcuno dall'elenco per sbaglio.
+   */
+  const assegnaPodio = async (posizione: number, progettoId: string) => {
+    const precedente = classifica.find(
+      (r: Qualsiasi) => r.posizione === posizione && r.progetto_id !== progettoId,
+    );
+    const nuovo = classifica.find((r: Qualsiasi) => r.progetto_id === progettoId);
+    if (!nuovo) return;
+
+    setOccupato(true);
+    setErrore(null);
+    try {
+      const patch = async (id: string, corpo: Record<string, unknown>) => {
+        const res = await fetch("/api/eventi/licei/admin/progetti", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...corpo }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || "Salvataggio non riuscito.");
+      };
+
+      if (precedente) {
+        await patch(precedente.progetto_id, { posizione: nuovo.posizione ?? null });
+      }
+      await patch(progettoId, { finalista: true, posizione });
+      await carica();
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Salvataggio non riuscito.");
+    } finally {
+      setOccupato(false);
+    }
+  };
+
   const classifica: Qualsiasi[] = useMemo(() => dati?.classifica ?? [], [dati]);
   const squadre: Qualsiasi[] = dati?.squadre ?? [];
   const stats = dati?.stats ?? null;
@@ -403,6 +445,74 @@ export function ProgettiPanel() {
         </div>
       </div>
 
+      {/* ── Podio (art. 6) ──
+          Compare solo quando ci sono finalisti: prima non c'e niente da
+          premiare, e una scheda vuota suggerirebbe che manchi un passaggio. */}
+      {finalisti > 0 && (
+        <div className="card" style={{ padding: 18 }}>
+          <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+            Il podio
+          </h2>
+          <p className="text-sm text-gray-600 mb-4" style={{ lineHeight: 1.7 }}>
+            {NOTA_PODIO}
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {PREMI_LICEI.map((premio, i) => {
+              const vincitore = classifica.find(
+                (r: Qualsiasi) => r.finalista && r.posizione === premio.posizione,
+              );
+              return (
+                <div
+                  key={premio.posizione}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "13px 0",
+                    borderTop: i === 0 ? "none" : "1px solid var(--border-color)",
+                  }}
+                >
+                  <span
+                    className="icon-circle icon-circle-primary"
+                    style={{ width: 38, height: 38, flexShrink: 0 }}
+                  >
+                    <i className={`fas ${premio.icona}`} style={{ fontSize: 14 }} />
+                  </span>
+
+                  <div style={{ flex: "1 1 240px", minWidth: 0 }}>
+                    <div className="font-semibold text-gray-800" style={{ fontSize: 14 }}>
+                      {premio.titolo}
+                    </div>
+                    <div className="text-gray-600" style={{ fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>
+                      {premio.desc} Parte una rappresentanza {premio.rappresentanza}, e con il tetto
+                      di {SQUADRA_MAX} la squadra ci va al completo.
+                    </div>
+                  </div>
+
+                  <select
+                    value={vincitore?.progetto_id ?? ""}
+                    disabled={occupato}
+                    onChange={(e) => e.target.value && assegnaPodio(premio.posizione, e.target.value)}
+                    style={{ ...selectStyle, flex: "0 1 260px" }}
+                  >
+                    <option value="">Non assegnato</option>
+                    {classifica
+                      .filter((r: Qualsiasi) => r.finalista)
+                      .map((r: Qualsiasi) => (
+                        <option key={r.progetto_id} value={r.progetto_id}>
+                          {r.squadra_nome} . {r.titolo || "(senza titolo)"}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Vista ── */}
       <div className="card-sm flex flex-wrap gap-2 items-center" style={{ padding: 12 }}>
         {(["classifica", "squadre"] as const).map((v) => (
@@ -443,6 +553,7 @@ export function ProgettiPanel() {
             {classifica.map((r, i) => {
               const ambito = AMBITI_PROGETTO.find((a) => a.value === r.ambito)?.label ?? r.ambito;
               const schedeMancanti = votanti - Number(r.schede ?? 0);
+              const premio = premioPerPosizione(r.posizione);
               return (
                 <div
                   key={r.progetto_id}
@@ -477,6 +588,22 @@ export function ProgettiPanel() {
                       {Number(r.componenti) === 1 ? "componente" : "componenti"}
                       {ambito ? ` . ${ambito}` : ""}
                     </div>
+                    {/* Finalista e premiato non sono la stessa cosa: sul palco
+                        salgono in dieci, il premio lo prendono in tre. */}
+                    {r.finalista && premio && (
+                      <span
+                        className="badge"
+                        style={{
+                          background: "#0A7A661A",
+                          color: "#0A7A66",
+                          marginTop: 5,
+                          display: "inline-block",
+                        }}
+                      >
+                        <i className={`fas ${premio.icona}`} style={{ marginRight: 6 }} />
+                        {premio.titolo}
+                      </span>
+                    )}
                   </div>
 
                   <div style={{ textAlign: "right", flexShrink: 0, minWidth: 92 }}>
