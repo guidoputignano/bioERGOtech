@@ -413,3 +413,25 @@ export async function requireCommissario(): Promise<
     },
   };
 }
+
+/**
+ * Lo studente che legge questa pagina e un iscritto confermato al percorso
+ * licei?
+ *
+ * Serve alle lezioni del corso, che a due punti attaccano un riquadro del
+ * bando. La domanda si fa lato server e non nel browser per una ragione
+ * precisa: il corso lo seguono anche persone che con il bando non c'entrano,
+ * e una chiamata che a loro risponde 403 farebbe comparire e sparire un
+ * riquadro d'errore su un bando che non li riguarda.
+ *
+ * Torna false, e non solleva, se qualcosa non e a posto: un problema del
+ * modulo licei non deve impedire a nessuno di leggere una lezione.
+ */
+export async function studenteLiceiConfermato(): Promise<boolean> {
+  try {
+    const guard = await requireStudente();
+    return guard.error === null;
+  } catch {
+    return false;
+  }
+}

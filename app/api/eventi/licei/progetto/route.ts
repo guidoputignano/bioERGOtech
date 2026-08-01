@@ -7,7 +7,12 @@ import {
   validateConsegna,
   type ProgettoInput,
 } from "@/lib/eventi/licei-squadre";
-import { consegnaEmailHtml, consegnaEmailSubject } from "@/lib/eventi/licei-email";
+import {
+  consegnaEmailHtml,
+  consegnaEmailSubject,
+  referenteConsegnaEmailHtml,
+  referenteConsegnaEmailSubject,
+} from "@/lib/eventi/licei-email";
 import { CAMPI_PROGETTO } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 const testo = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
@@ -157,32 +162,69 @@ export async function POST() {
     return NextResponse.json({ error: "Consegna non riuscita. Riprova." }, { status: 500 });
   }
 
-  /* ── Ricevuta a tutta la squadra ── */
-  // A tutti, non al solo capitano: e il lavoro di tutti, e chi non ha
-  // premuto il bottone ha comunque diritto di sapere che e stato premuto.
+  /* ── Ricevuta alla squadra, avviso al referente ── */
   if (process.env.RESEND_API_KEY) {
     try {
-      const [{ data: membri }, { data: squadra }] = await Promise.all([
-        client.from("licei_iscrizioni").select("nome, email").eq("squadra_id", ctx.iscrizione.squadra_id),
+      const [{ data: membri }, { data: squadra }, { data: adesione }] = await Promise.all([
+        client
+          .from("licei_iscrizioni")
+          .select("nome, cognome, classe, email")
+          .eq("squadra_id", ctx.iscrizione.squadra_id),
         client.from("licei_squadre").select("nome").eq("id", ctx.iscrizione.squadra_id).maybeSingle(),
+        client
+          .from("licei_adesioni")
+          .select("referente_nome, referente_cognome, referente_email")
+          .eq("id", ctx.iscrizione.adesione_id)
+          .maybeSingle(),
       ]);
 
       const resend = new Resend(process.env.RESEND_API_KEY);
-      await Promise.all(
-        (membri ?? []).map((m: { nome: string; email: string }) =>
-          resend.emails.send({
-            from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
-            to: m.email,
-            subject: consegnaEmailSubject(),
-            html: consegnaEmailHtml({
-              nome: m.nome,
-              squadra: squadra?.nome ?? "",
-              titolo: data.titolo,
-              istituto: ctx.istituto,
-            }),
+      const elenco = (membri ?? []) as {
+        nome: string;
+        cognome: string;
+        classe: string;
+        email: string;
+      }[];
+
+      // Alla squadra: a tutti, non al solo capitano. E' il lavoro di tutti, e
+      // chi non ha premuto il bottone ha comunque diritto di sapere che e
+      // stato premuto, e su quale versione.
+      const aiRagazzi = elenco.map((m) =>
+        resend.emails.send({
+          from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+          to: m.email,
+          subject: consegnaEmailSubject(),
+          html: consegnaEmailHtml({
+            nome: m.nome,
+            squadra: squadra?.nome ?? "",
+            titolo: data.titolo,
+            istituto: ctx.istituto,
           }),
-        ),
+        }),
       );
+
+      // Al referente: e l'unico che puo accorgersi in tempo di chi NON ha
+      // consegnato, e vederlo entrando nella sua area presuppone che ci
+      // entri. A novembre, fra scrutini e consigli di classe, non e un
+      // presupposto che si possa dare per buono.
+      const alReferente = adesione?.referente_email
+        ? [
+            resend.emails.send({
+              from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+              to: adesione.referente_email,
+              subject: referenteConsegnaEmailSubject(squadra?.nome ?? ""),
+              html: referenteConsegnaEmailHtml({
+                referente: `${adesione.referente_nome} ${adesione.referente_cognome}`.trim(),
+                istituto: ctx.istituto,
+                squadra: squadra?.nome ?? "",
+                titolo: data.titolo,
+                componenti: elenco.map((m) => `${m.cognome} ${m.nome} (${m.classe})`),
+              }),
+            }),
+          ]
+        : [];
+
+      await Promise.all([...aiRagazzi, ...alReferente]);
     } catch (mailErr) {
       // La consegna e registrata: un problema email non la annulla.
       console.error("Licei consegna email failed:", mailErr);

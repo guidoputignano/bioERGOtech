@@ -64,6 +64,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Modulo autorizzazione | `licei/referente/generaAutorizzazione.ts` |
 | Area dello studente | `app/eventi/vivere-piu-a-lungo/licei/studente/` |
 | Area della Commissione | `app/eventi/vivere-piu-a-lungo/licei/commissione/` |
+| Aggancio al corso | `app/courses/agentic-ai/lesson/[slug]/page.tsx` (`LEZIONI_LICEI`) |
 | Pannello staff | `app/eventi/vivere-piu-a-lungo/licei/admin/` |
 | Invio adesione | `app/api/eventi/licei/adesioni/route.ts` |
 | Invio iscrizione | `app/api/eventi/licei/iscrizioni/route.ts` |
@@ -263,6 +264,52 @@ la loro, e rischiare che qualcuno non lo compili e resti fuori dalla
 presentazione del proprio lavoro. Non viene chiesto ne dato alcun consenso
 marketing: un'iscrizione d'ufficio non e l'occasione per darselo da soli.
 
+## Il bando dentro il corso
+
+Squadra e progetto vivono in due posti: la pagina `/licei/studente`, che le
+mostra entrambe, e due lezioni del corso, che ne mostrano una ciascuna.
+
+- `lesson-4-4` mostra la **squadra**, perche e la lezione che chiede di
+  formarla;
+- `course-closing` mostra la **consegna**, perche e l'ultima cosa che si fa.
+
+Non e ridondanza. Chiedere a uno studente di sedici anni di ricordarsi un
+indirizzo nel momento esatto in cui la lezione gli dice di fare una cosa
+diversa e il modo piu affidabile di non farsi trovare.
+
+L'aggancio e uno **slot**, `extra`, non un condizionale dentro
+`LessonPageClient`: quel file non deve sapere che esiste un bando licei. Chi
+decide che cosa attaccare e la pagina, che ha gia il contesto dell'utente. Il
+giorno che un secondo percorso deve attaccarsi a una lezione, si aggiunge una
+riga a `LEZIONI_LICEI` e nient'altro.
+
+Il controllo "questo utente e uno studente confermato" si fa **lato server**
+(`studenteLiceiConfermato`), non nel browser. Il corso lo segue anche chi con
+il bando non c'entra: una chiamata che a loro risponde 403 farebbe comparire
+e sparire un riquadro d'errore su un bando che non li riguarda.
+
+Il riquadro si presenta per quello che e, invece di confondersi con la
+lezione: il corso e in inglese e aperto a chiunque, quel pezzo e in italiano
+e riguarda un bando a cui si aderisce tramite la scuola.
+
+## Il podio si decide dopo il palco
+
+L'evento dura due giorni: il 10 dicembre i dieci gruppi presentano, l'11 c'e
+la premiazione. Fra i due momenti la Commissione rivede il criterio "Qualita
+della presentazione", che sui materiali consegnati si puo solo stimare e dal
+vivo si vede davvero. Per questo le schede si **riaprono**, e per questo il
+commissario legge un avviso su quel criterio: senza, darebbe un voto
+definitivo su una cosa che non ha ancora visto.
+
+Ne segue che **finalista e premiato non sono la stessa cosa**: sul palco
+salgono in dieci, il premio lo prendono in tre. Il pannello li tiene
+distinti, e il premio non e una colonna a database ma si deriva dalla
+posizione (`premioPerPosizione`), cosi le due cose non possono dissentire.
+
+Assegnare un premio a una squadra che ne aveva gia un altro le **scambia**,
+invece di lasciare la precedente senza posizione: durante una premiazione si
+corregge un ordine, non si toglie qualcuno dall'elenco per sbaglio.
+
 ## Dati degli istituti nella fase 1
 
 In questa fase il sito **non tocca alcun dato di minori**. Il modulo raccoglie
@@ -333,20 +380,16 @@ Le stesse gia in uso: `NEXT_PUBLIC_SUPABASE_URL`,
 
 ## Che cosa manca
 
-Il percorso e completo da capo a fondo: adesione, iscrizione, squadra,
-progetto, valutazione, finalisti, evento. Quello che resta non e struttura.
+Sul codice, niente di strutturale. Il percorso e completo da capo a fondo:
+adesione, iscrizione, squadra, progetto, valutazione, podio, evento.
 
-1. **Agganciare le squadre alla lezione 4.4 del corso**, che oggi vivono in
-   una pagina separata (`/licei/studente`). L'aggancio va fatto con un
-   condizionale in `app/courses/agentic-ai/lesson/[slug]/page.tsx`, mai con un
-   fork di `LessonPageClient`: e da li che nascerebbe un secondo binario da
-   tenere allineato a mano. Va anche riallineato il testo della 4.4, che dice
-   ancora 2-4 studenti mentre il tetto e 5.
-2. **Notificare il referente** quando una sua squadra consegna. Oggi lo vede
-   nella sua area, ma non gli arriva niente.
-3. **Premi e graduatoria finale.** L'art. 6 assegna tre premi ai primi tre, e
-   oggi il sito registra la posizione ma non distingue il podio dal resto dei
-   dieci. Serve quando la Commissione delibera, non prima.
+Quello che resta e operativo e non si puo anticipare da qui:
+
+1. **Provare la catena con dati veri.** Conferma un'adesione, apri le
+   iscrizioni, iscriviti col codice, conferma dall'area referente, apri le
+   squadre, creane una, apri le consegne, consegna. Serve mezz'ora e va fatto
+   prima che ci siano dentro trecento ragazzi.
+2. **Il calendario**, qui sotto.
 
 ## Il vincolo di calendario, che resta
 

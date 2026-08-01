@@ -824,7 +824,7 @@ function Lesson_4_4() {
     <>
       <Section title="Project Idea Brief Workshop">
         <p style={p}>This is the final session of Phase 2. By the end, every team will have submitted a completed one-page Project Idea Brief. Submitting the brief is not the end of Week 4 — it is the beginning of Phase 3.</p>
-        <CalloutBox label="Team Size">2–4 students per team. Solo projects are permitted only with mentor approval. Mixed-track teams are allowed — a Track A student and a Track C student can collaborate if the project suits both skill levels.</CalloutBox>
+        <CalloutBox label="Team Size">2 to 5 students per team, all from the same school. Five is the cap because it matches the delegation that travels for the prize, so a winning team goes in full. Two is the floor because the brief is a team exercise. Mixed-track teams are allowed. A Track A student and a Track C student can collaborate if the project suits both skill levels.</CalloutBox>
       </Section>
       <Section title="The Project Idea Brief — Six Sections">
       <SlideImage src="/assets/courses/lesson-4-4/slide-1.png" alt="Slide 1" />
@@ -1355,9 +1355,21 @@ interface Props {
   lesson: Lesson;
   isAuthenticated: boolean;
   gateOpen?: boolean;
+  /**
+   * Riquadro facoltativo mostrato sotto il contenuto della lezione e sopra la
+   * consegna della riflessione. Serve al percorso licei, che a due lezioni
+   * deve attaccare qualcosa di suo: la formazione della squadra alla 4.4 e la
+   * consegna del progetto alla chiusura.
+   *
+   * E' uno slot e non un condizionale interno di proposito. Il giorno che un
+   * secondo percorso deve attaccarsi a una lezione, questo file non lo deve
+   * sapere: chi decide che cosa mettere e la pagina, che ha gia il contesto
+   * dell'utente.
+   */
+  extra?: React.ReactNode;
 }
 
-export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = false }: Props) {
+export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = false, extra }: Props) {
   const [showModal, setShowModal] = useState(gateOpen && !isAuthenticated);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -1430,6 +1442,8 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
               <p style={{ fontSize: 15, color: TEXT_LIGHT }}>This lesson is being prepared. Check back soon.</p>
             </div>
           )}
+
+          {extra}
 
           {/* Submission Box */}
           <LessonSubmissionBox

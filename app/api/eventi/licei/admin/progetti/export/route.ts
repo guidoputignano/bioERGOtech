@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
-import { CRITERI_LICEI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { CRITERI_LICEI, premioPerPosizione } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 function csvCell(value: unknown): string {
   const s = value == null ? "" : String(value);
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       [
         "Posizione in classifica", "Squadra", "Istituto", "Titolo", "Ambito",
         "Componenti", "Schede chiuse", "Media punteggio", "Media innovatività",
-        "Finalista", "Posizione assegnata", "Consegnato il",
+        "Finalista", "Posizione assegnata", "Premio (art. 6)", "Consegnato il",
       ]
         .map(csvCell)
         .join(","),
@@ -55,6 +55,9 @@ export async function GET(request: Request) {
           r.media_innovativita ?? "",
           r.finalista ? "sì" : "",
           r.posizione ?? "",
+          // Il premio non e una colonna a database: discende dalla posizione,
+          // e derivarlo qui evita che le due cose possano dissentire.
+          (r.finalista && premioPerPosizione(r.posizione)?.titolo) || "",
           r.consegnato_at ?? "",
         ]
           .map(csvCell)
