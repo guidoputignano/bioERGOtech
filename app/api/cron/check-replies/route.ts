@@ -211,8 +211,17 @@ async function sendWhatsAppAlert(contact: Record<string, unknown>, classificatio
 
 export async function GET(req: NextRequest) {
   // Security: accept secret via Authorization header OR ?secret= query param
+  // Fail closed: senza CRON_SECRET configurato la rotta non si apre, si spegne.
+  // Prima il controllo era dentro `if (cronSecret)`, quindi un segreto non
+  // impostato lasciava l'endpoint raggiungibile da chiunque.
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
+  if (!cronSecret) {
+    console.error("CRON_SECRET non configurato: cron rifiutato.");
+    return NextResponse.json({ error: "Cron not configured" }, { status: 503 });
+  }
+  {
+    // Vercel Cron manda il segreto nell'header. La forma ?secret= resta
+    // accettata per l'esecuzione manuale, ma finisce nei log: preferire l'header.
     const authHeader = req.headers.get("authorization");
     const querySecret = req.nextUrl.searchParams.get("secret");
     const valid = authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;

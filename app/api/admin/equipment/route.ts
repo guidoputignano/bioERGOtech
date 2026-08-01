@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-
-async function awardCoins(userId: string, amount: number, reason: string) {
+async function awardCoins(client: SupabaseClient, userId: string, amount: number, reason: string) {
   try {
-    const client = getClient();
-    const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
+      const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
     const currentBalance = existing?.balance ?? 0;
     const currentLifetime = existing?.lifetime_earned ?? 0;
     await client.from("coin_balances").upsert({ user_id: userId, balance: currentBalance + amount, lifetime_earned: currentLifetime + amount }, { onConflict: "user_id" });
@@ -20,7 +13,11 @@ async function awardCoins(userId: string, amount: number, reason: string) {
 }
 
 export async function GET() {
-  const { data, error } = await getClient()
+  const guard = await requireMember();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
+  const { data, error } = await client
     .from("equipment_proposals")
     .select("*")
     .order("created_at", { ascending: false });
@@ -30,16 +27,23 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireMember();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client, chiamante } = guard;
+
   try {
     const body = await request.json();
-    const isAdminAdd = body.is_admin_add === true;
+    // Inserire gia approvato pubblica senza revisione: solo staff. Un membro
+    // che manda is_admin_add: true ottiene comunque una proposta in attesa.
+    const isAdminAdd = body.is_admin_add === true && chiamante.isAdmin;
 
     const payload = {
       name: body.name?.trim(),
       category: body.category?.trim() || null,
       location: body.location?.trim(),
       description: body.description?.trim() || null,
-      proposed_by_email: body.proposed_by_email?.trim() || null,
+      // L'email di chi propone la sa il server dalla sessione.
+      proposed_by_email: chiamante.email,
       proposed_by_name: body.proposed_by_name?.trim() || null,
       contact_email: body.contact_email?.trim() || null,
       contact_phone: body.contact_phone?.trim() || null,
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Equipment name and location are required" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("equipment_proposals")
       .insert(payload)
       .select()
@@ -71,6 +75,10 @@ export async function POST(request: Request) {
 
 // PATCH — approve/reject equipment proposal. Awards +25 coins to proposer when approved.
 export async function PATCH(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
     const { id, ...fields } = body;
@@ -78,7 +86,7 @@ export async function PATCH(request: Request) {
     if (!id) return NextResponse.json({ error: "Missing equipment id" }, { status: 400 });
 
     // Fetch proposer info before updating
-    const { data: existing } = await getClient()
+    const { data: existing } = await client
       .from("equipment_proposals")
       .select("proposed_by_email, proposed_by_name, name, status")
       .eq("id", id)
@@ -101,7 +109,7 @@ export async function PATCH(request: Request) {
     if (fields.cost_savings_text !== undefined) updatePayload.cost_savings_text = fields.cost_savings_text?.trim() || null;
     if (fields.bookings_count !== undefined) updatePayload.bookings_count = Number(fields.bookings_count) || 0;
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("equipment_proposals")
       .update(updatePayload)
       .eq("id", id)
@@ -113,14 +121,14 @@ export async function PATCH(request: Request) {
     // Award +25 coins when equipment proposal is approved
     // We need to look up the user by email since equipment proposals store email not user_id
     if (fields.status === "approved" && existing?.status !== "approved" && existing?.proposed_by_email) {
-      const { data: profile } = await getClient()
+      const { data: profile } = await client
         .from("profiles")
         .select("id")
         .eq("email", existing.proposed_by_email)
         .single();
 
       if (profile?.id) {
-        await awardCoins(profile.id, 25, `Equipment proposal approved: "${existing.name}"`);
+        await awardCoins(client, profile.id, 25, `Equipment proposal approved: "${existing.name}"`);
       }
     }
 
@@ -131,11 +139,15 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const { error } = await getClient()
+    const { error } = await client
       .from("equipment_proposals")
       .delete()
       .eq("id", id);

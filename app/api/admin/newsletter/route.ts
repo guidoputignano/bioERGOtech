@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/auth/admin";
 
 export async function GET() {
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
 
-  const { data, error } = await adminClient
+  const { data, error } = await client
     .from("newsletter_subscribers")
     .select("*")
     .eq("is_active", true)

@@ -1,13 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin } from "@/lib/auth/admin";
 
 function daysOutstanding(from: string | null): number {
   if (!from) return 0;
@@ -16,8 +9,12 @@ function daysOutstanding(from: string | null): number {
 }
 
 export async function GET() {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
-    const db = getDB();
+    const db = client;
 
     const { data: followups, error } = await db
       .from("mou_followups")
@@ -53,11 +50,15 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { followup_id, actor, message_summary, new_status } = await req.json();
     if (!followup_id) return NextResponse.json({ error: "followup_id required" }, { status: 400 });
 
-    const db = getDB();
+    const db = client;
     const status = new_status || "sent";
 
     const { data: followup, error: updateError } = await db

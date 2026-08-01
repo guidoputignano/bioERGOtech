@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/auth/admin";
 import fs from "fs";
 import path from "path";
 import {
@@ -8,13 +8,6 @@ import {
   LevelFormat, Packer, Paragraph, ShadingType, Table, TableCell,
   TableRow, TextRun, WidthType,
 } from "docx";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
 interface MoUContact {
   id: string;
@@ -629,6 +622,10 @@ function buildMoU(contact, templateKey, logoData = null, includeAddendum = true)
 }
 
 export async function GET(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const { searchParams } = new URL(req.url);
   const contactId        = searchParams.get("contactId");
   const templateOverride = searchParams.get("templateType") || null;
@@ -636,7 +633,7 @@ export async function GET(req: NextRequest) {
 
   if (!contactId) return NextResponse.json({ error: "contactId required" }, { status: 400 });
 
-  const { data: contact, error } = await getDB()
+  const { data: contact, error } = await client
     .from("outreach_contacts")
     .select("id, name, country, type, city, field_of_interest, contact_person, email, category")
     .eq("id", contactId)
@@ -657,7 +654,7 @@ export async function GET(req: NextRequest) {
     const buffer = await Packer.toBuffer(doc);
     const safeName = (contact.name || "MoU").replace(/[^a-zA-Z0-9\s-]/g, "").trim().replace(/\s+/g, "_").slice(0, 40);
     const filename = `bioERGOtech_MoU_${safeName}_${new Date().getFullYear()}.docx`;
-    await getDB().from("outreach_contacts").update({ mou_status: "Draft in progress" }).eq("id", contactId);
+    await client.from("outreach_contacts").update({ mou_status: "Draft in progress" }).eq("id", contactId);
     return new NextResponse(buffer as unknown as BodyInit, {
       status: 200,
       headers: {

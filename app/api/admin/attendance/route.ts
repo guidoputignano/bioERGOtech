@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const getClient = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin } from "@/lib/auth/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 async function awardCoins(
+  client: SupabaseClient,
   userId: string,
   amount: number,
   reason: string
 ) {
-  const client = getClient();
   const { data: existing } = await client
     .from("coin_balances")
     .select("balance, lifetime_earned")
@@ -43,6 +37,10 @@ async function awardCoins(
 // GET /api/admin/attendance?event_id=xxx
 // Returns all attendees for a given event, with profile info
 export async function GET(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("event_id");
 
@@ -50,7 +48,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "event_id is required" }, { status: 400 });
   }
 
-  const client = getClient();
 
   const { data, error } = await client
     .from("event_attendees")
@@ -84,6 +81,10 @@ export async function GET(req: NextRequest) {
 // Body: { event_id, user_ids: string[], marked_by: string }
 // Marks users as attended, awards coins (+20 attendee, +60 if host)
 export async function POST(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const body = await req.json();
   const { event_id, user_ids, marked_by } = body;
 
@@ -94,7 +95,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const client = getClient();
 
   // Fetch the event to determine who the host/creator is
   const { data: event, error: eventError } = await client
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
         ? `Hosted event: ${event.title}`
         : `Attended event: ${event.title}`;
 
-      await awardCoins(userId, coinAmount, reason);
+      await awardCoins(client, userId, coinAmount, reason);
 
       await client
         .from("event_attendees")
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    await awardCoins(userId, coinAmount, reason);
+    await awardCoins(client, userId, coinAmount, reason);
     results.push({ user_id: userId, status: "marked_and_awarded", coins: coinAmount });
   }
 
@@ -174,6 +174,10 @@ export async function POST(req: NextRequest) {
 // Body: { event_id, user_id }
 // Removes attendance record (does NOT reverse coin award)
 export async function DELETE(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const body = await req.json();
   const { event_id, user_id } = body;
 
@@ -184,7 +188,6 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const client = getClient();
 
   const { error } = await client
     .from("event_attendees")

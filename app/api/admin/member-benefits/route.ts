@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
-
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin } from "@/lib/auth/admin";
 
 // GET — list benefits ordered for display. By default only active cards are
 // returned (member-facing). Pass ?all=true for the admin editor.
 export async function GET(request: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const { searchParams } = new URL(request.url);
   const all = searchParams.get("all") === "true";
 
-  let query = getClient()
+  let query = client
     .from("member_benefits")
     .select("*")
     .order("sort_order", { ascending: true })
@@ -28,6 +25,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Benefit name is required" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("member_benefits")
       .insert(payload)
       .select()
@@ -64,6 +65,10 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
     const { id, ...fields } = body;
@@ -83,7 +88,7 @@ export async function PATCH(request: Request) {
     if (fields.sort_order !== undefined) updatePayload.sort_order = Number(fields.sort_order) || 0;
     if (fields.is_active !== undefined) updatePayload.is_active = fields.is_active;
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("member_benefits")
       .update(updatePayload)
       .eq("id", id)
@@ -98,11 +103,15 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing benefit id" }, { status: 400 });
 
-    const { error } = await getClient()
+    const { error } = await client
       .from("member_benefits")
       .delete()
       .eq("id", id);

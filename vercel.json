@@ -5,7 +5,7 @@
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/cron/mou-followup?secret=bioergotech2026",
+      "path": "/api/cron/mou-followup",
       "schedule": "0 9 * * *"
     }
   ]

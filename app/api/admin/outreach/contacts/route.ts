@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const getClient = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin } from "@/lib/auth/admin";
 
 // GET /api/admin/outreach/contacts
 // Fetches ALL contacts using range-based pagination to bypass Supabase's 1000-row default cap
 export async function GET(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const { searchParams } = new URL(request.url);
   const country  = searchParams.get("country");
   const status   = searchParams.get("status");
   const category = searchParams.get("category");
   const search   = searchParams.get("search");
 
-  const db = getClient();
+  const db = client;
   let allContacts: Record<string, unknown>[] = [];
   const PAGE_SIZE = 1000;
   let from = 0;
@@ -56,6 +53,10 @@ export async function GET(request: Request) {
 // Single contact: { ...fields }
 // Bulk upsert (from sync): { contacts: [...], upsert: true }
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
 
@@ -83,14 +84,14 @@ export async function POST(request: Request) {
       }));
 
       // Delete all existing and re-insert (cleanest sync strategy)
-      await getClient().from("outreach_contacts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      const { data, error } = await getClient().from("outreach_contacts").insert(rows).select();
+      await client.from("outreach_contacts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { data, error } = await client.from("outreach_contacts").insert(rows).select();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       return NextResponse.json({ contacts: data, inserted: data?.length ?? 0 });
     }
 
     // Single contact insert
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("outreach_contacts")
       .insert({
         country:            body.country?.trim()            || null,
@@ -120,6 +121,10 @@ export async function POST(request: Request) {
 // PATCH /api/admin/outreach/contacts
 // Update CRM fields for a single contact
 export async function PATCH(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
     const { id, ...fields } = body;
@@ -135,7 +140,7 @@ export async function PATCH(request: Request) {
       if (f in fields) allowed[f] = fields[f] ?? null;
     }
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("outreach_contacts")
       .update(allowed)
       .eq("id", id)
@@ -151,10 +156,14 @@ export async function PATCH(request: Request) {
 
 // DELETE /api/admin/outreach/contacts
 export async function DELETE(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    const { error } = await getClient().from("outreach_contacts").delete().eq("id", id);
+    const { error } = await client.from("outreach_contacts").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   } catch {
