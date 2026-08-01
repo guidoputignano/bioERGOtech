@@ -258,6 +258,9 @@ export const CONFIG_CHIAVI = {
   scadenza_adesioni_label:
     "Scadenza da mostrare in pagina, in chiaro. Vuota finché il referente del consorzio non la comunica.",
   avviso: "Riga di avviso mostrata in cima alla pagina. Vuota per non mostrarla.",
+  stato_iscrizioni: "Iscrizione degli studenti: chiuse oppure aperte.",
+  scadenza_iscrizioni_label:
+    "Scadenza delle iscrizioni degli studenti, in chiaro. Vuota finché non è stata fissata.",
 } as const;
 
 /** Le adesioni si accettano davvero? Lo stato `chiuse` e l'archivio fermano tutto. */
@@ -345,3 +348,105 @@ export const FAQ_LICEI = [
     a: "Dentro il corso, non adesso. Il lavoro in team è uno dei contenuti del percorso: i ragazzi si conoscono durante le prime settimane e formano la squadra quando hanno un'idea da sviluppare. I dieci progetti migliori salgono sul palco il 10 dicembre.",
   },
 ] as const;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Fase 2. Iscrizione degli studenti
+   ═══════════════════════════════════════════════════════════════════════
+
+   Qui, per la prima volta, il sito raccoglie dati di studenti in larga
+   parte minorenni. Non e una scelta di disegno: le lezioni del corso sono
+   protette da login, quindi senza un account lo studente non puo seguirlo.
+
+   Il minimo per far funzionare corso e valutazione, e nient'altro: nome,
+   cognome, classe, anno di corso, email. Niente data di nascita, niente
+   codice fiscale, niente contatti dei genitori. L'anno di corso sostituisce
+   l'eta ed e meno identificante. Le autorizzazioni restano cartacee e in
+   custodia all'istituto: il sito genera il modulo da far firmare, non
+   raccoglie il modulo firmato.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export const ISCRIZIONE_SLUG = "iscrizione";
+export const REFERENTE_SLUG = "referente";
+
+export const ISCRIZIONE_PATH = `${LICEI_PATH}/${ISCRIZIONE_SLUG}`;
+export const REFERENTE_PATH = `${LICEI_PATH}/${REFERENTE_SLUG}`;
+
+/**
+ * Stato delle iscrizioni degli studenti, indipendente da quello delle
+ * adesioni. Parte CHIUSO, ed e giusto cosi: aprire le iscrizioni prima che i
+ * referenti abbiano ricevuto e diffuso il codice significa una pagina che
+ * respinge tutti quelli che ci arrivano.
+ */
+export type StatoIscrizioni = "chiuse" | "aperte";
+
+export const STATO_ISCRIZIONI_DEFAULT: StatoIscrizioni = "chiuse";
+
+export const iscrizioniAperte = (stato: StatoIscrizioni): boolean =>
+  !ARCHIVE_MODE && stato === "aperte";
+
+/**
+ * Stati dell'iscrizione di uno studente.
+ *
+ * Il referente conferma o rifiuta: e lui che sa chi sono davvero i suoi
+ * studenti, e l'elenco confermato e esattamente quello che l'art. 4 gli
+ * chiede di trasmettere. Senza questo passaggio l'elenco sarebbe
+ * autodichiarato da chi conosce il codice.
+ */
+export const STATI_ISCRIZIONE = [
+  { value: "in_attesa", label: "In attesa di conferma", colore: "#8A6100" },
+  { value: "confermata", label: "Confermata", colore: "#0A7A66" },
+  { value: "rifiutata", label: "Non riconosciuta", colore: "#B44A5E" },
+  { value: "ritirata", label: "Ritirata", colore: "#8896A6" },
+] as const;
+
+export type StatoIscrizione = (typeof STATI_ISCRIZIONE)[number]["value"];
+
+export const statoIscrizioneLabel = (v: string): string =>
+  STATI_ISCRIZIONE.find((s) => s.value === v)?.label ?? v;
+
+export const statoIscrizioneColore = (v: string): string =>
+  STATI_ISCRIZIONE.find((s) => s.value === v)?.colore ?? "#4A5568";
+
+/* ── Dichiarazioni dello studente ─────────────────────────────────────── */
+
+export const CONSENSO_PRIVACY_STUDENTE_TESTO =
+  "Acconsento al trattamento dei miei dati per la partecipazione al percorso formativo e alla selezione dei progetti, ai sensi del Regolamento (UE) 2016/679.";
+
+export const DICHIARAZIONE_AUTORIZZAZIONE_TESTO =
+  "Se sono minorenne, ho consegnato o consegnerò alla scuola il modulo di autorizzazione firmato da un genitore o da chi esercita la responsabilità genitoriale.";
+
+/**
+ * Avviso mostrato allo studente prima dell'invio. Dice due cose che
+ * altrimenti scoprirebbe dopo: che la scuola lo deve riconoscere, e che
+ * senza il modulo firmato non partecipa.
+ */
+export const NOTA_ISCRIZIONE_STUDENTE =
+  "La tua iscrizione arriva al docente referente del tuo istituto, che la conferma. Se sei minorenne serve anche il modulo di autorizzazione firmato da un genitore: lo chiedi al tuo referente, che ce l'ha già pronto.";
+
+/* ── Modulo di autorizzazione per le famiglie ─────────────────────────── */
+
+/**
+ * Testo del modulo che il referente stampa e fa firmare. Sono due
+ * autorizzazioni distinte, e vanno tenute distinte: la prima e necessaria
+ * per partecipare, la seconda no. Chi non acconsente alle riprese partecipa
+ * lo stesso, e la scuola lo segnala agli organizzatori.
+ */
+export const AUTORIZZAZIONI_MODULO = [
+  {
+    id: "partecipazione",
+    titolo: "Partecipazione al percorso formativo",
+    testo:
+      "autorizzo la partecipazione al percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", promosso da Fondazione bioERGOtech e SafesPro, che si svolge online e fuori dall'orario scolastico, e alla connessa attività di lavoro in team e sviluppo di un progetto.",
+    obbligatoria: true,
+  },
+  {
+    id: "riprese",
+    titolo: "Riprese audiovisive durante l'evento finale",
+    testo:
+      "autorizzo la ripresa audiovisiva e fotografica durante l'evento finale del 10 dicembre 2026 al PalaMazzola di Taranto, che si svolge in seduta pubblica, e il relativo utilizzo per la documentazione e la comunicazione istituzionale dell'iniziativa, senza fini di lucro.",
+    obbligatoria: false,
+  },
+] as const;
+
+export const AUTORIZZAZIONE_NOTA_CUSTODIA =
+  "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito.";
