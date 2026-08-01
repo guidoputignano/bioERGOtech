@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin } from "@/lib/auth/admin";
 
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
@@ -25,6 +18,10 @@ function parseCSVLine(line: string): string[] {
 // POST /api/admin/outreach/sync
 // Body: { url: string } — published Google Sheets CSV URL
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { url } = await request.json();
 
@@ -91,7 +88,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No valid contacts found in sheet" }, { status: 400 });
     }
 
-    const db = getDB();
+    const db = client;
 
     // Strategy: delete all existing + re-insert
     // This ensures the Supabase table always mirrors the Sheet exactly
@@ -176,7 +173,11 @@ function cleanText(s: string): string {
 
 // GET /api/admin/outreach/sync — return last sync stats
 export async function GET() {
-  const { count } = await getDB()
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
+  const { count } = await client
     .from("outreach_contacts")
     .select("*", { count: "exact", head: true });
 

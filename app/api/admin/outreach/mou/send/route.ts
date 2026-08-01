@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/auth/admin";
 import { Packer } from "docx";
 import {
   AlignmentType, BorderStyle, Document, Header, Footer, ImageRun,
@@ -9,13 +9,6 @@ import {
 } from "docx";
 import fs from "fs";
 import path from "path";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
 // ── Brand colours ────────────────────────────────────────────
 const BRAND_TEXT = "1A2332";  // bioERGOtech dark text
@@ -606,11 +599,15 @@ function buildMoU(contact, templateKey, logoData = null, includeAddendum = true)
 
 // POST /api/admin/outreach/mou/send
 export async function POST(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { contactId, includeAddendum = true } = await req.json();
     if (!contactId) return NextResponse.json({ error: "contactId required" }, { status: 400 });
 
-    const db = getDB();
+    const db = client;
     const { data: contact, error } = await db
       .from("outreach_contacts")
       .select("id, name, email, country, contact_person, field_of_interest, category, type, city")

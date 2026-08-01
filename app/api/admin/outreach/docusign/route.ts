@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/auth/admin";
 import fs from "fs";
 import path from "path";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
 // ── Get a fresh DocuSign access token using the stored refresh token ──────────
 async function getDocuSignToken(): Promise<string> {
@@ -39,6 +32,10 @@ async function getDocuSignToken(): Promise<string> {
 // Body: { contactId: string, signerEmail: string, signerName: string }
 // Generates MoU DOCX and sends to DocuSign for e-signature
 export async function POST(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { contactId, signerEmail, signerName } = await req.json();
 
@@ -49,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = getDB();
+    const db = client;
 
     // Load contact
     const { data: contact, error: fetchError } = await db
@@ -164,6 +161,10 @@ export async function POST(req: NextRequest) {
 // GET /api/admin/outreach/docusign?envelopeId=xxx
 // Check the status of a DocuSign envelope
 export async function GET(req: NextRequest) {
+  // Nessuna scrittura qui: la guardia serve solo a chiudere la rotta.
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+
   const { searchParams } = new URL(req.url);
   const envelopeId = searchParams.get("envelopeId");
 

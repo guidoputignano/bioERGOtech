@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin } from "@/lib/auth/admin";
 
 // Status priority — never downgrade a status
 const STATUS_PRIORITY: Record<string, number> = {
@@ -41,6 +34,10 @@ function resendEventToStatus(lastEvent: string): string {
 // GET /api/admin/outreach/recover-crm
 // Fetches all sent emails from Resend and reconstructs contact statuses
 export async function GET(req: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const { searchParams } = new URL(req.url);
   const dryRun = searchParams.get("dry_run") === "true";
 
@@ -49,7 +46,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
   }
 
-  const db = getDB();
+  const db = client;
   const recovered: Array<Record<string, unknown>> = [];
   const notFound:  Array<Record<string, unknown>> = [];
   let page = 0;

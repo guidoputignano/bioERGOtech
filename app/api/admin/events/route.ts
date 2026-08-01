@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
-
-const getClient = () => createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+import { requireAdmin } from "@/lib/auth/admin";
 
 // GET — all events including unapproved (admin only)
 export async function GET() {
-  const { data, error } = await getClient()
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
+  const { data, error } = await client
     .from("events")
     .select("*")
     .order("created_at", { ascending: false });
@@ -20,9 +18,13 @@ export async function GET() {
 
 // POST — create new event
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
-    const { error, data } = await getClient()
+    const { error, data } = await client
       .from("events")
       .insert({
         title: body.title?.trim(),
@@ -46,12 +48,16 @@ export async function POST(request: Request) {
 
 // PATCH — update existing event
 export async function PATCH(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
     const { id, ...fields } = body;
     if (!id) return NextResponse.json({ error: "Missing event id" }, { status: 400 });
 
-    const { error, data } = await getClient()
+    const { error, data } = await client
       .from("events")
       .update({
         title: fields.title?.trim(),
@@ -76,11 +82,15 @@ export async function PATCH(request: Request) {
 
 // DELETE — remove event
 export async function DELETE(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing event id" }, { status: 400 });
 
-    const { error } = await getClient()
+    const { error } = await client
       .from("events")
       .delete()
       .eq("id", id);

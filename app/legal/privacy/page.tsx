@@ -135,8 +135,9 @@ export default function PrivacyPolicy() {
               </div>
 
               <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-3">9. Children's Privacy</h2>
-                <p>Our website and services are not directed at children under the age of 16. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us and we will delete it promptly.</p>
+                <h2 className="text-xl font-semibold text-gray-800 mb-3">9. Minors</h2>
+                <p>Our website and services are not directed at children under the age of 14, and we do not knowingly collect their personal data. If you believe a child under 14 has provided us with personal data, please contact us and we will delete it promptly.</p>
+                <p className="mt-3">Some of our educational programmes are addressed to secondary school students, who may be minors aged 14 or over. Participation in those programmes always runs through the student&apos;s school, which appoints a referring teacher, collects the parental authorisations on our behalf and keeps the signed forms on file. In those cases we process only what the programme needs: name, surname, class, year of study and contact email. We do not collect dates of birth, tax codes, identity documents or parents&apos; contact details. Separate authorisation is always requested before a student appears in photographs or recordings of our events. Parents and guardians may exercise the rights described above on behalf of their child by writing to the address at the end of this policy.</p>
               </div>
 
               <div>

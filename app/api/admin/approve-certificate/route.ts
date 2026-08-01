@@ -1,16 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/auth/admin";
 import { Resend } from "resend";
 import { generateCertificatePptx, generateCertId } from "@/lib/certificate/generate";
-
-const getAdmin = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-
-
 
 /**
  * POST /api/admin/approve-certificate
@@ -22,7 +13,11 @@ const getAdmin = () =>
  * 4. Stores the cert_id in the profiles table
  */
 export async function POST(req: NextRequest) {
-  const admin = getAdmin();
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
+  const admin = client;
 
   try {
     const { user_id } = await req.json();

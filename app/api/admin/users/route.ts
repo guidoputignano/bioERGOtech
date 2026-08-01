@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
-
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
 
 // GET /api/admin/users — list all users with their profiles
+// Anche i membri normali passano di qui: MembersView del portale usa questo
+// elenco per la rubrica dei membri. Serve pero un utente autenticato: prima
+// questa rotta rispondeva a chiunque con tutte le email del sito.
 export async function GET() {
-  const { data, error } = await getClient()
+  const guard = await requireMember();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
+  const { data, error } = await client
     .from("profiles")
     .select("id, email, full_name, partnership_level, organisation_id, organisation_name")
     .order("email");
@@ -24,6 +24,10 @@ export async function GET() {
 
 // PATCH /api/admin/users — update a user's partnership level or organisation
 export async function PATCH(request: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
     const { userId, partnership_level, organisation_id } = body;
@@ -50,7 +54,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("profiles")
       .update(updatePayload)
       .eq("id", userId)
@@ -69,6 +73,10 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE /api/admin/users — delete a profile and auth user by id
 export async function DELETE(request: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client, chiamante } = guard;
+
   try {
     const body = await request.json();
     const { id } = body;
@@ -77,7 +85,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "User id is required" }, { status: 400 });
     }
 
-    const client = getClient();
+    // Un admin che cancella se stesso perde l'accesso al pannello e non puo
+    // piu rientrare a rimediare.
+    if (id === chiamante.id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account from here" },
+        { status: 400 },
+      );
+    }
 
     // Delete profile first
     const { error: profileError } = await client

@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "@/lib/auth/admin";
 import fs from "fs";
 import path from "path";
-
-const getDB = () =>
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
 // POST /api/admin/outreach/send
 // Body: { contacts: Contact[], subject: string, body: string, senderName: string, sentBy: string }
 export async function POST(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { contacts, subject, body, senderName, sentBy, bcc } = await request.json();
 
@@ -41,7 +38,7 @@ export async function POST(request: Request) {
       }
     } catch { /* PDF is optional */ }
 
-    const db = getDB();
+    const db = client;
 
     const results: Array<{ id: string; name: string; email: string; status: "sent" | "failed"; error?: string }> = [];
 
@@ -192,7 +189,11 @@ export async function POST(request: Request) {
 
 // GET /api/admin/outreach/send — fetch send log
 export async function GET() {
-  const { data, error } = await getDB()
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
+  const { data, error } = await client
     .from("outreach_sends")
     .select("*")
     .order("created_at", { ascending: false })

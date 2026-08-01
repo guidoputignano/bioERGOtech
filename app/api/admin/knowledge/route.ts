@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-
-async function awardCoins(userId: string, amount: number, reason: string) {
+async function awardCoins(client: SupabaseClient, userId: string, amount: number, reason: string) {
   try {
-    const client = getClient();
-    const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
+      const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
     const currentBalance = existing?.balance ?? 0;
     const currentLifetime = existing?.lifetime_earned ?? 0;
     await client.from("coin_balances").upsert({ user_id: userId, balance: currentBalance + amount, lifetime_earned: currentLifetime + amount }, { onConflict: "user_id" });
@@ -20,11 +13,15 @@ async function awardCoins(userId: string, amount: number, reason: string) {
 }
 
 export async function GET(request: NextRequest) {
+  const guard = await requireMember();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
   const pending = searchParams.get("pending") === "true";
 
-  let query = getClient()
+  let query = client
     .from("knowledge_documents")
     .select("*")
     .order("created_at", { ascending: false });
@@ -42,9 +39,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireMember();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client, chiamante } = guard;
+
   try {
     const body = await request.json();
-    const isAdminAdd = body.is_admin_add === true;
+    // L'inserimento diretto pubblica senza revisione, quindi non basta che il
+    // chiamante lo chieda: deve essere staff. Un membro che manda
+    // is_admin_add: true ottiene comunque una proposta da approvare.
+    const isAdminAdd = body.is_admin_add === true && chiamante.isAdmin;
 
     const payload = {
       title: body.title?.trim(),
@@ -53,10 +57,13 @@ export async function POST(request: Request) {
       url: body.url?.trim() || null,
       doc_type: body.doc_type || "external",
       is_public: body.is_public ?? true,
-      added_by: body.added_by || null,
+      added_by: isAdminAdd ? chiamante.id : null,
       is_approved: isAdminAdd,
-      proposed_by: body.proposed_by || null,
-      proposed_by_name: body.proposed_by_name || null,
+      // Chi propone lo dice la sessione, non il corpo della richiesta:
+      // altrimenti si attribuisce una proposta a chiunque (e i +30 coin
+      // dell'approvazione finiscono a lui).
+      proposed_by: isAdminAdd ? null : chiamante.id,
+      proposed_by_name: isAdminAdd ? null : body.proposed_by_name?.trim() || null,
     };
 
     if (!payload.title || !payload.category) {
@@ -66,7 +73,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("knowledge_documents")
       .insert(payload)
       .select()
@@ -81,19 +88,23 @@ export async function POST(request: Request) {
 
 // PATCH — approve or reject proposal. Awards +30 coins to proposer when approved.
 export async function PATCH(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const body = await request.json();
     const { id, is_approved } = body;
     if (!id) return NextResponse.json({ error: "Missing document id" }, { status: 400 });
 
     // Fetch proposer before updating
-    const { data: existing } = await getClient()
+    const { data: existing } = await client
       .from("knowledge_documents")
       .select("proposed_by, title")
       .eq("id", id)
       .single();
 
-    const { data, error } = await getClient()
+    const { data, error } = await client
       .from("knowledge_documents")
       .update({ is_approved })
       .eq("id", id)
@@ -104,7 +115,7 @@ export async function PATCH(request: Request) {
 
     // Award coins to proposer on approval
     if (is_approved && existing?.proposed_by) {
-      await awardCoins(existing.proposed_by, 30, `Knowledge contribution approved: "${existing.title}"`);
+      await awardCoins(client, existing.proposed_by, 30, `Knowledge contribution approved: "${existing.title}"`);
     }
 
     return NextResponse.json({ document: data });
@@ -114,11 +125,15 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const guard = await requireAdmin();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client } = guard;
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing document id" }, { status: 400 });
 
-    const { error } = await getClient()
+    const { error } = await client
       .from("knowledge_documents")
       .delete()
       .eq("id", id);
