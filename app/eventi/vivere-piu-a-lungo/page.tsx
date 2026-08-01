@@ -30,6 +30,7 @@ import {
   CANDIDATURE_SCADENZA_LABEL,
   FORZA_APERTURA,
 } from "./bando/content";
+import { LICEI_PATH } from "./licei/content";
 
 export const metadata: Metadata = {
   title: `${EVENT.titolo} . Fondazione bioERGOtech`,
@@ -391,6 +392,40 @@ export default function EventPage() {
                 Tra un panel e l&apos;altro, dieci gruppi di ragazzi presentano i loro progetti in tre blocchi: tre minuti a testa, due di pitch e uno di domande. Una commissione valuta le idee e proclama il gruppo vincitore.
               </p>
             </div>
+
+            {/* Percorso formativo per i licei, che sfocia nei progetti qui sopra */}
+            {!ARCHIVE_MODE && (
+              <div
+                className="card mt-6 flex flex-col md:flex-row md:items-center gap-6"
+                style={{ borderLeft: "4px solid var(--primary)" }}
+              >
+                <div className="flex-1">
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--primary-dark)",
+                    }}
+                  >
+                    Bando per i licei
+                  </span>
+                  <h3 className="text-xl font-semibold text-gray-800 mt-2 mb-2">
+                    I dieci progetti nascono qui
+                  </h3>
+                  <p className="text-gray-700 text-sm">
+                    I gruppi che salgono sul palco arrivano da un percorso formativo gratuito su
+                    biotecnologie e intelligenza artificiale, online e fuori dall&apos;orario
+                    scolastico, riservato agli studenti del triennio dei licei di Taranto e provincia.
+                    Aderisce l&apos;istituto, tramite un docente referente.
+                  </p>
+                </div>
+                <Link href={LICEI_PATH} className="btn-primary text-center whitespace-nowrap">
+                  Aderisci con la scuola
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
