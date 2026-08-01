@@ -40,6 +40,28 @@ export const BANDO = {
   emanato: "Taranto, 31 luglio 2026",
 } as const;
 
+/**
+ * L'indice della pagina pubblica, che alimenta la barra di navigazione
+ * appiccicata sotto il menu. Gli `id` sono quelli delle sezioni: cambiarne
+ * uno qui senza cambiarlo nel markup rompe l'ancora, non altro.
+ *
+ * Il bando è un documento lungo, e senza indice l'unico modo per arrivare al
+ * modulo o ai criteri è scorrere. L'ordine segue la lettura della pagina, che
+ * è narrativa e non coincide con la numerazione degli articoli.
+ */
+export const SEZIONI_BANDO = [
+  { id: "premessa", label: "Il bando" },
+  { id: "categorie", label: "Categorie" },
+  { id: "ambiti", label: "Ambiti" },
+  { id: "vantaggi", label: "Cosa ottieni" },
+  { id: "premi", label: "Premi" },
+  { id: "criteri", label: "Criteri" },
+  { id: "come-candidarsi", label: "Come candidarsi" },
+  { id: "showcase", label: "Lo Showcase" },
+  { id: "regole", label: "Commissione e tutele" },
+  { id: "faq", label: "Domande" },
+] as const;
+
 /* ── Finestra di candidatura (art. 5) ─────────────────────────────────── */
 
 /**
@@ -97,6 +119,11 @@ export type CategoriaBando = {
   stadio: string;
   /** Etichetta compatta per select ed elenchi. */
   label: string;
+  /**
+   * La regola in una riga, per capire a colpo d'occhio se è la propria
+   * categoria senza leggere tutto l'art. 2.
+   */
+  sintesi: string;
   chiPuoCandidarsi: string;
   /** Formato del pitch dal vivo (art. 6). */
   progettiAmmessi: string;
@@ -109,6 +136,7 @@ export const CATEGORIE_BANDO: CategoriaBando[] = [
     id: "A",
     stadio: "Ideazione",
     label: "A . Ideazione",
+    sintesi: "Non hai ancora costituito una società.",
     chiPuoCandidarsi:
       "Team informali, gruppi di ricerca, spin-off in costituzione e progetti che non hanno ancora costituito una società. Il progetto è a livello di concetto, studio di fattibilità o proof of concept.",
     progettiAmmessi: "fino a 6",
@@ -119,6 +147,7 @@ export const CATEGORIE_BANDO: CategoriaBando[] = [
     id: "B",
     stadio: "Creazione d'impresa",
     label: "B . Creazione d'impresa",
+    sintesi: "Società da meno di 36 mesi, sotto i 500.000 euro di raccolta.",
     chiPuoCandidarsi:
       "Società costituite da non più di 36 mesi alla data di scadenza delle candidature, con prototipo o MVP realizzato o in avanzato sviluppo, che non hanno chiuso raccolte di capitale superiori a 500.000 euro complessivi.",
     progettiAmmessi: "fino a 5",
@@ -129,6 +158,7 @@ export const CATEGORIE_BANDO: CategoriaBando[] = [
     id: "C",
     stadio: "Impresa con raccolta di capitale",
     label: "C . Impresa con raccolta di capitale",
+    sintesi: "Raccolta da 500.000 euro in su, oppure ricavi consolidati.",
     chiPuoCandidarsi:
       "Società già operative che hanno chiuso una o più raccolte di capitale per un totale pari o superiore a 500.000 euro, oppure che presentano ricavi consolidati, e che sono in cerca di partnership industriali, validazione clinica o di un nuovo round.",
     progettiAmmessi: "fino a 4",
@@ -348,21 +378,42 @@ export const COSA_OFFRE = [
 
 /* ── Art. 8. Premi ────────────────────────────────────────────────────── */
 
+/**
+ * Il premio di ogni categoria, spezzato in titolo e voci. È lo stesso testo
+ * dell'art. 8: la forma a elenco serve solo a renderlo leggibile a colpo
+ * d'occhio, senza che chi legge debba smontare un periodo lungo.
+ */
 export const PREMI = [
   {
     categoria: "A" as const,
     stadio: "Ideazione",
-    desc: "Percorso di accompagnamento di dodici mesi della Fondazione: mentorship scientifica dedicata, accesso al Laboratorio Distribuito, supporto di grant writing nell'ambito del ciclo Project Genesis per la partecipazione a bandi di ricerca e membership gratuita della Fondazione.",
+    titolo: "Percorso di accompagnamento di dodici mesi della Fondazione",
+    voci: [
+      "Mentorship scientifica dedicata",
+      "Accesso al Laboratorio Distribuito",
+      "Supporto di grant writing nell'ambito del ciclo Project Genesis, per la partecipazione a bandi di ricerca",
+      "Membership gratuita della Fondazione",
+    ],
   },
   {
     categoria: "B" as const,
     stadio: "Creazione d'impresa",
-    desc: "Residenza di dodici mesi presso lo Startup Hub bioERGOtech di Taranto, con accesso alle strutture di prototipazione, supporto amministrativo e legale, accompagnamento ai programmi di incentivo regionale NIDI, Mini-PIA e PIA e membership gratuita della Fondazione.",
+    titolo: "Residenza di dodici mesi presso lo Startup Hub bioERGOtech di Taranto",
+    voci: [
+      "Accesso alle strutture di prototipazione",
+      "Supporto amministrativo e legale",
+      "Accompagnamento ai programmi di incentivo regionale NIDI, Mini-PIA e PIA",
+      "Membership gratuita della Fondazione",
+    ],
   },
   {
     categoria: "C" as const,
     stadio: "Raccolta di capitale",
-    desc: "Programma di introduzione a investitori e partner industriali della rete della Fondazione, con accesso al percorso di validazione clinica presso le strutture partner e membership della Fondazione per un anno.",
+    titolo: "Programma di introduzione a investitori e partner industriali della rete della Fondazione",
+    voci: [
+      "Accesso al percorso di validazione clinica presso le strutture partner",
+      "Membership della Fondazione per un anno",
+    ],
   },
 ] as const;
 
