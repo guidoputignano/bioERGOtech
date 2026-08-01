@@ -24,6 +24,7 @@ import {
   DICHIARAZIONE_AUTORIZZAZIONE_TESTO,
   LICEI,
   NOTA_ISCRIZIONE_STUDENTE,
+  STUDENTE_PATH,
 } from "../content";
 import { normalizzaCodice, validateIscrizione } from "@/lib/eventi/licei-iscrizioni";
 
@@ -158,6 +159,13 @@ export function IscrizioneForm({
           modulo di autorizzazione, fallo firmare a un genitore e riportaglielo. Poi aspetta che il
           referente confermi la tua iscrizione: te lo diciamo per email.
         </div>
+        <p style={{ fontSize: 13, color: "var(--text-light)", lineHeight: 1.7, margin: "16px 0 0" }}>
+          Quando la tua iscrizione è confermata, la tua area è qui:{" "}
+          <Link href={STUDENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            squadra e progetto
+          </Link>
+          . Prima della conferma la trovi chiusa, ed è normale.
+        </p>
       </div>
     );
   }

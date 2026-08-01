@@ -17,6 +17,8 @@ import {
   ANNI_CORSO,
   ISCRIZIONE_PATH,
   SITE_URL,
+  SQUADRA_MAX,
+  SQUADRA_MIN,
   STATI_ISCRIZIONE,
   statoIscrizioneColore,
   statoIscrizioneLabel,
@@ -31,6 +33,7 @@ type Adesione = any;
 export function ReferenteConsole() {
   const [adesione, setAdesione] = useState<Adesione | null>(null);
   const [righe, setRighe] = useState<Iscrizione[]>([]);
+  const [squadre, setSquadre] = useState<Iscrizione[]>([]);
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
@@ -46,6 +49,7 @@ export function ReferenteConsole() {
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
       setAdesione(data.adesione);
       setRighe(data.iscrizioni ?? []);
+      setSquadre(data.squadre ?? []);
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Caricamento non riuscito.");
     } finally {
@@ -94,6 +98,13 @@ export function ReferenteConsole() {
     }
     return c;
   }, [righe]);
+
+  // Confermati ma senza squadra: e la sola cosa, in questa fase, che nessuno
+  // vedrebbe se non la vedesse il referente.
+  const senzaSquadra = useMemo(
+    () => righe.filter((r) => r.stato === "confermata" && !r.squadra_id).length,
+    [righe],
+  );
 
   const linkIscrizione = `${SITE_URL}${ISCRIZIONE_PATH}`;
 
@@ -339,6 +350,73 @@ export function ReferenteConsole() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Squadre dell'istituto ──
+          Compaiono solo quando ce ne sono: prima della fase delle squadre
+          una sezione vuota direbbe al referente che manca qualcosa. */}
+      {squadre.length > 0 && (
+        <div className="card" style={{ padding: 20 }}>
+          <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+            Le squadre del vostro istituto
+          </h2>
+          <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, marginBottom: 14 }}>
+            {senzaSquadra > 0
+              ? `${senzaSquadra} student${senzaSquadra === 1 ? "e confermato è rimasto" : "i confermati sono rimasti"} senza squadra. Lei è l'unico che può accorgersene in tempo e andare a cercarli.`
+              : "Tutti gli studenti confermati sono in una squadra."}
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {squadre.map((s, i) => {
+              const membri = righe.filter((r) => r.squadra_id === s.id);
+              const progetto = Array.isArray(s.licei_progetti)
+                ? s.licei_progetti[0]
+                : s.licei_progetti;
+              const consegnato = progetto?.stato === "consegnato";
+              return (
+                <div
+                  key={s.id}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "11px 0",
+                    borderTop: i === 0 ? "none" : "1px solid var(--border-color)",
+                  }}
+                >
+                  <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                    <div className="font-semibold text-gray-800" style={{ fontSize: 14 }}>
+                      {s.nome}
+                    </div>
+                    <div className="text-gray-600" style={{ fontSize: 12.5, marginTop: 2 }}>
+                      {membri.length} su {SQUADRA_MAX}
+                      {membri.length > 0
+                        ? ` . ${membri.map((m: Iscrizione) => m.cognome).join(", ")}`
+                        : ""}
+                    </div>
+                  </div>
+                  <span
+                    className="badge"
+                    style={{
+                      background: consegnato ? "#0A7A661A" : "#8A61001A",
+                      color: consegnato ? "#0A7A66" : "#8A6100",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {consegnato
+                      ? progetto?.finalista
+                        ? "Finalista"
+                        : "Progetto consegnato"
+                      : membri.length < SQUADRA_MIN
+                        ? `Serve almeno ${SQUADRA_MIN} componenti`
+                        : "Progetto in bozza"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
