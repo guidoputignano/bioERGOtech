@@ -3,7 +3,22 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { CONFIG_CHIAVI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 const CHIAVI_VALIDE = new Set<string>(Object.keys(CONFIG_CHIAVI));
-const STATI_VALIDI = new Set(["termini_non_comunicati", "aperte", "chiuse"]);
+
+/**
+ * I valori ammessi per ogni interruttore di fase.
+ *
+ * Una chiave di stato che ricevesse un valore inventato non romperebbe
+ * niente, perche `leggiConfigLicei` ricade sul default. Ma il default e
+ * "chiuso", quindi lo staff vedrebbe il comando accettare il click e la fase
+ * restare chiusa, senza un errore da nessuna parte: meglio rifiutare qui.
+ */
+const VALORI_AMMESSI: Record<string, Set<string>> = {
+  stato_adesioni: new Set(["termini_non_comunicati", "aperte", "chiuse"]),
+  stato_iscrizioni: new Set(["chiuse", "aperte"]),
+  stato_squadre: new Set(["chiuse", "aperte"]),
+  stato_consegne: new Set(["chiuse", "aperte"]),
+  stato_valutazione: new Set(["chiusa", "aperta"]),
+};
 
 /**
  * Configurazione del percorso licei. Vive a database e non nel codice perche
@@ -26,8 +41,12 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: `Chiave non prevista: ${chiave}` }, { status: 400 });
     }
     const v = typeof valore === "string" ? valore.trim() : "";
-    if (chiave === "stato_adesioni" && !STATI_VALIDI.has(v)) {
-      return NextResponse.json({ error: "Stato delle adesioni non valido." }, { status: 400 });
+    const ammessi = VALORI_AMMESSI[chiave];
+    if (ammessi && !ammessi.has(v)) {
+      return NextResponse.json(
+        { error: `Valore non valido per ${chiave}: ${v || "(vuoto)"}` },
+        { status: 400 },
+      );
     }
     if (v.length > 400) {
       return NextResponse.json({ error: `Il valore di ${chiave} è troppo lungo.` }, { status: 400 });

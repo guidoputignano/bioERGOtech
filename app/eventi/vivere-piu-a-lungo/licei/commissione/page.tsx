@@ -3,45 +3,42 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
-import { LiceiAdminTabs } from "./LiceiAdminTabs";
+import { CommissioneConsole } from "./CommissioneConsole";
+import { LICEI_PATH } from "../content";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Percorso licei . Admin",
+  title: "Commissione di valutazione . Percorso licei",
   robots: { index: false, follow: false },
 };
 
-export default async function LiceiAdminPage() {
+export default async function CommissionePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("partnership_level")
-      .eq("id", user.id)
-      .maybeSingle();
-    isAdmin = profile?.partnership_level === "admin";
-  }
-
-  if (!isAdmin) {
+  if (!user) {
     return (
       <>
         <Navbar />
         <div style={{ paddingTop: "110px", minHeight: "70vh" }} className="bg-light-gray">
           <div className="container mx-auto px-6 py-16">
             <div className="card max-w-md mx-auto text-center">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Accesso riservato</h1>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">Area riservata</h1>
               <p className="text-gray-600 mb-6">
-                Questa area è riservata allo staff della Fondazione. Accedi con un account admin.
+                Questa area è riservata ai membri della Commissione di valutazione. Acceda con
+                l&apos;email a cui ha ricevuto la nomina.
               </p>
-              <Link href="/auth/login" className="btn-primary inline-block">
-                Accedi
-              </Link>
+              <div className="flex flex-col gap-3">
+                <Link href="/auth/login" className="btn-primary">
+                  Accedi
+                </Link>
+                <Link href={LICEI_PATH} className="btn-outline">
+                  Torna al bando
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -55,7 +52,9 @@ export default async function LiceiAdminPage() {
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
         <div className="container mx-auto px-6 py-10">
-          <LiceiAdminTabs />
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <CommissioneConsole />
+          </div>
         </div>
       </div>
       <SiteFooter />

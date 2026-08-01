@@ -191,14 +191,22 @@ export const PREMI_LICEI = [
 
 /* ── Art. 7. Criteri di valutazione ───────────────────────────────────── */
 
+/**
+ * I sei criteri dell'art. 7, con la colonna di `licei_valutazioni` su cui
+ * ciascuno atterra. Il `campo` non è decorazione: è quello che tiene insieme
+ * il bando, la scheda della Commissione e il modulo di consegna, che chiede
+ * agli studenti esattamente ciò che verrà valutato.
+ */
 export const CRITERI_LICEI = [
-  { criterio: "Innovatività e originalità", punti: 25, desc: "Grado di novità della soluzione proposta rispetto allo stato dell'arte." },
-  { criterio: "Fattibilità tecnica", punti: 20, desc: "Solidità e concretezza dell'approccio tecnico e scientifico proposto." },
-  { criterio: "Impatto potenziale", punti: 20, desc: "Rilevanza e beneficio atteso in ambito sanitario, ambientale o industriale." },
-  { criterio: "Aspetti etici", punti: 15, desc: "Consapevolezza e gestione delle implicazioni etiche connesse alla soluzione proposta." },
-  { criterio: "Lavoro di squadra e metodo", punti: 10, desc: "Qualità della collaborazione e del metodo di lavoro adottato dal team." },
-  { criterio: "Qualità della presentazione", punti: 10, desc: "Chiarezza, efficacia comunicativa e capacità di sintesi nell'esposizione finale." },
+  { campo: "p_innovativita", criterio: "Innovatività e originalità", punti: 25, desc: "Grado di novità della soluzione proposta rispetto allo stato dell'arte." },
+  { campo: "p_fattibilita", criterio: "Fattibilità tecnica", punti: 20, desc: "Solidità e concretezza dell'approccio tecnico e scientifico proposto." },
+  { campo: "p_impatto", criterio: "Impatto potenziale", punti: 20, desc: "Rilevanza e beneficio atteso in ambito sanitario, ambientale o industriale." },
+  { campo: "p_etica", criterio: "Aspetti etici", punti: 15, desc: "Consapevolezza e gestione delle implicazioni etiche connesse alla soluzione proposta." },
+  { campo: "p_squadra", criterio: "Lavoro di squadra e metodo", punti: 10, desc: "Qualità della collaborazione e del metodo di lavoro adottato dal team." },
+  { campo: "p_presentazione", criterio: "Qualità della presentazione", punti: 10, desc: "Chiarezza, efficacia comunicativa e capacità di sintesi nell'esposizione finale." },
 ] as const;
+
+export type CampoPunteggio = (typeof CRITERI_LICEI)[number]["campo"];
 
 /** Criterio che decide a parità di punteggio complessivo (art. 7). */
 export const CRITERIO_DIRIMENTE_LICEI = "Innovatività e originalità";
@@ -261,6 +269,11 @@ export const CONFIG_CHIAVI = {
   stato_iscrizioni: "Iscrizione degli studenti: chiuse oppure aperte.",
   scadenza_iscrizioni_label:
     "Scadenza delle iscrizioni degli studenti, in chiaro. Vuota finché non è stata fissata.",
+  stato_squadre: "Formazione delle squadre: chiuse oppure aperte.",
+  stato_consegne: "Consegna dei progetti: chiuse oppure aperte.",
+  scadenza_consegna_label:
+    "Termine per la consegna dei progetti, in chiaro. Vuoto finché non è stato fissato.",
+  stato_valutazione: "Schede della Commissione: chiusa oppure aperta.",
 } as const;
 
 /** Le adesioni si accettano davvero? Lo stato `chiuse` e l'archivio fermano tutto. */
@@ -345,7 +358,11 @@ export const FAQ_LICEI = [
   },
   {
     q: "Come si formano le squadre?",
-    a: "Dentro il corso, non adesso. Il lavoro in team è uno dei contenuti del percorso: i ragazzi si conoscono durante le prime settimane e formano la squadra quando hanno un'idea da sviluppare. I dieci progetti migliori salgono sul palco il 10 dicembre.",
+    a: "Dentro il corso, non adesso. Il lavoro in team è uno dei contenuti del percorso: i ragazzi si conoscono durante le prime settimane e formano la squadra quando hanno un'idea da sviluppare. Uno crea la squadra dalla sua area e passa ai compagni il codice per entrare. Si va da 2 a 5 studenti, tutti dello stesso istituto. I dieci progetti migliori salgono sul palco il 10 dicembre.",
+  },
+  {
+    q: "Perché una squadra non può unire studenti di due scuole diverse?",
+    a: "Perché è l'istituto che risponde dei suoi studenti: raccoglie le candidature, custodisce le autorizzazioni dei genitori e accompagna i ragazzi all'evento finale. Una squadra a cavallo di due scuole non avrebbe un referente che ne risponde. Il tetto di cinque coincide con la rappresentanza dell'art. 6, così la squadra vincitrice parte al completo.",
   },
 ] as const;
 
@@ -450,3 +467,197 @@ export const AUTORIZZAZIONI_MODULO = [
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
   "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito.";
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Fase 3. Squadre, progetti, Commissione e finalisti
+   ═══════════════════════════════════════════════════════════════════════
+
+   Le prime due fasi portano lo studente dentro. Questa gli fa produrre
+   qualcosa e la fa giudicare: la squadra si forma (art. 3), consegna un
+   progetto, la Commissione lo valuta sui criteri dell'art. 7 e i primi
+   dieci salgono sul palco del 10 dicembre (art. 6).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+export const STUDENTE_SLUG = "studente";
+export const COMMISSIONE_SLUG = "commissione";
+
+export const STUDENTE_PATH = `${LICEI_PATH}/${STUDENTE_SLUG}`;
+export const COMMISSIONE_PATH = `${LICEI_PATH}/${COMMISSIONE_SLUG}`;
+
+/**
+ * Quanti studenti in una squadra.
+ *
+ * Il massimo è cinque, ed è il numero dell'art. 6: la rappresentanza che
+ * parte per il premio. Farli coincidere significa che la squadra vincitrice
+ * ci va al completo, e nessuno resta a casa a guardare le foto dei compagni.
+ *
+ * Il minimo è due perché l'art. 3 chiede un lavoro in team, e uno studente
+ * da solo non è un team. Vale alla consegna, non alla creazione: una squadra
+ * nasce con il suo fondatore e cresce nei giorni successivi.
+ */
+export const SQUADRA_MIN = 2;
+export const SQUADRA_MAX = 5;
+
+/** Una squadra sta dentro un solo istituto. Il perché è nella FAQ e nella migrazione. */
+export const SQUADRA_UN_SOLO_ISTITUTO = true;
+
+/* ── Interruttori delle fasi ──────────────────────────────────────────── */
+
+/**
+ * Ogni fase ha il suo stato e parte chiusa. Si aprono in ordine e a mano:
+ * aprire le consegne prima che esistano le squadre, o la valutazione prima
+ * che esistano i progetti, produce schermate senza niente da mostrare.
+ */
+export type StatoSquadre = "chiuse" | "aperte";
+export type StatoConsegne = "chiuse" | "aperte";
+export type StatoValutazione = "chiusa" | "aperta";
+
+export const STATO_SQUADRE_DEFAULT: StatoSquadre = "chiuse";
+export const STATO_CONSEGNE_DEFAULT: StatoConsegne = "chiuse";
+export const STATO_VALUTAZIONE_DEFAULT: StatoValutazione = "chiusa";
+
+export const squadreAperte = (stato: StatoSquadre): boolean =>
+  !ARCHIVE_MODE && stato === "aperte";
+
+export const consegneAperte = (stato: StatoConsegne): boolean =>
+  !ARCHIVE_MODE && stato === "aperte";
+
+export const valutazioneAperta = (stato: StatoValutazione): boolean =>
+  !ARCHIVE_MODE && stato === "aperta";
+
+/* ── Stati del progetto ───────────────────────────────────────────────── */
+
+export const STATI_PROGETTO = [
+  { value: "bozza", label: "Bozza", colore: "#8A6100" },
+  { value: "consegnato", label: "Consegnato", colore: "#0A7A66" },
+  { value: "ritirato", label: "Ritirato", colore: "#8896A6" },
+] as const;
+
+export type StatoProgetto = (typeof STATI_PROGETTO)[number]["value"];
+
+export const statoProgettoLabel = (v: string): string =>
+  STATI_PROGETTO.find((s) => s.value === v)?.label ?? v;
+
+export const statoProgettoColore = (v: string): string =>
+  STATI_PROGETTO.find((s) => s.value === v)?.colore ?? "#4A5568";
+
+/* ── Il modulo di consegna ────────────────────────────────────────────── */
+
+/**
+ * Sei domande, una per criterio dell'art. 7.
+ *
+ * Non è un questionario: è la griglia di valutazione girata in domande. Se
+ * la Commissione assegna 15 punti agli aspetti etici, il modulo li deve
+ * chiedere, altrimenti valuta qualcosa che a nessuno è stato chiesto e i
+ * ragazzi perdono punti su un capitolo che non sapevano di dover scrivere.
+ *
+ * Il limite di caratteri è basso di proposito. Sintetizzare fa parte del
+ * lavoro, e una Commissione che legge trenta progetti legge davvero solo
+ * quelli che stanno in una pagina.
+ */
+export const CAMPI_PROGETTO = [
+  {
+    campo: "problema",
+    label: "Il problema",
+    aiuto:
+      "Quale problema reale avete scelto, e perché conta. Ambito sanitario, ambientale o industriale.",
+    max: 800,
+    criterio: "Innovatività e originalità",
+  },
+  {
+    campo: "soluzione",
+    label: "La vostra soluzione",
+    aiuto:
+      "Che cosa proponete, in concreto. Che cosa la rende diversa da quello che già esiste.",
+    max: 1200,
+    criterio: "Innovatività e originalità",
+  },
+  {
+    campo: "tecnologie",
+    label: "Biotecnologie e intelligenza artificiale impiegate",
+    aiuto:
+      "Quali tecnologie usereste e come. Non serve saperle già usare: serve che il percorso da qui a lì stia in piedi.",
+    max: 1000,
+    criterio: "Fattibilità tecnica",
+  },
+  {
+    campo: "impatto",
+    label: "Impatto atteso",
+    aiuto: "Chi ne trae beneficio, quanti sono, e come vi accorgereste che sta funzionando.",
+    max: 800,
+    criterio: "Impatto potenziale",
+  },
+  {
+    campo: "etica",
+    label: "Aspetti etici",
+    aiuto:
+      "Che cosa potrebbe andare storto, chi potrebbe essere danneggiato, come lo terreste sotto controllo. Vale 15 punti su 100: non è una formalità.",
+    max: 800,
+    criterio: "Aspetti etici",
+  },
+  {
+    campo: "metodo",
+    label: "Come avete lavorato",
+    aiuto:
+      "Come vi siete divisi il lavoro, come avete deciso quando non eravate d'accordo, che cosa rifareste diversamente.",
+    max: 800,
+    criterio: "Lavoro di squadra e metodo",
+  },
+] as const;
+
+export type CampoProgetto = (typeof CAMPI_PROGETTO)[number]["campo"];
+
+export const TITOLO_MAX = 120;
+export const SQUADRA_NOME_MAX = 60;
+
+/**
+ * Un link, non un caricamento. Il sito non conserva file prodotti da minori
+ * se può evitarlo, e una presentazione su Drive o un video su YouTube fanno
+ * lo stesso lavoro restando in mano a chi li ha fatti.
+ */
+export const NOTA_MATERIALI =
+  "Se avete una presentazione, un video o un prototipo, incollate qui il link e controllate che sia visibile a chi lo apre senza essere loggato. Non carichiamo file su questo sito.";
+
+export const NOTA_CONSEGNA =
+  "Una volta consegnato, il progetto non è più modificabile. Fino ad allora resta una bozza che potete salvare e riprendere quando volete, e che nessuno all'infuori della vostra squadra può leggere.";
+
+/* ── Commissione (art. 8) ─────────────────────────────────────────────── */
+
+/**
+ * I ruoli dell'art. 8. L'ultimo è quello che spiega la colonna
+ * `diritto_voto`: il referente del consorzio siede in Commissione con
+ * funzioni consultive e senza diritto di voto, quindi vede i progetti e
+ * scrive note, ma i suoi numeri non entrano nella media.
+ */
+export const RUOLI_COMMISSIONE = [
+  { value: "presidente", label: "Presidente (direzione scientifica)", voto: true },
+  { value: "organizzatore", label: "Ente organizzatore (SafesPro)", voto: true },
+  { value: "esperto", label: "Esperto esterno (ricerca e università)", voto: true },
+  { value: "impresa", label: "Impresa e mentor", voto: true },
+  { value: "consorzio", label: "Referente consorzio licei (senza voto)", voto: false },
+] as const;
+
+export type RuoloCommissione = (typeof RUOLI_COMMISSIONE)[number]["value"];
+
+export const ruoloCommissioneLabel = (v: string): string =>
+  RUOLI_COMMISSIONE.find((r) => r.value === v)?.label ?? v;
+
+/** Somma dei punti dei criteri: deve fare 100, e il test lo verifica. */
+export const PUNTEGGIO_TOTALE_CRITERI = CRITERI_LICEI.reduce((s, c) => s + c.punti, 0);
+
+export const NOTA_VALUTAZIONE_INDIPENDENTE =
+  "Vede solo le sue schede. Il punteggio degli altri commissari non le compare, e non è riservatezza fine a se stessa: un voto letto prima di dare il proprio lo tira verso di sé, e la media di cinque giudizi ancorati vale meno di cinque giudizi indipendenti.";
+
+/* ── Finalisti (art. 6) ───────────────────────────────────────────────── */
+
+/**
+ * I finalisti non si iscrivono all'evento: ci vengono iscritti. Sono già
+ * nel database con nome, cognome ed email, hanno già l'autorizzazione dei
+ * genitori in segreteria, e devono salire sul palco. Chiedergli di
+ * ricompilare un modulo di iscrizione sarebbe un ostacolo in più fra loro e
+ * una sedia che è già la loro.
+ */
+export const SESSIONE_FINALISTI = "giorno-1";
+
+export const NOTA_ISCRIZIONE_UFFICIO =
+  "Iscrive all'evento del 10 dicembre tutti i componenti confermati delle squadre finaliste. L'operazione si può ripetere senza creare doppioni: chi risulta già iscritto viene lasciato dov'è.";
