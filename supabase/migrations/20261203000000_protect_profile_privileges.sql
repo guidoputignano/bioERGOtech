@@ -18,23 +18,43 @@
 -- puo quindi diventare admin, e chiudere le rotte API non basta perche
 -- questa strada passa direttamente da PostgREST.
 --
--- Rimedio in due strati indipendenti: i privilegi di colonna, che sono la
--- risposta dichiarativa di Postgres al problema, e un trigger che rimette a
--- posto i valori nel caso in cui un futuro `grant all` riapra i privilegi.
+-- Rimedio: un trigger che rimette a posto i valori a ogni update che non
+-- arrivi dal server. E l'unico strato che protegge davvero. Sotto c'e anche
+-- una revoca dei privilegi di colonna, che pero NON ha effetto: perche, e
+-- che cosa servirebbe per renderla efficace, e spiegato al punto 1.
 -- =========================================================
 
--- ── 1. Privilegi di colonna ────────────────────────────────────────────
--- L'utente puo continuare ad aggiornare la propria anagrafica e la propria
--- domanda, ma non le colonne che decidono che cosa gli e permesso e come la
--- domanda e stata valutata.
+-- ── 1. Privilegi di colonna: INEFFICACE, e va saputo ───────────────────
+-- Questa revoca non toglie niente, ed e rimasta qui perche e stata eseguita
+-- in produzione: toglierla dal file farebbe raccontare alla migrazione una
+-- storia diversa da quella vera.
+--
+-- Il motivo. Supabase concede `update` a livello di TABELLA su public.profiles
+-- ad authenticated e anon. In PostgreSQL i permessi effettivi su una colonna
+-- sono l'unione di quelli specifici della colonna e di quelli dell'intera
+-- tabella, quindi finche il grant di tabella resta in piedi, revocare colonna
+-- per colonna non cambia nulla. Si verifica cosi, e restituisce 8 invece di 0:
+--
+--   select count(*) from information_schema.column_privileges
+--   where table_schema = 'public' and table_name = 'profiles'
+--     and privilege_type = 'UPDATE' and grantee in ('authenticated', 'anon')
+--     and column_name in ('partnership_level', 'application_status',
+--                         'reviewed_at', 'admin_notes');
+--
+-- Per renderla efficace servirebbe togliere l'update di tabella e
+-- riconcederlo colonna per colonna su quelle lecite. Non e stato fatto per
+-- una ragione precisa: ogni colonna aggiunta in futuro a profiles nascerebbe
+-- senza grant, e la scrittura fallirebbe con un "permission denied for
+-- column" che salta fuori mesi dopo, lontano dalla causa. Il trigger protegge
+-- le stesse colonne senza quella trappola.
 revoke update (partnership_level, application_status, reviewed_at, admin_notes)
   on public.profiles from authenticated, anon;
 
--- ── 2. Trigger di sicurezza ────────────────────────────────────────────
--- Secondo strato: se i privilegi venissero riconcessi in blocco, questo
--- continua a proteggere le colonne. Le scritture legittime del server
--- passano dal ruolo service_role (service role key) o da postgres
--- (SQL editor e migrazioni), e non vengono toccate.
+-- ── 2. Trigger di sicurezza: e questo che protegge ─────────────────────
+-- Le scritture legittime del server passano dal ruolo service_role (service
+-- role key) o da postgres (SQL editor e migrazioni), e non vengono toccate.
+-- Per disattivare il trigger servirebbe possedere la tabella, e authenticated
+-- non la possiede.
 -- SECURITY INVOKER (il default), non DEFINER: dentro una funzione DEFINER
 -- `current_user` e il proprietario della funzione, quindi il controllo qui
 -- sotto passerebbe sempre e il trigger non proteggerebbe nulla. Invocata
@@ -64,13 +84,21 @@ create trigger trg_profiles_guard_privileged
   for each row execute function public.profiles_guard_privileged();
 
 -- ── 3. Verifica ────────────────────────────────────────────────────────
--- Da eseguire come utente normale autenticato: entrambe devono fallire o
--- lasciare il livello invariato.
---   update public.profiles set partnership_level = 'admin' where id = auth.uid();
---   update public.profiles set application_status = 'approved' where id = auth.uid();
+-- ATTENZIONE: dall'SQL editor di Supabase si gira come `postgres`, e il
+-- trigger lascia passare `postgres` di proposito, altrimenti bloccherebbe
+-- anche le promozioni legittime dal pannello admin. Quindi questa, da li,
+-- FUNZIONA, ed e il comportamento corretto, non un difetto:
 --
--- Privilegi di colonna residui:
---   select grantee, privilege_type, column_name
---   from information_schema.column_privileges
---   where table_name = 'profiles' and privilege_type = 'UPDATE'
---   order by grantee, column_name;
+--   update public.profiles set partnership_level = 'admin' where id = '<uuid>';
+--
+-- Dall'editor si verifica quindi la struttura, non il comportamento. Deve
+-- rispondere 1: il trigger e al suo posto.
+--
+--   select count(*) from pg_trigger
+--   where tgrelid = 'public.profiles'::regclass
+--     and tgname = 'trg_profiles_guard_privileged';
+--
+-- La verifica del comportamento si fa solo dal browser, con la chiave anon,
+-- loggati come utente normale: dopo l'update il livello deve essere quello
+-- di prima. L'update non solleva errore, il trigger riscrive i valori in
+-- silenzio.
