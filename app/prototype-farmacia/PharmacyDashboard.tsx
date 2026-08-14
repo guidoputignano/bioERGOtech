@@ -8,8 +8,9 @@ import {
 import {
   LayoutDashboard, PieChart as PieIcon, Radar, ShieldCheck, Boxes,
   Building2, ChevronDown, TrendingUp, TrendingDown, AlertTriangle,
-  CheckCircle2, Clock, Search, Columns3
+  CheckCircle2, Clock, Search, Columns3, Database
 } from "lucide-react";
+import { dataSources, type DataSourceType } from "./data-sources";
 
 const NAVY = "#1A2B45";
 const TEAL = "#00C9A7";
@@ -21,6 +22,7 @@ const RED = "#D9534F";
 const ASLS = ["AQ", "CH", "PE", "TE"];
 const TENANT_OPTIONS = ["Regione (tutte le ASL)", ...ASLS];
 
+// Source: asl-consumption-spend-extract (ASL Consumption & Spend Extract)
 const spendByAtc = [
   { code: "L", label: "Antineoplastici e immunomodulatori", v2026: 84.2, v2025: 83.0 },
   { code: "B", label: "Sangue e organi emopoietici", v2026: 25.0, v2025: 26.2 },
@@ -29,6 +31,7 @@ const spendByAtc = [
   { code: "N", label: "Sistema nervoso", v2026: 11.4, v2025: 10.0 },
 ];
 
+// Source: asl-consumption-spend-extract (ASL Consumption & Spend Extract)
 const topMovers = [
   { name: "ZOLGENSMA", delta: 2.51, dir: "up" },
   { name: "MOUNJARO", delta: 1.22, dir: "up" },
@@ -37,6 +40,7 @@ const topMovers = [
   { name: "GILENYA", delta: -1.34, dir: "down" },
 ];
 
+// Source: aifa-liste-trasparenza (AIFA — Liste di Trasparenza)
 const biosimilarTrend = [
   { year: "2022", pct: 51 },
   { year: "2023", pct: 58 },
@@ -45,11 +49,13 @@ const biosimilarTrend = [
   { year: "2026", pct: 72 },
 ];
 
+// Source: aifa-liste-trasparenza (AIFA — Liste di Trasparenza)
 const biosimilarPie = [
   { name: "Biosimilare", value: 72 },
   { name: "Originator / brand", value: 28 },
 ];
 
+// Source: egualia-loe-generics / egualia-loe-biosimilars (Egualia — Scadenze Brevettuali)
 const patentExpiries = [
   { drug: "OCREVUS", molecule: "ocrelizumab", date: "Mar 2027", window: "far" },
   { drug: "STELARA", molecule: "ustekinumab", date: "Nov 2026", window: "near" },
@@ -58,6 +64,7 @@ const patentExpiries = [
   { drug: "JARDIANCE", molecule: "empagliflozin", date: "Jan 2027", window: "near" },
 ];
 
+// Source: file-f-flow (File F Flow)
 const complianceRows = [
   { item: "Registro AIFA — Oncologici L01", status: "ok", due: "—" },
   { item: "File F — trasmissione mensile", status: "ok", due: "—" },
@@ -66,6 +73,7 @@ const complianceRows = [
   { item: "File F — riconciliazione trimestrale", status: "ok", due: "—" },
 ];
 
+// Source: asl-consumption-spend-extract (stock levels), cross-referenced with aifa-carenze (AIFA — Lista dei farmaci temporaneamente carenti)
 const stockRows = [
   { drug: "KAFTRIO", qty: 42, expiry: "Sep 2026", risk: "warn" },
   { drug: "DARZALEX", qty: 118, expiry: "Apr 2027", risk: "ok" },
@@ -74,6 +82,7 @@ const stockRows = [
   { drug: "BINOCRIT", qty: 14, expiry: "Aug 2026", risk: "late" },
 ];
 
+// Source: asl-consumption-spend-extract (ASL Consumption & Spend Extract)
 const capData = [
   { asl: "AQ", used: 82 },
   { asl: "CH", used: 96 },
@@ -82,6 +91,7 @@ const capData = [
 ];
 
 // Cross-authority comparison data — same molecule, same channel, across every ASL
+// Source: asl-consumption-spend-extract per ASL, cross-referenced with aifa-liste-trasparenza
 const crossAslMolecules = [
   {
     molecule: "Rituximab",
@@ -113,6 +123,7 @@ const modules = [
   { id: "stock", label: "Stock & Shortage", icon: Boxes, tag: "M4" },
   { id: "cap", label: "Procurement Cap", icon: TrendingUp, tag: "M1" },
   { id: "cross", label: "Cross-Authority Comparison", icon: Columns3, tag: "M6", flagship: true },
+  { id: "sources", label: "Data Sources", icon: Database, tag: "Ref" },
 ];
 
 type StatusValue = "ok" | "warn" | "late";
@@ -360,6 +371,49 @@ function StockScreen() {
   );
 }
 
+function DataSourcesScreen() {
+  const typeBadge: Record<DataSourceType, { bg: string; text: string; label: string }> = {
+    internal: { bg: "#E3F7F0", text: TEAL_DARK, label: "Internal" },
+    "external-public": { bg: "#EAF1FB", text: "#2A5C99", label: "Public" },
+    "external-licensed": { bg: "#FCF1DF", text: "#8A5A16", label: "Licensed — TBC" },
+  };
+  return (
+    <Card title="Data sources" subtitle="Structural reference only — no live integration. Data lineage per module, for review.">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
+            <th className="pb-2 font-medium">Source</th>
+            <th className="pb-2 font-medium">Type</th>
+            <th className="pb-2 font-medium">Cadence</th>
+            <th className="pb-2 font-medium">Feeds</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dataSources.map((s) => (
+            <tr key={s.id} className="border-b border-gray-50 last:border-0 align-top">
+              <td className="py-3 pr-4">
+                <p className="font-medium" style={{ color: NAVY }}>{s.name}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.owner}</p>
+                {s.note && <p className="text-xs text-gray-400 mt-1 max-w-md">{s.note}</p>}
+              </td>
+              <td className="py-3 pr-4">
+                <span
+                  className="inline-block px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap"
+                  style={{ background: typeBadge[s.type].bg, color: typeBadge[s.type].text }}
+                >
+                  {typeBadge[s.type].label}
+                </span>
+              </td>
+              <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{s.cadence}</td>
+              <td className="py-3 text-gray-600">{s.feedsModules.join(", ")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
 function CrossAuthorityScreen() {
   const flagStyle: Record<string, { bg: string; text: string }> = {
     ok: { bg: "#E3F7F0", text: TEAL_DARK },
@@ -433,6 +487,7 @@ export default function PrototypeFarmaciaDashboard() {
     stock: <StockScreen />,
     cap: <CapScreen />,
     cross: <CrossAuthorityScreen />,
+    sources: <DataSourcesScreen />,
   };
 
   return (
