@@ -48,6 +48,20 @@ export const metadata: Metadata = {
 // Tinta morbida coerente con la homepage.
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
+// Team organizzativo dell'evento. Le foto di Roberto Russo, Paola Cocozza e
+// Gianni Tartaglia non sono ancora nel repo: i percorsi puntano a dove
+// andranno messe, cosi la sezione funziona non appena i file arrivano.
+// Il ruolo di Roberto Russo non e confermato, quindi resta vuoto (nessuna
+// riga di ruolo mostrata) finche non viene verificato.
+const TEAM_ORGANIZZATIVO = [
+  { name: "Roberto Russo", role: "", img: "/assets/images/Team/roberto-russo.jpg" },
+  { name: "Mimma Leone", role: "Membro del Consiglio", img: "/assets/images/About-us/Mimma-Leone.webp" },
+  { name: "Alessia Soru", role: "Responsabile Progetti Scientifici", img: "/assets/images/About-us/Alessia-Soru.webp" },
+  { name: "Saria Miccoli", role: "Responsabile Comunicazione", img: "/assets/images/About-us/Saria-Miccoli.webp" },
+  { name: "Paola Cocozza", role: "Project Manager", img: "/assets/images/Team/paola-cocozza.jpg" },
+  { name: "Gianni Tartaglia", role: "Consigliere Comunale di Taranto", img: "/assets/images/Team/gianni-tartaglia.jpg" },
+] as const;
+
 function EventJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -560,6 +574,28 @@ export default function EventPage() {
                   </summary>
                   <div className="px-6 pb-6 text-gray-700 leading-relaxed">{f.a}</div>
                 </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Team Organizzativo ── */}
+        <section className="section bg-light-gray">
+          <div className="container mx-auto px-6">
+            <h2 className="section-title text-center block">Il Team Organizzativo</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+              {TEAM_ORGANIZZATIVO.map((p) => (
+                <div key={p.name} className="card text-center">
+                  <Image
+                    src={p.img}
+                    width={128}
+                    height={128}
+                    className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+                    alt={p.role ? `${p.name}, ${p.role}` : p.name}
+                  />
+                  <h4 className="text-xl font-semibold text-gray-800">{p.name}</h4>
+                  {p.role && <p style={{ color: "var(--primary)" }}>{p.role}</p>}
+                </div>
               ))}
             </div>
           </div>
