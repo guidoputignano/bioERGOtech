@@ -48,6 +48,49 @@ export const metadata: Metadata = {
 // Tinta morbida coerente con la homepage.
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
+// Team organizzativo dell'evento.
+type Organizzatore = { name: string; role: string; desc: string; img: string; imgPosition?: string };
+const TEAM_ORGANIZZATIVO: Organizzatore[] = [
+  {
+    name: "Roberto Russo",
+    role: "Studente Ambasciatore",
+    desc: "Studente delle scuole superiori, segue l'organizzazione dell'evento nel team operativo.",
+    img: "/assets/images/About-us/Roberto-Russo.jpeg",
+  },
+  {
+    name: "Mimma Leone",
+    role: "Membro del Consiglio",
+    desc: "Esperta legale e imprenditrice, promuove progetti educativi e universitari.",
+    img: "/assets/images/About-us/Mimma-Leone.webp",
+  },
+  {
+    name: "Alessia Soru",
+    role: "Responsabile Progetti Scientifici",
+    desc: "Dottoranda in Oncologia, Ematologia e Patologia all'Università di Bologna, membro del consiglio di Women&Tech® ETS.",
+    img: "/assets/images/About-us/Alessia-Soru.webp",
+  },
+  {
+    name: "Saria Miccoli",
+    role: "Responsabile Comunicazione",
+    desc: "Designer, cura l'identità visiva e la comunicazione della Fondazione.",
+    img: "/assets/images/About-us/Saria-Miccoli.webp",
+  },
+  {
+    name: "Paola Cocozza",
+    role: "Project Manager",
+    desc: "Project manager per società sportive ed enti di formazione, segue progetti sociali nello sport su inclusione e parità di genere.",
+    img: "/assets/images/About-us/Paola Cocozza.jpg",
+    imgPosition: "center 15%",
+  },
+  {
+    name: "Gianni Tartaglia",
+    role: "Consigliere Comunale di Taranto",
+    desc: "Consigliere comunale, si occupa di educazione, cultura, sport e inclusione per una Taranto più equa.",
+    img: "/assets/images/About-us/Gianni Tartaglia.png",
+    imgPosition: "center 15%",
+  },
+];
+
 function EventJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -560,6 +603,30 @@ export default function EventPage() {
                   </summary>
                   <div className="px-6 pb-6 text-gray-700 leading-relaxed">{f.a}</div>
                 </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Team Organizzativo ── */}
+        <section className="section bg-light-gray">
+          <div className="container mx-auto px-6">
+            <h2 className="section-title text-center block">Il Team Organizzativo</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+              {TEAM_ORGANIZZATIVO.map((p) => (
+                <div key={p.name} className="card text-center">
+                  <Image
+                    src={p.img}
+                    width={128}
+                    height={128}
+                    className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+                    style={p.imgPosition ? { objectPosition: p.imgPosition } : undefined}
+                    alt={p.role ? `${p.name}, ${p.role}` : p.name}
+                  />
+                  <h4 className="text-xl font-semibold text-gray-800">{p.name}</h4>
+                  {p.role && <p style={{ color: "var(--primary)" }}>{p.role}</p>}
+                  {p.desc && <p className="text-gray-600 mt-2 text-sm">{p.desc}</p>}
+                </div>
               ))}
             </div>
           </div>
