@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
 // Team organizzativo dell'evento.
-type Organizzatore = { name: string; role: string; desc: string; img: string };
+type Organizzatore = { name: string; role: string; desc: string; img: string; imgPosition?: string };
 const TEAM_ORGANIZZATIVO: Organizzatore[] = [
   {
     name: "Roberto Russo",
@@ -80,12 +80,14 @@ const TEAM_ORGANIZZATIVO: Organizzatore[] = [
     role: "Project Manager",
     desc: "Project manager per società sportive ed enti di formazione, segue progetti sociali nello sport su inclusione e parità di genere.",
     img: "/assets/images/About-us/Paola Cocozza.jpg",
+    imgPosition: "center 15%",
   },
   {
     name: "Gianni Tartaglia",
     role: "Consigliere Comunale di Taranto",
     desc: "Consigliere comunale, si occupa di educazione, cultura, sport e inclusione per una Taranto più equa.",
     img: "/assets/images/About-us/Gianni Tartaglia.png",
+    imgPosition: "center 15%",
   },
 ];
 
@@ -618,6 +620,7 @@ export default function EventPage() {
                     width={128}
                     height={128}
                     className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+                    style={p.imgPosition ? { objectPosition: p.imgPosition } : undefined}
                     alt={p.role ? `${p.name}, ${p.role}` : p.name}
                   />
                   <h4 className="text-xl font-semibold text-gray-800">{p.name}</h4>
