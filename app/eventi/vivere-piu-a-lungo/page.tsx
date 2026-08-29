@@ -57,11 +57,36 @@ const TEAM_ORGANIZZATIVO: Organizzatore[] = [
     desc: "Studente delle scuole superiori, segue l'organizzazione dell'evento nel team operativo.",
     img: "/assets/images/About-us/Roberto-Russo.jpeg",
   },
-  { name: "Mimma Leone", role: "Membro del Consiglio", desc: "", img: "/assets/images/About-us/Mimma-Leone.webp" },
-  { name: "Alessia Soru", role: "Responsabile Progetti Scientifici", desc: "", img: "/assets/images/About-us/Alessia-Soru.webp" },
-  { name: "Saria Miccoli", role: "Responsabile Comunicazione", desc: "", img: "/assets/images/About-us/Saria-Miccoli.webp" },
-  { name: "Paola Cocozza", role: "Project Manager", desc: "", img: "/assets/images/About-us/Paola Cocozza.jpg" },
-  { name: "Gianni Tartaglia", role: "Consigliere Comunale di Taranto", desc: "", img: "/assets/images/About-us/Gianni Tartaglia.png" },
+  {
+    name: "Mimma Leone",
+    role: "Membro del Consiglio",
+    desc: "Esperta legale e imprenditrice, promuove progetti educativi e universitari.",
+    img: "/assets/images/About-us/Mimma-Leone.webp",
+  },
+  {
+    name: "Alessia Soru",
+    role: "Responsabile Progetti Scientifici",
+    desc: "Dottoranda in Oncologia, Ematologia e Patologia all'Università di Bologna, membro del consiglio di Women&Tech® ETS.",
+    img: "/assets/images/About-us/Alessia-Soru.webp",
+  },
+  {
+    name: "Saria Miccoli",
+    role: "Responsabile Comunicazione",
+    desc: "Designer, cura l'identità visiva e la comunicazione della Fondazione.",
+    img: "/assets/images/About-us/Saria-Miccoli.webp",
+  },
+  {
+    name: "Paola Cocozza",
+    role: "Project Manager",
+    desc: "Project manager per società sportive ed enti di formazione, segue progetti sociali nello sport su inclusione e parità di genere.",
+    img: "/assets/images/About-us/Paola Cocozza.jpg",
+  },
+  {
+    name: "Gianni Tartaglia",
+    role: "Consigliere Comunale di Taranto",
+    desc: "Consigliere comunale, si occupa di educazione, cultura, sport e inclusione per una Taranto più equa.",
+    img: "/assets/images/About-us/Gianni Tartaglia.png",
+  },
 ];
 
 function EventJsonLd() {
