@@ -39,7 +39,6 @@ const SEGMENTS: Segment[] = [
       { icon: "fa-hospital", text: "A clinical network to validate your solution" },
       { icon: "fa-coins", text: "Hands-on support for NIDI, Mini-PIA, ZES and EU grants" },
       { icon: "fa-user-tie", text: "Mentorship and a Board of Advisors" },
-      { icon: "fa-toolbox", text: "Email, 1TB storage, Google Ads credit and Canva Pro" },
       { icon: "fa-handshake", text: "Warm introductions to our investor network" },
     ],
   },

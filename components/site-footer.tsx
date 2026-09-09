@@ -54,7 +54,7 @@ export function SiteFooter() {
                 { href: "/", label: "Home" },
                 { href: "/about-us", label: "About Us" },
                 { href: "/articles", label: "Articles" },
-                { href: "/member-portal", label: "Member Portal" },
+                { href: "/member-portal", label: "Research Portal" },
               ].map((l) => (
                 <li key={l.href} style={{ marginBottom: "10px" }}>
                   <Link href={l.href} style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }}>

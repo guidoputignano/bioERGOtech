@@ -8,9 +8,9 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
-  title: "Member Portal",
+  title: "Research Portal",
   description:
-    "Access the bioERGOtech Foundation member portal. Manage projects, connect with ecosystem members, and access shared resources.",
+    "The bioERGOtech Foundation research portal: active programmes, methods and evidence, facilities, and the people working on them.",
 };
 
 export default async function MemberPortal() {
@@ -26,11 +26,11 @@ export default async function MemberPortal() {
           <section className="bg-light-gray" style={{ padding: "60px 0 40px" }}>
             <div className="container mx-auto px-6 text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800">
-                Member Portal
+                Research Portal
               </h1>
               <p className="text-lg max-w-2xl mx-auto text-gray-600">
-                Access your projects, connect with ecosystem members, and manage
-                shared resources — all in one place.
+                Where the work is documented. Programmes, methods, facilities,
+                and the people running them.
               </p>
             </div>
           </section>
@@ -62,7 +62,7 @@ export default async function MemberPortal() {
                     className="btn-outline text-center w-full block"
                     style={{ textDecoration: "none" }}
                   >
-                    <i className="fas fa-user-plus mr-2" /> Join the Ecosystem
+                    <i className="fas fa-user-plus mr-2" /> Create an account
                   </Link>
                 </div>
                 <p className="text-center text-sm text-gray-500 mt-6">
@@ -74,15 +74,15 @@ export default async function MemberPortal() {
 
               <div className="mt-10">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
-                  What members get access to
+                  What is inside
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { icon: "fa-project-diagram", label: "Project management across hubs" },
-                    { icon: "fa-flask", label: "Distributed lab booking" },
-                    { icon: "fa-calendar", label: "Exclusive events and workshops" },
-                    { icon: "fa-address-book", label: "Member directory and networking" },
-                    { icon: "fa-book", label: "Knowledge base and resources" },
+                    { icon: "fa-project-diagram", label: "Programmes, with pillar, phase and lead" },
+                    { icon: "fa-book", label: "Methods and evidence: protocols, reports, shared documents" },
+                    { icon: "fa-flask", label: "Facilities, and how to request instrument use" },
+                    { icon: "fa-address-book", label: "People, and what each is working on" },
+                    { icon: "fa-calendar", label: "Events" },
                   ].map((b) => (
                     <div key={b.label} className="flex items-center gap-3 text-gray-700">
                       <i className={`fas ${b.icon}`} style={{ color: "var(--primary)", width: "20px" }} />
@@ -99,15 +99,12 @@ export default async function MemberPortal() {
     );
   }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, partnership_level, organisation_name")
     .eq("id", user.id)
     .single();
 
-  console.log("USER ID:", user.id);
-  console.log("PROFILE:", profile);
-  console.log("PROFILE ERROR:", profileError);
 
   // FIX: new users now default to "member" instead of "viewer"
   // so they immediately have access to events and the member network

@@ -1845,7 +1845,6 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
               {profiles.map((p) => {
-                const tier = getCoinTier(p.lifetime_earned ?? 0);
                 const levelColors: Record<string, { bg: string; color: string }> = { admin: { bg: "#FDECF1", color: "#E74C6F" }, partner: { bg: TEAL_LIGHT, color: TEAL_DARK }, member: { bg: "#F0EDFF", color: "#7C5CFC" } };
                 const lvl = levelColors[p.partnership_level] || levelColors.member;
                 return (
@@ -1862,8 +1861,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: lvl.bg, color: lvl.color, fontWeight: 700, textTransform: "capitalize" as const }}>{p.partnership_level}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700 }}>{tier.badge} {p.tier || "Explorer"}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: TEXT_LIGHT }}><img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} /> {p.coin_balance ?? 0}</span>
+                        <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{p.coin_balance ?? 0} contributions recorded</span>
                       </div>
                     </div>
                     {isAdmin && (
@@ -2168,29 +2166,13 @@ function KnowledgeView({ isAdmin, currentUserId, currentUserName, partnershipLev
 
 
 
-// ─── COIN TIER HELPER ─────────────────────────────────────────────────────────
-const COIN_TIERS = [
-  { name: "Catalyst",     min: 1000, color: "#F0A500", bg: "#FFF8E6", badge: "🟡" },
-  { name: "Collaborator", min: 500,  color: "#4A7DFF", bg: "#EBF1FF", badge: "🔵" },
-  { name: "Contributor",  min: 200,  color: "#00B894", bg: "#E6F9F5", badge: "🟢" },
-  { name: "Explorer",     min: 0,    color: "#8896A6", bg: "#F3F5F8", badge: "⚪" },
-];
-function getCoinTier(lifetime: number) {
-  return COIN_TIERS.find(t => lifetime >= t.min) || COIN_TIERS[3];
-}
+// ─── CONTRIBUTION RECORD ──────────────────────────────────────────────────────
+// I punti sono un registro interno dei contributi. Non danno diritto a nulla,
+// non si convertono e non si riscattano: la scala a livelli e le medaglie sono
+// state rimosse perche classificavano le persone invece dei contributi.
 type CoinBalance = { user_id: string; balance: number; lifetime_earned: number; tier: string; };
 type CoinTransaction = { id: string; amount: number; reason: string; type: string; created_at: string; };
 
-
-// ─── REDEMPTION CATALOGUE ─────────────────────────────────────────────────────
-const REDEMPTION_CATALOGUE = [
-  { id: "intro_1on1", label: "Request a 1:1 intro to another partner", cost: 150, icon: "users", color: "#7C5CFC", bg: "#F0EDFF", description: "Get a warm introduction to a partner of your choice facilitated by bioERGOtech." },
-  { id: "premium_kb", label: "Access a premium knowledge base resource", cost: 100, icon: "book", color: "#2EC4B6", bg: "#E8F8F6", description: "Unlock access to exclusive research, datasets, or proprietary resources in the Knowledge Base." },
-  { id: "priority_lab", label: "Priority lab slot booking", cost: 250, icon: "cpu", color: "#F0A500", bg: "#FFF8E6", description: "Jump the queue and secure priority access to Distributed Lab equipment and facilities." },
-  { id: "feature_project", label: "Feature your project on the portal homepage", cost: 400, icon: "star", color: "#E74C6F", bg: "#FDECF1", description: "Get your project highlighted on the bioERGOtech portal homepage for maximum visibility." },
-  { id: "nominate_upgrade", label: "Nominate someone for a partnership upgrade", cost: 600, icon: "award", color: "#00B894", bg: "#E6F9F5", description: "Nominate a colleague or partner for a tier upgrade within the bioERGOtech ecosystem." },
-  { id: "cobrand_event", label: "Co-brand an event with bioERGOtech", cost: 1000, icon: "calendar", color: "#4A7DFF", bg: "#EBF1FF", description: "Partner with bioERGOtech to co-host a branded event, workshop, or webinar." },
-];
 
 // ─── ADMIN TYPES ──────────────────────────────────────────────────────────────
 type UserProfile = { id: string; email: string; full_name?: string; partnership_level: PartnershipLevel; organisation_id?: string | null; };
@@ -3129,18 +3111,16 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
               {loadingCoins ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
                 : allCoinBalances.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No coin balances yet.</div>
                 : (<div style={{ overflowX: "auto" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", minWidth: 640, padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
-                    <span>Email</span><span>Name</span><span>Balance</span><span>Lifetime</span><span>Tier</span><span>Top Up</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 140px", minWidth: 640, padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
+                    <span>Email</span><span>Name</span><span>Balance</span><span>Lifetime</span><span>Top Up</span>
                   </div>
                   {allCoinBalances.map((cb, i) => {
-                    const tier = getCoinTier(cb.lifetime_earned);
                     return (
-                      <div key={cb.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 120px 140px", minWidth: 640, padding: "14px 24px", borderBottom: i < allCoinBalances.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
+                      <div key={cb.user_id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 140px", minWidth: 640, padding: "14px 24px", borderBottom: i < allCoinBalances.length - 1 ? `1px solid ${BORDER}` : "none", alignItems: "center" }}>
                         <span style={{ fontSize: 12, color: TEXT }}>{cb.profiles?.email}</span>
                         <span style={{ fontSize: 12, color: TEXT_MID }}>{cb.profiles?.full_name || "—"}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: cb.balance <= 0 ? "#E74C6F" : TEXT }}>{cb.balance}</span>
                         <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{cb.lifetime_earned}</span>
-                        <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700, width: "fit-content" }}>{tier.badge} {cb.tier}</span>
                         <button
                           onClick={() => setCoinTopUp({ userId: cb.user_id, amount: "", reason: "" })}
                           style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
@@ -3389,15 +3369,10 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
 
 
 // ─── REWARDS VIEW ─────────────────────────────────────────────────────────────
-function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem }: {
+function RewardsView({ coinBalance, currentUserId }: {
   coinBalance: CoinBalance | null;
   currentUserId: string;
-  userEmail: string;
-  userName?: string;
-  onRedeem: (item: typeof REDEMPTION_CATALOGUE[0], newBalance: number) => void;
 }) {
-  const [redeeming, setRedeeming] = useState<string | null>(null);
-  const [confirmItem, setConfirmItem] = useState<typeof REDEMPTION_CATALOGUE[0] | null>(null);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
   const [loadingTx, setLoadingTx] = useState(true);
 
@@ -3409,161 +3384,59 @@ function RewardsView({ coinBalance, currentUserId, userEmail, userName, onRedeem
       .catch(() => setLoadingTx(false));
   }, [currentUserId]);
 
-  const handleRedeem = async (item: typeof REDEMPTION_CATALOGUE[0]) => {
-    if (!coinBalance || coinBalance.balance < item.cost) return;
-    setRedeeming(item.id);
-    try {
-      const res = await fetch("/api/coins", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUserId, amount: -item.cost, reason: `Redeemed: ${item.label}`, type: "spend" }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setTransactions(prev => [{ id: Date.now().toString(), amount: -item.cost, reason: `Redeemed: ${item.label}`, type: "spend", created_at: new Date().toISOString() }, ...prev]);
-        onRedeem(item, data.balance.balance);
-        setConfirmItem(null);
-        // Log redemption request for admin
-        await fetch("/api/redemptions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: currentUserId, userEmail, userName, itemId: item.id, itemLabel: item.label, coinsSpent: item.cost }),
-        });
-      }
-    } catch (e) { console.error(e); }
-    finally { setRedeeming(null); }
-  };
-
-  const tier = coinBalance ? getCoinTier(coinBalance.lifetime_earned) : COIN_TIERS[3];
   const balance = coinBalance?.balance ?? 0;
+  const lifetime = coinBalance?.lifetime_earned ?? 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-      {/* Balance card */}
-      <div style={{ background: "linear-gradient(135deg, #1A2332, #2C3E50)", borderRadius: 20, padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-        <div>
-          <div style={{ fontSize: 13, color: "#8896A6", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.07em" }}>Your Coin Balance</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 48, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{balance}</span>
-            <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 32, height: 32, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
+      {/* Riepilogo. Un conteggio, non un saldo da spendere. */}
+      <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: "24px 28px", boxShadow: SHADOW }}>
+        <div style={{ fontSize: 13, color: TEXT_LIGHT, fontWeight: 600, marginBottom: 10, textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Contribution record</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 28, flexWrap: "wrap" as const }}>
+          <div>
+            <div style={{ fontSize: 40, fontWeight: 800, color: TEXT, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{balance}</div>
+            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 4 }}>currently recorded</div>
           </div>
-          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, padding: "3px 12px", borderRadius: 20, background: tier.bg, color: tier.color, fontWeight: 700 }}>{tier.badge} {tier.name}</span>
-            <span style={{ fontSize: 12, color: "#8896A6" }}>· {coinBalance?.lifetime_earned ?? 0} lifetime coins</span>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: TEXT_MID, fontFamily: "'Sora', sans-serif", lineHeight: 1 }}>{lifetime}</div>
+            <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 4 }}>recorded in total</div>
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 12, color: "#8896A6", marginBottom: 8 }}>Next tier</div>
-          {tier.name !== "Catalyst" && (() => {
-            const nextTier = COIN_TIERS[COIN_TIERS.findIndex(t => t.name === tier.name) - 1];
-            const progress = nextTier ? Math.min(100, ((coinBalance?.lifetime_earned ?? 0) / nextTier.min) * 100) : 100;
-            return (
-              <div>
-                <div style={{ fontSize: 12, color: nextTier?.color, fontWeight: 700, marginBottom: 6 }}>{nextTier?.name} ({nextTier?.min} coins)</div>
-                <div style={{ width: 160, height: 6, borderRadius: 6, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-                  <div style={{ width: `${progress}%`, height: "100%", background: nextTier?.color, borderRadius: 6, transition: "width 0.5s ease" }} />
-                </div>
-                <div style={{ fontSize: 11, color: "#8896A6", marginTop: 4 }}>{nextTier ? nextTier.min - (coinBalance?.lifetime_earned ?? 0) : 0} coins to go</div>
-              </div>
-            );
-          })()}
-          {tier.name === "Catalyst" && <div style={{ fontSize: 13, color: "#F0A500", fontWeight: 700 }}>🏆 Maximum tier reached!</div>}
-        </div>
+        <p style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.6, marginTop: 18, maxWidth: 620 }}>
+          This is an internal record of contributions to the Foundation. It is
+          used for tracking only. It is not a balance, it cannot be exchanged
+          for anything, and it does not affect what you can access.
+        </p>
       </div>
 
-      {/* Redemption catalogue */}
+      {/* Storico */}
       <div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 16 }}>Redeem Your Coins</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-          {REDEMPTION_CATALOGUE.map(item => {
-            const canAfford = balance >= item.cost;
-            return (
-              <div key={item.id} style={{ background: CARD, border: `1px solid ${canAfford ? BORDER : "#F3F5F8"}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12, boxShadow: SHADOW, opacity: canAfford ? 1 : 0.65 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Icon name={item.icon} size={20} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", lineHeight: 1.3 }}>{item.label}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                      <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 16, height: 16, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: item.color }}>{item.cost} coins</span>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.55 }}>{item.description}</div>
-                <button
-                  onClick={() => canAfford && setConfirmItem(item)}
-                  disabled={!canAfford || redeeming === item.id}
-                  style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: canAfford ? `linear-gradient(135deg, ${item.color}, ${item.color}CC)` : "#E8EDF3", color: canAfford ? "#fff" : TEXT_LIGHT, fontSize: 13, fontWeight: 700, cursor: canAfford ? "pointer" : "not-allowed", fontFamily: "'DM Sans', sans-serif" }}
-                >
-                  {!canAfford ? `Need ${item.cost - balance} more coins` : redeeming === item.id ? "Processing…" : "Redeem"}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Transaction history */}
-      <div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 16 }}>Transaction History</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", marginBottom: 16 }}>History</div>
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
           {loadingTx ? (
             <div style={{ padding: 32, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
           ) : transactions.length === 0 ? (
-            <div style={{ padding: 32, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No transactions yet.</div>
+            <div style={{ padding: 32, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Nothing recorded yet.</div>
           ) : (
             transactions.map((tx, i) => (
               <div key={tx.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: i < transactions.length - 1 ? `1px solid ${BORDER}` : "none" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: tx.amount > 0 ? "#E6F9F5" : "#FDECF1", color: tx.amount > 0 ? "#00B894" : "#E74C6F", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
-                    {tx.amount > 0 ? "+" : "−"}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{tx.reason}</div>
-                    <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>{new Date(tx.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
-                  </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{tx.reason}</div>
+                  <div style={{ fontSize: 11, color: TEXT_LIGHT, marginTop: 2 }}>{new Date(tx.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: tx.amount > 0 ? "#00B894" : "#E74C6F" }}>
-                  {tx.amount > 0 ? "+" : ""}{tx.amount} <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
+                <div style={{ fontSize: 14, fontWeight: 700, color: TEXT_MID }}>
+                  {tx.amount > 0 ? "+" : ""}{tx.amount}
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
-
-      {/* Confirmation modal */}
-      {confirmItem && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={() => setConfirmItem(null)} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
-          <div style={{ position: "relative", width: 440, background: CARD, borderRadius: 20, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 16, zIndex: 501 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Confirm Redemption</div>
-            <div style={{ background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 8 }}>{confirmItem.label}</div>
-              <div style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.55, marginBottom: 12 }}>{confirmItem.description}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 20, height: 20, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
-                <span style={{ fontSize: 15, fontWeight: 700, color: confirmItem.color }}>{confirmItem.cost} coins</span>
-                <span style={{ fontSize: 13, color: TEXT_LIGHT }}>· Remaining: {balance - confirmItem.cost}</span>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button onClick={() => setConfirmItem(null)} style={{ padding: "10px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-              <button
-                onClick={() => handleRedeem(confirmItem)}
-                disabled={redeeming === confirmItem.id}
-                style={{ padding: "10px 22px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${confirmItem.color}, ${confirmItem.color}CC)`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-              >{redeeming === confirmItem.id ? "Processing…" : "Confirm & Redeem"}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
 
 
 // ─── PROFILE VIEW ─────────────────────────────────────────────────────────────
@@ -5088,12 +4961,6 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           <RewardsView
             coinBalance={coinBalance}
             currentUserId={user.sub}
-            userEmail={user.email}
-            userName={user.display_name || user.full_name}
-            onRedeem={(item, newBalance) => {
-              setCoinBalance(prev => prev ? { ...prev, balance: newBalance } : prev);
-              setTimeout(() => showCoinToast(-item.cost, `${item.cost} coins spent on: "${item.label}"`), 300);
-            }}
           />
         );
 
@@ -5164,7 +5031,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
           <img src="/assets/images/Logo/full_bioergotech.webp" alt="bioERGOtech" style={{ height: 38, width: "auto", maxWidth: 170, objectFit: "contain", flexShrink: 0 }} />
-          <div style={{ fontSize: 12, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 700, whiteSpace: "nowrap" as const, paddingLeft: 2 }}>Member Portal</div>
+          <div style={{ fontSize: 12, color: TEXT_LIGHT, letterSpacing: "0.08em", textTransform: "uppercase" as const, fontWeight: 700, whiteSpace: "nowrap" as const, paddingLeft: 2 }}>Research Portal</div>
         </div>
       )}
     </a>
@@ -5215,8 +5082,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
           {coinBalance !== null && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
               <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: getCoinTier(coinBalance.lifetime_earned).color }}>{coinBalance.balance} coins</span>
-              <span style={{ fontSize: 10, color: TEXT_LIGHT }}>· {coinBalance.tier}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MID }}>{coinBalance.balance} contributions recorded</span>
             </div>
           )}
         </div>
