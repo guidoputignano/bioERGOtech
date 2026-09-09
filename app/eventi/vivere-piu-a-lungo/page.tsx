@@ -108,7 +108,7 @@ function EventJsonLd() {
       address: { "@type": "PostalAddress", addressLocality: "Taranto", addressCountry: "IT" },
     })),
     organizer: {
-      "@type": "Organization",
+      "@type": "ResearchOrganization",
       name: EVENT.organizzatore,
       url: SITE_URL,
     },
