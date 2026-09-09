@@ -54,10 +54,15 @@ export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
 
-    // Optional signature verification using RESEND_WEBHOOK_SECRET
-    // Uncomment and install 'svix' package when you get the signing secret from Resend
+    // Verifica della firma. Obbligatoria: senza, questa rotta e una scrittura
+    // aperta sullo stato dei contatti del CRM. Se il segreto non e
+    // configurato la richiesta viene rifiutata, non accettata.
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      console.error("[Resend Webhook] RESEND_WEBHOOK_SECRET is not set; rejecting.");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+    }
+    {
         const { Webhook } = await import("svix");
         const wh = new Webhook(webhookSecret);
         const svixId        = req.headers.get("svix-id") ?? "";

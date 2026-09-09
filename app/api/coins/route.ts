@@ -1,23 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+/**
+ * Punti di contributo.
+ *
+ * I punti sono un registro interno: servono a tracciare i contributi, non
+ * danno diritto a nulla di convertibile. Restano comunque dati da proteggere:
+ * ?all=true restituisce il saldo di ogni utente unito al profilo, quindi
+ * l'elenco completo dei membri con nome ed email. Senza guardia era leggibile
+ * da chiunque.
+ *
+ * Regola: l'elenco completo e l'accredito sono solo staff. Un membro legge
+ * solo il proprio saldo.
+ */
 
-// GET /api/coins?userId=xxx        → get balance + transactions for a user
-// GET /api/coins?all=true          → get all users' balances (admin)
+// GET /api/coins?userId=xxx  → saldo e movimenti di un utente
+// GET /api/coins?all=true    → saldi di tutti (staff)
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
   const all = searchParams.get("all") === "true";
 
   if (all) {
-    // Admin view — all users with balances
-    const { data, error } = await getClient()
+    const { error, status, client } = await requireAdmin();
+    if (error || !client) return NextResponse.json({ error }, { status });
+
+    const { data, error: dbError } = await client
       .from("coin_balances")
       .select(`
         *,
@@ -30,16 +37,20 @@ export async function GET(request: NextRequest) {
       `)
       .order("lifetime_earned", { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ balances: data });
   }
 
-  if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
+  const userId = searchParams.get("userId") ?? chiamante.id;
+
+  if (userId !== chiamante.id && !chiamante.isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Get balance
-  const { data: balance, error: balanceError } = await getClient()
+  const { data: balance, error: balanceError } = await client
     .from("coin_balances")
     .select("*")
     .eq("user_id", userId)
@@ -49,8 +60,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: balanceError.message }, { status: 500 });
   }
 
-  // Get last 20 transactions
-  const { data: transactions, error: txError } = await getClient()
+  const { data: transactions, error: txError } = await client
     .from("coin_transactions")
     .select("*")
     .eq("user_id", userId)
@@ -60,14 +70,17 @@ export async function GET(request: NextRequest) {
   if (txError) return NextResponse.json({ error: txError.message }, { status: 500 });
 
   return NextResponse.json({
-    balance: balance || { user_id: userId, balance: 0, lifetime_earned: 0, tier: "Explorer" },
+    balance: balance || { user_id: userId, balance: 0, lifetime_earned: 0 },
     transactions: transactions || [],
   });
 }
 
-// POST /api/coins — award or deduct coins
+// POST /api/coins — accredita o addebita punti
 // { userId, amount, reason, type: "earn" | "spend" | "admin" }
 export async function POST(request: Request) {
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const body = await request.json();
     const { userId, amount, reason, type } = body;
@@ -76,9 +89,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const client = getClient();
+    // Un membro puo solo togliere punti dal proprio saldo: e cosi che il
+    // portale registra un riscatto o la rimozione di un progetto. Creare
+    // punti resta un'azione di staff, altrimenti chiunque potrebbe
+    // accreditarsene quanti ne vuole.
+    if (!chiamante.isAdmin) {
+      const spendingOwn = userId === chiamante.id && Number(amount) < 0 && type === "spend";
+      if (!spendingOwn) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
-    // Get current balance
     const { data: existing } = await client
       .from("coin_balances")
       .select("*")
@@ -88,7 +109,6 @@ export async function POST(request: Request) {
     const currentBalance = existing?.balance ?? 0;
     const currentLifetime = existing?.lifetime_earned ?? 0;
 
-    // Check sufficient balance for spend
     if (type === "spend" && currentBalance + amount < 0) {
       return NextResponse.json({ error: "Insufficient coins" }, { status: 400 });
     }
@@ -96,7 +116,6 @@ export async function POST(request: Request) {
     const newBalance = currentBalance + amount;
     const newLifetime = amount > 0 ? currentLifetime + amount : currentLifetime;
 
-    // Upsert balance
     const { data: updatedBalance, error: upsertError } = await client
       .from("coin_balances")
       .upsert({
@@ -111,18 +130,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: upsertError.message }, { status: 500 });
     }
 
-    // Log transaction
     const { error: txError } = await client
       .from("coin_transactions")
       .insert({ user_id: userId, amount, reason, type });
 
     if (txError) {
       return NextResponse.json({ error: txError.message }, { status: 500 });
-    }
-
-    // If balance is zero or below, note it (admin can check the coins tab)
-    if (newBalance <= 0) {
-      console.warn(`User ${userId} has zero or negative coin balance`);
     }
 
     return NextResponse.json({ balance: updatedBalance });

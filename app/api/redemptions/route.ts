@@ -1,46 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+/**
+ * Richieste di riscatto.
+ *
+ * Le righe contengono user_email e user_name, quindi l'elenco completo e di
+ * fatto un elenco di membri. Senza guardia era leggibile da chiunque, e
+ * chiunque poteva aprire una richiesta a nome di un altro utente o
+ * approvarne una cambiando lo stato.
+ *
+ * Regola: l'elenco completo e il cambio di stato sono staff. Un membro vede
+ * e crea solo le proprie richieste.
+ */
 
-// GET /api/redemptions          → all requests (admin)
-// GET /api/redemptions?userId=x → user's own requests
+// GET /api/redemptions          → tutte le richieste (staff)
+// GET /api/redemptions?userId=x → le richieste di un utente
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId");
 
-  let query = getClient()
+  if (!userId) {
+    const { error, status, client } = await requireAdmin();
+    if (error || !client) return NextResponse.json({ error }, { status });
+
+    const { data, error: dbError } = await client
+      .from("redemption_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
+    return NextResponse.json({ requests: data });
+  }
+
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
+  if (userId !== chiamante.id && !chiamante.isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { data, error: dbError } = await client
     .from("redemption_requests")
     .select("*")
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (userId) query = query.eq("user_id", userId);
-
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
   return NextResponse.json({ requests: data });
 }
 
-// POST /api/redemptions → create a redemption request
+// POST /api/redemptions → apre una richiesta
 export async function POST(request: Request) {
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const body = await request.json();
-    const { userId, userEmail, userName, itemId, itemLabel, coinsSpent } = body;
+    const { itemId, itemLabel, coinsSpent, userName } = body;
 
-    if (!userId || !itemId || !coinsSpent) {
+    if (!itemId || coinsSpent === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error: dbError } = await client
       .from("redemption_requests")
       .insert({
-        user_id: userId,
-        user_email: userEmail,
+        // Utente ed email vengono dalla sessione, non dal body.
+        user_id: chiamante.id,
+        user_email: chiamante.email,
         user_name: userName || null,
         item_id: itemId,
         item_label: itemLabel,
@@ -50,27 +77,30 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ request: data });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 }
 
-// PATCH /api/redemptions → admin actions a request
+// PATCH /api/redemptions → lo staff evade una richiesta
 export async function PATCH(request: Request) {
+  const { error, status, client } = await requireAdmin();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const body = await request.json();
-    const { id, status, adminNotes } = body;
+    const { id, status: newStatus, adminNotes } = body;
 
-    if (!id || !status) {
+    if (!id || !newStatus) {
       return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error: dbError } = await client
       .from("redemption_requests")
       .update({
-        status,
+        status: newStatus,
         admin_notes: adminNotes || null,
         actioned_at: new Date().toISOString(),
       })
@@ -78,7 +108,7 @@ export async function PATCH(request: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ request: data });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

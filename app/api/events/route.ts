@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireMember } from "@/lib/auth/admin";
 
-const adminClient = () => createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
-
-// GET — public fetch of approved events
+/**
+ * Eventi del portale.
+ *
+ * L'unico chiamante e la dashboard del Member Portal, che e dietro
+ * autenticazione: la rotta non ha motivo di essere aperta. Le righe possono
+ * contenere riferimenti a persone e organizzazioni non ancora pubblici.
+ */
 export async function GET() {
-  const { data, error } = await adminClient()
+  const { error, status, client } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
+  const { data, error: dbError } = await client
     .from("events")
     .select("*")
     .eq("is_approved", true)
     .order("created_at", { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
   return NextResponse.json({ events: data });
 }
