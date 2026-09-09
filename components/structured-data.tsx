@@ -9,7 +9,7 @@ const BASE = "https://www.bioergotech.org";
 
 const organisation = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "ResearchOrganization",
   name: "bioERGOtech Foundation",
   url: BASE,
   logo: `${BASE}/favicon.png`,

@@ -131,9 +131,9 @@ export default async function ArticlePage({
     mainEntityOfPage: url,
     url,
     image: "https://www.bioergotech.org/assets/images/og-image-v2.jpg",
-    author: { "@type": "Organization", name: "bioERGOtech Foundation" },
+    author: { "@type": "ResearchOrganization", name: "bioERGOtech Foundation" },
     publisher: {
-      "@type": "Organization",
+      "@type": "ResearchOrganization",
       name: "bioERGOtech Foundation",
       logo: {
         "@type": "ImageObject",

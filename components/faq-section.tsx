@@ -11,11 +11,11 @@ const LINK = "color:#2EC4B6;font-weight:600";
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What is the bioERGOtech Foundation?",
-    a: "bioERGOtech is a foundation and biotech ecosystem that helps medical and life-science solutions move from the lab to the market. We build Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, with innovation hubs in Taranto, Zurich, and Riyadh.",
+    a: "bioERGOtech is a foundation and biotech ecosystem that helps medical and life-science solutions move from the lab to the market. We build Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, from our operational base in Taranto, Italy.",
   },
   {
     q: "Where is bioERGOtech based?",
-    a: `Our founding biotech hub is in <a href="/taranto" style="${LINK}">Taranto</a>, in the Puglia region of Southern Italy, with further innovation hubs in Zurich and Riyadh. We work with members across Europe and beyond.`,
+    a: `Our operational base is in <a href="/taranto" style="${LINK}">Taranto</a>, in the Puglia region of Southern Italy. Further locations in Zurich and Riyadh are planned from 2027.`,
   },
   {
     q: "Who can join the ecosystem?",

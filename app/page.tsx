@@ -31,10 +31,9 @@ const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSPropert
 
 /* ── Hero traction stats — keep these reflecting real, current numbers ── */
 const HERO_STATS = [
-  { num: "4", label: "Active projects" },
-  { num: "3", label: "Startups in the portfolio" },
-  { num: "3", label: "Innovation hubs" },
-  { num: "6+", label: "Countries reached" },
+  { num: "4", label: "Active programmes" },
+  { num: "1", label: "Operational location" },
+  { num: "4", label: "Research topics" },
 ];
 
 /* ── How it works — three low-friction steps ── */
@@ -236,7 +235,7 @@ export default function Home() {
           </div>
 
           {/* Traction stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-14">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-14">
             {HERO_STATS.map((s) => (
               <div key={s.label}>
                 <div className="stat-number">{s.num}</div>
