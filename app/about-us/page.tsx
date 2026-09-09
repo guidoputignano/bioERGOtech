@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: { absolute: "About bioERGOtech | A Synthetic Biology Foundation" },
-  description: "bioERGOtech is a foundation building Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, with innovation hubs in Taranto, Zurich, and Riyadh.",
+  description: "bioERGOtech is a foundation building Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, from its operational base in Taranto, Italy.",
   alternates: { canonical: "/about-us" },
 };
 
@@ -31,12 +31,11 @@ export default function AboutUs() {
       {/* Impact Metrics */}
       <section className="section" id="metrics">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
             {[
-              { num: "3", label: "Innovation Hubs", sub: "Taranto · Zurich · Riyadh" },
-              { num: "4", label: "Portfolio Companies", sub: "From diagnostics to robotics" },
-              { num: "4", label: "Scientific Pillars", sub: "Integrated research domains" },
-              { num: "6+", label: "Countries", sub: "Italy · Switzerland · Germany · US · China · Saudi Arabia" },
+              { num: "4", label: "Active programmes", sub: "Research programmes in progress" },
+              { num: "1", label: "Operational location", sub: "Taranto, Italy" },
+              { num: "4", label: "Research topics", sub: "Digital twins · Synthetic biology · Biomanufacturing · Multi-omics" },
             ].map((m) => (
               <div key={m.label}>
                 <span className="text-5xl md:text-6xl font-bold block mb-2" style={{ color: "var(--primary)" }}>{m.num}</span>
@@ -45,6 +44,9 @@ export default function AboutUs() {
               </div>
             ))}
           </div>
+          <p className="text-sm text-gray-500 text-center mt-10">
+            Taranto, operational. Zurich, from 2027. Riyadh, from 2027.
+          </p>
         </div>
       </section>
 

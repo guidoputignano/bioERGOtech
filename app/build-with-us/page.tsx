@@ -121,10 +121,10 @@ export default function BuildWithUs() {
               <h2 className="section-title">What We Provide</h2>
               <div className="space-y-6">
                 {[
-                  { icon: "fa-building", title: "Infrastructure", desc: "Access to innovation hubs in Taranto, Zurich, and Riyadh with laboratory space, automated systems, and co-working facilities." },
+                  { icon: "fa-building", title: "Infrastructure", desc: "Access to our Taranto hub, with laboratory space, automated systems, and co-working facilities. Zurich and Riyadh from 2027." },
                   { icon: "fa-user-tie", title: "Mentorship", desc: "Direct guidance from biotech industry veterans, successful entrepreneurs, AI and biotechnology experts, and regulatory specialists." },
                   { icon: "fa-coins", title: "Funding Access", desc: "Seed funding for promising ventures, connections to our investor network across Europe, US, and Asia, and support securing follow-on capital." },
-                  { icon: "fa-network-wired", title: "Strategic Network", desc: "Introductions to hospitals, pharmaceutical companies, universities, and healthcare systems including partners like Gilead Sciences and Fondazione Telethon." },
+                  { icon: "fa-network-wired", title: "Strategic Network", desc: "Introductions to hospitals, pharmaceutical companies, universities, and healthcare systems." },
                 ].map((item) => (
                   <div key={item.title}>
                     <h3 className="text-xl font-semibold text-gray-800 mb-1">
@@ -144,13 +144,12 @@ export default function BuildWithUs() {
         <div className="container mx-auto px-6">
           <h2 className="section-title text-center block">Our Portfolio</h2>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto text-center mb-12">
-            Four companies across diagnostics, digital health, medical devices, and robotics, spanning three continents.
+            Three companies across diagnostics, medical devices, and robotics.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {[
               { icon: "fa-microscope", name: "OncoTarget", type: "Diagnostics", desc: "UZH Zurich spin-off targeting Asian markets with organoid-based cancer diagnostics." },
               { icon: "fa-brain", name: "CranioTech", type: "Medical Devices", desc: "Italian startup developing physiological pattern measurement technology." },
-              { icon: "fa-laptop-medical", name: "pluracure", type: "Digital Health", desc: "TUM-incubated AI platform for chronic disease management." },
               { icon: "fa-robot", name: "Xperbot", type: "Robotics & Physical AI", desc: "European distributor for robotics technology and Physical AI development." },
             ].map((c) => (
               <div key={c.name} className="card text-center">
