@@ -65,50 +65,44 @@ const BADGE_STYLE: Record<BadgeKind, { label: string; bg: string; color: string 
 
 const BENEFITS: { icon: string; title: string; desc: string; badges: BadgeKind[] }[] = [
   {
+    icon: "fa-hospital",
+    title: "Clinical questions to work on",
+    desc: "Real problems brought by clinicians and research centres, with the institution that posed them named.",
+    badges: ["foundation", "community"],
+  },
+  {
     icon: "fa-flask",
-    title: "Distributed lab",
-    desc: "Shared equipment and spaces you can book online.",
+    title: "Instruments and lab space",
+    desc: "Shared equipment you can apply to use, with a short statement of what you intend to do with it.",
     badges: ["foundation", "community", "coming"],
   },
   {
     icon: "fa-microchip",
-    title: "GPU computing",
-    desc: "Compute capacity for AI and biomedical data analysis.",
+    title: "Compute",
+    desc: "Capacity for model training and biomedical data analysis.",
     badges: ["community", "coming"],
   },
   {
-    icon: "fa-building",
-    title: "Shared physical spaces",
-    desc: "Offices, meeting rooms and operational space opened up by members.",
-    badges: ["foundation", "community"],
-  },
-  {
-    icon: "fa-toolbox",
-    title: "Digital tools",
-    desc: "@bioergotech.org email, 1TB storage, €120k/yr Google Ads and Canva Pro.",
-    badges: ["foundation"],
-  },
-  {
-    icon: "fa-hospital",
-    title: "Clinical validation network",
-    desc: "Direct connections to hospitals, clinicians and research centers.",
-    badges: ["foundation", "community"],
-  },
-  {
     icon: "fa-coins",
-    title: "Access to funding",
-    desc: "Active support on NIDI, Mini-PIA, PIA, ZES benefits and European grants.",
+    title: "Funding you can apply for together",
+    desc: "Hands-on support on NIDI, Mini-PIA, PIA, ZES and European calls.",
     badges: ["foundation", "community"],
   },
   {
     icon: "fa-user-tie",
-    title: "Board of Advisors",
-    desc: "Advisors across regulatory, clinical development, IP and commercialization.",
+    title: "Regulatory and clinical advisors",
+    desc: "Guidance across regulatory strategy, clinical development, IP and commercialisation.",
+    badges: ["foundation", "community"],
+  },
+  {
+    icon: "fa-building",
+    title: "Working space",
+    desc: "Offices, meeting rooms and operational space opened up by members.",
     badges: ["foundation", "community"],
   },
   {
     icon: "fa-store",
-    title: "Commercial channels",
+    title: "Routes to market",
     desc: "Distribution through the commercial platforms of our members.",
     badges: ["community", "coming"],
   },
@@ -276,10 +270,11 @@ export default function Home() {
       {/* ── Infrastructure & benefits with badges ── */}
       <section className="section" id="infrastructure">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">What you find inside the ecosystem</h2>
+          <h2 className="section-title">What you can work with</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-8">
-            Concrete resources you can put to work. The badges indicate what the
-            Foundation provides directly and what the community makes available.
+            The problems come first: everything else exists to get them solved.
+            The badges indicate what the Foundation provides directly and what
+            the community makes available.
           </p>
 
           {/* Legend */}

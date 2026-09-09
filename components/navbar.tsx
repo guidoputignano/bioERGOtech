@@ -16,7 +16,7 @@ const navLinks = [
 ];
 
 // Persistent calls to action, always visible on the right of the nav.
-const memberPortal = { href: "/member-portal", label: "Member Portal" };
+const memberPortal = { href: "/member-portal", label: "Research Portal" };
 const joinCta = { href: "/join-us", label: "Join the Ecosystem" };
 
 export function Navbar() {
@@ -81,7 +81,7 @@ export function Navbar() {
               </Link>
             ))}
 
-            {/* Member Portal — quiet link for people already inside */}
+            {/* Research Portal, a quiet link for people already inside */}
             <Link
               key={memberPortal.href}
               href={memberPortal.href}
