@@ -9,7 +9,13 @@ const getClient = () =>
   );
 
 // GET /api/check-email?email=xxx
-// Returns { exists: true/false, source: "auth" | "application" | null }
+// Returns { exists: true/false }
+//
+// Deve restare pubblica: la usa il modulo di registrazione per dire subito se
+// un indirizzo e gia in uso. Risponde pero solo si o no. Distinguere "membro"
+// da "candidatura in corso", come faceva prima con `source` e `status`,
+// diceva a chiunque qualcosa sul rapporto di quella persona con la Fondazione
+// senza aggiungere nulla al modulo, che legge soltanto `exists`.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email")?.toLowerCase().trim();
@@ -25,23 +31,17 @@ export async function GET(request: NextRequest) {
     .eq("email", email)
     .maybeSingle();
 
-  if (profile) return NextResponse.json({ exists: true, source: "auth" });
+  if (profile) return NextResponse.json({ exists: true });
 
   // Check applications table (pending or approved join-us applicants)
   const { data: application } = await client
     .from("applications")
-    .select("id, application_status")
+    .select("id")
     .eq("email", email)
     .in("application_status", ["pending", "approved"])
     .maybeSingle();
 
-  if (application) {
-    return NextResponse.json({
-      exists: true,
-      source: "application",
-      status: application.application_status,
-    });
-  }
+  if (application) return NextResponse.json({ exists: true });
 
-  return NextResponse.json({ exists: false, source: null });
+  return NextResponse.json({ exists: false });
 }

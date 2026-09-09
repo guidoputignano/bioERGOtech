@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+/**
+ * Progetti del portale.
+ *
+ * Ogni metodo passa da requireMember o requireAdmin: la service role key
+ * bypassa la RLS, quindi senza guardia queste rotte sarebbero scrivibili e
+ * cancellabili da chiunque conosca l'indirizzo. Le righe contengono anche
+ * lead_email e lead_phone, che sono dati personali.
+ */
 
-// Award coins directly via Supabase — no internal HTTP fetch
-async function awardCoins(userId: string, amount: number, reason: string) {
+// Accredita punti usando il client gia autorizzato dalla guardia.
+async function awardCoins(client: SupabaseClient, userId: string, amount: number, reason: string) {
   try {
-    const client = getClient();
-
-    // Get or create balance
     const { data: existing } = await client
       .from("coin_balances")
       .select("balance, lifetime_earned")
@@ -41,20 +41,26 @@ async function awardCoins(userId: string, amount: number, reason: string) {
 }
 
 export async function GET() {
-  const { data, error } = await getClient()
+  const { error, status, client } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
+  const { data, error: dbError } = await client
     .from("projects")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
   return NextResponse.json({ projects: data });
 }
 
 export async function POST(request: Request) {
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const body = await request.json();
 
-    const { data, error } = await getClient()
+    const { data, error: dbError } = await client
       .from("projects")
       .insert({
         name: body.name?.trim(),
@@ -70,18 +76,17 @@ export async function POST(request: Request) {
         is_public: body.is_public ?? true,
         objectives: Array.isArray(body.objectives) ? body.objectives : [],
         update_notes: body.update_notes?.trim() || null,
-        created_by: body.created_by || null,
+        // L'autore viene dalla sessione, mai dal body: altrimenti chiunque
+        // potrebbe accreditare punti a un utente qualsiasi.
+        created_by: chiamante.id,
         updated_at: new Date().toISOString(),
       })
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
 
-    // Award +40 coins directly via Supabase
-    if (body.created_by) {
-      await awardCoins(body.created_by, 40, `Project created: "${body.name?.trim()}"`);
-    }
+    await awardCoins(client, chiamante.id, 40, `Project created: "${body.name?.trim()}"`);
 
     return NextResponse.json({ project: data });
   } catch {
@@ -90,6 +95,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const { error, status, client } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const body = await request.json();
     const { id, ...fields } = body;
@@ -113,16 +121,15 @@ export async function PATCH(request: Request) {
     if (fields.is_public !== undefined) updatePayload.is_public = fields.is_public;
     if (fields.objectives !== undefined) updatePayload.objectives = Array.isArray(fields.objectives) ? fields.objectives : [];
     if (fields.update_notes !== undefined) updatePayload.update_notes = fields.update_notes?.trim() || null;
-    if (fields.created_by !== undefined) updatePayload.created_by = fields.created_by || null;
 
-    const { data, error } = await getClient()
+    const { data, error: dbError } = await client
       .from("projects")
       .update(updatePayload)
       .eq("id", id)
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ project: data });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -130,16 +137,20 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  // Cancellare un progetto e irreversibile: solo staff.
+  const { error, status, client } = await requireAdmin();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing project id" }, { status: 400 });
 
-    const { error } = await getClient()
+    const { error: dbError } = await client
       .from("projects")
       .delete()
       .eq("id", id);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

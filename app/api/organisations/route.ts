@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireAdmin, requireMember } from "@/lib/auth/admin";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+/**
+ * Anagrafica organizzazioni.
+ *
+ * L'elenco completo e la mappa dei membri del portale: nome, tipo, sede e
+ * coordinate di ogni organizzazione. L'unico chiamante e la dashboard, che e
+ * dietro autenticazione. La ricerca pubblica usata dal modulo di adesione ha
+ * una rotta separata, /api/organisations/search, che restituisce solo pochi
+ * campi delle organizzazioni attive.
+ *
+ * Regola: lettura ai membri autenticati, scrittura e cancellazione allo staff.
+ */
 
 // Auto-geocode city/country using Nominatim
 async function geocode(city?: string, country?: string): Promise<{ lat: number; lng: number } | null> {
@@ -26,7 +31,10 @@ async function geocode(city?: string, country?: string): Promise<{ lat: number; 
 }
 
 export async function GET() {
-  const { data, error } = await getClient()
+  const { error: guard, status, client } = await requireMember();
+  if (guard || !client) return NextResponse.json({ error: guard }, { status });
+
+  const { data, error } = await client
     .from("organisations")
     .select("*")
     .eq("is_active", true)
@@ -37,6 +45,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const { error: guard, status, client } = await requireAdmin();
+  if (guard || !client) return NextResponse.json({ error: guard }, { status });
+
   try {
     const body = await request.json();
 
@@ -63,7 +74,7 @@ export async function POST(request: Request) {
 
     if (!payload.name) return NextResponse.json({ error: "Organisation name is required" }, { status: 400 });
 
-    const { data, error } = await getClient().from("organisations").insert(payload).select().single();
+    const { data, error } = await client.from("organisations").insert(payload).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ organisation: data });
   } catch {
@@ -72,6 +83,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const { error: guard, status, client } = await requireAdmin();
+  if (guard || !client) return NextResponse.json({ error: guard }, { status });
+
   try {
     const body = await request.json();
     const { id, ...fields } = body;
@@ -96,7 +110,7 @@ export async function PATCH(request: Request) {
       if (fields.lng !== undefined) updatePayload.lng = fields.lng;
     }
 
-    const { data, error } = await getClient().from("organisations").update(updatePayload).eq("id", id).select().single();
+    const { data, error } = await client.from("organisations").update(updatePayload).eq("id", id).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ organisation: data });
   } catch {
@@ -105,10 +119,13 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const { error: guard, status, client } = await requireAdmin();
+  if (guard || !client) return NextResponse.json({ error: guard }, { status });
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing organisation id" }, { status: 400 });
-    const { error } = await getClient().from("organisations").delete().eq("id", id);
+    const { error } = await client.from("organisations").delete().eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   } catch {

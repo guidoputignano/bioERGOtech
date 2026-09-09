@@ -1,40 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { requireMember } from "@/lib/auth/admin";
 
-const getClient = () =>
-  createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+/**
+ * Profilo utente.
+ *
+ * La tabella profiles contiene dati personali (email, telefono, bio, ORCID,
+ * organizzazione) e due flag di consenso, show_email e show_phone. Senza
+ * guardia questa rotta li restituiva tutti a chiunque conoscesse un userId,
+ * ignorando quei flag, e permetteva a chiunque di modificare il profilo
+ * altrui passando un userId nel body.
+ *
+ * Regola: un membro vede e modifica solo il proprio profilo. Lo staff puo
+ * agire su qualunque profilo.
+ */
 
 // GET /api/profile?userId=xxx
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
 
-  if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId") ?? chiamante.id;
+
+  if (userId !== chiamante.id && !chiamante.isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { data, error } = await getClient()
+  const { data, error: dbError } = await client
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
   return NextResponse.json({ profile: data });
 }
 
 // PATCH /api/profile — update own profile
 export async function PATCH(request: Request) {
+  const { error, status, client, chiamante } = await requireMember();
+  if (error || !client) return NextResponse.json({ error }, { status });
+
   try {
     const body = await request.json();
-    const { userId, ...fields } = body;
+    const { userId: requestedId, ...fields } = body;
 
-    if (!userId) {
-      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    // L'identita viene dalla sessione. Un userId nel body vale solo per lo
+    // staff, e solo per dire su quale profilo sta agendo.
+    const userId = chiamante.isAdmin ? (requestedId || chiamante.id) : chiamante.id;
+
+    if (requestedId && requestedId !== chiamante.id && !chiamante.isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const allowed = [
@@ -59,14 +75,14 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    const { data, error } = await getClient()
+    const { data, error: dbError } = await client
       .from("profiles")
       .update(updatePayload)
       .eq("id", userId)
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ profile: data });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
