@@ -18,7 +18,7 @@ import {
  * documento della scuola, e tenerle qui significherebbe custodire dati di
  * genitori che non ci servono.
  *
- * Convenzioni di misura e colore prese da app/gic-prototype/generateGicPDF.ts,
+ * Convenzioni di misura e colore ereditate dal generatore PDF del prototipo
  * cosi i due PDF del sito si somigliano.
  */
 
