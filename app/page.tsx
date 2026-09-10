@@ -100,12 +100,6 @@ const BENEFITS: { icon: string; title: string; desc: string; badges: BadgeKind[]
     desc: "Offices, meeting rooms and operational space opened up by members.",
     badges: ["foundation", "community"],
   },
-  {
-    icon: "fa-store",
-    title: "Routes to market",
-    desc: "Distribution through the commercial platforms of our members.",
-    badges: ["community", "coming"],
-  },
 ];
 
 /* ── Hubs — honest about the current stage of each ── */
@@ -222,8 +216,8 @@ export default function Home() {
                 width={1536}
                 height={1024}
                 priority
-                sizes="(max-width: 768px) 100vw, 448px"
-                className="rounded-lg shadow-xl w-full h-auto max-w-md"
+                sizes="(max-width: 768px) 100vw, 576px"
+                className="rounded-lg shadow-xl w-full h-auto"
               />
             </div>
           </div>
@@ -290,7 +284,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* 2×4 grid */}
+          {/* Two-column grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {BENEFITS.map((b) => (
               <div key={b.title} className="card-sm flex items-start gap-4" style={{ padding: 24 }}>
