@@ -68,7 +68,7 @@ export default function CaseForm({ onSubmit }: CaseFormProps) {
             Case Input Form
           </h2>
           <p className="text-gray-400 text-xs mt-0.5">
-            Enter patient data for GIC pre-analysis — all fields are de-identified
+            Enter the case for pre-analysis. Do not enter anything that identifies the patient.
           </p>
         </div>
         <button
@@ -235,7 +235,7 @@ export default function CaseForm({ onSubmit }: CaseFormProps) {
             name="request"
             value={form.request}
             onChange={handleChange}
-            placeholder="What decision or recommendation is the GIC being asked to make?"
+            placeholder="What question is the GIC bringing to this case?"
             className={`${inputClass} h-24 resize-none`}
             required
           />
@@ -245,7 +245,7 @@ export default function CaseForm({ onSubmit }: CaseFormProps) {
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <p className="text-xs text-gray-400">
             <i className="fas fa-lock mr-1" />
-            Data processed locally · Not stored · De-identified
+            Research prototype · Cases are sent to a processing backend · Do not enter identifiable patient data
           </p>
           <button
             type="submit"

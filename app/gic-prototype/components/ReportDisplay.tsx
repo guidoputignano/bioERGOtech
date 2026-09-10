@@ -7,7 +7,7 @@ interface ReportDisplayProps {
   onReset: () => void;
 }
 
-const HOSPITAL_NAME = "ASL VCO — Rete Oncologica";
+const HOSPITAL_NAME = "ASL VCO · Rete Oncologica";
 const HOSPITAL_SUBTITLE = "Gruppo Interdisciplinare Cure (GIC)";
 
 export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {
@@ -242,7 +242,7 @@ export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {
                 {HOSPITAL_SUBTITLE}
               </h2>
               <p className="text-gray-400 text-sm mt-1">
-                Scheda di Pre-Analisi AI — Supporto Decisionale
+                Scheda di Pre-Analisi AI · Prototipo di ricerca
               </p>
             </div>
             <div className="text-right">
@@ -267,7 +267,7 @@ export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {
           </span>
           <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
             <i className="fas fa-exclamation-triangle" />
-            Supporto decisionale — autorità clinica al panel GIC
+            Prototipo di ricerca · Ogni valutazione resta del panel GIC
           </span>
         </div>
       </div>

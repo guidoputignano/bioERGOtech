@@ -88,14 +88,14 @@ export default function GicPrototypeClient() {
           </div>
           <div className="text-center">
             <p className="text-lg font-semibold text-[#0B2545]">
-              Generating GIC Pre-Analysis Report
+              Preparing the brief
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              Searching AIOM and ESMO guidelines · Checking investigation
-              completeness · Drafting clinical proposal
+              Searching AIOM and ESMO guidelines · Checking which
+              investigations are recorded · Assembling the brief
             </p>
             <p className="text-xs text-gray-400 mt-3">
-              This may take 30–120 seconds
+              This may take 30 to 120 seconds
             </p>
           </div>
         </div>

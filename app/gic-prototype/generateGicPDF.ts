@@ -129,12 +129,12 @@ function drawHeader(pdf: any, date: string, pageNum: number, totalPages: number)
   pdf.setTextColor(...NAVY);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(11);
-  pdf.text("Centro Accoglienza e Servizi — Oncologia", PAGE_W / 2, 27, { align: "center" });
+  pdf.text("Centro Accoglienza e Servizi  ·  Oncologia", PAGE_W / 2, 27, { align: "center" });
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
   pdf.setTextColor(...TEAL);
-  pdf.text("SCHEDA GIC — PRE-ANALISI AI  ·  AIOM 2024 + ESMO Guidelines  ·  Supporto Decisionale", PAGE_W / 2, 33, { align: "center" });
+  pdf.text("SCHEDA GIC  ·  PRE-ANALISI AI  ·  AIOM 2024 + ESMO Guidelines  ·  Prototipo di ricerca", PAGE_W / 2, 33, { align: "center" });
 
   // ── Page / date bar ──
   pdf.setFillColor(...ROWBG);
@@ -162,7 +162,7 @@ function drawFooter(pdf: any, date: string, pageNum: number, totalPages: number)
   pdf.setTextColor(...GRAY);
   pdf.setFont("helvetica", "normal");
   pdf.text(
-    "Documento generato da AI  ·  Solo supporto decisionale  ·  Autorità clinica al panel GIC  ·  Non sostituisce il giudizio clinico",
+    "Documento generato da AI  ·  Prototipo di ricerca, non dispositivo medico  ·  Ogni contenuto va verificato dal panel GIC  ·  Non sostituisce il giudizio clinico",
     MARGIN,
     y + 4
   );
@@ -391,7 +391,7 @@ export async function generateGicPDF(data: ReportData): Promise<void> {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(8);
   pdf.setTextColor(...NAVY);
-  pdf.text("ASL VCO — Rete Oncologica  ·  Gruppo Interdisciplinare Cure (GIC)", MARGIN + 3, y + 4.5);
+  pdf.text("ASL VCO  ·  Rete Oncologica  ·  Gruppo Interdisciplinare Cure (GIC)", MARGIN + 3, y + 4.5);
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7.5);
@@ -482,7 +482,7 @@ export async function generateGicPDF(data: ReportData): Promise<void> {
     pdf.setFontSize(6.5);
     pdf.setTextColor(...GRAY);
     pdf.text(
-      "Documento generato da AI  ·  Solo supporto decisionale  ·  Autorità clinica al panel GIC  ·  Non sostituisce il giudizio clinico",
+      "Documento generato da AI  ·  Prototipo di ricerca, non dispositivo medico  ·  Ogni contenuto va verificato dal panel GIC  ·  Non sostituisce il giudizio clinico",
       MARGIN,
       FOOTER_Y + 4
     );

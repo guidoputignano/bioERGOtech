@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Ponte verso il backend del prototipo GIC.
+ *
+ * Questa rotta non ha una guardia di autenticazione: e raggiungibile da
+ * chiunque e inoltra la richiesta a GIC_BACKEND_URL con un timeout di 300
+ * secondi. La decisione se chiuderla e di chi gestisce il pilota, perche una
+ * guardia rompe l'accesso a chi non ha un account sul portale.
+ *
+ * Nel frattempo il testo di errore del backend non viene piu restituito al
+ * chiamante: conteneva potenzialmente hostname interni e stack trace.
+ */
 const GIC_BACKEND_URL = process.env.GIC_BACKEND_URL || "http://localhost:8000";
 
 export async function POST(req: NextRequest) {
@@ -12,14 +23,14 @@ export async function POST(req: NextRequest) {
       signal: AbortSignal.timeout(300_000),
     });
     if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error: `Backend error: ${error}` }, { status: response.status });
+      console.error("GIC backend error:", response.status, await response.text());
+      return NextResponse.json({ error: "Report generation failed" }, { status: response.status });
     }
     const data = await response.json();
     return NextResponse.json(data);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("GIC report error:", err);
+    return NextResponse.json({ error: "Report generation failed" }, { status: 500 });
   }
 }
 
@@ -33,8 +44,8 @@ export async function PUT(req: NextRequest) {
       signal: AbortSignal.timeout(60_000),
     });
     if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error: `PDF error: ${error}` }, { status: response.status });
+      console.error("GIC PDF error:", response.status, await response.text());
+      return NextResponse.json({ error: "PDF generation failed" }, { status: response.status });
     }
     const pdfBytes = await response.arrayBuffer();
     const today = new Date().toISOString().split("T")[0];
@@ -45,7 +56,7 @@ export async function PUT(req: NextRequest) {
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("GIC PDF error:", err);
+    return NextResponse.json({ error: "PDF generation failed" }, { status: 500 });
   }
 }
