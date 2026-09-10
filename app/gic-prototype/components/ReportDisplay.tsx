@@ -7,7 +7,7 @@ interface ReportDisplayProps {
   onReset: () => void;
 }
 
-const HOSPITAL_NAME = "ASL VCO · Rete Oncologica";
+const HOSPITAL_NAME = "A.S.L. V.C.O.";
 const HOSPITAL_SUBTITLE = "Gruppo Interdisciplinare Cure (GIC)";
 
 export default function ReportDisplay({ data, onReset }: ReportDisplayProps) {

@@ -391,7 +391,7 @@ export async function generateGicPDF(data: ReportData): Promise<void> {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(8);
   pdf.setTextColor(...NAVY);
-  pdf.text("ASL VCO  ·  Rete Oncologica  ·  Gruppo Interdisciplinare Cure (GIC)", MARGIN + 3, y + 4.5);
+  pdf.text("A.S.L. V.C.O.  ·  Gruppo Interdisciplinare Cure (GIC)", MARGIN + 3, y + 4.5);
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7.5);
