@@ -15,6 +15,8 @@ interface Attendee {
   id: string;
   user_id: string;
   attended: boolean;
+  // Nome storico della colonna. Ora vuole dire solo "presenza processata":
+  // dagli eventi non si accreditano piu punti.
   coins_awarded: boolean;
   created_at: string;
   profiles: Profile;
@@ -128,11 +130,11 @@ export function AttendanceModal({
         return;
       }
 
-      const awarded = data.results.filter(
-        (r: { status: string }) => r.status === "marked_and_awarded" || r.status === "coins_awarded"
+      const recorded = data.results.filter(
+        (r: { status: string }) => r.status === "recorded"
       ).length;
 
-      showToast(`✓ Attendance marked — ${awarded} member(s) received coins`);
+      showToast(`✓ Attendance marked for ${recorded} member(s)`);
       await loadData();
     } catch {
       showToast("Network error", "error");
@@ -300,7 +302,7 @@ export function AttendanceModal({
                         : "bg-gray-100 dark:bg-gray-800 text-gray-500"
                     }`}
                   >
-                    {a.coins_awarded ? "✓ Coins awarded" : "Pending"}
+                    {a.coins_awarded ? "✓ Recorded" : "Pending"}
                   </span>
                 </div>
               ))}

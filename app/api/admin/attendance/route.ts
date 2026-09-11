@@ -1,38 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
-async function awardCoins(
-  client: SupabaseClient,
-  userId: string,
-  amount: number,
-  reason: string
-) {
-  const { data: existing } = await client
-    .from("coin_balances")
-    .select("balance, lifetime_earned")
-    .eq("user_id", userId)
-    .single();
-
-  const currentBalance = existing?.balance ?? 0;
-  const currentLifetime = existing?.lifetime_earned ?? 0;
-
-  await client.from("coin_balances").upsert(
-    {
-      user_id: userId,
-      balance: currentBalance + amount,
-      lifetime_earned: currentLifetime + amount,
-    },
-    { onConflict: "user_id" }
-  );
-
-  await client.from("coin_transactions").insert({
-    user_id: userId,
-    amount,
-    reason,
-    type: "earn",
-  });
-}
 
 // GET /api/admin/attendance?event_id=xxx
 // Returns all attendees for a given event, with profile info
@@ -107,7 +75,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
 
-  const results: { user_id: string; status: string; coins: number }[] = [];
+  const results: { user_id: string; status: string }[] = [];
 
   for (const userId of user_ids) {
     // Check if already marked
@@ -119,37 +87,24 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (existing) {
-      // Already recorded — skip if coins already awarded
       if (existing.coins_awarded) {
-        results.push({ user_id: userId, status: "already_awarded", coins: 0 });
+        results.push({ user_id: userId, status: "already_recorded" });
         continue;
       }
 
-      // Coins not yet awarded — award now and mark
-      const isHost = event.created_by === userId;
-      const coinAmount = isHost ? 60 : 20;
-      const reason = isHost
-        ? `Hosted event: ${event.title}`
-        : `Attended event: ${event.title}`;
-
-      await awardCoins(client, userId, coinAmount, reason);
-
+      // La colonna si chiama ancora coins_awarded perche e in tabella, ma ora
+      // vuole dire solo "presenza gia processata": e il segno che impedisce di
+      // riscrivere due volte la stessa riga. Nessun punto viene accreditato.
       await client
         .from("event_attendees")
         .update({ coins_awarded: true, attended: true })
         .eq("id", existing.id);
 
-      results.push({ user_id: userId, status: "coins_awarded", coins: coinAmount });
+      results.push({ user_id: userId, status: "recorded" });
       continue;
     }
 
     // New attendance record
-    const isHost = event.created_by === userId;
-    const coinAmount = isHost ? 60 : 20;
-    const reason = isHost
-      ? `Hosted event: ${event.title}`
-      : `Attended event: ${event.title}`;
-
     const { error: insertError } = await client.from("event_attendees").insert({
       event_id,
       user_id: userId,
@@ -159,12 +114,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) {
-      results.push({ user_id: userId, status: "error", coins: 0 });
+      results.push({ user_id: userId, status: "error" });
       continue;
     }
 
-    await awardCoins(client, userId, coinAmount, reason);
-    results.push({ user_id: userId, status: "marked_and_awarded", coins: coinAmount });
+    results.push({ user_id: userId, status: "recorded" });
   }
 
   return NextResponse.json({ results });
