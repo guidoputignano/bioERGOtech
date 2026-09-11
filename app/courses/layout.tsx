@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 
+/**
+ * /courses only redirects to /courses/agentic-ai, so the course's own metadata
+ * moved down to that route where it can carry a canonical of its own. A
+ * canonical set on this layout would have been inherited by every child,
+ * including the lessons, and pointed them all at the wrong URL.
+ *
+ * Deliberately no `robots` here either. Layout metadata cascades to every
+ * descendant, so a noindex on this redirect would have taken the course page
+ * and all 22 lessons out of the index with it. The redirect itself is what
+ * keeps /courses from being indexed as a URL of its own.
+ */
 export const metadata: Metadata = {
-  title: "Agentic AI High School Innovation Program",
-  description:
-    "A free ten-week course taking you from understanding AI agents to building a working prototype. No prior experience required.",
-  openGraph: {
-    title: "Agentic AI Course | bioERGOtech Foundation",
-    description: "Free ten-week program: learn to build AI agents that solve real problems.",
-    url: "https://www.bioergotech.org/courses/agentic-ai",
-    images: [{ url: "https://www.bioergotech.org/assets/images/og-image-v2.jpg" }],
-  },
+  title: "Courses",
 };
 
 export default function CoursesLayout({

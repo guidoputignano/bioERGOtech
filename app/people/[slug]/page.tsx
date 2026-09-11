@@ -5,6 +5,7 @@ import { publicationsFor } from "@/lib/publications";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd, breadcrumbs } from "@/components/json-ld";
 import type { Metadata } from "next";
 
 export function generateStaticParams() {
@@ -37,8 +38,47 @@ export default async function PersonPage({
 
   const papers = publicationsFor(person.slug);
 
+  const BASE = "https://www.bioergotech.org";
+  const personLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${BASE}/people/${person.slug}`,
+    name: person.name,
+    jobTitle: person.role,
+    description: person.summary,
+    image: `${BASE}${person.photo}`,
+    url: `${BASE}/people/${person.slug}`,
+    ...(person.email ? { email: person.email } : {}),
+    affiliation: person.affiliations.map((a) => ({
+      "@type": "Organization",
+      name: a,
+    })),
+    // Only papers this person is actually on. The join is by author slug, so
+    // a page cannot claim a publication somebody else wrote.
+    ...(papers.length
+      ? {
+          subjectOf: papers.map((pub) => ({
+            "@type": "ScholarlyArticle",
+            headline: pub.title,
+            name: pub.title,
+            datePublished: pub.year,
+            isPartOf: { "@type": "Periodical", name: pub.venue },
+            sameAs: pub.href,
+            identifier: pub.doi,
+          })),
+        }
+      : {}),
+  };
+
   return (
     <>
+      <JsonLd data={personLd} />
+      <JsonLd
+        data={breadcrumbs([
+          { name: "People", path: "/people" },
+          { name: person.name, path: `/people/${person.slug}` },
+        ])}
+      />
       <Navbar />
       <main className="min-h-screen">
         {/* ── Header ── */}

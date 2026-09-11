@@ -7,6 +7,7 @@ import { publicationsFor } from "@/lib/publications";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd, breadcrumbs } from "@/components/json-ld";
 import type { Metadata } from "next";
 
 export function generateStaticParams() {
@@ -45,6 +46,12 @@ export default async function AreaPage({
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbs([
+          { name: "Areas we work in", path: "/build-with-us" },
+          { name: area.label, path: `/areas/${area.id}` },
+        ])}
+      />
       <Navbar />
       <main className="min-h-screen">
         {/* ── Header ── */}
