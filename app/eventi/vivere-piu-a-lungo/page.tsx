@@ -16,7 +16,7 @@ import {
   nomiVoce,
   relatoriVoce,
   RELATORI_PUBBLICI,
-  PARTNER_PUBBLICI,
+  partnerVoce,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -307,6 +307,7 @@ export default function EventPage() {
                 const isPanel = v.tipo === "panel";
                 const last = i === PROGRAMMA_GIORNO1.length - 1;
                 const relatori = relatoriVoce(v);
+                const partner = partnerVoce(v);
                 const ospiti = v.ospiti ?? [];
                 return (
                   <li
@@ -401,7 +402,7 @@ export default function EventPage() {
 
                       {/* Nei panel i protagonisti hanno un volto. Nelle voci di
                           raccordo restano una riga di nomi, per non appesantire. */}
-                      {isPanel && (relatori.length > 0 || ospiti.length > 0) ? (
+                      {isPanel && (relatori.length > 0 || partner.length > 0 || ospiti.length > 0) ? (
                         <ul
                           className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
                           style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}
@@ -424,6 +425,32 @@ export default function EventPage() {
                                 <span className="block text-gray-600" style={{ fontSize: 11, lineHeight: 1.35, marginTop: 2 }}>
                                   {r.ruolo}
                                 </span>
+                              </span>
+                            </li>
+                          ))}
+                          {partner.map((p) => (
+                            <li key={p.id} className="flex items-center gap-3">
+                              {/* Riquadro fisso e `object-contain`: i loghi hanno
+                                  proporzioni diverse fra loro e non vanno
+                                  ritagliati in tondo come i ritratti. */}
+                              <span style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+                                <Image
+                                  src={p.img}
+                                  alt=""
+                                  fill
+                                  sizes="52px"
+                                  className="object-contain"
+                                />
+                              </span>
+                              <span>
+                                <span className="block font-semibold text-gray-800" style={{ fontSize: 13, lineHeight: 1.25 }}>
+                                  {p.nome}
+                                </span>
+                                {p.ruolo && (
+                                  <span className="block text-gray-600" style={{ fontSize: 11, lineHeight: 1.35, marginTop: 2 }}>
+                                    {p.ruolo}
+                                  </span>
+                                )}
                               </span>
                             </li>
                           ))}
@@ -560,62 +587,6 @@ export default function EventPage() {
             )}
           </div>
         </section>
-
-        {/* ── Realtà coinvolte ── */}
-        {PARTNER_PUBBLICI.length > 0 && (
-          <section className="section">
-            <div className="container mx-auto px-6">
-              <h2 className="section-title text-center block">Con la partecipazione di</h2>
-              <p className="text-gray-700 text-center max-w-2xl mx-auto mt-2">
-                Le realtà che salgono sul palco con i loro ragazzi e i loro progetti.
-              </p>
-              <ul
-                className="flex flex-wrap items-start justify-center gap-x-10 gap-y-8 mt-10"
-                style={{ listStyle: "none", padding: 0, margin: 0 }}
-              >
-                {PARTNER_PUBBLICI.map((p) => {
-                  /* Il logo vive in un riquadro fisso: i file hanno proporzioni
-                     diverse, `object-contain` li allinea senza deformarli. */
-                  const logo = (
-                    <>
-                      <span style={{ position: "relative", display: "block", width: "100%", height: 72 }}>
-                        {/* `alt` vuoto di proposito: il nome e' gia' li' sotto
-                            come testo, quindi un alt lo farebbe leggere due
-                            volte a chi usa uno screen reader. */}
-                        <Image
-                          src={p.img}
-                          alt=""
-                          fill
-                          sizes="180px"
-                          className="object-contain"
-                        />
-                      </span>
-                      <span className="block font-semibold text-gray-800 mt-4" style={{ fontSize: 14 }}>
-                        {p.nome}
-                      </span>
-                      {p.ruolo && (
-                        <span className="block text-gray-600 mt-1" style={{ fontSize: 12, lineHeight: 1.4 }}>
-                          {p.ruolo}
-                        </span>
-                      )}
-                    </>
-                  );
-                  return (
-                    <li key={p.id} className="text-center" style={{ width: 180 }}>
-                      {p.url ? (
-                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="block">
-                          {logo}
-                        </a>
-                      ) : (
-                        logo
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </section>
-        )}
 
         {/* ── Perché partecipare ── */}
         <section className="section bg-light-gray">
