@@ -581,9 +581,12 @@ export default function EventPage() {
                   const logo = (
                     <>
                       <span style={{ position: "relative", display: "block", width: "100%", height: 72 }}>
+                        {/* `alt` vuoto di proposito: il nome e' gia' li' sotto
+                            come testo, quindi un alt lo farebbe leggere due
+                            volte a chi usa uno screen reader. */}
                         <Image
                           src={p.img}
-                          alt={p.nome}
+                          alt=""
                           fill
                           sizes="180px"
                           className="object-contain"

@@ -44,6 +44,31 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   lossy 480x480 (circa 10 KB a foto). Se aggiungi un ritratto, convertilo con
   lo stesso formato prima di committarlo: i PNG a piena risoluzione pesano
   centinaia di volte tanto e finirebbero nel bundle statico.
+- `PARTNER`: le realta coinvolte che compaiono con il loro logo nella sezione
+  "Con la partecipazione di". I file stanno in
+  `public/assets/images/eventi/vivere-piu-a-lungo/partner/`, webp con sfondo
+  trasparente dove possibile, lato lungo circa 480px. La pagina li scala dentro
+  un riquadro alto 72px con `object-contain`, quindi proporzioni diverse tra un
+  logo e l'altro non sono un problema. `ruolo` e `url` sono opzionali: meglio
+  lasciarli vuoti che scrivere una riga o un indirizzo non confermato.
+- `daCaricare: true` su un logo o su una scheda del team: stesso principio di
+  `daAutorizzare`, applicato al file invece che al consenso. Finche l'immagine
+  non e in repository la voce resta nei dati, completa, ma fuori dalla pagina,
+  cosi non pubblichiamo un'immagine rotta. Quando il file arriva, togli la riga
+  e la scheda compare. La sezione dei loghi sparisce del tutto se nessun logo e
+  ancora caricato.
+
+### Immagini attese ma non ancora in repository
+
+| Percorso | Chi | Flag da togliere |
+| --- | --- | --- |
+| `.../vivere-piu-a-lungo/olivia-botticelli.webp` | Olivia Botticelli, panel 1 | `daAutorizzare` in `content.ts` |
+| `.../vivere-piu-a-lungo/valentina-vezzali.webp` | Valentina Vezzali, panel 6 | `daAutorizzare` in `content.ts` |
+| `.../vivere-piu-a-lungo/partner/giffoni.webp` | logo Giffoni | `daCaricare` in `content.ts` |
+| `.../vivere-piu-a-lungo/partner/insuperabili.webp` | logo Insuperabili | `daCaricare` in `content.ts` |
+| `.../vivere-piu-a-lungo/partner/la-casa-di-sofia.webp` | logo La casa di Sofia | `daCaricare` in `content.ts` |
+| `About-us/Adriana-Chirico.webp` | Adriana Chirico, team | `daCaricare` in `page.tsx` |
+| `About-us/Giulia-Chironi.webp` | Giulia Chironi, team | `daCaricare` in `page.tsx` |
 
 ## Database
 
