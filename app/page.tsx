@@ -2,6 +2,7 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { FaqSection } from "@/components/faq-section";
 import { PUBLICATIONS } from "@/lib/publications";
+import { PROGRAMMES, STAGE_STYLE } from "@/lib/programmes";
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -55,66 +56,6 @@ const QUESTIONS = [
   "Can a group of patients too small for the statistics still be learned from?",
   "Can an organisation act on what it already knows, inside the year it matters?",
   "Where is the line between software that informs a clinical decision and software that makes one?",
-];
-
-/* ── Research programmes, each at the stage it has actually reached.
-      Titles lead with the artefact where the artefact is software, because the
-      headline promises agents and a reader should be able to see them. Card 1
-      is the exception: it is a cohort study and is labelled as one. ── */
-type Stage =
-  | "Published"
-  | "Completed"
-  | "Awaiting approval"
-  | "Prototype"
-  | "In progress"
-  | "In design";
-
-const STAGE_STYLE: Record<Stage, { bg: string; color: string }> = {
-  Published:           { bg: "#E1F5EE", color: "#0F6E56" },
-  Completed:           { bg: "#E1F5EE", color: "#0F6E56" },
-  "Awaiting approval": { bg: "#FDF3E3", color: "#8A6212" },
-  Prototype:           { bg: "#E6F1FB", color: "#185FA5" },
-  "In progress":       { bg: "#E6F1FB", color: "#185FA5" },
-  "In design":         { bg: "#EEF1F5", color: "#5A6B7B" },
-};
-
-const RESEARCH: { title: string; field: string; stage: Stage; desc: string }[] = [
-  {
-    title: "Cancer risk after an inflammatory disease diagnosis",
-    field: "Cohort study · oncology and rheumatology",
-    stage: "Published",
-    desc: "356,022 patients across five years of Italian hospital discharge records. Which cancers, how much more often, and when in the disease course.",
-  },
-  {
-    title: "Which subgroups carry which cancer risk",
-    field: "Algorithm · population oncology",
-    stage: "Completed",
-    desc: "Genotype, lifestyle and socioeconomic data read together at population level. One of the algorithms delivered under CODIGE. Population associations, never an individual risk score.",
-  },
-  {
-    title: "An agent that prepares the evidence for a tumour board",
-    field: "Agent · clinical decision support",
-    stage: "Awaiting approval",
-    desc: "A clinician enters a case, the agent searches published AIOM and ESMO guidance and returns one page the panel can read in the room. Built with an Italian local health authority. The pilot is waiting on regional approval and the agent is not in use in care.",
-  },
-  {
-    title: "An agent for the gap between rheumatology visits",
-    field: "Agent · rheumatology",
-    stage: "In design",
-    desc: "Months pass between outpatient visits, and every visit begins from a reconstruction by memory. What is worth capturing in between, and does capturing it change the next one.",
-  },
-  {
-    title: "A compass for hospital medicines spending",
-    field: "Agent · health system economics",
-    stage: "Prototype",
-    desc: "A hospital already holds every figure it needs to see where value is leaking. It is not organised in a way that points anywhere. This reads the flows an authority already produces and points at the molecule, the channel and the ward where the money is going.",
-  },
-  {
-    title: "A pipeline for patient groups too small to analyse",
-    field: "Computational analysis · rare disease",
-    stage: "In progress",
-    desc: "When a disease affects a handful of people in a country, the statistics built for thousands stop working. We are testing what can still be learned from a cohort that small, starting with propionic acidemia in Saudi Arabia.",
-  },
 ];
 
 /* ── How we work. The mechanism, not the onboarding sequence. ── */
@@ -283,7 +224,7 @@ export default function Home() {
                 what we find.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="#research" className="btn-primary text-center">
+                <Link href="/programmes" className="btn-primary text-center">
                   See what we are working on →
                 </Link>
                 <Link href="#publications" className="btn-outline text-center">
@@ -391,11 +332,17 @@ export default function Home() {
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
             Six programmes, each listed at the stage it has actually reached.
             Two are complete, one is waiting on a regional approval, and three
-            are live.
+            are live. Every card opens a case study stating what the work does
+            not do and what has not been established.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {RESEARCH.map((r) => (
-              <div key={r.title} className="card-sm" style={{ padding: 28 }}>
+            {PROGRAMMES.map((r) => (
+              <Link
+                key={r.slug}
+                href={`/programmes/${r.slug}`}
+                className="card-sm"
+                style={{ padding: 28, textDecoration: "none", display: "block" }}
+              >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <span className="text-xs uppercase tracking-widest font-semibold text-gray-500">
                     {r.field}
@@ -411,8 +358,14 @@ export default function Home() {
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-gray-800">{r.title}</h3>
-                <p className="text-gray-600 text-sm">{r.desc}</p>
-              </div>
+                <p className="text-gray-600 text-sm">{r.summary}</p>
+                <span
+                  className="text-sm font-semibold mt-4 inline-block"
+                  style={{ color: "var(--primary)" }}
+                >
+                  Read the case study →
+                </span>
+              </Link>
             ))}
           </div>
         </div>

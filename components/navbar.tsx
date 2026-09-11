@@ -4,10 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 
-// Visitor-centred labels: speak to who you are and what you get,
-// not to what the Foundation does. URLs are unchanged so nothing
-// already indexed breaks.
+// Research leads, because it is the thing a first-time visitor came to see and
+// the only item here that names what the Foundation does rather than who the
+// reader is. The audience-segmented labels below it are unchanged for now:
+// they are useful conversion pages, and demoting them out of the top level is
+// a separate decision.
 const navLinks = [
+  { href: "/programmes", label: "Research" },
   { href: "/about-us", label: "About Us" },
   { href: "/build-with-us", label: "For Innovators" },
   { href: "/partner-with-us", label: "For Partners" },
