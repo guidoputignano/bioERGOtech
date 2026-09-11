@@ -147,10 +147,8 @@ export type Relatore = {
 export const RELATORI: Relatore[] = [
   { id: "piovella", nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
   { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
-  // La foto di Olivia Botticelli non è ancora in repository e il ruolo è da
-  // confermare. Finché manca il file la scheda resta qui, completa, ma fuori
-  // dalla pagina: stesso meccanismo di chi è in attesa di autorizzazione.
-  { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista", img: `${SPEAKER_IMG}/olivia-botticelli.webp`, daAutorizzare: true },
+  // Ruolo ancora da confermare con la direzione dell'evento.
+  { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista", img: `${SPEAKER_IMG}/olivia-botticelli.webp` },
   { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
   { id: "loizzo", nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
   { id: "montervino", nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
@@ -163,7 +161,7 @@ export const RELATORI: Relatore[] = [
   // Sofia Raffaeli non è più assegnata a un panel: il suo posto nel panel 6 è
   // passato a Valentina Vezzali. La scheda resta qui, inattiva, nel caso torni.
   { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
-  { id: "vezzali", nome: "Valentina Vezzali", ruolo: "Campionessa olimpica di scherma", img: `${SPEAKER_IMG}/valentina-vezzali.webp`, daAutorizzare: true },
+  { id: "vezzali", nome: "Valentina Vezzali", ruolo: "Campionessa olimpica di scherma", img: `${SPEAKER_IMG}/valentina-vezzali.webp` },
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "galante", nome: "Fabio Galante", ruolo: "Ex difensore di Inter e Torino", img: `${SPEAKER_IMG}/fabio-galante.webp` },
 ];
@@ -368,14 +366,12 @@ export const PARTNER: Partner[] = [
     nome: "Giffoni Experience",
     ruolo: "Il festival di cinema per ragazzi",
     img: `${PARTNER_IMG}/giffoni.webp`,
-    daCaricare: true,
   },
   {
     id: "insuperabili",
     nome: "Insuperabili",
     ruolo: "Sport per ragazzi con disabilità",
     img: `${PARTNER_IMG}/insuperabili.webp`,
-    daCaricare: true,
   },
   {
     id: "casa-di-sofia",

@@ -107,14 +107,12 @@ const TEAM_ORGANIZZATIVO: Organizzatore[] = [
     role: "Giurista",
     desc: "Docente presso il Dipartimento Jonico dell'Università degli Studi di Bari Aldo Moro.",
     img: "/assets/images/About-us/Adriana-Chirico.webp",
-    daCaricare: true,
   },
   {
     name: "Giulia Chironi",
     role: "Avvocata",
     desc: "Avvocata del foro di Taranto e dottoressa di ricerca in diritto tributario. Si occupa di fiscalità ambientale e di tassazione degli alimenti salutistici.",
     img: "/assets/images/About-us/Giulia-Chironi.webp",
-    daCaricare: true,
   },
 ];
 
@@ -198,9 +196,9 @@ export default function EventPage() {
               <div className="order-1 md:order-2 flex justify-center">
                 <Image
                   src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
-                  alt="Il pubblico durante una giornata dell'evento della Fondazione bioERGOtech a Taranto"
-                  width={1200}
-                  height={800}
+                  alt="Illustrazione: un'atleta corre sul lungomare di Taranto davanti al Castello Aragonese, affiancata dalla figura luminosa di un corpo umano digitale e da una doppia elica del DNA"
+                  width={1600}
+                  height={694}
                   priority
                   sizes="(max-width: 768px) 100vw, 560px"
                   className="rounded-lg shadow-xl w-full h-auto"

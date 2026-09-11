@@ -62,13 +62,7 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
 
 | Percorso | Chi | Flag da togliere |
 | --- | --- | --- |
-| `.../vivere-piu-a-lungo/olivia-botticelli.webp` | Olivia Botticelli, panel 1 | `daAutorizzare` in `content.ts` |
-| `.../vivere-piu-a-lungo/valentina-vezzali.webp` | Valentina Vezzali, panel 6 | `daAutorizzare` in `content.ts` |
-| `.../vivere-piu-a-lungo/partner/giffoni.webp` | logo Giffoni | `daCaricare` in `content.ts` |
-| `.../vivere-piu-a-lungo/partner/insuperabili.webp` | logo Insuperabili | `daCaricare` in `content.ts` |
 | `.../vivere-piu-a-lungo/partner/la-casa-di-sofia.webp` | logo La casa di Sofia | `daCaricare` in `content.ts` |
-| `About-us/Adriana-Chirico.webp` | Adriana Chirico, team | `daCaricare` in `page.tsx` |
-| `About-us/Giulia-Chironi.webp` | Giulia Chironi, team | `daCaricare` in `page.tsx` |
 
 ## Database
 
