@@ -58,12 +58,6 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   e la scheda compare. La sezione dei loghi sparisce del tutto se nessun logo e
   ancora caricato.
 
-### Immagini attese ma non ancora in repository
-
-| Percorso | Chi | Flag da togliere |
-| --- | --- | --- |
-| `.../vivere-piu-a-lungo/partner/la-casa-di-sofia.webp` | logo La casa di Sofia | `daCaricare` in `content.ts` |
-
 ## Database
 
 Migrazioni:

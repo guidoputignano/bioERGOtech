@@ -378,7 +378,6 @@ export const PARTNER: Partner[] = [
     nome: "La casa di Sofia",
     ruolo: "Accoglienza per bambini e famiglie",
     img: `${PARTNER_IMG}/la-casa-di-sofia.webp`,
-    daCaricare: true,
   },
 ];
 
