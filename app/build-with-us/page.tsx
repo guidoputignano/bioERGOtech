@@ -190,10 +190,10 @@ export default function BuildWithUs() {
         </div>
       </section>
 
-      {/* Venture Focus Areas */}
+      {/* Areas we work in */}
       <section className="section" id="ventures">
         <div className="container mx-auto px-6">
-          <h2 className="section-title text-center block">Venture Focus Areas</h2>
+          <h2 className="section-title text-center block">Areas we work in</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-12 text-center">
             {[
               { icon: "fa-laptop-medical", label: "AI-Powered Diagnostics" },
