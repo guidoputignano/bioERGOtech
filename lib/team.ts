@@ -106,6 +106,7 @@ export const ADVISORS: Member[] = [
     role: "Doctor",
     desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care.",
     img: "/assets/images/About-us/Daniela-Marotto.webp",
+    href: "/people/daniela-marotto",
   },
   {
     name: "Pasquale Persico",
