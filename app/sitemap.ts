@@ -3,6 +3,7 @@ import { articleMeta } from "./articles/[slug]/page";
 import { PEOPLE } from "./people/people";
 import { areasWithPages } from "@/lib/areas";
 import { COURSE_LESSONS } from "./courses/course-data";
+import { PROGRAMMES } from "@/lib/programmes";
 
 const BASE = "https://www.bioergotech.org";
 
@@ -16,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/eventi/vivere-piu-a-lungo/bando", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei/iscrizione", priority: 0.7, changeFrequency: "weekly" },
+    { path: "/programmes", priority: 0.9, changeFrequency: "weekly" },
+    { path: "/agents", priority: 0.8, changeFrequency: "monthly" },
     { path: "/about-us", priority: 0.9, changeFrequency: "monthly" },
     { path: "/people", priority: 0.8, changeFrequency: "monthly" },
     { path: "/taranto", priority: 0.8, changeFrequency: "monthly" },
@@ -36,6 +39,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
+  }));
+
+  // One entry per research programme case study.
+  const programmeEntries: MetadataRoute.Sitemap = PROGRAMMES.map((p) => ({
+    url: `${BASE}/programmes/${p.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
   }));
 
   // One entry per principal investigator page.
@@ -88,6 +99,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticEntries,
+    ...programmeEntries,
     ...areaEntries,
     ...peopleEntries,
     ...lessonEntries,
