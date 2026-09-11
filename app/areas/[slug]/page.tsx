@@ -37,7 +37,7 @@ export default async function AreaPage({
   const area = areaById(slug);
   if (!area?.page) notFound();
 
-  const { lead, focus, approach, piSlug } = area.page;
+  const { lead, focus, approach, piSlug, figure } = area.page;
   const pi = personBySlug(piSlug);
   const team = teamForArea(area.id).filter((m) => m.name !== pi?.name);
   const papers = pi ? publicationsFor(pi.slug) : [];
@@ -74,6 +74,37 @@ export default async function AreaPage({
             </div>
           </div>
         </section>
+
+        {/* ── Figure from the area's own published work ── */}
+        {figure && (
+          <section className="section" style={{ paddingTop: 0, paddingBottom: 60 }}>
+            <div className="container mx-auto px-6">
+              <figure className="max-w-5xl">
+                <Image
+                  src={figure.src}
+                  alt={figure.alt}
+                  width={figure.width}
+                  height={figure.height}
+                  sizes="(max-width: 1024px) 100vw, 1000px"
+                  className="w-full h-auto rounded-xl shadow-lg"
+                  priority
+                />
+                <figcaption className="mt-4 text-gray-600 leading-relaxed">
+                  {figure.caption}{" "}
+                  <a
+                    href={figure.creditHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold whitespace-nowrap"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {figure.credit} &#8599;
+                  </a>
+                </figcaption>
+              </figure>
+            </div>
+          </section>
+        )}
 
         {/* ── Focus and approach ── */}
         <section className="section bg-light-gray">

@@ -20,6 +20,17 @@ export type Area = {
     approach: string[];
     /** Slug in app/people/people.ts. */
     piSlug: string;
+    /** A figure from the area's own published work. */
+    figure?: {
+      src: string;
+      width: number;
+      height: number;
+      alt: string;
+      caption: string;
+      /** Attribution. Reusing our own CC BY figure still gets a credit line. */
+      credit: string;
+      creditHref: string;
+    };
   };
 };
 
@@ -44,6 +55,16 @@ export const AREAS: Area[] = [
         "The same discipline applies to what we claim. A model that has not been tested against data is a hypothesis, and it is described as one.",
       ],
       piSlug: "guido-putignano",
+      figure: {
+        src: "/assets/images/Research/car-t-modelling.jpg",
+        width: 2563,
+        height: 1236,
+        alt: "A six stage map of where modelling enters CAR-T cell therapy, from antigen receptors and treatment specificity through combination therapy, time and dosage, cell dynamics and treatment efficacy, running from cancer to remission.",
+        caption:
+          "Where a model can carry weight in CAR-T cell therapy, stage by stage, from the receptor to the response. Each stage is a place where a question can be asked of a model before it is asked of a patient.",
+        credit: "Putignano G et al., Frontiers in Immunology 2025. CC BY.",
+        creditHref: "https://doi.org/10.3389/fimmu.2025.1581210",
+      },
     },
   },
 ];
