@@ -195,19 +195,32 @@ export default function BuildWithUs() {
       <section className="section" id="ventures">
         <div className="container mx-auto px-6">
           <h2 className="section-title text-center block">Areas we work in</h2>
+          <p className="text-lg text-gray-700 max-w-3xl mx-auto text-center mt-4">
+            One of these has a page describing the work behind it and the people
+            doing it. The others are directions we work in and have not been
+            written up yet, which is why only one of the cards opens.
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-12 text-center">
             {AREAS.map((a) => {
+              /* An area without a page is not a broken link, and saying so is
+                 cheaper than writing a page with nothing to put in it. */
               const card = (
                 <>
                   <div className="mb-3">
-                    <i className={`fas ${a.icon} text-2xl`} style={{ color: "var(--primary)" }} />
+                    <i
+                      className={`fas ${a.icon} text-2xl`}
+                      style={{ color: a.page ? "var(--primary)" : "#94A3B8" }}
+                    />
                   </div>
-                  <p className="font-semibold text-gray-800">{a.label}</p>
-                  {a.page && (
-                    <p className="text-sm font-semibold mt-3" style={{ color: "var(--primary)" }}>
-                      Read more →
-                    </p>
-                  )}
+                  <p className={a.page ? "font-semibold text-gray-800" : "font-semibold text-gray-500"}>
+                    {a.label}
+                  </p>
+                  <p
+                    className="text-sm font-semibold mt-3"
+                    style={{ color: a.page ? "var(--primary)" : "#94A3B8" }}
+                  >
+                    {a.page ? "Read more →" : "Not yet written up"}
+                  </p>
                 </>
               );
               return a.page ? (
@@ -215,7 +228,13 @@ export default function BuildWithUs() {
                   {card}
                 </Link>
               ) : (
-                <div key={a.id} className="card py-6">{card}</div>
+                <div
+                  key={a.id}
+                  className="card py-6"
+                  style={{ background: "#FAFBFC", boxShadow: "none" }}
+                >
+                  {card}
+                </div>
               );
             })}
           </div>

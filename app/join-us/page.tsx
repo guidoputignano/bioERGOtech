@@ -435,7 +435,7 @@ export default function JoinUs() {
       <div style={{ paddingTop: "70px" }}>
         <section className="bg-light-gray" style={{ padding: "60px 0 40px" }}>
           <div className="container mx-auto px-6 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 text-gray-800">Join the Ecosystem</h1>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 text-gray-800">Work with us</h1>
             <p className="text-lg max-w-2xl mx-auto text-gray-600">Apply for membership to bioERGOtech Foundation. We review every application personally and aim to respond within 5 business days.</p>
           </div>
         </section>

@@ -178,7 +178,7 @@ export default function PartnerWithUs() {
       {/* CTA */}
       <section className="section text-center">
         <div className="container mx-auto px-6">
-          <h2 className="section-title block">Ready to Join the Ecosystem?</h2>
+          <h2 className="section-title block">Ready to work together?</h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
             Tell us about your organization and the challenges you&apos;re working on. Apply through our Join Us form and we&apos;ll explore how a partnership could create shared value.
           </p>

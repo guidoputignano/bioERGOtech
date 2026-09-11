@@ -20,7 +20,10 @@ const navLinks = [
 
 // Persistent calls to action, always visible on the right of the nav.
 const memberPortal = { href: "/member-portal", label: "Research Portal" };
-const joinCta = { href: "/join-us", label: "Join the Ecosystem" };
+// "Work with us" rather than "Join the Ecosystem". This is the one call to
+// action on every page, and "join" asks a visitor to become part of something
+// before they know what the work is. The URL is unchanged.
+const joinCta = { href: "/join-us", label: "Work with us" };
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
