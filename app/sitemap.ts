@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { articleMeta } from "./articles/[slug]/page";
+import { PEOPLE } from "./people/people";
+import { areasWithPages } from "@/lib/areas";
 
 const BASE = "https://www.bioergotech.org";
 
@@ -14,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/eventi/vivere-piu-a-lungo/licei", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei/iscrizione", priority: 0.7, changeFrequency: "weekly" },
     { path: "/about-us", priority: 0.9, changeFrequency: "monthly" },
+    { path: "/people", priority: 0.8, changeFrequency: "monthly" },
     { path: "/taranto", priority: 0.8, changeFrequency: "monthly" },
     { path: "/partner-with-us", priority: 0.8, changeFrequency: "monthly" },
     { path: "/build-with-us", priority: 0.8, changeFrequency: "monthly" },
@@ -30,6 +33,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
+  }));
+
+  // One entry per principal investigator page.
+  const peopleEntries: MetadataRoute.Sitemap = PEOPLE.map((p) => ({
+    url: `${BASE}/people/${p.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  // One entry per research area that has a page of its own.
+  const areaEntries: MetadataRoute.Sitemap = areasWithPages().map((a) => ({
+    url: `${BASE}/areas/${a.id}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
   }));
 
   // One entry per article. articleMeta is the single source of truth for slugs.
@@ -51,5 +70,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return [...staticEntries, ...articleEntries, ...standaloneArticles];
+  return [...staticEntries, ...areaEntries, ...peopleEntries, ...articleEntries, ...standaloneArticles];
 }

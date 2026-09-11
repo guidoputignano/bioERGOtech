@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { FaqSection } from "@/components/faq-section";
+import { PUBLICATIONS } from "@/lib/publications";
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -97,37 +98,6 @@ const RESEARCH: { title: string; field: string; stage: Stage; desc: string }[] =
     field: "Computational analysis · rare disease",
     stage: "In progress",
     desc: "When a disease affects a handful of people in a country, the statistics built for thousands stop working. We are testing what can still be learned from a cohort that small, starting with propionic acidemia in Saudi Arabia.",
-  },
-];
-
-/* ── Published work. The journal name carries the weight here, so it leads the
-      card. A DOI resolves, which is more than most claims on a research site. ── */
-const PUBLICATIONS = [
-  {
-    venue: "Nature Reviews Bioengineering",
-    year: "2026",
-    title: "Modelling sex differences of neurological disorders in vitro",
-    authors: "Castro-Aldrete L, Einsiedler M, ... Putignano G, ... Santuccione Chadha A",
-    doi: "10.1038/s44222-025-00355-w",
-    href: "https://doi.org/10.1038/s44222-025-00355-w",
-  },
-  {
-    venue: "Cancers",
-    year: "2026",
-    title:
-      "Cancer Association in Patients with Immune-Mediated Inflammatory Diseases: A Five-Year Nationwide Italian Cohort Study",
-    authors: "Giordani B, Pirtoli L, Putignano G, Giordano A, Marotto D, Baglio G",
-    doi: "10.3390/cancers18061027",
-    href: "https://doi.org/10.3390/cancers18061027",
-  },
-  {
-    venue: "Frontiers in Immunology",
-    year: "2025",
-    title:
-      "Mathematical models and computational approaches in CAR-T therapeutics",
-    authors: "Putignano G, Ruiperez-Campillo S, Yuan Z, Millet J, Guerrero-Aspizua S",
-    doi: "10.3389/fimmu.2025.1581210",
-    href: "https://doi.org/10.3389/fimmu.2025.1581210",
   },
 ];
 

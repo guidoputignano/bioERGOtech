@@ -1,5 +1,7 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import { PUBLICATIONS } from "@/lib/publications";
+import { TEAM, ADVISORS } from "@/lib/team";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -28,20 +30,31 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Impact Metrics */}
-      <section className="section" id="metrics">
+      {/* Published record. Counters describing our own size used to sit here.
+          A journal name is checkable; "4 active programmes" is not. */}
+      <section className="section" id="record">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-            {[
-              { num: "4", label: "Active programmes", sub: "Research programmes in progress" },
-              { num: "1", label: "Operational location", sub: "Taranto, Italy" },
-              { num: "4", label: "Research topics", sub: "Digital twins · Synthetic biology · Biomanufacturing · Multi-omics" },
-            ].map((m) => (
-              <div key={m.label}>
-                <span className="text-5xl md:text-6xl font-bold block mb-2" style={{ color: "var(--primary)" }}>{m.num}</span>
-                <p className="text-lg text-gray-700 font-medium">{m.label}</p>
-                <p className="text-sm text-gray-500">{m.sub}</p>
-              </div>
+          <p className="text-sm uppercase tracking-widest font-semibold text-gray-500 text-center mb-8">
+            Where our work has been published
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {PUBLICATIONS.map((pub) => (
+              <a
+                key={pub.doi}
+                href={pub.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-center block"
+              >
+                <span
+                  className="block text-xl md:text-2xl font-bold leading-tight mb-1"
+                  style={{ color: "var(--primary)", fontFamily: "'Sora', sans-serif" }}
+                >
+                  {pub.venue}
+                </span>
+                <span className="block text-sm text-gray-500 mb-2">{pub.year}</span>
+                <span className="block text-xs text-gray-500">doi:{pub.doi} &#8599;</span>
+              </a>
             ))}
           </div>
           <p className="text-sm text-gray-500 text-center mt-10">
@@ -154,24 +167,17 @@ export default function AboutUs() {
           <div className="mb-16">
             <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Leadership</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                { img: "/assets/images/About-us/Guido-Putignano.webp", name: "Guido Putignano", role: "President", desc: "Specialized in computational biology, with experience in engineering and AI-driven biomedical solutions." },
-                { img: "/assets/images/About-us/Mimma-Leone.webp", name: "Mimma Leone", role: "Board Member", desc: "Legal expert and entrepreneur focused on advancing educational and university projects." },
-                { img: "/assets/images/About-us/Carmine-Pisano.webp", name: "Carmine Pisano", role: "Board Member", desc: "Expert in public administration and urban development, specializing in digital transformation." },
-                { img: "/assets/images/About-us/Giacomo-Ferrazzini.webp", name: "Giacomo Ferrazzini", role: "Scientific Projects Lead", desc: "Medical student at ETH Zurich and USI, combining advanced medical training with leadership in health science initiatives." },
-                { img: "/assets/images/About-us/Alessia-Soru.webp", name: "Alessia Soru", role: "Scientific Projects Lead", desc: "PhD student in Oncology, Hematology and Pathology at the University of Bologna, and Board Member of Women&Tech® ETS." },
-                { img: "/assets/images/About-us/Saria-Miccoli.webp", name: "Saria Miccoli", role: "Communication Lead", desc: "Experienced designer who shapes the Foundation's visual identity and communications." },
-                { img: "/assets/images/About-us/Olufemi-Olusola.webp", name: "Olufemi Olusola", role: "Scientific Projects Lead", desc: "Biostatistician working at the intersection of agentic AI, clinical data, and digital twin therapeutics." },
-                { img: "/assets/images/About-us/Luigi-Fantini.webp", name: "Luigi Fantini", role: "Strategy Lead", desc: "Sales and outreach specialist who has built a career on connecting with people and reaching new markets." },
-                { img: "/assets/images/About-us/Oscar-Carrisi.webp", name: "Oscar Carrisi", role: "Strategy Lead", desc: "CEO at Priver and a strategy expert focused on growth and market positioning." },
-                { img: "/assets/images/About-us/Margherita-Basile.webp", name: "Margherita Basile", role: "Lawyer", desc: "Lawyer advising the Foundation on governance, contracts, and regulatory compliance." },
-                { img: "/assets/images/About-us/Mario-Tagarelli.webp", name: "Mario Tagarelli", role: "Auditor", desc: "Career auditor responsible for the Foundation's financial oversight and compliance." },
-              ].map((p) => (
+              {TEAM.map((p) => (
                 <div key={p.name} className="card text-center">
                   <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
                   <h4 className="text-xl font-semibold">{p.name}</h4>
                   <p style={{ color: "var(--primary)" }}>{p.role}</p>
                   <p className="text-gray-600 mt-2">{p.desc}</p>
+                  {p.href && (
+                    <Link href={p.href} className="font-semibold text-sm inline-block mt-3" style={{ color: "var(--primary)" }}>
+                      Research and publications →
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>
@@ -181,12 +187,7 @@ export default function AboutUs() {
           <div className="mb-16">
             <h3 className="text-3xl font-bold text-center text-gray-800 mb-8">Advisory Board</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                { img: "/assets/images/About-us/Daniela-Marotto.webp", name: "Daniela Marotto", role: "Doctor", desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care." },
-                { img: "/assets/images/About-us/Pasquale-Persico.webp", name: "Pasquale Persico", role: "Market Access", desc: "Market access and pharma strategy expertise at Gilead Sciences, covering regulatory and reimbursement pathways." },
-                { img: "/assets/images/About-us/Roberto-De-Ponti.webp", name: "Roberto De Ponti", role: "Investor", desc: "Managing Director and General Partner at 3B Future Health Fund, a healthcare and biotech venture fund investing in pharmaceuticals and therapeutics at seed and Series A stages." },
-                { img: "/assets/images/About-us/Domenico-Amalfitano.webp", name: "Domenico Amalfitano", role: "Policy", desc: "Politician working at the intersection of complex systems and society." },
-              ].map((p) => (
+              {ADVISORS.map((p) => (
                 <div key={p.name} className="card text-center">
                   <Image src={p.img} width={128} height={128} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" alt={`${p.name}, ${p.role}`} />
                   <h4 className="text-xl font-semibold">{p.name}</h4>

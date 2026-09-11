@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navbar";
+import { AREAS } from "@/lib/areas";
 import { SiteFooter } from "@/components/site-footer";
 import Image from "next/image";
 import Link from "next/link";
@@ -190,23 +191,33 @@ export default function BuildWithUs() {
         </div>
       </section>
 
-      {/* Venture Focus Areas */}
+      {/* Areas we work in */}
       <section className="section" id="ventures">
         <div className="container mx-auto px-6">
-          <h2 className="section-title text-center block">Venture Focus Areas</h2>
+          <h2 className="section-title text-center block">Areas we work in</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-12 text-center">
-            {[
-              { icon: "fa-laptop-medical", label: "AI-Powered Diagnostics" },
-              { icon: "fa-dna", label: "Therapeutic Technologies" },
-              { icon: "fa-mobile-alt", label: "Digital Health Platforms" },
-              { icon: "fa-robot", label: "Medical Devices & Robotics" },
-              { icon: "fa-flask", label: "Biotech Innovations" },
-            ].map((f) => (
-              <div key={f.label} className="card py-6">
-                <div className="mb-3"><i className={`fas ${f.icon} text-2xl`} style={{ color: "var(--primary)" }} /></div>
-                <p className="font-semibold text-gray-800">{f.label}</p>
-              </div>
-            ))}
+            {AREAS.map((a) => {
+              const card = (
+                <>
+                  <div className="mb-3">
+                    <i className={`fas ${a.icon} text-2xl`} style={{ color: "var(--primary)" }} />
+                  </div>
+                  <p className="font-semibold text-gray-800">{a.label}</p>
+                  {a.page && (
+                    <p className="text-sm font-semibold mt-3" style={{ color: "var(--primary)" }}>
+                      Read more →
+                    </p>
+                  )}
+                </>
+              );
+              return a.page ? (
+                <Link key={a.id} href={`/areas/${a.id}`} className="card py-6 block">
+                  {card}
+                </Link>
+              ) : (
+                <div key={a.id} className="card py-6">{card}</div>
+              );
+            })}
           </div>
         </div>
       </section>
