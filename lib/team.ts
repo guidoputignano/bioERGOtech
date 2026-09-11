@@ -52,6 +52,7 @@ export const TEAM: Member[] = [
     role: "Scientific Projects Lead",
     desc: "PhD student in Oncology, Hematology and Pathology at the University of Bologna, and Board Member of Women&Tech® ETS.",
     img: "/assets/images/About-us/Alessia-Soru.webp",
+    areas: ["biotech-innovations"],
   },
   {
     name: "Saria Miccoli",

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { articleMeta } from "./articles/[slug]/page";
 import { PEOPLE } from "./people/people";
+import { areasWithPages } from "@/lib/areas";
 
 const BASE = "https://www.bioergotech.org";
 
@@ -42,6 +43,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
+  // One entry per research area that has a page of its own.
+  const areaEntries: MetadataRoute.Sitemap = areasWithPages().map((a) => ({
+    url: `${BASE}/areas/${a.id}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
   // One entry per article. articleMeta is the single source of truth for slugs.
   const articleEntries: MetadataRoute.Sitemap = Object.keys(articleMeta).map(
     (slug) => ({
@@ -61,5 +70,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return [...staticEntries, ...peopleEntries, ...articleEntries, ...standaloneArticles];
+  return [...staticEntries, ...areaEntries, ...peopleEntries, ...articleEntries, ...standaloneArticles];
 }
