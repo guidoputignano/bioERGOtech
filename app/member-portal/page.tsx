@@ -109,10 +109,15 @@ export default async function MemberPortal() {
     .single();
 
 
-  // FIX: new users now default to "member" instead of "viewer"
-  // so they immediately have access to events and the member network
+  // Il fallback torna a "viewer", che e anche il default della tabella profiles.
+  //
+  // Era stato alzato a "member" perche un viewer non vedeva nulla: la vecchia
+  // matrice gli lasciava solo la dashboard. Ora un viewer legge programmi,
+  // metodi, persone ed eventi, quindi il motivo e sparito, e le due parti
+  // tornano a dire la stessa cosa: le rotte API leggono il livello vero dal
+  // profilo, e questa pagina ne inventava uno piu alto per la sola interfaccia.
   const partnershipLevel: PartnershipLevel =
-    (profile?.partnership_level as PartnershipLevel) ?? "member";
+    (profile?.partnership_level as PartnershipLevel) ?? "viewer";
 
   const fullName = profile?.full_name || "";
   const initials = fullName

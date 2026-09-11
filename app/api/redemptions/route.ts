@@ -49,40 +49,14 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ requests: data });
 }
 
-// POST /api/redemptions → apre una richiesta
-export async function POST(request: Request) {
-  const { error, status, client, chiamante } = await requireMember();
-  if (error || !client) return NextResponse.json({ error }, { status });
-
-  try {
-    const body = await request.json();
-    const { itemId, itemLabel, coinsSpent, userName } = body;
-
-    if (!itemId || coinsSpent === undefined) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    const { data, error: dbError } = await client
-      .from("redemption_requests")
-      .insert({
-        // Utente ed email vengono dalla sessione, non dal body.
-        user_id: chiamante.id,
-        user_email: chiamante.email,
-        user_name: userName || null,
-        item_id: itemId,
-        item_label: itemLabel,
-        coins_spent: coinsSpent,
-        status: "pending",
-      })
-      .select()
-      .single();
-
-    if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
-    return NextResponse.json({ request: data });
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
-}
+// Niente POST.
+//
+// Il catalogo di riscatto e stato rimosso dal portale: nessuno chiama piu
+// questa rotta per aprire una richiesta. La POST che c'era accettava
+// coins_spent direttamente dal body, senza controllo e senza toccare
+// coin_balances, quindi un membro autenticato poteva registrare una richiesta
+// per un numero qualsiasi. Le richieste gia in tabella restano leggibili e
+// chiudibili dallo staff con GET e PATCH qui sotto.
 
 // PATCH /api/redemptions → lo staff evade una richiesta
 export async function PATCH(request: Request) {

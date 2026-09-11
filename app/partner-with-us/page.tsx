@@ -23,7 +23,7 @@ export default function PartnerWithUs() {
             <span style={{ color: "var(--primary)" }}>validated innovation pipeline</span>
           </h1>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
-            Hospitals, universities, pharma and investors join the ecosystem for early access to vetted ventures, shared infrastructure, and research collaborations that reach patients faster.
+            Hospitals, universities, pharma and investors work with us on shared infrastructure and on research collaborations that reach patients faster.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/join-us" className="btn-primary text-center">Become a partner</Link>
@@ -32,65 +32,67 @@ export default function PartnerWithUs() {
         </div>
       </section>
 
-      {/* Partnership Tiers */}
+      {/* How partnerships work */}
       <section className="section" id="tiers">
         <div className="container mx-auto px-6">
-          <h2 className="section-title text-center block">Partnership Tiers</h2>
+          <h2 className="section-title text-center block">How partnerships work</h2>
           <p className="text-lg text-gray-700 max-w-3xl mx-auto text-center mb-12">
-            Choose the level of engagement that aligns with your goals and capacity.
+            Three shapes a collaboration takes. They are not levels, nothing here is
+            bought, and which one fits depends on the question you bring rather than on
+            the size of your organisation.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                tier: "Community Partner",
+                shape: "Stay in touch",
                 icon: "fa-users",
-                desc: "Join our broader network and stay connected to the bioERGOtech ecosystem.",
-                items: ["Access to ecosystem events and publications", "Newsletter and knowledge sharing", "Visibility in our partner directory", "Informal collaboration opportunities"],
+                desc:
+                  "You follow the work: events, publications and the people doing it. " +
+                  "Useful when you want to understand what we do before deciding whether " +
+                  "there is anything to do together.",
+                needs: "No agreement, and nothing owed on either side.",
               },
               {
-                tier: "Project Partner",
+                shape: "Work on one problem",
                 icon: "fa-project-diagram",
-                desc: "Collaborate on specific research or innovation projects with defined scope and outcomes.",
-                items: ["Co-development of research projects", "Access to shared infrastructure and datasets", "Joint IP arrangements", "Co-authorship on publications and reports", "Regular project reviews and milestone tracking"],
-                featured: true,
+                desc:
+                  "We run a defined piece of work together: a stated question, a scope, a " +
+                  "timeline and named people on both sides. Shared infrastructure and data " +
+                  "access are arranged around that work, not offered as a standing benefit.",
+                needs:
+                  "A written agreement covering IP and authorship, signed before the work starts.",
               },
               {
-                tier: "Strategic Partner",
+                shape: "Work across programmes",
                 icon: "fa-handshake",
-                desc: "Enter into a deep, long-term relationship co-shaping bioERGOtech's strategic direction.",
-                items: ["All Project Partner benefits", "Advisory role in foundation governance", "Priority access to portfolio companies", "Co-branding on flagship initiatives", "Joint funding applications", "Dedicated partnership manager"],
+                desc:
+                  "A standing relationship spanning more than one programme, usually with " +
+                  "joint funding applications and a voice in what we take on next. This is " +
+                  "the same work as above, repeated, not a higher grade of it.",
+                needs:
+                  "A written agreement, plus an agreed way of deciding together what gets picked up.",
               },
             ].map((t) => (
-              <div
-                key={t.tier}
-                className="card"
-                style={
-                  t.featured
-                    ? { borderTop: "4px solid var(--primary)", boxShadow: "0 8px 30px rgba(19,214,176,0.15)" }
-                    : { borderTop: "4px solid var(--primary)" }
-                }
-              >
+              <div key={t.shape} className="card" style={{ borderTop: "4px solid var(--primary)" }}>
                 <div className="text-center mb-4">
                   <i className={`fas ${t.icon} text-3xl`} style={{ color: "var(--primary)" }} />
                 </div>
-                <h3 className="text-2xl font-bold text-center text-gray-800 mb-2">{t.tier}</h3>
-                <p className="text-gray-600 mb-4 text-center">{t.desc}</p>
-                <ul className="space-y-2 text-gray-700 mb-6">
-                  {t.items.map((item) => (
-                    <li key={item} className="flex items-start">
-                      <i className="fas fa-check mt-1 mr-2 text-sm" style={{ color: "var(--primary)" }} />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="text-center">
-                  <Link href="/join-us" className="btn-primary" style={{ textDecoration: "none" }}>
-                    Apply to Join Us
-                  </Link>
-                </div>
+                <h3 className="text-2xl font-bold text-center text-gray-800 mb-3">{t.shape}</h3>
+                <p className="text-gray-600 mb-4">{t.desc}</p>
+                <p className="text-sm text-gray-700 pt-4" style={{ borderTop: "1px solid #E2E8F0" }}>
+                  <strong>What it needs:</strong> {t.needs}
+                </p>
               </div>
             ))}
           </div>
+          <p className="text-center text-gray-700 mt-10">
+            If you are not sure which of these you are asking for, that is normal and it is
+            the right thing to start a conversation about.{" "}
+            <Link href="/contact" className="font-semibold" style={{ color: "var(--primary)" }}>
+              Talk to us
+            </Link>
+            .
+          </p>
         </div>
       </section>
 
