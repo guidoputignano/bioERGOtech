@@ -16,6 +16,7 @@ import {
   nomiVoce,
   relatoriVoce,
   RELATORI_PUBBLICI,
+  PARTNER_PUBBLICI,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -49,7 +50,19 @@ export const metadata: Metadata = {
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
 // Team organizzativo dell'evento.
-type Organizzatore = { name: string; role: string; desc: string; img: string; imgPosition?: string };
+type Organizzatore = {
+  name: string;
+  role: string;
+  desc: string;
+  img: string;
+  imgPosition?: string;
+  /**
+   * La foto non è ancora in repository. La scheda resta qui, completa, ma non
+   * compare nella griglia, così non pubblichiamo un'immagine rotta. Quando il
+   * file arriva basta togliere questa riga.
+   */
+  daCaricare?: boolean;
+};
 const TEAM_ORGANIZZATIVO: Organizzatore[] = [
   {
     name: "Roberto Russo",
@@ -89,7 +102,22 @@ const TEAM_ORGANIZZATIVO: Organizzatore[] = [
     img: "/assets/images/About-us/Gianni Tartaglia.png",
     imgPosition: "center 15%",
   },
+  {
+    name: "Adriana Chirico",
+    role: "Giurista",
+    desc: "Docente presso il Dipartimento Jonico dell'Università degli Studi di Bari Aldo Moro.",
+    img: "/assets/images/About-us/Adriana-Chirico.webp",
+  },
+  {
+    name: "Giulia Chironi",
+    role: "Avvocata",
+    desc: "Avvocata del foro di Taranto e dottoressa di ricerca in diritto tributario. Si occupa di fiscalità ambientale e di tassazione degli alimenti salutistici.",
+    img: "/assets/images/About-us/Giulia-Chironi.webp",
+  },
 ];
+
+/** Le schede del team che hanno già la foto, le uniche che la pagina pubblica. */
+const TEAM_PUBBLICO = TEAM_ORGANIZZATIVO.filter((p) => !p.daCaricare);
 
 function EventJsonLd() {
   const jsonLd = {
@@ -168,9 +196,9 @@ export default function EventPage() {
               <div className="order-1 md:order-2 flex justify-center">
                 <Image
                   src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
-                  alt="Il pubblico durante una giornata dell'evento della Fondazione bioERGOtech a Taranto"
-                  width={1200}
-                  height={800}
+                  alt="Illustrazione: un'atleta corre sul lungomare di Taranto davanti al Castello Aragonese, affiancata dalla figura luminosa di un corpo umano digitale e da una doppia elica del DNA"
+                  width={1600}
+                  height={694}
                   priority
                   sizes="(max-width: 768px) 100vw, 560px"
                   className="rounded-lg shadow-xl w-full h-auto"
@@ -533,6 +561,62 @@ export default function EventPage() {
           </div>
         </section>
 
+        {/* ── Realtà coinvolte ── */}
+        {PARTNER_PUBBLICI.length > 0 && (
+          <section className="section">
+            <div className="container mx-auto px-6">
+              <h2 className="section-title text-center block">Con la partecipazione di</h2>
+              <p className="text-gray-700 text-center max-w-2xl mx-auto mt-2">
+                Le realtà che salgono sul palco con i loro ragazzi e i loro progetti.
+              </p>
+              <ul
+                className="flex flex-wrap items-start justify-center gap-x-10 gap-y-8 mt-10"
+                style={{ listStyle: "none", padding: 0, margin: 0 }}
+              >
+                {PARTNER_PUBBLICI.map((p) => {
+                  /* Il logo vive in un riquadro fisso: i file hanno proporzioni
+                     diverse, `object-contain` li allinea senza deformarli. */
+                  const logo = (
+                    <>
+                      <span style={{ position: "relative", display: "block", width: "100%", height: 72 }}>
+                        {/* `alt` vuoto di proposito: il nome e' gia' li' sotto
+                            come testo, quindi un alt lo farebbe leggere due
+                            volte a chi usa uno screen reader. */}
+                        <Image
+                          src={p.img}
+                          alt=""
+                          fill
+                          sizes="180px"
+                          className="object-contain"
+                        />
+                      </span>
+                      <span className="block font-semibold text-gray-800 mt-4" style={{ fontSize: 14 }}>
+                        {p.nome}
+                      </span>
+                      {p.ruolo && (
+                        <span className="block text-gray-600 mt-1" style={{ fontSize: 12, lineHeight: 1.4 }}>
+                          {p.ruolo}
+                        </span>
+                      )}
+                    </>
+                  );
+                  return (
+                    <li key={p.id} className="text-center" style={{ width: 180 }}>
+                      {p.url ? (
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="block">
+                          {logo}
+                        </a>
+                      ) : (
+                        logo
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </section>
+        )}
+
         {/* ── Perché partecipare ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
@@ -613,7 +697,7 @@ export default function EventPage() {
           <div className="container mx-auto px-6">
             <h2 className="section-title text-center block">Il Team Organizzativo</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-              {TEAM_ORGANIZZATIVO.map((p) => (
+              {TEAM_PUBBLICO.map((p) => (
                 <div key={p.name} className="card text-center">
                   <Image
                     src={p.img}
