@@ -86,12 +86,26 @@ type KnowledgeDocument = { id: string; title: string; category: string; descript
 
 export type PartnershipLevel = "viewer" | "student" | "member" | "partner" | "admin";
 
+// Chi ha fatto l'accesso vede la scienza. Il livello governa il fare, non il vedere.
+//
+// Prima di questo blocco un `viewer` aveva solo la dashboard e trovava sfocate
+// programmi, metodi, persone ed eventi, con sopra un invito a passare di
+// livello. La pagina di accesso di questo stesso portale promette "Programmes,
+// methods, facilities, and the people running them": o la promessa era falsa o
+// la matrice era sbagliata.
+//
+// Restano dietro un livello solo due sezioni, e per una ragione che si spiega
+// da sola: le attrezzature si chiedono con una dichiarazione d'uso, e il
+// registro dei contributi presuppone un accordo firmato.
+//
+// `profile` era assente da ogni riga, admin compreso: la voce "My Profile"
+// risultava percio bloccata per tutti.
 const PARTNERSHIP_ACCESS: Record<PartnershipLevel, string[]> = {
-  viewer: ["dashboard"],
-  student: ["dashboard", "knowledge"],
-  member: ["dashboard", "events", "members"],
-  partner: ["dashboard", "projects", "lab", "events", "members", "knowledge"],
-  admin: ["dashboard", "projects", "lab", "events", "members", "knowledge", "admin"],
+  viewer: ["dashboard", "projects", "events", "members", "knowledge", "profile"],
+  student: ["dashboard", "projects", "events", "members", "knowledge", "profile"],
+  member: ["dashboard", "projects", "events", "members", "knowledge", "profile"],
+  partner: ["dashboard", "projects", "events", "members", "knowledge", "lab", "rewards", "profile"],
+  admin: ["dashboard", "projects", "events", "members", "knowledge", "lab", "rewards", "profile", "outreach", "admin"],
 };
 const PARTNERSHIP_LABELS: Record<PartnershipLevel, { label: string; color: string; bg: string }> = {
   viewer: { label: "Viewer", color: "#8896A6", bg: "#F3F5F8" },
@@ -100,20 +114,23 @@ const PARTNERSHIP_LABELS: Record<PartnershipLevel, { label: string; color: strin
   partner: { label: "Partner", color: "#7C5CFC", bg: "#F0EDFF" },
   admin: { label: "Admin", color: "#E74C6F", bg: "#FDECF1" },
 };
+// Nessuna sezione scientifica viene piu sfocata. Solo attrezzature e registro.
 const LOCKED_SECTIONS: Record<PartnershipLevel, { id: string; requiredLevel: string }[]> = {
-  viewer: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }, { id: "knowledge", requiredLevel: "Partner" }],
-  student: [{ id: "projects", requiredLevel: "Member" }, { id: "lab", requiredLevel: "Partner" }, { id: "events", requiredLevel: "Member" }, { id: "members", requiredLevel: "Member" }],
-  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "knowledge", requiredLevel: "Partner" }],
+  viewer: [{ id: "lab", requiredLevel: "Partner" }, { id: "rewards", requiredLevel: "Partner" }],
+  student: [{ id: "lab", requiredLevel: "Partner" }, { id: "rewards", requiredLevel: "Partner" }],
+  member: [{ id: "lab", requiredLevel: "Partner" }, { id: "rewards", requiredLevel: "Partner" }],
   partner: [], admin: [],
 };
+// Solo le etichette. Gli id restano quelli, cosi nessun link salvato si rompe
+// e il dispatch di renderContent non va toccato.
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: "grid" },
-  { id: "projects", label: "Projects", icon: "layers" },
-  { id: "lab", label: "Distributed Lab", icon: "cpu" },
+  { id: "projects", label: "Programmes", icon: "layers" },
+  { id: "lab", label: "Facilities", icon: "cpu" },
   { id: "events", label: "Events", icon: "calendar" },
-  { id: "members", label: "Members", icon: "users" },
-  { id: "knowledge", label: "Knowledge Base", icon: "book" },
-  { id: "rewards", label: "Rewards", icon: "star" },
+  { id: "members", label: "People", icon: "users" },
+  { id: "knowledge", label: "Methods and evidence", icon: "book" },
+  { id: "rewards", label: "Contribution record", icon: "star" },
   { id: "profile", label: "My Profile", icon: "user" },
   { id: "outreach", label: "Outreach", icon: "mail" },
   { id: "admin", label: "Admin Panel", icon: "shield" },
@@ -408,53 +425,6 @@ function EquipmentAdminModal({ equipment, onClose, onSave }: { equipment: Partia
 }
 
 // ─── DASHBOARD VIEW ───────────────────────────────────────────────────────────
-  const onboardingCopy: Record<
-    PartnershipLevel,
-    {
-      title: string;
-      text: string;
-      actions: { label: string; target: string }[];
-    }
-  > = {
-    viewer: {
-      title: "Your access is currently limited",
-      text: "You can view the dashboard for now. If you need broader access to members, events, projects, or knowledge resources, please contact the bioERGOtech team for an access upgrade.",
-      actions: [
-        { label: "View Dashboard", target: "dashboard" },
-      ],
-    },
-    student: {
-      title: "Welcome to the BioERGOtech Student Portal",
-      text: "You are enrolled as a student. You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
-      actions: [
-        { label: "Open Knowledge Base", target: "knowledge" },
-      ],
-    },
-    member: {
-      title: "Welcome to the member network",
-      text: "You now have access to the ecosystem directory and shared events. A good place to start is to explore who is in the network and what events are coming up.",
-      actions: [
-        { label: "Explore Members", target: "members" },
-        { label: "View Events", target: "events" },
-      ],
-    },
-    partner: {
-      title: "You can now actively contribute",
-      text: "As a partner, you can work across projects, distributed lab resources, events, members, and the knowledge base. Start by opening your project portfolio or reviewing shared lab equipment.",
-      actions: [
-        { label: "Open Projects", target: "projects" },
-        { label: "Open Lab", target: "lab" },
-      ],
-    },
-    admin: {
-      title: "Administrator access enabled",
-      text: "You can manage applications, users, projects, organisations, equipment, knowledge resources, and newsletter subscribers. Review pending applications first to keep the ecosystem moving.",
-      actions: [
-        { label: "Open Admin Panel", target: "admin" },
-        { label: "Review Projects", target: "projects" },
-      ],
-    },
-  };
 
 function DashboardView({
   projects,
@@ -473,6 +443,10 @@ function DashboardView({
   displayName?: string;
   onQuickNavigate?: (section: string) => void;
 }) {
+  // Quello che si apre per primo dice cos'e questo posto. Il testo di prima
+  // diceva a un membro che il patrimonio e la rete di contatti: "esplora chi
+  // c'e nella rete". Qui il patrimonio e il lavoro, e la porta d'ingresso e un
+  // programma, non una directory.
   const onboardingCopy: Record<
     PartnershipLevel,
     {
@@ -482,39 +456,43 @@ function DashboardView({
     }
   > = {
     viewer: {
-      title: "Your access is currently limited",
-      text: "You can view the dashboard for now. If you need broader access to members, events, projects, or knowledge resources, please contact the bioERGOtech team for an access upgrade.",
-      actions: [{ label: "View Dashboard", target: "dashboard" }],
+      title: "What we are working on",
+      text: "You can read every programme, the methods and evidence behind them, and who is working on each. Requesting instrument access or contributing to a programme needs a review first.",
+      actions: [
+        { label: "Browse programmes", target: "projects" },
+        { label: "Open methods and evidence", target: "knowledge" },
+      ],
     },
     student: {
-      title: "Welcome to the BioERGOtech Student Portal",
-      text: "You are enrolled as a student. You therefore have access to Bioergotech Educational Programs. Head to the Knowledge Base to access your course materials and start learning.",
+      title: "Your training track",
+      text: "Your course materials are under Methods and evidence. Everything else on this portal is open to you as well: the programmes, the people running them, and the events.",
       actions: [
-        { label: "Open Knowledge Base", target: "knowledge" },
+        { label: "Open methods and evidence", target: "knowledge" },
+        { label: "Browse programmes", target: "projects" },
       ],
     },
     member: {
-      title: "Welcome to the member network",
-      text: "You now have access to the ecosystem directory and shared events. A good place to start is to explore who is in the network and what events are coming up.",
+      title: "Full access to the science",
+      text: "Every active programme is open to you, along with the methods behind them and the people working on each. The most direct way in is a programme whose question overlaps something you already know.",
       actions: [
-        { label: "Explore Members", target: "members" },
-        { label: "View Events", target: "events" },
+        { label: "Browse programmes", target: "projects" },
+        { label: "See who is working on what", target: "members" },
       ],
     },
     partner: {
-      title: "You can now actively contribute",
-      text: "As a partner, you can work across projects, distributed lab resources, events, members, and the knowledge base. Start by opening your project portfolio or reviewing shared lab equipment.",
+      title: "You can contribute",
+      text: "You can work across programmes, request instrument use with a short declaration of what it is for, and be named on outputs. Contributions are recorded in the contribution record.",
       actions: [
-        { label: "Open Projects", target: "projects" },
-        { label: "Open Lab", target: "lab" },
+        { label: "Open programmes", target: "projects" },
+        { label: "Request instrument access", target: "lab" },
       ],
     },
     admin: {
-      title: "Administrator access enabled",
-      text: "You can manage applications, users, projects, organisations, equipment, knowledge resources, and newsletter subscribers. Review pending applications first to keep the ecosystem moving.",
+      title: "Staff",
+      text: "Manage programmes, people, organisations, instruments, methods and subscribers. Pending applications are the queue that keeps everything else moving.",
       actions: [
         { label: "Open Admin Panel", target: "admin" },
-        { label: "Review Projects", target: "projects" },
+        { label: "Review programmes", target: "projects" },
       ],
     },
   };
@@ -4802,7 +4780,13 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const accessibleSections = PARTNERSHIP_ACCESS[partnershipLevel] || PARTNERSHIP_ACCESS.viewer;
   const levelInfo = PARTNERSHIP_LABELS[partnershipLevel] || PARTNERSHIP_LABELS.viewer;
   const sectionNames: Record<string, string> = { dashboard: "Dashboard", projects: "Project Tracker", lab: "Distributed Laboratory", events: "Events & Meetings", members: "Member Network", knowledge: "Knowledge Base", outreach: "Outreach & MoU Pipeline", admin: "Admin Panel" };
-  const visibleNav = navItems.filter(item => { if (item.id === "admin") return isAdmin; return true; });
+  // Le due voci da staff spariscono per tutti gli altri. Attrezzature e registro
+  // invece restano visibili e bloccate: sono richieste che si possono fare, e
+  // nasconderle vorrebbe dire nascondere che esistono.
+  const visibleNav = navItems.filter(item => {
+    if (item.id === "admin" || item.id === "outreach") return isAdmin;
+    return true;
+  });
 
   const handleSaveEventInline = async (event: Partial<Event>) => { const res = await fetch("/api/admin/events", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(event) }); if (res.ok) { fetchEvents(); setEditingEvent(null); } };
   const handleSaveProjectInline = async (project: Partial<Project>) => { const res = await fetch("/api/admin/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); if (res.ok) { fetchProjects(); setEditingProject(null); } };
