@@ -57,21 +57,36 @@ export async function PATCH(request: Request) {
     const { id, ...fields } = body;
     if (!id) return NextResponse.json({ error: "Missing project id" }, { status: 400 });
 
+    // Si scrive solo quello che e stato mandato.
+    //
+    // Prima l'oggetto veniva costruito tutto in una volta, e una PATCH
+    // parziale rovinava sei colonne. Le chiavi undefined spariscono da sole
+    // quando il payload diventa JSON, quindi name, pillar, phase, status e
+    // lead si salvavano per caso; le altre no. `undefined?.trim() || null`
+    // vale null, e cosi lead_email, lead_phone e description venivano
+    // azzerate; progress tornava a 0, color al teal di default e is_public a
+    // true. Stesso schema della PATCH lato membro in app/api/projects.
+    const updatePayload: Record<string, unknown> = {};
+
+    if (fields.name !== undefined) updatePayload.name = fields.name?.trim();
+    if (fields.pillar !== undefined) updatePayload.pillar = fields.pillar?.trim();
+    if (fields.phase !== undefined) updatePayload.phase = fields.phase?.trim();
+    if (fields.status !== undefined) updatePayload.status = fields.status;
+    if (fields.lead !== undefined) updatePayload.lead = fields.lead?.trim();
+    if (fields.lead_email !== undefined) updatePayload.lead_email = fields.lead_email?.trim() || null;
+    if (fields.lead_phone !== undefined) updatePayload.lead_phone = fields.lead_phone?.trim() || null;
+    if (fields.description !== undefined) updatePayload.description = fields.description?.trim() || null;
+    if (fields.progress !== undefined) updatePayload.progress = Number(fields.progress) || 0;
+    if (fields.color !== undefined) updatePayload.color = fields.color || "#2EC4B6";
+    if (fields.is_public !== undefined) updatePayload.is_public = fields.is_public;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+    }
+
     const { data, error } = await client
       .from("projects")
-      .update({
-        name: fields.name?.trim(),
-        pillar: fields.pillar?.trim(),
-        phase: fields.phase?.trim(),
-        status: fields.status,
-        lead: fields.lead?.trim(),
-        lead_email: fields.lead_email?.trim() || null,
-        lead_phone: fields.lead_phone?.trim() || null,
-        description: fields.description?.trim() || null,
-        progress: Number(fields.progress) || 0,
-        color: fields.color || "#2EC4B6",
-        is_public: fields.is_public ?? true,
-      })
+      .update(updatePayload)
       .eq("id", id)
       .select()
       .single();
