@@ -37,7 +37,8 @@ export default async function AreaPage({
   const area = areaById(slug);
   if (!area?.page) notFound();
 
-  const { lead, focus, approach, piSlug, figure } = area.page;
+  const { lead, focus, methods, methodsNote, piSlug, figure, methodsFigure } =
+    area.page;
   const pi = personBySlug(piSlug);
   const team = teamForArea(area.id).filter((m) => m.name !== pi?.name);
   const papers = pi ? publicationsFor(pi.slug) : [];
@@ -106,37 +107,63 @@ export default async function AreaPage({
           </section>
         )}
 
-        {/* ── Focus and approach ── */}
+        {/* ── What we work on ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div>
-                <h2 className="section-title">What we work on</h2>
-                <div className="flex flex-col gap-5">
-                  {focus.map((para) => (
-                    <p key={para.slice(0, 24)} className="text-lg text-gray-700 leading-relaxed">
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h2 className="section-title">How we work</h2>
-                <div className="flex flex-col gap-5">
-                  {approach.map((para) => (
-                    <p key={para.slice(0, 24)} className="text-lg text-gray-700 leading-relaxed">
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              </div>
+            <h2 className="section-title">What we work on</h2>
+            <div className="max-w-3xl flex flex-col gap-5">
+              {focus.map((para) => (
+                <p key={para.slice(0, 24)} className="text-lg text-gray-700 leading-relaxed">
+                  {para}
+                </p>
+              ))}
             </div>
+          </div>
+        </section>
+
+        {/* ── Methods ── */}
+        <section className="section">
+          <div className="container mx-auto px-6">
+            <h2 className="section-title">Methods</h2>
+            <p className="text-lg text-gray-700 max-w-3xl mb-12">{methodsNote}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              {methods.map((m) => (
+                <div key={m.name} className="card-sm" style={{ padding: 26 }}>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{m.name}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{m.useFor}</p>
+                </div>
+              ))}
+            </div>
+            {methodsFigure && (
+              <figure className="max-w-4xl">
+                <Image
+                  src={methodsFigure.src}
+                  alt={methodsFigure.alt}
+                  width={methodsFigure.width}
+                  height={methodsFigure.height}
+                  sizes="(max-width: 1024px) 100vw, 850px"
+                  className="w-full h-auto rounded-xl shadow-lg"
+                />
+                <figcaption className="mt-4 text-gray-600 leading-relaxed">
+                  {methodsFigure.caption}{" "}
+                  <a
+                    href={methodsFigure.creditHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold whitespace-nowrap"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {methodsFigure.credit} &#8599;
+                  </a>
+                </figcaption>
+              </figure>
+            )}
           </div>
         </section>
 
         {/* ── Principal investigator ── */}
         {pi && (
-          <section className="section">
+          <section className="section bg-light-gray">
             <div className="container mx-auto px-6">
               <h2 className="section-title">Principal investigator</h2>
               <Link
@@ -171,7 +198,7 @@ export default async function AreaPage({
 
         {/* ── People ── */}
         {team.length > 0 && (
-          <section className="section bg-light-gray">
+          <section className="section">
             <div className="container mx-auto px-6">
               <h2 className="section-title">People in this area</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
