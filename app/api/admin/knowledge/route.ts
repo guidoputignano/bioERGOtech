@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, requireMember } from "@/lib/auth/admin";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
-async function awardCoins(client: SupabaseClient, userId: string, amount: number, reason: string) {
-  try {
-      const { data: existing } = await client.from("coin_balances").select("balance, lifetime_earned").eq("user_id", userId).single();
-    const currentBalance = existing?.balance ?? 0;
-    const currentLifetime = existing?.lifetime_earned ?? 0;
-    await client.from("coin_balances").upsert({ user_id: userId, balance: currentBalance + amount, lifetime_earned: currentLifetime + amount }, { onConflict: "user_id" });
-    await client.from("coin_transactions").insert({ user_id: userId, amount, reason, type: "earn" });
-  } catch (e) { console.error("Failed to award coins:", e); }
-}
 
 export async function GET(request: NextRequest) {
   const guard = await requireMember();
@@ -115,7 +105,6 @@ export async function PATCH(request: Request) {
 
     // Award coins to proposer on approval
     if (is_approved && existing?.proposed_by) {
-      await awardCoins(client, existing.proposed_by, 30, `Knowledge contribution approved: "${existing.title}"`);
     }
 
     return NextResponse.json({ document: data });

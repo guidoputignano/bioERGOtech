@@ -10,8 +10,14 @@ import { requireAdmin, requireMember } from "@/lib/auth/admin";
  * l'elenco completo dei membri con nome ed email. Senza guardia era leggibile
  * da chiunque.
  *
- * Regola: l'elenco completo e l'accredito sono solo staff. Un membro legge
- * solo il proprio saldo.
+ * Regola: l'elenco completo e la registrazione sono solo staff. Un membro
+ * legge solo il proprio record.
+ *
+ * Non si accredita piu niente in automatico. Le cinque chiamate che facevano
+ * punti su un'azione (creare un progetto, approvare un documento, approvare
+ * un'attrezzatura, un referral, presenza a un evento) sono state tolte: erano
+ * metriche di ingaggio, e un contributo non e un click. Resta la
+ * registrazione fatta da una persona, con una motivazione scritta.
  */
 
 // GET /api/coins?userId=xxx  → saldo e movimenti di un utente
@@ -35,7 +41,9 @@ export async function GET(request: NextRequest) {
           partnership_level
         )
       `)
-      .order("lifetime_earned", { ascending: false });
+      // Ordinato per nome, non per punteggio: una classifica di persone e
+      // esattamente quello che questo registro non deve essere.
+      .order("user_id", { ascending: true });
 
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
     return NextResponse.json({ balances: data });
@@ -75,10 +83,13 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// POST /api/coins — accredita o addebita punti
-// { userId, amount, reason, type: "earn" | "spend" | "admin" }
+// POST /api/coins: registra un contributo (staff)
+// { userId, amount, reason, type }
 export async function POST(request: Request) {
-  const { error, status, client, chiamante } = await requireMember();
+  // Solo staff. Prima un membro poteva togliersi punti da solo, con
+  // type "spend": serviva al catalogo di riscatto, che non esiste piu. Un
+  // registro dove il soggetto stesso scrive le righe non e un registro.
+  const { error, status, client } = await requireAdmin();
   if (error || !client) return NextResponse.json({ error }, { status });
 
   try {
@@ -89,15 +100,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Un membro puo solo togliere punti dal proprio saldo: e cosi che il
-    // portale registra un riscatto o la rimozione di un progetto. Creare
-    // punti resta un'azione di staff, altrimenti chiunque potrebbe
-    // accreditarsene quanti ne vuole.
-    if (!chiamante.isAdmin) {
-      const spendingOwn = userId === chiamante.id && Number(amount) < 0 && type === "spend";
-      if (!spendingOwn) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+    const importo = Number(amount);
+    if (!Number.isFinite(importo) || !Number.isInteger(importo) || importo === 0) {
+      return NextResponse.json({ error: "Amount must be a non-zero integer" }, { status: 400 });
     }
 
     const { data: existing } = await client
@@ -109,12 +114,12 @@ export async function POST(request: Request) {
     const currentBalance = existing?.balance ?? 0;
     const currentLifetime = existing?.lifetime_earned ?? 0;
 
-    if (type === "spend" && currentBalance + amount < 0) {
-      return NextResponse.json({ error: "Insufficient coins" }, { status: 400 });
-    }
-
-    const newBalance = currentBalance + amount;
-    const newLifetime = amount > 0 ? currentLifetime + amount : currentLifetime;
+    // lifetime segue il totale in entrambe le direzioni. Con il vecchio
+    // calcolo una correzione al ribasso lasciava il totale gonfiato, e finche
+    // esistevano gli accrediti automatici bastava creare e cancellare un
+    // progetto in ciclo per farlo salire senza limite.
+    const newBalance = currentBalance + importo;
+    const newLifetime = Math.max(0, currentLifetime + importo);
 
     const { data: updatedBalance, error: upsertError } = await client
       .from("coin_balances")
@@ -132,7 +137,7 @@ export async function POST(request: Request) {
 
     const { error: txError } = await client
       .from("coin_transactions")
-      .insert({ user_id: userId, amount, reason, type });
+      .insert({ user_id: userId, amount: importo, reason, type });
 
     if (txError) {
       return NextResponse.json({ error: txError.message }, { status: 500 });

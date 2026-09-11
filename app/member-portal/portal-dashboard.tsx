@@ -1839,7 +1839,6 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: lvl.bg, color: lvl.color, fontWeight: 700, textTransform: "capitalize" as const }}>{p.partnership_level}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{p.coin_balance ?? 0} contributions recorded</span>
                       </div>
                     </div>
                     {isAdmin && (
@@ -2796,7 +2795,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
     { id: "equipment" as const, label: "Equipment", icon: "cpu", badge: pendingProposals > 0 ? pendingProposals : null as number | null },
     { id: "knowledge" as const, label: "Knowledge", icon: "book", badge: null as number | null },
     { id: "pending_docs" as const, label: "Doc Proposals", icon: "fileText", badge: pendingDocs.length > 0 ? pendingDocs.length : null as number | null },
-    { id: "coins" as const, label: "Coins", icon: "star", badge: null as number | null },
+    { id: "coins" as const, label: "Contributions", icon: "star", badge: null as number | null },
     { id: "redemptions" as const, label: "Redemptions", icon: "award", badge: pendingRedemptions.length > 0 ? pendingRedemptions.length : null as number | null },
           { id: "submissions" as const, label: "Submissions", icon: "book", badge: null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null },
@@ -3083,14 +3082,14 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
               <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Member Coin Balances</h3>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Contribution record</h3>
                 <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{allCoinBalances.length} members</span>
               </div>
               {loadingCoins ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Loading…</div>
-                : allCoinBalances.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No coin balances yet.</div>
+                : allCoinBalances.length === 0 ? <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>Nothing recorded yet.</div>
                 : (<div style={{ overflowX: "auto" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 100px 140px", minWidth: 640, padding: "12px 24px", background: "#FAFBFC", borderBottom: `1px solid ${BORDER}`, fontSize: 11, color: TEXT_LIGHT, textTransform: "uppercase" as const, letterSpacing: "0.07em", fontWeight: 700 }}>
-                    <span>Email</span><span>Name</span><span>Balance</span><span>Lifetime</span><span>Top Up</span>
+                    <span>Email</span><span>Name</span><span>Recorded</span><span>Total</span><span>Add</span>
                   </div>
                   {allCoinBalances.map((cb, i) => {
                     return (
@@ -3102,7 +3101,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                         <button
                           onClick={() => setCoinTopUp({ userId: cb.user_id, amount: "", reason: "" })}
                           style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL_DARK, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
-                        >+ Add Coins</button>
+                        >+ Record</button>
                       </div>
                     );
                   })}
@@ -3117,12 +3116,12 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
             <div onClick={() => setCoinTopUp(null)} style={{ position: "absolute", inset: 0, background: "rgba(26,35,50,0.5)", backdropFilter: "blur(4px)" }} />
             <div style={{ position: "relative", width: 400, background: CARD, borderRadius: 20, padding: 28, boxShadow: "0 24px 80px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 16, zIndex: 3001 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Add Coins</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Record a contribution</div>
                 <button onClick={() => setCoinTopUp(null)} style={{ background: "#F3F5F8", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: TEXT_MID }}><Icon name="x" size={15} /></button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div><label style={modalLabelStyle}>Amount</label><input type="number" value={coinTopUp.amount} onChange={e => setCoinTopUp(p => p ? { ...p, amount: e.target.value } : p)} placeholder="e.g. 100" style={modalInputStyle} /></div>
-                <div><label style={modalLabelStyle}>Reason</label><input value={coinTopUp.reason} onChange={e => setCoinTopUp(p => p ? { ...p, reason: e.target.value } : p)} placeholder="e.g. Manual top-up by admin" style={modalInputStyle} /></div>
+                <div><label style={modalLabelStyle}>Reason</label><input value={coinTopUp.reason} onChange={e => setCoinTopUp(p => p ? { ...p, reason: e.target.value } : p)} placeholder="What was contributed, and how it was verified" style={modalInputStyle} /></div>
               </div>
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
                 <button onClick={() => setCoinTopUp(null)} style={{ padding: "9px 18px", borderRadius: 10, border: `1.5px solid ${BORDER}`, background: CARD, color: TEXT_MID, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
@@ -3141,7 +3140,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                   }}
                   disabled={savingCoin || !coinTopUp.amount || !coinTopUp.reason}
                   style={{ padding: "9px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", fontSize: 13, fontWeight: 700, cursor: savingCoin ? "default" : "pointer", opacity: savingCoin ? 0.7 : 1 }}
-                >{savingCoin ? "Saving…" : "Add Coins"}</button>
+                >{savingCoin ? "Saving…" : "Record"}</button>
               </div>
             </div>
           </div>
@@ -3151,7 +3150,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
               <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Coin Redemption Requests</h3>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Redemption requests (historic)</h3>
                 <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{pendingRedemptions.filter(r => r.status === "pending").length} pending</span>
               </div>
               {loadingRedemptions ? (
@@ -3177,7 +3176,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: sc.bg, color: sc.color, fontWeight: 700, textTransform: "capitalize" as const }}>{req.status}</span>
-                              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: TEXT_LIGHT }}><img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} /> {req.coins_spent} coins</span>
+                              <span style={{ fontSize: 12, color: TEXT_LIGHT }}>{req.coins_spent} points</span>
                             </div>
                             {req.admin_notes && <div style={{ fontSize: 12, color: TEXT_MID, marginTop: 6, fontStyle: "italic" }}>Note: {req.admin_notes}</div>}
                           </div>
@@ -3382,9 +3381,11 @@ function RewardsView({ coinBalance, currentUserId }: {
           </div>
         </div>
         <p style={{ fontSize: 13, color: TEXT_LIGHT, lineHeight: 1.6, marginTop: 18, maxWidth: 620 }}>
-          This is an internal record of contributions to the Foundation. It is
-          used for tracking only. It is not a balance, it cannot be exchanged
-          for anything, and it does not affect what you can access.
+          This is an internal record of contributions to the Foundation, kept
+          for tracking only. Entries are added by staff with a written reason:
+          nothing here accrues automatically from using the portal. It is not a
+          balance, it cannot be exchanged for anything, and it does not affect
+          what you can access.
         </p>
       </div>
 
@@ -3750,7 +3751,7 @@ function ProfileView({ currentUserId, userEmail }: { currentUserId: string; user
           <div>
             <div style={{ fontSize: 12, color: "#8896A6", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: 6 }}>Your Referral Code</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", fontFamily: "'Sora', sans-serif", letterSpacing: "0.1em" }}>{profile.referral_code as string}</div>
-            <div style={{ fontSize: 12, color: "#8896A6", marginTop: 6 }}>Share this code with colleagues — you earn <span style={{ color: "#2EC4B6", fontWeight: 700 }}>+100 coins</span> when they join!</div>
+            <div style={{ fontSize: 12, color: "#8896A6", marginTop: 6 }}>Share this code with colleagues so their application is linked back to you.</div>
           </div>
           <button
             onClick={() => { navigator.clipboard.writeText(profile.referral_code as string); }}
@@ -4749,14 +4750,9 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [addingProject, setAddingProject] = useState(false);
   const [coinBalance, setCoinBalance] = useState<CoinBalance | null>(null);
-  const [coinToast, setCoinToast] = useState<{ amount: number; reason: string } | null>(null);
 
   const fetchCoinBalance = () => {
     fetch(`/api/coins?userId=${user.sub}`).then(r => r.json()).then(d => { if (d.balance) setCoinBalance(d.balance); }).catch(() => {});
-  };
-  const showCoinToast = (amount: number, reason: string) => {
-    setCoinToast({ amount, reason });
-    setTimeout(() => setCoinToast(null), 5000);
   };
   const fetchProjects = () => fetch("/api/projects").then(r => r.json()).then(d => setProjects(d.projects || []));
   const fetchEvents = () => fetch("/api/events").then(r => r.json()).then(d => setEvents(d.events || []));
@@ -4830,14 +4826,8 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.error || "Failed to create project");
-                    const projectName = data.project?.name || project.name || "your project";
                     setAddingProject(false);
                     fetchProjects();
-                    // Small delay to let coin award complete server-side before fetching
-                    setTimeout(() => {
-                      fetchCoinBalance();
-                      showCoinToast(40, `You earned 40 coins for adding "${projectName}" to the bioERGOtech project catalogue!`);
-                    }, 1000);
                   }}
                 />
               )}
@@ -4849,22 +4839,11 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
                 onAddProject={() => setAddingProject(true)}
                 onEdit={(p) => setEditingProject(p)}
                 onDelete={async (id) => {
-                  // Find the project to check if current user is creator
-                  const proj = projects.find(p => p.id === id);
                   await fetch("/api/admin/projects", {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id }),
                   });
-                  // Deduct coins if creator is deleting their own project
-                  if (proj?.created_by === user.sub) {
-                    await fetch("/api/coins", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ userId: user.sub, amount: -40, reason: `Project removed: "${proj.name}"`, type: "spend" }),
-                    });
-                    setTimeout(() => fetchCoinBalance(), 500);
-                  }
                   fetchProjects();
                 }}
                 onSaveProjectDetails={async (payload) => {
@@ -5063,12 +5042,6 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
             {user.display_name || user.full_name || user.email}
           </div>
           <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 10, background: levelInfo.bg, color: levelInfo.color, fontWeight: 700 }}>{levelInfo.label}</span>
-          {coinBalance !== null && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
-              <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MID }}>{coinBalance.balance} contributions recorded</span>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -5134,44 +5107,6 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
       </div>
 
       {/* ── Coin Toast Notification ── */}
-      {coinToast && (
-        <div style={{
-          position: "fixed",
-          bottom: 28,
-          right: 28,
-          zIndex: 9999,
-          background: "linear-gradient(135deg, #1A2332, #2C3E50)",
-          color: "#fff",
-          borderRadius: 16,
-          padding: "16px 22px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 14,
-          maxWidth: 360,
-          animation: "fadeUp 0.3s ease both",
-        }}>
-          <div style={{ fontSize: 28, flexShrink: 0 }}>🎉</div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, fontFamily: "'Sora', sans-serif" }}>
-              +{coinToast.amount} coins earned!
-            </div>
-            <div style={{ fontSize: 13, color: "#B8C5D6", lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
-              {coinToast.reason}
-            </div>
-            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
-              <img src="/assets/images/coin.jpeg" alt="coin" style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle", borderRadius: "50%" }} />
-              <span style={{ fontSize: 12, color: "#2EC4B6", fontWeight: 700 }}>
-                {coinBalance ? `New balance: ${coinBalance.balance + coinToast.amount} coins` : "Check your coin balance"}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => setCoinToast(null)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#8896A6", padding: 0, flexShrink: 0, fontSize: 16, lineHeight: 1 }}
-          >✕</button>
-        </div>
-      )}
     </div>
   );
 } // ← closes BioERGOtechPortal

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin, requireMember } from "@/lib/auth/admin";
 
 /**
@@ -10,35 +9,6 @@ import { requireAdmin, requireMember } from "@/lib/auth/admin";
  * cancellabili da chiunque conosca l'indirizzo. Le righe contengono anche
  * lead_email e lead_phone, che sono dati personali.
  */
-
-// Accredita punti usando il client gia autorizzato dalla guardia.
-async function awardCoins(client: SupabaseClient, userId: string, amount: number, reason: string) {
-  try {
-    const { data: existing } = await client
-      .from("coin_balances")
-      .select("balance, lifetime_earned")
-      .eq("user_id", userId)
-      .single();
-
-    const currentBalance = existing?.balance ?? 0;
-    const currentLifetime = existing?.lifetime_earned ?? 0;
-
-    await client.from("coin_balances").upsert({
-      user_id: userId,
-      balance: currentBalance + amount,
-      lifetime_earned: currentLifetime + amount,
-    }, { onConflict: "user_id" });
-
-    await client.from("coin_transactions").insert({
-      user_id: userId,
-      amount,
-      reason,
-      type: "earn",
-    });
-  } catch (e) {
-    console.error("Failed to award coins:", e);
-  }
-}
 
 export async function GET() {
   const { error, status, client, chiamante } = await requireMember();
@@ -101,7 +71,6 @@ export async function POST(request: Request) {
 
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
 
-    await awardCoins(client, chiamante.id, 40, `Project created: "${body.name?.trim()}"`);
 
     return NextResponse.json({ project: data });
   } catch {
