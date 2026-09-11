@@ -146,7 +146,11 @@ export type Relatore = {
  */
 export const RELATORI: Relatore[] = [
   { id: "piovella", nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
-  { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp`, daAutorizzare: true },
+  { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
+  // La foto di Olivia Botticelli non è ancora in repository e il ruolo è da
+  // confermare. Finché manca il file la scheda resta qui, completa, ma fuori
+  // dalla pagina: stesso meccanismo di chi è in attesa di autorizzazione.
+  { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista", img: `${SPEAKER_IMG}/olivia-botticelli.webp`, daAutorizzare: true },
   { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
   { id: "loizzo", nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
   { id: "montervino", nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
@@ -195,7 +199,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     n: 1,
     titolo: "Salute, prevenzione e sport",
     desc: "Come si riconosce e si previene il rischio tromboembolico, e che cosa cambia quando il corpo è quello di chi si allena ogni giorno. Dalla diagnosi precoce alle abitudini che proteggono la circolazione, anche lontano dall'agonismo.",
-    relatori: ["piovella", "abbagnale"],
+    relatori: ["piovella", "abbagnale", "botticelli"],
   },
   {
     tipo: "panel",
@@ -325,6 +329,62 @@ export const MODERATRICE = {
   ruolo: "Giornalista Rai. Modera la prima giornata al PalaMazzola.",
   img: `${SPEAKER_IMG}/simona-rolandi.webp`,
 };
+
+/** Cartella dei loghi delle realtà coinvolte. */
+const PARTNER_IMG = "/assets/images/eventi/vivere-piu-a-lungo/partner";
+
+export type Partner = {
+  /** Chiave stabile, usata solo come key di render. */
+  id: string;
+  nome: string;
+  /** Che cosa porta alla giornata. Una riga sola, sotto il logo. */
+  ruolo?: string;
+  img: string;
+  /** Sito ufficiale. Se manca, il logo resta senza link. */
+  url?: string;
+  /**
+   * Stesso meccanismo di `daAutorizzare` per i relatori, applicato al file:
+   * finché il logo non è in repository la voce resta qui, completa, ma non
+   * compare sulla pagina, così non pubblichiamo un'immagine rotta. Quando il
+   * file arriva basta togliere questa riga.
+   */
+  daCaricare?: boolean;
+};
+
+/**
+ * Le realtà che partecipano alla giornata con i loro ragazzi e con i loro
+ * progetti. Il logo è il modo in cui compaiono nella pagina: nessuna gerarchia
+ * tra sponsor e ospiti, l'ordine è quello di questo array.
+ */
+export const PARTNER: Partner[] = [
+  // Le righe `ruolo` sono descrizioni minime, da confermare con ciascuna
+  // realtà prima della pubblicazione, insieme all'indirizzo del sito da
+  // mettere in `url`. Meglio nessuna riga che una riga imprecisa.
+  {
+    id: "giffoni",
+    nome: "Giffoni Experience",
+    ruolo: "Il festival di cinema per ragazzi",
+    img: `${PARTNER_IMG}/giffoni.webp`,
+    daCaricare: true,
+  },
+  {
+    id: "insuperabili",
+    nome: "Insuperabili",
+    ruolo: "Sport per ragazzi con disabilità",
+    img: `${PARTNER_IMG}/insuperabili.webp`,
+    daCaricare: true,
+  },
+  {
+    id: "casa-di-sofia",
+    nome: "La casa di Sofia",
+    ruolo: "Accoglienza per bambini e famiglie",
+    img: `${PARTNER_IMG}/la-casa-di-sofia.webp`,
+    daCaricare: true,
+  },
+];
+
+/** I loghi che la pagina può pubblicare davvero. */
+export const PARTNER_PUBBLICI = PARTNER.filter((p) => !p.daCaricare);
 
 /** Panel e relatori sono contati dai dati, così non divergono dal programma. */
 export const STATS = [

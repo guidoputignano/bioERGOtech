@@ -16,6 +16,7 @@ import {
   nomiVoce,
   relatoriVoce,
   RELATORI_PUBBLICI,
+  PARTNER_PUBBLICI,
   MODERATRICE,
   STATS,
   PERCHE_PARTECIPARE,
@@ -532,6 +533,59 @@ export default function EventPage() {
             )}
           </div>
         </section>
+
+        {/* ── Realtà coinvolte ── */}
+        {PARTNER_PUBBLICI.length > 0 && (
+          <section className="section">
+            <div className="container mx-auto px-6">
+              <h2 className="section-title text-center block">Con la partecipazione di</h2>
+              <p className="text-gray-700 text-center max-w-2xl mx-auto mt-2">
+                Le realtà che salgono sul palco con i loro ragazzi e i loro progetti.
+              </p>
+              <ul
+                className="flex flex-wrap items-start justify-center gap-x-10 gap-y-8 mt-10"
+                style={{ listStyle: "none", padding: 0, margin: 0 }}
+              >
+                {PARTNER_PUBBLICI.map((p) => {
+                  /* Il logo vive in un riquadro fisso: i file hanno proporzioni
+                     diverse, `object-contain` li allinea senza deformarli. */
+                  const logo = (
+                    <>
+                      <span style={{ position: "relative", display: "block", width: "100%", height: 72 }}>
+                        <Image
+                          src={p.img}
+                          alt={p.nome}
+                          fill
+                          sizes="180px"
+                          className="object-contain"
+                        />
+                      </span>
+                      <span className="block font-semibold text-gray-800 mt-4" style={{ fontSize: 14 }}>
+                        {p.nome}
+                      </span>
+                      {p.ruolo && (
+                        <span className="block text-gray-600 mt-1" style={{ fontSize: 12, lineHeight: 1.4 }}>
+                          {p.ruolo}
+                        </span>
+                      )}
+                    </>
+                  );
+                  return (
+                    <li key={p.id} className="text-center" style={{ width: 180 }}>
+                      {p.url ? (
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="block">
+                          {logo}
+                        </a>
+                      ) : (
+                        logo
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* ── Perché partecipare ── */}
         <section className="section bg-light-gray">
