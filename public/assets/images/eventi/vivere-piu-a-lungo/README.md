@@ -15,6 +15,9 @@ contatore e dai dati strutturati. Quando il file arriva, togli quella riga.
 | File                      | Relatore          | Panel |
 | ------------------------- | ----------------- | ----- |
 | `olivia-botticelli.webp`  | Olivia Botticelli | 1     |
-| `adriana-chirico.webp`    | Adriana Chirico   | 2     |
 | `valentina-vezzali.webp`  | Valentina Vezzali | 6     |
-| `giulia-chironi.webp`     | Giulia Chironi    | da assegnare |
+
+Adriana Chirico e Giulia Chironi non sono relatrici: stanno nel team
+organizzativo, quindi le loro foto vanno in `/assets/images/About-us/` e le
+schede stanno in `TEAM_ORGANIZZATIVO` dentro `page.tsx`, con lo stesso flag
+`daCaricare` usato per i loghi.

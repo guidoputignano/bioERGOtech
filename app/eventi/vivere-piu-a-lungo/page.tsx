@@ -50,7 +50,19 @@ export const metadata: Metadata = {
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
 // Team organizzativo dell'evento.
-type Organizzatore = { name: string; role: string; desc: string; img: string; imgPosition?: string };
+type Organizzatore = {
+  name: string;
+  role: string;
+  desc: string;
+  img: string;
+  imgPosition?: string;
+  /**
+   * La foto non è ancora in repository. La scheda resta qui, completa, ma non
+   * compare nella griglia, così non pubblichiamo un'immagine rotta. Quando il
+   * file arriva basta togliere questa riga.
+   */
+  daCaricare?: boolean;
+};
 const TEAM_ORGANIZZATIVO: Organizzatore[] = [
   {
     name: "Roberto Russo",
@@ -90,7 +102,24 @@ const TEAM_ORGANIZZATIVO: Organizzatore[] = [
     img: "/assets/images/About-us/Gianni Tartaglia.png",
     imgPosition: "center 15%",
   },
+  {
+    name: "Adriana Chirico",
+    role: "Giurista",
+    desc: "Docente presso il Dipartimento Jonico dell'Università degli Studi di Bari Aldo Moro.",
+    img: "/assets/images/About-us/Adriana-Chirico.webp",
+    daCaricare: true,
+  },
+  {
+    name: "Giulia Chironi",
+    role: "Responsabile Ricerca e Ambiente",
+    desc: "Responsabile ricerca, ambiente, salute e lavoro presso SafesPro, scuola di alta formazione per professionisti.",
+    img: "/assets/images/About-us/Giulia-Chironi.webp",
+    daCaricare: true,
+  },
 ];
+
+/** Le schede del team che hanno già la foto, le uniche che la pagina pubblica. */
+const TEAM_PUBBLICO = TEAM_ORGANIZZATIVO.filter((p) => !p.daCaricare);
 
 function EventJsonLd() {
   const jsonLd = {
@@ -667,7 +696,7 @@ export default function EventPage() {
           <div className="container mx-auto px-6">
             <h2 className="section-title text-center block">Il Team Organizzativo</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-              {TEAM_ORGANIZZATIVO.map((p) => (
+              {TEAM_PUBBLICO.map((p) => (
                 <div key={p.name} className="card text-center">
                   <Image
                     src={p.img}

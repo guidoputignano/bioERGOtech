@@ -164,10 +164,6 @@ export const RELATORI: Relatore[] = [
   // passato a Valentina Vezzali. La scheda resta qui, inattiva, nel caso torni.
   { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
   { id: "vezzali", nome: "Valentina Vezzali", ruolo: "Campionessa olimpica di scherma", img: `${SPEAKER_IMG}/valentina-vezzali.webp`, daAutorizzare: true },
-  // Ruolo fornito dalla direzione dell'evento, nella forma breve.
-  { id: "chirico", nome: "Adriana Chirico", ruolo: "Giurista, docente presso il Dipartimento Jonico, UniBa", img: `${SPEAKER_IMG}/adriana-chirico.webp`, daAutorizzare: true },
-  // Ruolo ripreso dal sito di SafesPro. Non ancora assegnata a un panel.
-  { id: "chironi", nome: "Giulia Chironi", ruolo: "Responsabile ricerca, ambiente, salute e lavoro, SafesPro", img: `${SPEAKER_IMG}/giulia-chironi.webp`, daAutorizzare: true },
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "galante", nome: "Fabio Galante", ruolo: "Ex difensore di Inter e Torino", img: `${SPEAKER_IMG}/fabio-galante.webp` },
 ];
@@ -213,7 +209,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     n: 2,
     titolo: "Regole, professioni e istituzioni",
     desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Un confronto tra ordine professionale e legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
-    relatori: ["mandelli", "loizzo", "chirico"],
+    relatori: ["mandelli", "loizzo"],
   },
   {
     tipo: "ragazzi",
