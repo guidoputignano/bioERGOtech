@@ -202,23 +202,52 @@ export default async function AreaPage({
             <div className="container mx-auto px-6">
               <h2 className="section-title">People in this area</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {team.map((m) => (
-                  <div key={m.name} className="card-sm" style={{ padding: 28 }}>
-                    <Image
-                      src={m.img}
-                      alt={`${m.name}, ${m.role}`}
-                      width={192}
-                      height={192}
-                      sizes="96px"
-                      className="w-24 h-24 rounded-full object-cover mb-4"
-                    />
-                    <h3 className="text-lg font-semibold text-gray-800">{m.name}</h3>
-                    <p className="font-semibold text-sm mb-3" style={{ color: "var(--primary)" }}>
-                      {m.role}
-                    </p>
-                    <p className="text-gray-600 text-sm">{m.desc}</p>
-                  </div>
-                ))}
+                {team.map((m) => {
+                  const body = (
+                    <>
+                      <Image
+                        src={m.img}
+                        alt={`${m.name}, ${m.role}`}
+                        width={192}
+                        height={192}
+                        sizes="96px"
+                        className="w-24 h-24 rounded-full object-cover mb-4"
+                      />
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-gray-800">{m.name}</h3>
+                        {m.group && (
+                          <span
+                            className="badge flex-shrink-0"
+                            style={{ background: "#EEF1F5", color: "#5A6B7B" }}
+                          >
+                            {m.group}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-semibold text-sm mb-3" style={{ color: "var(--primary)" }}>
+                        {m.role}
+                      </p>
+                      <p className="text-gray-600 text-sm">{m.desc}</p>
+                      {m.href && (
+                        <span
+                          className="font-semibold text-sm inline-block mt-3"
+                          style={{ color: "var(--primary)" }}
+                        >
+                          Research and publications →
+                        </span>
+                      )}
+                    </>
+                  );
+                  return m.href ? (
+                    <Link key={m.name} href={m.href} className="card-sm block" style={{ padding: 28 }}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <div key={m.name} className="card-sm" style={{ padding: 28 }}>
+                      {body}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
