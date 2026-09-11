@@ -37,7 +37,8 @@ export default async function AreaPage({
   const area = areaById(slug);
   if (!area?.page) notFound();
 
-  const { lead, focus, approach, piSlug } = area.page;
+  const { lead, focus, methods, methodsNote, piSlug, figure, methodsFigure } =
+    area.page;
   const pi = personBySlug(piSlug);
   const team = teamForArea(area.id).filter((m) => m.name !== pi?.name);
   const papers = pi ? publicationsFor(pi.slug) : [];
@@ -75,37 +76,94 @@ export default async function AreaPage({
           </div>
         </section>
 
-        {/* ── Focus and approach ── */}
+        {/* ── Figure from the area's own published work ── */}
+        {figure && (
+          <section className="section" style={{ paddingTop: 0, paddingBottom: 60 }}>
+            <div className="container mx-auto px-6">
+              <figure className="max-w-5xl">
+                <Image
+                  src={figure.src}
+                  alt={figure.alt}
+                  width={figure.width}
+                  height={figure.height}
+                  sizes="(max-width: 1024px) 100vw, 1000px"
+                  className="w-full h-auto rounded-xl shadow-lg"
+                  priority
+                />
+                <figcaption className="mt-4 text-gray-600 leading-relaxed">
+                  {figure.caption}{" "}
+                  <a
+                    href={figure.creditHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold whitespace-nowrap"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {figure.credit} &#8599;
+                  </a>
+                </figcaption>
+              </figure>
+            </div>
+          </section>
+        )}
+
+        {/* ── What we work on ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div>
-                <h2 className="section-title">What we work on</h2>
-                <div className="flex flex-col gap-5">
-                  {focus.map((para) => (
-                    <p key={para.slice(0, 24)} className="text-lg text-gray-700 leading-relaxed">
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h2 className="section-title">How we work</h2>
-                <div className="flex flex-col gap-5">
-                  {approach.map((para) => (
-                    <p key={para.slice(0, 24)} className="text-lg text-gray-700 leading-relaxed">
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              </div>
+            <h2 className="section-title">What we work on</h2>
+            <div className="max-w-3xl flex flex-col gap-5">
+              {focus.map((para) => (
+                <p key={para.slice(0, 24)} className="text-lg text-gray-700 leading-relaxed">
+                  {para}
+                </p>
+              ))}
             </div>
+          </div>
+        </section>
+
+        {/* ── Methods ── */}
+        <section className="section">
+          <div className="container mx-auto px-6">
+            <h2 className="section-title">Methods</h2>
+            <p className="text-lg text-gray-700 max-w-3xl mb-12">{methodsNote}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              {methods.map((m) => (
+                <div key={m.name} className="card-sm" style={{ padding: 26 }}>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{m.name}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{m.useFor}</p>
+                </div>
+              ))}
+            </div>
+            {methodsFigure && (
+              <figure className="max-w-4xl">
+                <Image
+                  src={methodsFigure.src}
+                  alt={methodsFigure.alt}
+                  width={methodsFigure.width}
+                  height={methodsFigure.height}
+                  sizes="(max-width: 1024px) 100vw, 850px"
+                  className="w-full h-auto rounded-xl shadow-lg"
+                />
+                <figcaption className="mt-4 text-gray-600 leading-relaxed">
+                  {methodsFigure.caption}{" "}
+                  <a
+                    href={methodsFigure.creditHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold whitespace-nowrap"
+                    style={{ color: "var(--primary)" }}
+                  >
+                    {methodsFigure.credit} &#8599;
+                  </a>
+                </figcaption>
+              </figure>
+            )}
           </div>
         </section>
 
         {/* ── Principal investigator ── */}
         {pi && (
-          <section className="section">
+          <section className="section bg-light-gray">
             <div className="container mx-auto px-6">
               <h2 className="section-title">Principal investigator</h2>
               <Link
@@ -140,27 +198,56 @@ export default async function AreaPage({
 
         {/* ── People ── */}
         {team.length > 0 && (
-          <section className="section bg-light-gray">
+          <section className="section">
             <div className="container mx-auto px-6">
               <h2 className="section-title">People in this area</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {team.map((m) => (
-                  <div key={m.name} className="card-sm" style={{ padding: 28 }}>
-                    <Image
-                      src={m.img}
-                      alt={`${m.name}, ${m.role}`}
-                      width={192}
-                      height={192}
-                      sizes="96px"
-                      className="w-24 h-24 rounded-full object-cover mb-4"
-                    />
-                    <h3 className="text-lg font-semibold text-gray-800">{m.name}</h3>
-                    <p className="font-semibold text-sm mb-3" style={{ color: "var(--primary)" }}>
-                      {m.role}
-                    </p>
-                    <p className="text-gray-600 text-sm">{m.desc}</p>
-                  </div>
-                ))}
+                {team.map((m) => {
+                  const body = (
+                    <>
+                      <Image
+                        src={m.img}
+                        alt={`${m.name}, ${m.role}`}
+                        width={192}
+                        height={192}
+                        sizes="96px"
+                        className="w-24 h-24 rounded-full object-cover mb-4"
+                      />
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-lg font-semibold text-gray-800">{m.name}</h3>
+                        {m.group && (
+                          <span
+                            className="badge flex-shrink-0"
+                            style={{ background: "#EEF1F5", color: "#5A6B7B" }}
+                          >
+                            {m.group}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-semibold text-sm mb-3" style={{ color: "var(--primary)" }}>
+                        {m.role}
+                      </p>
+                      <p className="text-gray-600 text-sm">{m.desc}</p>
+                      {m.href && (
+                        <span
+                          className="font-semibold text-sm inline-block mt-3"
+                          style={{ color: "var(--primary)" }}
+                        >
+                          Research and publications →
+                        </span>
+                      )}
+                    </>
+                  );
+                  return m.href ? (
+                    <Link key={m.name} href={m.href} className="card-sm block" style={{ padding: 28 }}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <div key={m.name} className="card-sm" style={{ padding: 28 }}>
+                      {body}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>

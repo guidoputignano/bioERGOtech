@@ -43,6 +43,25 @@ export const PEOPLE: Person[] = [
     ],
     email: "guido.putignano@bioergotech.org",
   },
+  {
+    slug: "daniela-marotto",
+    name: "Daniela Marotto",
+    role: "Advisory Board, rheumatology",
+    photo: "/assets/images/About-us/Daniela-Marotto.webp",
+    affiliations: [
+      "Azienda Socio-Sanitaria Locale della Gallura, Olbia",
+      "Advisory Board, bioERGOtech Foundation",
+    ],
+    summary:
+      "Rheumatology, and the question of what else a patient with an inflammatory disease is carrying.",
+    // Third person, and strictly what the published paper supports. See the
+    // note in the PR: her own page text is hers to approve before it is public.
+    focus: [
+      "A rheumatologist whose work sits where rheumatology meets oncology.",
+      "She is co-senior author on the first nationwide Italian study of cancer risk in immune-mediated inflammatory disease, which followed 356,022 patients across five years of hospital discharge records and found the association strongest in the first year after diagnosis. The study was conducted on behalf of the Onco-Rheumatology Study Group of the CREI Executive Board.",
+      "That temporal pattern is the part that matters clinically: it is difficult to explain by medication, which accumulates, and easier to explain by inflammation, which early treatment reduces. The paper states it as a hypothesis, and testing it is the work that follows.",
+    ],
+  },
 ];
 
 export const personBySlug = (slug: string) =>

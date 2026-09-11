@@ -24,9 +24,12 @@ export const metadata: Metadata = {
   },
 };
 
-/* The global main.css overrides --primary-light with a harsh saturated mint
-   (#61ffe0). We pin it back to a soft, on-brand tint for the homepage so every
-   tinted surface (tabs, icon tiles, tags, the closing CTA) stays gentle. */
+/* This used to exist because main.css overrode --primary-light with a harsh
+   saturated mint and clobbered the design system on every page that did not
+   pin it back by hand. That is fixed at the root now: main.css calls its
+   bright accent --primary-bright, and globals.css carries this exact tint for
+   the whole site. The pin is kept only because it is harmless and the wrapper
+   is load bearing nowhere else. */
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
 /* ── The finding. One published result, stated so a reader can check it.
@@ -40,6 +43,19 @@ const FINDING = {
   cite: "Cancers 2026;18(6):1027",
   href: "https://doi.org/10.3390/cancers18061027",
 };
+
+/* ── What we are trying to find out. The six programmes below are different
+      subjects with one shape in common, and this is where that is stated. ── */
+const MOONSHOT =
+  "That the distance between a question somebody has and an answer they can defend collapses from years to days.";
+
+const QUESTIONS = [
+  "Can we say, years ahead of a diagnosis, which subgroups carry which risk, and why?",
+  "Can a model stand in for an experiment that is too slow, too small or too expensive to run?",
+  "Can a group of patients too small for the statistics still be learned from?",
+  "Can an organisation act on what it already knows, inside the year it matters?",
+  "Where is the line between software that informs a clinical decision and software that makes one?",
+];
 
 /* ── Research programmes, each at the stage it has actually reached.
       Titles lead with the artefact where the artefact is software, because the
@@ -317,6 +333,53 @@ export default function Home() {
                 </a>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── What we are trying to find out ── */}
+      <section className="section bg-light-gray" id="questions">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title">What we are trying to find out</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <div>
+              <p className="text-lg text-gray-700 leading-relaxed mb-5">
+                In every programme below, the answer already existed in data
+                somebody already held. What was missing was the time and the
+                method to get it out.
+              </p>
+              <p className="text-lg text-gray-700 leading-relaxed mb-8">
+                A national cohort sat in hospital discharge records for five
+                years before anyone joined it up. A hospital sees a medicine it
+                should have switched a year after the window closed. A tumour
+                board&apos;s evidence is in a guideline nobody had the evening to
+                read.
+              </p>
+              <div
+                className="bg-white rounded-xl p-8"
+                style={{ borderLeft: "4px solid var(--primary)" }}
+              >
+                <p className="text-sm uppercase tracking-widest font-semibold text-gray-500 mb-3">
+                  The moonshot
+                </p>
+                <p className="text-xl md:text-2xl text-gray-800 font-semibold leading-snug">
+                  {MOONSHOT}
+                </p>
+              </div>
+            </div>
+            <ol className="flex flex-col gap-5">
+              {QUESTIONS.map((q, i) => (
+                <li key={q.slice(0, 24)} className="flex items-start gap-4">
+                  <span
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{ background: "var(--primary-light)", color: "var(--primary-dark)" }}
+                  >
+                    {i + 1}
+                  </span>
+                  <p className="text-lg text-gray-700 leading-relaxed">{q}</p>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>

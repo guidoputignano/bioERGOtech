@@ -19,6 +19,9 @@ export type Member = {
   areas?: string[];
   /** Set only for people with a principal investigator page. */
   href?: string;
+  /** Filled in by the lists below. Area pages show it, because an advisor
+      working in an area is not the same as staff working in it. */
+  group?: "Advisory Board";
 };
 
 export const TEAM: Member[] = [
@@ -103,9 +106,11 @@ export const TEAM: Member[] = [
 export const ADVISORS: Member[] = [
   {
     name: "Daniela Marotto",
-    role: "Doctor",
+    role: "Rheumatologist",
     desc: "Rheumatologist and leader in Italian health science, recognized for her commitment to multidisciplinary care.",
     img: "/assets/images/About-us/Daniela-Marotto.webp",
+    href: "/people/daniela-marotto",
+    areas: ["biotech-innovations"],
   },
   {
     name: "Pasquale Persico",
@@ -127,5 +132,11 @@ export const ADVISORS: Member[] = [
   },
 ];
 
-export const teamForArea = (areaId: string) =>
-  TEAM.filter((m) => m.areas?.includes(areaId));
+/** Everyone working in an area, staff first, then advisors, each labelled. */
+export const teamForArea = (areaId: string): Member[] => [
+  ...TEAM.filter((m) => m.areas?.includes(areaId)),
+  ...ADVISORS.filter((m) => m.areas?.includes(areaId)).map((m) => ({
+    ...m,
+    group: "Advisory Board" as const,
+  })),
+];

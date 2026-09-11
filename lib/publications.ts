@@ -36,7 +36,7 @@ export const PUBLICATIONS: Publication[] = [
     authors: "Giordani B, Pirtoli L, Putignano G, Giordano A, Marotto D, Baglio G",
     doi: "10.3390/cancers18061027",
     href: "https://doi.org/10.3390/cancers18061027",
-    people: ["guido-putignano"],
+    people: ["guido-putignano", "daniela-marotto"],
   },
   {
     venue: "Frontiers in Immunology",

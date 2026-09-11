@@ -96,7 +96,7 @@ export default async function PersonPage({
         {/* ── What I work on ── */}
         <section className="section bg-light-gray">
           <div className="container mx-auto px-6">
-            <h2 className="section-title">What I work on</h2>
+            <h2 className="section-title">Research focus</h2>
             <div className="max-w-3xl flex flex-col gap-5">
               {person.focus.map((para, i) => (
                 <p

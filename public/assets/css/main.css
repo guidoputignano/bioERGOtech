@@ -6,7 +6,11 @@
 :root {
     --primary: #13d6b0;
     --primary-dark: #0eb093;
-    --primary-light: #61ffe0;
+    /* Bright accent for the logo hover and the scroll progress bar only.
+       This used to be called --primary-light, which clobbered the design
+       system's soft tint of the same name in globals.css on every page that
+       did not pin it back by hand. */
+    --primary-bright: #61ffe0;
     --dark: #333;
     --darker: #1a1a1a;
     --light: #fff;
@@ -395,7 +399,7 @@ body {
 }
 
 .logo-text:hover .ergo-text {
-    -webkit-text-fill-color: var(--primary-light);
+    -webkit-text-fill-color: var(--primary-bright);
 }
 
 /* --- Mobile Menu --- */
@@ -501,7 +505,7 @@ body {
 
 .progress-bar {
     height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    background: linear-gradient(90deg, var(--primary), var(--primary-bright));
     width: 0;
     box-shadow: 0 0 10px var(--primary);
 }

@@ -193,6 +193,11 @@ export default function AboutUs() {
                   <h4 className="text-xl font-semibold">{p.name}</h4>
                   <p style={{ color: "var(--primary)" }}>{p.role}</p>
                   <p className="text-gray-600 mt-2">{p.desc}</p>
+                  {p.href && (
+                    <Link href={p.href} className="font-semibold text-sm inline-block mt-3" style={{ color: "var(--primary)" }}>
+                      Research and publications →
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>
