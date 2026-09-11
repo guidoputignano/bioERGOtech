@@ -147,8 +147,8 @@ export type Relatore = {
 export const RELATORI: Relatore[] = [
   { id: "piovella", nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
   { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
-  // Ruolo ancora da confermare con la direzione dell'evento.
-  { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista", img: `${SPEAKER_IMG}/olivia-botticelli.webp` },
+  // Ruolo ripreso dalla sua scheda giocatrice sul sito del BSL San Lazzaro.
+  { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista, cresciuta nel vivaio del BSL San Lazzaro", img: `${SPEAKER_IMG}/olivia-botticelli.webp` },
   { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
   { id: "loizzo", nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
   { id: "montervino", nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
