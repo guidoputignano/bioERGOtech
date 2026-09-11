@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { articleMeta } from "./articles/[slug]/page";
 import { PEOPLE } from "./people/people";
 import { areasWithPages } from "@/lib/areas";
+import { COURSE_LESSONS } from "./courses/course-data";
 
 const BASE = "https://www.bioergotech.org";
 
@@ -22,6 +23,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/build-with-us", priority: 0.8, changeFrequency: "monthly" },
     { path: "/join-us", priority: 0.8, changeFrequency: "monthly" },
     { path: "/articles", priority: 0.8, changeFrequency: "weekly" },
+    { path: "/courses/agentic-ai", priority: 0.7, changeFrequency: "monthly" },
+    { path: "/navigator", priority: 0.6, changeFrequency: "monthly" },
     { path: "/careers", priority: 0.7, changeFrequency: "weekly" },
     { path: "/contact", priority: 0.6, changeFrequency: "yearly" },
     { path: "/legal/privacy", priority: 0.2, changeFrequency: "yearly" },
@@ -51,6 +54,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  // One entry per course lesson. They render for logged out visitors, so they
+  // are public pages and belong here. "introduction" is the exception: it is
+  // still a "lesson coming soon" placeholder, and submitting a placeholder for
+  // indexing costs more than the URL is worth.
+  const lessonEntries: MetadataRoute.Sitemap = COURSE_LESSONS.filter(
+    (l) => l.slug !== "introduction",
+  ).map((l) => ({
+    url: `${BASE}/courses/agentic-ai/lesson/${l.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.5,
+  }));
+
   // One entry per article. articleMeta is the single source of truth for slugs.
   const articleEntries: MetadataRoute.Sitemap = Object.keys(articleMeta).map(
     (slug) => ({
@@ -70,5 +86,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return [...staticEntries, ...areaEntries, ...peopleEntries, ...articleEntries, ...standaloneArticles];
+  return [
+    ...staticEntries,
+    ...areaEntries,
+    ...peopleEntries,
+    ...lessonEntries,
+    ...articleEntries,
+    ...standaloneArticles,
+  ];
 }

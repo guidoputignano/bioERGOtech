@@ -8,6 +8,8 @@ import {
   type SezioneStudente,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/studente/StudenteConsole";
 import { LICEI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { JsonLd, breadcrumbs } from "@/components/json-ld";
+import { lessonLd } from "../../course-ld";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -46,10 +48,18 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const lesson = COURSE_LESSONS.find((l) => l.slug === slug);
+  if (!lesson) return { title: "Lesson | bioERGOtech" };
   return {
-    title: lesson
-      ? `${lesson.number}: ${lesson.title} | bioERGOtech`
-      : "Lesson | bioERGOtech",
+    title: `${lesson.number}: ${lesson.title} | bioERGOtech`,
+    // The lesson data already carries a written description. It was going to
+    // waste while every lesson inherited the site default.
+    description: lesson.description,
+    alternates: { canonical: `/courses/agentic-ai/lesson/${lesson.slug}` },
+    openGraph: {
+      title: `${lesson.number}: ${lesson.title}`,
+      description: lesson.description,
+      url: `https://www.bioergotech.org/courses/agentic-ai/lesson/${lesson.slug}`,
+    },
   };
 }
 
@@ -113,6 +123,32 @@ function RiquadroLicei({
   );
 }
 
+/**
+ * The markup for one lesson, emitted on every branch.
+ *
+ * It has to go on the logged out branch too. That branch is the one a crawler
+ * actually gets, and it is the one where the sign-in gate needs declaring.
+ */
+function LessonSchema({ lesson }: { lesson: (typeof COURSE_LESSONS)[number] }) {
+  return (
+    <>
+      <JsonLd data={lessonLd(lesson)} />
+      <JsonLd
+        data={breadcrumbs([
+          // The trail starts at the course, not at /courses. /courses is only
+          // a redirect, and a crumb pointing at a redirect sends a crawler
+          // one hop for nothing.
+          { name: "Agentic AI Course", path: "/courses/agentic-ai" },
+          {
+            name: `${lesson.number}: ${lesson.title}`,
+            path: `/courses/agentic-ai/lesson/${lesson.slug}`,
+          },
+        ])}
+      />
+    </>
+  );
+}
+
 export default async function LessonPage({ params }: Props) {
   const { slug } = await params;
 
@@ -121,7 +157,12 @@ export default async function LessonPage({ params }: Props) {
 
   // Free lessons are publicly accessible
   if (lesson.free) {
-    return <LessonPageClient lesson={lesson} isAuthenticated={false} />;
+    return (
+      <>
+        <LessonSchema lesson={lesson} />
+        <LessonPageClient lesson={lesson} isAuthenticated={false} />
+      </>
+    );
   }
 
   // Gated lessons: check Supabase session server-side
@@ -132,7 +173,12 @@ export default async function LessonPage({ params }: Props) {
 
   if (!user) {
     // Not logged in: render lesson with gate modal open
-    return <LessonPageClient lesson={lesson} isAuthenticated={false} gateOpen />;
+    return (
+      <>
+        <LessonSchema lesson={lesson} />
+        <LessonPageClient lesson={lesson} isAuthenticated={false} gateOpen />
+      </>
+    );
   }
 
   // Il riquadro del bando compare solo sulle due lezioni interessate e solo a
@@ -142,18 +188,21 @@ export default async function LessonPage({ params }: Props) {
   const mostraLicei = licei ? await studenteLiceiConfermato() : false;
 
   return (
-    <LessonPageClient
-      lesson={lesson}
-      isAuthenticated={true}
-      extra={
-        mostraLicei && licei ? (
-          <RiquadroLicei
-            sezione={licei.sezione}
-            titolo={licei.titolo}
-            sottotitolo={licei.sottotitolo}
-          />
-        ) : undefined
-      }
-    />
+    <>
+      <LessonSchema lesson={lesson} />
+      <LessonPageClient
+        lesson={lesson}
+        isAuthenticated={true}
+        extra={
+          mostraLicei && licei ? (
+            <RiquadroLicei
+              sezione={licei.sezione}
+              titolo={licei.titolo}
+              sottotitolo={licei.sottotitolo}
+            />
+          ) : undefined
+        }
+      />
+    </>
   );
 }

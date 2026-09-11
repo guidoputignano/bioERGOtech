@@ -6,6 +6,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "Privacy Policy for the bioERGOtech Foundation website.",
+  alternates: { canonical: "/legal/privacy" },
 };
 
 export default function PrivacyPolicy() {

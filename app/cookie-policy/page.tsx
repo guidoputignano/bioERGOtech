@@ -6,6 +6,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Cookie Policy",
   description: "Cookie Policy for the bioERGOtech Foundation website.",
+  alternates: { canonical: "/cookie-policy" },
 };
 
 export default function CookiePolicy() {

@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Research Portal",
   description:
     "The bioERGOtech Foundation research portal: active programmes, methods and evidence, facilities, and the people working on them.",
+  // Behind authentication and already disallowed in robots.txt. noindex is what
+  // actually keeps it out of the index if something links to it.
+  robots: { index: false, follow: false },
 };
 
 export default async function MemberPortal() {
