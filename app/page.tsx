@@ -24,9 +24,12 @@ export const metadata: Metadata = {
   },
 };
 
-/* The global main.css overrides --primary-light with a harsh saturated mint
-   (#61ffe0). We pin it back to a soft, on-brand tint for the homepage so every
-   tinted surface (tabs, icon tiles, tags, the closing CTA) stays gentle. */
+/* This used to exist because main.css overrode --primary-light with a harsh
+   saturated mint and clobbered the design system on every page that did not
+   pin it back by hand. That is fixed at the root now: main.css calls its
+   bright accent --primary-bright, and globals.css carries this exact tint for
+   the whole site. The pin is kept only because it is harmless and the wrapper
+   is load bearing nowhere else. */
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
 /* ── The finding. One published result, stated so a reader can check it.
