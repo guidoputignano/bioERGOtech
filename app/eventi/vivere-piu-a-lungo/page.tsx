@@ -173,43 +173,91 @@ export default function EventPage() {
 
       <div style={SOFT_BRAND} className="event-page">
         {/* ── Hero ── */}
-        <section className="hero" style={{ paddingTop: "120px" }}>
-          <div className="container mx-auto px-6 pt-8 pb-28 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-10">
-              <div className="order-2 md:order-1">
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "var(--primary-dark)",
-                    marginBottom: 16,
-                  }}
-                >
-                  {EVENT.occhiello}
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
-                  {EVENT.titolo}
-                </h1>
-                <p className="text-xl text-gray-700">{EVENT.sottotitolo}</p>
+        {/* La `.hero` del design system e' un blocco centrato alto 100vh. Qui
+            serve un banner a tutta larghezza con il titolo sopra, quindi
+            neutralizziamo flex e altezza minima e teniamo solo il gradiente,
+            che prosegue sotto il banner dietro i box informativi. Il padding
+            in alto e' l'altezza esatta della navbar fissa, 70px. */}
+        <section className="hero" style={{ display: "block", minHeight: 0, paddingTop: 70 }}>
+          {/* L'immagine e' un panorama 2.3:1: dentro mezza colonna diventava
+              una striscia di poco piu' di 200px di altezza e la scena si
+              perdeva. A tutta larghezza ha la forma per cui e' composta. */}
+          <div className="relative" style={{ height: "min(56vh, 660px)", minHeight: 320 }}>
+            <Image
+              src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
+              alt="Illustrazione: un'atleta corre sul lungomare di Taranto davanti al Castello Aragonese, affiancata dalla figura luminosa di un corpo umano digitale e da una doppia elica del DNA"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+              /* Ancorata in alto. Su schermi larghi `object-cover` scala
+                 sulla larghezza e sborda in altezza: con un'ancora centrale il
+                 taglio arrivava dall'alto e tagliava le teste. Da qui in giu'
+                 si perde semmai il lastricato in basso, che il velo scuro
+                 copre comunque. */
+              style={{ objectPosition: "center top" }}
+            />
+            {/* Due veli sovrapposti. Quello dal basso regge il contrasto del
+                titolo; quello da sinistra scurisce la fascia dove cade il
+                testo, che altrimenti finisce sulla parte chiara della scena.
+                Insieme lasciano leggibile il cielo e il castello a destra. */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: [
+                  "linear-gradient(to top, rgba(9,20,28,0.92) 0%, rgba(9,20,28,0.70) 30%, rgba(9,20,28,0.28) 58%, rgba(9,20,28,0) 92%)",
+                  "linear-gradient(to right, rgba(9,20,28,0.66) 0%, rgba(9,20,28,0.30) 45%, rgba(9,20,28,0) 78%)",
+                ].join(", "),
+              }}
+            />
+            <div
+              className="container mx-auto px-6 relative h-full flex flex-col justify-end"
+              style={{ paddingBottom: 36 }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#7FE3D8",
+                  marginBottom: 14,
+                  textShadow: "0 1px 10px rgba(0,0,0,0.55)",
+                }}
+              >
+                {EVENT.occhiello}
               </div>
-              <div className="order-1 md:order-2 flex justify-center">
-                <Image
-                  src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
-                  alt="Illustrazione: un'atleta corre sul lungomare di Taranto davanti al Castello Aragonese, affiancata dalla figura luminosa di un corpo umano digitale e da una doppia elica del DNA"
-                  width={1600}
-                  height={694}
-                  priority
-                  sizes="(max-width: 768px) 100vw, 560px"
-                  className="rounded-lg shadow-xl w-full h-auto"
-                />
-              </div>
+              <h1
+                className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white"
+                style={{
+                  marginBottom: 12,
+                  maxWidth: "min(100%, 680px)",
+                  textShadow: "0 2px 18px rgba(0,0,0,0.55)",
+                }}
+              >
+                {EVENT.titolo}
+              </h1>
+              <p
+                className="text-base sm:text-lg md:text-xl"
+                style={{
+                  color: "rgba(255,255,255,0.92)",
+                  maxWidth: "min(100%, 620px)",
+                  textShadow: "0 1px 12px rgba(0,0,0,0.55)",
+                }}
+              >
+                {EVENT.sottotitolo}
+              </p>
             </div>
+          </div>
 
-            <div className="max-w-3xl">
-              {/* Box informativi */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="container mx-auto px-6 pt-10 pb-24 relative z-10">
+            {/* Box informativi: tre colonne uguali su tutta la larghezza del
+                contenitore. Prima stavano in una colonna da 768px allineata a
+                sinistra, che sotto un banner a tutta larghezza lasciava mezzo
+                schermo vuoto a destra. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                 {[
                   { icon: "fa-calendar", label: "Data", value: EVENT.dataLabel },
                   { icon: "fa-clock", label: "Orario", value: EVENT.orarioLabel },
@@ -227,20 +275,31 @@ export default function EventPage() {
                 ))}
               </div>
 
-              {!ARCHIVE_MODE && (
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="?cat=studente#iscrizione" className="btn-primary text-center">
-                    Iscriviti come studente/scuola
-                  </Link>
-                  <Link href="?cat=startup#iscrizione" className="btn-outline text-center">
-                    Iscriviti come startup/partner
-                  </Link>
-                  <Link href={BANDO_PATH} className="btn-outline text-center">
-                    Candidati con la tua startup
-                  </Link>
-                </div>
-              )}
-            </div>
+            {!ARCHIVE_MODE && (
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 mt-8">
+                <Link
+                  href="?cat=studente#iscrizione"
+                  className="btn-primary text-center"
+                  style={{ minWidth: 250 }}
+                >
+                  Iscriviti come studente/scuola
+                </Link>
+                <Link
+                  href="?cat=startup#iscrizione"
+                  className="btn-outline text-center"
+                  style={{ minWidth: 250 }}
+                >
+                  Iscriviti come startup/partner
+                </Link>
+                <Link
+                  href={BANDO_PATH}
+                  className="btn-outline text-center"
+                  style={{ minWidth: 250 }}
+                >
+                  Candidati con la tua startup
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
