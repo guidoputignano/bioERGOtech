@@ -160,7 +160,14 @@ export const RELATORI: Relatore[] = [
   { id: "montano", nome: "Aldo Montano", ruolo: "Campione olimpico di scherma", img: `${SPEAKER_IMG}/aldo-montano.webp` },
   { id: "bortuzzo", nome: "Manuel Bortuzzo", ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024", img: `${SPEAKER_IMG}/manuel-bortuzzo.webp` },
   { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp` },
+  // Sofia Raffaeli non è più assegnata a un panel: il suo posto nel panel 6 è
+  // passato a Valentina Vezzali. La scheda resta qui, inattiva, nel caso torni.
   { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
+  { id: "vezzali", nome: "Valentina Vezzali", ruolo: "Campionessa olimpica di scherma", img: `${SPEAKER_IMG}/valentina-vezzali.webp`, daAutorizzare: true },
+  // Ruolo fornito dalla direzione dell'evento, nella forma breve.
+  { id: "chirico", nome: "Adriana Chirico", ruolo: "Giurista, docente presso il Dipartimento Jonico, UniBa", img: `${SPEAKER_IMG}/adriana-chirico.webp`, daAutorizzare: true },
+  // Ruolo ripreso dal sito di SafesPro. Non ancora assegnata a un panel.
+  { id: "chironi", nome: "Giulia Chironi", ruolo: "Responsabile ricerca, ambiente, salute e lavoro, SafesPro", img: `${SPEAKER_IMG}/giulia-chironi.webp`, daAutorizzare: true },
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "galante", nome: "Fabio Galante", ruolo: "Ex difensore di Inter e Torino", img: `${SPEAKER_IMG}/fabio-galante.webp` },
 ];
@@ -206,7 +213,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     n: 2,
     titolo: "Regole, professioni e istituzioni",
     desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Un confronto tra ordine professionale e legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
-    relatori: ["mandelli", "loizzo"],
+    relatori: ["mandelli", "loizzo", "chirico"],
   },
   {
     tipo: "ragazzi",
@@ -253,7 +260,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     n: 6,
     titolo: "Scienza, tecnologia e nuove generazioni",
     desc: "Come si accende la curiosità scientifica e come si tiene viva quando lo studio si fa difficile. Divulgazione, disciplina e talento: che cosa serve davvero ai ragazzi per costruirsi un percorso, dentro e fuori dall'aula.",
-    relatori: ["schettini", "raffaeli"],
+    relatori: ["schettini", "vezzali"],
   },
   {
     tipo: "ragazzi",
