@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navbar";
+import { teamForArea } from "@/lib/team";
 import { SiteFooter } from "@/components/site-footer";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +10,16 @@ export const metadata: Metadata = {
   description: "Build a biotech or deeptech startup with the bioERGOtech Foundation. Shared lab infrastructure, a clinical validation network, EU and regional funding support, and mentorship in Southern Italy.",
   alternates: { canonical: "/build-with-us" },
 };
+
+/* Areas the Foundation supports. The id is what lib/team.ts tags a person
+   with, so a member shows up under the area they actually work in. */
+const AREAS = [
+  { id: "ai-diagnostics", icon: "fa-laptop-medical", label: "AI-Powered Diagnostics" },
+  { id: "therapeutics", icon: "fa-dna", label: "Therapeutic Technologies" },
+  { id: "digital-health", icon: "fa-mobile-alt", label: "Digital Health Platforms" },
+  { id: "devices-robotics", icon: "fa-robot", label: "Medical Devices & Robotics" },
+  { id: "biotech-innovations", icon: "fa-flask", label: "Biotech Innovations" },
+];
 
 export default function BuildWithUs() {
   return (
@@ -194,19 +205,41 @@ export default function BuildWithUs() {
       <section className="section" id="ventures">
         <div className="container mx-auto px-6">
           <h2 className="section-title text-center block">Areas we work in</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-12 text-center">
-            {[
-              { icon: "fa-laptop-medical", label: "AI-Powered Diagnostics" },
-              { icon: "fa-dna", label: "Therapeutic Technologies" },
-              { icon: "fa-mobile-alt", label: "Digital Health Platforms" },
-              { icon: "fa-robot", label: "Medical Devices & Robotics" },
-              { icon: "fa-flask", label: "Biotech Innovations" },
-            ].map((f) => (
-              <div key={f.label} className="card py-6">
-                <div className="mb-3"><i className={`fas ${f.icon} text-2xl`} style={{ color: "var(--primary)" }} /></div>
-                <p className="font-semibold text-gray-800">{f.label}</p>
-              </div>
-            ))}
+          <p className="text-lg text-gray-700 max-w-3xl mx-auto text-center mb-12">
+            Where an area has people working in it today, they are named here.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {AREAS.map((a) => {
+              const people = teamForArea(a.id);
+              return (
+                <div key={a.id} className="card flex flex-col" style={{ padding: 28 }}>
+                  <div className="mb-3">
+                    <i className={`fas ${a.icon} text-2xl`} style={{ color: "var(--primary)" }} />
+                  </div>
+                  <p className="font-semibold text-gray-800 text-lg">{a.label}</p>
+                  {people.length > 0 && (
+                    <div className="mt-5 pt-5 border-t border-gray-100 flex flex-col gap-4">
+                      {people.map((m) => (
+                        <div key={m.name} className="flex items-center gap-3">
+                          <Image
+                            src={m.img}
+                            alt={`${m.name}, ${m.role}`}
+                            width={96}
+                            height={96}
+                            sizes="48px"
+                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-800 text-sm leading-tight">{m.name}</p>
+                            <p className="text-xs" style={{ color: "var(--primary)" }}>{m.role}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
