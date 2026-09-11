@@ -111,8 +111,8 @@ const TEAM_ORGANIZZATIVO: Organizzatore[] = [
   },
   {
     name: "Giulia Chironi",
-    role: "Responsabile Ricerca e Ambiente",
-    desc: "Responsabile ricerca, ambiente, salute e lavoro presso SafesPro, scuola di alta formazione per professionisti.",
+    role: "Avvocata",
+    desc: "Avvocata del foro di Taranto e dottoressa di ricerca in diritto tributario. Si occupa di fiscalità ambientale e di tassazione degli alimenti salutistici.",
     img: "/assets/images/About-us/Giulia-Chironi.webp",
     daCaricare: true,
   },
