@@ -1,6 +1,5 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
-import { SegmentTabs } from "@/components/segment-tabs";
 import { FaqSection } from "@/components/faq-section";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,16 +9,16 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: {
     absolute:
-      "bioERGOtech Foundation: The Biotech Ecosystem From Lab to Market",
+      "bioERGOtech Foundation: digital scientists for real clinical problems",
   },
   description:
-    "bioERGOtech Foundation is the biotech ecosystem that takes your medical solution from the lab to the market. Synthetic biology, shared lab infrastructure, a validated clinical network, and access to regional and European funding.",
+    "A research foundation in Taranto, Italy. We build software agents inside clinical problems someone already has, and publish what we find, including where we stopped.",
   alternates: { canonical: "/" },
   openGraph: {
     title:
-      "bioERGOtech Foundation: The Biotech Ecosystem From Lab to Market",
+      "bioERGOtech Foundation: digital scientists for real clinical problems",
     description:
-      "Shared lab infrastructure, a validated clinical network, and access to regional and European funding. The ecosystem that takes your medical solution from the lab to the market.",
+      "A research foundation in Taranto, Italy. We build software agents inside clinical problems someone already has, and publish what we find, including where we stopped.",
     url: "https://www.bioergotech.org",
   },
 };
@@ -29,29 +28,103 @@ export const metadata: Metadata = {
    tinted surface (tabs, icon tiles, tags, the closing CTA) stays gentle. */
 const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
 
-/* ── Hero traction stats — keep these reflecting real, current numbers ── */
-const HERO_STATS = [
-  { num: "4", label: "Active programmes" },
-  { num: "1", label: "Operational location" },
-  { num: "4", label: "Research topics" },
+/* ── The finding. One published result, stated so a reader can check it.
+      Replaces the old traction counters, which measured the size of the
+      Foundation rather than anything it had found. ── */
+const FINDING = {
+  number: "356,022",
+  unit: "patients",
+  claim:
+    "In a five-year national cohort study, cancer risk after a diagnosis of immune-mediated inflammatory disease was highest in the first year and fell steadily after it. The shape of that decline points at inflammation rather than at treatment.",
+  cite: "Cancers 2026;18(6):1027",
+  href: "https://doi.org/10.3390/cancers18061027",
+};
+
+/* ── Research programmes, each at its real stage. "Withdrawn" is deliberate:
+      it is the most informative status on the list. ── */
+type Stage = "Published" | "In progress" | "Prototype" | "Design study" | "Withdrawn";
+const STAGE_STYLE: Record<Stage, { bg: string; color: string }> = {
+  Published:      { bg: "#E1F5EE", color: "#0F6E56" },
+  "In progress":  { bg: "#E6F1FB", color: "#185FA5" },
+  Prototype:      { bg: "#E6F1FB", color: "#185FA5" },
+  "Design study": { bg: "#EEF1F5", color: "#5A6B7B" },
+  Withdrawn:      { bg: "#FDF0E7", color: "#9A5518" },
+};
+
+const RESEARCH: { title: string; field: string; stage: Stage; desc: string }[] = [
+  {
+    title: "Cancer risk after an inflammatory disease diagnosis",
+    field: "Oncology and rheumatology",
+    stage: "Published",
+    desc: "356,022 patients across five years of Italian hospital discharge records. Which cancers, how much more often, and when in the disease course.",
+  },
+  {
+    title: "Which subgroups carry which cancer risk",
+    field: "Population oncology",
+    stage: "In progress",
+    desc: "Genotype, lifestyle and socioeconomic data read together at population level. One of the algorithms delivered under CODIGE. No individual risk score.",
+  },
+  {
+    title: "Where the regulatory line sits for a tumour board tool",
+    field: "Clinical decision support",
+    stage: "Withdrawn",
+    desc: "We built a working prototype, found it sat inside MDR Annex VIII Rule 11, and took it offline rather than leaving a disclaimer on top. The line is the finding.",
+  },
+  {
+    title: "The interval between visits",
+    field: "Rheumatology",
+    stage: "Design study",
+    desc: "Months pass between outpatient visits and every visit begins from a reconstruction by memory. What is worth capturing in between, and does capturing it change anything.",
+  },
+  {
+    title: "Where the medicines go",
+    field: "Health system economics",
+    stage: "Prototype",
+    desc: "A read-only view of hospital pharmaceutical spending. The claim being tested is about how fast an organisation reacts to an opportunity, not about savings.",
+  },
 ];
 
-/* ── How it works — three low-friction steps ── */
+/* ── Published work. A DOI resolves, which is more than most claims on a
+      research site can say. ── */
+const PUBLICATIONS = [
+  {
+    title:
+      "Cancer Association in Patients with Immune-Mediated Inflammatory Diseases: A Five-Year Nationwide Italian Cohort Study",
+    venue: "Cancers, 2026",
+    doi: "10.3390/cancers18061027",
+    href: "https://doi.org/10.3390/cancers18061027",
+  },
+  {
+    title: "Modelling sex differences of neurological disorders in vitro",
+    venue: "Nature Reviews Bioengineering, 2026",
+    doi: "10.1038/s44222-025-00355-w",
+    href: "https://doi.org/10.1038/s44222-025-00355-w",
+  },
+  {
+    title:
+      "Mathematical models and computational approaches in CAR-T therapeutics",
+    venue: "Frontiers in Immunology, 2025",
+    doi: "10.3389/fimmu.2025.1581210",
+    href: "https://doi.org/10.3389/fimmu.2025.1581210",
+  },
+];
+
+/* ── How we work. The mechanism, not the onboarding sequence. ── */
 const STEPS = [
   {
     num: "1",
-    title: "Book an exploratory call",
-    desc: "Fifteen minutes with the Foundation team, with no commitment. Together we understand whether there is a fit.",
+    title: "Someone brings a problem they own",
+    desc: "A clinician, a discovery scientist or a pharmacy lead who has the problem and could not solve it. Not a technology looking for an application.",
   },
   {
     num: "2",
-    title: "We shape your profile",
-    desc: "Based on who you are, whether a startup, company, hospital or investor, we map what you can access and what you might contribute to the ecosystem.",
+    title: "We build the smallest thing that answers it",
+    desc: "Documented, versioned and evaluated. What was not evaluated is written down next to what was, because a reader cannot tell the difference otherwise.",
   },
   {
     num: "3",
-    title: "You enter the ecosystem",
-    desc: "Onboarding, access to resources and introductions to the members most relevant to you. Operational from the first day, not after months of paperwork.",
+    title: "We publish what we find",
+    desc: "Including where we stopped. One prototype on this page was withdrawn on regulatory grounds, and it is written up rather than quietly deleted.",
   },
 ];
 
@@ -192,20 +265,21 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
-                The ecosystem that takes your medical solution{" "}
-                <span style={{ color: "var(--primary)" }}>from the lab to the market</span>
+                bioERGOtech builds{" "}
+                <span style={{ color: "var(--primary)" }}>digital scientists</span>
+                : software agents built inside real clinical problems.
               </h1>
               <p className="text-xl mb-8 text-gray-700">
-                Shared infrastructure, a validated clinical network and access to
-                regional and European funding, without the cost of doing it all
-                on your own.
+                We start from a question someone already has and could not
+                answer, build the smallest system that tests it, and publish
+                what we find.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="#for-you" className="btn-primary text-center">
-                  See what you get →
+                <Link href="#research" className="btn-primary text-center">
+                  See what we are working on →
                 </Link>
-                <Link href="/about-us" className="btn-outline text-center">
-                  Explore active projects
+                <Link href="#publications" className="btn-outline text-center">
+                  Read the papers
                 </Link>
               </div>
             </div>
@@ -222,27 +296,79 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Traction stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-14">
-            {HERO_STATS.map((s) => (
-              <div key={s.label}>
-                <div className="stat-number">{s.num}</div>
-                <div className="stat-label">{s.label}</div>
+          {/* One published finding, in place of counters describing our own size */}
+          <div
+            className="mt-14 bg-white rounded-xl p-8 md:p-10 shadow-lg"
+            style={{ borderLeft: "4px solid var(--primary)" }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+              <div>
+                <div className="stat-number" style={{ fontSize: "3.25rem" }}>
+                  {FINDING.number}
+                </div>
+                <div className="stat-label" style={{ fontSize: "0.95rem" }}>
+                  {FINDING.unit}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-gray-700 text-lg leading-relaxed mb-4">
+                  {FINDING.claim}
+                </p>
+                <a
+                  href={FINDING.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-sm"
+                  style={{ color: "var(--primary)" }}
+                >
+                  {FINDING.cite} ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Research ── */}
+      <section className="section" id="research">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title">Research</h2>
+          <p className="text-lg text-gray-700 max-w-3xl mb-12">
+            Each programme is listed at the stage it has actually reached. One of
+            them was withdrawn, and it is on the list for the same reason as the
+            others.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {RESEARCH.map((r) => (
+              <div key={r.title} className="card-sm" style={{ padding: 28 }}>
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <span className="text-xs uppercase tracking-widest font-semibold text-gray-500">
+                    {r.field}
+                  </span>
+                  <span
+                    className="badge flex-shrink-0"
+                    style={{
+                      background: STAGE_STYLE[r.stage].bg,
+                      color: STAGE_STYLE[r.stage].color,
+                    }}
+                  >
+                    {r.stage}
+                  </span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">{r.title}</h3>
+                <p className="text-gray-600 text-sm">{r.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── You're in the right place if… (segment tabs) ── */}
-      <SegmentTabs />
-
-      {/* ── How it works ── */}
-      <section className="section bg-light-gray" id="how-it-works">
+      {/* ── How we work ── */}
+      <section className="section bg-light-gray" id="how-we-work">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">How it works</h2>
+          <h2 className="section-title">How we work</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Three steps, from a first conversation to full membership.
+            The same three steps every time, whatever the field.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {STEPS.map((step) => (
@@ -256,6 +382,37 @@ export default function Home() {
                 <h3 className="text-xl font-semibold mb-3 text-gray-800">{step.title}</h3>
                 <p className="text-gray-600">{step.desc}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Published work ── */}
+      <section className="section" id="publications">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title">Published work</h2>
+          <p className="text-lg text-gray-700 max-w-3xl mb-12">
+            Peer reviewed, and checkable without asking us. Every entry resolves
+            from its DOI.
+          </p>
+          <div className="flex flex-col gap-4">
+            {PUBLICATIONS.map((pub) => (
+              <a
+                key={pub.doi}
+                href={pub.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card-sm block course-card-hover"
+                style={{ padding: 24, borderLeft: "3px solid var(--primary)" }}
+              >
+                <h3 className="text-base font-semibold mb-2 text-gray-800">{pub.title}</h3>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span className="text-gray-600">{pub.venue}</span>
+                  <span className="font-semibold" style={{ color: "var(--primary)" }}>
+                    doi:{pub.doi} ↗
+                  </span>
+                </div>
+              </a>
             ))}
           </div>
         </div>
@@ -322,11 +479,10 @@ export default function Home() {
       {/* ── Hubs ── */}
       <section className="section bg-light-gray" id="hubs">
         <div className="container mx-auto px-6">
-          <h2 className="section-title">Where the ecosystem grows</h2>
+          <h2 className="section-title">Where we work</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Our network spans one operational home today, with two strategic
-            frontiers in development. Taranto is where we started. Our ambitions
-            reach further.
+            One operational home today, and two locations in development. Taranto
+            is where the work happens now.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HUBS.map((hub) => (
@@ -465,12 +621,47 @@ export default function Home() {
       </section>
 
 
+      {/* ── Who made it? ── */}
+      <section className="section bg-light-gray" id="community">
+        <div className="container mx-auto px-6">
+          <h2 className="section-title">Who made it?</h2>
+          <p className="text-lg text-gray-700 max-w-3xl mb-12">
+            The first members of the Foundation, already building alongside us.
+            More to come soon.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {COMMUNITY.map((m) => (
+              <div
+                key={m.name}
+                className="card-sm flex flex-col items-center justify-center"
+                style={{ padding: 28 }}
+              >
+                <Image
+                  src={m.logo}
+                  alt={`${m.name}, member of the bioERGOtech Foundation`}
+                  width={800}
+                  height={300}
+                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 240px"
+                  className="w-full h-auto max-w-[200px] object-contain"
+                />
+                <span
+                  className="badge mt-5"
+                  style={{ background: "#E1F5EE", color: "#0F6E56" }}
+                >
+                  Active member
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Agentic AI Course ── */}
       <section className="section bg-light-gray" id="courses">
         <div className="container mx-auto px-6">
           <h2 className="section-title">Learn to build AI agents</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            A free 10-week programme for high school students. Go from understanding what AI agents are to building and demonstrating a working prototype — no prior coding experience required.
+            A free 10-week programme for high school students. Go from understanding what AI agents are to building and demonstrating a working prototype. No prior coding experience required.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             <div className="md:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden block course-card-hover">
@@ -489,7 +680,7 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Build real AI agents that solve genuine problems. Choose your track — no-code, low-code, or full-code. Earn a verified certificate on completion.</p>
+                <p className="text-gray-600 text-sm mb-4">Build real AI agents that solve genuine problems. Choose your track: no-code, low-code, or full-code. Earn a verified certificate on completion.</p>
                 <Link href="/courses/agentic-ai" className="btn-primary inline-block">Start learning →</Link>
               </div>
             </div>
@@ -551,41 +742,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Who made it? ── */}
-      <section className="section bg-light-gray" id="community">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Who made it?</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            The first members of the Foundation, already building alongside us.
-            More to come soon.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {COMMUNITY.map((m) => (
-              <div
-                key={m.name}
-                className="card-sm flex flex-col items-center justify-center"
-                style={{ padding: 28 }}
-              >
-                <Image
-                  src={m.logo}
-                  alt={`${m.name}, member of the bioERGOtech Foundation`}
-                  width={800}
-                  height={300}
-                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 240px"
-                  className="w-full h-auto max-w-[200px] object-contain"
-                />
-                <span
-                  className="badge mt-5"
-                  style={{ background: "#E1F5EE", color: "#0F6E56" }}
-                >
-                  Active member
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── Grant & Funding Eligibility Navigator ── */}
       <section className="section" id="navigator">
         <div className="container mx-auto px-6">
@@ -613,7 +769,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-600 text-sm mb-4">
-                  Covers NIDI, Mini-PIA, PIA, ZES, Horizon Europe, and the EIC Accelerator — including
+                  Covers NIDI, Mini-PIA, PIA, ZES, Horizon Europe, and the EIC Accelerator, including
                   Puglia- and Taranto-specific schemes most tools miss entirely.
                 </p>
                 <Link href="/navigator" className="btn-primary inline-block">Check your eligibility →</Link>
@@ -639,20 +795,25 @@ export default function Home() {
       {/* ── FAQ ── */}
       <FaqSection />
 
-      {/* ── Final CTA ── */}
+      {/* ── Get involved ── */}
       <section className="section" style={{ background: "var(--primary-light)" }}>
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 max-w-3xl mx-auto">
-            Founding memberships for 2026 are now open.
+            Five open questions, and we cannot answer them alone.
           </h2>
           <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-            Membership is free for seed-stage startups. Book a fifteen-minute
-            call and we will explore together whether there is a fit, with no
-            commitment.
+            We are looking for co-investigators, cohorts to replicate on, and
+            clinical partners who have a problem they own. If one of the
+            programmes above is close to something you work on, write to us.
           </p>
-          <Link href="/contact" className="btn-primary">
-            Book an exploratory call →
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/contact" className="btn-primary">
+              Start a conversation →
+            </Link>
+            <Link href="/join-us" className="btn-outline">
+              Other ways to work with us
+            </Link>
+          </div>
         </div>
       </section>
       </div>
