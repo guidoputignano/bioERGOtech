@@ -185,6 +185,12 @@ export type ProgrammaVoce = {
   desc: string;
   relatori?: string[];
   ospiti?: string[];
+  /**
+   * Gli `id` di PARTNER che salgono sul palco in questa voce. È il posto dove
+   * i loghi compaiono: dentro la card del panel, accanto a chi interviene, non
+   * in una fascia separata a fondo pagina che non direbbe in che veste ci sono.
+   */
+  partner?: string[];
 };
 
 export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
@@ -228,7 +234,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     titolo: "Sport, disabilità e inclusione",
     desc: "Che cosa succede quando una squadra si apre davvero: autonomia, fiducia e legami che nascono in campo prima che nei percorsi di cura. Le esperienze di chi accompagna ragazzi con disabilità, raccontate da chi le vive ogni giorno.",
     relatori: ["tari"],
-    ospiti: ["Squadra Insuperabili", "Ragazzi de La casa di Sofia"],
+    partner: ["giffoni", "insuperabili", "casa-di-sofia"],
   },
   {
     tipo: "pausa",
@@ -321,6 +327,7 @@ export const relatoriVoce = (v: ProgrammaVoce): Relatore[] =>
 /** Nomi in riga, per le voci di raccordo che non mostrano i volti. */
 export const nomiVoce = (v: ProgrammaVoce): string[] => [
   ...relatoriVoce(v).map((r) => r.nome),
+  ...partnerVoce(v).map((p) => p.nome),
   ...(v.ospiti ?? []),
 ];
 
@@ -383,6 +390,16 @@ export const PARTNER: Partner[] = [
 
 /** I loghi che la pagina può pubblicare davvero. */
 export const PARTNER_PUBBLICI = PARTNER.filter((p) => !p.daCaricare);
+
+// Come RELATORE_BY_ID: un id senza file non risolve, e la voce di programma
+// che lo cita mostra semplicemente gli altri.
+const PARTNER_BY_ID = new Map(PARTNER_PUBBLICI.map((p) => [p.id, p]));
+
+/** I loghi di una voce di programma, risolti dagli id. */
+export const partnerVoce = (v: ProgrammaVoce): Partner[] =>
+  (v.partner ?? [])
+    .map((id) => PARTNER_BY_ID.get(id))
+    .filter((p): p is Partner => Boolean(p));
 
 /** Panel e relatori sono contati dai dati, così non divergono dal programma. */
 export const STATS = [
