@@ -41,7 +41,7 @@ async function awardCoins(client: SupabaseClient, userId: string, amount: number
 }
 
 export async function GET() {
-  const { error, status, client } = await requireMember();
+  const { error, status, client, chiamante } = await requireMember();
   if (error || !client) return NextResponse.json({ error }, { status });
 
   const { data, error: dbError } = await client
@@ -50,7 +50,22 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
-  return NextResponse.json({ projects: data });
+
+  // I recapiti del referente non escono dalla riga di chi non c'entra.
+  //
+  // requireMember lascia passare qualunque utente autenticato, quindi senza
+  // questo filtro l'elenco progetti consegnava email e telefono di ogni
+  // referente a ogni iscritto. Il progetto resta visibile a tutti: sono solo
+  // i due campi personali a restare allo staff e a chi ha creato la riga.
+  const progetti = (data ?? []).map((riga) => {
+    if (chiamante.isAdmin || riga.created_by === chiamante.id) return riga;
+    const resto = { ...riga };
+    delete resto.lead_email;
+    delete resto.lead_phone;
+    return resto;
+  });
+
+  return NextResponse.json({ projects: progetti });
 }
 
 export async function POST(request: Request) {
