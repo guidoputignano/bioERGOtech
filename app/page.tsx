@@ -40,70 +40,92 @@ const FINDING = {
   href: "https://doi.org/10.3390/cancers18061027",
 };
 
-/* ── Research programmes, each at its real stage. "Withdrawn" is deliberate:
-      it is the most informative status on the list. ── */
-type Stage = "Published" | "In progress" | "Prototype" | "Design study" | "Withdrawn";
+/* ── Research programmes, each at the stage it has actually reached.
+      Titles lead with the artefact where the artefact is software, because the
+      headline promises agents and a reader should be able to see them. Card 1
+      is the exception: it is a cohort study and is labelled as one. ── */
+type Stage =
+  | "Published"
+  | "Completed"
+  | "Awaiting approval"
+  | "Prototype"
+  | "In progress"
+  | "In design";
+
 const STAGE_STYLE: Record<Stage, { bg: string; color: string }> = {
-  Published:      { bg: "#E1F5EE", color: "#0F6E56" },
-  "In progress":  { bg: "#E6F1FB", color: "#185FA5" },
-  Prototype:      { bg: "#E6F1FB", color: "#185FA5" },
-  "Design study": { bg: "#EEF1F5", color: "#5A6B7B" },
-  Withdrawn:      { bg: "#FDF0E7", color: "#9A5518" },
+  Published:           { bg: "#E1F5EE", color: "#0F6E56" },
+  Completed:           { bg: "#E1F5EE", color: "#0F6E56" },
+  "Awaiting approval": { bg: "#FDF3E3", color: "#8A6212" },
+  Prototype:           { bg: "#E6F1FB", color: "#185FA5" },
+  "In progress":       { bg: "#E6F1FB", color: "#185FA5" },
+  "In design":         { bg: "#EEF1F5", color: "#5A6B7B" },
 };
 
 const RESEARCH: { title: string; field: string; stage: Stage; desc: string }[] = [
   {
     title: "Cancer risk after an inflammatory disease diagnosis",
-    field: "Oncology and rheumatology",
+    field: "Cohort study · oncology and rheumatology",
     stage: "Published",
     desc: "356,022 patients across five years of Italian hospital discharge records. Which cancers, how much more often, and when in the disease course.",
   },
   {
     title: "Which subgroups carry which cancer risk",
-    field: "Population oncology",
-    stage: "In progress",
-    desc: "Genotype, lifestyle and socioeconomic data read together at population level. One of the algorithms delivered under CODIGE. No individual risk score.",
+    field: "Algorithm · population oncology",
+    stage: "Completed",
+    desc: "Genotype, lifestyle and socioeconomic data read together at population level. One of the algorithms delivered under CODIGE. Population associations, never an individual risk score.",
   },
   {
-    title: "Where the regulatory line sits for a tumour board tool",
-    field: "Clinical decision support",
-    stage: "Withdrawn",
-    desc: "We built a working prototype, found it sat inside MDR Annex VIII Rule 11, and took it offline rather than leaving a disclaimer on top. The line is the finding.",
+    title: "An agent that prepares the evidence for a tumour board",
+    field: "Agent · clinical decision support",
+    stage: "Awaiting approval",
+    desc: "A clinician enters a case, the agent searches published AIOM and ESMO guidance and returns one page the panel can read in the room. Built with an Italian local health authority. The pilot is waiting on regional approval and the agent is not in use in care.",
   },
   {
-    title: "The interval between visits",
-    field: "Rheumatology",
-    stage: "Design study",
-    desc: "Months pass between outpatient visits and every visit begins from a reconstruction by memory. What is worth capturing in between, and does capturing it change anything.",
+    title: "An agent for the gap between rheumatology visits",
+    field: "Agent · rheumatology",
+    stage: "In design",
+    desc: "Months pass between outpatient visits, and every visit begins from a reconstruction by memory. What is worth capturing in between, and does capturing it change the next one.",
   },
   {
-    title: "Where the medicines go",
-    field: "Health system economics",
+    title: "A compass for hospital medicines spending",
+    field: "Agent · health system economics",
     stage: "Prototype",
-    desc: "A read-only view of hospital pharmaceutical spending. The claim being tested is about how fast an organisation reacts to an opportunity, not about savings.",
+    desc: "A hospital already holds every figure it needs to see where value is leaking. It is not organised in a way that points anywhere. This reads the flows an authority already produces and points at the molecule, the channel and the ward where the money is going.",
+  },
+  {
+    title: "A pipeline for patient groups too small to analyse",
+    field: "Computational analysis · rare disease",
+    stage: "In progress",
+    desc: "When a disease affects a handful of people in a country, the statistics built for thousands stop working. We are testing what can still be learned from a cohort that small, starting with propionic acidemia in Saudi Arabia.",
   },
 ];
 
-/* ── Published work. A DOI resolves, which is more than most claims on a
-      research site can say. ── */
+/* ── Published work. The journal name carries the weight here, so it leads the
+      card. A DOI resolves, which is more than most claims on a research site. ── */
 const PUBLICATIONS = [
   {
-    title:
-      "Cancer Association in Patients with Immune-Mediated Inflammatory Diseases: A Five-Year Nationwide Italian Cohort Study",
-    venue: "Cancers, 2026",
-    doi: "10.3390/cancers18061027",
-    href: "https://doi.org/10.3390/cancers18061027",
-  },
-  {
+    venue: "Nature Reviews Bioengineering",
+    year: "2026",
     title: "Modelling sex differences of neurological disorders in vitro",
-    venue: "Nature Reviews Bioengineering, 2026",
+    authors: "Castro-Aldrete L, Einsiedler M, ... Putignano G, ... Santuccione Chadha A",
     doi: "10.1038/s44222-025-00355-w",
     href: "https://doi.org/10.1038/s44222-025-00355-w",
   },
   {
+    venue: "Cancers",
+    year: "2026",
+    title:
+      "Cancer Association in Patients with Immune-Mediated Inflammatory Diseases: A Five-Year Nationwide Italian Cohort Study",
+    authors: "Giordani B, Pirtoli L, Putignano G, Giordano A, Marotto D, Baglio G",
+    doi: "10.3390/cancers18061027",
+    href: "https://doi.org/10.3390/cancers18061027",
+  },
+  {
+    venue: "Frontiers in Immunology",
+    year: "2025",
     title:
       "Mathematical models and computational approaches in CAR-T therapeutics",
-    venue: "Frontiers in Immunology, 2025",
+    authors: "Putignano G, Ruiperez-Campillo S, Yuan Z, Millet J, Guerrero-Aspizua S",
     doi: "10.3389/fimmu.2025.1581210",
     href: "https://doi.org/10.3389/fimmu.2025.1581210",
   },
@@ -123,8 +145,8 @@ const STEPS = [
   },
   {
     num: "3",
-    title: "We publish what we find",
-    desc: "Including where we stopped. One prototype on this page was withdrawn on regulatory grounds, and it is written up rather than quietly deleted.",
+    title: "What works goes to market",
+    desc: "A programme is completed when its question has been answered. Where the answer is useful beyond us, the route out is a publication, a tool other groups can run, or a company.",
   },
 ];
 
@@ -334,9 +356,9 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <h2 className="section-title">Research</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Each programme is listed at the stage it has actually reached. One of
-            them was withdrawn, and it is on the list for the same reason as the
-            others.
+            Six programmes, each listed at the stage it has actually reached.
+            Two are complete, one is waiting on a regional approval, and three
+            are live.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {RESEARCH.map((r) => (
@@ -395,20 +417,43 @@ export default function Home() {
             Peer reviewed, and checkable without asking us. Every entry resolves
             from its DOI.
           </p>
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PUBLICATIONS.map((pub) => (
               <a
                 key={pub.doi}
                 href={pub.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="card-sm block course-card-hover"
-                style={{ padding: 24, borderLeft: "3px solid var(--primary)" }}
+                className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col course-card-hover"
               >
-                <h3 className="text-base font-semibold mb-2 text-gray-800">{pub.title}</h3>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span className="text-gray-600">{pub.venue}</span>
-                  <span className="font-semibold" style={{ color: "var(--primary)" }}>
+                <div
+                  className="px-6 pt-6 pb-5"
+                  style={{ borderTop: "4px solid var(--primary)" }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "'Sora', sans-serif",
+                      fontSize: 17,
+                      fontWeight: 800,
+                      lineHeight: 1.25,
+                      color: "var(--primary-dark)",
+                    }}
+                  >
+                    {pub.venue}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">{pub.year}</div>
+                </div>
+                <div className="px-6 pb-6 flex flex-col flex-1">
+                  <h3 className="text-base font-semibold text-gray-800 leading-snug mb-3">
+                    {pub.title}
+                  </h3>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-5">
+                    {pub.authors}
+                  </p>
+                  <span
+                    className="text-xs font-semibold mt-auto"
+                    style={{ color: "var(--primary)" }}
+                  >
                     doi:{pub.doi} ↗
                   </span>
                 </div>
@@ -419,7 +464,7 @@ export default function Home() {
       </section>
 
       {/* ── Infrastructure & benefits with badges ── */}
-      <section className="section" id="infrastructure">
+      <section className="section bg-light-gray" id="infrastructure">
         <div className="container mx-auto px-6">
           <h2 className="section-title">What you can work with</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-8">
@@ -477,7 +522,7 @@ export default function Home() {
       </section>
 
       {/* ── Hubs ── */}
-      <section className="section bg-light-gray" id="hubs">
+      <section className="section" id="hubs">
         <div className="container mx-auto px-6">
           <h2 className="section-title">Where we work</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
@@ -524,7 +569,7 @@ export default function Home() {
       </section>
 
       {/* ── Recent updates ── */}
-      <section className="section" id="updates">
+      <section className="section bg-light-gray" id="updates">
         <div className="container mx-auto px-6">
           <h2 className="section-title">Recent updates</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
@@ -622,7 +667,7 @@ export default function Home() {
 
 
       {/* ── Who made it? ── */}
-      <section className="section bg-light-gray" id="community">
+      <section className="section" id="community">
         <div className="container mx-auto px-6">
           <h2 className="section-title">Who made it?</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
@@ -743,7 +788,7 @@ export default function Home() {
       </section>
 
       {/* ── Grant & Funding Eligibility Navigator ── */}
-      <section className="section" id="navigator">
+      <section className="section bg-light-gray" id="navigator">
         <div className="container mx-auto px-6">
           <h2 className="section-title">Not sure which grants you qualify for?</h2>
           <p className="text-lg text-gray-700 max-w-3xl mb-12">
