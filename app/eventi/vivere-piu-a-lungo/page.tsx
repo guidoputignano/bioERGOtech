@@ -181,7 +181,7 @@ export default function EventPage() {
           {/* L'immagine e' un panorama 2.3:1: dentro mezza colonna diventava
               una striscia di poco piu' di 200px di altezza e la scena si
               perdeva. A tutta larghezza ha la forma per cui e' composta. */}
-          <div className="relative" style={{ height: "min(56vh, 600px)", minHeight: 320 }}>
+          <div className="relative" style={{ height: "min(56vh, 660px)", minHeight: 320 }}>
             <Image
               src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
               alt="Illustrazione: un'atleta corre sul lungomare di Taranto davanti al Castello Aragonese, affiancata dalla figura luminosa di un corpo umano digitale e da una doppia elica del DNA"
@@ -189,7 +189,12 @@ export default function EventPage() {
               priority
               sizes="100vw"
               className="object-cover"
-              style={{ objectPosition: "center 45%" }}
+              /* Ancorata in alto. Su schermi larghi `object-cover` scala
+                 sulla larghezza e sborda in altezza: con un'ancora centrale il
+                 taglio arrivava dall'alto e tagliava le teste. Da qui in giu'
+                 si perde semmai il lastricato in basso, che il velo scuro
+                 copre comunque. */
+              style={{ objectPosition: "center top" }}
             />
             {/* Due veli sovrapposti. Quello dal basso regge il contrasto del
                 titolo; quello da sinistra scurisce la fascia dove cade il
@@ -246,10 +251,12 @@ export default function EventPage() {
             </div>
           </div>
 
-          <div className="container mx-auto px-6 pt-10 pb-28 relative z-10">
-            <div className="max-w-3xl">
-              {/* Box informativi */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="container mx-auto px-6 pt-10 pb-24 relative z-10">
+            {/* Box informativi: tre colonne uguali su tutta la larghezza del
+                contenitore. Prima stavano in una colonna da 768px allineata a
+                sinistra, che sotto un banner a tutta larghezza lasciava mezzo
+                schermo vuoto a destra. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                 {[
                   { icon: "fa-calendar", label: "Data", value: EVENT.dataLabel },
                   { icon: "fa-clock", label: "Orario", value: EVENT.orarioLabel },
@@ -267,20 +274,31 @@ export default function EventPage() {
                 ))}
               </div>
 
-              {!ARCHIVE_MODE && (
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="?cat=studente#iscrizione" className="btn-primary text-center">
-                    Iscriviti come studente/scuola
-                  </Link>
-                  <Link href="?cat=startup#iscrizione" className="btn-outline text-center">
-                    Iscriviti come startup/partner
-                  </Link>
-                  <Link href={BANDO_PATH} className="btn-outline text-center">
-                    Candidati con la tua startup
-                  </Link>
-                </div>
-              )}
-            </div>
+            {!ARCHIVE_MODE && (
+              <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 mt-8">
+                <Link
+                  href="?cat=studente#iscrizione"
+                  className="btn-primary text-center"
+                  style={{ minWidth: 250 }}
+                >
+                  Iscriviti come studente/scuola
+                </Link>
+                <Link
+                  href="?cat=startup#iscrizione"
+                  className="btn-outline text-center"
+                  style={{ minWidth: 250 }}
+                >
+                  Iscriviti come startup/partner
+                </Link>
+                <Link
+                  href={BANDO_PATH}
+                  className="btn-outline text-center"
+                  style={{ minWidth: 250 }}
+                >
+                  Candidati con la tua startup
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
