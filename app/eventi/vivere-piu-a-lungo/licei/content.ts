@@ -431,6 +431,36 @@ export const STATI_ISCRIZIONE = [
 
 export type StatoIscrizione = (typeof STATI_ISCRIZIONE)[number]["value"];
 
+/**
+ * Se uno studente e riuscito a entrare nel corso, oppure no.
+ *
+ * Due segnali e non uno, e il perche viene da un bug vero: in produzione e
+ * comparso uno studente con 2 lezioni su 21 completate e il badge "Mai
+ * entrato" addosso. Le due cose non possono stare insieme, perche per
+ * consegnare la riflessione che chiude una lezione bisogna essere dentro.
+ *
+ * `ultimo_accesso` viene da `last_sign_in_at` di `auth.users`, e per quello
+ * studente era nullo pur avendo lui una sessione e dei lavori consegnati.
+ * Invece di indovinare come GoTrue tratti gli account creati dall'API di
+ * amministrazione, si smette di appendere a un solo indizio un'affermazione
+ * che un docente legge come un fatto: chi ha consegnato anche una sola
+ * lezione e entrato, punto.
+ *
+ * Sta qui, accanto agli stati, perche la usano la console del referente, il
+ * pannello dello staff e i due export. Tenerne quattro copie voleva dire
+ * poterle disallineare, che e il modo in cui questo bug tornerebbe.
+ */
+export const haFattoAccesso = (r: {
+  ultimo_accesso?: string | null;
+  lezioni_completate?: number | null;
+}): boolean => Boolean(r.ultimo_accesso) || (r.lezioni_completate ?? 0) > 0;
+
+/** Gli stati in cui uno studente e ancora in gioco, quindi da seguire. */
+export const STATI_ISCRIZIONE_ATTIVI: ReadonlySet<string> = new Set([
+  "in_attesa",
+  "confermata",
+]);
+
 export const statoIscrizioneLabel = (v: string): string =>
   STATI_ISCRIZIONE.find((s) => s.value === v)?.label ?? v;
 

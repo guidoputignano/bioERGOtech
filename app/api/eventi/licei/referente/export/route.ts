@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireReferente } from "@/lib/eventi/licei-server";
-import { statoIscrizioneLabel } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  haFattoAccesso,
+  statoIscrizioneLabel,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 
 function csvCell(value: unknown): string {
@@ -42,10 +45,10 @@ export async function GET(request: Request) {
   ]);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const entrato = new Map<string, boolean>(
+  const ultimoAccesso = new Map<string, string | null>(
     ((accessi ?? []) as { iscrizione_id: string; ultimo_accesso: string | null }[]).map((a) => [
       a.iscrizione_id,
-      a.ultimo_accesso !== null,
+      a.ultimo_accesso,
     ]),
   );
 
@@ -72,7 +75,12 @@ export async function GET(request: Request) {
         r.anno_corso,
         r.email,
         statoIscrizioneLabel(r.stato),
-        entrato.get(r.id) ? "SI" : "NO",
+        haFattoAccesso({
+          ultimo_accesso: ultimoAccesso.get(r.id) ?? null,
+          lezioni_completate: r.user_id ? (progresso.get(r.user_id) ?? 0) : 0,
+        })
+          ? "SI"
+          : "NO",
         r.user_id ? (progresso.get(r.user_id) ?? 0) : 0,
         r.created_at,
         r.confermata_at ?? "",
