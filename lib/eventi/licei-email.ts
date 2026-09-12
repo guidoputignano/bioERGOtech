@@ -10,6 +10,7 @@
 import {
   COMMISSIONE_PATH,
   CONTATTI_LICEI,
+  GUIDA_PATH,
   ISCRIZIONE_PATH,
   LICEI,
   LICEI_PATH,
@@ -118,6 +119,7 @@ export function liceiEmailHtml(input: LiceiEmailInput): string {
         oppure a
         <a href="mailto:${CONTATTI_LICEI.organizzazione.email}" style="color:#008F6B;">${CONTATTI_LICEI.organizzazione.email}</a>.<br>
         Fondazione bioERGOtech e SafesPro .
+        <a href="${SITE_URL}${GUIDA_PATH}" style="color:#008F6B;">Chi fa cosa, passo per passo</a> .
         <a href="${SITE_URL}" style="color:#008F6B;">www.bioergotech.org</a>
       </p>
     </div>
@@ -195,6 +197,7 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
         Per qualsiasi dubbio parlane prima con il tuo docente referente. Se serve, scrivi a
         <a href="mailto:${CONTATTI_LICEI.fondazione.email}" style="color:#008F6B;">${CONTATTI_LICEI.fondazione.email}</a>.<br>
         Fondazione bioERGOtech e SafesPro .
+        <a href="${SITE_URL}${GUIDA_PATH}" style="color:#008F6B;">Chi fa cosa, passo per passo</a> .
         <a href="${SITE_URL}${LICEI_PATH}" style="color:#008F6B;">Il bando</a>
       </p>
     </div>
@@ -214,6 +217,7 @@ const chiusura = (extra = ""): string => `
       <p style="color:#A0AEC0;font-size:12px;margin:0;line-height:1.6;">
         ${extra}
         Fondazione bioERGOtech e SafesPro .
+        <a href="${SITE_URL}${GUIDA_PATH}" style="color:#008F6B;">Chi fa cosa</a> .
         <a href="${SITE_URL}${LICEI_PATH}" style="color:#008F6B;">Il bando</a> .
         <a href="mailto:${CONTATTI_LICEI.fondazione.email}" style="color:#008F6B;">${CONTATTI_LICEI.fondazione.email}</a>
       </p>`;

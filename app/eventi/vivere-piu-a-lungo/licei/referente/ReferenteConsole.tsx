@@ -22,6 +22,7 @@ import {
   STATI_ISCRIZIONE,
   statoAdesioneColore,
   statoAdesioneLabel,
+  GUIDA_PATH,
   STATI_ISCRIZIONE_ATTIVI,
   haFattoAccesso,
   statoIscrizioneColore,
@@ -201,6 +202,10 @@ export function ReferenteConsole() {
         </div>
         <p className="text-sm text-gray-600">
           Area del docente referente . {adesione?.referente_nome} {adesione?.referente_cognome}
+          {" . "}
+          <a href={GUIDA_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Chi fa cosa, passo per passo
+          </a>
         </p>
       </div>
 

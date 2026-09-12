@@ -402,6 +402,14 @@ export const ISCRIZIONE_PATH = `${LICEI_PATH}/${ISCRIZIONE_SLUG}`;
 export const REFERENTE_PATH = `${LICEI_PATH}/${REFERENTE_SLUG}`;
 
 /**
+ * La guida che spiega a ciascuno cosa deve fare e su quale link cliccare.
+ * Vive sul sito e non altrove perche i docenti la devono ritrovare da soli,
+ * e la cercano accanto al bando.
+ */
+export const GUIDA_SLUG = "guida";
+export const GUIDA_PATH = `${LICEI_PATH}/${GUIDA_SLUG}`;
+
+/**
  * Stato delle iscrizioni degli studenti, indipendente da quello delle
  * adesioni. Parte CHIUSO, ed e giusto cosi: aprire le iscrizioni prima che i
  * referenti abbiano ricevuto e diffuso il codice significa una pagina che
