@@ -459,7 +459,7 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
               value={denominazione}
               maxLength={200}
               onChange={(e) => setDenominazione(e.target.value)}
-              placeholder="Es. Liceo Scientifico Statale Battaglini"
+              placeholder="Es. Istituto Tecnico Industriale Statale Galileo Galilei"
             />
           </div>
 

@@ -567,7 +567,7 @@ export default function EventPage() {
                       color: "var(--primary-dark)",
                     }}
                   >
-                    Bando per i licei
+                    Bando per gli istituti superiori
                   </span>
                   <h3 className="text-xl font-semibold text-gray-800 mt-2 mb-2">
                     I dieci progetti nascono qui
@@ -575,7 +575,8 @@ export default function EventPage() {
                   <p className="text-gray-700 text-sm">
                     I gruppi che salgono sul palco arrivano da un percorso formativo gratuito su
                     biotecnologie e intelligenza artificiale, online e fuori dall&apos;orario
-                    scolastico, riservato agli studenti del triennio dei licei di Taranto e provincia.
+                    scolastico, riservato agli studenti del triennio degli istituti superiori di Taranto e
+                    provincia.
                     Aderisce l&apos;istituto, tramite un docente referente.
                   </p>
                 </div>

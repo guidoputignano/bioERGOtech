@@ -31,7 +31,7 @@ export const LICEI = {
   occhiello: "Fondazione bioERGOtech e SafesPro",
   titolo: "Biotecnologie e Intelligenza Artificiale",
   sottotitolo:
-    "Percorso formativo gratuito per gli studenti del triennio dei licei di Taranto e provincia, con mentor dalla ricerca e dall'impresa, che si chiude sul palco del PalaMazzola.",
+    "Percorso formativo gratuito per gli studenti del triennio degli istituti superiori di Taranto e provincia, con mentor dalla ricerca e dall'impresa, che si chiude sul palco del PalaMazzola.",
   /** L'evento finale, art. 6. È la sola data certa del bando. */
   dataLabel: "Giovedì 10 dicembre 2026",
   luogo: "PalaMazzola, Taranto",
