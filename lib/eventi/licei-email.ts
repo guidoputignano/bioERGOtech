@@ -10,6 +10,7 @@
 import {
   COMMISSIONE_PATH,
   CONTATTI_LICEI,
+  ISCRIZIONE_PATH,
   LICEI,
   LICEI_PATH,
   REFERENTE_PATH,
@@ -486,6 +487,81 @@ export function referenteConsegnaEmailHtml(input: ReferenteConsegnaEmailInput): 
       <div style="text-align:center;margin-bottom:8px;">
         <a href="${SITE_URL}${REFERENTE_PATH}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
           La sua area
+        </a>
+      </div>
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+export type AdesioneConfermataEmailInput = {
+  referente: string;
+  istituto: string;
+  codice: string;
+  /** Vero quando lo stato e "attiva", cioe l'istituto e gia sul corso. */
+  attiva: boolean;
+};
+
+export function adesioneConfermataEmailSubject(): string {
+  return `Adesione confermata . ${LICEI.titolo}`;
+}
+
+/**
+ * Email al docente referente quando lo staff conferma l'adesione del suo
+ * istituto.
+ *
+ * Esiste perche l'email di adesione gliela promette alla lettera
+ * ("Confermiamo l'adesione dell'istituto e le scriviamo"), e la console gli
+ * dice di aspettarla prima di diffondere il codice. Senza questo invio il
+ * referente resta fermo ad aspettare un messaggio che nessuno manda, e con lui
+ * si ferma tutta la catena: il codice non gira, gli studenti non si iscrivono.
+ *
+ * Parte una sola volta, sulla transizione: la rotta che la chiama confronta lo
+ * stato precedente con quello nuovo, cosi salvare una nota su un'adesione gia
+ * confermata non fa partire niente.
+ */
+export function adesioneConfermataEmailHtml(input: AdesioneConfermataEmailInput): string {
+  const { referente, istituto, codice, attiva } = input;
+  const areaUrl = `${SITE_URL}${REFERENTE_PATH}`;
+  const iscrizioneUrl = `${SITE_URL}${ISCRIZIONE_PATH}?codice=${encodeURIComponent(codice)}`;
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">
+        L'adesione è confermata.
+      </h2>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Gentile ${referente}, abbiamo verificato e confermato l'adesione di
+        <strong>${istituto}</strong>${attiva ? ", che risulta ora attiva sul corso" : ""}. Da adesso
+        il codice del vostro istituto accetta le iscrizioni dei suoi studenti.
+      </p>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:24px;text-align:center;margin-bottom:24px;">
+        <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Codice del vostro istituto</p>
+        <p style="color:#0A1628;font-size:26px;font-weight:800;letter-spacing:0.12em;font-family:monospace;margin:0 0 12px;">${codice}</p>
+        <p style="color:#718096;font-size:13px;line-height:1.6;margin:0;">
+          Lo metta in circolare insieme al link qui sotto: chi lo apre trova il campo del codice
+          già compilato.
+        </p>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:22px;margin-bottom:24px;">
+        <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
+          <strong style="color:#0A1628;">1. Diffonda il codice.</strong> Il link pronto da
+          incollare è <a href="${iscrizioneUrl}" style="color:#008F6B;word-break:break-all;">${iscrizioneUrl}</a>
+        </p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0;">
+          <strong style="color:#0A1628;">2. Confermi gli studenti.</strong> Le iscrizioni arrivano
+          nella sua area riservata e le conferma una per una. Solo allora lo studente riceve la sua
+          email e accede al corso.
+        </p>
+      </div>
+
+      <div style="text-align:center;margin-bottom:8px;">
+        <a href="${areaUrl}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
+          La sua area riservata
         </a>
       </div>
       ${chiusura()}
