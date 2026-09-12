@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { requireReferente } from "@/lib/eventi/licei-server";
-import { confermaEmailHtml, confermaEmailSubject } from "@/lib/eventi/licei-email";
-import { STATI_ISCRIZIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  accessoEmailHtml,
+  accessoEmailSubject,
+  confermaEmailHtml,
+  confermaEmailSubject,
+} from "@/lib/eventi/licei-email";
+import { SITE_URL, STATI_ISCRIZIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 const STATI_VALIDI = new Set<string>(STATI_ISCRIZIONE.map((s) => s.value));
 
@@ -16,7 +21,12 @@ export async function GET() {
   // di piu: il referente e l'unico che puo accorgersi che tre suoi studenti
   // confermati sono rimasti senza squadra, e l'unico che puo andare a
   // cercarli in corridoio prima che scada la consegna.
-  const [{ data, error }, { data: squadre }] = await Promise.all([
+  // L'ultimo accesso arriva da `auth.users`, che PostgREST non espone: passa
+  // per una funzione, gia filtrata per istituto. Serve al referente per
+  // vedere chi risulta iscritto ma non e mai entrato nel corso, che e il
+  // solo fallimento di questo percorso a non lasciare traccia da nessuna
+  // altra parte.
+  const [{ data, error }, { data: squadre }, { data: accessi }] = await Promise.all([
     client
       .from("licei_iscrizioni")
       .select(
@@ -29,13 +39,23 @@ export async function GET() {
       .select("id, nome, codice, created_at, licei_progetti(stato, titolo, consegnato_at, finalista)")
       .eq("adesione_id", ctx.adesione.id)
       .order("created_at", { ascending: true }),
+    client.rpc("licei_accessi_istituto", { p_adesione_id: ctx.adesione.id }),
   ]);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const perIscrizione = new Map<string, { ha_account: boolean; ultimo_accesso: string | null }>(
+    ((accessi ?? []) as { iscrizione_id: string; ha_account: boolean; ultimo_accesso: string | null }[])
+      .map((a) => [a.iscrizione_id, { ha_account: a.ha_account, ultimo_accesso: a.ultimo_accesso }]),
+  );
+
   return NextResponse.json({
     adesione: ctx.adesione,
-    iscrizioni: data ?? [],
+    iscrizioni: (data ?? []).map((r) => ({
+      ...r,
+      ha_account: perIscrizione.get(r.id)?.ha_account ?? false,
+      ultimo_accesso: perIscrizione.get(r.id)?.ultimo_accesso ?? null,
+    })),
     squadre: squadre ?? [],
   });
 }
@@ -130,4 +150,103 @@ export async function PATCH(request: Request) {
   }
 
   return NextResponse.json({ success: true, iscrizione: data });
+}
+
+/**
+ * Rimanda a uno studente il link per impostare la password.
+ *
+ * L'iscrizione gli crea l'account e gli manda quel link una volta sola,
+ * dentro l'email di benvenuto. Se non lo apre, l'account resta senza
+ * password: risulta iscritto e confermato ovunque, ma nel corso non entra.
+ * Finora l'unico rimedio era scrivere a noi. Adesso il referente, che e
+ * l'unico a vedere la classe, se lo risolve da solo.
+ *
+ * Il link si genera qui e non si conserva: un link di recupero salvato a
+ * database vale quanto una password in chiaro.
+ */
+export async function POST(request: Request) {
+  const guard = await requireReferente();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client, ctx } = guard;
+
+  const body = (await request.json()) as { id?: string; azione?: string };
+
+  if (body.azione !== "rimanda_accesso") {
+    return NextResponse.json({ error: "Azione non riconosciuta." }, { status: 400 });
+  }
+  if (!body.id) return NextResponse.json({ error: "Iscrizione non indicata." }, { status: 400 });
+
+  // Come per la PATCH, il filtro su adesione_id e la vera guardia: senza,
+  // conoscere l'id di un'iscrizione basterebbe a far partire un link di
+  // accesso all'account di uno studente di un'altra scuola.
+  const { data: iscrizione } = await client
+    .from("licei_iscrizioni")
+    .select("id, nome, email, user_id, stato")
+    .eq("id", body.id)
+    .eq("adesione_id", ctx.adesione.id)
+    .maybeSingle();
+
+  if (!iscrizione) {
+    return NextResponse.json(
+      { error: "Iscrizione non trovata fra quelle del tuo istituto." },
+      { status: 404 },
+    );
+  }
+
+  if (!iscrizione.user_id) {
+    return NextResponse.json(
+      {
+        error:
+          "Questa iscrizione non ha un account collegato. Ce lo segnali e lo sistemiamo noi.",
+      },
+      { status: 409 },
+    );
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json(
+      { error: "L'invio delle email non è configurato. Ce lo segnali." },
+      { status: 503 },
+    );
+  }
+
+  try {
+    const { data: link, error: erroreLink } = await client.auth.admin.generateLink({
+      type: "recovery",
+      email: iscrizione.email,
+      options: { redirectTo: `${SITE_URL}/auth/update-password` },
+    });
+
+    const url = link?.properties?.action_link;
+    if (erroreLink || !url) {
+      console.error("Licei rimanda accesso: generateLink failed:", erroreLink);
+      return NextResponse.json(
+        { error: "Non è stato possibile generare il link. Riprovi fra poco." },
+        { status: 500 },
+      );
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+      to: iscrizione.email,
+      subject: accessoEmailSubject(),
+      html: accessoEmailHtml({
+        nome: iscrizione.nome,
+        istituto: ctx.adesione.istituto_denominazione,
+        setPasswordUrl: url,
+      }),
+    });
+  } catch (err) {
+    // Qui l'errore va detto: a differenza della conferma, l'invio e tutto
+    // quello che questa chiamata doveva fare. Un successo silenzioso
+    // lascerebbe il referente convinto di aver rimediato.
+    console.error("Licei rimanda accesso email failed:", err);
+    return NextResponse.json(
+      { error: "L'email non è partita. Riprovi fra poco." },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json({ success: true });
 }

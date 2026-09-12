@@ -387,7 +387,7 @@ export default async function LiceiPage() {
                   <i className="fas fa-clock" aria-hidden="true" />
                   <span>
                     Il bando non fissa un termine: i tempi per la trasmissione delle adesioni saranno
-                    comunicati dal referente del consorzio dei licei. Il modulo è già aperto, e
+                    comunicati dal referente del consorzio degli istituti superiori. Il modulo è già aperto, e
                     aderire adesso vi porta avanti.
                   </span>
                 </div>
@@ -810,7 +810,7 @@ export default async function LiceiPage() {
               Il bando ha finalità informativa e di invito alla partecipazione. Ulteriori modalità
               operative, termini di scadenza per la presentazione delle candidature e documentazione
               di adesione saranno comunicati dagli organizzatori tramite il referente del consorzio
-              dei licei e i canali ufficiali di Fondazione bioERGOtech e SafesPro. {LICEI.emanato}.
+              degli istituti superiori e i canali ufficiali di Fondazione bioERGOtech e SafesPro. {LICEI.emanato}.
             </p>
           </div>
         </section>

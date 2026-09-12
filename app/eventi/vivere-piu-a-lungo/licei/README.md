@@ -76,7 +76,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Tipi e validazione | `lib/eventi/licei.ts`, `licei-iscrizioni.ts`, `licei-squadre.ts` |
 | Helper server | `lib/eventi/licei-server.ts` |
 | Email di conferma | `lib/eventi/licei-email.ts` |
-| Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql` |
+| Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql` |
 
 ## Le scadenze non sono nel codice
 
@@ -146,6 +146,49 @@ Da qui due conseguenze nel codice:
   Non e ridondante: il client ha la service role key, quindi RLS non lo ferma,
   e senza quel filtro conoscere l'id di un'iscrizione basterebbe a un referente
   per toccare quella di un'altra scuola.
+
+## Chi risulta iscritto e chi c'e davvero
+
+Due cose, per mesi, non le vedeva nessuno. Non mancavano i dati: mancava chi
+li guardasse.
+
+**Il pannello staff leggeva solo `licei_adesioni`.** Il numero "Studenti
+previsti" viene da `licei_stats()`, che somma `studenti_totale`: una
+previsione scritta a mano dal docente nel momento in cui aderisce, quando gli
+studenti non esistono ancora. Un istituto confermato a settembre che a ottobre
+non ha portato nessuno era indistinguibile da uno che ne ha portati trenta.
+Gli studenti veri comparivano solo nella scheda "Squadre e progetti", e solo
+una volta entrati in una squadra: nelle settimane fra l'apertura delle
+iscrizioni e quella delle squadre, lo staff vedeva zero studenti perche non
+c'era niente da vedere, non perche non ce ne fossero.
+
+Ora `licei_iscrizioni_stats()` restituisce, per istituto, iscritti, confermati
+dal referente, da confermare e mai entrati. Il pannello li mette accanto alla
+previsione, in elenco e nel dettaglio, e l'export CSV li porta con se. I
+totali in cima si sommano su tutte le iscrizioni, non su quelle a schermo: la
+ricerca filtra l'elenco, non la realta, e un totale che cambia mentre si
+digita non e un totale.
+
+**L'iscrizione crea l'account e manda il link della password una volta sola.**
+Se lo studente non lo apre, l'account resta senza password: lui nel corso non
+entra, ma in ogni elenco risulta iscritto e confermato. E' il fallimento piu
+silenzioso di tutto il percorso, perche e individuale e non lascia traccia. Il
+referente lo scopriva a novembre, dal fatto che quel ragazzo non aveva mai
+consegnato niente.
+
+`licei_accessi_istituto(adesione_id)` risponde alla domanda, studente per
+studente. Nella console del referente diventano un contatore, un badge sulla
+riga e un bottone che rimanda il link; nel suo CSV una colonna "Entrato nel
+corso", perche su un foglio stampato una data di login non serve. Il link si
+genera al momento dell'invio e non si conserva: un link di recupero salvato a
+database vale quanto una password in chiaro.
+
+Entrambe le funzioni leggono `auth.users`, che PostgREST non espone, quindi
+sono `security definer` e revocate ad `anon` e `authenticated`. Le chiama solo
+il client con la service role key, dietro le guardie che gia c'erano.
+`licei_accessi_istituto` filtra per istituto **dentro** la funzione: il client
+ha la service role key, RLS non lo ferma, e una funzione che restituisse tutto
+lascerebbe il confine in mano a chi la chiama.
 
 ## Una squadra sta dentro un istituto
 
@@ -388,7 +431,11 @@ Quello che resta e operativo e non si puo anticipare da qui:
 1. **Provare la catena con dati veri.** Conferma un'adesione, apri le
    iscrizioni, iscriviti col codice, conferma dall'area referente, apri le
    squadre, creane una, apri le consegne, consegna. Serve mezz'ora e va fatto
-   prima che ci siano dentro trecento ragazzi.
+   prima che ci siano dentro trecento ragazzi. Da provare anche il ramo che
+   non si vede: iscriviti e **non** aprire il link della password, poi
+   controlla che lo studente risulti "Mai entrato" al referente e nel
+   conteggio dello staff, e che il bottone "Rimanda il link" faccia partire
+   davvero una seconda email.
 2. **Il calendario**, qui sotto.
 
 ## Il vincolo di calendario, che resta

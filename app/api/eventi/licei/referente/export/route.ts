@@ -31,12 +31,26 @@ export async function GET(request: Request) {
 
   if (!tutte) query = query.eq("stato", "confermata");
 
-  const { data, error } = await query;
+  // L'ultimo accesso viaggia separato perche vive in `auth.users`, che
+  // PostgREST non espone. In questo file diventa una colonna sola, "Entrato
+  // nel corso": e la domanda che il referente si porta in classe, e su un
+  // foglio stampato una data di login non serve a niente.
+  const [{ data, error }, { data: accessi }] = await Promise.all([
+    query,
+    client.rpc("licei_accessi_istituto", { p_adesione_id: ctx.adesione.id }),
+  ]);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const entrato = new Map<string, boolean>(
+    ((accessi ?? []) as { iscrizione_id: string; ultimo_accesso: string | null }[]).map((a) => [
+      a.iscrizione_id,
+      a.ultimo_accesso !== null,
+    ]),
+  );
 
   const headers = [
     "Cognome", "Nome", "Classe", "Anno di corso", "Email", "Stato",
-    "Iscritto il", "Confermato il", "Note",
+    "Entrato nel corso", "Iscritto il", "Confermato il", "Note",
   ];
   const lines = [headers.map(csvCell).join(",")];
 
@@ -50,6 +64,7 @@ export async function GET(request: Request) {
         r.anno_corso,
         r.email,
         statoIscrizioneLabel(r.stato),
+        entrato.get(r.id) ? "SI" : "NO",
         r.created_at,
         r.confermata_at ?? "",
         r.note_referente ?? "",

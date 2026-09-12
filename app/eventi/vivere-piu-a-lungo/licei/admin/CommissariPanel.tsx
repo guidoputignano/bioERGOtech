@@ -9,9 +9,10 @@
  * ricevere le sue schede.
  *
  * Il diritto di voto segue il ruolo e non e una spunta libera. L'art. 8 lo
- * nega al solo referente del consorzio dei licei, che siede in Commissione
- * con funzioni consultive: lasciarlo a discrezione di chi compila il modulo
- * significherebbe poterselo dimenticare, e accorgersene a medie calcolate.
+ * nega al solo referente del consorzio degli istituti superiori, che siede in
+ * Commissione con funzioni consultive: lasciarlo a discrezione di chi compila
+ * il modulo significherebbe poterselo dimenticare, e accorgersene a medie
+ * calcolate.
  */
 
 import { useCallback, useEffect, useState } from "react";

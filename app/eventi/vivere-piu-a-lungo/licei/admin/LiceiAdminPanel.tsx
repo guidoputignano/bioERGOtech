@@ -23,6 +23,15 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Adesione = any;
 
+/** Una riga di `licei_iscrizioni_stats()`: gli studenti veri di un istituto. */
+type IscrizioniStat = {
+  adesione_id: string;
+  iscritti: number;
+  in_attesa: number;
+  confermate: number;
+  mai_entrati: number;
+};
+
 const selectStyle: React.CSSProperties = {
   height: 36,
   borderRadius: 8,
@@ -56,6 +65,9 @@ function Riga({ label, children }: { label: string; children: React.ReactNode })
 export function LiceiAdminPanel() {
   const [rows, setRows] = useState<Adesione[]>([]);
   const [config, setConfig] = useState<Record<string, string>>({});
+  // I numeri veri delle iscrizioni, per adesione. Distinti dalle previsioni
+  // dichiarate, che vivono sulla riga dell'adesione stessa.
+  const [iscrizioni, setIscrizioni] = useState<Record<string, IscrizioniStat>>({});
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -74,6 +86,11 @@ export function LiceiAdminPanel() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
       setRows(data.adesioni ?? []);
+      const perAdesione: Record<string, IscrizioniStat> = {};
+      for (const r of (data.iscrizioni_stats ?? []) as IscrizioniStat[]) {
+        perAdesione[r.adesione_id] = r;
+      }
+      setIscrizioni(perAdesione);
       const mappa: Record<string, string> = {};
       for (const c of data.config ?? []) mappa[c.chiave] = c.valore ?? "";
       setConfig(mappa);
@@ -139,6 +156,21 @@ export function LiceiAdminPanel() {
     return { studenti, evento, confermate };
   }, [rows]);
 
+  // I totali veri si sommano su tutte le iscrizioni esistenti, non solo su
+  // quelle degli istituti a schermo: la ricerca filtra l'elenco, non la
+  // realta, e un totale che cambia mentre si digita non e un totale.
+  const totaliVeri = useMemo(() => {
+    let iscritti = 0;
+    let confermati = 0;
+    let maiEntrati = 0;
+    for (const s of Object.values(iscrizioni)) {
+      iscritti += Number(s.iscritti ?? 0);
+      confermati += Number(s.confermate ?? 0);
+      maiEntrati += Number(s.mai_entrati ?? 0);
+    }
+    return { iscritti, confermati, maiEntrati };
+  }, [iscrizioni]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -161,8 +193,9 @@ export function LiceiAdminPanel() {
           Stato della raccolta
         </h2>
         <p className="text-sm text-gray-600 mb-4">
-          Il bando rimanda i termini al referente del consorzio dei licei. Quando arriva la data,
-          scrivila qui: compare in cima alla pagina pubblica senza bisogno di un rilascio del sito.
+          Il bando rimanda i termini al referente del consorzio degli istituti superiori.
+          Quando arriva la data, scrivila qui: compare in cima alla pagina pubblica senza
+          bisogno di un rilascio del sito.
         </p>
         <div className="flex flex-wrap gap-3 items-end">
           <label style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text-light)" }}>
@@ -236,7 +269,10 @@ export function LiceiAdminPanel() {
         </div>
       </div>
 
-      {/* Conteggi */}
+      {/* Conteggi. La prima riga sono gli istituti e le previsioni che hanno
+          dichiarato aderendo. La seconda sono gli studenti veri: fino a che
+          non c'erano, "Studenti previsti" era l'unico numero a schermo e si
+          leggeva come un'iscrizione, che non e. */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{rows.length}</div>
@@ -244,15 +280,45 @@ export function LiceiAdminPanel() {
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{totali.confermate}</div>
-          <div className="stat-label">Confermati</div>
+          <div className="stat-label">Istituti confermati</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{totali.studenti}</div>
-          <div className="stat-label">Studenti previsti</div>
+          <div className="stat-label">Studenti previsti dagli istituti</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{totali.evento}</div>
           <div className="stat-label">Attesi al PalaMazzola</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card-sm" style={{ padding: 16 }}>
+          <div className="stat-number" style={{ fontSize: 26, color: "var(--primary-dark)" }}>
+            {totaliVeri.iscritti}
+          </div>
+          <div className="stat-label">Studenti iscritti davvero</div>
+        </div>
+        <div className="card-sm" style={{ padding: 16 }}>
+          <div className="stat-number" style={{ fontSize: 26, color: "var(--primary-dark)" }}>
+            {totaliVeri.confermati}
+          </div>
+          <div className="stat-label">Confermati dal referente</div>
+        </div>
+        <div className="card-sm" style={{ padding: 16 }}>
+          <div
+            className="stat-number"
+            style={{ fontSize: 26, color: totaliVeri.maiEntrati > 0 ? "#B44A5E" : undefined }}
+          >
+            {totaliVeri.maiEntrati}
+          </div>
+          <div className="stat-label">Mai entrati nel corso</div>
+        </div>
+        <div className="card-sm" style={{ padding: 16, display: "flex", alignItems: "center" }}>
+          <div style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.6 }}>
+            I numeri di questa riga sono iscrizioni vere. Quelli sopra sono le previsioni
+            dichiarate dagli istituti quando hanno aderito.
+          </div>
         </div>
       </div>
 
@@ -319,8 +385,17 @@ export function LiceiAdminPanel() {
                   {r.referente_cognome} . <span style={{ fontFamily: "monospace" }}>{r.codice}</span>
                 </span>
               </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary-dark)", flexShrink: 0 }}>
-                {r.studenti_totale} studenti
+              {/* Previsti e veri sulla stessa riga. Un istituto confermato a
+                  settembre con zero iscritti a ottobre e il caso che questo
+                  pannello non sapeva mostrare, ed e quello su cui si
+                  interviene. */}
+              <span style={{ fontSize: 13, flexShrink: 0, textAlign: "right", lineHeight: 1.5 }}>
+                <span style={{ display: "block", fontWeight: 700, color: "var(--primary-dark)" }}>
+                  {iscrizioni[r.id]?.iscritti ?? 0} iscritti
+                </span>
+                <span style={{ display: "block", fontSize: 11.5, color: "var(--text-light)" }}>
+                  su {r.studenti_totale} previsti
+                </span>
               </span>
               <span
                 className="badge"
@@ -388,7 +463,16 @@ export function LiceiAdminPanel() {
                     {r.referente_materia ? `, ${r.referente_materia}` : ""} . {r.referente_email} .{" "}
                     {r.referente_telefono}
                   </Riga>
-                  <Riga label="Studenti previsti">
+                  <Riga label="Studenti iscritti davvero">
+                    {iscrizioni[r.id]
+                      ? `${iscrizioni[r.id].iscritti} iscritti . ${iscrizioni[r.id].confermate} confermati dal referente . ${iscrizioni[r.id].in_attesa} da confermare${
+                          Number(iscrizioni[r.id].mai_entrati) > 0
+                            ? ` . ${iscrizioni[r.id].mai_entrati} non sono mai entrati nel corso`
+                            : ""
+                        }`
+                      : "Nessuna iscrizione ancora."}
+                  </Riga>
+                  <Riga label="Studenti previsti all'adesione">
                     {`Terze ${r.studenti_terza} . Quarte ${r.studenti_quarta} . Quinte ${r.studenti_quinta} . Totale ${r.studenti_totale}`}
                   </Riga>
                   <Riga label="Classi coinvolte">{r.classi_coinvolte}</Riga>

@@ -13,7 +13,7 @@
  * a cui la sua scuola ha aderito.
  *
  * Le SCADENZE non stanno qui. L'art. 4 e l'art. 10 le rimandano al referente
- * del consorzio dei licei, quindi arrivano da un terzo con preavviso ignoto:
+ * del consorzio degli istituti superiori, quindi arrivano da un terzo con preavviso ignoto:
  * vivono nella tabella `licei_config`, modificabile dal pannello staff senza
  * un rilascio del sito. Qui restano solo le date certe, cioè l'evento.
  */
@@ -218,16 +218,16 @@ export const COMMISSIONE_LICEI = [
   "Un rappresentante di SafesPro, in qualità di ente organizzatore.",
   "Due o più esperti esterni dal mondo della ricerca scientifica e universitaria nei settori delle biotecnologie e dell'intelligenza artificiale.",
   "Uno o più rappresentanti del mondo dell'impresa e dei mentor coinvolti nel percorso formativo.",
-  "Il referente del consorzio dei licei della provincia di Taranto, con funzioni consultive e senza diritto di voto.",
+  "Il referente del consorzio degli istituti superiori della provincia di Taranto, con funzioni consultive e senza diritto di voto.",
 ] as const;
 
 /* ── Art. 9. Contatti ─────────────────────────────────────────────────── */
 
 export const CONTATTI_LICEI = {
   consorzio: {
-    ruolo: "Referente consorzio licei",
+    ruolo: "Referente consorzio istituti superiori",
     nome: "Prof. Gianni Tartaglia",
-    dettaglio: "Referente del consorzio dei licei della provincia di Taranto.",
+    dettaglio: "Referente del consorzio degli istituti superiori della provincia di Taranto.",
   },
   fondazione: {
     ruolo: "Referente Fondazione bioERGOtech",
@@ -351,7 +351,7 @@ export const FAQ_LICEI = [
   },
   {
     q: "Quando scadono le adesioni?",
-    a: "Il bando non fissa un termine: l'art. 10 rimanda i termini agli organizzatori, tramite il referente del consorzio dei licei. Appena la data sarà comunicata comparirà su questa pagina. Nel frattempo il modulo è aperto e conviene aderire, così ricevete il codice e potete iniziare a raccogliere le candidature.",
+    a: "Il bando non fissa un termine: l'art. 10 rimanda i termini agli organizzatori, tramite il referente del consorzio degli istituti superiori. Appena la data sarà comunicata comparirà su questa pagina. Nel frattempo il modulo è aperto e conviene aderire, così ricevete il codice e potete iniziare a raccogliere le candidature.",
   },
   {
     q: "Possono partecipare le classi terze?",
@@ -647,7 +647,7 @@ export const RUOLI_COMMISSIONE = [
   { value: "organizzatore", label: "Ente organizzatore (SafesPro)", voto: true },
   { value: "esperto", label: "Esperto esterno (ricerca e università)", voto: true },
   { value: "impresa", label: "Impresa e mentor", voto: true },
-  { value: "consorzio", label: "Referente consorzio licei (senza voto)", voto: false },
+  { value: "consorzio", label: "Referente consorzio istituti superiori (senza voto)", voto: false },
 ] as const;
 
 export type RuoloCommissione = (typeof RUOLI_COMMISSIONE)[number]["value"];
