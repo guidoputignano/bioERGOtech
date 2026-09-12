@@ -48,10 +48,23 @@ export async function GET(request: Request) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const { data: stats } = await client.rpc("licei_stats");
-  const { data: config } = await client.from("licei_config").select("chiave, valore");
+  // `licei_stats` conta le PREVISIONI dichiarate all'adesione.
+  // `licei_iscrizioni_stats` conta gli studenti veri. Servono entrambe, e
+  // affiancate: lo scarto fra quanti una scuola diceva di portarne e quanti
+  // ne ha portati e la sola misura che dice se il percorso sta funzionando
+  // in quell'istituto, e finora non era visibile da nessuna parte.
+  const [{ data: stats }, { data: iscrizioniStats }, { data: config }] = await Promise.all([
+    client.rpc("licei_stats"),
+    client.rpc("licei_iscrizioni_stats"),
+    client.from("licei_config").select("chiave, valore"),
+  ]);
 
-  return NextResponse.json({ adesioni: data ?? [], stats: stats ?? [], config: config ?? [] });
+  return NextResponse.json({
+    adesioni: data ?? [],
+    stats: stats ?? [],
+    iscrizioni_stats: iscrizioniStats ?? [],
+    config: config ?? [],
+  });
 }
 
 /** Istruttoria: stato dell'adesione e note interne. */

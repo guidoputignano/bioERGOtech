@@ -22,7 +22,8 @@ const VALORI_AMMESSI: Record<string, Set<string>> = {
 
 /**
  * Configurazione del percorso licei. Vive a database e non nel codice perche
- * i termini del bando arrivano dal referente del consorzio dei licei con
+ * i termini del bando arrivano dal referente del consorzio degli istituti superiori
+ * con
  * preavviso ignoto (art. 4 e art. 10): con le date nel codice, ogni
  * comunicazione richiederebbe un rilascio del sito.
  */

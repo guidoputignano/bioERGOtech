@@ -33,9 +33,9 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `${LICEI.titolo} . Percorso per i licei . Fondazione bioERGOtech`,
+  title: `${LICEI.titolo} . Percorso per gli istituti superiori . Fondazione bioERGOtech`,
   description:
-    "Percorso formativo gratuito su biotecnologie e intelligenza artificiale per gli studenti del triennio dei licei di Taranto e provincia. Online, fuori orario scolastico, con mentor dalla ricerca e dall'impresa. I dieci progetti migliori sul palco del PalaMazzola il 10 dicembre 2026.",
+    "Percorso formativo gratuito su biotecnologie e intelligenza artificiale per gli studenti del triennio degli istituti superiori di Taranto e provincia. Online, fuori orario scolastico, con mentor dalla ricerca e dall'impresa. I dieci progetti migliori sul palco del PalaMazzola il 10 dicembre 2026.",
   alternates: { canonical: LICEI_PATH },
   openGraph: {
     title: `${LICEI.titolo} . Fondazione bioERGOtech`,
@@ -340,7 +340,7 @@ export default async function LiceiPage() {
           <div className="container mx-auto px-6">
             <div style={{ maxWidth: 820 }}>
               <div className="lc-kicker" style={{ marginBottom: 16 }}>
-                {LICEI.occhiello} . Bando per i licei
+                {LICEI.occhiello} . Bando per gli istituti superiori
               </div>
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-5 text-gray-800">
                 {LICEI.titolo}
@@ -387,7 +387,7 @@ export default async function LiceiPage() {
                   <i className="fas fa-clock" aria-hidden="true" />
                   <span>
                     Il bando non fissa un termine: i tempi per la trasmissione delle adesioni saranno
-                    comunicati dal referente del consorzio dei licei. Il modulo è già aperto, e
+                    comunicati dal referente del consorzio degli istituti superiori. Il modulo è già aperto, e
                     aderire adesso vi porta avanti.
                   </span>
                 </div>
@@ -810,7 +810,7 @@ export default async function LiceiPage() {
               Il bando ha finalità informativa e di invito alla partecipazione. Ulteriori modalità
               operative, termini di scadenza per la presentazione delle candidature e documentazione
               di adesione saranno comunicati dagli organizzatori tramite il referente del consorzio
-              dei licei e i canali ufficiali di Fondazione bioERGOtech e SafesPro. {LICEI.emanato}.
+              degli istituti superiori e i canali ufficiali di Fondazione bioERGOtech e SafesPro. {LICEI.emanato}.
             </p>
           </div>
         </section>

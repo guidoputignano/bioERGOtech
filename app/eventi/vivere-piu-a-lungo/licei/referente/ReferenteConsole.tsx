@@ -41,6 +41,10 @@ export function ReferenteConsole() {
   const [filtro, setFiltro] = useState("");
   const [salvando, setSalvando] = useState<string | null>(null);
   const [copiato, setCopiato] = useState(false);
+  // Un insieme, non un id solo: il referente rimanda il link a piu studenti
+  // di fila, e con un id solo la conferma sul primo sparirebbe appena tocca
+  // il secondo, facendogli credere di non averlo fatto.
+  const [rimandati, setRimandati] = useState<Set<string>>(new Set());
 
   const carica = useCallback(async () => {
     setLoading(true);
@@ -81,6 +85,25 @@ export function ReferenteConsole() {
     }
   };
 
+  const rimandaAccesso = async (id: string) => {
+    setSalvando(id);
+    setErrore(null);
+    try {
+      const res = await fetch("/api/eventi/licei/referente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, azione: "rimanda_accesso" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invio non riuscito.");
+      setRimandati((prev) => new Set(prev).add(id));
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Invio non riuscito.");
+    } finally {
+      setSalvando(null);
+    }
+  };
+
   const visibili = useMemo(() => {
     const q = filtro.trim().toLowerCase();
     if (!q) return righe;
@@ -100,6 +123,19 @@ export function ReferenteConsole() {
     }
     return c;
   }, [righe]);
+
+  // Iscritti che non hanno mai fatto accesso. L'iscrizione crea l'account e
+  // manda il link per la password una volta sola: chi non lo apre resta
+  // fuori dal corso pur risultando a posto in ogni elenco. Senza questo
+  // numero il referente lo scopre a novembre, guardando chi non ha mai
+  // consegnato niente.
+  const maiEntrati = useMemo(
+    () =>
+      righe.filter(
+        (r) => ["in_attesa", "confermata"].includes(r.stato) && !r.ultimo_accesso,
+      ).length,
+    [righe],
+  );
 
   // Confermati ma senza squadra: e la sola cosa, in questa fase, che nessuno
   // vedrebbe se non la vedesse il referente.
@@ -235,7 +271,7 @@ export function ReferenteConsole() {
       </div>
 
       {/* ── Conteggi ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{righe.length}</div>
           <div className="stat-label">Iscrizioni ricevute</div>
@@ -247,6 +283,15 @@ export function ReferenteConsole() {
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{conteggi.confermate}</div>
           <div className="stat-label">Confermate</div>
+        </div>
+        <div className="card-sm" style={{ padding: 16 }}>
+          <div
+            className="stat-number"
+            style={{ fontSize: 26, color: maiEntrati > 0 ? "#B44A5E" : undefined }}
+          >
+            {maiEntrati}
+          </div>
+          <div className="stat-label">Mai entrati nel corso</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.7 }}>
@@ -327,6 +372,35 @@ export function ReferenteConsole() {
               >
                 {statoIscrizioneLabel(r.stato)}
               </span>
+
+              {/* Iscritto ma senza password: risulta a posto ovunque e nel
+                  corso non entra. Il badge lo dice, il bottone lo rimedia. */}
+              {["in_attesa", "confermata"].includes(r.stato) && !r.ultimo_accesso && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                  <span
+                    className="badge"
+                    style={{ background: "#B44A5E1A", color: "#B44A5E" }}
+                    title={
+                      r.ha_account
+                        ? "Ha un account ma non ha mai impostato la password, quindi non può aprire le lezioni. Il bottone qui accanto gli rimanda il link."
+                        : "Questa iscrizione non ha un account collegato, quindi lo studente non può entrare nel corso. Ce lo segnali e lo sistemiamo noi."
+                    }
+                  >
+                    Mai entrato
+                  </span>
+                  {r.ha_account && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => rimandaAccesso(r.id)}
+                      disabled={salvando === r.id || rimandati.has(r.id)}
+                      style={{ height: 30, fontSize: 12.5 }}
+                    >
+                      {rimandati.has(r.id) ? "Link inviato" : "Rimanda il link"}
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {r.stato === "in_attesa" ? (
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>

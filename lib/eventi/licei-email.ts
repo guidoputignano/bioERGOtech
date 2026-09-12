@@ -72,7 +72,7 @@ export function liceiEmailHtml(input: LiceiEmailInput): string {
         </p>
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
           <strong style="color:#0A1628;">2.</strong> Le comunichiamo i termini per la raccolta delle
-          candidature, che il bando affida al referente del consorzio dei licei.
+          candidature, che il bando affida al referente del consorzio degli istituti superiori.
         </p>
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
           <strong style="color:#0A1628;">3.</strong> Lei promuove il percorso fra gli studenti del
@@ -564,6 +564,59 @@ export function adesioneConfermataEmailHtml(input: AdesioneConfermataEmailInput)
           La sua area riservata
         </a>
       </div>
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+export type AccessoEmailInput = {
+  nome: string;
+  istituto: string;
+  setPasswordUrl: string;
+};
+
+export function accessoEmailSubject(): string {
+  return `Il link per entrare nel corso . ${LICEI.titolo}`;
+}
+
+/**
+ * Rimanda allo studente il link per impostare la password.
+ *
+ * Serve perche l'iscrizione gli crea l'account e gli manda quel link una
+ * volta sola, dentro l'email di benvenuto. Se quella finisce nello spam, o
+ * se la apre e rimanda a dopo, l'account resta senza password e lui non
+ * entra nel corso, mentre in ogni schermata risulta iscritto e confermato.
+ * Il referente e l'unico che puo accorgersene guardando in faccia la classe,
+ * e questa e la sua leva per rimediare senza scrivere a noi.
+ *
+ * Il link e a scadenza e viene generato al momento dell'invio, non
+ * conservato: un link di recupero che vive in un database e una password.
+ */
+export function accessoEmailHtml(input: AccessoEmailInput): string {
+  const { nome, istituto, setPasswordUrl } = input;
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">
+        Ciao ${nome}, ti manca solo la password.
+      </h2>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Sei iscritto al percorso con ${istituto}, ma il tuo account non ha ancora una password,
+        quindi non puoi entrare nelle lezioni. Si imposta in un minuto, dal pulsante qui sotto.
+      </p>
+
+      <div style="text-align:center;margin-bottom:24px;">
+        <a href="${setPasswordUrl}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
+          Imposta la password
+        </a>
+      </div>
+
+      <p style="color:#718096;font-size:13px;line-height:1.7;margin:0;">
+        Il link scade dopo un po'. Se lo trovi scaduto, chiedi al tuo docente referente di
+        rimandartelo: gli basta un clic.
+      </p>
       ${chiusura()}
     </div>
   </div>`;

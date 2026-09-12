@@ -102,7 +102,7 @@ function RiquadroLicei({
           marginBottom: 8,
         }}
       >
-        Percorso licei . {LICEI.titolo}
+        Percorso istituti superiori . {LICEI.titolo}
       </div>
       <h2
         style={{
