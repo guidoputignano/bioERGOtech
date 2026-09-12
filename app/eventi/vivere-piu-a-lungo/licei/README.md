@@ -469,14 +469,11 @@ adesione, iscrizione, squadra, progetto, valutazione, podio, evento.
 
 Quello che resta e operativo e non si puo anticipare da qui:
 
-1. **Provare la catena con dati veri.** Conferma un'adesione, apri le
-   iscrizioni, iscriviti col codice, conferma dall'area referente, apri le
-   squadre, creane una, apri le consegne, consegna. Serve mezz'ora e va fatto
-   prima che ci siano dentro trecento ragazzi. Da provare anche il ramo che
-   non si vede: iscriviti e **non** aprire il link della password, poi
-   controlla che lo studente risulti "Mai entrato" al referente e nel
-   conteggio dello staff, e che il bottone "Rimanda il link" faccia partire
-   davvero una seconda email.
+1. **Provare la catena con dati veri.** Il procedimento passo per passo,
+   con i dati finti che passano le validazioni, la trappola delle finestre
+   loggate, che cosa deve succedere a ogni passo e la pulizia dopo, sta in
+   [`COLLAUDO.md`](./COLLAUDO.md). Serve mezz'ora e va fatto prima che ci
+   siano dentro trecento ragazzi.
 2. **Il calendario**, qui sotto.
 
 ## Il vincolo di calendario, che resta
