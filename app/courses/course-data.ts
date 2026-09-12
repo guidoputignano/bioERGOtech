@@ -262,6 +262,20 @@ export const COURSE_LESSONS: Lesson[] = [
   },
 ];
 
+/**
+ * The course introduction does not have a lesson page of its own: it lives on
+ * the course landing page, and navigation sends it there. It therefore has no
+ * closing reflection, so it can never be submitted and must not be counted
+ * when measuring how far a student has got. Without this, a student who has
+ * finished everything shows one short of the total and never reaches 100%.
+ */
+export const INTRO_SLUG = "introduction";
+
+/** The lessons that have their own page and a closing reflection to submit. */
+export const SUBMITTABLE_LESSONS: Lesson[] = COURSE_LESSONS.filter(
+  (l) => l.slug !== INTRO_SLUG,
+);
+
 export const PHASES = [
   { phase: 1, name: "Foundation", weeks: "Weeks 1–2", color: "#00C4B4" },
   { phase: 2, name: "Exploration", weeks: "Weeks 3–4", color: "#4A7DFF" },
