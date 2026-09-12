@@ -45,6 +45,10 @@ export function ReferenteConsole() {
   // di fila, e con un id solo la conferma sul primo sparirebbe appena tocca
   // il secondo, facendogli credere di non averlo fatto.
   const [rimandati, setRimandati] = useState<Set<string>>(new Set());
+  // Il denominatore del "9 su 23" arriva dal server invece di essere scritto
+  // qui: le lezioni del corso possono cambiare, e un numero copiato a mano
+  // diventerebbe falso senza che nessuno se ne accorga.
+  const [totaleLezioni, setTotaleLezioni] = useState(0);
 
   const carica = useCallback(async () => {
     setLoading(true);
@@ -54,6 +58,7 @@ export function ReferenteConsole() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
       setAdesione(data.adesione);
+      setTotaleLezioni(data.totale_lezioni ?? 0);
       setRighe(data.iscrizioni ?? []);
       setSquadre(data.squadre ?? []);
     } catch (err) {
@@ -133,6 +138,18 @@ export function ReferenteConsole() {
     () =>
       righe.filter(
         (r) => ["in_attesa", "confermata"].includes(r.stato) && !r.ultimo_accesso,
+      ).length,
+    [righe],
+  );
+
+  // Confermati che non hanno completato nemmeno una lezione. Diverso da "mai
+  // entrato": questi la password ce l'hanno e la porta l'hanno aperta, ma il
+  // corso non l'hanno iniziato. Il rimedio non e un link, e una parola in
+  // classe, e serve saperlo a settembre invece che a novembre.
+  const fermiAZero = useMemo(
+    () =>
+      righe.filter(
+        (r) => r.stato === "confermata" && r.ultimo_accesso && !r.lezioni_completate,
       ).length,
     [righe],
   );
@@ -271,7 +288,7 @@ export function ReferenteConsole() {
       </div>
 
       {/* ── Conteggi ── */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{righe.length}</div>
           <div className="stat-label">Iscrizioni ricevute</div>
@@ -292,6 +309,15 @@ export function ReferenteConsole() {
             {maiEntrati}
           </div>
           <div className="stat-label">Mai entrati nel corso</div>
+        </div>
+        <div className="card-sm" style={{ padding: 16 }}>
+          <div
+            className="stat-number"
+            style={{ fontSize: 26, color: fermiAZero > 0 ? "#8A6100" : undefined }}
+          >
+            {fermiAZero}
+          </div>
+          <div className="stat-label">Entrati ma fermi a zero lezioni</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.7 }}>
@@ -360,6 +386,38 @@ export function ReferenteConsole() {
                 <div className="text-gray-600" style={{ fontSize: 12.5, marginTop: 2 }}>
                   Classe {r.classe} . {r.email}
                 </div>
+                {/* Il punto del corso a cui e arrivato. Una lezione conta
+                    quando ha consegnato la riflessione che la chiude, ed e
+                    la stessa consegna che gli sblocca la lezione dopo: e il
+                    punto in cui e arrivato davvero, non le pagine aperte. */}
+                {totaleLezioni > 0 && (
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}
+                    title={`${r.lezioni_completate ?? 0} lezioni completate su ${totaleLezioni}. Una lezione si conta quando lo studente consegna la riflessione che la chiude.`}
+                  >
+                    <div
+                      style={{
+                        width: 84,
+                        height: 5,
+                        borderRadius: 3,
+                        background: "var(--border-color)",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.round(((r.lezioni_completate ?? 0) / totaleLezioni) * 100)}%`,
+                          height: "100%",
+                          background: "var(--primary-dark)",
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: 11.5, color: "var(--text-light)" }}>
+                      {r.lezioni_completate ?? 0} / {totaleLezioni} lezioni
+                    </span>
+                  </div>
+                )}
               </div>
 
               <span

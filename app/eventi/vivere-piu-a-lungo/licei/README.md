@@ -75,6 +75,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | API staff | `app/api/eventi/licei/admin/` |
 | Tipi e validazione | `lib/eventi/licei.ts`, `licei-iscrizioni.ts`, `licei-squadre.ts` |
 | Helper server | `lib/eventi/licei-server.ts` |
+| Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email di conferma | `lib/eventi/licei-email.ts` |
 | Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql` |
 
@@ -189,6 +190,46 @@ il client con la service role key, dietro le guardie che gia c'erano.
 `licei_accessi_istituto` filtra per istituto **dentro** la funzione: il client
 ha la service role key, RLS non lo ferma, e una funzione che restituisse tutto
 lascerebbe il confine in mano a chi la chiama.
+
+## Il progresso sul corso c'era gia, e non lo guardava nessuno
+
+Sembrava mancare un tracciamento e invece manca solo chi lo legga. Ogni
+lezione si chiude con una riflessione, la riflessione finisce in
+`lesson_submissions`, e finche non e consegnata la lezione dopo resta
+bloccata. Quindi il numero di righe che uno studente ha in quella tabella e
+esattamente quante lezioni ha portato a termine: non "ha aperto la pagina",
+ma il punto in cui e arrivato. Il dato era li da sempre, visibile solo nel
+pannello delle riflessioni, una lezione alla volta e senza sapere di quale
+scuola fosse quel ragazzo.
+
+Adesso il referente vede per ogni suo studente una barra e un "9 su 23", e un
+contatore di quelli che sono entrati e non hanno completato nemmeno una
+lezione. Quest'ultimo e diverso da "mai entrato": qui la password ce l'hanno e
+la porta l'hanno aperta, ma il corso non l'hanno iniziato, e il rimedio non e
+un link ma una parola in classe. Lo staff vede la stessa cosa aggregata per
+istituto, come media per studente confermato. Una media e non un totale: il
+totale premierebbe la scuola grande, e qui interessa se i ragazzi seguono, non
+quanti sono. Entrambi i CSV portano la colonna.
+
+**Il conteggio si fa in TypeScript e non in SQL**, in `lib/eventi/licei-progresso.ts`,
+e la ragione e che `lesson_submissions` e l'unica tabella del progetto **senza
+una migrazione nel repository**: e stata creata fuori banda e vive solo in
+produzione. Una funzione SQL che ci si appoggia farebbe fallire l'intera
+catena di migrazioni su un ambiente nuovo. Una query normale invece fallisce
+da sola, e sopra ci si mette una degradazione morbida: se la lettura non
+riesce il progresso si legge come zero e i due pannelli restano in piedi,
+perche il referente deve poter confermare i suoi studenti anche quando un dato
+accessorio non arriva. Resta un debito: quella tabella una migrazione dovrebbe
+averla, e finche non ce l'ha il progresso non puo essere aggregato a database.
+
+La query va **a blocchi**, e la dimensione del blocco si calcola sul numero di
+lezioni invece di essere un numero tondo. Due limiti si romperebbero
+altrimenti, tutti e due in silenzio: la URL, perche PostgREST riceve gli
+identificativi nella query string e qualche centinaio di uuid la fa rifiutare
+dal proxy, e il tetto di righe per risposta, perche un blocco di N studenti ne
+produce fino a N per il numero di lezioni. Con blocchi grandi la risposta
+verrebbe troncata senza dirlo, e mancherebbero lezioni proprio alle scuole
+piu avanti, cioe il conteggio sarebbe sbagliato per difetto dove conta di piu.
 
 ## Una squadra sta dentro un istituto
 

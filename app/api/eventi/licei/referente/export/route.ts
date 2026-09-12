@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireReferente } from "@/lib/eventi/licei-server";
 import { statoIscrizioneLabel } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 
 function csvCell(value: unknown): string {
   const s = value == null ? "" : String(value);
@@ -48,9 +49,16 @@ export async function GET(request: Request) {
     ]),
   );
 
+  const progresso = await progressoPerUtenti(
+    client,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((data ?? []) as any[]).map((r) => r.user_id).filter((id): id is string => !!id),
+  );
+
   const headers = [
     "Cognome", "Nome", "Classe", "Anno di corso", "Email", "Stato",
-    "Entrato nel corso", "Iscritto il", "Confermato il", "Note",
+    "Entrato nel corso", `Lezioni completate (su ${TOTALE_LEZIONI})`,
+    "Iscritto il", "Confermato il", "Note",
   ];
   const lines = [headers.map(csvCell).join(",")];
 
@@ -65,6 +73,7 @@ export async function GET(request: Request) {
         r.email,
         statoIscrizioneLabel(r.stato),
         entrato.get(r.id) ? "SI" : "NO",
+        r.user_id ? (progresso.get(r.user_id) ?? 0) : 0,
         r.created_at,
         r.confermata_at ?? "",
         r.note_referente ?? "",

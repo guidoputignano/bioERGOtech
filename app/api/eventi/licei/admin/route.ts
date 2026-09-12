@@ -9,6 +9,7 @@ import {
   adesioneConfermataEmailHtml,
   adesioneConfermataEmailSubject,
 } from "@/lib/eventi/licei-email";
+import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 
 const STATI_VALIDI = new Set<string>(STATI_ADESIONE.map((s) => s.value));
 
@@ -59,10 +60,43 @@ export async function GET(request: Request) {
     client.from("licei_config").select("chiave, valore"),
   ]);
 
+  // Il progresso sul corso, aggregato per istituto. Va letto in due passi
+  // perche serve prima sapere quali studenti appartengono a quale scuola.
+  // Si prendono solo i confermati: e di loro che la scuola risponde, e un
+  // rifiutato che non segue il corso non e un problema di nessuno.
+  const { data: studenti } = await client
+    .from("licei_iscrizioni")
+    .select("adesione_id, user_id")
+    .eq("stato", "confermata");
+
+  const righeStudenti = (studenti ?? []) as { adesione_id: string; user_id: string | null }[];
+  const progresso = await progressoPerUtenti(
+    client,
+    righeStudenti.map((r) => r.user_id).filter((id): id is string => !!id),
+  );
+
+  const progressoPerIstituto: Record<
+    string,
+    { confermati: number; lezioni_totali: number; fermi_a_zero: number }
+  > = {};
+  for (const r of righeStudenti) {
+    const acc = (progressoPerIstituto[r.adesione_id] ??= {
+      confermati: 0,
+      lezioni_totali: 0,
+      fermi_a_zero: 0,
+    });
+    const fatte = r.user_id ? (progresso.get(r.user_id) ?? 0) : 0;
+    acc.confermati += 1;
+    acc.lezioni_totali += fatte;
+    if (fatte === 0) acc.fermi_a_zero += 1;
+  }
+
   return NextResponse.json({
     adesioni: data ?? [],
     stats: stats ?? [],
     iscrizioni_stats: iscrizioniStats ?? [],
+    progresso: progressoPerIstituto,
+    totale_lezioni: TOTALE_LEZIONI,
     config: config ?? [],
   });
 }
