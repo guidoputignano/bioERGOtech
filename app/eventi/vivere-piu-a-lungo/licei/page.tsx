@@ -23,6 +23,7 @@ import {
   MODALITA,
   PREMI_LICEI,
   PROVINCIA,
+  GUIDA_PATH,
   REFERENTE_PATH,
   SITE_URL,
   adesioniAperte,
@@ -396,6 +397,9 @@ export default async function LiceiPage() {
               <div className="lc-azioni">
                 <Link href="#adesione" className="btn-primary text-center">
                   Aderisci con il tuo istituto
+                </Link>
+                <Link href={GUIDA_PATH} className="btn-outline text-center">
+                  Chi fa cosa, passo per passo
                 </Link>
                 <Link href={`/eventi/${EVENT_SLUG}`} className="btn-outline text-center">
                   L&apos;evento del 10 dicembre
