@@ -8,6 +8,7 @@ import {
   confermaEmailSubject,
 } from "@/lib/eventi/licei-email";
 import { SITE_URL, STATI_ISCRIZIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 
 const STATI_VALIDI = new Set<string>(STATI_ISCRIZIONE.map((s) => s.value));
 
@@ -30,7 +31,7 @@ export async function GET() {
     client
       .from("licei_iscrizioni")
       .select(
-        "id, nome, cognome, email, classe, anno_corso, stato, note_referente, created_at, confermata_at, squadra_id, squadra_ruolo",
+        "id, nome, cognome, email, classe, anno_corso, stato, note_referente, created_at, confermata_at, squadra_id, squadra_ruolo, user_id",
       )
       .eq("adesione_id", ctx.adesione.id)
       .order("cognome", { ascending: true }),
@@ -49,12 +50,26 @@ export async function GET() {
       .map((a) => [a.iscrizione_id, { ha_account: a.ha_account, ultimo_accesso: a.ultimo_accesso }]),
   );
 
+  // Quanto lontano e arrivato ognuno nel corso. Si legge dopo, e non in
+  // parallelo, perche serve la lista degli user_id che arriva dalla query
+  // qui sopra.
+  const progresso = await progressoPerUtenti(
+    client,
+    (data ?? []).map((r) => r.user_id).filter((id): id is string => !!id),
+  );
+
   return NextResponse.json({
     adesione: ctx.adesione,
-    iscrizioni: (data ?? []).map((r) => ({
+    totale_lezioni: TOTALE_LEZIONI,
+    // `user_id` serve al server per contare le lezioni e poi esce dalla
+    // risposta: e l'identificativo dell'account di un minorenne e la console
+    // non ne fa niente. Al suo posto viaggiano `ha_account`, che e la sola
+    // cosa che il referente deve sapere, e il conteggio.
+    iscrizioni: (data ?? []).map(({ user_id, ...r }) => ({
       ...r,
       ha_account: perIscrizione.get(r.id)?.ha_account ?? false,
       ultimo_accesso: perIscrizione.get(r.id)?.ultimo_accesso ?? null,
+      lezioni_completate: user_id ? (progresso.get(user_id) ?? 0) : 0,
     })),
     squadre: squadre ?? [],
   });

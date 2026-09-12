@@ -23,6 +23,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Adesione = any;
 
+/** Il progresso sul corso di un istituto, aggregato sui soli confermati. */
+type ProgressoIstituto = {
+  confermati: number;
+  lezioni_totali: number;
+  fermi_a_zero: number;
+};
+
 /** Una riga di `licei_iscrizioni_stats()`: gli studenti veri di un istituto. */
 type IscrizioniStat = {
   adesione_id: string;
@@ -68,6 +75,8 @@ export function LiceiAdminPanel() {
   // I numeri veri delle iscrizioni, per adesione. Distinti dalle previsioni
   // dichiarate, che vivono sulla riga dell'adesione stessa.
   const [iscrizioni, setIscrizioni] = useState<Record<string, IscrizioniStat>>({});
+  const [progresso, setProgresso] = useState<Record<string, ProgressoIstituto>>({});
+  const [totaleLezioni, setTotaleLezioni] = useState(0);
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -91,6 +100,8 @@ export function LiceiAdminPanel() {
         perAdesione[r.adesione_id] = r;
       }
       setIscrizioni(perAdesione);
+      setProgresso(data.progresso ?? {});
+      setTotaleLezioni(data.totale_lezioni ?? 0);
       const mappa: Record<string, string> = {};
       for (const c of data.config ?? []) mappa[c.chiave] = c.valore ?? "";
       setConfig(mappa);
@@ -155,6 +166,15 @@ export function LiceiAdminPanel() {
     }
     return { studenti, evento, confermate };
   }, [rows]);
+
+  // Media di lezioni completate per studente confermato di un istituto. Una
+  // media e non un totale: il totale premierebbe la scuola grande, e qui
+  // interessa se i ragazzi stanno seguendo, non quanti sono.
+  const mediaLezioni = (adesioneId: string): number | null => {
+    const p = progresso[adesioneId];
+    if (!p || p.confermati === 0) return null;
+    return p.lezioni_totali / p.confermati;
+  };
 
   // I totali veri si sommano su tutte le iscrizioni esistenti, non solo su
   // quelle degli istituti a schermo: la ricerca filtra l'elenco, non la
@@ -471,6 +491,16 @@ export function LiceiAdminPanel() {
                             : ""
                         }`
                       : "Nessuna iscrizione ancora."}
+                  </Riga>
+                  <Riga label="Avanzamento sul corso">
+                    {(() => {
+                      const p = progresso[r.id];
+                      if (!p || p.confermati === 0) return "Nessuno studente confermato.";
+                      const media = mediaLezioni(r.id);
+                      return `${media === null ? "0" : media.toFixed(1)} lezioni di media su ${totaleLezioni}, per ${p.confermati} studenti confermati${
+                        p.fermi_a_zero > 0 ? ` . ${p.fermi_a_zero} non ne ha completata nessuna` : ""
+                      }`;
+                    })()}
                   </Riga>
                   <Riga label="Studenti previsti all'adesione">
                     {`Terze ${r.studenti_terza} . Quarte ${r.studenti_quarta} . Quinte ${r.studenti_quinta} . Totale ${r.studenti_totale}`}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { statoAdesioneLabel } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 
 /** Cella CSV con escaping RFC 4180. */
 function csvCell(value: unknown): string {
@@ -42,12 +43,34 @@ export async function GET() {
     }[]).map((r) => [r.adesione_id, r]),
   );
 
+  // Avanzamento sul corso, aggregato per istituto sui soli confermati.
+  const { data: studenti } = await client
+    .from("licei_iscrizioni")
+    .select("adesione_id, user_id")
+    .eq("stato", "confermata");
+
+  const righeStudenti = (studenti ?? []) as { adesione_id: string; user_id: string | null }[];
+  const progresso = await progressoPerUtenti(
+    client,
+    righeStudenti.map((r) => r.user_id).filter((id): id is string => !!id),
+  );
+
+  const perIstituto: Record<string, { confermati: number; lezioni: number; zero: number }> = {};
+  for (const r of righeStudenti) {
+    const acc = (perIstituto[r.adesione_id] ??= { confermati: 0, lezioni: 0, zero: 0 });
+    const fatte = r.user_id ? (progresso.get(r.user_id) ?? 0) : 0;
+    acc.confermati += 1;
+    acc.lezioni += fatte;
+    if (fatte === 0) acc.zero += 1;
+  }
+
   const headers = [
     "Codice", "Stato", "Istituto", "Codice meccanografico", "Comune", "Provincia",
     "Email istituto", "Sito", "Dirigente",
     "Referente", "Email referente", "Telefono", "Materia",
     "Studenti terza", "Studenti quarta", "Studenti quinta", "Totale studenti previsti",
     "Iscritti davvero", "Confermati dal referente", "Da confermare", "Mai entrati nel corso",
+    `Lezioni completate in media (su ${TOTALE_LEZIONI})`, "Confermati fermi a zero lezioni",
     "Classi coinvolte", "Studenti attesi all'evento", "Docenti attesi all'evento",
     "Note dell'istituto", "Note staff", "Consenso marketing",
     "Inviata il", "Aggiornata il",
@@ -80,6 +103,10 @@ export async function GET() {
         perAdesione.get(r.id)?.confermate ?? 0,
         perAdesione.get(r.id)?.in_attesa ?? 0,
         perAdesione.get(r.id)?.mai_entrati ?? 0,
+        perIstituto[r.id] && perIstituto[r.id].confermati > 0
+          ? (perIstituto[r.id].lezioni / perIstituto[r.id].confermati).toFixed(1)
+          : "",
+        perIstituto[r.id]?.zero ?? 0,
         r.classi_coinvolte ?? "",
         r.evento_studenti_stimati ?? "",
         r.evento_docenti_stimati ?? "",
