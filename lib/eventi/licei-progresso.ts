@@ -1,4 +1,4 @@
-import { COURSE_LESSONS } from "@/app/courses/course-data";
+import { SUBMITTABLE_LESSONS } from "@/app/courses/course-data";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -23,8 +23,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * studente e contare le sue lezioni, senza bisogno di leggere quale.
  */
 
-/** Le lezioni del percorso. E' il denominatore di ogni "9 su 23". */
-export const TOTALE_LEZIONI = COURSE_LESSONS.length;
+/**
+ * Il denominatore di ogni "9 su 21".
+ *
+ * Sono le lezioni che si possono davvero consegnare, non tutte quelle
+ * dichiarate. L'introduzione non ha una pagina sua, vive sulla pagina del
+ * corso e la navigazione porta li: non ha una riflessione di chiusura, quindi
+ * nessuno potra mai consegnarla. Contandola, uno studente che ha finito tutto
+ * si fermerebbe a uno dalla fine e non arriverebbe mai al 100%, e a novembre
+ * sembrerebbe che nessuno ha completato il percorso.
+ */
+export const TOTALE_LEZIONI = SUBMITTABLE_LESSONS.length;
 
 export type ProgressoPerUtente = Map<string, number>;
 
