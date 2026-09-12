@@ -3,8 +3,8 @@
  *
  * Volutamente sobria: conferma che la candidatura e arrivata, ricorda il
  * codice e dice chiaramente le due cose che il candidato rischia di dare per
- * scontate, cioe che i termini arriveranno sui canali ufficiali e che
- * l'iscrizione all'evento del 10 dicembre e un'altra cosa.
+ * scontate, cioè che i termini arriveranno sui canali ufficiali e che
+ * l'iscrizione all'evento del 10 dicembre è un'altra cosa.
  */
 
 import {
@@ -17,20 +17,17 @@ import {
 export type UniversitaEmailInput = {
   nome: string;
   codice: string;
-  aggiornata: boolean;
 };
 
-export function universitaEmailSubject(aggiornata: boolean): string {
-  return aggiornata
-    ? "Candidatura aggiornata . Biotecnologie e Intelligenza Artificiale"
-    : "Candidatura ricevuta . Biotecnologie e Intelligenza Artificiale";
+export function universitaEmailSubject(): string {
+  return "Candidatura ricevuta . Biotecnologie e Intelligenza Artificiale";
 }
 
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function universitaEmailHtml(input: UniversitaEmailInput): string {
-  const { nome, codice, aggiornata } = input;
+  const { nome, codice } = input;
   const bando = `${SITE_URL}${UNIVERSITA_PATH}`;
   const evento = `${SITE_URL}/eventi/${EVENT_SLUG}`;
 
@@ -47,14 +44,11 @@ export function universitaEmailHtml(input: UniversitaEmailInput): string {
                   Fondazione bioERGOtech e SafesPro
                 </p>
                 <h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#1A2332;">
-                  ${aggiornata ? "Candidatura aggiornata" : "Candidatura ricevuta"}
+                  Candidatura ricevuta
                 </h1>
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#44506B;">
-                  Ciao ${esc(nome)}, ${
-                    aggiornata
-                      ? "abbiamo aggiornato la tua candidatura"
-                      : "abbiamo registrato la tua candidatura"
-                  } al percorso &ldquo;Biotecnologie e Intelligenza Artificiale&rdquo;.
+                  Ciao ${esc(nome)}, abbiamo registrato la tua candidatura al
+                  percorso &ldquo;Biotecnologie e Intelligenza Artificiale&rdquo;.
                 </p>
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4FCFA;border:1px solid #B4E3D8;border-radius:12px;padding:16px 18px;margin:0 0 20px;">
                   <tr>
@@ -69,9 +63,9 @@ export function universitaEmailHtml(input: UniversitaEmailInput): string {
                   </tr>
                 </table>
                 <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#44506B;">
-                  Questa e una pre-iscrizione: non ti abbiamo chiesto un progetto perche il
+                  Questa è una pre-iscrizione: non ti abbiamo chiesto un progetto perché il
                   progetto si costruisce durante il percorso, con il supporto dei mentor.
-                  Le modalita operative e i termini saranno comunicati sui canali ufficiali
+                  Le modalità operative e i termini saranno comunicati sui canali ufficiali
                   di Fondazione bioERGOtech e SafesPro.
                 </p>
                 <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#44506B;">

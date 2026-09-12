@@ -6,8 +6,8 @@ import { SEZIONI_UNIVERSITA } from "./content";
 /**
  * Barra di navigazione del bando universitario, appiccicata sotto il menu del
  * sito. Stessa impostazione di LiceiIndice: la sezione corrente si calcola a
- * mano, perche le sezioni sono piu alte della finestra e "quella che si vede"
- * non e una domanda binaria.
+ * mano, perché le sezioni sono più alte della finestra e "quella che si vede"
+ * non è una domanda binaria.
  */
 export function UniversitaIndice({ ctaLabel }: { ctaLabel: string }) {
   const [attiva, setAttiva] = useState<string>(SEZIONI_UNIVERSITA[0].id);
@@ -40,7 +40,7 @@ export function UniversitaIndice({ ctaLabel }: { ctaLabel: string }) {
     };
   }, []);
 
-  // La voce attiva puo finire fuori dalla parte visibile su schermi stretti.
+  // La voce attiva può finire fuori dalla parte visibile su schermi stretti.
   useEffect(() => {
     const voce = barra.current?.querySelector<HTMLElement>(`[data-id="${attiva}"]`);
     voce?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });

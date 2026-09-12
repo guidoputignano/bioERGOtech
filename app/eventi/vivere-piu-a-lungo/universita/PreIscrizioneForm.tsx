@@ -3,7 +3,7 @@
 /**
  * Modulo di pre-iscrizione al bando universitario.
  *
- * Volutamente corto. L'art. 4 elenca molte cose che la candidatura "potra
+ * Volutamente corto. L'art. 4 elenca molte cose che la candidatura "potrà
  * prevedere", ma le elenca a titolo esemplificativo, e in questa fase serve
  * raccogliere adesioni, non selezionare: chiedere CV, competenze e proposta
  * di progetto adesso costerebbe candidature senza aggiungere informazione
@@ -15,6 +15,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { validateUniversita } from "@/lib/eventi/universita";
 import {
   ACCETTAZIONE_BANDO_TESTO,
   AREE_DISCIPLINARI,
@@ -92,12 +93,11 @@ export function PreIscrizioneForm() {
   const [stato, setStato] = useState<Stato>("compilazione");
   const [errore, setErrore] = useState<string | null>(null);
   const [codice, setCodice] = useState<string>("");
-  const [aggiornata, setAggiornata] = useState(false);
 
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [email, setEmail] = useState("");
-  const [universita, setUniversita] = useState("");
+  const [università, setUniversita] = useState("");
   const [corsoStudi, setCorsoStudi] = useState("");
   const [livello, setLivello] = useState("");
   const [area, setArea] = useState("");
@@ -105,38 +105,50 @@ export function PreIscrizioneForm() {
   const [interessi, setInteressi] = useState("");
   const [accettaBando, setAccettaBando] = useState(false);
   const [privacy, setPrivacy] = useState(false);
+  // Honeypot: invisibile a chi legge, irresistibile per i bot. Come nelle
+  // altre rotte pubbliche del sito.
+  const [website, setWebsite] = useState("");
 
   async function invia(e: React.FormEvent) {
     e.preventDefault();
     setErrore(null);
+
+    // La stessa funzione che usa la rotta. Un campo vuoto si scopre qui,
+    // senza un giro di rete per volta.
+    const dati = {
+      nome,
+      cognome,
+      email,
+      università,
+      corso_studi: corsoStudi,
+      livello,
+      area,
+      area_altro: areaAltro,
+      interessi,
+      accetta_bando: accettaBando,
+      consenso_privacy: privacy,
+    };
+    const problema = validateUniversita(dati);
+    if (problema) {
+      setErrore(problema);
+      return;
+    }
+
     setStato("invio");
 
     try {
       const risposta = await fetch("/api/eventi/universita", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome,
-          cognome,
-          email,
-          universita,
-          corso_studi: corsoStudi,
-          livello,
-          area,
-          area_altro: areaAltro,
-          interessi,
-          accetta_bando: accettaBando,
-          consenso_privacy: privacy,
-        }),
+        body: JSON.stringify({ ...dati, website }),
       });
-      const dati = await risposta.json();
+      const risposta_dati = await risposta.json();
       if (!risposta.ok) {
-        setErrore(dati?.error ?? "Non e stato possibile inviare la candidatura. Riprova.");
+        setErrore(risposta_dati?.error ?? "Non è stato possibile inviare la candidatura. Riprova.");
         setStato("compilazione");
         return;
       }
-      setCodice(dati.codice);
-      setAggiornata(Boolean(dati.aggiornata));
+      setCodice(risposta_dati.codice);
       setStato("fatto");
     } catch {
       setErrore("Non e stato possibile contattare il server. Controlla la connessione e riprova.");
@@ -150,13 +162,13 @@ export function PreIscrizioneForm() {
         <span className="un-esito-icona" aria-hidden="true">
           <i className="fas fa-circle-check" />
         </span>
-        <h3>{aggiornata ? "Candidatura aggiornata" : "Candidatura ricevuta"}</h3>
+        <h3>Candidatura ricevuta</h3>
         <p>
           Ti abbiamo inviato una email di conferma. Il codice della tua candidatura e{" "}
           <strong>{codice}</strong>.
         </p>
         <p className="un-esito-nota">
-          Le modalita operative e i termini saranno comunicati sui canali ufficiali. Ricorda che
+          Le modalità operative e i termini saranno comunicati sui canali ufficiali. Ricorda che
           candidarsi al bando e iscriversi alla giornata del 10 dicembre sono due cose distinte.
         </p>
       </div>
@@ -203,11 +215,11 @@ export function PreIscrizioneForm() {
       </Campo>
 
       <div className="un-form-griglia">
-        <Campo id="un-universita" label="Universita" obbligatorio>
+        <Campo id="un-università" label="Università" obbligatorio>
           <input
-            id="un-universita"
+            id="un-università"
             style={campo}
-            value={universita}
+            value={università}
             onChange={(e) => setUniversita(e.target.value)}
             placeholder="Anche straniera"
             required
@@ -292,6 +304,19 @@ export function PreIscrizioneForm() {
             Leggi l&apos;informativa
           </Link>
         </Consenso>
+      </div>
+
+      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
+        <label htmlFor="un-website">Non compilare questo campo</label>
+        <input
+          id="un-website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={(ev) => setWebsite(ev.target.value)}
+        />
       </div>
 
       {errore && (

@@ -44,6 +44,12 @@ import {
   statoCandidatureUniversita,
 } from "./content";
 
+// La finestra di candidatura si valuta a ogni richiesta: una pagina generata
+// a build time resterebbe ferma allo stato del giorno del deploy, e il giorno
+// dopo la scadenza continuerebbe a mostrare il modulo aperto. Stessa scelta
+// delle pagine gemelle di /licei e /bando.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: `${UNIVERSITA.titolo} . Bando per gli studenti universitari . Fondazione bioERGOtech`,
   description: UNIVERSITA.sottotitolo,
@@ -57,7 +63,29 @@ export const metadata: Metadata = {
 };
 
 const STILE = `
-/* Le due barre appiccicate in cima, navbar 70px piu indice 58px, coprirebbero
+/* /assets/css/main.css e' caricato nel layout dopo globals.css e ridefinisce
+   .section, .section-title e .card. Le pagine gemelle lo neutralizzano sotto
+   la propria classe: senza questi reset il titolo delle FAQ resta
+   inline-block e "text-center" non lo centra. */
+.un-page .section { padding: 76px 0; overflow: visible; }
+.un-page .section-title {
+  display: block; font-size: 2rem; line-height: 1.25;
+  color: var(--text-dark); padding-bottom: 20px; margin: 0 0 20px;
+}
+.un-page .section-title::after { width: 56px; height: 3px; }
+.un-page .section-title:hover::after { width: 56px; }
+.un-page .card {
+  margin: 0; background: #fff; border: 1px solid var(--border-color);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.un-page .card::before { display: none; }
+.un-page .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgba(26, 35, 50, .10);
+  border-color: #CFE9E4;
+}
+
+/* Le due barre appiccicate in cima, navbar 70px più indice 58px, coprirebbero
    la testata della sezione a cui si e appena saltati. Stessa misura usata
    dalle pagine gemelle del bando startup e dei licei. */
 .un-page section[id] { scroll-margin-top: 138px; }
@@ -313,7 +341,7 @@ export default function UniversitaPage() {
                 <div className="un-stato un-stato-attesa">
                   <i className="fas fa-clock" aria-hidden="true" />
                   <span>
-                    Le modalita e la scadenza per le candidature saranno comunicate a breve sui
+                    Le modalità e la scadenza per le candidature saranno comunicate a breve sui
                     canali ufficiali.
                   </span>
                 </div>
@@ -339,8 +367,8 @@ export default function UniversitaPage() {
             <Testata
               numero="01"
               articolo="Art. 1"
-              kicker="Premessa e finalita"
-              titolo="Un ponte tra universita, ricerca e impresa"
+              kicker="Premessa e finalità"
+              titolo="Un ponte tra università, ricerca e impresa"
             />
             <div className="un-testo">
               {PREMESSA.map((p, i) => (
@@ -357,7 +385,7 @@ export default function UniversitaPage() {
               numero="02"
               articolo="Art. 2"
               kicker="Destinatari"
-              titolo="Chi puo candidarsi"
+              titolo="Chi può candidarsi"
               intro={DESTINATARI_NOTE[0]}
             />
 
@@ -376,7 +404,7 @@ export default function UniversitaPage() {
               Aree disciplinari
             </h3>
             <p className="un-nota" style={{ marginBottom: 14 }}>
-              L&apos;elenco e indicato dal bando a titolo esemplificativo.
+              L&apos;elenco è indicato dal bando a titolo esemplificativo.
             </p>
             <div className="un-pill-griglia" style={{ marginBottom: 32 }}>
               {AREE_DISCIPLINARI.map((a) => (
@@ -401,7 +429,7 @@ export default function UniversitaPage() {
             <Testata
               numero="03"
               articolo="Art. 3"
-              kicker="Modalita di svolgimento"
+              kicker="Modalità di svolgimento"
               titolo="Come funziona il percorso"
               intro={SVOLGIMENTO_NOTE[0]}
             />
@@ -409,7 +437,7 @@ export default function UniversitaPage() {
               {SVOLGIMENTO_NOTE[1]}
             </p>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-dark)", margin: "0 0 16px" }}>
-              Il percorso potra comprendere
+              Il percorso potrà comprendere
             </h3>
             <ul className="un-elenco un-elenco-2">
               {CONTENUTI_PERCORSO.map((c) => (
@@ -540,22 +568,22 @@ export default function UniversitaPage() {
             <Testata
               numero="07"
               articolo="Art. 4"
-              kicker="Modalita di adesione"
+              kicker="Modalità di adesione"
               titolo="Candidati"
             />
 
             <div className="un-griglia un-griglia-2" style={{ alignItems: "start" }}>
               <div>
                 <p className="un-testo" style={{ marginBottom: 20 }}>
-                  La candidatura e individuale. In questa fase non serve un progetto: bastano due
+                  La candidatura è individuale. In questa fase non serve un progetto: bastano due
                   minuti e i dati essenziali. Il progetto si costruisce durante il percorso, con il
                   supporto dei mentor.
                 </p>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-dark)", margin: "0 0 6px" }}>
-                  Piu avanti potra essere richiesto
+                  Più avanti potrà essere richiesto
                 </h3>
                 <p className="un-nota" style={{ marginBottom: 14 }}>
-                  L&apos;art. 4 elenca a titolo esemplificativo quello che la candidatura potra
+                  L&apos;art. 4 elenca a titolo esemplificativo quello che la candidatura potrà
                   prevedere nelle fasi successive.
                 </p>
                 <ul className="un-elenco">
@@ -586,7 +614,7 @@ export default function UniversitaPage() {
                       {stato === "chiuse" ? "Candidature chiuse" : "Candidature non ancora aperte"}
                     </h3>
                     <p className="un-testo" style={{ marginBottom: 20 }}>
-                      Le modalita e la scadenza per le candidature saranno comunicate a breve sui
+                      Le modalità e la scadenza per le candidature saranno comunicate a breve sui
                       canali ufficiali.
                     </p>
                     <a href={MAILTO_INFORMAZIONI} className="btn-primary" style={{ display: "inline-block" }}>
@@ -618,7 +646,7 @@ export default function UniversitaPage() {
               articolo="Art. 8"
               kicker="Commissione"
               titolo="Chi valuta i progetti"
-              intro="La Commissione e nominata congiuntamente da Fondazione bioERGOtech e SafesPro."
+              intro="La Commissione è nominata congiuntamente da Fondazione bioERGOtech e SafesPro."
             />
             <div className="un-griglia un-griglia-2">
               <div>

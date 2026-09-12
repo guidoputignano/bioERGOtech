@@ -2,7 +2,7 @@
  * Tipi e validazione della pre-iscrizione al bando universitario.
  *
  * Condiviso tra il modulo in pagina e la rotta API: la stessa funzione
- * valida sui due lati, cosi un campo non puo passare dal client senza
+ * valida sui due lati, così un campo non può passare dal client senza
  * passare anche dal server.
  */
 
@@ -44,7 +44,7 @@ const CAMPI_OBBLIGATORI: [keyof UniversitaInput, string][] = [
   ["nome", "il nome"],
   ["cognome", "il cognome"],
   ["email", "l'email"],
-  ["universita", "l'universita"],
+  ["universita", "l'università"],
   ["corso_studi", "il corso di studi"],
 ];
 
