@@ -20,6 +20,8 @@ import {
   SQUADRA_MAX,
   SQUADRA_MIN,
   STATI_ISCRIZIONE,
+  statoAdesioneColore,
+  statoAdesioneLabel,
   statoIscrizioneColore,
   statoIscrizioneLabel,
 } from "../content";
@@ -122,7 +124,26 @@ export function ReferenteConsole() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">{adesione?.istituto_denominazione}</h1>
+        <div className="flex items-center flex-wrap gap-3">
+          <h1 className="text-2xl font-bold text-gray-800">{adesione?.istituto_denominazione}</h1>
+          {/* Lo stato dell'adesione, detto per esteso. Prima si poteva solo
+              dedurre dal banner giallo qui sotto: quando lo staff confermava,
+              quel banner spariva e al suo posto non compariva niente, quindi
+              la conferma si leggeva da un'assenza. Stessa forma del badge già
+              usato per le iscrizioni più in basso. */}
+          {adesione?.stato && (
+            <span
+              className="badge"
+              style={{
+                background: `${statoAdesioneColore(adesione.stato)}1A`,
+                color: statoAdesioneColore(adesione.stato),
+                flexShrink: 0,
+              }}
+            >
+              {statoAdesioneLabel(adesione.stato)}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-gray-600">
           Area del docente referente . {adesione?.referente_nome} {adesione?.referente_cognome}
         </p>

@@ -12,15 +12,8 @@ import {
   CONSENSO_PRIVACY_STUDENTE_TESTO,
   DICHIARAZIONE_AUTORIZZAZIONE_TESTO,
   SITE_URL,
+  STATI_ADESIONE_CHE_ACCETTANO,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
-
-/**
- * Un istituto accetta studenti solo dopo che lo staff ne ha confermato
- * l'adesione. Il codice gira per forza di cose in tutta la scuola, quindi
- * senza questo controllo basterebbe conoscerlo per iscriversi a un istituto
- * la cui adesione e ancora da verificare.
- */
-const STATI_ADESIONE_CHE_ACCETTANO = new Set(["confermata", "attiva"]);
 
 export async function POST(request: Request) {
   try {
@@ -65,6 +58,12 @@ export async function POST(request: Request) {
       );
     }
 
+    /**
+     * Un istituto accetta studenti solo dopo che lo staff ne ha confermato
+     * l'adesione. Il codice gira per forza di cose in tutta la scuola, quindi
+     * senza questo controllo basterebbe conoscerlo per iscriversi a un istituto
+     * la cui adesione e ancora da verificare.
+     */
     if (!STATI_ADESIONE_CHE_ACCETTANO.has(adesione.stato)) {
       return NextResponse.json(
         {

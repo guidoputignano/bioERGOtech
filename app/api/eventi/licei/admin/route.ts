@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { requireAdmin } from "@/lib/auth/admin";
-import { STATI_ADESIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  STATI_ADESIONE,
+  STATI_ADESIONE_CHE_ACCETTANO,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  adesioneConfermataEmailHtml,
+  adesioneConfermataEmailSubject,
+} from "@/lib/eventi/licei-email";
 
 const STATI_VALIDI = new Set<string>(STATI_ADESIONE.map((s) => s.value));
 
@@ -76,6 +84,19 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Nessuna modifica richiesta." }, { status: 400 });
   }
 
+  // Lo stato di partenza, letto prima di scrivere. Serve solo a distinguere una
+  // transizione da un salvataggio qualsiasi: senza, una nota interna aggiunta a
+  // un'adesione gia confermata rimanderebbe l'email ogni volta.
+  let statoPrecedente: string | null = null;
+  if (patch.stato !== undefined) {
+    const { data: prima } = await client
+      .from("licei_adesioni")
+      .select("stato")
+      .eq("id", body.id)
+      .maybeSingle();
+    statoPrecedente = prima?.stato ?? null;
+  }
+
   const { data, error } = await client
     .from("licei_adesioni")
     .update(patch)
@@ -84,6 +105,37 @@ export async function PATCH(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // ── Avviso al referente, solo sulla transizione verso uno stato che accetta
+  // iscrizioni. L'email di adesione gli promette alla lettera che gli
+  // scriviamo alla conferma, e la sua console gli dice di aspettarla prima di
+  // diffondere il codice: finora quella promessa era scoperta.
+  const entraInAccettazione =
+    statoPrecedente !== null &&
+    !STATI_ADESIONE_CHE_ACCETTANO.has(statoPrecedente) &&
+    typeof patch.stato === "string" &&
+    STATI_ADESIONE_CHE_ACCETTANO.has(patch.stato);
+
+  if (entraInAccettazione && process.env.RESEND_API_KEY && data?.referente_email) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+        to: data.referente_email,
+        subject: adesioneConfermataEmailSubject(),
+        html: adesioneConfermataEmailHtml({
+          referente: `${data.referente_nome ?? ""} ${data.referente_cognome ?? ""}`.trim(),
+          istituto: data.istituto_denominazione ?? "",
+          codice: data.codice ?? "",
+          attiva: patch.stato === "attiva",
+        }),
+      });
+    } catch (mailErr) {
+      // Lo stato e gia salvato: un problema di invio non deve far fallire
+      // l'istruttoria dello staff.
+      console.error("Licei conferma adesione email failed:", mailErr);
+    }
+  }
 
   return NextResponse.json({ success: true, adesione: data });
 }

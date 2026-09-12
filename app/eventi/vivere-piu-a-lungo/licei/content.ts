@@ -297,6 +297,19 @@ export const STATI_ADESIONE = [
 
 export type StatoAdesione = (typeof STATI_ADESIONE)[number]["value"];
 
+/**
+ * Gli stati in cui il codice dell'istituto accetta le iscrizioni degli
+ * studenti. Sta qui e non nelle rotte perché due punti lo devono usare, e
+ * devono usarlo d'accordo: il cancello vero, nella rotta delle iscrizioni, e
+ * l'email che avvisa il referente che può cominciare, nella rotta dello
+ * staff. Se i due insiemi divergono, la scuola riceve un invito a partire
+ * mentre gli studenti sbattono contro un errore, o il contrario.
+ */
+export const STATI_ADESIONE_CHE_ACCETTANO: ReadonlySet<string> = new Set([
+  "confermata",
+  "attiva",
+]);
+
 export const statoAdesioneLabel = (v: string): string =>
   STATI_ADESIONE.find((s) => s.value === v)?.label ?? v;
 
