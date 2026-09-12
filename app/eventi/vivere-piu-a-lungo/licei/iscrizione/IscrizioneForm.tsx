@@ -307,7 +307,7 @@ export function IscrizioneForm({
         </Consenso>
         <Consenso checked={privacy} onChange={setPrivacy}>
           {CONSENSO_PRIVACY_STUDENTE_TESTO} *{" "}
-          <Link href="/legal/privacy" style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+          <Link href="/legal/informativa-privacy" style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
             Leggi l&apos;informativa
           </Link>
         </Consenso>
