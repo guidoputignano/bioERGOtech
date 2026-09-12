@@ -28,6 +28,8 @@ type ProgressoIstituto = {
   confermati: number;
   lezioni_totali: number;
   fermi_a_zero: number;
+  /** Non arriva piu da SQL: dipende anche dalle lezioni consegnate. */
+  mai_entrati: number;
 };
 
 /** Una riga di `licei_iscrizioni_stats()`: gli studenti veri di un istituto. */
@@ -36,7 +38,6 @@ type IscrizioniStat = {
   iscritti: number;
   in_attesa: number;
   confermate: number;
-  mai_entrati: number;
 };
 
 const selectStyle: React.CSSProperties = {
@@ -186,10 +187,12 @@ export function LiceiAdminPanel() {
     for (const s of Object.values(iscrizioni)) {
       iscritti += Number(s.iscritti ?? 0);
       confermati += Number(s.confermate ?? 0);
-      maiEntrati += Number(s.mai_entrati ?? 0);
     }
+    // "Mai entrati" arriva dal blocco del progresso e non da quello delle
+    // iscrizioni: dipende anche dalle lezioni consegnate, che SQL non vede.
+    for (const p of Object.values(progresso)) maiEntrati += Number(p.mai_entrati ?? 0);
     return { iscritti, confermati, maiEntrati };
-  }, [iscrizioni]);
+  }, [iscrizioni, progresso]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -486,8 +489,8 @@ export function LiceiAdminPanel() {
                   <Riga label="Studenti iscritti davvero">
                     {iscrizioni[r.id]
                       ? `${iscrizioni[r.id].iscritti} iscritti . ${iscrizioni[r.id].confermate} confermati dal referente . ${iscrizioni[r.id].in_attesa} da confermare${
-                          Number(iscrizioni[r.id].mai_entrati) > 0
-                            ? ` . ${iscrizioni[r.id].mai_entrati} non sono mai entrati nel corso`
+                          Number(progresso[r.id]?.mai_entrati ?? 0) > 0
+                            ? ` . ${progresso[r.id].mai_entrati} non sono mai entrati nel corso`
                             : ""
                         }`
                       : "Nessuna iscrizione ancora."}

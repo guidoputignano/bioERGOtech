@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/auth/admin";
 import {
   STATI_ADESIONE,
   STATI_ADESIONE_CHE_ACCETTANO,
+  STATI_ISCRIZIONE_ATTIVI,
+  haFattoAccesso,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import {
   adesioneConfermataEmailHtml,
@@ -60,16 +62,32 @@ export async function GET(request: Request) {
     client.from("licei_config").select("chiave, valore"),
   ]);
 
-  // Il progresso sul corso, aggregato per istituto. Va letto in due passi
-  // perche serve prima sapere quali studenti appartengono a quale scuola.
-  // Si prendono solo i confermati: e di loro che la scuola risponde, e un
-  // rifiutato che non segue il corso non e un problema di nessuno.
-  const { data: studenti } = await client
-    .from("licei_iscrizioni")
-    .select("adesione_id, user_id")
-    .eq("stato", "confermata");
+  // Accessi e progresso, aggregati per istituto.
+  //
+  // "Mai entrato" si calcola qui e non in SQL perche dipende da due segnali
+  // che stanno in due posti: la data di accesso in `auth.users`, che una
+  // funzione puo leggere, e le lezioni consegnate in `lesson_submissions`,
+  // che una funzione non puo leggere senza far fallire le migrazioni su un
+  // ambiente nuovo. Questo e l'unico punto in cui i due si incontrano.
+  const [{ data: studenti }, { data: accessi }] = await Promise.all([
+    client.from("licei_iscrizioni").select("id, adesione_id, user_id, stato"),
+    client.rpc("licei_accessi_tutti"),
+  ]);
 
-  const righeStudenti = (studenti ?? []) as { adesione_id: string; user_id: string | null }[];
+  const righeStudenti = (studenti ?? []) as {
+    id: string;
+    adesione_id: string;
+    user_id: string | null;
+    stato: string;
+  }[];
+
+  const accessoPerIscrizione = new Map<string, string | null>(
+    ((accessi ?? []) as { iscrizione_id: string; ultimo_accesso: string | null }[]).map((a) => [
+      a.iscrizione_id,
+      a.ultimo_accesso,
+    ]),
+  );
+
   const progresso = await progressoPerUtenti(
     client,
     righeStudenti.map((r) => r.user_id).filter((id): id is string => !!id),
@@ -77,18 +95,36 @@ export async function GET(request: Request) {
 
   const progressoPerIstituto: Record<
     string,
-    { confermati: number; lezioni_totali: number; fermi_a_zero: number }
+    { confermati: number; lezioni_totali: number; fermi_a_zero: number; mai_entrati: number }
   > = {};
+
   for (const r of righeStudenti) {
+    // Un ritirato o un non riconosciuto non e un problema da risolvere, e in
+    // mezzo agli altri sarebbe rumore.
+    if (!STATI_ISCRIZIONE_ATTIVI.has(r.stato)) continue;
+
     const acc = (progressoPerIstituto[r.adesione_id] ??= {
       confermati: 0,
       lezioni_totali: 0,
       fermi_a_zero: 0,
+      mai_entrati: 0,
     });
-    const fatte = r.user_id ? (progresso.get(r.user_id) ?? 0) : 0;
-    acc.confermati += 1;
-    acc.lezioni_totali += fatte;
-    if (fatte === 0) acc.fermi_a_zero += 1;
+
+    const lezioni = r.user_id ? (progresso.get(r.user_id) ?? 0) : 0;
+    const ultimo = accessoPerIscrizione.get(r.id) ?? null;
+
+    if (!haFattoAccesso({ ultimo_accesso: ultimo, lezioni_completate: lezioni })) {
+      acc.mai_entrati += 1;
+    }
+
+    // La media sul corso guarda i soli confermati: e di loro che la scuola
+    // risponde, e un'iscrizione ancora da riconoscere non dice niente sul
+    // percorso.
+    if (r.stato === "confermata") {
+      acc.confermati += 1;
+      acc.lezioni_totali += lezioni;
+      if (lezioni === 0) acc.fermi_a_zero += 1;
+    }
   }
 
   return NextResponse.json({

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
-import { statoAdesioneLabel } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  STATI_ISCRIZIONE_ATTIVI,
+  haFattoAccesso,
+  statoAdesioneLabel,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 
 /** Cella CSV con escaping RFC 4180. */
@@ -33,35 +37,64 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const perAdesione = new Map<string, { iscritti: number; in_attesa: number; confermate: number; mai_entrati: number }>(
+  const perAdesione = new Map<string, { iscritti: number; in_attesa: number; confermate: number }>(
     ((iscrizioniStats ?? []) as {
       adesione_id: string;
       iscritti: number;
       in_attesa: number;
       confermate: number;
-      mai_entrati: number;
     }[]).map((r) => [r.adesione_id, r]),
   );
 
-  // Avanzamento sul corso, aggregato per istituto sui soli confermati.
-  const { data: studenti } = await client
-    .from("licei_iscrizioni")
-    .select("adesione_id, user_id")
-    .eq("stato", "confermata");
+  // Avanzamento sul corso e chi non e mai entrato, per istituto. Stesso
+  // calcolo della rotta del pannello, e per la stessa ragione: "mai entrato"
+  // dipende sia dalla data di accesso sia dalle lezioni consegnate, e i due
+  // segnali si incontrano solo qui.
+  const [{ data: studenti }, { data: accessi }] = await Promise.all([
+    client.from("licei_iscrizioni").select("id, adesione_id, user_id, stato"),
+    client.rpc("licei_accessi_tutti"),
+  ]);
 
-  const righeStudenti = (studenti ?? []) as { adesione_id: string; user_id: string | null }[];
+  const righeStudenti = (studenti ?? []) as {
+    id: string;
+    adesione_id: string;
+    user_id: string | null;
+    stato: string;
+  }[];
+
+  const ultimoAccesso = new Map<string, string | null>(
+    ((accessi ?? []) as { iscrizione_id: string; ultimo_accesso: string | null }[]).map((a) => [
+      a.iscrizione_id,
+      a.ultimo_accesso,
+    ]),
+  );
+
   const progresso = await progressoPerUtenti(
     client,
     righeStudenti.map((r) => r.user_id).filter((id): id is string => !!id),
   );
 
-  const perIstituto: Record<string, { confermati: number; lezioni: number; zero: number }> = {};
+  const perIstituto: Record<
+    string,
+    { confermati: number; lezioni: number; zero: number; mai_entrati: number }
+  > = {};
   for (const r of righeStudenti) {
-    const acc = (perIstituto[r.adesione_id] ??= { confermati: 0, lezioni: 0, zero: 0 });
+    if (!STATI_ISCRIZIONE_ATTIVI.has(r.stato)) continue;
+    const acc = (perIstituto[r.adesione_id] ??= {
+      confermati: 0,
+      lezioni: 0,
+      zero: 0,
+      mai_entrati: 0,
+    });
     const fatte = r.user_id ? (progresso.get(r.user_id) ?? 0) : 0;
-    acc.confermati += 1;
-    acc.lezioni += fatte;
-    if (fatte === 0) acc.zero += 1;
+    if (!haFattoAccesso({ ultimo_accesso: ultimoAccesso.get(r.id) ?? null, lezioni_completate: fatte })) {
+      acc.mai_entrati += 1;
+    }
+    if (r.stato === "confermata") {
+      acc.confermati += 1;
+      acc.lezioni += fatte;
+      if (fatte === 0) acc.zero += 1;
+    }
   }
 
   const headers = [
@@ -102,7 +135,7 @@ export async function GET() {
         perAdesione.get(r.id)?.iscritti ?? 0,
         perAdesione.get(r.id)?.confermate ?? 0,
         perAdesione.get(r.id)?.in_attesa ?? 0,
-        perAdesione.get(r.id)?.mai_entrati ?? 0,
+        perIstituto[r.id]?.mai_entrati ?? 0,
         perIstituto[r.id] && perIstituto[r.id].confermati > 0
           ? (perIstituto[r.id].lezioni / perIstituto[r.id].confermati).toFixed(1)
           : "",

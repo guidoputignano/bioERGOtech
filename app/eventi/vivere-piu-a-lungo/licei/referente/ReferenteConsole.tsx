@@ -22,6 +22,8 @@ import {
   STATI_ISCRIZIONE,
   statoAdesioneColore,
   statoAdesioneLabel,
+  STATI_ISCRIZIONE_ATTIVI,
+  haFattoAccesso,
   statoIscrizioneColore,
   statoIscrizioneLabel,
 } from "../content";
@@ -137,7 +139,7 @@ export function ReferenteConsole() {
   const maiEntrati = useMemo(
     () =>
       righe.filter(
-        (r) => ["in_attesa", "confermata"].includes(r.stato) && !r.ultimo_accesso,
+        (r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !haFattoAccesso(r),
       ).length,
     [righe],
   );
@@ -149,7 +151,7 @@ export function ReferenteConsole() {
   const fermiAZero = useMemo(
     () =>
       righe.filter(
-        (r) => r.stato === "confermata" && r.ultimo_accesso && !r.lezioni_completate,
+        (r) => r.stato === "confermata" && haFattoAccesso(r) && !r.lezioni_completate,
       ).length,
     [righe],
   );
@@ -433,7 +435,7 @@ export function ReferenteConsole() {
 
               {/* Iscritto ma senza password: risulta a posto ovunque e nel
                   corso non entra. Il badge lo dice, il bottone lo rimedia. */}
-              {["in_attesa", "confermata"].includes(r.stato) && !r.ultimo_accesso && (
+              {STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !haFattoAccesso(r) && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                   <span
                     className="badge"
