@@ -32,6 +32,7 @@ import {
   FORZA_APERTURA,
 } from "./bando/content";
 import { LICEI_PATH } from "./licei/content";
+import { UNIVERSITA_PATH } from "./universita/content";
 
 export const metadata: Metadata = {
   title: `${EVENT.titolo} . Fondazione bioERGOtech`,
@@ -580,6 +581,42 @@ export default function EventPage() {
                 </div>
                 <Link href={LICEI_PATH} className="btn-primary text-center whitespace-nowrap">
                   Aderisci con la scuola
+                </Link>
+              </div>
+            )}
+
+            {/* Bando per gli studenti universitari. A differenza dei licei qui
+                si candida il singolo studente, non l'ateneo. */}
+            {!ARCHIVE_MODE && (
+              <div
+                className="card mt-6 flex flex-col md:flex-row md:items-center gap-6"
+                style={{ borderLeft: "4px solid var(--primary)" }}
+              >
+                <div className="flex-1">
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--primary-dark)",
+                    }}
+                  >
+                    Bando per gli studenti universitari
+                  </span>
+                  <h3 className="text-xl font-semibold text-gray-800 mt-2 mb-2">
+                    Biotecnologie e Intelligenza Artificiale
+                  </h3>
+                  <p className="text-gray-700 text-sm">
+                    Un percorso formativo e progettuale gratuito, aperto agli studenti universitari
+                    di triennale, magistrale, ciclo unico, dottorato e post-laurea, di atenei
+                    italiani o stranieri. Si lavora con ricercatori e mentor a una proposta
+                    scientifica originale che integri biotecnologie e intelligenza artificiale. Ci
+                    si candida individualmente, i team si formano dopo.
+                  </p>
+                </div>
+                <Link href={UNIVERSITA_PATH} className="btn-primary text-center whitespace-nowrap">
+                  Scopri il bando
                 </Link>
               </div>
             )}

@@ -422,6 +422,11 @@ export const PERCHE_PARTECIPARE = [
     desc: "Porti la tua classe a contatto con ricerca, robotica e IA applicate alla vita reale.",
   },
   {
+    icona: "fa-flask",
+    titolo: "Per gli universitari",
+    desc: "Sviluppi un progetto di ricerca con il supporto di mentor e puoi essere accompagnato verso la sottomissione a una rivista scientifica.",
+  },
+  {
     icona: "fa-rocket",
     titolo: "Per le startup",
     desc: "Porti la tua startup, spin-off o progetto nello showcase di innovazione, davanti a investitori, partner e istituzioni.",
@@ -453,6 +458,10 @@ export const FAQ = [
   {
     q: "Come funziona il check-in in loco?",
     a: "Dopo l'iscrizione ricevi un'email di conferma con un codice e un QR code. Al desk lo mostri allo staff per il check-in della sessione.",
+  },
+  {
+    q: "Possono partecipare gli studenti universitari?",
+    a: "Sì, con un bando dedicato. Il percorso “Biotecnologie e Intelligenza Artificiale” è gratuito ed è aperto agli studenti iscritti a corsi di laurea triennale, magistrale, a ciclo unico, dottorato di ricerca o altri percorsi post-universitari, presso università italiane o straniere. Ci si candida individualmente e i team di lavoro si costituiscono in un secondo momento. I dettagli e il modulo sono nella pagina del bando per gli studenti universitari.",
   },
   {
     q: "Come faccio a presentare la mia startup nello Showcase del giorno 2?",
