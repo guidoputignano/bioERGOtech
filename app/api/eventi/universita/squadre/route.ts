@@ -164,18 +164,16 @@ async function statoStudente(client: Client, candidatura: Candidatura): Promise<
     .eq("candidatura_id", candidatura.id)
     .order("created_at", { ascending: false });
 
-  const inviate: RichiestaInviata[] = (inviateRaw ?? []).map(
-    (r: RichiestaInviata & { squadra?: { nome: string } | { nome: string }[] | null }) => ({
-      id: r.id,
-      squadra_id: r.squadra_id,
-      squadra_nome: unoSolo(r.squadra)?.nome ?? null,
-      origine: r.origine,
-      messaggio: r.messaggio ?? null,
-      stato: r.stato,
-      created_at: r.created_at,
-      deciso_at: r.deciso_at ?? null,
-    }),
-  );
+  const inviate: RichiestaInviata[] = (inviateRaw ?? []).map((r) => ({
+    id: r.id,
+    squadra_id: r.squadra_id,
+    squadra_nome: unoSolo(r.squadra)?.nome ?? null,
+    origine: r.origine,
+    messaggio: r.messaggio ?? null,
+    stato: r.stato,
+    created_at: r.created_at,
+    deciso_at: r.deciso_at ?? null,
+  }));
 
   if (!squadraId) {
     return {
@@ -215,43 +213,36 @@ async function statoStudente(client: Client, candidatura: Candidatura): Promise<
       .eq("squadra_id", squadraId),
   ]);
 
-  const ricevute: RichiestaRicevuta[] = (ricevuteRes.data ?? []).map(
-    (r: RichiestaRicevuta & { candidatura?: PersonaBacheca | PersonaBacheca[] | null }) => ({
-      id: r.id,
-      candidatura_id: r.candidatura_id,
-      origine: r.origine,
-      messaggio: r.messaggio ?? null,
-      stato: r.stato,
-      created_at: r.created_at,
-      deciso_at: r.deciso_at ?? null,
-      richiedente: unoSolo(r.candidatura),
-    }),
-  );
+  const ricevute: RichiestaRicevuta[] = (ricevuteRes.data ?? []).map((r) => ({
+    id: r.id,
+    candidatura_id: r.candidatura_id,
+    origine: r.origine,
+    messaggio: r.messaggio ?? null,
+    stato: r.stato,
+    created_at: r.created_at,
+    deciso_at: r.deciso_at ?? null,
+    richiedente: unoSolo(r.candidatura),
+  }));
 
   // Solo i mentor approvati. Un abbinamento a una candidatura ancora da
   // valutare, o sospesa, non e un recapito da consegnare a una squadra: la
   // pubblicazione di un contatto la decide lo stato del mentor, non il fatto
   // che qualcuno abbia gia scritto la riga di abbinamento.
   const mentor: MentorSquadra[] = (mentorRes.data ?? [])
-    .map(
-      (r: {
-        nota: string | null;
-        mentor?: (MentorSquadra & { stato: string }) | (MentorSquadra & { stato: string })[] | null;
-      }) => {
-        const m = unoSolo(r.mentor);
-        if (!m || m.stato !== "approvata") return null;
-        return {
-          id: m.id,
-          nome: m.nome,
-          cognome: m.cognome,
-          ruolo: m.ruolo,
-          organizzazione: m.organizzazione,
-          email: m.email,
-          nota: r.nota ?? null,
-        };
-      },
-    )
-    .filter((m: MentorSquadra | null): m is MentorSquadra => m !== null);
+    .map((r) => {
+      const m = unoSolo(r.mentor);
+      if (!m || m.stato !== "approvata") return null;
+      return {
+        id: m.id,
+        nome: m.nome,
+        cognome: m.cognome,
+        ruolo: m.ruolo,
+        organizzazione: m.organizzazione,
+        email: m.email,
+        nota: r.nota ?? null,
+      };
+    })
+    .filter((m): m is MentorSquadra => m !== null);
 
   return {
     candidatura,
