@@ -107,6 +107,28 @@ export function validateMessaggioRichiesta(messaggio: unknown): string | null {
 
 /* ── Progetti ─────────────────────────────────────────────────────────── */
 
+/**
+ * Le colonne del progetto che la squadra puo vedere.
+ *
+ * Esiste perche un `select("*")`, o un `.select()` nudo dopo un update,
+ * consegnerebbe anche `note_staff`, che e un appunto interno allo staff, e
+ * `vincitore` e `posizione`, che lo staff scrive a mano il giorno della
+ * premiazione: la squadra leggerebbe il proprio esito ricaricando la
+ * console, prima che qualcuno glielo annunci dal palco.
+ *
+ * Sta qui e non in una delle due rotte che la usano perche due copie
+ * divergono appena qualcuno aggiunge una colonna a `universita_progetti`, e
+ * la copia dimenticata e quella che perde.
+ *
+ * E' una stringa sola e non una concatenazione, per quanto sia lunga: il
+ * client tipizzato di Supabase analizza l'elenco delle colonne a livello di
+ * tipo, e una concatenazione lo riduce a `string`, con cui l'inferenza cade
+ * su `GenericStringError` e la riga non e piu leggibile. Mandarla a capo per
+ * ordine rompe il typecheck.
+ */
+export const CAMPI_PROGETTO_VISIBILI =
+  "id, squadra_id, titolo, ambito, ipotesi, stato_arte, metodo, integrazione, impatto, etica, link_materiali, stato, consegnato_at, created_at, updated_at";
+
 export type ProgettoInput = {
   titolo: string;
   ambito: string;

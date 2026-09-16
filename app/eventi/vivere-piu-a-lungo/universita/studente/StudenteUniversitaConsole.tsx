@@ -243,15 +243,30 @@ export function StudenteUniversitaConsole({
   sezione = "tutto",
   intestazione = true,
 }: {
-  sezione?: SezioneStudenteUniversita;
+  /**
+   * Una sezione, oppure piu di una.
+   *
+   * L'array serve alla lezione 4.4, che chiede di formare la squadra: per
+   * chi ha gia i compagni la squadra si crea con un nome, per chi non
+   * conosce nessuno si passa dalla bacheca, e sono due meta della stessa
+   * richiesta. Con una sezione sola quella lezione mostrava "Crea una
+   * squadra" ed "Entra con un codice", cioe le due strade che presuppongono
+   * di conoscere gia qualcuno, proprio mentre il sottotitolo prometteva la
+   * bacheca.
+   */
+  sezione?: SezioneStudenteUniversita | SezioneStudenteUniversita[];
   intestazione?: boolean;
 } = {}) {
   // Le quattro sezioni diventano tre interruttori qui in cima: "tutto" non
   // e una sezione ma il caso in cui ci sono tutte, e risolverlo una volta
   // sola evita di ripetere il confronto in dieci punti del markup.
-  const mostraSquadra = sezione === "tutto" || sezione === "squadra";
-  const mostraBoard = sezione === "tutto" || sezione === "board";
-  const mostraProgetto = sezione === "tutto" || sezione === "progetto";
+  const sezioni = Array.isArray(sezione) ? sezione : [sezione];
+  const mostra = (quale: SezioneStudenteUniversita) =>
+    sezioni.includes("tutto") || sezioni.includes(quale);
+
+  const mostraSquadra = mostra("squadra");
+  const mostraBoard = mostra("board");
+  const mostraProgetto = mostra("progetto");
 
   const [dati, setDati] = useState<Qualsiasi>(null);
   const [bacheca, setBacheca] = useState<Qualsiasi>(null);

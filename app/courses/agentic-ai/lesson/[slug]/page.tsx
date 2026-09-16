@@ -62,16 +62,20 @@ const LEZIONI_LICEI: Record<string, { sezione: SezioneStudente; titolo: string; 
  */
 const LEZIONI_UNIVERSITA: Record<
   string,
-  { sezione: SezioneStudenteUniversita; titolo: string; sottotitolo: string }
+  { sezione: SezioneStudenteUniversita[]; titolo: string; sottotitolo: string }
 > = {
   "lesson-4-4": {
-    sezione: "squadra",
+    // Due sezioni e non una: il sottotitolo qui sotto promette la bacheca, e
+    // con la sola "squadra" restavano visibili le due strade che danno per
+    // scontato di conoscere gia qualcuno. Chi arriva solo non e un caso
+    // limite di questo percorso, e il caso normale.
+    sezione: ["squadra", "board"],
     titolo: "La tua squadra",
     sottotitolo:
       "Questa lezione ti chiede di formare la squadra. Puoi farlo da qui: crea la tua e passa il codice a chi conosci, oppure cerca compagni in bacheca.",
   },
   "course-closing": {
-    sezione: "progetto",
+    sezione: ["progetto"],
     titolo: "Consegna il progetto",
     sottotitolo:
       "È l'ultimo passo del percorso. Quello che consegnate qui è quello che la Commissione leggerà, e dopo non si tocca più.",
@@ -175,7 +179,7 @@ function RiquadroUniversita({
   titolo,
   sottotitolo,
 }: {
-  sezione: SezioneStudenteUniversita;
+  sezione: SezioneStudenteUniversita[];
   titolo: string;
   sottotitolo: string;
 }) {

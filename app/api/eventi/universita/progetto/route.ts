@@ -21,6 +21,7 @@ import {
   verificaConsegneAperte,
 } from "@/lib/eventi/universita-server";
 import {
+  CAMPI_PROGETTO_VISIBILI,
   validateBozza,
   validateConsegna,
   type ProgettoInput,
@@ -119,7 +120,7 @@ export async function PATCH(request: Request) {
     .update(patch)
     .eq("id", dati.progetto.id)
     .eq("squadra_id", squadraId)
-    .select()
+    .select(CAMPI_PROGETTO_VISIBILI)
     .maybeSingle();
 
   if (error) {
@@ -191,7 +192,7 @@ export async function POST() {
     .eq("id", dati.progetto.id)
     .eq("squadra_id", squadraId)
     .eq("stato", "bozza")
-    .select()
+    .select(CAMPI_PROGETTO_VISIBILI)
     .maybeSingle();
 
   if (error || !data) {

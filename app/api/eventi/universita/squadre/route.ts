@@ -26,6 +26,7 @@ import {
   type CandidatoContext,
 } from "@/lib/eventi/universita-server";
 import {
+  CAMPI_PROGETTO_VISIBILI,
   generateCodiceSquadraUniversita,
   messaggioErroreDb,
   normalizzaCodiceSquadraUniversita,
@@ -196,7 +197,11 @@ async function statoStudente(client: Client, candidatura: Candidatura): Promise<
       // chi apre la schermata deve sapere subito a chi chiedere.
       .order("squadra_ruolo", { ascending: true })
       .order("cognome", { ascending: true }),
-    client.from("universita_progetti").select("*").eq("squadra_id", squadraId).maybeSingle(),
+    client
+      .from("universita_progetti")
+      .select(CAMPI_PROGETTO_VISIBILI)
+      .eq("squadra_id", squadraId)
+      .maybeSingle(),
     // Le richieste ricevute le vede il capitano, perche e l'unico che puo
     // rispondere: mostrarle a chi non puo decidere sarebbe solo il nome di
     // uno sconosciuto in una schermata che non ha nessun bottone.
@@ -540,10 +545,17 @@ export async function DELETE() {
     );
   }
 
+  // Solo chi e ancora nel percorso puo ereditare la capitananza. Senza il
+  // filtro sullo stato, un componente escluso dallo staff resta in squadra,
+  // perche l'esclusione non tocca `squadra_id`, e diventerebbe capitano di
+  // una squadra in cui non puo piu entrare: `requireCandidato` gli risponde
+  // 403, quindi nessuno potrebbe piu accettare una richiesta ne accendere
+  // l'annuncio in bacheca, e i compagni resterebbero congelati.
   const { data: rimasti } = await client
     .from("universita_candidature")
     .select("id, squadra_ruolo, created_at")
     .eq("squadra_id", squadraId)
+    .eq("stato", "confermata")
     .order("created_at", { ascending: true });
 
   if (!rimasti || rimasti.length === 0) {
@@ -562,10 +574,15 @@ export async function DELETE() {
     // La capitananza passa a chi e nel percorso da piu tempo. Una squadra
     // senza capitano non puo rispondere a nessuna richiesta, e una squadra
     // che non risponde e invisibile in bacheca anche se e in cerca.
+    // Il filtro sulla squadra non e ridondante rispetto all'id: fra la
+    // lettura di `rimasti` e questa scrittura la persona puo essere uscita a
+    // sua volta, e senza il vincolo il ruolo atterrerebbe su chi non e piu
+    // in squadra.
     await client
       .from("universita_candidature")
       .update({ squadra_ruolo: "capo" })
-      .eq("id", rimasti[0].id);
+      .eq("id", rimasti[0].id)
+      .eq("squadra_id", squadraId);
   }
 
   const stato = await statoDopoMutazione(client, ctx.candidatura.id, ctx.candidatura);
