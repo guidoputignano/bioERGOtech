@@ -216,6 +216,75 @@ ha dimostrato appartenere a chi chiama, cioe `ctx.candidatura.id`,
 corpo della richiesta non dimostra niente, e usarlo come se lo dimostrasse e
 il modo in cui questo modulo si romperebbe.
 
+## Sicurezza: la RLS filtra le righe, non le colonne
+
+Vale la pena scriverlo grande, perche e il difetto che questo modulo ha
+avuto davvero, in due punti, ed e il genere di cosa che sembra a posto
+finche non lo e.
+
+Una policy `for select using (...)` decide **quali righe** si vedono, e poi
+di quelle righe consegna **ogni colonna**. Non esiste una policy che dica
+"questa riga si, ma solo queste colonne".
+
+Le rotte di questo modulo scelgono le colonne a mano e lo fanno bene. Ma le
+rotte non sono l'unico modo di leggere il database: PostgREST e esposto
+pubblicamente e la chiave publishable sta nel bundle del browser per
+costruzione, `lib/supabase/client.ts`. Chiunque puo interrogare una tabella
+direttamente, e li le rotte non ci sono.
+
+Il risultato, prima della migrazione `20261211000000`, era che:
+
+- la pagina dei mentor prometteva che il telefono non compare in pagina, e
+  infatti non lo mostra, ma un `select *` anonimo su `universita_mentor`
+  restituiva telefono, email, note dello staff e i testi dei consensi;
+- la bacheca prometteva che l'email non compare e che il recapito si scambia
+  solo dopo una richiesta accettata, e un partecipante confermato poteva
+  leggerla lo stesso, insieme al codice della candidatura e alle note dello
+  staff. Dalle squadre aperte poteva leggere il `codice`, cioe la chiave per
+  entrare senza chiedere permesso: la stretta di mano su cui e costruita
+  meta della bacheca era aggirabile in una query.
+
+Il rimedio non e un'altra policy. E' il **privilegio di colonna**, che
+PostgREST rispetta:
+
+```sql
+revoke select on public.tabella from anon, authenticated;
+grant select (colonna, colonna, ...) on public.tabella to authenticated;
+```
+
+Da qui in avanti, chi aggiunge una colonna a `universita_mentor`,
+`universita_candidature` o `universita_squadre` deve chiedersi se quel ruolo
+puo vederla, e aggiungerla al `grant` solo se la risposta e si. Il default,
+cioe non toccare niente, e la colonna invisibile, che e il verso giusto in
+cui sbagliare.
+
+Un corollario da conoscere: neanche il candidato puo piu leggere la propria
+email o il proprio codice interrogando il database dal browser, perche un
+privilegio di colonna vale per il ruolo e non per la riga, e fra il proprio
+caso e quello di un estraneo vince il piu stretto. Non e una perdita: la sua
+area legge dalla rotta, che gira con la service role e gli restituisce la
+riga intera.
+
+## Sicurezza: la ricorsione nelle policy
+
+Una policy su una tabella che per decidere interroga **la stessa tabella**
+fa abortire lo statement con `42P17`, "infinite recursion detected in
+policy". E non cade da sola: le policy permissive di SELECT si fondono in
+un'unica espressione OR, quindi trascina con se anche le policy vicine che
+sono scritte bene.
+
+E' successo qui: `universita_e_confermato()` esiste apposta per evitarlo, e
+trentotto righe dopo una policy ci e cascata comunque. Oggi ci sono due
+helper `security definer`, `universita_e_confermato` e
+`universita_squadra_di`, e una policy di questo modulo che ha bisogno di
+leggere `universita_candidature` deve passare da uno di loro.
+
+Questi due helper sono gli unici `security definer` del modulo che **non**
+si revocano da `authenticated`: le espressioni di una policy sono valutate
+con i privilegi di chi interroga, quindi togliere l'EXECUTE farebbe fallire
+la policy proprio per le persone a cui serve. Tutte le altre funzioni,
+`universita_classifica()` e `universita_stats()`, la revoca ce l'hanno.
+
 ## Catena tecnica
 
 | Pezzo | File |
