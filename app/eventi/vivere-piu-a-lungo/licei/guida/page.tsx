@@ -12,7 +12,10 @@ import {
   REFERENTE_PATH,
   STUDENTE_PATH,
 } from "../content";
-import { UNIVERSITA_PATH } from "../../universita/content";
+import {
+  STUDENTE_PATH as UNIVERSITA_STUDENTE_PATH,
+  UNIVERSITA_PATH,
+} from "../../universita/content";
 
 /**
  * La guida operativa del percorso: chi fa cosa, in che ordine, con che link.
@@ -273,9 +276,49 @@ const UNIVERSITARIO: Passo[] = [
     },
   },
   {
-    titolo: "Ricevi il codice e ti fermi qui",
+    titolo: "Apri subito il link della password",
     testo:
-      "Ti arriva una email con il codice della tua candidatura. Non c'è un'area riservata da controllare né una conferma da aspettare: i team si formano dopo, e per quello ti scriviamo noi.",
+      "Insieme al codice della candidatura ti arriva il link per scegliere la password del tuo account. Vale una volta sola. Se lo rimandi a dopo e scade, ne chiedi un altro dalla pagina di accesso: l'email è quella con cui ti sei candidato.",
+    poi: {
+      titolo: "Perché serve subito",
+      testo:
+        "Le lezioni del corso sono protette da login. Senza password non entri, e nel frattempo in ogni nostra schermata risulti regolarmente candidato: nessuno si accorge che sei fermo.",
+    },
+  },
+  {
+    titolo: "Comincia il corso",
+    testo:
+      "Non c'è niente da aspettare. Le lezioni sono in inglese e si aprono una dopo l'altra: ognuna si chiude con una riflessione da consegnare, ed è quella che sblocca la successiva.",
+    link: {
+      etichetta: "Il corso",
+      href: "/courses/agentic-ai",
+      mostra: "bioergotech.org/courses/agentic-ai",
+    },
+  },
+  {
+    titolo: "Fai squadra, da due a cinque",
+    testo:
+      "Se hai già i compagni, crea la squadra e passa loro il codice. Se non conosci nessuno, entri in bacheca con una riga su cosa vorresti fare, vedi chi altro sta cercando e quali squadre hanno un posto libero, e mandi una richiesta. La tua email non compare in bacheca: i contatti si scambiano quando la richiesta viene accettata.",
+    link: {
+      etichetta: "La tua area",
+      href: UNIVERSITA_STUDENTE_PATH,
+      mostra: "bioergotech.org" + UNIVERSITA_STUDENTE_PATH,
+    },
+    poi: {
+      titolo: "Università diverse, e va bene così",
+      testo:
+        "Una squadra può mettere insieme atenei e discipline diverse. L'art. 2 lo incoraggia, e a parità di tutto il resto saranno favoriti i gruppi con competenze complementari.",
+    },
+  },
+  {
+    titolo: "Consegnate il progetto",
+    testo:
+      "Sei campi, uno per criterio di valutazione: ipotesi, stato dell'arte, metodo, integrazione fra le due discipline, impatto ed etica. Fino alla consegna resta una bozza che potete salvare e riprendere, e che nessuno all'infuori della vostra squadra e del vostro mentor può leggere.",
+    poi: {
+      titolo: "E poi",
+      testo:
+        "La Commissione valuta i progetti consegnati. Il migliore viene avviato a un percorso di preparazione alla pubblicazione su una rivista internazionale con revisione fra pari.",
+    },
   },
 ];
 
