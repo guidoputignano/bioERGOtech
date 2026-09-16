@@ -511,6 +511,13 @@ create index if not exists universita_mentor_squadre_squadra_idx
  *
  * E' l'unico modo di avere una bacheca visibile ai soli partecipanti senza
  * aprire la tabella a tutti gli utenti autenticati.
+ *
+ * NON si revoca da `authenticated`, a differenza di ogni altra funzione
+ * `security definer` di questo repository. Le espressioni di una policy RLS
+ * sono valutate con i privilegi di chi interroga, non del proprietario della
+ * tabella: togliere l'EXECUTE a `authenticated` farebbe fallire la policy
+ * proprio per le persone a cui serve. Quello che la funzione puo dire, del
+ * resto, e un solo booleano su un utente che il chiamante ha gia in mano.
  */
 create or replace function public.universita_e_confermato(p_user uuid)
 returns boolean
@@ -798,6 +805,12 @@ as $$
     p.consegnato_at asc;
 $$;
 
+-- Le chiama solo il pannello staff, con la service role key. Senza la revoca
+-- un utente autenticato qualunque potrebbe interrogare la classifica per
+-- intero dal client, medie e posizioni comprese, e leggerla prima della
+-- Commissione.
+revoke all on function public.universita_classifica() from anon, authenticated;
+
 -- ── 13. Contatori per il pannello staff ────────────────────────────────
 create or replace function public.universita_stats()
 returns table (
@@ -832,8 +845,20 @@ as $$
     (select count(*) from public.universita_mentor where stato = 'approvata');
 $$;
 
+revoke all on function public.universita_stats() from anon, authenticated;
+
 comment on table public.universita_squadre is
   'Squadre del percorso universitario. Senza ateneo di appartenenza: l''art. 2 incoraggia i team fra atenei e fra discipline diverse, quindi il vincolo dei licei "una squadra sta dentro un istituto" qui sarebbe il contrario di quello che il bando chiede.';
+
+-- Il commento dell'indice unico in 20261207000000 dice che "un secondo invio
+-- aggiorna la prima" candidatura. Non e mai stato vero: la rotta risponde 409
+-- e non aggiorna niente, di proposito, perche e pubblica e senza
+-- autenticazione, quindi un aggiornamento silenzioso permetterebbe a chiunque
+-- conosca un indirizzo di riscrivere la candidatura di quella persona e di
+-- leggerne il codice nella risposta. La migrazione applicata non si tocca, e
+-- il commento si corregge qui.
+comment on index public.universita_candidature_email_uidx is
+  'Una candidatura per indirizzo. Un secondo invio viene RIFIUTATO con 409, non fuso nella prima: la rotta e pubblica, e un aggiornamento silenzioso esporrebbe la candidatura altrui a chiunque ne conosca l''email.';
 
 comment on table public.universita_richieste_squadra is
   'La stretta di mano della bacheca: chi cerca compagni chiede di entrare, il capitano accetta. Il codice della squadra resta la strada breve per chi i compagni li conosce gia.';

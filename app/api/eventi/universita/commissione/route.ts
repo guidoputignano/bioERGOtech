@@ -194,10 +194,13 @@ export async function GET() {
     for (const m of (membri ?? []) as { squadra_id: string; universita: string | null }[]) {
       const voce = composizione.get(m.squadra_id) ?? { componenti: 0, atenei: [] };
       voce.componenti += 1;
-      // Distinti ignorando maiuscole e spazi, come il `count(distinct
-      // lower(universita))` della funzione della classifica. Se i due conti
-      // divergessero, la stessa squadra risulterebbe interdisciplinare in
-      // una schermata e no nell'altra, e nessuno saprebbe quale credere.
+      // Distinti a minuscole uguali, come il `count(distinct
+      // lower(universita))` di `universita_classifica()`: se i due conti
+      // divergessero, la stessa squadra risulterebbe fra due atenei in una
+      // schermata e dentro uno solo nell'altra, e nessuno saprebbe quale
+      // credere. In piu togliamo gli spazi ai bordi, che il database non
+      // toglie: una differenza invisibile a schermo non deve diventare un
+      // ateneo in piu in elenco.
       const ateneo = testo(m.universita);
       if (ateneo && !voce.atenei.some((a) => a.toLowerCase() === ateneo.toLowerCase())) {
         voce.atenei.push(ateneo);

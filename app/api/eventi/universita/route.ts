@@ -108,6 +108,26 @@ export async function POST(request: Request) {
     // Si cerca prima un profilo con quella email, perche chi e gia registrato
     // sul sito, per il portale o per un altro bando, non deve ritrovarsi un
     // secondo account con lo stesso indirizzo.
+    //
+    // Questa rotta e pubblica e senza autenticazione, quindi crea account su
+    // richiesta di chiunque. Vale la pena dire cosa lo limita e cosa no.
+    //
+    // Non lo limita un codice: nel gemello dei licei serve il `LIC-` della
+    // scuola, qui non c'e niente di equivalente, e non ci puo essere, perche
+    // il candidato e il singolo. Lo limitano la finestra di candidatura, il
+    // honeypot, e il rifiuto dei duplicati, che insieme fermano il caso
+    // ordinario e non un attacco deciso.
+    //
+    // Quello che un abuso NON ottiene e l'accesso: l'account nasce senza
+    // password, e il link per sceglierla arriva solo alla casella di posta
+    // dell'indirizzo indicato. Registrare l'email di un altro non apre
+    // niente a chi la registra. Quello che ottiene e mandare a quella
+    // persona un messaggio che non ha chiesto, ed e lo stesso rischio che
+    // /auth/sign-up porta gia da sempre.
+    //
+    // Se un giorno servisse chiuderlo davvero, il punto giusto e un limite
+    // di frequenza per indirizzo IP davanti a questa rotta, non un secondo
+    // cancello dentro: il cancello dentro lo si aggira riprovando.
     let userId: string | null = null;
     let setPasswordUrl: string | undefined;
 
