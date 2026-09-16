@@ -15,6 +15,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import {
+  leggiConfigUniversita,
   universitaAdminClient,
   verificaFinestraUniversita,
 } from "@/lib/eventi/universita-server";
@@ -31,6 +32,7 @@ import {
   ACCETTAZIONE_BANDO_TESTO,
   CONSENSO_PRIVACY_UNIVERSITA_TESTO,
   CONTATTI_UNIVERSITA,
+  SITE_URL,
 } from "@/app/eventi/vivere-piu-a-lungo/universita/content";
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
@@ -98,10 +100,60 @@ export async function POST(request: Request) {
       );
     }
 
+    // ── Account del candidato ──
+    // Serve per entrare nel corso, che e protetto da login, e per la propria
+    // area del percorso. Fino alla fase 2 questa rotta non lo creava: il
+    // candidato riceveva un codice e non aveva nessun posto dove usarlo.
+    //
+    // Si cerca prima un profilo con quella email, perche chi e gia registrato
+    // sul sito, per il portale o per un altro bando, non deve ritrovarsi un
+    // secondo account con lo stesso indirizzo.
+    let userId: string | null = null;
+    let setPasswordUrl: string | undefined;
+
+    const { data: profilo } = await client
+      .from("profiles")
+      .select("id")
+      .eq("email", input.email)
+      .maybeSingle();
+
+    if (profilo?.id) {
+      userId = profilo.id as string;
+    } else {
+      const { data: creato, error: erroreCreazione } = await client.auth.admin.createUser({
+        email: input.email,
+        email_confirm: true,
+        user_metadata: { full_name: `${input.nome} ${input.cognome}` },
+      });
+      if (erroreCreazione || !creato.user) {
+        console.error("Universita createUser error:", erroreCreazione);
+        return NextResponse.json(
+          { error: "Non è stato possibile creare il tuo account. Riprova." },
+          { status: 500 },
+        );
+      }
+      userId = creato.user.id;
+
+      const { data: link } = await client.auth.admin.generateLink({
+        type: "recovery",
+        email: input.email,
+        options: { redirectTo: `${SITE_URL}/auth/update-password` },
+      });
+      setPasswordUrl = link?.properties?.action_link;
+    }
+
+    // Con `conferma_automatica` a `si` la candidatura entra subito nel
+    // percorso. Il default della colonna a database resta `candidata`: e la
+    // rete per le righe che non passano da qui.
+    const config = await leggiConfigUniversita();
+    const stato = config.conferma_automatica === "si" ? "confermata" : "candidata";
+
     const codice = generateCodiceUniversita();
     const { error: erroreInsert } = await client
       .from("universita_candidature")
       .insert({
+        user_id: userId,
+        stato,
         nome: input.nome,
         cognome: input.cognome,
         email: input.email,
@@ -146,7 +198,7 @@ export async function POST(request: Request) {
           from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
           to: input.email,
           subject: universitaEmailSubject(),
-          html: universitaEmailHtml({ nome: input.nome, codice }),
+          html: universitaEmailHtml({ nome: input.nome, codice, setPasswordUrl }),
         });
       } catch (mailErr) {
         // La candidatura è salvata: un problema email non deve farla fallire.
