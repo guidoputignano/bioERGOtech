@@ -3,17 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { COURSE_LESSONS } from "../../../course-data";
 import LessonPageClient from "./LessonPageClient";
 import { studenteLiceiConfermato } from "@/lib/eventi/licei-server";
-import { candidatoUniversitaConfermato } from "@/lib/eventi/universita-server";
 import {
   StudenteConsole,
   type SezioneStudente,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/studente/StudenteConsole";
-import {
-  StudenteUniversitaConsole,
-  type SezioneStudenteUniversita,
-} from "@/app/eventi/vivere-piu-a-lungo/universita/studente/StudenteUniversitaConsole";
 import { LICEI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
-import { UNIVERSITA } from "@/app/eventi/vivere-piu-a-lungo/universita/content";
 import { JsonLd, breadcrumbs } from "@/components/json-ld";
 import { lessonLd } from "../../course-ld";
 
@@ -42,39 +36,6 @@ const LEZIONI_LICEI: Record<string, { sezione: SezioneStudente; titolo: string; 
     titolo: "Consegna il progetto",
     sottotitolo:
       "È l'ultimo passo del percorso. Quello che scrivete qui è quello che la Commissione leggerà.",
-  },
-};
-
-/**
- * Le stesse due lezioni, per il percorso universitario.
- *
- * E' una mappa separata e non una colonna in piu su quella dei licei: le
- * sezioni sono di due console diverse, i testi si rivolgono a persone
- * diverse, e alla 4.4 l'universitario ha una cosa in piu da fare che il
- * liceale non ha, cioe cercarsi i compagni in bacheca. Fonderle
- * significherebbe un tipo con due meta facoltative e un ramo in ogni punto
- * che lo legge.
- *
- * Le due mappe non possono scattare insieme: nessuno e allo stesso tempo un
- * iscritto confermato dei licei e un candidato confermato universitario, e
- * se per un errore di dati lo fosse, l'ordine sotto decide, con i licei
- * prima.
- */
-const LEZIONI_UNIVERSITA: Record<
-  string,
-  { sezione: SezioneStudenteUniversita; titolo: string; sottotitolo: string }
-> = {
-  "lesson-4-4": {
-    sezione: "squadra",
-    titolo: "La tua squadra",
-    sottotitolo:
-      "Questa lezione ti chiede di formare la squadra. Puoi farlo da qui: crea la tua e passa il codice a chi conosci, oppure cerca compagni in bacheca.",
-  },
-  "course-closing": {
-    sezione: "progetto",
-    titolo: "Consegna il progetto",
-    sottotitolo:
-      "È l'ultimo passo del percorso. Quello che consegnate qui è quello che la Commissione leggerà, e dopo non si tocca più.",
   },
 };
 
@@ -163,66 +124,6 @@ function RiquadroLicei({
 }
 
 /**
- * Il riquadro del percorso universitario dentro la lezione.
- *
- * Stesso ragionamento del gemello dei licei: si presenta per quello che e,
- * invece di confondersi con il contenuto del corso. Il corso e in inglese e
- * aperto a chiunque, questo pezzo e in italiano e riguarda un percorso a cui
- * la persona si e candidata.
- */
-function RiquadroUniversita({
-  sezione,
-  titolo,
-  sottotitolo,
-}: {
-  sezione: SezioneStudenteUniversita;
-  titolo: string;
-  sottotitolo: string;
-}) {
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #E2E8F0",
-        borderTop: "3px solid #00C4B4",
-        borderRadius: 14,
-        padding: 24,
-        marginTop: 24,
-        boxShadow: "0 1px 3px rgba(16,24,40,0.06)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: "#0A7A66",
-          marginBottom: 8,
-        }}
-      >
-        Percorso universitario . {UNIVERSITA.titolo}
-      </div>
-      <h2
-        style={{
-          fontFamily: "'Sora', sans-serif",
-          fontSize: 20,
-          fontWeight: 700,
-          color: "#1A2B4A",
-          margin: "0 0 6px",
-        }}
-      >
-        {titolo}
-      </h2>
-      <p style={{ fontSize: 14, color: "#5A6B85", margin: "0 0 20px", lineHeight: 1.6 }}>
-        {sottotitolo}
-      </p>
-      <StudenteUniversitaConsole sezione={sezione} intestazione={false} />
-    </div>
-  );
-}
-
-/**
  * The markup for one lesson, emitted on every branch.
  *
  * It has to go on the logged out branch too. That branch is the one a crawler
@@ -283,16 +184,8 @@ export default async function LessonPage({ params }: Props) {
   // Il riquadro del bando compare solo sulle due lezioni interessate e solo a
   // chi e iscritto e confermato. Il controllo si fa qui, lato server, cosi a
   // chi segue il corso per conto suo non compare e sparisce niente.
-  //
-  // I due percorsi si interrogano solo se la lezione ha davvero qualcosa da
-  // attaccare, e l'universitario solo se il liceale non ha gia risposto di
-  // si: sono due query in piu su ogni lezione, e su una pagina che legge
-  // chiunque non si pagano per un riquadro che non comparira.
   const licei = LEZIONI_LICEI[slug];
-  const universita = LEZIONI_UNIVERSITA[slug];
   const mostraLicei = licei ? await studenteLiceiConfermato() : false;
-  const mostraUniversita =
-    !mostraLicei && universita ? await candidatoUniversitaConfermato() : false;
 
   return (
     <>
@@ -306,12 +199,6 @@ export default async function LessonPage({ params }: Props) {
               sezione={licei.sezione}
               titolo={licei.titolo}
               sottotitolo={licei.sottotitolo}
-            />
-          ) : mostraUniversita && universita ? (
-            <RiquadroUniversita
-              sezione={universita.sezione}
-              titolo={universita.titolo}
-              sottotitolo={universita.sottotitolo}
             />
           ) : undefined
         }
