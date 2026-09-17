@@ -2,6 +2,19 @@
 
 Run manually against Supabase (SQL editor or `supabase db push`) — nothing here executes automatically. Files are numbered chronologically; run them in filename order.
 
+## Which ones have actually been applied?
+
+Nothing here records that, so the only honest answer comes from the database
+itself. **`VERIFICA.sql`** asks it: paste the whole file into the Supabase SQL
+editor and read the `esito` column. It reports `OK`, `DA ESEGUIRE` or
+`PARZIALE` per migration, names the missing objects, and then checks the
+things that are easy to get wrong on the two most recent ones (the column
+privileges that keep a mentor's phone number and a candidate's email out of
+an anonymous `select *`).
+
+It only reads the catalogue: no writes, safe to run as often as you like, and
+it is **not** a migration, so do not run it "in filename order" with the rest.
+
 ## Navigator: which file to run
 
 The Grant & Funding Eligibility Navigator's data has gone through a few passes. If you're setting up a **fresh** database:
