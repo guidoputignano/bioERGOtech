@@ -106,7 +106,10 @@ with oggetti as (
     ('20261210000000_universita_percorso',        'funzione', 'universita_config_touch',      null),
 
     -- ── Percorso universitario, correzioni RLS ────────────────────────
-    ('20261211000000_universita_colonne',         'funzione', 'universita_squadra_di',        null)
+    ('20261211000000_universita_colonne',         'funzione', 'universita_squadra_di',        null),
+
+    -- ── Ricorsione nelle policy di profiles ───────────────────────────
+    ('20261213000000_profiles_ricorsione',        'funzione', 'e_admin',                      null)
   ) as t(migrazione, tipo, oggetto, colonna)
 ),
 
@@ -159,59 +162,33 @@ order by migrazione;
 
 
 -- =========================================================
--- SECONDA VERIFICA: le due migrazioni del percorso universitario
+-- SECONDA VERIFICA: i privilegi di colonna del percorso universitario
 --
--- Le due piu recenti meritano un controllo piu fine, perche la prima porta
--- la colonna senza la quale il modulo di candidatura non scrive, e la
--- seconda porta i privilegi di colonna che impediscono a un `select *` di
--- restituire email e numeri di telefono a chi non deve vederli.
+-- Questo blocco NON nomina nessuna tabella in una FROM, di proposito.
+-- PostgreSQL risolve le relazioni quando analizza la query, non quando la
+-- esegue: una `from public.universita_config` dentro un CASE che non
+-- scattera mai fa comunque fallire l'intera esecuzione se quella tabella
+-- non c'e. E siccome questo file serve proprio a scoprire che una tabella
+-- non c'e, la prima versione moriva nell'unico caso per cui era stata
+-- scritta. Qui si usano solo funzioni che prendono il nome come TESTO,
+-- protette da `to_regclass`, che torna null invece di sollevare.
 -- =========================================================
 
-select 'universita_config popolata' as controllo,
-       case when count(*) >= 7 then 'OK' else 'MANCA: attese 7 chiavi, trovate ' || count(*) end as esito
-from public.universita_config
-
-union all
-
-select 'le fasi partono chiuse',
+select 'mentor: il telefono e protetto da anon' as controllo,
        case
-         when not exists (select 1 from public.universita_config where chiave = 'stato_squadre')
-           then 'NON VERIFICABILE: manca la riga'
-         else 'stato_squadre=' || (select valore from public.universita_config where chiave = 'stato_squadre')
-              || ' board=' || coalesce((select valore from public.universita_config where chiave = 'stato_board'), '?')
-              || ' consegne=' || coalesce((select valore from public.universita_config where chiave = 'stato_consegne'), '?')
-              || ' valutazione=' || coalesce((select valore from public.universita_config where chiave = 'stato_valutazione'), '?')
-       end
-
-union all
-
-select 'conferma automatica',
-       coalesce((select 'e ' || valore from public.universita_config where chiave = 'conferma_automatica'), 'MANCA')
-
-union all
-
--- Il privilegio di colonna della migrazione 20261211000000. Se `anon` ha il
--- select sull'INTERA tabella dei mentor, la revoca non e stata applicata e
--- un select anonimo restituisce anche telefono, email e note dello staff.
-select 'mentor: il telefono e protetto da anon',
-       case
-         when not exists (
-           select 1 from information_schema.tables
-           where table_schema='public' and table_name='universita_mentor'
-         ) then 'NON VERIFICABILE: manca la tabella'
+         when to_regclass('public.universita_mentor') is null
+           then 'DA ESEGUIRE: manca universita_mentor (migrazione 20261210000000)'
          when has_column_privilege('anon', 'public.universita_mentor', 'telefono', 'SELECT')
            then 'NO: anon legge ancora il telefono, esegua 20261211000000'
          else 'OK'
-       end
+       end as esito
 
 union all
 
 select 'bacheca: l''email e protetta dagli altri partecipanti',
        case
-         when not exists (
-           select 1 from information_schema.tables
-           where table_schema='public' and table_name='universita_candidature'
-         ) then 'NON VERIFICABILE: manca la tabella'
+         when to_regclass('public.universita_candidature') is null
+           then 'DA ESEGUIRE: manca universita_candidature (migrazione 20261207000000)'
          when has_column_privilege('authenticated', 'public.universita_candidature', 'email', 'SELECT')
            then 'NO: un utente autenticato legge ancora l''email, esegua 20261211000000'
          else 'OK'
@@ -221,10 +198,8 @@ union all
 
 select 'squadre: il codice e protetto',
        case
-         when not exists (
-           select 1 from information_schema.tables
-           where table_schema='public' and table_name='universita_squadre'
-         ) then 'NON VERIFICABILE: manca la tabella'
+         when to_regclass('public.universita_squadre') is null
+           then 'DA ESEGUIRE: manca universita_squadre (migrazione 20261210000000)'
          when has_column_privilege('authenticated', 'public.universita_squadre', 'codice', 'SELECT')
            then 'NO: un utente autenticato legge ancora il codice, esegua 20261211000000'
          else 'OK'
@@ -232,47 +207,142 @@ select 'squadre: il codice e protetto',
 
 union all
 
--- La classifica e i contatori restano allo staff: se `authenticated` puo
--- eseguirli, la revoca non e passata.
-select 'classifica revocata ad authenticated',
+-- Attenzione al ruolo PUBLIC. Le migrazioni fino alla 20261211000000
+-- scrivevano `revoke all ... from anon, authenticated`, che non toglie
+-- niente: il permesso i due ruoli lo ereditano da PUBLIC, e finche PUBLIC
+-- ce l'ha continuano ad averlo. Per questo si interroga il ruolo, non
+-- l'ACL: `has_function_privilege` tiene conto anche di cio che si eredita.
+select 'classifica NON eseguibile da authenticated',
        case
-         when not exists (
-           select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-           where n.nspname='public' and p.proname='universita_classifica'
-         ) then 'NON VERIFICABILE: manca la funzione'
+         when to_regprocedure('public.universita_classifica()') is null
+           then 'DA ESEGUIRE: manca la funzione'
          when has_function_privilege('authenticated', 'public.universita_classifica()', 'EXECUTE')
-           then 'NO: revoca mancante'
+           then 'NO: eseguibile da chiunque sia loggato, esegua 20261212000000'
+         else 'OK'
+       end
+
+union all
+
+select 'statistiche licei NON eseguibili da anon',
+       case
+         when to_regprocedure('public.licei_stats()') is null
+           then 'DA ESEGUIRE: manca la funzione'
+         when has_function_privilege('anon', 'public.licei_stats()', 'EXECUTE')
+           then 'NO: un visitatore non autenticato legge i numeri del bando, esegua 20261212000000'
+         else 'OK'
+       end
+
+union all
+
+select 'accessi licei NON eseguibili da anon',
+       case
+         when to_regprocedure('public.licei_accessi_tutti()') is null
+           then 'DA ESEGUIRE: manca la funzione'
+         when has_function_privilege('anon', 'public.licei_accessi_tutti()', 'EXECUTE')
+           then 'NO: esegua 20261212000000'
+         else 'OK'
+       end
+
+union all
+
+-- Il rovescio della medaglia: la revoca non deve aver colpito la chiave
+-- che usano davvero le rotte admin. Se qui esce NO, il pannello staff
+-- smette di funzionare.
+select 'le rotte admin (service_role) eseguono ancora la classifica',
+       case
+         when to_regprocedure('public.universita_classifica()') is null
+           then 'DA ESEGUIRE: manca la funzione'
+         when has_function_privilege('service_role', 'public.universita_classifica()', 'EXECUTE')
+           then 'OK'
+         else 'NO: revoca troppo larga, il pannello staff non funzionera'
+       end
+
+union all
+
+select 'profiles: ricorsione nelle policy risolta',
+       case
+         when to_regprocedure('public.e_admin()') is null
+           then 'DA ESEGUIRE: manca e_admin, esegua 20261213000000'
+         when not has_function_privilege('authenticated', 'public.e_admin()', 'EXECUTE')
+           then 'NO: e_admin non e eseguibile, le policy falliranno'
          else 'OK'
        end
 
 union all
 
 -- Questa invece NON va revocata: la usano le policy RLS, che girano con i
--- privilegi di chi interroga.
+-- privilegi di chi interroga. Revocarla romperebbe la bacheca.
 select 'universita_e_confermato ESEGUIBILE da authenticated',
        case
-         when not exists (
-           select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-           where n.nspname='public' and p.proname='universita_e_confermato'
-         ) then 'NON VERIFICABILE: manca la funzione'
+         when to_regprocedure('public.universita_e_confermato(uuid)') is null
+           then 'DA ESEGUIRE: manca la funzione'
          when has_function_privilege('authenticated', 'public.universita_e_confermato(uuid)', 'EXECUTE')
            then 'OK'
          else 'NO: e stata revocata per errore, la bacheca non funzionera'
-       end
-
-union all
-
-select 'candidature gia raccolte',
-       case
-         when not exists (
-           select 1 from information_schema.tables
-           where table_schema='public' and table_name='universita_candidature'
-         ) then 'NON VERIFICABILE: manca la tabella'
-         else (select count(*)::text || ' candidature, di cui '
-               || count(*) filter (where user_id is not null)::text || ' con account'
-               from public.universita_candidature)
        end;
 
+
+-- =========================================================
+-- TERZA VERIFICA: il contenuto
+--
+-- Da eseguire SOLO quando la prima verifica dice OK sulle migrazioni
+-- 20261207000000 e 20261210000000. Prima di allora queste tabelle non
+-- esistono e la query fallisce: e la ragione per cui sta in un blocco a
+-- parte e non insieme al resto.
+--
+-- Si selezioni da qui in giu e si prema Run.
+-- =========================================================
+
+-- select 'chiavi di configurazione' as controllo,
+--        count(*)::text || ' su 7 attese' as esito
+-- from public.universita_config
+-- union all
+-- select 'stato delle fasi',
+--        'squadre=' || coalesce(max(valore) filter (where chiave = 'stato_squadre'), '?')
+--        || ' bacheca=' || coalesce(max(valore) filter (where chiave = 'stato_board'), '?')
+--        || ' consegne=' || coalesce(max(valore) filter (where chiave = 'stato_consegne'), '?')
+--        || ' valutazione=' || coalesce(max(valore) filter (where chiave = 'stato_valutazione'), '?')
+--        || ' conferma_automatica=' || coalesce(max(valore) filter (where chiave = 'conferma_automatica'), '?')
+-- from public.universita_config
+-- union all
+-- select 'candidature raccolte',
+--        count(*)::text || ' in tutto, di cui '
+--        || count(*) filter (where user_id is not null)::text || ' con account'
+-- from public.universita_candidature;
+
+
+-- =========================================================
+-- L'ORDINE DELLE MIGRAZIONI DA ESEGUIRE
+--
+-- Sono cinque e vanno eseguite in questo ordine, perche ognuna si
+-- appoggia alla precedente:
+--
+--   1. 20261207000000_create_universita_candidature.sql
+--      Crea la tabella delle candidature e la funzione
+--      `universita_touch_updated_at()`.
+--
+--   2. 20261210000000_universita_percorso.sql
+--      USA quella funzione per i trigger delle nuove tabelle, e AGGIUNGE
+--      colonne a `universita_candidature`. Senza la prima fallisce con
+--      "function public.universita_touch_updated_at() does not exist".
+--
+--   3. 20261211000000_universita_colonne_e_ricorsione.sql
+--      Corregge le policy e toglie il select di colonna su email,
+--      telefono e codice.
+--
+--   4. 20261212000000_revoca_execute_public.sql
+--      Rende efficaci le revoche sulle funzioni dello staff. Non riguarda
+--      solo il percorso universitario: vale anche per il bando, per gli
+--      eventi e per i licei, che avevano tutti la stessa revoca inefficace.
+--
+--   5. 20261213000000_profiles_ricorsione.sql
+--      Toglie la ricorsione dalle policy di `profiles`, che bloccava ogni
+--      lettura con RLS su dodici tabelle.
+--
+-- Le ultime due si possono eseguire anche su un database dove le prime
+-- non sono state applicate: saltano da sole cio che non trovano.
+--
+-- =========================================================
 
 -- =========================================================
 -- QUELLO CHE DA QUI NON SI VEDE
@@ -286,7 +356,6 @@ select 'candidature gia raccolte',
 --
 --   20260717000000_navigator_consolidated_authoritative
 --     select count(*) from public.navigator_rules;
---     Se torna 0, i dati del Navigator non sono stati caricati.
 --
 --   20260711000001_backfill_mou_followups
 --     select count(*) from public.mou_followups;
@@ -294,10 +363,9 @@ select 'candidature gia raccolte',
 --   20261101000000_update_event_sessions
 --   20261201000000_update_event_sessions_palamazzola
 --     select id, titolo from public.event_sessions order by id;
---     L'ultima aggiorna le sessioni alla sede del PalaMazzola.
 --
--- Una nota sul trigger dei privilegi del profilo: il file
--- 20261203000000 contiene anche una revoca di colonna che NON ha effetto,
--- ed e previsto. Il README della cartella lo spiega per esteso. Quello che
--- conta e il trigger, che l'elenco sopra verifica.
+-- Una nota sul trigger dei privilegi del profilo: il file 20261203000000
+-- contiene anche una revoca di colonna che NON ha effetto, ed e previsto.
+-- Il README della cartella lo spiega. Quello che conta e il trigger, che
+-- la prima verifica controlla.
 -- =========================================================
