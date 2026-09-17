@@ -268,7 +268,7 @@ const UNIVERSITARIO: Passo[] = [
   {
     titolo: "Candidati",
     testo:
-      "Nome, cognome, email, università, corso di studi, livello e le aree che ti interessano. Una riga sui tuoi interessi basta: serve a farci un'idea, non è una proposta di progetto. Non ti chiediamo il CV, né competenze, né compagni di team, e non devi caricare niente.",
+      "Nome, cognome, email, università, corso di studi, livello e l'area disciplinare. Una riga sui tuoi interessi basta: serve a farci un'idea, non è una proposta di progetto. Non ti chiediamo il CV, né competenze, né compagni di team, e non devi caricare niente.",
     link: {
       etichetta: "Candidatura",
       href: UNIVERSITA_PATH,
@@ -288,7 +288,7 @@ const UNIVERSITARIO: Passo[] = [
   {
     titolo: "Comincia il corso",
     testo:
-      "Non c'è niente da aspettare. Le lezioni sono in inglese e si aprono una dopo l'altra: ognuna si chiude con una riflessione da consegnare, ed è quella che sblocca la successiva.",
+      "Non c'è niente da aspettare: basta l'account. Le lezioni sono in inglese e ognuna si chiude con una riflessione da consegnare, che apre il collegamento alla lezione dopo ed è il modo in cui sappiamo a che punto sei.",
     link: {
       etichetta: "Il corso",
       href: "/courses/agentic-ai",
@@ -313,7 +313,7 @@ const UNIVERSITARIO: Passo[] = [
   {
     titolo: "Consegnate il progetto",
     testo:
-      "Sei campi, uno per criterio di valutazione: ipotesi, stato dell'arte, metodo, integrazione fra le due discipline, impatto ed etica. Fino alla consegna resta una bozza che potete salvare e riprendere, e che nessuno all'infuori della vostra squadra e del vostro mentor può leggere.",
+      "Sei campi, costruiti sui criteri di valutazione: ipotesi e stato dell'arte, che valgono entrambi per l'innovatività, poi metodo, integrazione fra le due discipline, impatto ed etica. Fino alla consegna resta una bozza, che si salva finché le consegne sono aperte e che all'infuori della vostra squadra leggono solo il vostro mentor e lo staff della Fondazione. La Commissione vede i progetti solo dopo la consegna.",
     poi: {
       titolo: "E poi",
       testo:

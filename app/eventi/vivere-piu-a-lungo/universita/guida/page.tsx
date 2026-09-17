@@ -150,7 +150,7 @@ const STUDENTE: Passo[] = [
   {
     titolo: "Apri subito il link della password",
     testo:
-      "Insieme al codice della candidatura ti arriva il link per scegliere la password del tuo account. Vale una volta sola. Se lo rimandi a dopo e scade, ne chiedi un altro dalla pagina di accesso: l'indirizzo è quello con cui ti sei candidato.",
+      "Se non eri già registrato sul sito, insieme al codice della candidatura ti arriva il link per scegliere la password. Vale una volta sola: se lo rimandi a dopo e scade, ne chiedi un altro dalla pagina di accesso. Se invece un account con quella email ce l'avevi già, non ne creiamo un secondo: entri con la password che usi già.",
     poi: {
       titolo: "Perché serve subito",
       testo:
@@ -160,7 +160,7 @@ const STUDENTE: Passo[] = [
   {
     titolo: "Comincia il corso, senza aspettare nulla",
     testo:
-      "Non c'è una conferma da attendere. Le lezioni sono in inglese e si aprono una dopo l'altra: ognuna si chiude con una riflessione da consegnare, ed è quella che sblocca la successiva. È anche il modo in cui sappiamo a che punto sei.",
+      "Non c'è una conferma da attendere: basta l'account. Le lezioni sono in inglese e ognuna si chiude con una riflessione da consegnare, che apre il collegamento alla lezione dopo ed è il modo in cui sappiamo a che punto sei.",
     link: { etichetta: "Il corso", href: CORSO_PATH, mostra: url(CORSO_PATH) },
     poi: {
       titolo: "Il corso è in inglese, il resto no",
@@ -176,7 +176,7 @@ const STUDENTE: Passo[] = [
     poi: {
       titolo: "In bacheca non c'è la tua email",
       testo:
-        "Compaiono nome, università, corso e la tua nota, e nient'altro. Chi vuole lavorare con te manda una richiesta, e i contatti si scambiano solo quando quella richiesta viene accettata. Puoi toglierti dalla bacheca quando vuoi.",
+        "Compaiono nome e cognome, università, corso di studi, livello, area disciplinare e la tua nota. L'email no. Chi vuole lavorare con te manda una richiesta, e i contatti si scambiano solo quando quella richiesta viene accettata. Puoi toglierti dalla bacheca quando vuoi, finché la bacheca è aperta.",
     },
   },
   {
@@ -187,11 +187,11 @@ const STUDENTE: Passo[] = [
   {
     titolo: "Scrivete il progetto, e consegnatelo una volta sola",
     testo:
-      "Sei campi, uno per criterio di valutazione: l'ipotesi di ricerca, lo stato dell'arte e cosa ci aggiungete, metodo e disegno dello studio, come le due discipline si integrano, l'impatto potenziale e gli aspetti etici. Più il titolo, l'ambito e un link ai materiali, se ne avete.",
+      "Sei campi, costruiti sui criteri di valutazione: l'ipotesi di ricerca, lo stato dell'arte e cosa ci aggiungete, metodo e disegno dello studio, come le due discipline si integrano, l'impatto potenziale e gli aspetti etici. I primi due valgono entrambi per l'innovatività. Più il titolo, l'ambito e un link ai materiali, se ne avete.",
     poi: {
       titolo: "Fino alla consegna è una bozza",
       testo:
-        "Potete salvarla e riprenderla quando volete, e la leggete solo voi e il vostro mentor. Dopo la consegna non si tocca più: è quello che la Commissione legge. Può consegnare qualunque componente, non solo chi ha creato la squadra.",
+        "Potete salvarla e riprenderla per tutto il tempo in cui la fase delle consegne è aperta: finché non lo è, il modulo resta in sola lettura. La leggete voi, il vostro mentor e lo staff della Fondazione, e nessun altro: la Commissione vede i progetti solo dopo la consegna. Dopo la consegna non si tocca più, ed è quello che la Commissione legge. Può consegnare qualunque componente, non solo chi ha creato la squadra.",
     },
   },
   {
@@ -218,18 +218,18 @@ const MENTOR: Passo[] = [
   {
     titolo: "La legge la direzione scientifica",
     testo:
-      "L'approvazione non è automatica e non è un giudizio sul suo curriculum: dipende anche dalle aree che i team stanno effettivamente affrontando, e quelle cambiano a ogni edizione. Le scriviamo in ogni caso.",
+      "L'approvazione non è automatica e non è un giudizio sul suo curriculum: dipende anche dalle aree che i team stanno effettivamente affrontando, e quelle cambiano a ogni edizione. Le scriviamo sia se la candidatura viene accolta sia se non lo è.",
   },
   {
     titolo: "Comparire in elenco è una scelta separata",
     testo:
-      "Il consenso alla pubblicazione del profilo è facoltativo e distinto dall'approvazione: si può essere mentor del percorso senza comparire nella pagina pubblica. Chi lo dà compare con nome, ruolo, organizzazione, aree e profilo. Il numero di telefono non compare mai: serve a noi per organizzare gli incontri.",
+      "Il consenso alla pubblicazione del profilo è facoltativo e distinto dall'approvazione: si può essere mentor del percorso senza comparire nella pagina pubblica. Chi lo dà compare con nome, ruolo, organizzazione, aree e profilo, più la foto e i collegamenti al sito e a LinkedIn se li ha indicati. Il numero di telefono non compare mai, e non solo perché la pagina non lo mostra: il database non lo concede proprio a chi legge da fuori.",
     link: { etichetta: "L'elenco dei mentor", href: MENTOR_PATH, mostra: url(MENTOR_PATH) },
   },
   {
     titolo: "L'abbinamento lo proponiamo noi",
     testo:
-      "Nessun mentor si trova assegnato un team senza saperlo, e nessun team si trova un mentor che non ha mai visto. L'abbinamento tiene conto dell'area del progetto. Da quel momento vede la bozza del team che segue, e solo quella.",
+      "Nessun mentor si trova assegnato un team senza saperlo, e nessun team si trova un mentor che non ha mai visto. L'abbinamento tiene conto dell'area del progetto, e solo un mentor già approvato può essere abbinato: il pannello rifiuta gli altri. Da quel momento vede la bozza del team che segue, e solo quella.",
   },
   {
     titolo: "Orientamento, non esecuzione",
@@ -275,7 +275,7 @@ const COMMISSARIO: Passo[] = [
   {
     titolo: "Chiudere la scheda è l'atto che conta",
     testo:
-      "Finché resta aperta è un appunto privato e non entra in classifica. Si chiude intera: una scheda consegnata a metà peserebbe nella media come una completa, e abbasserebbe un progetto per una distrazione di chi lo giudica invece che per il suo merito. Dopo la chiusura, solo lo staff può riaprirla.",
+      "Finché resta aperta è un appunto privato e non entra in classifica. Si chiude intera: una scheda consegnata a metà peserebbe nella media come una completa, e abbasserebbe un progetto per una distrazione di chi lo giudica invece che per il suo merito. Dopo la chiusura non si riapre da nessuna pagina del sito: se deve correggerla, scriva alla segreteria della Commissione.",
   },
 ];
 
@@ -290,7 +290,7 @@ const GUASTI = [
   },
   {
     d: "Il codice della squadra viene rifiutato",
-    r: "È nel formato UST- seguito da sei caratteri, e non contiene lettere o cifre che si possano confondere fra loro. Se è giusto e viene comunque rifiutato, o la squadra è già al completo, o non è più attiva.",
+    r: "È nel formato UST- seguito da sei caratteri, e non contiene lettere o cifre che si possano confondere fra loro. Se è giusto e viene comunque rifiutato: o la squadra è al completo, o non è più attiva, o la formazione delle squadre non è ancora aperta.",
   },
   {
     d: "Non vedo nessuno in bacheca",
@@ -298,7 +298,7 @@ const GUASTI = [
   },
   {
     d: "La squadra non riesce a consegnare",
-    r: `Servono almeno ${SQUADRA_MIN} componenti: l'art. 4 parla di team, e una persona sola non lo è. Controllate anche che tutti e sei i campi siano compilati, perché la Commissione li valuta uno per uno.`,
+    r: `Servono almeno ${SQUADRA_MIN} componenti: l'art. 4 parla di team, e una persona sola non lo è. Controllate anche che ci siano il titolo e l'ambito, e che tutti e sei i campi siano compilati, perché la Commissione li valuta uno per uno.`,
   },
   {
     d: "Sono un mentor approvato ma non compaio nella pagina",
