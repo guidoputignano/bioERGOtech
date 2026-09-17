@@ -27,6 +27,7 @@ import {
   ADMIN_PATH as UNIVERSITA_ADMIN_PATH,
   COMMISSIONE_PATH as UNIVERSITA_COMMISSIONE_PATH,
   CORSO_PATH,
+  GUIDA_PATH as UNIVERSITA_GUIDA_PATH,
   MENTOR_CANDIDATURA_PATH,
   MENTOR_PATH,
   STUDENTE_PATH as UNIVERSITA_STUDENTE_PATH,
@@ -97,6 +98,12 @@ export const GRUPPI: Gruppo[] = [
         href: UNIVERSITA_PATH,
         accesso: "pubblico",
         desc: "La pagina da diffondere. Contiene il modulo di candidatura, il regolamento articolo per articolo e le domande frequenti.",
+      },
+      {
+        titolo: "Come funziona il percorso",
+        href: UNIVERSITA_GUIDA_PATH,
+        accesso: "pubblico",
+        desc: "La guida operativa: i passi in ordine per lo studente, per il mentor e per chi siede in Commissione. E' la pagina da mandare a chi chiede come funziona.",
       },
       {
         titolo: "I mentor",

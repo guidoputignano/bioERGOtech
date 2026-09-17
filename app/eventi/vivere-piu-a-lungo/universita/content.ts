@@ -494,6 +494,7 @@ export const COMMISSIONE_PATH = `${UNIVERSITA_PATH}/commissione`;
 export const ADMIN_PATH = `${UNIVERSITA_PATH}/admin`;
 export const MENTOR_PATH = `${UNIVERSITA_PATH}/mentor`;
 export const MENTOR_CANDIDATURA_PATH = `${MENTOR_PATH}/candidatura`;
+export const GUIDA_PATH = `${UNIVERSITA_PATH}/guida`;
 
 /* ── Stato della candidatura ──────────────────────────────────────────── */
 

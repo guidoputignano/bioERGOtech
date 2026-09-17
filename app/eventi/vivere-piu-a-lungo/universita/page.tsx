@@ -17,6 +17,7 @@ import {
   CONTENUTI_PERCORSO,
   CORSO_PATH,
   CORSO_PUNTI,
+  GUIDA_PATH,
   COSA_OFFRE,
   CRITERI_NOTE,
   CRITERI_UNIVERSITA,
@@ -503,6 +504,9 @@ export default function UniversitaPage() {
               </Link>
               <Link href={STUDENTE_PATH} className="btn-outline">
                 La tua area del percorso
+              </Link>
+              <Link href={GUIDA_PATH} className="btn-outline">
+                Come funziona, passo per passo
               </Link>
             </div>
           </div>

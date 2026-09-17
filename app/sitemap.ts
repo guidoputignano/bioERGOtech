@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // proposito: sono noindex, e una sitemap che le elenca chiede a un
     // crawler di andare a sbattere contro un login.
     { path: "/eventi/vivere-piu-a-lungo/universita", priority: 0.8, changeFrequency: "weekly" },
+    { path: "/eventi/vivere-piu-a-lungo/universita/guida", priority: 0.7, changeFrequency: "monthly" },
     { path: "/eventi/vivere-piu-a-lungo/universita/mentor", priority: 0.7, changeFrequency: "weekly" },
     {
       path: "/eventi/vivere-piu-a-lungo/universita/mentor/candidatura",
