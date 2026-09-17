@@ -127,6 +127,27 @@ const EN: Informativa = {
         ],
       },
       {
+        titolo: "Participants in the University Programme",
+        voci: [
+          "The account created when the application is submitted, which gives access to the course and to the programme area",
+          "Reflections submitted at the end of each lesson, and therefore how far through the course the participant has got",
+          "The team they join, the role they hold in it, and the join requests they send or receive",
+          "The project the team submits, and the links to material they choose to share",
+          "If they choose to appear on the board of participants looking for a team: name, surname, university, degree course, discipline and the note they write. The board is visible only to confirmed participants of the programme, it is not public and it is not indexed. This consent is optional and can be withdrawn at any time, and the email address never appears there",
+          "The scores and notes the evaluation committee records on the submitted project",
+        ],
+      },
+      {
+        titolo: "Mentor Applications",
+        voci: [
+          "Name, surname, email and optional telephone number, which stays internal and is never published",
+          "Role, university, institution or company, disciplines, profile, expertise and declared availability",
+          "Any links to a personal website or a professional profile",
+          "The outcome of the application and the teams the mentor is paired with, if any",
+          "Consent to publish the profile on the public mentors page, which is optional and separate: one can be a mentor without appearing on the page, and the consent can be withdrawn at any time",
+        ],
+      },
+      {
         titolo: "Website Usage",
         voci: [
           "IP address and browser type (anonymised where possible)",
@@ -151,6 +172,11 @@ const EN: Informativa = {
       { finalita: "Recording course work, teams and project submissions, and assessing them", base: "Legitimate interest in running and judging the programme" },
       { finalita: "Registering finalists for the closing event", base: "Legitimate interest" },
       { finalita: "Processing applications to our calls", base: "Consent / Pre-contractual steps" },
+      { finalita: "Creating the account that gives access to the course and the programme area", base: "Performance of the programme the applicant asked to join" },
+      { finalita: "Showing who is looking for a team on the board, to other participants only", base: "Consent, optional and withdrawable" },
+      { finalita: "Running teams, join requests and mentor pairing", base: "Legitimate interest in running the programme" },
+      { finalita: "Collecting and assessing mentor applications", base: "Consent / Pre-contractual steps" },
+      { finalita: "Publishing a mentor profile on the public page", base: "Consent, optional and withdrawable" },
       { finalita: "Sending platform notifications", base: "Consent / Legitimate interest" },
       { finalita: "Improving website performance", base: "Consent (analytics cookies)" },
       { finalita: "Complying with legal obligations", base: "Legal obligation" },
@@ -313,6 +339,27 @@ const IT: Informativa = {
         ],
       },
       {
+        titolo: "Partecipanti al percorso universitario",
+        voci: [
+          "L'account creato al momento della candidatura, che dà accesso al corso e all'area del percorso",
+          "Le riflessioni consegnate al termine di ogni lezione, e quindi il punto del corso a cui il partecipante è arrivato",
+          "La squadra di cui entra a far parte, il ruolo che vi ricopre e le richieste di ingresso inviate o ricevute",
+          "Il progetto consegnato dalla squadra e i link ai materiali che sceglie di condividere",
+          "Se sceglie di comparire nella bacheca dei partecipanti che cercano una squadra: nome, cognome, università, corso di studi, area disciplinare e la nota che scrive. La bacheca è visibile ai soli partecipanti confermati del percorso, non è pubblica e non è indicizzata. Il consenso è facoltativo e revocabile in qualsiasi momento, e l'indirizzo email non vi compare mai",
+          "I punteggi e le note della Commissione di valutazione sul progetto consegnato",
+        ],
+      },
+      {
+        titolo: "Candidature a mentor",
+        voci: [
+          "Nome, cognome, email ed eventuale telefono, che resta a uso interno e non viene pubblicato",
+          "Ruolo, università, ente o azienda di appartenenza, aree disciplinari, profilo, competenze e disponibilità dichiarata",
+          "Gli eventuali link a un sito personale o a un profilo professionale",
+          "L'esito della candidatura e le squadre a cui il mentor viene eventualmente abbinato",
+          "Il consenso alla pubblicazione del profilo nella pagina pubblica dei mentor, che è facoltativo e separato: si può essere mentor senza comparire in pagina, e il consenso è revocabile in qualsiasi momento",
+        ],
+      },
+      {
         titolo: "Navigazione del sito",
         voci: [
           "Indirizzo IP e tipo di browser (anonimizzati dove possibile)",
@@ -337,6 +384,11 @@ const IT: Informativa = {
       { finalita: "Registrare e valutare lavori, squadre e progetti consegnati", base: "Legittimo interesse a gestire e giudicare il percorso" },
       { finalita: "Iscrivere i finalisti all'evento conclusivo", base: "Legittimo interesse" },
       { finalita: "Gestire le candidature ai nostri bandi", base: "Consenso e misure precontrattuali" },
+      { finalita: "Creare l'account che dà accesso al corso e all'area del percorso", base: "Esecuzione del percorso a cui il candidato ha chiesto di partecipare" },
+      { finalita: "Mostrare in bacheca chi cerca una squadra, ai soli altri partecipanti", base: "Consenso, facoltativo e revocabile" },
+      { finalita: "Gestire squadre, richieste di ingresso e abbinamento con i mentor", base: "Legittimo interesse a gestire il percorso" },
+      { finalita: "Raccogliere e valutare le candidature a mentor", base: "Consenso e misure precontrattuali" },
+      { finalita: "Pubblicare il profilo di un mentor nella pagina pubblica", base: "Consenso, facoltativo e revocabile" },
       { finalita: "Inviare comunicazioni di servizio", base: "Consenso e legittimo interesse" },
       { finalita: "Migliorare le prestazioni del sito", base: "Consenso (cookie analitici)" },
       { finalita: "Adempiere a obblighi di legge", base: "Obbligo legale" },

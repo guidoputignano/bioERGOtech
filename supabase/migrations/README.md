@@ -2,6 +2,48 @@
 
 Run manually against Supabase (SQL editor or `supabase db push`) — nothing here executes automatically. Files are numbered chronologically; run them in filename order.
 
+## Which ones have actually been applied?
+
+Nothing here records that, so the only honest answer comes from the database
+itself. **`VERIFICA.sql`** asks it: paste the whole file into the Supabase SQL
+editor and read the `esito` column. It reports `OK`, `DA ESEGUIRE` or
+`PARZIALE` per migration, names the missing objects, and then checks the
+things that are easy to get wrong (the column privileges that keep a mentor's
+phone number and a candidate's email out of an anonymous `select *`, and the
+function privileges that keep the staff reports out of reach of an anonymous
+caller).
+
+It only reads the catalogue: no writes, safe to run as often as you like, and
+it is **not** a migration, so do not run it "in filename order" with the rest.
+
+## Two fixes that apply to the whole database, not one feature
+
+Both were found by running the migrations against a scratch PostgreSQL and
+probing them as `anon`, which is the only way these show up: neither breaks
+anything visibly, and the site works with both bugs present.
+
+**`20261212000000_revoca_execute_public.sql`.** Every migration that wanted to
+keep a `security definer` reporting function to staff wrote
+`revoke all on function ... from anon, authenticated`. That line does nothing.
+PostgreSQL grants `EXECUTE` to `PUBLIC` when a function is created, and the two
+roles inherit it from there, so revoking their own grant leaves the inherited
+one untouched. Eleven functions were affected, across the bando, the events,
+the licei and the universita tracks. Because Supabase exposes `public` schema
+functions over PostgREST as `/rest/v1/rpc/<name>`, the site's anonymous key was
+enough to call them, and being `security definer` they are not filtered by RLS.
+The migration revokes from `PUBLIC` and re-grants to `service_role`, which is
+what the admin routes actually use.
+
+**`20261213000000_profiles_ricorsione.sql`.** The policy `Admins can view all
+profiles` checked for admin rights by selecting from `profiles`, the table the
+policy guards, so reading it as an authenticated user raised
+`42P17 infinite recursion detected in policy`. Eighteen policies on twelve
+tables run that same admin check, so all of them failed the same way. It stayed
+invisible because the server routes use the `service_role` key and never go
+through RLS, which means the failure was in the fallback layer, the one that
+matters only once the first one is bypassed. The fix is a `security definer`
+helper, `public.e_admin()`, so the lookup no longer re-enters the policy.
+
 ## Navigator: which file to run
 
 The Grant & Funding Eligibility Navigator's data has gone through a few passes. If you're setting up a **fresh** database:

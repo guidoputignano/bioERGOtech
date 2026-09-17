@@ -17,6 +17,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/eventi/vivere-piu-a-lungo/bando", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei/iscrizione", priority: 0.7, changeFrequency: "weekly" },
+    // Il bando universitario e le sue due pagine pubbliche. Mancavano da qui
+    // fin da quando il modulo e nato: la pagina esisteva, dichiarava il
+    // proprio canonical, e nessuna mappa del sito la nominava.
+    // Le aree riservate, /studente /commissione /admin, restano fuori di
+    // proposito: sono noindex, e una sitemap che le elenca chiede a un
+    // crawler di andare a sbattere contro un login.
+    { path: "/eventi/vivere-piu-a-lungo/universita", priority: 0.8, changeFrequency: "weekly" },
+    { path: "/eventi/vivere-piu-a-lungo/universita/guida", priority: 0.7, changeFrequency: "monthly" },
+    { path: "/eventi/vivere-piu-a-lungo/universita/mentor", priority: 0.7, changeFrequency: "weekly" },
+    {
+      path: "/eventi/vivere-piu-a-lungo/universita/mentor/candidatura",
+      priority: 0.6,
+      changeFrequency: "monthly",
+    },
     { path: "/programmes", priority: 0.9, changeFrequency: "weekly" },
     { path: "/agents", priority: 0.8, changeFrequency: "monthly" },
     { path: "/about-us", priority: 0.9, changeFrequency: "monthly" },

@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { PreIscrizioneForm } from "./PreIscrizioneForm";
 import { UniversitaIndice } from "./UniversitaIndice";
 import {
+  ACCESSO_CORSO,
   ADESIONE_NOTE,
   AREE_DISCIPLINARI,
   BANDO_DATA,
@@ -14,15 +15,24 @@ import {
   COMMISSIONE_PRINCIPI,
   CONTATTI_UNIVERSITA,
   CONTENUTI_PERCORSO,
+  CORSO_PATH,
+  CORSO_PUNTI,
+  GUIDA_PATH,
   COSA_OFFRE,
   CRITERI_NOTE,
   CRITERI_UNIVERSITA,
   DESTINATARI_NOTE,
   DISPOSIZIONI_FINALI,
   EVENT_SLUG,
+  FAQ_PERCORSO,
   FAQ_UNIVERSITA,
   LIVELLI_STUDIO,
   MAILTO_INFORMAZIONI,
+  MENTOR_CANDIDATURA_PATH,
+  MENTOR_INTRO,
+  MENTOR_PATH,
+  NOTA_RICHIESTE,
+  NOTA_SQUADRA_INTERDISCIPLINARE,
   PARTECIPAZIONE_GRATUITA_NOTA,
   PREMESSA,
   PREMIO_CONDIZIONI,
@@ -38,6 +48,9 @@ import {
   REGOLA_PARITA,
   SCADENZA_CANDIDATURE_UNIVERSITARI,
   SITE_URL,
+  SQUADRA_MAX,
+  SQUADRA_MIN,
+  STUDENTE_PATH,
   SVOLGIMENTO_NOTE,
   UNIVERSITA,
   UNIVERSITA_PATH,
@@ -450,11 +463,59 @@ export default function UniversitaPage() {
           </div>
         </section>
 
-        {/* ── Art. 5. Cosa offre ── */}
-        <section className="section bg-light-gray" id="offre">
+
+        {/* ── Il corso, art. 3 ── */}
+        {/* Il corso esisteva gia e questa pagina non ci puntava da nessuna
+            parte. Un candidato riceveva un codice e poi non aveva niente da
+            fare per settimane, mentre le lezioni erano li. */}
+        <section className="section bg-light-gray" id="corso">
           <div className="container mx-auto px-6">
             <Testata
               numero="04"
+              articolo="Art. 3"
+              kicker="Il percorso formativo"
+              titolo={ACCESSO_CORSO.titolo}
+              intro={ACCESSO_CORSO.intro}
+            />
+            <div className="un-griglia un-griglia-2 un-griglia-4" style={{ marginBottom: 28 }}>
+              {CORSO_PUNTI.map((c) => (
+                <div key={c.titolo} className="un-scheda">
+                  <span className="un-scheda-icona" aria-hidden="true">
+                    <i className={`fas ${c.icona}`} />
+                  </span>
+                  <h3>{c.titolo}</h3>
+                  <p>{c.desc}</p>
+                </div>
+              ))}
+            </div>
+            <ul className="un-elenco" style={{ marginBottom: 28 }}>
+              <li>
+                <i className="fas fa-circle-info" aria-hidden="true" />
+                <span>{ACCESSO_CORSO.lingua}</span>
+              </li>
+              <li>
+                <i className="fas fa-circle-info" aria-hidden="true" />
+                <span>{ACCESSO_CORSO.ritmo}</span>
+              </li>
+            </ul>
+            <div className="un-azioni">
+              <Link href={CORSO_PATH} className="btn-primary">
+                Vai al corso
+              </Link>
+              <Link href={STUDENTE_PATH} className="btn-outline">
+                La tua area del percorso
+              </Link>
+              <Link href={GUIDA_PATH} className="btn-outline">
+                Come funziona, passo per passo
+              </Link>
+            </div>
+          </div>
+        </section>
+        {/* ── Art. 5. Cosa offre ── */}
+        <section className="section" id="offre">
+          <div className="container mx-auto px-6">
+            <Testata
+              numero="05"
               articolo="Art. 5"
               kicker="Cosa offre il progetto"
               titolo="Che cosa ci metti e che cosa ci trovi"
@@ -474,11 +535,38 @@ export default function UniversitaPage() {
           </div>
         </section>
 
+
+        {/* ── Mentor, art. 3 e art. 5 ── */}
+        {/* Il mentoring era una riga in COSA_OFFRE e nient'altro: nessun
+            elenco, nessun modo di candidarsi, nessun legame fra una persona
+            e una squadra. */}
+        <section className="section bg-light-gray" id="mentor">
+          <div className="container mx-auto px-6">
+            <Testata
+              numero="06"
+              articolo="Art. 3 e 5"
+              kicker="Chi accompagna i team"
+              titolo="I mentor del percorso"
+              intro={MENTOR_INTRO[0]}
+            />
+            <p className="un-testo" style={{ marginBottom: 28 }}>
+              {MENTOR_INTRO[1]}
+            </p>
+            <div className="un-azioni">
+              <Link href={MENTOR_PATH} className="btn-primary">
+                Vedi i mentor del percorso
+              </Link>
+              <Link href={MENTOR_CANDIDATURA_PATH} className="btn-outline">
+                Candidarsi come mentor
+              </Link>
+            </div>
+          </div>
+        </section>
         {/* ── Art. 6. Premio ── */}
         <section className="section" id="premio">
           <div className="container mx-auto px-6">
             <Testata
-              numero="05"
+              numero="07"
               articolo="Art. 6"
               kicker="Premio e valorizzazione scientifica"
               titolo="Il premio, e che cosa non e"
@@ -514,7 +602,7 @@ export default function UniversitaPage() {
         <section className="section bg-light-gray" id="criteri">
           <div className="container mx-auto px-6">
             <Testata
-              numero="06"
+              numero="08"
               articolo="Art. 7"
               kicker="Criteri di valutazione"
               titolo={`Come si arriva a ${PUNTEGGIO_MASSIMO} punti`}
@@ -566,7 +654,7 @@ export default function UniversitaPage() {
         <section className="section" id="candidatura">
           <div className="container mx-auto px-6">
             <Testata
-              numero="07"
+              numero="09"
               articolo="Art. 4"
               kicker="Modalità di adesione"
               titolo="Candidati"
@@ -638,11 +726,62 @@ export default function UniversitaPage() {
           </div>
         </section>
 
-        {/* ── Art. 8. Commissione ── */}
-        <section className="section bg-light-gray" id="commissione">
+
+        {/* ── Squadre e bacheca, art. 2 e art. 4 ── */}
+        {/* La differenza che conta rispetto ai licei: li una squadra sta
+            dentro un istituto, qui l'art. 2 chiede il contrario. */}
+        <section className="section bg-light-gray" id="team">
           <div className="container mx-auto px-6">
             <Testata
-              numero="08"
+              numero="10"
+              articolo="Art. 2 e 4"
+              kicker="Come si forma una squadra"
+              titolo={`Da ${SQUADRA_MIN} a ${SQUADRA_MAX}, anche di atenei diversi`}
+              intro={NOTA_SQUADRA_INTERDISCIPLINARE}
+            />
+            <ul className="un-elenco un-elenco-2" style={{ marginBottom: 24 }}>
+              <li>
+                <i className="fas fa-circle-check" aria-hidden="true" />
+                <span>
+                  Chi i compagni li ha già crea la squadra e passa loro il codice: si entra in un
+                  clic.
+                </span>
+              </li>
+              <li>
+                <i className="fas fa-circle-check" aria-hidden="true" />
+                <span>
+                  Chi non conosce nessuno si mette in bacheca, vede chi altro sta cercando e quali
+                  squadre hanno un posto libero, e manda una richiesta.
+                </span>
+              </li>
+              <li>
+                <i className="fas fa-circle-check" aria-hidden="true" />
+                <span>
+                  La bacheca è visibile solo agli altri partecipanti, non è pubblica, e ci si sta
+                  solo se si sceglie di starci.
+                </span>
+              </li>
+              <li>
+                <i className="fas fa-circle-check" aria-hidden="true" />
+                <span>
+                  Il progetto si scrive in squadra e si consegna una volta sola: da quel momento è
+                  quello che la Commissione legge.
+                </span>
+              </li>
+            </ul>
+            <p className="un-nota">{NOTA_RICHIESTE}</p>
+            <div className="un-azioni" style={{ marginTop: 26 }}>
+              <Link href={STUDENTE_PATH} className="btn-primary">
+                La tua area del percorso
+              </Link>
+            </div>
+          </div>
+        </section>
+        {/* ── Art. 8. Commissione ── */}
+        <section className="section" id="commissione">
+          <div className="container mx-auto px-6">
+            <Testata
+              numero="11"
               articolo="Art. 8"
               kicker="Commissione"
               titolo="Chi valuta i progetti"
@@ -680,10 +819,10 @@ export default function UniversitaPage() {
         </section>
 
         {/* ── Art. 9. Pubblicazione ── */}
-        <section className="section" id="pubblicazione">
+        <section className="section bg-light-gray" id="pubblicazione">
           <div className="container mx-auto px-6">
             <Testata
-              numero="09"
+              numero="12"
               articolo="Art. 9"
               kicker="Presentazione e pubblicazione"
               titolo="Dal palco alla rivista"
@@ -710,11 +849,11 @@ export default function UniversitaPage() {
         </section>
 
         {/* ── FAQ ── */}
-        <section className="section bg-light-gray" id="faq">
+        <section className="section" id="faq">
           <div className="container mx-auto px-6">
             <h2 className="section-title text-center">Domande frequenti</h2>
             <div className="max-w-3xl mx-auto mt-8 space-y-4">
-              {FAQ_UNIVERSITA.map((f) => (
+              {[...FAQ_UNIVERSITA, ...FAQ_PERCORSO].map((f) => (
                 <details key={f.q} className="card group" style={{ padding: 0, overflow: "hidden" }}>
                   <summary className="flex items-center justify-between gap-4 cursor-pointer list-none p-6 font-semibold text-gray-800 [&::-webkit-details-marker]:hidden">
                     <span>{f.q}</span>
@@ -732,10 +871,10 @@ export default function UniversitaPage() {
         </section>
 
         {/* ── Art. 10 e 11. Contatti e disposizioni finali ── */}
-        <section className="section" id="contatti">
+        <section className="section bg-light-gray" id="contatti">
           <div className="container mx-auto px-6">
             <Testata
-              numero="10"
+              numero="13"
               articolo="Art. 10"
               kicker="Referenti e contatti"
               titolo="A chi scrivere"
@@ -767,7 +906,7 @@ export default function UniversitaPage() {
 
             <div style={{ marginTop: 44, paddingTop: 32, borderTop: "1px solid var(--border-color)" }}>
               <div className="un-head-riga">
-                <span className="un-kicker">11. Disposizioni finali</span>
+                <span className="un-kicker">14. Disposizioni finali</span>
                 <span className="un-art">Art. 11</span>
               </div>
               <p className="un-testo">{DISPOSIZIONI_FINALI}</p>

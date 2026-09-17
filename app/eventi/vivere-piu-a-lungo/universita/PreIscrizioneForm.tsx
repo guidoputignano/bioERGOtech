@@ -97,7 +97,13 @@ export function PreIscrizioneForm() {
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [email, setEmail] = useState("");
-  const [università, setUniversita] = useState("");
+  // Senza accento, e non e un vezzo: la property shorthand qui sotto usa il
+  // nome della variabile come CHIAVE del corpo della richiesta, e la chiave
+  // che la validazione e la rotta leggono e `universita`. Con l'identificatore
+  // accentato il modulo spediva `università` e `validateUniversita` non
+  // trovava mai il campo, quindi rifiutava ogni invio con "Manca
+  // l'università" proprio mentre quel campo era compilato.
+  const [universita, setUniversita] = useState("");
   const [corsoStudi, setCorsoStudi] = useState("");
   const [livello, setLivello] = useState("");
   const [area, setArea] = useState("");
@@ -119,7 +125,7 @@ export function PreIscrizioneForm() {
       nome,
       cognome,
       email,
-      università,
+      universita,
       corso_studi: corsoStudi,
       livello,
       area,
@@ -219,7 +225,7 @@ export function PreIscrizioneForm() {
           <input
             id="un-università"
             style={campo}
-            value={università}
+            value={universita}
             onChange={(e) => setUniversita(e.target.value)}
             placeholder="Anche straniera"
             required
