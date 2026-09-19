@@ -380,7 +380,6 @@ export const PARTNER: Partner[] = [
     // `ruolo` e `url` restano da confermare con la squadra, come per le altre
     // realtà: meglio nessuna riga che una riga imprecisa.
     img: `${PARTNER_IMG}/diavoli-rossi.webp`,
-    daCaricare: true,
   },
   {
     id: "casa-di-sofia",
