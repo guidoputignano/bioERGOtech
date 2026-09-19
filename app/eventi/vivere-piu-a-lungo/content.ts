@@ -234,7 +234,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     titolo: "Sport, disabilità e inclusione",
     desc: "Che cosa succede quando una squadra si apre davvero: autonomia, fiducia e legami che nascono in campo prima che nei percorsi di cura. Le esperienze di chi accompagna ragazzi con disabilità, raccontate da chi le vive ogni giorno.",
     relatori: ["tari"],
-    partner: ["giffoni", "insuperabili", "casa-di-sofia"],
+    partner: ["giffoni", "diavoli-rossi", "casa-di-sofia"],
   },
   {
     tipo: "pausa",
@@ -375,10 +375,12 @@ export const PARTNER: Partner[] = [
     img: `${PARTNER_IMG}/giffoni.webp`,
   },
   {
-    id: "insuperabili",
-    nome: "Insuperabili",
-    ruolo: "Sport per ragazzi con disabilità",
-    img: `${PARTNER_IMG}/insuperabili.webp`,
+    id: "diavoli-rossi",
+    nome: "Diavoli Rossi",
+    // `ruolo` e `url` restano da confermare con la squadra, come per le altre
+    // realtà: meglio nessuna riga che una riga imprecisa.
+    img: `${PARTNER_IMG}/diavoli-rossi.webp`,
+    daCaricare: true,
   },
   {
     id: "casa-di-sofia",
