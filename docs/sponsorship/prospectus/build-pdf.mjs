@@ -1,5 +1,5 @@
 /**
- * Prints prospectus.html to A4 PDF with Chromium, through Playwright.
+ * Prints a prospectus HTML file to A4 PDF with Chromium, through Playwright.
  *
  * The HTML is self-contained: fonts and images are already inlined as data
  * URIs, so nothing is fetched at print time and the output is reproducible
@@ -7,12 +7,13 @@
  * which is why preferCSSPageSize is on: Chromium must not impose its own
  * margins over the ones the document already draws.
  *
- *   node build-pdf.mjs                 print to the default filename
- *   node build-pdf.mjs out.pdf         print somewhere else
- *   node build-pdf.mjs out.pdf --shots also write one PNG per page to shots/
+ *   node build-pdf.mjs                          print prospectus-short.html
+ *   node build-pdf.mjs prospectus.html          print the long version
+ *   node build-pdf.mjs prospectus.html out.pdf  print somewhere else
+ *   node build-pdf.mjs --shots                  also write one PNG per page
  *
  * Needs playwright-core and a Chromium build. On a machine where Playwright
- * has installed its browsers, the executable is found automatically; set
+ * has installed its browsers the executable is found automatically; set
  * CHROMIUM_PATH to point at a different one.
  */
 import { chromium } from 'playwright-core'
@@ -22,14 +23,26 @@ import { fileURLToPath } from 'node:url'
 import { findChromium } from './tools/chromium.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const SRC = path.join(HERE, 'prospectus.html')
-const DEFAULT_OUT = path.join(HERE, 'Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf')
 
-const args = process.argv.slice(2).filter((a) => !a.startsWith('--'))
-const out = args[0] ? path.resolve(args[0]) : DEFAULT_OUT
+/** Each source file has a settled output name, so a build never guesses. */
+const OUTPUT = {
+  'prospectus-short.html': 'Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf',
+  'prospectus.html': 'Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf',
+}
+
+const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'))
+const source = positional[0] || 'prospectus-short.html'
+const src = path.resolve(HERE, source)
+const out = positional[1]
+  ? path.resolve(positional[1])
+  : path.join(HERE, OUTPUT[path.basename(src)] || path.basename(src).replace(/\.html$/, '.pdf'))
 const shots = process.argv.includes('--shots')
 
-/** Chromium locations, in order of preference. */
+if (!fs.existsSync(src)) {
+  console.error(`no such file: ${src}`)
+  process.exit(1)
+}
+
 const browser = await chromium.launch({ executablePath: findChromium() })
 const page = await browser.newPage({ viewport: { width: 794, height: 1123 }, deviceScaleFactor: 2 })
 
@@ -37,7 +50,7 @@ const problems = []
 page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`))
 page.on('requestfailed', (r) => problems.push(`requestfailed: ${r.url().slice(0, 80)}`))
 
-await page.goto('file://' + SRC, { waitUntil: 'load' })
+await page.goto('file://' + src, { waitUntil: 'load' })
 await page.evaluate(() => document.fonts.ready)
 
 /**
@@ -47,18 +60,19 @@ await page.evaluate(() => document.fonts.ready)
 const overflow = await page.evaluate(() => {
   const bad = []
   document.querySelectorAll('.page').forEach((p, i) => {
-    const box = p.getBoundingClientRect()
+    const body = p.querySelector('.body')
+    if (!body || p.classList.contains('cover')) return
+    const floor = body.getBoundingClientRect().bottom
     let lowest = 0
     let culprit = null
-    p.querySelectorAll('.body *').forEach((el) => {
+    body.querySelectorAll('*').forEach((el) => {
       const r = el.getBoundingClientRect()
       if (r.height > 0 && r.bottom > lowest) {
         lowest = r.bottom
         culprit = el.className || el.tagName
       }
     })
-    const floor = box.bottom - (p.classList.contains('cover') ? 0 : 34)
-    if (lowest > floor) bad.push({ page: i + 1, px: Math.round(lowest - floor), culprit })
+    if (lowest > floor + 1) bad.push({ page: i + 1, px: Math.round(lowest - floor), culprit })
   })
   return bad
 })

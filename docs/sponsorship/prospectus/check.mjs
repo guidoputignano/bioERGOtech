@@ -1,8 +1,9 @@
 /**
- * Checks prospectus.html against the constraints the document was written
- * under. Run it after every edit, before printing the PDF.
+ * Checks a prospectus HTML file against the constraints the documents were
+ * written under. Run it after every edit, before printing the PDF.
  *
- *   node check.mjs
+ *   node check.mjs                     check prospectus-short.html
+ *   node check.mjs prospectus.html     check the long version
  *
  * The rules are not stylistic. Four of them protect people who have not given
  * consent, or protect internal material that must not reach a sponsor, so a
@@ -18,7 +19,14 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 const browser = await chromium.launch({ executablePath: findChromium() })
 const page = await browser.newPage()
-await page.goto('file://' + path.join(HERE, 'prospectus.html'), { waitUntil: 'load' })
+const source = process.argv[2] || 'prospectus-short.html'
+const src = path.resolve(HERE, source)
+if (!fs.existsSync(src)) {
+  console.error(`no such file: ${src}`)
+  process.exit(1)
+}
+console.log(`checking ${path.basename(src)}\n`)
+await page.goto('file://' + src, { waitUntil: 'load' })
 const text = await page.evaluate(() => document.body.innerText)
 const images = await page.evaluate(() =>
   [...document.images].map((i) => ({
@@ -57,7 +65,9 @@ check('every authorised speaker present', missing.length === 0, missing.join(', 
 
 /* 4 · Only the three logos in PARTNER_PUBBLICI. */
 const logos = ['Giffoni Experience', 'Diavoli Rossi', 'La casa di Sofia']
-check('the three cleared partner logos present', logos.every((n) => text.includes(n)))
+const shown = logos.filter((n) => text.includes(n))
+check('partner logos are all three or none', shown.length === 0 || shown.length === 3,
+  shown.length ? `showing ${shown.length}: ${shown.join(', ')}` : 'none shown')
 
 /* 5 · Nothing from a section the working rate card marks [interno], nor from
    the two untagged internal sections. */

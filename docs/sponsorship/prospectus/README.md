@@ -1,30 +1,52 @@
 # Sponsorship prospectus, Vivere più a lungo 2026
 
-The sponsor-facing document for **Vivere più a lungo: sport e intelligenza
-artificiale**, Taranto, 10 and 11 December 2026. English, A4, 17 pages,
-written for national and international companies.
+The sponsor-facing documents for **Vivere più a lungo: sport e intelligenza
+artificiale**, Taranto, 10 and 11 December 2026. English, A4, written for
+national and international companies.
+
+Two versions, same content, same sources.
 
 | File | What it is |
 |---|---|
-| `prospectus.html` | The source. Self-contained: fonts and images are inlined as data URIs, nothing is fetched at print time. Edit this. |
-| `build-pdf.mjs` | Prints `prospectus.html` to A4 PDF with Chromium. |
-| `check.mjs` | Checks the document against the constraints it was written under. |
+| `prospectus-short.html` | **8 pages.** The one to send. Built around what a partner takes away, with the speakers as the draw. |
+| `prospectus.html` | **17 pages.** The full version, with the two-day programme and the Showcase set out in detail. |
+| `build-pdf.mjs` | Prints either source to A4 PDF with Chromium. |
+| `check.mjs` | Checks a source against the constraints the documents were written under. |
 | `tools/embed.mjs` | Prints the data URI for an image, so a new one can be dropped in. |
-| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The printed output. |
+| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf` | The 8 page output. |
+| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The 17 page output. |
+
+### What the short version does differently
+
+It leads with the company rather than the event. Page 3 is the room a partner
+is buying into, sixteen faces with their roles. Page 4 is the six things the
+two days actually produce for a partner, each one saying which tiers carry it.
+Page 5 puts all five tiers on one page so they can be compared at a glance.
+The student competition is not part of it: the talent benefits that a company
+takes away, the recruiting desk and the student challenge, are on page 4 where
+they belong.
+
+Its design follows the Foundation's own report deck: centred wordmark, the
+ghosted section number over a teal block, teal card headers, and the teal foot
+band with the page number in a white notch.
 
 ## Working on it
 
 ```bash
-npm install          # playwright-core, once
-npm run check        # constraints
-npm run build        # PDF
-npm run proof        # PDF plus one PNG per page in shots/
+npm install            # playwright-core, once
+npm run check          # constraints, both versions
+npm run build          # both PDFs
+npm run build:short    # just the 8 page one
+npm run proof          # PDF plus one PNG per page in shots/
 ```
+
+`build-pdf.mjs` and `check.mjs` both take the source file as their first
+argument and default to `prospectus-short.html`.
 
 Chromium is found through `PLAYWRIGHT_BROWSERS_PATH`, or through Playwright's
 own install, or from `CHROMIUM_PATH` if you set it.
 
-Open `prospectus.html` in a browser to preview. What you see is what prints:
+Open either HTML file in a browser to preview. What you see is what prints:
 page geometry comes from the stylesheet (`@page { size: A4; margin: 0 }`) and
 `build-pdf.mjs` passes `preferCSSPageSize`, so Chromium imposes no margins of
 its own.
