@@ -77,22 +77,30 @@ const internal = [
   ['endorsement', 'the endorsement rules'], ['Allegato A', 'the contract annex'],
   ['Potronissima', 'a contract typo'], ['1322', 'a contract article'],
   ['6,000 participants', 'an unresolved figure'], ['5,000 students', 'an unresolved figure'],
-  ['media plan', 'an open item'],
+  ['media plan', 'an open item'], ['piano media', 'an open item'],
+  ['6.000 partecipanti', 'an unresolved figure'], ['5.000 studenti', 'an unresolved figure'],
 ]
 const leaked = internal.filter(([k]) => text.includes(k)).map(([k, w]) => `${k} (${w})`)
 check('no internal content', leaked.length === 0, leaked.join(', '))
 
-/* 6 · A tier is described by what it contains, never by who should buy it. */
+/* 6 · A tier is described by what it contains, never by who should buy it.
+   Both languages, since the same document exists in English and in Italian. */
 const targeting = ['ideal for', 'designed for', 'aimed at', 'suited to', 'perfect for',
   'best for', 'intended for', 'for companies', 'for organisations that', 'for those who',
-  'for brands', 'for businesses', 'tailored to', 'a good fit', 'this tier suits']
+  'for brands', 'for businesses', 'tailored to', 'a good fit', 'this tier suits',
+  'ideale per', 'pensato per', 'adatto a', 'adatta a', 'rivolto a', 'rivolta a',
+  'per aziende', 'per imprese', 'per chi ', 'indicato per', 'su misura per',
+  'perfetto per', 'questo livello è per']
 const targeted = targeting.filter((k) => new RegExp(k, 'i').test(text))
 check('no tier is described by its intended buyer', targeted.length === 0, targeted.join(', '))
 
-/* 7 · Every price in the working rate card survives into the document. */
-const prices = ['€ 50,000', '€ 25,000', '€ 10,000', '€ 5,000', '€ 2,500', '€ 15,000',
-  '€ 12,000', '€ 8,000', '€ 6,000', '€ 4,000', '€ 3,000', '€ 150']
-const lost = prices.filter((p) => !text.includes(p))
+/* 7 · Every price in the working rate card survives into the document.
+   English writes € 50,000 and Italian € 50.000, so the separator is dropped
+   before matching rather than kept in two lists that could drift apart. */
+const flat = text.replace(/(\d)[.,](\d{3})/g, '$1$2')
+const prices = ['50000', '25000', '10000', '5000', '2500', '15000',
+  '12000', '8000', '6000', '4000', '3000', '150']
+const lost = prices.filter((p) => !flat.includes('€ ' + p))
 check('every price present', lost.length === 0, lost.join(', '))
 
 /* 8 · No image is enlarged past what it can carry in print. */

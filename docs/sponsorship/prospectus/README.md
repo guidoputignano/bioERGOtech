@@ -1,20 +1,22 @@
 # Sponsorship prospectus, Vivere più a lungo 2026
 
 The sponsor-facing documents for **Vivere più a lungo: sport e intelligenza
-artificiale**, Taranto, 10 and 11 December 2026. English, A4, written for
-national and international companies.
+artificiale**, Taranto, 10 and 11 December 2026. A4, in Italian and in
+English, written for national and international companies.
 
-Two versions, same content, same sources.
+Three versions, same offer, same sources.
 
 | File | What it is |
 |---|---|
-| `prospectus-short.html` | **8 pages.** The one to send. Built around what a partner takes away, with the speakers as the draw. |
-| `prospectus.html` | **17 pages.** The full version, with the two-day programme and the Showcase set out in detail. |
-| `build-pdf.mjs` | Prints either source to A4 PDF with Chromium. |
+| `prospectus-short-it.html` | **8 pagine, italiano.** For Italian companies. Built from the Italian originals, not translated back from the English. |
+| `prospectus-short.html` | **8 pages, English.** The same document for international companies. |
+| `prospectus.html` | **17 pages, English.** The full version, with the two-day programme and the Showcase set out in detail. |
+| `build-pdf.mjs` | Prints any of the sources to A4 PDF with Chromium. |
 | `check.mjs` | Checks a source against the constraints the documents were written under. |
 | `tools/embed.mjs` | Prints the data URI for an image, so a new one can be dropped in. |
-| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf` | The 8 page output. |
-| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The 17 page output. |
+| `Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf` | The 8 page Italian output. |
+| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf` | The 8 page English output. |
+| `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The 17 page English output. |
 
 ### What the short version does differently
 
@@ -34,14 +36,27 @@ band with the page number in a white notch.
 
 ```bash
 npm install            # playwright-core, once
-npm run check          # constraints, both versions
-npm run build          # both PDFs
-npm run build:short    # just the 8 page one
+npm run check          # constraints, all three versions
+npm run build          # all three PDFs
+npm run build:it       # just the Italian one
 npm run proof          # PDF plus one PNG per page in shots/
 ```
 
 `build-pdf.mjs` and `check.mjs` both take the source file as their first
 argument and default to `prospectus-short.html`.
+
+### The Italian version
+
+Not a translation of the English. The offer, the benefit matrix, the rate card
+and the commercial conditions come straight from the Italian working rate card,
+and the panel titles and speaker roles from `content.ts`, so the wording a
+sponsor reads is the wording the Foundation already uses. Prices follow Italian
+convention (`€ 50.000`), which is why `check.mjs` strips the thousands
+separator before matching rather than keeping two lists that could drift. The
+tier names stay in English, as the source listino has them.
+
+The same six rules below apply to it, and `check.mjs` carries the Italian
+phrasings for the buyer-targeting rule as well as the English ones.
 
 Chromium is found through `PLAYWRIGHT_BROWSERS_PATH`, or through Playwright's
 own install, or from `CHROMIUM_PATH` if you set it.

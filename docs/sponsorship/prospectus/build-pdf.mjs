@@ -27,6 +27,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 /** Each source file has a settled output name, so a build never guesses. */
 const OUTPUT = {
   'prospectus-short.html': 'Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf',
+  'prospectus-short-it.html': 'Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf',
   'prospectus.html': 'Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf',
 }
 
