@@ -1,0 +1,13 @@
+{
+  "name": "vivere-piu-a-lungo-prospectus",
+  "private": true,
+  "description": "Builds the sponsorship prospectus PDF from the self-contained prospectus.html.",
+  "scripts": {
+    "build": "node build-pdf.mjs",
+    "check": "node check.mjs",
+    "proof": "node build-pdf.mjs --shots"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}
