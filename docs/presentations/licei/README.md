@@ -75,6 +75,15 @@ Le slide da 5 a 10 hanno in alto un indicatore delle tre tappe, con quella corre
   presentazione dice solo che il podio si assegna dopo le presentazioni.
 - **Startup da Boston, Zurigo e Italia** allo Showcase: il bando chiude il 31
   ottobre e gli ammessi si conoscono entro il 20 novembre.
-- **Durata e impegno.** Il corso è strutturato in 10 settimane e la pagina del
-  corso indica da 4 a 6 ore a settimana. Il calendario reale dipende da quando
-  si aprono le iscrizioni.
+- **Calendario.** Dal 24 settembre al 10 dicembre ci sono 11 settimane, e il
+  README del bando licei fa chiudere la consegna a metà novembre per dare due
+  settimane alla Commissione. Il corso da 10 settimane andrà quindi compresso
+  o con fasi sovrapposte. Per questo la slide del programma mostra le quattro
+  fasi senza numeri di settimana, e la slide finale rimanda calendario e
+  scadenze, consegna compresa, al coordinatore della rete.
+- **Impegno settimanale.** La pagina del corso indica da 4 a 6 ore a settimana:
+  la presentazione lo dà come indicativo.
+- **Biotecnologie.** Le 21 lezioni online riguardano l'intelligenza artificiale.
+  Le biotecnologie entrano nel progetto, dove ogni squadra indica quali
+  impiegare e come. Se sono previsti contenuti di biotecnologie a parte, per
+  esempio con i mentor, vale la pena dirlo a voce.
