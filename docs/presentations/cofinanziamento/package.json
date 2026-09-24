@@ -1,0 +1,12 @@
+{
+  "name": "cofinanziamento-progetto-formativo-deck",
+  "private": true,
+  "description": "Builds the co-funding proposal PDF from the self-contained HTML source.",
+  "scripts": {
+    "build": "node build-pdf.mjs",
+    "proof": "node build-pdf.mjs --shots"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}
