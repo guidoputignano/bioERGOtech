@@ -4,17 +4,19 @@ The sponsor-facing documents for **Vivere più a lungo: sport e intelligenza
 artificiale**, Taranto, 10 and 11 December 2026. A4, in Italian and in
 English, written for national and international companies.
 
-Three versions, same offer, same sources.
+Four versions, same offer, same sources.
 
 | File | What it is |
 |---|---|
-| `prospectus-short-it.html` | **8 pagine, italiano.** For Italian companies. Built from the Italian originals, not translated back from the English. |
+| `prospectus-short-it.html` | **9 pagine, italiano.** For Italian companies. Built from the Italian originals, not translated back from the English. |
+| `prospectus-short-it-fideuram.html` | **10 pagine, italiano, per Fideuram.** The Italian version with a dedicated cover line and a "Perché Fideuram" page. |
 | `prospectus-short.html` | **8 pages, English.** The same document for international companies. |
 | `prospectus.html` | **17 pages, English.** The full version, with the two-day programme and the Showcase set out in detail. |
 | `build-pdf.mjs` | Prints any of the sources to A4 PDF with Chromium. |
 | `check.mjs` | Checks a source against the constraints the documents were written under. |
 | `tools/embed.mjs` | Prints the data URI for an image, so a new one can be dropped in. |
-| `Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf` | The 8 page Italian output. |
+| `Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf` | The 9 page Italian output. |
+| `Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Fideuram.pdf` | The 10 page Italian output addressed to Fideuram, Taranto. |
 | `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf` | The 8 page English output. |
 | `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The 17 page English output. |
 
@@ -57,6 +59,32 @@ tier names stay in English, as the source listino has them.
 
 The same six rules below apply to it, and `check.mjs` carries the Italian
 phrasings for the buyer-targeting rule as well as the English ones.
+
+Since 25 September 2026 the Italian version also carries:
+
+- the audience, as seats: 2,000 at the PalaMazzola and 500 at the Teatro Fusco;
+- a page on the schools' programme and the territory: 11 schools in 7 towns,
+  550 students, and three official figures on Taranto (ISTAT and the Ministry's
+  open data, sourced on the page and in `../../presentations/cofinanziamento/README.md`);
+- SafesPro, the organising body, as the party that issues the contract and the
+  invoices, since the payment goes to SafesPro;
+- four wording fixes: "una Commissione che riunisce", "traslazione clinica",
+  "Istituzioni e comunicazione" and "Ex capitano del Napoli".
+
+The in-document references ("a pagina N") are computed from the page order, so
+they stay right when a page is added.
+
+### The version for Fideuram
+
+The same document with two additions: the cover says "Proposta di
+sponsorizzazione per Fideuram", and page 2 is "Perché Fideuram", with three
+points of contact and two combinations taken from the rate card at its
+published prices (Official Partner, and Official Partner with the naming of the
+panel "Vivere più a lungo"). Everything else, prices and conditions included,
+is the listino every sponsor receives. Fideuram appears only as a name in the
+text: no logo and no brand colours, since using them needs Fideuram's consent
+and would suggest a partnership that does not exist yet. Nothing is said about
+Fideuram's own strategy, and no other bank is named.
 
 Chromium is found through `PLAYWRIGHT_BROWSERS_PATH`, or through Playwright's
 own install, or from `CHROMIUM_PATH` if you set it.
@@ -104,9 +132,13 @@ to stop rather than a suggestion.
 5. **A tier is never described by its intended buyer.** No sector, size,
    maturity or motive, and none of the indirect forms either. A tier is
    described by what it contains.
-6. **No invented figures.** Seat counts are the venue capacities published in
-   `content.ts`, and they say so on the page. There is no attendance forecast,
-   no reach claim and no audience profile anywhere in the document.
+6. **No invented figures.** Seat counts are the Foundation's figures, 2,000 at
+   the PalaMazzola and 500 at the Teatro Fusco, stated as seats and never as
+   attendance. The website configuration (`content.ts`, `SESSIONS.capienza`)
+   still says 300 and 150, and the sponsorship contract declares about 6,000
+   participants and 5,000 students: both have to be aligned before signing,
+   and `check.mjs` keeps the contract figures out of the document. There is no
+   attendance forecast, no reach claim and no audience profile anywhere.
 
 ## Images
 
