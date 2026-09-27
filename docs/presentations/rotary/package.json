@@ -1,0 +1,12 @@
+{
+  "name": "aggiornamento-rotary-deck",
+  "private": true,
+  "description": "Builds the update for the Rotary as a PDF from the self-contained HTML source.",
+  "scripts": {
+    "build": "node build-pdf.mjs",
+    "proof": "node build-pdf.mjs --shots"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}
