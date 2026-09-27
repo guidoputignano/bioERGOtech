@@ -4,12 +4,13 @@ The sponsor-facing documents for **Vivere più a lungo: sport e intelligenza
 artificiale**, Taranto, 10 and 11 December 2026. A4, in Italian and in
 English, written for national and international companies.
 
-Four versions, same offer, same sources.
+Five versions, same offer, same sources.
 
 | File | What it is |
 |---|---|
 | `prospectus-short-it.html` | **9 pagine, italiano.** For Italian companies. Built from the Italian originals, not translated back from the English. |
 | `prospectus-short-it-fideuram.html` | **10 pagine, italiano, per Fideuram.** The Italian version with a dedicated cover line and a "Perché Fideuram" page. |
+| `prospectus-short-it-teva.html` | **10 pagine, italiano, per Teva Italia.** The same, with a "Perché Teva" page. |
 | `prospectus-short.html` | **8 pages, English.** The same document for international companies. |
 | `prospectus.html` | **17 pages, English.** The full version, with the two-day programme and the Showcase set out in detail. |
 | `build-pdf.mjs` | Prints any of the sources to A4 PDF with Chromium. |
@@ -17,6 +18,7 @@ Four versions, same offer, same sources.
 | `tools/embed.mjs` | Prints the data URI for an image, so a new one can be dropped in. |
 | `Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf` | The 9 page Italian output. |
 | `Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Fideuram.pdf` | The 10 page Italian output addressed to Fideuram, Taranto. |
+| `Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Teva.pdf` | The 10 page Italian output addressed to Teva Italia. |
 | `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf` | The 8 page English output. |
 | `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The 17 page English output. |
 
@@ -38,8 +40,8 @@ band with the page number in a white notch.
 
 ```bash
 npm install            # playwright-core, once
-npm run check          # constraints, all three versions
-npm run build          # all three PDFs
+npm run check          # constraints, all five versions
+npm run build          # all five PDFs
 npm run build:it       # just the Italian one
 npm run proof          # PDF plus one PNG per page in shots/
 ```
@@ -85,6 +87,26 @@ is the listino every sponsor receives. Fideuram appears only as a name in the
 text: no logo and no brand colours, since using them needs Fideuram's consent
 and would suggest a partnership that does not exist yet. Nothing is said about
 Fideuram's own strategy, and no other bank is named.
+
+### The version for Teva Italia
+
+Built the same way, from the same generator (`gen3it.mjs teva`): the cover says
+"Proposta di sponsorizzazione per Teva Italia", and page 2 is "Perché Teva",
+with three points of contact (health and prevention, sport alongside medicine,
+the schools) and two combinations at published prices: Official Partner, and
+Official Partner with the naming of panel 1, "Salute, prevenzione e sport".
+Three choices are specific to this version:
+
+- **Category exclusivity on two sectors**, pharmaceuticals and sports
+  nutrition, since Teva works in both. The rate card grants one sector per
+  partner: offering two is a commercial decision to confirm.
+- **No speaker is named next to Teva.** The athletes and clinicians take part
+  in the event, not in the sponsor's communication. Content with the athletes
+  stays on request, agreed case by case with each of them, as on the rate card.
+- **The naming does not touch the content.** Page 2 says so, because a
+  pharmaceutical company's compliance review will ask.
+
+No Teva logo and no brand colours, for the same reason as Fideuram.
 
 Chromium is found through `PLAYWRIGHT_BROWSERS_PATH`, or through Playwright's
 own install, or from `CHROMIUM_PATH` if you set it.
