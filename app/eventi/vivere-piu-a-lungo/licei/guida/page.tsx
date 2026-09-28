@@ -173,6 +173,33 @@ const DOCENTE: Passo[] = [
     },
   },
   {
+    titolo: "Distribuisca il modulo e raccolga le firme",
+    testo:
+      "Dalla sua area riservata scarica il modulo di autorizzazione, già intestato all'istituto, in due varianti: per gli studenti minorenni, per i quali firmano i genitori, e per i maggiorenni, che firmano da sé. Le prime due pagine sono l'informativa e restano a casa. La terza torna firmata a lei e resta agli atti della scuola: non va inviata a noi.",
+    link: {
+      etichetta: "Area riservata",
+      href: REFERENTE_PATH,
+      mostra: "bioergotech.org" + REFERENTE_PATH,
+    },
+    avvisi: [
+      {
+        forte: "Usi solo la versione nuova.",
+        testo:
+          "Il modulo precedente, di una pagina sola, non contiene l'informativa e non copre le riprese dell'11 dicembre. Le famiglie che lo hanno già firmato ricevono le pagine 1 e 2 e firmano solo la nuova pagina 3.",
+      },
+      {
+        forte: "Chi compie 18 anni prima dell'evento",
+        testo:
+          "può confermare o cambiare le scelte dei genitori firmando, dopo il compleanno, la variante per maggiorenni.",
+      },
+    ],
+    poi: {
+      titolo: "Prima dell'evento",
+      testo:
+        "Le chiediamo, per gli studenti finalisti, solo l'esito delle scelte su foto e riprese, e poi ogni nuova pagina 3 o revoca che riceve. Chi non ha autorizzato sale sul palco come gli altri.",
+    },
+  },
+  {
     titolo: "Tenga d'occhio due numeri",
     testo:
       "Nella stessa pagina, accanto a ogni studente, vede a che punto è del corso. In cima ci sono due contatori che indicano due problemi diversi.",
@@ -233,6 +260,16 @@ const STUDENTE: Passo[] = [
       titolo: "Cosa succede dopo",
       testo:
         "Ricevi una email di iscrizione confermata, e da quel momento il corso è aperto.",
+    },
+  },
+  {
+    titolo: "Porta a casa il modulo e riportalo firmato",
+    testo:
+      "Lo chiedi al tuo professore. Se sei minorenne lo firmano i tuoi genitori e tu firmi per presa visione: senza la loro autorizzazione non puoi partecipare. Se sei maggiorenne lo firmi tu. Le prime due pagine restano a casa, la terza la riporti a scuola.",
+    poi: {
+      titolo: "Foto e riprese",
+      testo:
+        "Sono due scelte facoltative, e dire di no non cambia niente: partecipi lo stesso e, se la tua squadra è finalista, sali sul palco come gli altri, senza essere riconoscibile nelle immagini pubblicate dagli organizzatori.",
     },
   },
   {

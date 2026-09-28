@@ -155,9 +155,11 @@ export function IscrizioneForm({
             lineHeight: 1.65,
           }}
         >
-          <strong>Due cose, adesso.</strong> Se sei minorenne, chiedi al tuo docente referente il
-          modulo di autorizzazione, fallo firmare a un genitore e riportaglielo. Poi aspetta che il
-          referente confermi la tua iscrizione: te lo diciamo per email.
+          <strong>Due cose, adesso.</strong> Chiedi al tuo docente referente il modulo di
+          autorizzazione. Se sei minorenne fallo firmare ai tuoi genitori, firma anche tu per presa
+          visione e riportagli la pagina 3; se sei maggiorenne compila e firma tu la variante per
+          maggiorenni. Le prime due pagine restano a casa. Poi aspetta che il referente confermi la
+          tua iscrizione: te lo diciamo per email.
         </div>
         <p style={{ fontSize: 13, color: "var(--text-light)", lineHeight: 1.7, margin: "16px 0 0" }}>
           Quando la tua iscrizione è confermata, la tua area è qui:{" "}

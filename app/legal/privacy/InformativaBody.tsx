@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Informativa } from "./content";
+import { TITOLARE, type Informativa } from "./content";
 
 /**
  * Il corpo dell'informativa, uguale nelle due lingue.
@@ -28,15 +28,17 @@ export function InformativaBody({ t }: { t: Informativa }) {
           <h2 className="text-xl font-semibold text-gray-800 mb-3">{t.titolare.h}</h2>
           <p>{t.titolare.intro}</p>
           <div className="mt-3 p-4 rounded-xl bg-gray-50 border border-gray-100 text-sm">
-            <p><strong>Fondazione bioERGOtech ETS</strong></p>
-            <p>Via Ciro Giovinazzi 70, 74123 Taranto, Italy</p>
-            <p>C.F. 90287640735</p>
+            <p><strong>{TITOLARE.denominazione}</strong></p>
+            <p>{TITOLARE.sede}, Italy</p>
+            <p>C.F. {TITOLARE.cf}</p>
             <p className="mt-2">
-              <a href="mailto:info@bioergotech.org" style={{ color: "var(--primary)" }}>
-                info@bioergotech.org
+              <a href={`mailto:${TITOLARE.email}`} style={{ color: "var(--primary)" }}>
+                {TITOLARE.email}
               </a>
             </p>
           </div>
+          <p className="mt-3 text-sm">{t.titolare.contitolare}</p>
+          <p className="mt-2 text-sm">{t.titolare.dpo}</p>
         </div>
 
         <div>

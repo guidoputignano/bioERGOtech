@@ -169,7 +169,7 @@ export const RELATORI: Relatore[] = [
 /**
  * Il programma della mattina del giorno 1, come sequenza. Sette panel da circa
  * 25 minuti (dialogo sul tema, senza slide) si alternano ai blocchi di
- * presentazione dei ragazzi, al coffee break e alla proclamazione, fino al
+ * presentazione dei ragazzi, al coffee break e alla chiusura della gara, fino al
  * concerto. Qui pubblichiamo temi, protagonisti e ritmo, non gli orari
  * puntuali: la fonte di verità resta il piano interno.
  *
@@ -276,10 +276,10 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     relatori: ["franchini", "galante"],
   },
   {
-    tipo: "premiazione",
-    icona: "fa-trophy",
-    titolo: "Proclamazione del gruppo vincitore",
-    desc: "La commissione valuta i dieci progetti, premia il gruppo vincitore e si chiude con le foto ufficiali.",
+    tipo: "ragazzi",
+    icona: "fa-clipboard-check",
+    titolo: "Chiusura della gara dei ragazzi",
+    desc: "Dopo l'ultimo blocco la commissione completa la valutazione dei dieci progetti, rivedendo anche la qualità delle presentazioni dal vivo. Il podio si annuncia venerdì 11 dicembre, con la premiazione al Teatro Fusco.",
   },
   {
     tipo: "lunch",

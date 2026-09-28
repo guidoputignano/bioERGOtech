@@ -19,6 +19,7 @@
  */
 
 import { ARCHIVE_MODE, EVENT_SLUG, SITE_URL } from "../content";
+import { CONTITOLARE_IMMAGINI, DPO, TITOLARE } from "@/app/legal/privacy/content";
 
 export { ARCHIVE_MODE, EVENT_SLUG, SITE_URL };
 
@@ -131,13 +132,13 @@ export const IMPEGNI_ISTITUTO = [
     campo: "impegno_evento",
     titolo: "Evento finale",
     testo:
-      "L'istituto favorisce la partecipazione delle classi coinvolte all'evento finale del 10 dicembre 2026 a Taranto, anche nell'ambito dei percorsi di orientamento in uscita.",
+      "L'istituto favorisce la partecipazione delle classi coinvolte all'evento finale del 10 e 11 dicembre 2026 a Taranto, anche nell'ambito dei percorsi di orientamento in uscita.",
   },
   {
     campo: "impegno_consensi",
-    titolo: "Autorizzazioni delle famiglie",
+    titolo: "Autorizzazioni e consensi",
     testo:
-      "L'istituto raccoglie e custodisce le autorizzazioni dei genitori o di chi esercita la responsabilità genitoriale per la partecipazione degli studenti minorenni e per l'eventuale ripresa audiovisiva durante l'evento finale, e le conserva agli atti.",
+      "L'istituto consegna a ogni studente il modulo di autorizzazione nella variante per minorenni o per maggiorenni, secondo l'età dello studente alla data della firma, con l'informativa da trattenere; raccoglie la pagina firmata e la conserva agli atti per cinque anni dall'evento finale; prima dell'evento comunica agli organizzatori l'esito delle scelte sulle immagini degli studenti finalisti e, senza ritardo, ogni pagina firmata o revoca ricevuta in seguito; mostra i moduli agli organizzatori che chiedano di verificarli. I moduli firmati non vengono inviati agli organizzatori.",
   },
 ] as const;
 
@@ -363,7 +364,15 @@ export const FAQ_LICEI = [
   },
   {
     q: "Dobbiamo raccogliere le autorizzazioni dei genitori?",
-    a: "Sì, e restano in custodia all'istituto. Il sito non raccoglie moduli firmati e non conserva dati dei genitori. Servono due autorizzazioni distinte: una per la partecipazione al percorso e una per l'eventuale ripresa audiovisiva durante l'evento finale, che si svolge in seduta pubblica.",
+    a: "Sì, con un solo modulo in tre pagine, che il docente referente scarica già intestato dalla sua area riservata. Le pagine 1 e 2 sono l'informativa e restano alla famiglia o allo studente maggiorenne; la pagina 3 torna firmata al referente e resta agli atti dell'istituto, perché il sito non raccoglie moduli firmati. Per gli studenti minorenni firmano entrambi i genitori, o uno solo con una dichiarazione, e la pagina contiene l'autorizzazione a partecipare, che è necessaria. Per gli studenti maggiorenni c'è una variante che firma lo studente. Le scelte su foto e riprese dell'evento del 10 e 11 dicembre sono facoltative e non condizionano la partecipazione: prima dell'evento ci comunicate il loro esito per gli studenti finalisti.",
+  },
+  {
+    q: "Come verranno usate foto e riprese?",
+    a: "Il 10 dicembre al PalaMazzola e l'11 dicembre al Teatro Fusco, fotografi e videomaker incaricati riprendono le presentazioni e la premiazione. Fondazione bioERGOtech e SafesPro, contitolari del trattamento delle immagini, le usano secondo le scelte espresse nel modulo. Con il consenso A documentano l'iniziativa sui siti dei due enti, sui loro profili LinkedIn e Instagram e nei materiali per la stampa. Con il consenso B, che si aggiunge ad A, le immagini compaiono anche in materiali promozionali e commerciali dei due enti. L'autorizzazione è gratuita, esclude usi lesivi del decoro e cessioni a terzi diverse dalla consegna alla stampa, e si può revocare in ogni momento. Le immagini si conservano per 5 anni. Nessun minore presente fra il pubblico viene reso riconoscibile nelle immagini pubblicate dagli organizzatori.",
+  },
+  {
+    q: "Cosa succede a chi non autorizza le riprese?",
+    a: "Partecipa come tutti, al percorso e all'evento. Se la sua squadra è finalista sale sul palco come gli altri, e gli organizzatori non pubblicano né usano immagini in cui sia riconoscibile. Fra il pubblico nessun minore viene reso riconoscibile. Se per un consenso non è barrata nessuna casella, o sono barrate entrambe, vale come non autorizzo. Chi cambia idea prima dell'evento può firmare una nuova pagina 3 e riconsegnarla al referente. In ogni momento può revocare il consenso dato scrivendo a info@bioergotech.org o a info@altaformazioneprofessionisti.it. L'evento però è aperto al pubblico: giornalisti e spettatori possono fotografare con mezzi propri, e quelle immagini sfuggono al controllo degli organizzatori.",
   },
   {
     q: "Quanti studenti possiamo iscrivere?",
@@ -481,43 +490,266 @@ export const CONSENSO_PRIVACY_STUDENTE_TESTO =
   "Acconsento al trattamento dei miei dati per la partecipazione al percorso formativo e alla selezione dei progetti, ai sensi del Regolamento (UE) 2016/679.";
 
 export const DICHIARAZIONE_AUTORIZZAZIONE_TESTO =
-  "Se sono minorenne, ho consegnato o consegnerò alla scuola il modulo di autorizzazione firmato da un genitore o da chi esercita la responsabilità genitoriale.";
+  "Se sono minorenne, ho consegnato o consegnerò alla scuola il modulo di autorizzazione firmato dai miei genitori o da chi esercita la responsabilità genitoriale. Se sono maggiorenne, so che il modulo per le scelte su foto e riprese lo firmo io.";
 
 /**
  * Avviso mostrato allo studente prima dell'invio. Dice due cose che
- * altrimenti scoprirebbe dopo: che la scuola lo deve riconoscere, e che
- * senza il modulo firmato non partecipa.
+ * altrimenti scoprirebbe dopo: che la scuola lo deve riconoscere, e che se
+ * e minorenne senza il modulo firmato non partecipa.
  */
 export const NOTA_ISCRIZIONE_STUDENTE =
-  "La tua iscrizione arriva al docente referente del tuo istituto, che la conferma. Se sei minorenne serve anche il modulo di autorizzazione firmato da un genitore: lo chiedi al tuo referente, che ce l'ha già pronto.";
+  "La tua iscrizione arriva al docente referente del tuo istituto, che la conferma. Lui ha anche il modulo di autorizzazione: se sei minorenne lo firmano i tuoi genitori ed è necessario per partecipare; se sei maggiorenne lo firmi tu, e serve solo per le scelte su foto e riprese dell'evento.";
 
 /* ── Modulo di autorizzazione per le famiglie ─────────────────────────── */
 
 /**
- * Testo del modulo che il referente stampa e fa firmare. Sono due
- * autorizzazioni distinte, e vanno tenute distinte: la prima e necessaria
- * per partecipare, la seconda no. Chi non acconsente alle riprese partecipa
- * lo stesso, e la scuola lo segnala agli organizzatori.
+ * Il modulo che il referente stampa e fa firmare, versione 2.
+ *
+ * La versione 1 era una pagina sola con due caselle, e un consulente privacy
+ * l'ha giudicata, con ragione, la sola raccolta di una scelta: non diceva chi
+ * tratta i dati, dove finiscono le immagini, per quanto e come si revoca. Un
+ * consenso chiesto cosi non e informato, e un consenso non informato non
+ * regge. Da qui le tre pagine:
+ *
+ * - pagine 1 e 2, l'informativa, che resta alla famiglia o allo studente
+ *   maggiorenne. E una sola, impersonale, valida per le due varianti;
+ * - pagina 3, le firme, che torna al referente e resta agli atti della
+ *   scuola. Cambia con la variante: per il minorenne firmano i genitori e
+ *   c'e l'autorizzazione a partecipare, per il maggiorenne firma lo studente.
+ *
+ * I consensi sulle immagini sono due e separati, perche fanno due cose
+ * diverse: A documenta l'iniziativa, B porta le stesse immagini nei
+ * materiali promozionali e commerciali dei due enti. Chi accetta il primo
+ * deve poter rifiutare il secondo. Entrambi sono facoltativi, e chi non
+ * autorizza partecipa lo stesso, anche sul palco.
+ *
+ * Le misure contano: l'informativa deve stare in due pagine A4 e la pagina 3
+ * in una. Chi allunga un testo rigeneri il PDF e guardi che non sfori.
  */
-export const AUTORIZZAZIONI_MODULO = [
-  {
-    id: "partecipazione",
-    titolo: "Partecipazione al percorso formativo",
-    testo:
-      "autorizzo la partecipazione al percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", promosso da Fondazione bioERGOtech e SafesPro, che si svolge online e fuori dall'orario scolastico, e alla connessa attività di lavoro in team e sviluppo di un progetto.",
-    obbligatoria: true,
+export const MODULO_VERSIONE = "v2, settembre 2026";
+
+export type VarianteModulo = "minorenne" | "maggiorenne";
+
+export type SezioneInformativa = { titolo: string; paragrafi: string[] };
+
+export type InformativaModulo = {
+  titolo: string;
+  sottotitolo: string;
+  /** Fascia in cima alla pagina 1, e quella di seguito sulla pagina 2. */
+  fascia: string;
+  fasciaSeguito: string;
+  apertura: string;
+  sezioni: SezioneInformativa[];
+};
+
+export const INFORMATIVA_MODULO: InformativaModulo = {
+  titolo: "Informativa su dati personali, foto e riprese",
+  sottotitolo:
+    "Artt. 13 e 26 del Regolamento (UE) 2016/679 (GDPR), art. 10 c.c., artt. 96 e 97 L. 633/1941",
+  fascia:
+    "DA CONSERVARE. Le pagine 1 e 2 restano alla famiglia o allo studente maggiorenne. Alla scuola si riconsegna solo la pagina 3, firmata.",
+  fasciaSeguito: "INFORMATIVA, DA CONSERVARE (segue dalla pagina 1)",
+  apertura:
+    "Questo modulo riguarda il percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", per gli studenti del triennio, e il suo evento finale a Taranto: il 10 dicembre 2026 al PalaMazzola, con i dieci progetti finalisti sul palco, e l'11 dicembre 2026 al Teatro Fusco, con la premiazione. Per lo studente minorenne firmano i genitori o il tutore, il maggiorenne firma per sé: qui \"chi firma\" indica gli uni o l'altro.",
+  sezioni: [
+    {
+      titolo: "1. Chi tratta i dati",
+      paragrafi: [
+        `${TITOLARE.denominazione}, ${TITOLARE.sede}, C.F. ${TITOLARE.cf}, ${TITOLARE.email}.`,
+        `${CONTITOLARE_IMMAGINI.denominazione}, ${CONTITOLARE_IMMAGINI.email}.`,
+        "Per le foto e le riprese dell'evento i due enti sono contitolari del trattamento (art. 26 GDPR). Per i dati del percorso online il titolare è la sola Fondazione (punto 4).",
+        `Per le foto e le riprese il responsabile della protezione dei dati (DPO) è ${DPO.nome}, ${DPO.contatto}.`,
+      ],
+    },
+    {
+      titolo: "2. I due contitolari",
+      paragrafi: [
+        "La Fondazione e SafesPro usano insieme le immagini dell'evento, solo nei limiti delle scelte espresse nella pagina 3. Ciascun ente cura ciò che pubblica sui propri canali, ma verso lo studente e chi firma ne rispondono entrambi. Il contenuto essenziale dell'accordo tra i contitolari (art. 26, par. 2, GDPR) si può chiedere agli indirizzi del punto 1.",
+      ],
+    },
+    {
+      titolo: "3. Il ruolo della scuola",
+      paragrafi: [
+        "La scuola distribuisce il modulo, raccoglie la pagina 3 firmata e la conserva agli atti per 5 anni dall'evento, perché i consensi si possano dimostrare. Il modulo non viene inviato agli organizzatori: prima dell'evento la scuola comunica loro solo il nome e l'esito dei consensi A e B degli studenti finalisti, e mostra il modulo se chiedono di verificarlo. Il modulo non autorizza la scuola a usare le immagini degli organizzatori e non riguarda le foto fatte da docenti e accompagnatori con mezzi propri.",
+      ],
+    },
+    {
+      titolo: "4. I dati del percorso",
+      paragrafi: [
+        "Per il percorso online (account, lezioni, squadra, progetto e valutazione) il titolare è la Fondazione e vale l'informativa completa del sito, www.bioergotech.org/legal/informativa-privacy, che lo studente riceve all'iscrizione.",
+      ],
+    },
+    {
+      titolo: "5. Foto e riprese",
+      paragrafi: [
+        "Nelle due giornate si fanno fotografie e video, con l'audio e quindi con la voce (\"immagini\", in questa informativa), delle presentazioni, della premiazione e degli altri momenti dell'evento, comprese le foto di gruppo. Riprendono fotografi e videomaker incaricati dagli organizzatori, secondo le loro istruzioni. Nelle didascalie e nei testi possono comparire il nome della squadra, il titolo del progetto e l'istituto, non il nome e cognome dello studente. Il modulo non autorizza trasmissioni in diretta.",
+      ],
+    },
+    {
+      titolo: "6. Dove si pubblicano e per quali usi",
+      paragrafi: [
+        "Con il consenso A le immagini servono a documentare e comunicare questa edizione dell'iniziativa: sui siti web dei due enti, sui loro profili LinkedIn e Instagram, in comunicati e materiali per la stampa. Con il consenso B, che si aggiunge ad A, le stesse immagini si usano in materiali promozionali e commerciali dei due enti, cioè brochure, presentazioni, pagine e inserzioni che promuovono le loro attività e i loro corsi, comprese le edizioni successive del percorso, senza attribuire allo studente dichiarazioni o giudizi sui corsi promossi.",
+      ],
+    },
+    {
+      titolo: "7. Base giuridica e condizioni d'uso",
+      paragrafi: [
+        "La base giuridica è il consenso di chi firma (art. 6, par. 1, lett. a, GDPR), che vale anche come autorizzazione all'uso del ritratto (art. 10 c.c. e art. 96 L. 633/1941). Sul legittimo interesse degli organizzatori (art. 6, par. 1, lett. f, GDPR) si basano invece le riprese d'insieme, in cui può comparire anche chi non ha dato il consenso (punti 8 e 11), e la conservazione dell'esito delle scelte di chi non autorizza, per rispettarle; quello dei consensi dati si conserva per l'obbligo di poterli dimostrare (art. 7, par. 1, GDPR).",
+        "L'autorizzazione è gratuita e non dà diritto ad alcun compenso. Le immagini possono essere ritagliate, adattate nel formato e montate, senza alterarne il significato. Sono esclusi gli usi che ledono la dignità, l'onore, la reputazione o il decoro dello studente (art. 97 L. 633/1941). Le immagini non sono cedute né vendute a terzi, compresi sponsor e partner dell'evento, salvo la consegna alla stampa prevista dal consenso A e la licenza che LinkedIn e Instagram chiedono sui contenuti pubblicati (punto 9).",
+      ],
+    },
+    {
+      titolo: "8. Pubblico e stampa",
+      paragrafi: [
+        "Nelle immagini pubblicate dagli organizzatori nessun minore del pubblico è reso riconoscibile, anche senza questo modulo. Gli spettatori maggiorenni, compresi gli studenti non finalisti, possono comparire nelle immagini d'insieme. L'evento è aperto al pubblico: giornalisti e spettatori possono fotografare e riprendere con mezzi propri, e gli organizzatori non ne rispondono.",
+      ],
+    },
+    {
+      titolo: "9. Chi riceve le immagini",
+      paragrafi: [
+        "Le trattano per conto degli organizzatori, come responsabili del trattamento (art. 28 GDPR), i fotografi e videomaker incaricati e i fornitori tecnici che ospitano siti e archivi. LinkedIn e Instagram le ricevono con la pubblicazione e le trattano anche secondo le proprie condizioni. Con il consenso A le ricevono giornalisti e testate; con il consenso B, i fornitori che realizzano i materiali promozionali. Online le immagini sono visibili a chiunque e possono essere copiate da terzi. Per fornitori tecnici e trasferimenti fuori dallo Spazio Economico Europeo vale l'informativa del sito; per SafesPro si può scrivere a info@altaformazioneprofessionisti.it.",
+      ],
+    },
+    {
+      titolo: "10. Per quanto tempo",
+      paragrafi: [
+        "Le immagini selezionate secondo le scelte sono conservate per 5 anni dall'evento, quindi fino a dicembre 2031, poi cancellate dagli archivi dei due enti e rimosse dai loro siti e profili; le altre sono cancellate al termine della selezione. Né alla scadenza né dopo una revoca si possono ritirare i materiali già distribuiti, stampati o in file, o le immagini già pubblicate dalla stampa o copiate da terzi. L'esito delle scelte e le revoche si conservano per lo stesso periodo, anche dopo una revoca.",
+      ],
+    },
+    {
+      titolo: "11. Le scelte sono libere",
+      paragrafi: [
+        "I consensi A e B sono facoltativi. Chi non autorizza partecipa al percorso e all'evento come gli altri e, se è finalista, sale sul palco con la sua squadra: può comparire nelle riprese del palco e d'insieme, ma le immagini in cui è riconoscibile sono cancellate durante la selezione, senza alcun uso. Per chi assiste dal pubblico vale il punto 8. Se per un consenso non è barrata nessuna casella, o sono barrate entrambe, vale NON AUTORIZZO, e il consenso B vale solo se è autorizzato anche A. Per i minorenni è invece necessaria l'autorizzazione a partecipare, nella pagina 3.",
+      ],
+    },
+    {
+      titolo: "12. Revoca e suoi effetti",
+      paragrafi: [
+        "Il consenso A, il consenso B o entrambi possono essere revocati in ogni momento da ciascun genitore o dal tutore, anche da chi non ha firmato, e dallo studente maggiorenne, scrivendo a info@bioergotech.org o a info@altaformazioneprofessionisti.it. La revoca vale per il futuro e non rende illecito l'uso fatto prima. Revocare A comporta anche la revoca di B: cessano i nuovi usi, le immagini sono cancellate dagli archivi dei due enti e rimosse dai loro siti e profili senza ingiustificato ritardo e comunque entro un mese, e chi le ha ricevute dagli organizzatori viene avvisato. Revocando solo B, nello stesso termine le immagini sono tolte dai materiali promozionali ancora in uso, e restano gli usi del consenso A. Lo studente che diventa maggiorenne può confermare o revocare di persona le scelte dei genitori, anche firmando, prima dell'evento, la variante per maggiorenni.",
+      ],
+    },
+    {
+      titolo: "13. Diritti e reclamo",
+      paragrafi: [
+        "Si possono chiedere a ciascuno dei due enti, agli indirizzi del punto 1, l'accesso ai dati e alle immagini, la rettifica, la cancellazione, la limitazione del trattamento, la portabilità e, per i trattamenti basati sul legittimo interesse, l'opposizione. Per lo studente minorenne lo fanno i genitori o il tutore. Si può proporre reclamo al Garante per la protezione dei dati personali, www.garanteprivacy.it.",
+      ],
+    },
+  ],
+};
+
+/** Un consenso sulle immagini, con le due caselle AUTORIZZO e NON AUTORIZZO. */
+export type ConsensoModulo = { titolo: string; testo: string };
+
+export type PaginaFirme = {
+  /** Come la variante compare nel piè di pagina e nel nome del file. */
+  nome: string;
+  /** Etichetta del bottone nella console del referente. */
+  bottone: string;
+  fascia: string;
+  titolo: string;
+  sottotitolo: string;
+  campi: string[];
+  presaVisione: string;
+  /** Solo per il minorenne: l'autorizzazione a partecipare, senza caselle. */
+  partecipazione: { titolo: string; testo: string; nota: string } | null;
+  /** Solo per il maggiorenne: una riga al posto del riquadro partecipazione. */
+  notaPartecipazione: string | null;
+  consensoA: ConsensoModulo;
+  consensoB: ConsensoModulo;
+  regole: string;
+  /** Solo per il minorenne: che cosa dichiara chi firma da solo. */
+  firmaSingola: { intestazione: string; opzioni: string[] } | null;
+  /** A coppie, sinistra e destra: la prima e sempre "Luogo e data". */
+  firme: string[];
+};
+
+const CONSENSO_A_CONDIZIONI =
+  "e loro pubblicazione sui siti web e sui profili LinkedIn e Instagram di Fondazione bioERGOtech e SafesPro e in comunicati e materiali per la stampa. Vale come consenso al trattamento (art. 6, par. 1, lett. a, GDPR) e come autorizzazione all'uso del ritratto (art. 10 c.c. e art. 96 L. 633/1941), a titolo gratuito e senza alcun compenso. Sono esclusi gli usi lesivi di dignità, onore, reputazione e decoro (art. 97 L. 633/1941) e ogni altra cessione a terzi. Le immagini sono conservate per 5 anni dall'evento. Revocabile in ogni momento per il futuro.";
+
+const CONSENSO_A_TITOLO = "Consenso A. Foto e riprese per documentare e comunicare l'iniziativa";
+
+const CONSENSO_B: ConsensoModulo = {
+  titolo: "Consenso B. Materiali promozionali e commerciali",
+  testo:
+    "Uso delle stesse immagini in materiali promozionali e commerciali di Fondazione bioERGOtech e SafesPro, cioè brochure, presentazioni, pagine e inserzioni che promuovono le loro attività e i loro corsi, alle stesse condizioni del consenso A: a titolo gratuito, senza usi lesivi e senza cessione a terzi, per 5 anni dall'evento, revocabile per il futuro. Allo studente non sono attribuite dichiarazioni o giudizi sui corsi promossi.",
+};
+
+const FASCIA_FIRME = "DA RICONSEGNARE FIRMATA AL DOCENTE REFERENTE";
+
+export const PAGINA_FIRME: Record<VarianteModulo, PaginaFirme> = {
+  minorenne: {
+    nome: "studenti minorenni",
+    bottone: "Modulo per studenti minorenni",
+    fascia: FASCIA_FIRME,
+    titolo: "Autorizzazioni e consensi per lo studente minorenne",
+    sottotitolo:
+      "Da compilare e firmare a cura dei genitori o del tutore, solo per lo studente che non ha ancora compiuto 18 anni.",
+    campi: [
+      "Genitore 1 o tutore (nome e cognome)",
+      "Genitore 2 (nome e cognome)",
+      "Studente (nome e cognome)",
+      "Classe e sezione",
+    ],
+    presaVisione:
+      "Chi firma dichiara di aver ricevuto e letto l'informativa delle pagine 1 e 2, che trattiene.",
+    partecipazione: {
+      titolo: "Partecipazione al percorso formativo",
+      testo:
+        "Chi firma autorizza lo studente a partecipare al percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", promosso da Fondazione bioERGOtech e SafesPro, che si svolge online, fuori dall'orario scolastico e con un account personale sul sito della Fondazione, al lavoro in squadra e allo sviluppo di un progetto e, se la squadra è finalista, all'evento finale del 10 e 11 dicembre 2026 a Taranto.",
+      nota: "Necessaria per partecipare.",
+    },
+    notaPartecipazione: null,
+    consensoA: {
+      titolo: CONSENSO_A_TITOLO,
+      testo: `Riprese fotografiche e video dello studente, con la voce, il 10 dicembre 2026 al PalaMazzola e l'11 dicembre 2026 al Teatro Fusco di Taranto, ${CONSENSO_A_CONDIZIONI}`,
+    },
+    consensoB: CONSENSO_B,
+    regole:
+      "Per ciascun consenso, se non è barrata nessuna casella o sono barrate entrambe, vale NON AUTORIZZO. Il consenso B vale solo se è autorizzato anche il consenso A. Se firma un solo genitore senza barrare una delle due dichiarazioni qui sotto, A e B valgono NON AUTORIZZO. La firma dello studente attesta la presa visione e non è necessaria per la validità delle scelte. La partecipazione al percorso e all'evento non dipende da queste scelte.",
+    firmaSingola: {
+      intestazione: "Da compilare se firma un solo genitore. Chi firma dichiara che:",
+      opzioni: [
+        "le scelte di questa pagina sono condivise con l'altro genitore, nel rispetto degli artt. 316, 337-ter e 337-quater c.c.;",
+        "esercita da solo la responsabilità genitoriale, anche per le decisioni di maggiore interesse per lo studente.",
+      ],
+    },
+    firme: [
+      "Luogo e data",
+      "Firma del genitore 1 o del tutore",
+      "Firma del genitore 2",
+      "Firma dello studente, per presa visione",
+    ],
   },
-  {
-    id: "riprese",
-    titolo: "Riprese audiovisive durante l'evento finale",
-    testo:
-      "autorizzo la ripresa audiovisiva e fotografica durante l'evento finale del 10 dicembre 2026 al PalaMazzola di Taranto, che si svolge in seduta pubblica, e il relativo utilizzo per la documentazione e la comunicazione istituzionale dell'iniziativa, senza fini di lucro.",
-    obbligatoria: false,
+  maggiorenne: {
+    nome: "studenti maggiorenni",
+    bottone: "Modulo per studenti maggiorenni",
+    fascia: FASCIA_FIRME,
+    titolo: "Consensi dello studente maggiorenne",
+    sottotitolo: "Da compilare e firmare a cura dello studente che ha compiuto 18 anni.",
+    campi: ["Studente (nome e cognome)", "Classe e sezione"],
+    presaVisione:
+      "Dichiaro di essere maggiorenne e di aver ricevuto e letto l'informativa delle pagine 1 e 2, che trattengo.",
+    partecipazione: null,
+    notaPartecipazione:
+      "Per lo studente maggiorenne la partecipazione non richiede autorizzazioni: questa pagina riguarda solo foto e riprese.",
+    consensoA: {
+      titolo: CONSENSO_A_TITOLO,
+      testo: `Riprese fotografiche e video che mi ritraggono, con la voce, il 10 dicembre 2026 al PalaMazzola e l'11 dicembre 2026 al Teatro Fusco di Taranto, ${CONSENSO_A_CONDIZIONI}`,
+    },
+    consensoB: CONSENSO_B,
+    regole:
+      "Per ciascun consenso, se non è barrata nessuna casella o sono barrate entrambe, vale NON AUTORIZZO. Il consenso B vale solo se è autorizzato anche il consenso A. Per i consensi A e B questa pagina sostituisce quella firmata in precedenza dai genitori. Se lo studente maggiorenne non riconsegna questa pagina, valgono le scelte firmate dai genitori quando era minorenne oppure, se non ci sono, NON AUTORIZZO. La partecipazione al percorso e all'evento non dipende da queste scelte.",
+    firmaSingola: null,
+    firme: ["Luogo e data", "Firma dello studente"],
   },
-] as const;
+};
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
-  "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito.";
+  "Questa pagina resta agli atti della scuola: non va inviata agli organizzatori né caricata su alcun sito. Prima dell'evento la scuola comunica agli organizzatori solo l'esito dei consensi A e B dei finalisti, e mostra questa pagina se lo chiedono.";
+
+/** Il piè di ogni pagina: chi tratta le immagini, la versione e la variante. */
+export const piedeModulo = (variante: VarianteModulo, pagina: number, totale: number): string =>
+  `Contitolari per foto e riprese: Fondazione bioERGOtech ETS e SafesPro. Modulo ${MODULO_VERSIONE}, ${PAGINA_FIRME[variante].nome}. Pagina ${pagina} di ${totale}`;
 
 /* ═══════════════════════════════════════════════════════════════════════
    Fase 3. Squadre, progetti, Commissione e finalisti

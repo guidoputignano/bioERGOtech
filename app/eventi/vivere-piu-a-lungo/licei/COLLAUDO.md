@@ -138,6 +138,13 @@ Confermi entrambi con **E mio studente**.
 una nuova email con il link della password, e il bottone deve diventare "Link
 inviato".
 
+**Scarichi i due moduli di autorizzazione**, "Modulo per studenti minorenni"
+e "Modulo per studenti maggiorenni". Ognuno deve avere tre pagine: 1 e 2
+l'informativa, 3 le firme, con il nome dell'istituto nel riquadro. Controlli
+che la pagina 3 non sia spezzata, che il piè dica "Pagina 1 di 3" e cosi via
+con la variante giusta, e che gli accenti si leggano. Ne stampi uno: e un foglio
+che le famiglie firmano a penna, e va guardato su carta.
+
 ### Passo 7. Lo studente segue il corso (incognito dello studente 1)
 
 Vada su `/courses/agentic-ai/lesson/lesson-1-1`, legga, e **consegni la
@@ -190,7 +197,8 @@ Arrivato in fondo ha verificato la catena intera: adesione, conferma, le due
 email che prima non partivano, il cancello delle iscrizioni, l'iscrizione
 degli studenti, la creazione degli account, il badge di chi non e mai entrato,
 il rinvio del link, la conferma del referente, il conteggio del progresso, le
-squadre, la consegna, la valutazione e l'iscrizione d'ufficio all'evento.
+squadre, la consegna, la valutazione, l'iscrizione d'ufficio all'evento e i
+due moduli di autorizzazione.
 
 **Non** ha collaudato: il comportamento con numeri veri (trecento studenti
 distribuiti su venti istituti), che e l'unica cosa che questo collaudo non

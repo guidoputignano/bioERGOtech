@@ -71,7 +71,7 @@ export function validateIscrizione(input: Partial<IscrizioneInput>): string | nu
   if (!input.consenso_privacy)
     return "Per iscriverti devi acconsentire al trattamento dei tuoi dati.";
   if (!input.dichiara_autorizzazione)
-    return "Devi dichiarare di aver consegnato, o di voler consegnare, il modulo di autorizzazione firmato alla tua scuola.";
+    return "Devi spuntare la dichiarazione sul modulo di autorizzazione.";
 
   return null;
 }

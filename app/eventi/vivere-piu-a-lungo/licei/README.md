@@ -131,6 +131,40 @@ modulo firmato: in `licei_iscrizioni` non esiste alcuna colonna per i genitori,
 ed e deliberato. Lo studente dichiara di averlo consegnato; la prova e il
 foglio in segreteria, e chi la verifica e il referente quando conferma.
 
+## Il modulo di autorizzazione, versione 2
+
+La prima versione era una pagina con due caselle. Un consulente privacy l'ha
+letta per quello che era, la sola raccolta di una scelta: non diceva chi
+tratta i dati, dove finiscono le immagini, per quanto e come si revoca, e un
+consenso chiesto senza queste informazioni non e informato. La versione 2 ha
+tre pagine:
+
+- **pagine 1 e 2, l'informativa**, che restano alla famiglia o allo studente
+  maggiorenne. Una sola, impersonale, uguale nelle due varianti;
+- **pagina 3, le firme**, che torna al referente e resta agli atti. Per il
+  minorenne firmano i due genitori (o uno, con una dichiarazione) e c'e
+  l'autorizzazione a partecipare; per il maggiorenne firma lo studente e la
+  pagina riguarda solo le immagini.
+
+Le scelte sulle immagini sono **due consensi separati**: A documenta
+l'iniziativa (siti, LinkedIn e Instagram dei due enti, stampa), B porta le
+stesse immagini nei materiali promozionali e commerciali. Chi accetta il primo
+deve poter rifiutare il secondo, e chi non accetta nessuno dei due partecipa lo
+stesso, anche sul palco. Per le immagini la Fondazione e SafesPro sono
+contitolari; le immagini si conservano per cinque anni dall'evento.
+
+I testi vivono in `content.ts` (`INFORMATIVA_MODULO`, `PAGINA_FIRME`), il
+titolare e il DPO in `app/legal/privacy/content.ts`, che e la stessa fonte
+dell'informativa del sito. Il generatore impagina e basta, con una regola:
+l'informativa sta in due pagine e le firme in una, perche i testi chiamano
+"pagina 3" quella da riconsegnare. Se un testo si allunga il corpo scende di
+qualche decimo di punto invece di far slittare le pagine.
+
+La scuola non ci manda i moduli. Prima dell'evento ci comunica solo l'esito dei
+consensi dei finalisti, che servono ai fotografi. Oggi questo passaggio non ha
+un canale nel sito, ed e voluto: una colonna in `licei_iscrizioni` sarebbe un
+dato di un minore in piu, e riguarda al massimo cinquanta ragazzi.
+
 ## Perche il referente deve confermare
 
 Il codice `LIC-` gira per forza di cose in tutta la scuola, e prima o poi

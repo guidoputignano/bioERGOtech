@@ -360,7 +360,7 @@ export default function EventPage() {
             {/* Programma del giorno 1: una sola linea del tempo, con i volti nei panel */}
             <h3 className="text-lg font-semibold text-gray-800 mb-1">Il programma della giornata</h3>
             <p className="text-sm text-gray-600 mb-8">
-              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore e al concerto. Per ogni panel trovi chi sale sul palco.
+              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla chiusura della gara e al concerto. Per ogni panel trovi chi sale sul palco.
             </p>
             <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 880 }}>
               {PROGRAMMA_GIORNO1.map((v, i) => {
@@ -547,7 +547,7 @@ export default function EventPage() {
                 I progetti dei ragazzi
               </h3>
               <p className="text-gray-700">
-                Tra un panel e l&apos;altro, dieci gruppi di ragazzi presentano i loro progetti in tre blocchi: tre minuti a testa, due di pitch e uno di domande. Una commissione valuta le idee e proclama il gruppo vincitore.
+                Tra un panel e l&apos;altro, dieci gruppi di ragazzi presentano i loro progetti in tre blocchi: tre minuti a testa, due di pitch e uno di domande. Una commissione valuta le idee, e il podio si annuncia l&apos;11 dicembre con la premiazione al Teatro Fusco.
               </p>
             </div>
 

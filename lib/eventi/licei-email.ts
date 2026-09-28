@@ -88,11 +88,15 @@ export function liceiEmailHtml(input: LiceiEmailInput): string {
 
       <div style="background:#FFF8E6;border-left:3px solid #E4B33C;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
         <p style="color:#75570F;font-size:13.5px;line-height:1.65;margin:0;">
-          <strong>Da preparare intanto.</strong> Le autorizzazioni dei genitori per gli studenti
-          minorenni restano in custodia all'istituto: ne servono due, una per la partecipazione al
-          percorso e una per la ripresa audiovisiva durante l'evento finale, che si svolge in seduta
-          pubblica. Il modulo da far firmare, già intestato al vostro istituto, lo scarica dalla sua
-          area riservata:
+          <strong>Da preparare intanto.</strong> Il modulo di autorizzazione è uno solo, in tre
+          pagine, già intestato al vostro istituto, e lo scarica dalla sua area riservata in due
+          varianti: per gli studenti minorenni, per i quali firmano i genitori, e per quelli
+          maggiorenni, che firmano da sé. Le pagine 1 e 2 sono l'informativa e restano alla famiglia
+          o allo studente maggiorenne. La pagina 3 torna firmata a lei e resta agli atti
+          dell'istituto: non va inviata a noi. Per i minorenni contiene l'autorizzazione a
+          partecipare, che è necessaria. Le scelte su foto e riprese dell'evento del 10 e 11
+          dicembre sono facoltative e non condizionano la partecipazione: prima dell'evento le
+          chiederemo il loro esito per gli studenti finalisti. L'area riservata è qui:
           <a href="${SITE_URL}${REFERENTE_PATH}" style="color:#8A6100;font-weight:700;">${SITE_URL}${REFERENTE_PATH}</a>
         </p>
       </div>
@@ -142,7 +146,7 @@ export function studenteEmailSubject(): string {
 /**
  * Email allo studente. Diversa nel tono da quella al referente: si da del tu
  * e si dicono due cose che altrimenti scoprirebbe dopo, cioe che la scuola lo
- * deve riconoscere e che senza il modulo firmato non partecipa.
+ * deve riconoscere e che, se e minorenne, senza il modulo firmato non partecipa.
  */
 export function studenteEmailHtml(input: StudenteEmailInput): string {
   const { nome, istituto, setPasswordUrl } = input;
@@ -163,10 +167,12 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
       <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Due cose da fare</p>
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 14px;">
-          <strong style="color:#0A1628;">1. Il modulo di autorizzazione.</strong> Se sei minorenne
-          serve la firma di un genitore. Il modulo lo ha il tuo docente referente: chiediglielo,
-          fallo firmare e riportaglielo. Senza quel foglio non puoi partecipare, e non è una
-          formalità che possiamo saltare.
+          <strong style="color:#0A1628;">1. Il modulo di autorizzazione.</strong> Chiedilo al tuo
+          docente referente. Se sei minorenne lo firmano i tuoi genitori e tu firmi per presa
+          visione; se sei maggiorenne lo firmi tu. Le prime due pagine sono l'informativa e restano
+          a casa, la terza la riporti firmata al referente. Se sei minorenne l'autorizzazione a
+          partecipare è necessaria: senza, non puoi seguire il percorso. Le scelte su foto e riprese
+          invece sono libere, e dire di no non cambia niente per la tua partecipazione.
         </p>
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0;">
           <strong style="color:#0A1628;">2. Aspetta la conferma.</strong> Il tuo referente controlla
@@ -376,10 +382,12 @@ export function finalistaEmailHtml(input: FinalistaEmailInput): string {
       </div>
 
       <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0 0 24px;">
-        Il tuo docente referente riceve le indicazioni per l'accompagnamento e gli orari. Se sei
-        minorenne, controlla con lui che in segreteria ci sia la tua autorizzazione firmata,
-        comprese le riprese: l'evento è in seduta pubblica, e chi non acconsente alle riprese
-        partecipa lo stesso.
+        Il tuo docente referente riceve le indicazioni per l'accompagnamento e gli orari. Controlla
+        con lui che la pagina 3 del modulo di autorizzazione, firmata dai tuoi genitori o da te se
+        sei maggiorenne, sia agli atti della scuola: prima dell'evento la scuola ci comunica le tue
+        scelte su foto e riprese. Se compi 18 anni prima dell'evento, puoi confermarle o cambiarle
+        firmando la variante per maggiorenni. Chi non autorizza le riprese partecipa lo stesso,
+        anche sul palco, e non compare riconoscibile nelle immagini pubblicate dagli organizzatori.
       </p>
       ${chiusura()}
     </div>

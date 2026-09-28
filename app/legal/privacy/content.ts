@@ -34,6 +34,50 @@ export type RigaFinalita = { finalita: string; base: string };
  */
 export type RigaConservazione = { categoria: string; periodo: string | null };
 
+/**
+ * Chi tratta i dati, scritto una volta sola.
+ *
+ * Lo usano la pagina dell'informativa e il modulo di autorizzazione dei licei
+ * (`licei/referente/generaAutorizzazione.ts`), che lo stampa per le famiglie.
+ * Prima il titolare era scritto a mano nel componente della pagina e il
+ * modulo non lo nominava affatto: un genitore che firmava non sapeva a chi
+ * rivolgersi.
+ */
+export const TITOLARE = {
+  denominazione: "Fondazione bioERGOtech ETS",
+  sede: "Via Ciro Giovinazzi 70, 74123 Taranto",
+  cf: "90287640735",
+  email: "info@bioergotech.org",
+} as const;
+
+/**
+ * Contitolare con la Fondazione per le sole foto e riprese dell'evento Vivere
+ * piu a lungo (art. 26 GDPR). Per tutti gli altri dati il titolare resta la
+ * sola Fondazione.
+ *
+ * TODO: mancano denominazione legale, forma giuridica, sede e codice fiscale
+ * o partita IVA di SafesPro. L'art. 13 li chiede per ciascun contitolare, e
+ * non vanno inventati: appena arrivano si aggiungono qui.
+ */
+export const CONTITOLARE_IMMAGINI = {
+  denominazione: "SafesPro, Scuola di Alta Formazione e Studi Specializzati per Professionisti",
+  email: "info@altaformazioneprofessionisti.it",
+} as const;
+
+/**
+ * Il responsabile della protezione dei dati per foto e riprese.
+ *
+ * TODO: il recapito e provvisorio. Passare dalla casella generica della
+ * Fondazione si concilia male con la riservatezza che l'art. 38 GDPR chiede
+ * al DPO: appena c'e il suo indirizzo diretto va scritto qui, nelle due
+ * lingue insieme. Va anche chiarito quale ente lo ha designato.
+ */
+export const DPO = {
+  nome: "Francesco Ruggieri",
+  contatto: "contattabile scrivendo a info@bioergotech.org, all'attenzione del DPO",
+  contattoEn: "who can be reached by writing to info@bioergotech.org, for the attention of the DPO",
+} as const;
+
 export type Informativa = {
   titoloPagina: string;
   descrizionePagina: string;
@@ -42,7 +86,7 @@ export type Informativa = {
   /** Rimando all'altra lingua, in cima alla pagina. */
   altraLingua: { etichetta: string; href: string };
 
-  titolare: { h: string; intro: string };
+  titolare: { h: string; intro: string; contitolare: string; dpo: string };
   raccolta: { h: string; intro: string; gruppi: GruppoDati[] };
   finalita: { h: string; colFinalita: string; colBase: string; righe: RigaFinalita[]; nota: string };
   conservazione: { h: string; intro: string; righe: RigaConservazione[]; senzaTermine: string };
@@ -68,6 +112,9 @@ const EN: Informativa = {
   titolare: {
     h: "1. Data Controller",
     intro: "The data controller responsible for your personal data is:",
+    contitolare:
+      "For the photos and recordings of the Vivere più a lungo event the Foundation is joint controller with SafesPro: details are in section 5.",
+    dpo: `For the photos and recordings of the Vivere più a lungo event, the Data Protection Officer (DPO) is ${DPO.nome}, ${DPO.contattoEn}.`,
   },
 
   raccolta: {
@@ -113,7 +160,15 @@ const EN: Informativa = {
           "Class and year of study",
           "The institute the student belongs to, and the team they join",
           "Reflections submitted at the end of each lesson, and the project the team submits",
-          "The consent and the declaration about the parental authorisation, recorded with their wording and timestamp",
+          "The consent and the declaration about the authorisation form, recorded with their wording and timestamp",
+        ],
+      },
+      {
+        titolo: "Photos and Recordings at the Vivere più a lungo Event",
+        voci: [
+          "Photographs and videos, with sound and therefore voice, taken on 10 December 2026 at the PalaMazzola and on 11 December 2026 at the Teatro Fusco in Taranto during the presentations, the award ceremony and the other moments of the event, including group photos, showing the finalist students",
+          "The team name, the project title and the institute, when they accompany the images. The student's name and surname are not published in the captions of the images",
+          "The outcome of the image choices (consent A and consent B) of the finalist students, which the school sends us before the event, and any withdrawals. The signed form stays with the school",
         ],
       },
       {
@@ -171,6 +226,10 @@ const EN: Informativa = {
       { finalita: "Enrolling students and giving them access to the course", base: "Consent, and performance of the programme the school has joined" },
       { finalita: "Recording course work, teams and project submissions, and assessing them", base: "Legitimate interest in running and judging the programme" },
       { finalita: "Registering finalists for the closing event", base: "Legitimate interest" },
+      { finalita: "Recording students at the event and publishing the images to document and communicate this edition of the initiative, on the websites and on the LinkedIn and Instagram profiles of the Foundation and SafesPro, and in press materials", base: "Consent A, optional and withdrawable, which also serves as authorisation to use the person's image (art. 96 of Italian Law 633/1941)" },
+      { finalita: "Using the same images in promotional and commercial materials of the Foundation and SafesPro, including those promoting later editions of the programme", base: "Consent B, optional, separate and withdrawable, valid only together with consent A" },
+      { finalita: "Receiving from schools the outcome of the finalists' image choices, applying it and, where needed, checking it against the form", base: "Obligation to be able to demonstrate consent (art. 7(1) GDPR) and, for those who did not authorise, legitimate interest in ensuring that their images are not published" },
+      { finalita: "Recording the event as a whole, including the audience, and selecting the images: those in which a finalist who did not authorise can be recognised are deleted, and those in which a minor in the audience can be recognised are not published", base: "Legitimate interest in documenting a public event, respecting the students' choices and protecting minors" },
       { finalita: "Processing applications to our calls", base: "Consent / Pre-contractual steps" },
       { finalita: "Creating the account that gives access to the course and the programme area", base: "Performance of the programme the applicant asked to join" },
       { finalita: "Showing who is looking for a team on the board, to other participants only", base: "Consent, optional and withdrawable" },
@@ -198,6 +257,9 @@ const EN: Informativa = {
       { categoria: "Student enrolment records", periodo: null },
       { categoria: "Course work, teams and project submissions", periodo: null },
       { categoria: "Applications to our calls", periodo: null },
+      { categoria: "Photos and recordings of the Vivere più a lungo event", periodo: "Retained for 5 years from the event, that is until December 2031, then deleted from the archives and removed from the websites and the LinkedIn and Instagram profiles of the Foundation and SafesPro. If consent A is withdrawn, without undue delay and in any case within one month of the withdrawal; if only consent B is withdrawn, within the same time limit they are removed from promotional materials still in use." },
+      { categoria: "Outcome of the image choices sent by schools, and any withdrawals", periodo: "Retained for 5 years from the event, including after a withdrawal, so that the choices made can be demonstrated." },
+      { categoria: "Images discarded during selection", periodo: "Deleted when selection ends, before any publication." },
     ],
     senzaTermine:
       "A fixed period is being defined. Until it is set, the data is kept only for as long as the purposes described above require, and is deleted on request.",
@@ -212,9 +274,11 @@ const EN: Informativa = {
       "Vercel Inc. Website hosting and deployment",
       "Resend. Delivery of the transactional emails described in this policy",
       "Google LLC. Maps and productivity tools (Google for Nonprofits)",
+      "Appointed photographers and videographers. Taking and selecting images at our events, on behalf of the Foundation and SafesPro",
+      "Suppliers producing promotional materials. Design, printing and publication of materials using images authorised under consent B, on behalf of the Foundation and SafesPro",
     ],
     nota:
-      "All third-party processors are bound by Data Processing Agreements and are required to process data only as instructed by us. The members of the assessment panel for our calls and programmes see the submitted projects in order to score them, and are bound to confidentiality. Students' names are not disclosed to them.",
+      "All third-party processors are bound by Data Processing Agreements and are required to process data only as instructed by us. The members of the assessment panel for our calls and programmes see the submitted projects in order to score them, and are bound to confidentiality. Students' names are not disclosed to them. For the photos and recordings of the Vivere più a lungo event, the Foundation is joint controller with SafesPro, Scuola di Alta Formazione e Studi Specializzati per Professionisti (info@altaformazioneprofessionisti.it), under art. 26 GDPR. The two organisations use the images together and only on the terms of the authorisation form. Each organisation manages what it publishes on its own channels, but both remain responsible towards data subjects, and rights can be exercised with either of them. The essence of the arrangement can be requested at info@bioergotech.org or info@altaformazioneprofessionisti.it. Authorised images are published on the websites and on the LinkedIn and Instagram profiles of the two organisations, and the platforms also process them under their own terms. With consent, they may be given to the press to report on the initiative. They are not passed to any other third party, including sponsors and partners. For all other data in this policy the Foundation remains the sole controller.",
   },
 
   trasferimenti: {
@@ -249,7 +313,7 @@ const EN: Informativa = {
     h: "9. Minors",
     paragrafi: [
       "Our website and services are not directed at children under the age of 14, and we do not knowingly collect their personal data. If you believe a child under 14 has provided us with personal data, please contact us and we will delete it promptly.",
-      "Some of our educational programmes are addressed to secondary school students, who may be minors aged 14 or over. Participation in those programmes always runs through the student's school, which appoints a referring teacher, collects the parental authorisations on our behalf and keeps the signed forms on file. In those cases we process only what the programme needs: name, surname, class, year of study and contact email. We do not collect dates of birth, tax codes, identity documents or parents' contact details. Separate authorisation is always requested before a student appears in photographs or recordings of our events. Parents and guardians may exercise the rights described above on behalf of their child by writing to the address at the end of this policy.",
+      "Some of our educational programmes are addressed to students in the last three years of upper secondary school, most of them minors aged 14 or over and some already adults. Participation always runs through the student's school, which appoints a referring teacher, hands out the authorisation form and keeps the signed page on file: the form is not sent to us. For a student who is a minor, the parents sign, or one parent alone who declares that they act in agreement with the other or that they exercise parental responsibility alone, and the student signs to confirm they have read the information notice; a student who is an adult signs for themselves. For the programme we process only what it needs: name, surname, class, year of study and contact email. We do not collect dates of birth, tax codes, identity documents or parents' contact details. Images in which a finalist student can be recognised are published only with the consent given in the form, which is optional and does not affect participation; before the event the school tells us the outcome of the finalists' choices. In the images published by the Foundation and SafesPro, no minor in the audience is made recognisable. Parents and guardians may exercise the rights described in section 7 on behalf of their child by writing to info@bioergotech.org.",
       "Taking part in the programme also means following an online course, which requires an account. Alongside the data listed above we therefore keep the work the student submits during the course: the reflection that closes each lesson, the team they belong to and the project the team submits. The referring teacher sees how far their own students have got, so that the school can follow them. The assessment panel sees the projects without the names of the students who wrote them.",
     ],
   },
@@ -280,6 +344,9 @@ const IT: Informativa = {
   titolare: {
     h: "1. Titolare del trattamento",
     intro: "Il titolare del trattamento dei suoi dati personali è:",
+    contitolare:
+      "Per le foto e le riprese dell'evento Vivere più a lungo la Fondazione è contitolare del trattamento con SafesPro: i dettagli sono nella sezione 5.",
+    dpo: `Per le foto e le riprese dell'evento Vivere più a lungo il responsabile della protezione dei dati (DPO) è ${DPO.nome}, ${DPO.contatto}.`,
   },
 
   raccolta: {
@@ -325,7 +392,15 @@ const IT: Informativa = {
           "Classe e anno di corso",
           "L'istituto di appartenenza e la squadra di cui entra a far parte",
           "Le riflessioni consegnate al termine di ogni lezione e il progetto consegnato dalla squadra",
-          "Il consenso e la dichiarazione sull'autorizzazione dei genitori, registrati con il loro testo e la data",
+          "Il consenso e la dichiarazione sul modulo di autorizzazione, registrati con il loro testo e la data",
+        ],
+      },
+      {
+        titolo: "Foto e riprese all'evento Vivere più a lungo",
+        voci: [
+          "Fotografie e video, con l'audio e quindi la voce, ripresi il 10 dicembre 2026 al PalaMazzola e l'11 dicembre 2026 al Teatro Fusco di Taranto durante le presentazioni, la premiazione e gli altri momenti dell'evento, comprese le foto di gruppo, in cui compaiono gli studenti finalisti",
+          "Il nome della squadra, il titolo del progetto e l'istituto, quando accompagnano le immagini. Nome e cognome dello studente non compaiono nelle didascalie delle immagini",
+          "L'esito delle scelte sulle immagini (consenso A e consenso B) degli studenti finalisti, che la scuola ci comunica prima dell'evento, ed eventuali revoche. Il modulo firmato resta alla scuola",
         ],
       },
       {
@@ -383,6 +458,10 @@ const IT: Informativa = {
       { finalita: "Iscrivere gli studenti e dare loro accesso al corso", base: "Consenso, ed esecuzione del percorso a cui la scuola ha aderito" },
       { finalita: "Registrare e valutare lavori, squadre e progetti consegnati", base: "Legittimo interesse a gestire e giudicare il percorso" },
       { finalita: "Iscrivere i finalisti all'evento conclusivo", base: "Legittimo interesse" },
+      { finalita: "Riprendere gli studenti all'evento e pubblicare le immagini per documentare e comunicare questa edizione dell'iniziativa, sui siti e sui profili LinkedIn e Instagram della Fondazione e di SafesPro e nei materiali per la stampa", base: "Consenso A, facoltativo e revocabile, che vale anche come autorizzazione all'uso del ritratto (art. 96 L. 633/1941)" },
+      { finalita: "Usare le stesse immagini in materiali promozionali e commerciali della Fondazione e di SafesPro, compresi quelli che promuovono le edizioni successive del percorso", base: "Consenso B, facoltativo, separato e revocabile, valido solo insieme al consenso A" },
+      { finalita: "Ricevere dalle scuole l'esito delle scelte sulle immagini dei finalisti, applicarlo e, se serve, verificarlo sul modulo", base: "Obbligo di poter dimostrare il consenso (art. 7, par. 1, GDPR) e, per chi non ha autorizzato, legittimo interesse a garantire che le sue immagini non siano pubblicate" },
+      { finalita: "Riprendere l'evento nel suo insieme, compreso il pubblico, e selezionare le immagini: si cancellano quelle in cui è riconoscibile un finalista che non ha autorizzato e non si pubblicano quelle in cui è riconoscibile un minore del pubblico", base: "Legittimo interesse a documentare un evento pubblico, nel rispetto delle scelte degli studenti e della tutela dei minori" },
       { finalita: "Gestire le candidature ai nostri bandi", base: "Consenso e misure precontrattuali" },
       { finalita: "Creare l'account che dà accesso al corso e all'area del percorso", base: "Esecuzione del percorso a cui il candidato ha chiesto di partecipare" },
       { finalita: "Mostrare in bacheca chi cerca una squadra, ai soli altri partecipanti", base: "Consenso, facoltativo e revocabile" },
@@ -410,6 +489,9 @@ const IT: Informativa = {
       { categoria: "Iscrizioni degli studenti", periodo: null },
       { categoria: "Lavori del corso, squadre e progetti consegnati", periodo: null },
       { categoria: "Candidature ai nostri bandi", periodo: null },
+      { categoria: "Foto e riprese dell'evento Vivere più a lungo", periodo: "Conservate per 5 anni dall'evento, quindi fino a dicembre 2031, poi cancellate dagli archivi e rimosse dai siti e dai profili LinkedIn e Instagram della Fondazione e di SafesPro. Se il consenso A è revocato, senza ingiustificato ritardo e comunque entro un mese dalla revoca; se è revocato solo il consenso B, entro lo stesso termine sono tolte dai materiali promozionali ancora in uso." },
+      { categoria: "Esito delle scelte sulle immagini comunicato dalle scuole, ed eventuali revoche", periodo: "Conservati per 5 anni dall'evento, anche dopo una revoca, per poter dimostrare le scelte espresse." },
+      { categoria: "Immagini scartate nella selezione", periodo: "Cancellate al termine della selezione, prima di ogni pubblicazione." },
     ],
     senzaTermine:
       "Il termine è in corso di definizione. Fino ad allora i dati sono conservati per il solo tempo richiesto dalle finalità sopra descritte, e cancellati su richiesta.",
@@ -424,9 +506,11 @@ const IT: Informativa = {
       "Vercel Inc. Hosting e pubblicazione del sito",
       "Resend. Invio delle email di servizio descritte in questa informativa",
       "Google LLC. Mappe e strumenti di produttività (Google for Nonprofits)",
+      "Fotografi e videomaker incaricati. Riprese e selezione delle immagini degli eventi, per conto della Fondazione e di SafesPro",
+      "Fornitori che realizzano i materiali promozionali. Grafica, stampa e pubblicazione dei materiali che usano le immagini autorizzate con il consenso B, per conto della Fondazione e di SafesPro",
     ],
     nota:
-      "Tutti i responsabili esterni sono vincolati da accordi sul trattamento dei dati e possono trattarli solo secondo le nostre istruzioni. I membri delle commissioni di valutazione dei nostri bandi e percorsi vedono i progetti consegnati per poterli valutare, e sono tenuti alla riservatezza. I nomi degli studenti non vengono loro comunicati.",
+      "Tutti i responsabili esterni sono vincolati da accordi sul trattamento dei dati e possono trattarli solo secondo le nostre istruzioni. I membri delle commissioni di valutazione dei nostri bandi e percorsi vedono i progetti consegnati per poterli valutare, e sono tenuti alla riservatezza. I nomi degli studenti non vengono loro comunicati. Per le foto e le riprese dell'evento Vivere più a lungo la Fondazione è contitolare del trattamento con SafesPro, Scuola di Alta Formazione e Studi Specializzati per Professionisti (info@altaformazioneprofessionisti.it), ai sensi dell'art. 26 GDPR. I due enti usano le immagini insieme e solo alle condizioni del modulo di autorizzazione. Ciascun ente cura ciò che pubblica sui propri canali, ma verso gli interessati ne rispondono entrambi, e i diritti si possono esercitare presso l'uno o l'altro. Il contenuto essenziale dell'accordo si può chiedere a info@bioergotech.org o a info@altaformazioneprofessionisti.it. Le immagini autorizzate sono pubblicate sui siti e sui profili LinkedIn e Instagram dei due enti, e le piattaforme le trattano anche secondo le proprie condizioni. Con il consenso, possono essere consegnate alla stampa per dare notizia dell'iniziativa. Non sono cedute ad altri terzi, compresi sponsor e partner. Per tutti gli altri dati di questa informativa il titolare resta la sola Fondazione.",
   },
 
   trasferimenti: {
@@ -462,7 +546,7 @@ const IT: Informativa = {
     h: "9. Minori",
     paragrafi: [
       "Il nostro sito e i nostri servizi non si rivolgono a bambini di età inferiore ai 14 anni, e non raccogliamo consapevolmente i loro dati personali. Se ritiene che un minore di 14 anni ci abbia fornito dati personali, ci contatti e li cancelleremo tempestivamente.",
-      "Alcuni dei nostri percorsi formativi si rivolgono a studenti delle scuole secondarie di secondo grado, che possono essere minorenni di almeno 14 anni. La partecipazione a quei percorsi passa sempre dalla scuola dello studente, che nomina un docente referente, raccoglie per nostro conto le autorizzazioni dei genitori e conserva agli atti i moduli firmati. In quei casi trattiamo solo ciò che serve al percorso: nome, cognome, classe, anno di corso ed email di contatto. Non raccogliamo date di nascita, codici fiscali, documenti di identità né contatti dei genitori. Prima che uno studente compaia in fotografie o riprese dei nostri eventi viene sempre richiesta un'autorizzazione a parte. I genitori e chi esercita la responsabilità genitoriale possono esercitare i diritti sopra descritti per conto del minore scrivendo all'indirizzo indicato in fondo a questa informativa.",
+      "Alcuni dei nostri percorsi formativi si rivolgono agli studenti del triennio delle scuole secondarie di secondo grado, in gran parte minorenni di almeno 14 anni e in parte già maggiorenni. La partecipazione passa sempre dalla scuola dello studente, che nomina un docente referente, distribuisce il modulo di autorizzazione e ne conserva agli atti la pagina firmata: il modulo non viene inviato a noi. Per lo studente minorenne firmano i genitori, oppure uno solo che dichiara di agire d'accordo con l'altro o di esercitare da solo la responsabilità genitoriale, e lo studente firma per presa visione; lo studente maggiorenne firma per sé. Per il percorso trattiamo solo ciò che serve: nome, cognome, classe, anno di corso ed email di contatto. Non raccogliamo date di nascita, codici fiscali, documenti di identità né contatti dei genitori. Le immagini in cui uno studente finalista è riconoscibile si pubblicano solo con il consenso espresso nel modulo, che è facoltativo e non condiziona la partecipazione; prima dell'evento la scuola ci comunica l'esito delle scelte degli studenti finalisti. Nelle immagini pubblicate dalla Fondazione e da SafesPro nessun minore presente fra il pubblico è reso riconoscibile. I genitori e chi esercita la responsabilità genitoriale possono esercitare i diritti descritti nella sezione 7 per conto del minore, scrivendo a info@bioergotech.org.",
       "Partecipare al percorso significa anche seguire un corso online, che richiede un account. Accanto ai dati sopra elencati conserviamo quindi il lavoro che lo studente consegna durante il corso: la riflessione che chiude ogni lezione, la squadra di cui fa parte e il progetto consegnato dalla squadra. Il docente referente vede a che punto sono arrivati i propri studenti, così che la scuola possa seguirli. La commissione di valutazione vede i progetti senza i nomi di chi li ha scritti.",
     ],
   },

@@ -25,6 +25,7 @@ import {
   GUIDA_PATH,
   STATI_ISCRIZIONE_ATTIVI,
   haFattoAccesso,
+  PAGINA_FIRME,
   statoIscrizioneColore,
   statoIscrizioneLabel,
 } from "../content";
@@ -272,25 +273,40 @@ export function ReferenteConsole() {
             Modulo di autorizzazione
           </h2>
           <p className="text-sm text-gray-600 mb-3">
-            Già intestato al vostro istituto. Lo stampa, lo fa firmare a un genitore per ogni
-            studente minorenne e lo conserva agli atti. Non va inviato a noi.
+            Già intestato al vostro istituto, in tre pagine. Le pagine 1 e 2 sono
+            l&apos;informativa e restano alla famiglia o allo studente maggiorenne; la pagina 3
+            torna firmata a lei e resta agli atti della scuola. Non va inviata a noi: prima
+            dell&apos;evento le chiederemo solo l&apos;esito delle scelte sulle immagini degli
+            studenti finalisti. Questa versione sostituisce la precedente, di una pagina sola, che
+            non va più usata.
           </p>
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() =>
-              adesione &&
-              generaAutorizzazionePDF({
-                istituto: adesione.istituto_denominazione,
-                comune: adesione.istituto_comune,
-                provincia: adesione.istituto_provincia,
-                referente: `${adesione.referente_nome} ${adesione.referente_cognome}`,
-              })
-            }
-          >
-            <i className="fas fa-file-pdf" style={{ marginRight: 8 }} />
-            Scarica il modulo
-          </Button>
+          <div className="flex flex-col gap-2">
+            {(["minorenne", "maggiorenne"] as const).map((variante, i) => (
+              <Button
+                key={variante}
+                type="button"
+                variant={i === 0 ? "default" : "outline"}
+                className="w-full"
+                onClick={() =>
+                  adesione &&
+                  generaAutorizzazionePDF({
+                    istituto: adesione.istituto_denominazione,
+                    comune: adesione.istituto_comune,
+                    provincia: adesione.istituto_provincia,
+                    referente: `${adesione.referente_nome} ${adesione.referente_cognome}`,
+                    variante,
+                  })
+                }
+              >
+                <i className="fas fa-file-pdf" style={{ marginRight: 8 }} />
+                {PAGINA_FIRME[variante].bottone}
+              </Button>
+            ))}
+          </div>
+          <p style={{ fontSize: 12, color: "var(--text-light)", lineHeight: 1.6, margin: "10px 0 0" }}>
+            Se uno studente compie 18 anni prima del 10 dicembre, dopo il compleanno può confermare
+            o cambiare le scelte dei genitori firmando il modulo per maggiorenni.
+          </p>
         </div>
       </div>
 
@@ -582,8 +598,10 @@ export function ReferenteConsole() {
 
       <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.7, margin: 0 }}>
         L&apos;elenco dei confermati è quello che l&apos;art. 4 chiede all&apos;istituto di
-        trasmettere: lo scarica da qui invece di compilarlo. Le autorizzazioni firmate restano in
-        custodia alla scuola, non vanno caricate su questo sito.
+        trasmettere: lo scarica da qui invece di compilarlo. I moduli di autorizzazione firmati
+        restano in custodia alla scuola e non vanno caricati su questo sito. Prima
+        dell&apos;evento le chiederemo, per gli studenti finalisti, solo l&apos;esito delle scelte
+        su foto e riprese.
       </p>
     </div>
   );
