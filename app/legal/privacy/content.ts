@@ -28,9 +28,13 @@ export type RigaFinalita = { finalita: string; base: string };
  * periodo. Appena la Fondazione fissa i termini si scrive qui la stringa e
  * la pagina cambia da sola, in tutte e due le lingue.
  *
- * TODO: definire i termini di conservazione delle quattro categorie che oggi
- * hanno `periodo: null`. Sono una decisione della Fondazione, non un
- * dettaglio tecnico, e non vanno inventati.
+ * Per iscrizioni degli studenti e lavori del corso la Fondazione ha scelto 2
+ * anni dalla fine del percorso, la stessa regola delle domande di adesione.
+ *
+ * TODO: definire i termini di conservazione delle due categorie che oggi
+ * hanno `periodo: null`, le adesioni degli istituti e le candidature ai
+ * bandi. Sono una decisione della Fondazione, non un dettaglio tecnico, e
+ * non vanno inventati.
  */
 export type RigaConservazione = { categoria: string; periodo: string | null };
 
@@ -254,8 +258,8 @@ const EN: Informativa = {
       { categoria: "Website analytics", periodo: "Aggregated data retained for up to 26 months." },
       { categoria: "Email communications", periodo: "Retained for up to 3 years for record-keeping purposes." },
       { categoria: "Records of schools joining a programme", periodo: null },
-      { categoria: "Student enrolment records", periodo: null },
-      { categoria: "Course work, teams and project submissions", periodo: null },
+      { categoria: "Student enrolment records", periodo: "Retained for 2 years from the end of the programme, or until you request deletion." },
+      { categoria: "Course work, teams and project submissions", periodo: "Retained for 2 years from the end of the programme, or until you request deletion." },
       { categoria: "Applications to our calls", periodo: null },
       { categoria: "Photos and recordings of the Vivere più a lungo event", periodo: "Retained for 5 years from the event, that is until December 2031, then deleted from the archives and removed from the websites and the LinkedIn and Instagram profiles of the Foundation and SafesPro. If consent A is withdrawn, without undue delay and in any case within one month of the withdrawal; if only consent B is withdrawn, within the same time limit they are removed from promotional materials still in use." },
       { categoria: "Outcome of the image choices sent by schools, and any withdrawals", periodo: "Retained for 5 years from the event, including after a withdrawal, so that the choices made can be demonstrated." },
@@ -486,8 +490,8 @@ const IT: Informativa = {
       { categoria: "Analytics del sito", periodo: "Dati aggregati conservati fino a 26 mesi." },
       { categoria: "Comunicazioni email", periodo: "Conservate fino a 3 anni per finalità di archivio." },
       { categoria: "Adesioni degli istituti a un percorso", periodo: null },
-      { categoria: "Iscrizioni degli studenti", periodo: null },
-      { categoria: "Lavori del corso, squadre e progetti consegnati", periodo: null },
+      { categoria: "Iscrizioni degli studenti", periodo: "Conservate per 2 anni dalla fine del percorso, o fino a richiesta di cancellazione." },
+      { categoria: "Lavori del corso, squadre e progetti consegnati", periodo: "Conservati per 2 anni dalla fine del percorso, o fino a richiesta di cancellazione." },
       { categoria: "Candidature ai nostri bandi", periodo: null },
       { categoria: "Foto e riprese dell'evento Vivere più a lungo", periodo: "Conservate per 5 anni dall'evento, quindi fino a dicembre 2031, poi cancellate dagli archivi e rimosse dai siti e dai profili LinkedIn e Instagram della Fondazione e di SafesPro. Se il consenso A è revocato, senza ingiustificato ritardo e comunque entro un mese dalla revoca; se è revocato solo il consenso B, entro lo stesso termine sono tolte dai materiali promozionali ancora in uso." },
       { categoria: "Esito delle scelte sulle immagini comunicato dalle scuole, ed eventuali revoche", periodo: "Conservati per 5 anni dall'evento, anche dopo una revoca, per poter dimostrare le scelte espresse." },

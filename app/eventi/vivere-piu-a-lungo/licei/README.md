@@ -175,10 +175,10 @@ modulo alle scuole**:
 - i **dati legali di SafesPro** (denominazione, forma giuridica, sede, codice
   fiscale) e il **recapito diretto del DPO**, oggi provvisorio;
 - l'**accordo di contitolarita** fra Fondazione e SafesPro, di cui
-  l'informativa promette il contenuto essenziale a chi lo chiede;
-- i **termini di conservazione** delle iscrizioni degli studenti e dei lavori
-  del corso, ancora "in corso di definizione" nell'informativa del sito, a cui
-  il modulo rimanda per i dati del percorso.
+  l'informativa promette il contenuto essenziale a chi lo chiede.
+
+I dati del percorso, a cui il modulo rimanda per il resto, si conservano per 2
+anni dalla fine del percorso: e scritto nell'informativa del sito.
 
 Il TODO accanto a `MODULO_VERSIONE` in `content.ts` e quelli su `CONTITOLARE_IMMAGINI`
 e `DPO` in `app/legal/privacy/content.ts` dicono dove si scrive la risposta.
