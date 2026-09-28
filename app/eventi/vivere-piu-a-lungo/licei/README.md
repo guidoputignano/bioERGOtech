@@ -165,6 +165,24 @@ consensi dei finalisti, che servono ai fotografi. Oggi questo passaggio non ha
 un canale nel sito, ed e voluto: una colonna in `licei_iscrizioni` sarebbe un
 dato di un minore in piu, e riguarda al massimo cinquanta ragazzi.
 
+Restano aperte, e vanno chiuse con il consulente privacy **prima di mandare il
+modulo alle scuole**:
+
+- il **ruolo della scuola** per la pagina 3: responsabile per conto dei
+  contitolari (serve un atto di nomina firmato dal dirigente) o titolare
+  autonomo. Da questo dipende anche per quanto la scuola conserva la pagina,
+  che oggi il testo non dice perche non e deciso;
+- i **dati legali di SafesPro** (denominazione, forma giuridica, sede, codice
+  fiscale) e il **recapito diretto del DPO**, oggi provvisorio;
+- l'**accordo di contitolarita** fra Fondazione e SafesPro, di cui
+  l'informativa promette il contenuto essenziale a chi lo chiede;
+- i **termini di conservazione** delle iscrizioni degli studenti e dei lavori
+  del corso, ancora "in corso di definizione" nell'informativa del sito, a cui
+  il modulo rimanda per i dati del percorso.
+
+Il TODO accanto a `MODULO_VERSIONE` in `content.ts` e quelli su `CONTITOLARE_IMMAGINI`
+e `DPO` in `app/legal/privacy/content.ts` dicono dove si scrive la risposta.
+
 ## Perche il referente deve confermare
 
 Il codice `LIC-` gira per forza di cose in tutta la scuola, e prima o poi

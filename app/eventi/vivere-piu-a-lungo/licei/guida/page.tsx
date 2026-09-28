@@ -519,7 +519,7 @@ export default function GuidaPage() {
             <Testata
               numero="Percorso 3"
               titolo="Lo studente universitario"
-              sommario="Qui non c'è nessuna scuola di mezzo, nessun codice e nessuno che ti debba riconoscere. Ti candidi da solo, e finisce lì: due passi invece di cinque."
+              sommario="Qui non c'è nessuna scuola di mezzo, nessun codice e nessuno che ti debba riconoscere. Ti candidi da solo, e finisce lì: per questo i passi sono meno."
             />
             <Passi passi={UNIVERSITARIO} />
           </div>

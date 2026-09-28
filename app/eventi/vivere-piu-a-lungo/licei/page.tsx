@@ -558,8 +558,8 @@ export default async function LiceiPage() {
             <Testata n={5} kicker="Evento finale e premi" articolo="Art. 6" titolo="I tre premi">
               I {LICEI.progettiSulPalco} progetti migliori vengono selezionati ed esposti dagli stessi
               studenti sul palco dell&apos;evento finale del {LICEI.dataLabel.toLowerCase()}, al{" "}
-              {LICEI.luogo}, davanti a scienziati di primo piano e a una commissione scientifica. Al
-              termine della conferenza vengono premiati i migliori progetti.
+              {LICEI.luogo}, davanti a scienziati di primo piano e a una commissione scientifica. La
+              premiazione si tiene l&apos;11 dicembre 2026 al Teatro Fusco di Taranto.
             </Testata>
 
             <div className="lc-griglia lc-griglia-3">
@@ -670,8 +670,8 @@ export default async function LiceiPage() {
 
                 <p className="lc-nota" style={{ marginTop: 26 }}>
                   Qui non chiediamo i nomi degli studenti, solo quanti prevedete di coinvolgere. Le
-                  autorizzazioni dei genitori restano cartacee e in custodia all&apos;istituto: il
-                  sito non le raccoglie e non le conserva.
+                  autorizzazioni restano cartacee e in custodia all&apos;istituto: il sito non le
+                  raccoglie e non le conserva.
                 </p>
 
                 {/* Chi arriva qui e uno studente ha sbagliato pagina: questo modulo

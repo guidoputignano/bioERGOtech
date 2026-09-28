@@ -65,6 +65,33 @@ export type AutorizzazioneInput = {
   variante: VarianteModulo;
 };
 
+/**
+ * Porta un testo scritto dal referente dentro cp1252, l'unico alfabeto dei
+ * font standard di jsPDF.
+ *
+ * Non e pignoleria: basta un carattere fuori da cp1252, una "Ł" in un
+ * cognome polacco o una "Ș" rumena, perche jsPDF codifichi l'intera riga in
+ * UTF-16 e la stampi con le lettere spaziate e quel carattere perso. Qui la
+ * lettera perde solo il segno diacritico, e resta leggibile; quello che non
+ * ha un equivalente diventa un punto interrogativo.
+ */
+const PER_CP1252: Record<string, string> = { "Ł": "L", "ł": "l", "Đ": "D", "đ": "d" };
+// Stampabili ASCII, Latin-1 e i 27 caratteri che cp1252 aggiunge fra 0x80 e 0x9f.
+const NEL_CP1252 =
+  /[\u0020-\u007e\u00a0-\u00ff\u0152\u0153\u0160\u0161\u0178\u017d\u017e\u0192\u02c6\u02dc\u2013\u2014\u2018\u2019\u201a\u201c\u201d\u201e\u2020\u2021\u2022\u2026\u2030\u2039\u203a\u20ac\u2122]/;
+
+export function perCp1252(testo: string): string {
+  return Array.from(testo.normalize("NFC"))
+    .map((c) => {
+      if (NEL_CP1252.test(c)) return c;
+      if (/\s/.test(c)) return " ";
+      if (PER_CP1252[c]) return PER_CP1252[c];
+      const base = c.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return base && Array.from(base).every((b) => NEL_CP1252.test(b)) ? base : "?";
+    })
+    .join("");
+}
+
 /* ── Pezzi comuni ─────────────────────────────────────────────────────── */
 
 function fasciaIntera(doc: jsPDF) {
@@ -380,25 +407,42 @@ function piedi(doc: jsPDF, variante: VarianteModulo) {
  * chi allunga un testo non si accorga del problema solo quando una scuola
  * stampa un modulo con la pagina delle firme spezzata a meta.
  */
-export function creaAutorizzazionePDF(input: AutorizzazioneInput): jsPDF {
+export function creaAutorizzazionePDF(dati: AutorizzazioneInput): jsPDF {
+  const input: AutorizzazioneInput = {
+    ...dati,
+    istituto: perCp1252(dati.istituto),
+    comune: perCp1252(dati.comune),
+    provincia: perCp1252(dati.provincia),
+    referente: perCp1252(dati.referente),
+  };
   const CORPI_INFORMATIVA = [8.5, 8.3, 8.1, 7.9, 7.7];
   const CORPI_FIRME = [9, 8.7, 8.4, 8.1];
 
-  let corpoInformativa = CORPI_INFORMATIVA[CORPI_INFORMATIVA.length - 1];
+  let corpoInformativa: number | null = null;
   for (const pt of CORPI_INFORMATIVA) {
     if (informativa(new jsPDF({ unit: "mm", format: "a4" }), pt) <= PAGINE_INFORMATIVA) {
       corpoInformativa = pt;
       break;
     }
   }
+  if (corpoInformativa === null) {
+    // Il PDF esce lo stesso, perche un modulo lungo e meglio di nessun
+    // modulo, ma i testi che dicono "pagina 3" diventano sbagliati.
+    console.error("Modulo di autorizzazione: l'informativa non sta in due pagine. Accorciare INFORMATIVA_MODULO.");
+    corpoInformativa = CORPI_INFORMATIVA[CORPI_INFORMATIVA.length - 1];
+  }
 
   let ultimo: jsPDF | null = null;
+  let fine = Infinity;
   for (const pt of CORPI_FIRME) {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     informativa(doc, corpoInformativa);
-    const fine = paginaFirme(doc, input, pt);
+    fine = paginaFirme(doc, input, pt);
     ultimo = doc;
     if (fine <= LIMITE) break;
+  }
+  if (fine > LIMITE) {
+    console.error("Modulo di autorizzazione: la pagina delle firme non sta in una pagina. Accorciare PAGINA_FIRME.");
   }
 
   const doc = ultimo as jsPDF;

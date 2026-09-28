@@ -138,7 +138,7 @@ export const IMPEGNI_ISTITUTO = [
     campo: "impegno_consensi",
     titolo: "Autorizzazioni e consensi",
     testo:
-      "L'istituto consegna a ogni studente il modulo di autorizzazione nella variante per minorenni o per maggiorenni, secondo l'età dello studente alla data della firma, con l'informativa da trattenere; raccoglie la pagina firmata e la conserva agli atti per cinque anni dall'evento finale; prima dell'evento comunica agli organizzatori l'esito delle scelte sulle immagini degli studenti finalisti e, senza ritardo, ogni pagina firmata o revoca ricevuta in seguito; mostra i moduli agli organizzatori che chiedano di verificarli. I moduli firmati non vengono inviati agli organizzatori.",
+      "L'istituto consegna a ogni studente il modulo di autorizzazione nella variante per minorenni o per maggiorenni, secondo l'età dello studente alla data della firma, con l'informativa da trattenere; raccoglie la pagina firmata e la conserva agli atti; prima dell'evento comunica agli organizzatori l'esito delle scelte sulle immagini degli studenti finalisti e, senza ritardo, ogni pagina firmata o revoca ricevuta in seguito; mostra i moduli agli organizzatori che chiedano di verificarli. I moduli firmati non vengono inviati agli organizzatori.",
   },
 ] as const;
 
@@ -337,7 +337,7 @@ export const CONSENSO_MARKETING_LICEI_TESTO =
  * tocca nessun dato di minori, solo numeri.
  */
 export const NOTA_DATI_STUDENTI =
-  "In questa fase non chiediamo i nomi degli studenti, ma solo quanti prevedete di coinvolgere. I ragazzi si iscriveranno da soli al percorso, con il codice che riceverete via email, e sarete voi a confermare l'elenco. Le autorizzazioni dei genitori restano cartacee e in custodia all'istituto: il sito non le raccoglie e non le conserva.";
+  "In questa fase non chiediamo i nomi degli studenti, ma solo quanti prevedete di coinvolgere. I ragazzi si iscriveranno da soli al percorso, con il codice che riceverete via email, e sarete voi a confermare l'elenco. Le autorizzazioni restano cartacee e in custodia all'istituto: il sito non le raccoglie e non le conserva.";
 
 /* ── FAQ ──────────────────────────────────────────────────────────────── */
 
@@ -368,11 +368,11 @@ export const FAQ_LICEI = [
   },
   {
     q: "Come verranno usate foto e riprese?",
-    a: "Il 10 dicembre al PalaMazzola e l'11 dicembre al Teatro Fusco, fotografi e videomaker incaricati riprendono le presentazioni e la premiazione. Fondazione bioERGOtech e SafesPro, contitolari del trattamento delle immagini, le usano secondo le scelte espresse nel modulo. Con il consenso A documentano l'iniziativa sui siti dei due enti, sui loro profili LinkedIn e Instagram e nei materiali per la stampa. Con il consenso B, che si aggiunge ad A, le immagini compaiono anche in materiali promozionali e commerciali dei due enti. L'autorizzazione è gratuita, esclude usi lesivi del decoro e cessioni a terzi diverse dalla consegna alla stampa, e si può revocare in ogni momento. Le immagini si conservano per 5 anni. Nessun minore presente fra il pubblico viene reso riconoscibile nelle immagini pubblicate dagli organizzatori.",
+    a: "Il 10 dicembre al PalaMazzola e l'11 dicembre al Teatro Fusco, fotografi e videomaker incaricati riprendono le presentazioni e la premiazione. Fondazione bioERGOtech e SafesPro, contitolari del trattamento delle immagini, le usano secondo le scelte espresse nel modulo. Con il consenso A documentano l'iniziativa sui siti dei due enti, sui loro profili LinkedIn e Instagram e nei materiali per la stampa. Con il consenso B, che si aggiunge ad A, le immagini compaiono anche in materiali promozionali e commerciali dei due enti. L'autorizzazione è gratuita, esclude usi lesivi del decoro e cessioni a terzi diverse dalla consegna alla stampa, e si può revocare in ogni momento. Le immagini si conservano per 5 anni. Nessuno studente e nessun altro minore presente fra il pubblico viene reso riconoscibile nelle immagini pubblicate dagli organizzatori.",
   },
   {
     q: "Cosa succede a chi non autorizza le riprese?",
-    a: "Partecipa come tutti, al percorso e all'evento. Se la sua squadra è finalista sale sul palco come gli altri, e gli organizzatori non pubblicano né usano immagini in cui sia riconoscibile. Fra il pubblico nessun minore viene reso riconoscibile. Se per un consenso non è barrata nessuna casella, o sono barrate entrambe, vale come non autorizzo. Chi cambia idea prima dell'evento può firmare una nuova pagina 3 e riconsegnarla al referente. In ogni momento può revocare il consenso dato scrivendo a info@bioergotech.org o a info@altaformazioneprofessionisti.it. L'evento però è aperto al pubblico: giornalisti e spettatori possono fotografare con mezzi propri, e quelle immagini sfuggono al controllo degli organizzatori.",
+    a: "Partecipa come tutti, al percorso e all'evento. Se la sua squadra è finalista sale sul palco come gli altri, e gli organizzatori non pubblicano né usano immagini in cui sia riconoscibile. Fra il pubblico nessuno studente e nessun altro minore viene reso riconoscibile. Se per un consenso non è barrata nessuna casella, o sono barrate entrambe, vale come non autorizzo. Chi cambia idea prima dell'evento può firmare una nuova pagina 3 e riconsegnarla al referente. In ogni momento può revocare il consenso dato scrivendo a info@bioergotech.org o a info@altaformazioneprofessionisti.it. L'evento però è aperto al pubblico: giornalisti e spettatori possono fotografare con mezzi propri, e quelle immagini sfuggono al controllo degli organizzatori.",
   },
   {
     q: "Quanti studenti possiamo iscrivere?",
@@ -528,6 +528,19 @@ export const NOTA_ISCRIZIONE_STUDENTE =
  */
 export const MODULO_VERSIONE = "v2, settembre 2026";
 
+/*
+ * TODO, da decidere con il consulente privacy prima di distribuire il modulo:
+ * - il ruolo della scuola per la pagina 3. Se la conserva per conto dei
+ *   contitolari e un responsabile (art. 28 GDPR) e serve un atto di nomina
+ *   firmato dal dirigente; se e titolare autonomo, la conservazione la fissa
+ *   la scuola e ne da la propria informativa. Il punto 3 dell'informativa e
+ *   `impegno_consensi` vanno completati di conseguenza, anche con il termine
+ *   di conservazione della pagina, che oggi non e scritto perche non e
+ *   deciso;
+ * - i dati legali di SafesPro e il recapito diretto del DPO, in
+ *   `app/legal/privacy/content.ts`.
+ */
+
 export type VarianteModulo = "minorenne" | "maggiorenne";
 
 export type SezioneInformativa = { titolo: string; paragrafi: string[] };
@@ -570,7 +583,7 @@ export const INFORMATIVA_MODULO: InformativaModulo = {
     {
       titolo: "3. Il ruolo della scuola",
       paragrafi: [
-        "La scuola distribuisce il modulo, raccoglie la pagina 3 firmata e la conserva agli atti per 5 anni dall'evento, perché i consensi si possano dimostrare. Il modulo non viene inviato agli organizzatori: prima dell'evento la scuola comunica loro solo il nome e l'esito dei consensi A e B degli studenti finalisti, e mostra il modulo se chiedono di verificarlo. Il modulo non autorizza la scuola a usare le immagini degli organizzatori e non riguarda le foto fatte da docenti e accompagnatori con mezzi propri.",
+        "La scuola distribuisce il modulo, raccoglie la pagina 3 firmata e la conserva agli atti, perché i consensi si possano dimostrare. Il modulo non viene inviato agli organizzatori: prima dell'evento la scuola comunica loro solo il nome e l'esito dei consensi A e B degli studenti finalisti, e mostra il modulo se chiedono di verificarlo. Il modulo non autorizza la scuola a usare le immagini degli organizzatori e non riguarda le foto fatte da docenti e accompagnatori con mezzi propri.",
       ],
     },
     {
@@ -601,7 +614,7 @@ export const INFORMATIVA_MODULO: InformativaModulo = {
     {
       titolo: "8. Pubblico e stampa",
       paragrafi: [
-        "Nelle immagini pubblicate dagli organizzatori nessun minore del pubblico è reso riconoscibile, anche senza questo modulo. Gli spettatori maggiorenni, compresi gli studenti non finalisti, possono comparire nelle immagini d'insieme. L'evento è aperto al pubblico: giornalisti e spettatori possono fotografare e riprendere con mezzi propri, e gli organizzatori non ne rispondono.",
+        "Nelle immagini pubblicate dagli organizzatori nessuno studente e nessun altro minore del pubblico è reso riconoscibile, anche senza questo modulo. L'evento è aperto al pubblico: giornalisti e spettatori possono fotografare e riprendere con mezzi propri, e gli organizzatori non ne rispondono.",
       ],
     },
     {
@@ -625,7 +638,7 @@ export const INFORMATIVA_MODULO: InformativaModulo = {
     {
       titolo: "12. Revoca e suoi effetti",
       paragrafi: [
-        "Il consenso A, il consenso B o entrambi possono essere revocati in ogni momento da ciascun genitore o dal tutore, anche da chi non ha firmato, e dallo studente maggiorenne, scrivendo a info@bioergotech.org o a info@altaformazioneprofessionisti.it. La revoca vale per il futuro e non rende illecito l'uso fatto prima. Revocare A comporta anche la revoca di B: cessano i nuovi usi, le immagini sono cancellate dagli archivi dei due enti e rimosse dai loro siti e profili senza ingiustificato ritardo e comunque entro un mese, e chi le ha ricevute dagli organizzatori viene avvisato. Revocando solo B, nello stesso termine le immagini sono tolte dai materiali promozionali ancora in uso, e restano gli usi del consenso A. Lo studente che diventa maggiorenne può confermare o revocare di persona le scelte dei genitori, anche firmando, prima dell'evento, la variante per maggiorenni.",
+        "Il consenso A, il consenso B o entrambi possono essere revocati in ogni momento da ciascun genitore o dal tutore, anche da chi non ha firmato, e dallo studente maggiorenne, scrivendo a info@bioergotech.org o a info@altaformazioneprofessionisti.it, oppure consegnandola per iscritto al docente referente. La revoca vale per il futuro e non rende illecito l'uso fatto prima. Revocare A comporta anche la revoca di B: cessano i nuovi usi, le immagini sono cancellate dagli archivi dei due enti e rimosse dai loro siti e profili senza ingiustificato ritardo e comunque entro un mese, e chi le ha ricevute dagli organizzatori viene avvisato. Revocando solo B, nello stesso termine le immagini sono tolte dai materiali promozionali ancora in uso, e restano gli usi del consenso A. Lo studente che diventa maggiorenne può confermare o revocare di persona le scelte dei genitori, anche firmando, prima dell'evento, la variante per maggiorenni.",
       ],
     },
     {
