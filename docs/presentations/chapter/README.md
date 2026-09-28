@@ -22,7 +22,7 @@ npm run proof        # PDF più un PNG per slide in shots/
 
 1. Copertina
 2. Da dove partiamo: la prima edizione a Taranto, in corso, e le tre tappe del percorso
-3. Che cos'è un chapter: chi può esserlo, un territorio per chapter, il nome
+3. Che cos'è un chapter: chi può esserlo, un chapter per provincia, il nome
 4. Chi fa cosa: che cosa resta centralizzato e che cosa fa il chapter
 5. Che cosa dovete fare, passo per passo: prima dell'avvio, adesioni e iscrizioni, il corso, la chiusura
 6. Le scuole e i mentor del territorio
@@ -30,7 +30,7 @@ npm run proof        # PDF più un PNG per slide in shots/
 8. I benefici per il chapter
 9. I benefici per studenti, scuole e territorio
 10. Le regole comuni: marchio, struttura e dati, e di chi è che cosa
-11. Che cosa serve per aprire un chapter, e chi sostiene che cosa
+11. Che cosa serve per aprire un chapter, e chi sostiene che cosa: nessuna quota il primo anno
 12. Come si diventa chapter, in sette passi, e che cosa fissa l'accordo
 13. Prossimi passi e contatti
 
@@ -52,15 +52,18 @@ correggere.
   piattaforma, metodo e marchio sono della Fondazione, e che i progetti restano
   degli studenti, come già promette il corso.
 - **Il marchio** è concesso in uso con una licenza scritta, non cedibile e
-  revocabile, per il programma, il territorio e la durata dell'accordo.
+  revocabile, per il programma, la provincia e la durata dell'accordo.
 - **Il chapter è un partner autonomo**: non è una sede della Fondazione, non
   agisce in suo nome e risponde delle attività che organizza.
 - **La finale** ha tre formule: nel territorio, i finalisti a Taranto, oppure
-  entrambe. La finale di Taranto dell'anno prossimo non è data per certa: la
-  conferma la Fondazione prima dell'accordo, con data e posti per chapter.
-- **Nessun importo e nessuna quota.** La presentazione dice che cosa mette
-  ciascuno e che il percorso è gratuito per famiglie e scuole. Le condizioni
-  tra Fondazione e chapter sono rimandate all'accordo.
+  entrambe. La finale di Taranto è confermata anche nel 2027; data e posti per
+  ogni chapter si fissano nell'accordo.
+- **Un chapter per provincia.** Il territorio di un chapter è una provincia, e
+  in ogni edizione c'è un solo chapter per provincia.
+- **Nessuna quota il primo anno.** Il chapter non versa nulla alla Fondazione e
+  sostiene solo i costi delle attività locali. Dal secondo anno, impegni e
+  condizioni si definiscono al rinnovo dell'accordo. Nessun importo è indicato,
+  e il percorso resta gratuito per famiglie e scuole.
 - **I numeri di Taranto sono obiettivi** di un'edizione in corso. Nessun
   premio è indicato.
 - **Le lezioni** sono dette per quello che sono: di intelligenza artificiale,
@@ -69,15 +72,15 @@ correggere.
   sul certificato punta a `/verify`, che sul sito non esiste ancora.
 - **Nessun trattino lungo**, come vuole `CLAUDE.md`.
 
+## Decisioni della Fondazione, 28 settembre 2026
+
+- Nessuna quota il primo anno.
+- Il territorio di un chapter è la provincia.
+- La finale a Taranto si fa anche nel 2027.
+
 ## Da decidere prima di diffonderla
 
-- **La quota.** Il chapter versa qualcosa alla Fondazione, oppure ciascuno
-  sostiene i propri costi? Le tre proposte suggeriscono nessuna quota nella
-  prima edizione.
-- **Il territorio.** Provincia, città metropolitana o altro. La presentazione
-  dice che l'area si concorda.
-- **La finale a Taranto nel 2027**: se ci sarà, quando e con quanti posti per
-  chapter.
+- **La finale a Taranto nel 2027**: data e numero di posti per chapter.
 - **La piattaforma.** Oggi è configurata per Taranto: una sola provincia, un
   solo calendario, moduli e circolare che citano il PalaMazzola e SafesPro.
   Per più territori servono un'etichetta di chapter per scuola, report
