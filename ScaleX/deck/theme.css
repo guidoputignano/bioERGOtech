@@ -1,0 +1,292 @@
+/*
+ * bioERGOtech deck theme.
+ *
+ * Colours are the website's tokens (app/globals.css), so the deck and
+ * bioergotech.org read as one thing: teal #2EC4B6 for bars, rules and marks,
+ * the darker #1A9E92 wherever teal carries text, ink #1A2332 for type.
+ * Type is Mulish throughout. Slides are drawn at 1920 x 1080.
+ */
+
+:root {
+  --teal: #2EC4B6;
+  --teal-dark: #1A9E92;
+  --teal-light: #E1F5EE;
+  --ink: #1A2332;
+  --ink-mid: #4A5568;
+  --ink-light: #8896A6;
+  --line: #E8EDF3;
+  --bg: #FFFFFF;
+  --bg-light: #F7F9FC;
+  --hero: linear-gradient(135deg, #F7F9FC 0%, #E8F8F6 50%, #F0EDFF 100%);
+
+  --pad-x: 128px;
+  --pad-top: 96px;
+  --pad-bottom: 132px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Mulish, Arial, sans-serif;
+  color: var(--ink);
+  background: #D9DEE5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Slide canvas ─── */
+
+.slide {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--bg);
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  font-size: 30px;
+  line-height: 1.5;
+  color: var(--ink-mid);
+}
+
+.slide.hero { background: var(--hero); }
+
+.slide-footer {
+  position: absolute;
+  left: var(--pad-x);
+  right: var(--pad-x);
+  bottom: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 20px;
+  color: var(--ink-light);
+}
+/* The logo, drawn once as a background by build.py; 2400 x 381 px. */
+.slide-footer .brand { display: block; height: 26px; width: 164px; }
+
+/* ─── Type ─── */
+
+h1, h2, h3, h4 { color: var(--ink); font-weight: 700; line-height: 1.2; }
+
+/* The website's section title: bold, with a short teal bar underneath. */
+.title {
+  font-size: 60px;
+  font-weight: 800;
+  line-height: 1.12;
+  padding-bottom: 28px;
+  position: relative;
+}
+.title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 96px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--teal);
+}
+.title-block { display: flex; flex-direction: column; gap: 22px; }
+.subtitle { font-size: 30px; color: var(--ink-mid); line-height: 1.45; }
+
+h3 { font-size: 32px; }
+h4 { font-size: 28px; }
+p + p { margin-top: 22px; }
+strong { color: var(--ink); font-weight: 700; }
+.small { font-size: 26px; line-height: 1.45; }
+.note { font-size: 22px; line-height: 1.45; color: var(--ink-mid); }
+.teal { color: var(--teal-dark); }
+.nowrap { white-space: nowrap; }
+
+ul.list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+ul.list li { position: relative; padding-left: 36px; }
+ul.list li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.62em;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+ol.list { list-style: none; counter-reset: n; display: flex; flex-direction: column; gap: 16px; }
+ol.list li { counter-increment: n; position: relative; padding-left: 60px; }
+ol.list li::before {
+  content: counter(n);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 40px;
+  text-align: center;
+}
+
+/* The website's badge: a pill in teal-light with dark teal text. */
+.badge {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  white-space: nowrap;
+}
+.badge.outline { background: transparent; border: 2px solid var(--teal); }
+.badge.grey { background: var(--bg-light); color: var(--ink-mid); border: 2px solid var(--line); }
+
+/* ─── Layout ─── */
+
+.cols { display: flex; gap: 96px; align-items: flex-start; }
+.cols > * { flex: 1 1 0; min-width: 0; }
+.cols.tight { gap: 56px; }
+.stack { display: flex; flex-direction: column; gap: 28px; }
+.stack.sm { gap: 14px; }
+.grow { flex: 1 1 auto; }
+.push-down { margin-top: auto; }
+
+/* The website's card: white, rounded, hairline border, soft shadow. */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  padding: 40px 44px;
+}
+.card.tint { background: var(--teal-light); border-color: transparent; box-shadow: none; }
+.card.top { border-top: 6px solid var(--teal); }
+
+/* Rows separated by hairlines: label on the left, text on the right. */
+.rows > * {
+  display: grid;
+  grid-template-columns: var(--label, 520px) 1fr;
+  gap: 48px;
+  align-items: baseline;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+}
+.rows > *:last-child { border-bottom: 1px solid var(--line); }
+.rows .big { font-size: 52px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.rows .label { font-size: 30px; font-weight: 700; color: var(--ink); }
+.rows-big { font-size: 44px; font-weight: 800; color: var(--ink); line-height: 1.15; }
+
+/* List of named items with a hairline between them. */
+.items > * { padding: 20px 0; border-top: 1px solid var(--line); }
+.items > *:last-child { border-bottom: 1px solid var(--line); }
+.items h4 { margin-bottom: 4px; }
+
+/* Horizontal bar chart. Width comes from --v (0 to 1). */
+.bars { display: flex; flex-direction: column; gap: 20px; }
+.bar {
+  display: grid;
+  grid-template-columns: var(--bar-label, 400px) 1fr;
+  align-items: center;
+  gap: 24px;
+  font-size: 26px;
+}
+.bar .track { display: flex; align-items: center; gap: 18px; }
+.bar .fill {
+  height: 30px;
+  width: calc(var(--v) * (100% - 180px));
+  flex: none;
+  border-radius: 0 8px 8px 0;
+  background: var(--teal);
+}
+.bar .fill.muted { background: var(--ink-light); }
+.bar .value { font-weight: 800; color: var(--ink); white-space: nowrap; }
+
+/* Tables */
+table.data { width: 100%; border-collapse: collapse; font-size: 28px; }
+table.data th {
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 16px 22px;
+  border-bottom: 2px solid var(--teal);
+}
+table.data td { padding: 18px 22px; border-bottom: 1px solid var(--line); }
+table.data .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.data tr.total td { font-weight: 800; color: var(--ink); background: var(--teal-light); border-bottom: none; }
+
+/* Text-heavy slides: one step smaller, tighter lists. */
+.slide.dense { font-size: 28px; gap: 40px; }
+.slide.dense .subtitle { font-size: 28px; }
+.slide.dense .stack { gap: 22px; }
+.slide.dense .stack.sm { gap: 12px; }
+.slide.dense ul.list { gap: 10px; }
+.slide.dense .rows > * { padding: 22px 0; }
+.slide.dense table.data td { padding: 13px 22px; }
+.slide.dense h3 { font-size: 30px; }
+
+/* ─── Map ─── */
+.map { position: relative; }
+.map svg { display: block; width: 100%; height: auto; }
+.map svg path { fill: var(--bg-light); stroke: #C9D2DD; stroke-width: 1.2; }
+.map svg path.on { fill: var(--teal-light); stroke: var(--teal-dark); }
+.pin {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  background: var(--teal-dark);
+  border: 4px solid #fff;
+  box-shadow: 0 1px 4px rgba(26, 35, 50, 0.35);
+}
+.pin.ring { background: #fff; border: 7px solid var(--teal-dark); }
+.pin.grey { background: var(--ink-light); }
+.pin-label {
+  position: absolute;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  /* A white backing keeps labels legible over region borders. A text-shadow
+     would do the same on screen, but Chromium writes each shadow into the PDF
+     as another copy of the text. */
+  background: rgba(255, 255, 255, 0.88);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.pin-label span { display: block; font-weight: 400; font-size: 19px; color: var(--ink-mid); }
+.pin-label.left { transform: translate(-100%, -50%); text-align: right; }
+.legend { display: flex; flex-direction: column; gap: 14px; font-size: 22px; }
+.legend div { display: flex; align-items: center; gap: 16px; }
+.legend .pin { position: static; margin: 0; flex: none; }
+
+/* ─── Preview page (screen only) ─── */
+@media screen {
+  body { padding: 40px 0; }
+  .deck { display: flex; flex-direction: column; align-items: center; gap: 40px; }
+  .frame { width: calc(1920px * var(--s)); height: calc(1080px * var(--s)); box-shadow: 0 6px 30px rgba(0,0,0,.18); }
+  .frame > .slide { transform: scale(var(--s)); transform-origin: 0 0; }
+
+  body.present { padding: 0; background: #000; overflow: hidden; }
+  body.present .deck { display: block; }
+  body.present .frame { position: fixed; inset: 0; margin: auto; box-shadow: none; display: none; }
+  body.present .frame.current { display: block; }
+}
+
+@page { size: 1920px 1080px; margin: 0; }
+@media print {
+  body { background: none; padding: 0; }
+  .frame { width: 1920px; height: 1080px; break-after: page; }
+  .frame:last-child { break-after: auto; }
+  .frame > .slide { transform: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -1,0 +1,408 @@
+<!--
+  bioERGOtech at KAUST ScaleX 2026. Slide content.
+
+  Every number here is traced in notes/facts-and-sources.md. Change a figure
+  there first, then here. Build with: python3 deck/build.py [--pdf]
+
+  Writing rules: first person, plain, no slogans, no em dashes.
+  Keep a number and its unit together with &nbsp;.
+-->
+
+<!-- 1 -->
+<section class="slide hero no-footer" style="justify-content:space-between;padding-top:120px;padding-bottom:120px">
+  <span class="badge">KAUST ScaleX 2026</span>
+  <div class="stack" style="gap:56px">
+    <img src="assets/logo.png" alt="bioERGOtech" style="width:1040px">
+    <p style="font-size:42px;line-height:1.4;color:var(--ink);max-width:1360px">
+      We build software for hospitals, doctors and pharmacists. Each product starts from a specific problem in a hospital, a health authority or a medical society.
+    </p>
+  </div>
+  <div class="stack sm" style="font-size:28px">
+    <strong style="font-size:30px">Guido Putignano, Founder and President</strong>
+    <span>Taranto and Zurich, info@bioergotech.org</span>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <h2 class="title">What we do</h2>
+  <div class="cols">
+    <div>
+      <p>We are a small team in Taranto and Zurich. We work with hospitals, health authorities and medical societies on a problem they already have, often first as a paid consulting project.</p>
+      <p>When a solution works, we turn it into a product that other institutions can buy. We started in April 2025.</p>
+    </div>
+    <div>
+      <h3 style="margin-bottom:12px">Four products so far</h3>
+      <div class="items small">
+        <div><h4>Frankura</h4>For oncology departments. Pilot running with ASL&nbsp;VCO.</div>
+        <div><h4>VIS Pharma Compass</h4>For hospital pharmacies and regions. Tested on data from Regione Abruzzo.</div>
+        <div><h4>Bonnie</h4>For rheumatology patients, designed with the Italian College of Rheumatologists.</div>
+        <div><h4>Skippy</h4>For people leaving prison, with the University of Maryland, Baltimore.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <h2 class="title">Team</h2>
+  <div class="cols" style="gap:120px">
+    <div class="items small" style="flex:1.25">
+      <div><h4>Guido Putignano, Founder and President</h4>Biomedical engineer, with experience at ETH Zurich, Harvard and MIT.</div>
+      <div><h4>Olufemi Olusola, Technical lead</h4>Biostatistician with 10 years of experience.</div>
+      <div><h4>Domenica Leone, COO</h4>Lawyer. Runs operations, legal and compliance.</div>
+      <div><h4>Domenico Putignano, CMO</h4>Leads the clinical side of our work.</div>
+      <div><h4>Mario Tagarelli, Economic manager</h4>Looks after finance, grants and reporting.</div>
+    </div>
+    <div class="stack" style="gap:48px">
+      <div class="stack sm small">
+        <h3 style="margin-bottom:6px">Advisors</h3>
+        <p><strong>Daniela Marotto</strong>, rheumatologist, Italian College of Rheumatologists (CReI)</p>
+        <p style="margin:0"><strong>Pasquale Persico</strong>, market access at Gilead Sciences</p>
+        <p style="margin:0"><strong>Roberto De Ponti</strong>, Managing Director, 3B Future Health Fund</p>
+      </div>
+      <div class="stack sm small">
+        <h3 style="margin-bottom:6px">Foundation board</h3>
+        <p>Guido Putignano, Domenica Leone and Carmine Pisano</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <h2 class="title">Who we work with</h2>
+  <div class="cols tight" style="align-items:stretch">
+    <div class="card top stack sm">
+      <h3>Doctors</h3>
+      <p class="small">Oncologists and rheumatologists. They lose hours to paperwork and see chronic patients only every few months.</p>
+      <span class="badge push-down" style="margin-top:12px">Frankura and Bonnie</span>
+    </div>
+    <div class="card top stack sm">
+      <h3>Pharmacists</h3>
+      <p class="small">Hospital pharmacy directors and regional pharmacy services. They manage large drug budgets, often in spreadsheets.</p>
+      <span class="badge push-down" style="margin-top:12px">VIS Pharma Compass</span>
+    </div>
+    <div class="card top stack sm">
+      <h3>Hospitals and regions</h3>
+      <p class="small">Local health authorities, hospitals and regional governments. They hold the budget, so they are the ones who sign the contract.</p>
+      <span class="badge push-down" style="margin-top:12px">All products</span>
+    </div>
+  </div>
+  <p style="max-width:1500px">Medical societies and universities are partners in some projects. The Italian College of Rheumatologists is working with us on the design of the Bonnie study, and the University of Maryland, Baltimore runs Skippy with us.</p>
+</section>
+
+<!-- 5 -->
+<section class="slide dense">
+  <div class="title-block">
+    <h2 class="title">Frankura</h2>
+    <p class="subtitle">For oncology departments. We have a pilot agreement with ASL&nbsp;VCO, in Piedmont, and we are running the pilot.</p>
+  </div>
+  <div class="cols">
+    <div class="stack">
+      <p>Every year ASL&nbsp;VCO handles 1,100 cancer intake forms, 525 oncology visits and 1,547 tumour board cases. Most of the data is typed by hand and copied from one form to the next.</p>
+      <div class="stack sm">
+        <h3>What Frankura does</h3>
+        <ul class="list">
+          <li>Records the visit and fills in the intake form</li>
+          <li>Copies the data into the tumour board file</li>
+          <li>Prepares a summary of each case before the board meets</li>
+          <li>Produces a standard report for GPs and other hospitals</li>
+        </ul>
+      </div>
+      <p class="note">It runs on top of the hospital's existing software.</p>
+    </div>
+    <div class="card stack" style="gap:30px">
+      <h3>Estimated doctor time saved per year</h3>
+      <div class="bars" style="--bar-label:360px">
+        <div class="bar"><span>Filling in the intake form</span><span class="track"><span class="fill" style="--v:0.677"></span><span class="value">406&nbsp;h</span></span></div>
+        <div class="bar"><span>Copying to the board file</span><span class="track"><span class="fill" style="--v:1"></span><span class="value">600&nbsp;h</span></span></div>
+        <div class="bar"><span>Preparing the board</span><span class="track"><span class="fill" style="--v:0.643"></span><span class="value">386&nbsp;h</span></span></div>
+      </div>
+      <p style="color:var(--ink);border-top:1px solid var(--line);padding-top:26px">About 1,400&nbsp;hours a year, close to €67,000 at €48 an&nbsp;hour. That is roughly seven months of one doctor's full-time work.</p>
+      <p class="note" style="margin:0">Our estimate, based on ASL&nbsp;VCO's own volumes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <h2 class="title">How big the market is for Frankura</h2>
+  <div class="rows" style="--label:500px">
+    <div><span class="big">$6.9&nbsp;billion</span><span>The global market for AI agents in healthcare by 2030, up from $1.1&nbsp;billion in 2025. The nearby market for AI-powered clinical documentation reaches about $14&nbsp;billion in the same year.</span></div>
+    <div><span class="big">218 buyers</span><span>The public institutions that buy software like ours: 198 health authorities and hospital trusts in Italy, and 20 health clusters in Saudi Arabia. At €50,000 to €150,000 per licence, that is €11 to €33&nbsp;million, plus a yearly fee.</span></div>
+    <div><span class="big">20 hospitals</span><span>Our target for the next three years, worth €1 to €3&nbsp;million in licences. Four Italian institutions are already talking to us: ASL&nbsp;Salerno, Ospedale Miulli, ASL&nbsp;Taranto and ASL&nbsp;Caserta.</span></div>
+  </div>
+  <p class="note">Sources: MarketsandMarkets 2026, The Business Research Company 2026, CERGAS Bocconi OASI Report 2025, Health Holding Company.</p>
+</section>
+
+<!-- 7 -->
+<section class="slide dense">
+  <div class="title-block">
+    <h2 class="title">VIS Pharma Compass</h2>
+    <p class="subtitle">For hospital pharmacies and regions. A working prototype, not yet under contract.</p>
+  </div>
+  <div class="cols">
+    <div class="stack">
+      <p>In 2025 the Italian public health system spent €4.8&nbsp;billion more than the legal ceiling on the medicines it buys directly, up from €4.0&nbsp;billion in 2024. Pharmacy teams have the data but work in spreadsheets, so they spot savings late.</p>
+      <div class="stack sm">
+        <h3>What VIS does</h3>
+        <ul class="list">
+          <li>Puts purchase and dispensing data in one place and checks it against the accounts</li>
+          <li>Flags patents about to expire and biosimilars that are available but not used</li>
+          <li>Compares health authorities in the same region, medicine by medicine</li>
+        </ul>
+      </div>
+      <p class="note">It only reads aggregated data, so it is not a medical device. Spending figures: AIFA, final reports for 2024 and 2025.</p>
+    </div>
+    <div class="stack" style="gap:30px">
+      <div class="card tint stack sm">
+        <h3>Tested on Regione Abruzzo's four health authorities</h3>
+        <p class="small" style="color:var(--ink)">Over 250,000 dispensing records and about €450&nbsp;million of yearly spend.</p>
+      </div>
+      <div class="stack" style="gap:22px">
+        <h4>Yearly fee and estimated yearly value, for a region with four health authorities</h4>
+        <div class="bars" style="--bar-label:300px">
+          <div class="bar"><span>Fee</span><span class="track"><span class="fill muted" style="--v:0.197"></span><span class="value">€159,000</span></span></div>
+          <div class="bar"><span>Value, minimum case</span><span class="track"><span class="fill" style="--v:0.5"></span><span class="value">€404,000</span></span></div>
+          <div class="bar"><span>Value, prudent case</span><span class="track"><span class="fill" style="--v:1"></span><span class="value">€808,000</span></span></div>
+        </div>
+      </div>
+      <p class="small">Sales start with a €9,000 analysis of the client's own data, done in three weeks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide dense">
+  <div class="title-block">
+    <h2 class="title">Bonnie</h2>
+    <p class="subtitle">For rheumatology patients, designed with the Italian College of Rheumatologists (CReI). Interface prototype ready.</p>
+  </div>
+  <div class="cols">
+    <div class="stack">
+      <p>A patient with rheumatoid or psoriatic arthritis sees the rheumatologist every three to six months. Flares, side effects and stopped treatments in between are rarely written down, so each visit starts from what the patient remembers.</p>
+      <div class="stack sm">
+        <h3>How it works</h3>
+        <ul class="list">
+          <li>Every week the patient answers a few questions in about two minutes, with no account to create</li>
+          <li>Bonnie, a small cartoon skeleton, reminds them and keeps them going. It reacts to the fact that they answered, never to what they said</li>
+          <li>Before the visit, the rheumatologist sees how the patient has been, week by week</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <h3>The study with CReI</h3>
+      <p>CReI brings together about 500 rheumatologists working in hospitals and in the community. We are designing the study with them. Called PROSSIMA, it would follow patients with rheumatoid arthritis, psoriatic arthritis and axial spondyloarthritis.</p>
+      <p style="margin:0">CReI would own the study and the data. We build and run the software. We built the prototype at our own cost before asking them to commit.</p>
+      <p class="note" style="margin:0">Bonnie is built on the Frankura platform. It is not a medical device.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide dense">
+  <div class="title-block">
+    <h2 class="title">Skippy</h2>
+    <p class="subtitle">For people leaving prison, with the EMBRACE Initiative at the University of Maryland, Baltimore. Interface prototype ready.</p>
+  </div>
+  <div class="cols">
+    <div class="stack">
+      <p>People coming out of prison are usually handed a list of phone numbers. Programmes count a referral as soon as it is sent, even if the person never gets help.</p>
+      <div class="stack sm">
+        <h3>How it works</h3>
+        <ul class="list">
+          <li>Helps the person take the next practical step, such as getting an ID or applying for benefits</li>
+          <li>Connects them with the right service or staff member</li>
+          <li>Follows up until the step is done, and tells staff what got in the way</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <h3>The plan with EMBRACE</h3>
+      <table class="data">
+        <tr><th>Phase</th><th class="num">People</th></tr>
+        <tr><td>Pilot</td><td class="num">20</td></tr>
+        <tr><td>Baltimore</td><td class="num">500</td></tr>
+        <tr><td>Maryland</td><td class="num">2,000</td></tr>
+        <tr><td>Other programmes</td><td class="num">later</td></tr>
+      </table>
+      <p>EMBRACE owns the programme and the data. We build and run the software. It is our first project in the United States.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <h2 class="title">How we work</h2>
+  <div class="cols tight" style="align-items:stretch">
+    <div class="card top stack sm">
+      <h3>1. Consulting first</h3>
+      <p class="small">A hospital, region or medical society comes to us with a problem. We work on it as a paid project, or start with a paid analysis like the €9,000 one for VIS. We build a first prototype at our own cost, and the full product only once someone is paying for the work.</p>
+    </div>
+    <div class="card top stack sm">
+      <h3>2. One platform</h3>
+      <p class="small">What we build goes into one shared platform, Frankura: recording clinical data, patient consent, audit trails, the AI layer and data storage in Europe. New products start from there, and Bonnie is built on it.</p>
+    </div>
+    <div class="card top stack sm">
+      <h3>3. Sell it again</h3>
+      <p class="small">Once a product works for one client, we offer it to the next. ASL&nbsp;VCO follows the intake and tumour board model of the Piedmont oncology network, so the same workflow applies across the region. A new region for VIS needs a data adapter, not a new system.</p>
+    </div>
+  </div>
+  <p style="max-width:1560px">bioERGOtech works in two parts. The Foundation finds the clinical needs and does the research and consulting. Hadi Health S.r.l., our clinical AI venture, sells and runs the software in hospitals.</p>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <h2 class="title">Where we are in 2026</h2>
+  <div class="cols" style="gap:64px">
+    <div class="stack" style="flex:0 0 780px;gap:30px">
+      <div class="stack" style="gap:26px">
+        <div><div class="rows-big">Pilot agreement</div><p class="small">With ASL&nbsp;VCO for Frankura. We are running the pilot.</p></div>
+        <div><div class="rows-big">4 health authorities</div><p class="small">VIS tested on real data from Regione Abruzzo.</p></div>
+        <div><div class="rows-big">4 in talks</div><p class="small">ASL&nbsp;Salerno, Ospedale Miulli, ASL&nbsp;Taranto and ASL&nbsp;Caserta.</p></div>
+        <div><div class="rows-big">€25,000 signed</div><p class="small">And about €120,000 in advanced pipeline, as of June 2026.</p></div>
+      </div>
+      <div class="legend">
+        <div><i class="pin"></i>Pilot running</div>
+        <div><i class="pin ring"></i>Tested on regional data</div>
+        <div><i class="pin grey"></i>In talks</div>
+      </div>
+      <p class="note" style="color:var(--ink-light)">Map: ISTAT boundaries, CC&nbsp;BY&nbsp;4.0.</p>
+    </div>
+    <div style="display:flex;justify-content:flex-start">
+      <div class="map" data-on="Piemonte,Abruzzo,Campania,Puglia" style="width:600px;flex:none">
+        <i class="pin" data-lat="45.92" data-lon="8.55"></i>
+        <b class="pin-label" data-lat="45.92" data-lon="8.55" data-dx="26">ASL&nbsp;VCO<span>Frankura pilot</span></b>
+        <i class="pin ring" data-lat="42.25" data-lon="13.85"></i>
+        <b class="pin-label" data-lat="42.25" data-lon="13.85" data-dx="26">Regione Abruzzo<span>VIS, tested on data</span></b>
+        <i class="pin grey" data-lat="41.07" data-lon="14.33"></i>
+        <b class="pin-label left" data-lat="41.07" data-lon="14.33" data-dx="-24" data-dy="-12">ASL&nbsp;Caserta</b>
+        <i class="pin grey" data-lat="40.68" data-lon="14.77"></i>
+        <b class="pin-label left" data-lat="40.68" data-lon="14.77" data-dx="-24" data-dy="14">ASL&nbsp;Salerno</b>
+        <i class="pin grey" data-lat="40.895" data-lon="16.84"></i>
+        <b class="pin-label" data-lat="40.895" data-lon="16.84" data-dx="24" data-dy="-16">Ospedale Miulli</b>
+        <i class="pin grey" data-lat="40.47" data-lon="17.24"></i>
+        <b class="pin-label" data-lat="40.47" data-lon="17.24" data-dx="24" data-dy="14">ASL&nbsp;Taranto<span>our base</span></b>
+      </div><!--/map-->
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide dense">
+  <div class="title-block">
+    <h2 class="title">The research behind the products</h2>
+    <p class="subtitle">Each project is listed on bioergotech.org, with what it has shown and what it has not.</p>
+  </div>
+  <div class="rows small" style="--label:440px">
+    <div><span class="label" style="font-size:28px">Cancer risk after inflammatory disease</span><span>Published in <em>Cancers</em>, 2026, with Daniela Marotto. A national cohort of 356,022 patients from Italian hospital discharge records. Cancer risk is highest in the first year after diagnosis.</span></div>
+    <div><span class="label" style="font-size:28px">Cancer risk by subgroup</span><span>An algorithm that links genotype, lifestyle and socioeconomic data to cancer incidence at population level. Delivered within CODIGE, part of the AGE-IT programme.</span></div>
+    <div><span class="label" style="font-size:28px">Cell-therapy models</span><span>Mathematical models of engineered cell therapies, at ETH Zurich. Review published in <em>Frontiers in Immunology</em>, 2025.</span></div>
+    <div><span class="label" style="font-size:28px">Very small patient groups</span><span>Methods for diseases too rare for standard statistics, starting with propionic acidemia in Saudi Arabia. Work in progress.</span></div>
+  </div>
+  <p class="note">Our lab and offices are in Taranto. Guido Putignano also works at ETH Zurich's Department of Biosystems Science and Engineering.</p>
+</section>
+
+<!-- 13 -->
+<section class="slide" style="gap:48px">
+  <div class="title-block">
+    <h2 class="title">How we get to Saudi Arabia</h2>
+    <p class="subtitle">We test each product where it is easiest to prove, keep what works, and offer that to Saudi health clusters.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:40px">
+    <div class="stack" style="flex:0 0 610px;gap:22px">
+      <div style="border-left:6px solid var(--teal);padding-left:24px"><h4>Italy</h4><p class="small">Do public hospitals buy it and use it? With ASL&nbsp;VCO, Regione Abruzzo and CReI.</p></div>
+      <div style="border-left:6px solid var(--teal);padding-left:24px"><h4>United States</h4><p class="small">Does it work for thousands of people? With the University of Maryland, Baltimore.</p></div>
+      <div style="border-left:6px solid var(--teal);padding-left:24px"><h4>Switzerland</h4><p class="small">Does the science hold up? With ETH Zurich.</p></div>
+    </div>
+    <svg width="56" height="32" viewBox="0 0 56 32" style="flex:none"><path d="M0 16h44M34 4l14 12-14 12" fill="none" stroke="var(--teal)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="card stack sm" style="flex:1.25">
+      <h3>What we keep</h3>
+      <ul class="list small">
+        <li>Products with a paying customer</li>
+        <li>Results we have measured</li>
+        <li>Nothing that needs custom work for each new client</li>
+      </ul>
+    </div>
+    <svg width="56" height="32" viewBox="0 0 56 32" style="flex:none"><path d="M0 16h44M34 4l14 12-14 12" fill="none" stroke="var(--teal)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="card tint stack sm" style="flex:1">
+      <h3>Saudi Arabia</h3>
+      <p class="small" style="color:var(--ink)">We offer what passed to health clusters, starting with one pilot through ScaleX.</p>
+    </div>
+  </div>
+  <div class="cols tight" style="gap:40px">
+    <div style="border-top:2px solid var(--line);padding-top:18px"><h4 class="teal">2026</h4><p class="small">Testing in Italy, the US and Switzerland</p></div>
+    <div style="border-top:2px solid var(--line);padding-top:18px"><h4 class="teal">2027</h4><p class="small">ScaleX, and a first pilot in one Saudi health cluster</p></div>
+    <div style="border-top:2px solid var(--line);padding-top:18px"><h4 class="teal">2028</h4><p class="small">First contract in Saudi Arabia</p></div>
+    <div style="border-top:2px solid var(--line);padding-top:18px"><h4 class="teal">2029</h4><p class="small">Our products reach about 5&nbsp;million people</p></div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="slide">
+  <h2 class="title">Who this reaches</h2>
+  <div class="cols" style="gap:96px">
+    <div class="stack" style="flex:0 0 560px">
+      <div style="font-size:150px;font-weight:800;line-height:1;color:var(--teal-dark)" class="nowrap">5&nbsp;million</div>
+      <p>Our goal for 2029: our products in use in health systems that together serve about 5&nbsp;million people.</p>
+      <p class="note" style="margin:0">Skippy adds 2,000 people leaving prison in Maryland.</p>
+    </div>
+    <div class="stack">
+      <table class="data" style="white-space:nowrap">
+        <tr><th>Where</th><th class="num">People</th><th>Status</th></tr>
+        <tr><td>ASL&nbsp;VCO, Frankura</td><td class="num">153,000</td><td>Pilot running</td></tr>
+        <tr><td>Regione Abruzzo, VIS</td><td class="num">1.27&nbsp;million</td><td>Tested on data</td></tr>
+        <tr><td>ASL&nbsp;Salerno, Taranto and Caserta</td><td class="num">2.5&nbsp;million</td><td>In talks</td></tr>
+        <tr><td>One Saudi health cluster</td><td class="num">1&nbsp;million</td><td>With ScaleX</td></tr>
+        <tr class="total"><td>Total</td><td class="num">About 5&nbsp;million</td><td></td></tr>
+      </table>
+      <p class="note">Residents on 1 January 2025 (ISTAT). A Saudi health cluster serves about 1&nbsp;million people (Ministry of Health), and the 20 clusters serve over 20&nbsp;million (Health Holding Company).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="slide">
+  <h2 class="title">What we are asking from ScaleX</h2>
+  <div class="cols">
+    <div class="stack">
+      <p>We want to open in Riyadh with products that are already being tested in Italian public health. Saudi public healthcare is moving to 20 regional health clusters, each running the hospitals and clinics for about 1&nbsp;million people. That is close to how the Italian health authorities we work with are organised.</p>
+      <div class="stack sm">
+        <h3>What we would bring</h3>
+        <ul class="list">
+          <li>Frankura, for oncology departments</li>
+          <li>VIS Pharma Compass, for hospital drug budgets</li>
+          <li>Bonnie, for patients with chronic conditions between&nbsp;visits</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <h3>What we need</h3>
+      <ol class="list">
+        <li>An introduction to a health cluster for a first pilot</li>
+        <li>Advice on Saudi rules for clinical software and health data</li>
+        <li>Introductions to investors</li>
+        <li>Lab access at KAUST and a desk in Riyadh for our&nbsp;team</li>
+      </ol>
+      <div class="card tint stack sm" style="margin-top:12px">
+        <h4>A first pilot would follow our Italian path</h4>
+        <p class="small" style="color:var(--ink)">A paid analysis of the cluster's own data in three weeks, the software running within 90&nbsp;days, and a joint review at six months.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="slide hero no-footer" style="justify-content:space-between;padding-top:120px;padding-bottom:120px">
+  <img src="assets/logo.png" alt="bioERGOtech" style="width:560px">
+  <div class="stack" style="gap:28px">
+    <h2 style="font-size:96px;font-weight:800">Thank you</h2>
+    <p style="font-size:38px;line-height:1.4;color:var(--ink);max-width:1300px">Four products, a pilot running with ASL&nbsp;VCO, and a plan to reach 5&nbsp;million people by 2029.</p>
+  </div>
+  <div class="stack sm" style="font-size:28px">
+    <strong style="font-size:30px">Guido Putignano, Founder and President</strong>
+    <span>info@bioergotech.org, bioergotech.org</span>
+    <span>Via Ciro Giovinazzi 70, Taranto, Italy</span>
+  </div>
+</section>
