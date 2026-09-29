@@ -3,7 +3,7 @@
 Every number and factual claim in `deck/slides.html`, and where it comes from.
 Change a figure here first, then on the slide.
 
-Last full check: 29 September 2026.
+Last full check: 29 September 2026 (second version: 18 slides).
 
 ## How to read the status column
 
@@ -23,6 +23,9 @@ Source documents in `sources/`:
 - **PROSSIMA**: `Studio_PROSSIMA_Proposta_CReI (1).pdf`, the study proposal to CReI
 - **SKIPPY**: `Skippy_Proposal_EMBRACE_Initiative (1).pdf`, the proposal to EMBRACE
 - **INTRO**: `../intro.pdf` (repo root), the Foundation report from December 2025
+- **UZH**: `UZH_Innovation_Grant_Project_Overview.md`, the project text of OncoTarget's UZH
+  Innovation Grant application. Guido shared the .docx on 29 Sept 2026; the applicant's
+  personal details are left out of the repo copy.
 
 ## Slide by slide
 
@@ -32,6 +35,8 @@ Source documents in `sources/`:
 |---|---|---|
 | Guido Putignano, Founder and President | Doc, Site | INTRO p.19 ("President: Dott. Guido Putignano"); `lib/team.ts` |
 | Taranto and Zurich | Site | `app/people/people.ts` (ETH Zurich affiliation); HADI §3.1 (Taranto office) |
+
+The cover photo is `public/assets/images/Taranto/Main/third.webp` from the website. Its caption comes from slide 12 ("Our lab and offices are in Taranto").
 
 ### 2. What we do
 
@@ -43,6 +48,9 @@ Source documents in `sources/`:
 | Bonnie designed with CReI | Doc, Guido | PROSSIMA is a proposal to CReI's board. Guido said CReI has agreed informally. |
 | Skippy with the University of Maryland, Baltimore | Doc, Guido, Web | SKIPPY names EMBRACE. Guido confirmed EMBRACE has agreed. EMBRACE is a UMB initiative under the Office of the Provost: https://www.umaryland.edu/embrace/ |
 | Removed: "this year we are profitable" | | Not in any document. HADI §7.2 shows only a *projected* year-1 result. Guido chose to drop it. |
+| 3 countries: Italy, Switzerland, the US | Derived | Taranto, Zurich, and Skippy in Baltimore |
+| 4 products | Derived | Frankura, VIS, Bonnie, Skippy |
+| Status badges | Guido, Doc | Frankura "Pilot running" (Guido). VIS "Prototype" (VIS cover). Bonnie and Skippy "Interface prototype" (PROSSIMA and SKIPPY covers). |
 
 ### 3. Team
 
@@ -51,12 +59,14 @@ Source documents in `sources/`:
 | Guido Putignano: biomedical engineer, ETH Zurich, Harvard, MIT | Doc | HADI §3.4 |
 | Olufemi Olusola: technical lead, biostatistician, 10 years | Doc | HADI §3.4 |
 | Domenica Leone: COO, lawyer, operations, legal and compliance | Doc, Site | HADI §3.4 (COO, resources and organisation); `lib/team.ts` and `app/eventi/.../content.ts` ("Avv.", legal expert, Vice President of the Foundation) |
-| Domenico Putignano: CMO, clinical side | Doc | HADI §3.4 |
+| Saria Miccoli: communication lead; designer, visual identity and communications | Site | `lib/team.ts` ("Communication Lead. Experienced designer who shapes the Foundation's visual identity and communications.") |
 | Mario Tagarelli: economic manager, finance, grants and reporting | Guido | **The website says "Auditor"** (`lib/team.ts`). Guido confirmed the deck's title. |
 | Daniela Marotto: rheumatologist, CReI | Site | `app/people/people.ts`, `lib/team.ts`. Changed from "President of CReI", which no source supports. |
 | Pasquale Persico: market access at Gilead Sciences | Site | `lib/team.ts` |
 | Roberto De Ponti: Managing Director, 3B Future Health Fund | Site | `lib/team.ts`. Changed from the generic "venture capital and fundraising". |
 | Foundation board: Guido Putignano, Domenica Leone, Carmine Pisano | Site | `lib/team.ts`. Mino Fabbiano was removed; he appears in no source. |
+
+Photos: the website's headshots in `public/assets/images/About-us/`, resized. Domenica Leone's photo is `Mimma-Leone.webp`. The slide shows the eight people Guido listed on 29 Sept 2026, plus the board line. Domenico Putignano (CMO, HADI §3.4) was left out at Guido's request; he has no photo on the website.
 
 ### 4. Who we work with
 
@@ -75,6 +85,8 @@ Source documents in `sources/`:
 | About 1,400 h, close to €67,000 at €48/h | Doc | VCO p.10: 1,392 h, €66,816 |
 | Roughly seven months of one doctor's full-time work | Doc | VCO p.11: "circa 7 mesi lavorativi a tempo pieno". This is the document's own conversion. |
 | The four functions | Doc | VCO modules A to D. Module E (marketing) is left out. |
+| Third function: "a one-page summary of each case for the board, with the options suggested by the AIOM and ESMO guidelines. The board confirms, changes or rejects them." | Doc, Site | VCO module C: the pre-analysis follows "linee guida nazionali e internazionali", suggesting an orientation "che il team può confermare, modificare o rigettare". `lib/programmes.ts`: the agent "searches published AIOM and ESMO guidance and returns one page the panel can read in the room". |
+| 406 h, 600 h, 386 h placed on the first three functions | Doc | VCO: module A = 406 h, module B = 600 h, module C (the board pre-analysis) = 386 h |
 | Runs on top of existing software | Doc | HADI §1.3 |
 | Pilot agreement with ASL VCO, pilot running | Guido | See slide 2 |
 
@@ -105,6 +117,7 @@ Caveat: HHC is taking over the clusters from the Ministry of Health gradually. T
 | Over 250,000 dispensing records, about €450 million of yearly spend | Doc | VIS §8: 261,153 records, €452.7M. Rounded at Guido's request, because the document is confidential. |
 | Fee €159,000 a year, region with four authorities, all modules | Doc | VIS §9.6 (the €182,000 year-1 figure in §9.5 includes activation) |
 | Value €404,000 (minimum case), €808,000 (prudent case) | Doc | VIS §9.2 summary. The labels were changed from "cautious" and "expected" to the document's own. |
+| 2.5× and 5.1× the fee | Doc | VIS §9.6: region, four authorities, all modules: minimum 2.5×, prudent 5.1× |
 | €9,000 analysis in three weeks | Doc | VIS §9.4 |
 | Not yet under contract | Guido | |
 
@@ -131,6 +144,8 @@ Caveat: HHC is taking over the clusters from the Ministry of Health gradually. T
 | EMBRACE owns programme and data; we build and run the software | Doc | SKIPPY, letter and §8 |
 | Interface prototype ready | Doc | SKIPPY cover |
 | Our first project in the United States | Deck | Not in any document. No other US project appears in the repo. |
+
+The step chart of 20, 500, 2,000 and later shows the order of the phases. Its heights are not to scale.
 
 ### 10. How we work
 
@@ -165,15 +180,37 @@ Caveat: HHC is taking over the clusters from the Ministry of Health gradually. T
 | Lab and offices in Taranto | Site | `app/build-with-us/page.tsx` |
 | Guido at ETH Zurich D-BSSE | Site | `app/people/people.ts` |
 | Removed: VERO "our cancer risk algorithm", the OncoTarget gastric organoid pipeline, "Xperbot in Zug", protein language models, "most of our science is in Switzerland" | | Not documented. VERO under "patient-specific models" also contradicted the site, which says our cancer-risk work gives "never an individual risk score". Guido chose to use documented research only. |
+| Badges: Published, Completed, Published, In progress | Site | The stage of each item in `lib/programmes.ts` and `lib/publications.ts` |
 
-### 13. How we get to Saudi Arabia
+### 13. OncoTarget
 
 | Claim | Status | Source |
 |---|---|---|
-| Partners per country | | As on slides 2 to 12. The University of Zurich was removed from Switzerland; only ETH Zurich is documented. |
-| 2026 to 2029 timeline | Plan | |
+| Drug testing on organoids grown from a patient's own tumour, for gastric cancer | Doc | UZH, "Project title" and "Solution" |
+| A project at the University of Zurich, led by Giovanni Papa | Doc | UZH: applicant Giovanni Papa, doctoral student, IMCR, University of Zurich; "Giovanni Papa will lead the project" |
+| Grant application submitted | Guido | Guido confirmed on 29 Sept 2026 that the UZH Innovation Grant application has been submitted, and that the people can be named |
+| Patients respond differently; profiling does not always show which drug will work | Doc | UZH, "Problem" |
+| Biopsy grown into organoids; automated screening against a panel of clinical cancer drugs; responses read with the molecular profile | Doc | UZH, "Solution" |
+| Protocols with the Departments of Visceral Surgery and Pathology at USZ | Doc | UZH, "Technology Status" |
+| Drug screening in 3D organoids with the Children's Hospital Zurich | Doc | UZH, "Technology Status" |
+| Responses linked to genetic backgrounds, most hits validated individually | Doc | UZH, "Technology Status": "the vast majority of hits individually validated" |
+| Prof. Anne Müller as mentor; Guido builds the data model, the analysis pipeline and the quality criteria | Doc | UZH, "Team" |
+| OncoTarget and Frankura are separate projects that could meet in future at the tumour board | Guido | Guido, 29 Sept 2026: "they are two different things. But we could connect them in the future". This is a possibility, not a plan. |
 
-### 14. Who this reaches
+### 14. How we get to Saudi Arabia
+
+| Claim | Status | Source |
+|---|---|---|
+| The questions and partners per country | | As on slides 2 to 13. The University of Zurich is documented by UZH. |
+| Map | Web | Natural Earth 1:50m countries, public domain (https://www.naturalearthdata.com). Pins are placed at the cities: Baltimore, Zurich, Taranto, Riyadh, and KAUST in Thuwal. The routes are drawn for the story; they are not travel routes. |
+
+### 15. Our plan to 2029
+
+| Claim | Status | Source |
+|---|---|---|
+| What we keep; the 2026 to 2029 timeline | Plan | Unchanged from the earlier deck |
+
+### 16. Who this reaches
 
 | Claim | Status | Source |
 |---|---|---|
@@ -188,16 +225,16 @@ Caveat: HHC is taking over the clusters from the Ministry of Health gradually. T
 
 ISTAT population files: https://demo.istat.it (POSAS 2025).
 
-### 15. What we ask from ScaleX
+### 17. What we ask from ScaleX
 
 | Claim | Status | Source |
 |---|---|---|
 | 20 clusters, about 1 million people each | Web | As on slide 14 |
 | Three-week analysis, running in 90 days, review at six months | Doc | VIS §9.4 and §10.1 |
 
-### 16. Closing
+### 18. Closing
 
-A summary of slides 2, 5 and 14. Nothing new.
+A summary of slides 2, 5 and 16. Nothing new. The photo is `public/assets/images/Taranto/Main/second.webp`.
 
 ## To settle before ScaleX, outside the deck
 
@@ -208,4 +245,9 @@ These do not change the slides, but a reviewer who opens bioergotech.org will se
 3. **Rheumatology.** `lib/programmes.ts` says "no clinical site agreement". That fits an informal agreement with CReI, but check the wording.
 4. **VIS figures.** `lib/programmes.ts` deliberately publishes no VIS figures ("marked confidential"). The deck now shows rounded figures and names Abruzzo, at Guido's request.
 5. **Team titles.** `lib/team.ts` lists Mario Tagarelli as "Auditor" and Domenica Leone as "Mimma Leone, Board Member". The deck uses "Economic manager" and "COO".
-6. **VIS document, opening paragraph.** It uses OsMed gross spending (€17.8B) and the Jan to Oct 2025 overrun. AIFA's final 2025 report (+€4.77B) is newer.
+6. **OncoTarget on the website.** `app/build-with-us/page.tsx` calls OncoTarget a "UZH Zurich
+   spin-off targeting Asian markets". The grant application describes a research project that
+   aims to become a venture later. The deck follows the application.
+7. **Domenico Putignano** is CMO in the Hadi Health plan but is not on the website or on the
+   team slide.
+8. **VIS document, opening paragraph.** It uses OsMed gross spending (€17.8B) and the Jan to Oct 2025 overrun. AIFA's final 2025 report (+€4.77B) is newer.

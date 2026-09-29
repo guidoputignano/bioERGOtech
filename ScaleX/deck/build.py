@@ -68,7 +68,7 @@ def render_map(match):
     names for italy, ISO A3 codes for the world maps. Pins and labels carry
     data-lat and data-lon, plus optional data-dx and data-dy in pixels.
     """
-    attrs, inner = match.group(1), match.group(2)
+    classes, attrs, inner = match.group(1), match.group(2), match.group(3)
     name = (re.search(r'data-map="([^"]*)"', attrs) or [0, "italy"])[1]
     on = re.search(r'data-on="([^"]*)"', attrs)
     keys = {k.strip() for k in on.group(1).split(",")} if on else set()
@@ -92,13 +92,13 @@ def render_map(match):
         return f'<{tag} style="{style}"{rest}'
 
     inner = re.sub(r"<(i|b|span|div)(\s[^>]*data-lat=[^>]*)", place, inner)
-    return f'<div class="map"{attrs}>{svg}{inner}</div>'
+    return f'<div class="{classes}"{attrs}>{svg}{inner}</div>'
 
 
 def build():
     source = (DECK / "slides.html").read_text()
     logo = data_uri(ASSETS / "logo.png", "image/png")
-    source = re.sub(r'<div class="map"([^>]*)>(.*?)</div><!--/map-->', render_map, source, flags=re.S)
+    source = re.sub(r'<div class="(map\b[^"]*)"([^>]*)>(.*?)</div><!--/map-->', render_map, source, flags=re.S)
     source = inline_assets(source)
 
     slides = re.findall(r"<section\b.*?</section>", source, flags=re.S)
@@ -190,7 +190,7 @@ CHECK_JS = r"""() => {
     const text = slide.innerText;
     if (/\u2014/.test(text)) out.push(`slide ${n}: contains an em dash`);
     slide.querySelectorAll('*').forEach(el => {
-      if (el.closest('.slide-footer') || el.closest('svg')) return;
+      if (el.closest('.slide-footer') || el.closest('svg') || el.closest('.crop')) return;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) return;
       const label = (el.innerText || el.className || el.tagName).trim().slice(0, 60);

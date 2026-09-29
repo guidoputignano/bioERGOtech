@@ -1,10 +1,19 @@
 /*
  * bioERGOtech deck theme.
  *
- * Colours are the website's tokens (app/globals.css), so the deck and
- * bioergotech.org read as one thing: teal #2EC4B6 for bars, rules and marks,
- * the darker #1A9E92 wherever teal carries text, ink #1A2332 for type.
- * Type is Mulish throughout. Slides are drawn at 1920 x 1080.
+ * Colours are the website's tokens (app/globals.css): teal #2EC4B6 for marks,
+ * bars and routes, dark teal #1A9E92 wherever teal carries text, navy #1A2332
+ * for type and for the two photo slides (cover and close). Teal is never a
+ * large filled block (CLAUDE.md). Type is Mulish throughout.
+ *
+ * One signature device, taken from the logo: a teal line that ends in the
+ * logo's half arrowhead (a right triangle sitting on the line, vertical edge
+ * first, hypotenuse falling to the tip). It underlines every title and
+ * connects steps that lead somewhere. Everything else is the website: white
+ * cards with a 16 px radius and a soft shadow, pill badges, line icons in
+ * teal-light squares.
+ *
+ * Canvas 1920 x 1080. Grid: 120 px side margins, 12 columns, 32 px gutters.
  */
 
 :root {
@@ -17,11 +26,16 @@
   --line: #E8EDF3;
   --bg: #FFFFFF;
   --bg-light: #F7F9FC;
-  --hero: linear-gradient(135deg, #F7F9FC 0%, #E8F8F6 50%, #F0EDFF 100%);
+  --shadow: 0 4px 20px rgba(26, 35, 50, 0.07);
 
-  --pad-x: 128px;
-  --pad-top: 96px;
-  --pad-bottom: 132px;
+  --pad-x: 120px;
+  --pad-top: 80px;
+  --pad-bottom: 124px;
+  --gut: 32px;
+
+  /* The device: stroke and arrowhead, in the logo's proportions. */
+  --stroke: 8px;
+  --head: 22px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,198 +58,360 @@ body {
   padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
   display: flex;
   flex-direction: column;
-  gap: 48px;
-  font-size: 30px;
-  line-height: 1.5;
+  gap: 44px;
+  font-size: 28px;
+  line-height: 1.42;
   color: var(--ink-mid);
 }
-
-.slide.hero { background: var(--hero); }
+.slide.soft { background: var(--bg-light); }
+.slide.navy { background: var(--ink); color: #C9D2DD; }
 
 .slide-footer {
   position: absolute;
   left: var(--pad-x);
   right: var(--pad-x);
-  bottom: 56px;
+  bottom: 50px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 20px;
+  font-weight: 700;
   color: var(--ink-light);
 }
-/* The logo, drawn once as a background by build.py; 2400 x 381 px. */
 .slide-footer .brand { display: block; height: 26px; width: 164px; }
+
+/* ─── The device ─── */
+
+/* A horizontal line ending in the logo's half arrowhead. Give it a width
+   (or flex). It is --head tall and the stroke sits on its bottom edge. */
+.arrow { position: relative; height: var(--head); flex: none; }
+.arrow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: calc(var(--head) - 1px);
+  bottom: 0;
+  height: var(--stroke);
+  border-radius: var(--stroke) 0 0 var(--stroke);
+  background: var(--teal);
+}
+.arrow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--head);
+  height: var(--head);
+  background: var(--teal);
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+.arrow.fine { --stroke: 5px; --head: 15px; }
+.arrow.grey::before, .arrow.grey::after { background: #D5DCE5; }
 
 /* ─── Type ─── */
 
-h1, h2, h3, h4 { color: var(--ink); font-weight: 700; line-height: 1.2; }
+h1, h2, h3, h4 { color: var(--ink); font-weight: 800; line-height: 1.15; }
+.navy h1, .navy h2, .navy h3, .navy h4 { color: #fff; }
 
-/* The website's section title: bold, with a short teal bar underneath. */
+/* The website's section title, with its bar turned into the logo's line. */
 .title {
-  font-size: 60px;
+  font-size: 72px;
   font-weight: 800;
-  line-height: 1.12;
-  padding-bottom: 28px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  padding-bottom: 40px;
   position: relative;
 }
-.title::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 96px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--teal);
-}
-.title-block { display: flex; flex-direction: column; gap: 22px; }
-.subtitle { font-size: 30px; color: var(--ink-mid); line-height: 1.45; }
+.title::before,
+.title::after { content: ""; position: absolute; bottom: 0; background: var(--teal); }
+.title::before { left: 0; width: 180px; height: var(--stroke); border-radius: var(--stroke) 0 0 var(--stroke); }
+.title::after { left: 179px; width: var(--head); height: var(--head); clip-path: polygon(0 0, 100% 100%, 0 100%); }
+.title-row { display: flex; align-items: flex-start; gap: 32px; }
+.title-row .badge { margin-top: 22px; }
+.title-block { display: flex; flex-direction: column; gap: 26px; }
+.lede { font-size: 32px; line-height: 1.38; color: var(--ink-mid); }
+.lede strong { color: var(--ink); }
 
 h3 { font-size: 32px; }
 h4 { font-size: 28px; }
-p + p { margin-top: 22px; }
-strong { color: var(--ink); font-weight: 700; }
-.small { font-size: 26px; line-height: 1.45; }
-.note { font-size: 22px; line-height: 1.45; color: var(--ink-mid); }
+p + p { margin-top: 18px; }
+strong { color: var(--ink); font-weight: 800; }
+.navy strong { color: #fff; }
+.body { font-size: 28px; line-height: 1.42; }
+.small { font-size: 26px; line-height: 1.4; }
+.note { font-size: 22px; line-height: 1.4; color: var(--ink-mid); }
+.ink { color: var(--ink); }
 .teal { color: var(--teal-dark); }
 .nowrap { white-space: nowrap; }
 
-ul.list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
-ul.list li { position: relative; padding-left: 36px; }
-ul.list li::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 0.62em;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--teal);
-}
-ol.list { list-style: none; counter-reset: n; display: flex; flex-direction: column; gap: 16px; }
-ol.list li { counter-increment: n; position: relative; padding-left: 60px; }
-ol.list li::before {
-  content: counter(n);
-  position: absolute;
-  left: 0;
-  top: 2px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--teal-light);
-  color: var(--teal-dark);
-  font-size: 22px;
+/* Small uppercase label; .rule adds a hairline running to the right. */
+.label {
+  font-size: 20px;
   font-weight: 800;
-  line-height: 40px;
-  text-align: center;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+  line-height: 1.2;
 }
+.label.grey { color: var(--ink-mid); }
+.label.rule { display: flex; align-items: center; gap: 24px; white-space: nowrap; }
+.label.rule::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-/* The website's badge: a pill in teal-light with dark teal text. */
+/* The website's badge: a pill in teal-light with dark teal text and a dot. */
 .badge {
   display: inline-flex;
   align-self: flex-start;
   align-items: center;
-  padding: 6px 18px;
+  gap: 10px;
+  padding: 8px 20px;
   border-radius: 999px;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
   background: var(--teal-light);
   color: var(--teal-dark);
-  white-space: nowrap;
 }
-.badge.outline { background: transparent; border: 2px solid var(--teal); }
-.badge.grey { background: var(--bg-light); color: var(--ink-mid); border: 2px solid var(--line); }
+.badge::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--teal); flex: none; }
+.badge.plain::before { display: none; }
+.badge.grey { background: var(--bg-light); color: var(--ink-mid); box-shadow: inset 0 0 0 2px var(--line); }
+.badge.grey::before { background: var(--ink-light); }
+.badge.on-navy { background: transparent; color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal); }
 
 /* ─── Layout ─── */
 
-.cols { display: flex; gap: 96px; align-items: flex-start; }
+.g12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gut); }
+.span-3 { grid-column: span 3; } .span-4 { grid-column: span 4; } .span-5 { grid-column: span 5; }
+.span-6 { grid-column: span 6; } .span-7 { grid-column: span 7; } .span-8 { grid-column: span 8; }
+.cols { display: flex; gap: 88px; align-items: flex-start; }
 .cols > * { flex: 1 1 0; min-width: 0; }
-.cols.tight { gap: 56px; }
+.row { display: flex; gap: var(--gut); }
 .stack { display: flex; flex-direction: column; gap: 28px; }
-.stack.sm { gap: 14px; }
+.stack.sm { gap: 12px; }
+.stack.md { gap: 20px; }
 .grow { flex: 1 1 auto; }
 .push-down { margin-top: auto; }
 
-/* The website's card: white, rounded, hairline border, soft shadow. */
+/* The website's card. */
 .card {
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  padding: 40px 44px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 36px 40px;
 }
 .card.tint { background: var(--teal-light); border-color: transparent; box-shadow: none; }
+.card.flat { box-shadow: none; }
 .card.top { border-top: 6px solid var(--teal); }
+.card.compact { padding: 26px 32px; }
 
-/* Rows separated by hairlines: label on the left, text on the right. */
-.rows > * {
+/* A stat tile: small label, big number, caption. */
+.tile {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 26px 30px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tile .pre { font-size: 20px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mid); }
+.tile .cap { font-size: 26px; line-height: 1.3; color: var(--ink-mid); }
+
+/* Numbers */
+.num {
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--teal-dark);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.num.ink { color: var(--ink); }
+.num-xxl { font-size: 200px; }
+.num-xl { font-size: 150px; }
+.num-l { font-size: 96px; }
+.num-m { font-size: 68px; }
+.num-s { font-size: 52px; letter-spacing: -0.02em; }
+.num small { font-size: 0.42em; letter-spacing: 0; margin-left: 0.1em; font-weight: 800; }
+
+/* Line icon in a teal-light rounded square. */
+.ico {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: var(--teal-light);
   display: grid;
-  grid-template-columns: var(--label, 520px) 1fr;
-  gap: 48px;
-  align-items: baseline;
-  padding: 26px 0;
+  place-items: center;
+}
+.ico svg { width: 40px; height: 40px; fill: none; stroke: var(--teal-dark); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ico.sm { width: 56px; height: 56px; border-radius: 14px; }
+.ico.sm svg { width: 32px; height: 32px; }
+
+/* Lists */
+ul.checks { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+ul.checks li { position: relative; padding-left: 44px; color: var(--ink); line-height: 1.35; }
+ul.checks li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.32em;
+  width: 18px;
+  height: 10px;
+  border-left: 4px solid var(--teal);
+  border-bottom: 4px solid var(--teal);
+  transform: rotate(-45deg);
+}
+ul.dots { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+ul.dots li { position: relative; padding-left: 34px; line-height: 1.38; }
+ul.dots li::before { content: ""; position: absolute; left: 4px; top: 0.6em; width: 12px; height: 12px; border-radius: 50%; background: var(--teal); }
+
+/* Steps: icon, text and an optional meter, on hairline rows. */
+.steps { display: flex; flex-direction: column; }
+.step {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 28px;
+  align-items: center;
+  padding: 12px 0;
   border-top: 1px solid var(--line);
 }
-.rows > *:last-child { border-bottom: 1px solid var(--line); }
-.rows .big { font-size: 52px; font-weight: 800; color: var(--ink); line-height: 1.1; }
-.rows .label { font-size: 30px; font-weight: 700; color: var(--ink); }
-.rows-big { font-size: 44px; font-weight: 800; color: var(--ink); line-height: 1.15; }
+.step:last-child { border-bottom: 1px solid var(--line); }
+.steps.meters .step { grid-template-columns: 56px 1fr 200px; gap: 24px; }
+.step p { font-size: 26px; line-height: 1.36; color: var(--ink); }
+.steps.plain .step { grid-template-columns: 56px 1fr; gap: 22px; padding: 12px 0; }
 
-/* List of named items with a hairline between them. */
-.items > * { padding: 20px 0; border-top: 1px solid var(--line); }
-.items > *:last-child { border-bottom: 1px solid var(--line); }
-.items h4 { margin-bottom: 4px; }
+.meter { display: flex; flex-direction: column; gap: 10px; }
+.meter .val { font-size: 40px; font-weight: 800; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+.meter .val small { font-size: 24px; font-weight: 700; color: var(--ink-mid); margin-left: 4px; }
+.meter .track { height: 16px; border-radius: 8px; background: var(--line); position: relative; }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--v) * 100%); border-radius: 8px; background: var(--teal); }
 
-/* Horizontal bar chart. Width comes from --v (0 to 1). */
+/* Horizontal value bars, label above. Width comes from --v (0 to 1). */
 .bars { display: flex; flex-direction: column; gap: 20px; }
-.bar {
-  display: grid;
-  grid-template-columns: var(--bar-label, 400px) 1fr;
-  align-items: center;
-  gap: 24px;
-  font-size: 26px;
-}
+.bar { display: flex; flex-direction: column; gap: 8px; }
+.bar .lab { font-size: 26px; color: var(--ink); }
 .bar .track { display: flex; align-items: center; gap: 18px; }
-.bar .fill {
-  height: 30px;
-  width: calc(var(--v) * (100% - 180px));
-  flex: none;
-  border-radius: 0 8px 8px 0;
-  background: var(--teal);
-}
+.bar .fill { height: 26px; width: calc(var(--v) * (100% - 190px)); flex: none; border-radius: 0 8px 8px 0; background: var(--teal); }
 .bar .fill.muted { background: var(--ink-light); }
-.bar .value { font-weight: 800; color: var(--ink); white-space: nowrap; }
+/* Label on the left, bar on the right. */
+.bars.inline .bar { display: grid; grid-template-columns: 290px 1fr; align-items: center; gap: 18px; }
+.bars.inline .fill { width: calc(var(--v) * (100% - 250px)); }
+.bar .value { font-size: 32px; font-weight: 800; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bar .value small { font-size: 22px; font-weight: 800; color: var(--teal-dark); margin-left: 10px; }
 
-/* Tables */
-table.data { width: 100%; border-collapse: collapse; font-size: 28px; }
-table.data th {
-  text-align: left;
+/* Stacked bar: one line split into parts. */
+.stackbar { display: flex; height: 40px; border-radius: 10px; overflow: hidden; gap: 4px; }
+.stackbar span { display: block; height: 100%; }
+.stackbar .s1 { background: var(--teal); }
+.stackbar .s2 { background: var(--teal-dark); }
+.stackbar .s3 { background: #8FDDD5; }
+.stackbar .s4 { background: #C9D2DD; }
+.key { display: flex; flex-direction: column; gap: 14px; }
+.key > div { display: grid; grid-template-columns: 26px 1fr auto auto; gap: 18px; align-items: baseline; font-size: 26px; color: var(--ink); padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.key i { width: 22px; height: 22px; border-radius: 6px; display: block; transform: translateY(3px); }
+.key b { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.key em { font-style: normal; font-size: 20px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal-dark); white-space: nowrap; min-width: 190px; text-align: right; }
+.key em.grey { color: var(--ink-mid); }
+.key > div.total { border-bottom: none; font-weight: 800; }
+
+/* Timeline along the device. */
+.timeline { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 40px; padding-top: 56px; }
+.timeline > .arrow { position: absolute; left: 0; right: 0; top: 6px; }
+.timeline .year { position: relative; }
+.timeline .year::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -56px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  border: 7px solid var(--teal-dark);
+  box-sizing: border-box;
+}
+.timeline .year b { display: block; font-size: 56px; font-weight: 800; letter-spacing: -0.02em; color: var(--teal-dark); line-height: 1; }
+.timeline .year p { font-size: 28px; line-height: 1.35; color: var(--ink); margin-top: 14px; }
+
+/* ─── Cover and close: navy, with a real photo of Taranto on the right ─── */
+
+.slide.photo {
+  background: var(--ink);
+  padding: 88px 900px 84px var(--pad-x);
+  gap: 0;
+  color: #C9D2DD;
+}
+.slide.photo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 780px;
+  background: var(--photo) no-repeat;
+  background-size: var(--photo-size, 2400px 1600px);
+  background-position: var(--photo-pos, -918px -350px);
+}
+/* A teal seam between the navy and the photo. */
+.slide.photo::after { content: ""; position: absolute; top: 0; bottom: 0; right: 780px; width: 6px; background: var(--teal); }
+.photo h1, .photo h2, .photo h3, .photo h4, .photo strong { color: #fff; }
+.photo .logo { width: 860px; display: block; }
+.photo .lead { font-size: 68px; font-weight: 800; line-height: 1.08; letter-spacing: -0.022em; color: #fff; }
+.photo .lead-2 { font-size: 32px; line-height: 1.42; color: #E8EDF3; }
+.photo .who { font-size: 26px; line-height: 1.5; color: #C9D2DD; padding-top: 30px; border-top: 1px solid rgba(232, 237, 243, 0.18); }
+.photo .who strong { font-size: 30px; display: block; margin-bottom: 4px; }
+.photo .caption {
+  position: absolute;
+  right: 56px;
+  bottom: 50px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--ink);
-  padding: 16px 22px;
-  border-bottom: 2px solid var(--teal);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 8px 16px;
+  border-radius: 999px;
 }
-table.data td { padding: 18px 22px; border-bottom: 1px solid var(--line); }
-table.data .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-table.data tr.total td { font-weight: 800; color: var(--ink); background: var(--teal-light); border-bottom: none; }
 
-/* Text-heavy slides: one step smaller, tighter lists. */
-.slide.dense { font-size: 28px; gap: 40px; }
-.slide.dense .subtitle { font-size: 28px; }
-.slide.dense .stack { gap: 22px; }
-.slide.dense .stack.sm { gap: 12px; }
-.slide.dense ul.list { gap: 10px; }
-.slide.dense .rows > * { padding: 22px 0; }
-.slide.dense table.data td { padding: 13px 22px; }
-.slide.dense h3 { font-size: 30px; }
+/* ─── Team ─── */
 
-/* ─── Map ─── */
+.people { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--gut); }
+.person img {
+  display: block;
+  width: 100%;
+  height: 270px;
+  object-fit: cover;
+  object-position: 50% 24%;
+  border-radius: 16px;
+  background: var(--bg-light);
+}
+.person h3 { font-size: 30px; margin-top: 22px; letter-spacing: -0.01em; }
+.person .role { font-size: 26px; font-weight: 700; color: var(--teal-dark); margin-top: 4px; line-height: 1.3; }
+.person p { font-size: 26px; line-height: 1.36; margin-top: 8px; color: var(--ink-mid); }
+.advisors { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gut); }
+.advisor { display: grid; grid-template-columns: 124px 1fr; gap: 24px; align-items: start; }
+.advisor img { width: 124px; height: 124px; object-fit: cover; object-position: 50% 20%; border-radius: 50%; display: block; }
+.advisor h4 { font-size: 28px; margin-top: 10px; }
+.advisor p { font-size: 26px; line-height: 1.34; margin-top: 4px; }
+
+/* ─── Maps ─── */
+
 .map { position: relative; }
-.map svg { display: block; width: 100%; height: auto; }
-.map svg path { fill: var(--bg-light); stroke: #C9D2DD; stroke-width: 1.2; }
-.map svg path.on { fill: var(--teal-light); stroke: var(--teal-dark); }
+.map > svg { display: block; width: 100%; height: auto; }
+.map > svg:not(.routes) path { fill: var(--bg-light); stroke: #C9D2DD; stroke-width: 1.2; }
+.map > svg:not(.routes) path.on { fill: var(--teal-light); stroke: var(--teal-dark); }
+.map.world > svg:not(.routes) path { fill: #EEF1F5; stroke: #FFFFFF; stroke-width: 0.8; }
+.map.world > svg:not(.routes) path.on { fill: var(--teal-light); stroke: var(--teal-dark); stroke-width: 1.4; }
+.map .routes { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.map .routes path { fill: none; stroke: var(--teal); stroke-width: 5; stroke-linecap: round; }
+.map .routes .head { fill: var(--teal); stroke: none; }
+/* Show only a band of a map: the wrapper sets the height, the map is shifted up. */
+.crop { position: relative; overflow: hidden; }
+
 .pin {
   position: absolute;
   width: 26px;
@@ -243,31 +419,34 @@ table.data tr.total td { font-weight: 800; color: var(--ink); background: var(--
   margin: -13px 0 0 -13px;
   border-radius: 50%;
   background: var(--teal-dark);
-  border: 4px solid #fff;
-  box-shadow: 0 1px 4px rgba(26, 35, 50, 0.35);
+  border: 5px solid #fff;
+  box-shadow: 0 1px 5px rgba(26, 35, 50, 0.35);
 }
 .pin.ring { background: #fff; border: 7px solid var(--teal-dark); }
 .pin.grey { background: var(--ink-light); }
+.pin.big { width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+.halo { position: absolute; width: 92px; height: 92px; margin: -46px 0 0 -46px; border-radius: 50%; background: rgba(46, 196, 182, 0.22); }
 .pin-label {
   position: absolute;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.2;
   color: var(--ink);
   white-space: nowrap;
   transform: translateY(-50%);
-  /* A white backing keeps labels legible over region borders. A text-shadow
-     would do the same on screen, but Chromium writes each shadow into the PDF
-     as another copy of the text. */
-  background: rgba(255, 255, 255, 0.88);
-  padding: 2px 8px;
+  /* A white backing keeps labels legible over borders. A text-shadow would
+     do the same on screen, but Chromium writes each shadow into the PDF as
+     another copy of the text. */
+  background: rgba(255, 255, 255, 0.9);
+  padding: 3px 9px;
   border-radius: 6px;
 }
-.pin-label span { display: block; font-weight: 400; font-size: 19px; color: var(--ink-mid); }
+.pin-label span { display: block; font-weight: 600; font-size: 20px; color: var(--ink-mid); }
 .pin-label.left { transform: translate(-100%, -50%); text-align: right; }
-.legend { display: flex; flex-direction: column; gap: 14px; font-size: 22px; }
+.legend { display: flex; flex-direction: column; gap: 14px; font-size: 22px; color: var(--ink); }
 .legend div { display: flex; align-items: center; gap: 16px; }
 .legend .pin { position: static; margin: 0; flex: none; }
+.map-credit { font-size: 20px; color: var(--ink-light); }
 
 /* ─── Preview page (screen only) ─── */
 @media screen {
