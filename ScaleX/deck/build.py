@@ -28,10 +28,6 @@ PREVIEW = DECK / "preview.html"
 PDF = DECK / "bioERGOtech-ScaleX.pdf"
 TITLE = "bioERGOtech at KAUST ScaleX 2026"
 
-# Must match deck/tools/make_map.py, which drew assets/italy.svg.
-MAP_LAT0, MAP_LON_MIN, MAP_LAT_MAX, MAP_SCALE = 42.0, 6.6, 47.1, 100
-
-
 def data_uri(path, mime):
     return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
 
@@ -46,23 +42,43 @@ def font_faces():
     return "\n".join(faces)
 
 
-def project(lat, lon, width, height):
-    """Latitude and longitude to a position in % of the map box."""
-    kx = math.cos(math.radians(MAP_LAT0))
-    x = (lon - MAP_LON_MIN) * kx * MAP_SCALE
-    y = (MAP_LAT_MAX - lat) * MAP_SCALE
-    return 100 * x / width, 100 * y / height
+MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".webp": "image/webp", ".svg": "image/svg+xml"}
+
+
+def inline_assets(source):
+    """Turn src="assets/x" and url(assets/x) into data URIs, so the page is one file."""
+    cache = {}
+
+    def swap(m):
+        name = m.group(2)
+        if name not in cache:
+            path = ASSETS / name
+            cache[name] = data_uri(path, MIME[path.suffix.lower()])
+        return m.group(1) + cache[name]
+
+    return re.sub(r'(src="|url\()assets/([^")]+)', swap, source)
 
 
 def render_map(match):
-    """<div class="map" data-on="Piemonte,Abruzzo"> ... pins ... </div>"""
+    """<div class="map" data-map="world" data-on="ITA,CHE"> ... pins ... </div>
+
+    data-map names an SVG in assets (italy, world or world-dots; italy when
+    left out). data-on lists the regions or countries to highlight: region
+    names for italy, ISO A3 codes for the world maps. Pins and labels carry
+    data-lat and data-lon, plus optional data-dx and data-dy in pixels.
+    """
     attrs, inner = match.group(1), match.group(2)
+    name = (re.search(r'data-map="([^"]*)"', attrs) or [0, "italy"])[1]
     on = re.search(r'data-on="([^"]*)"', attrs)
-    regions = {r.strip() for r in on.group(1).split(",")} if on else set()
-    svg = (ASSETS / "italy.svg").read_text()
+    keys = {k.strip() for k in on.group(1).split(",")} if on else set()
+    svg = (ASSETS / f"{name}.svg").read_text()
     width, height = map(float, re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg).groups())
-    for region in regions:
-        svg = svg.replace(f'<path data-region="{region}"', f'<path class="on" data-region="{region}"')
+    proj = {k: float(v) for k, v in re.findall(r'data-(lat0|lon-min|lat-max|scale)="([-\d.]+)"', svg)}
+    kx = math.cos(math.radians(proj["lat0"]))
+    for key in keys:
+        svg = re.sub(rf'<(path|g) data-(region|country)="{re.escape(key)}"',
+                     rf'<\1 class="on" data-\2="{key}"', svg)
 
     def place(m):
         tag, rest = m.group(1), m.group(2)
@@ -70,19 +86,20 @@ def render_map(match):
         lon = float(re.search(r'data-lon="([-\d.]+)"', rest).group(1))
         dx = float((re.search(r'data-dx="([-\d.]+)"', rest) or [0, 0])[1])
         dy = float((re.search(r'data-dy="([-\d.]+)"', rest) or [0, 0])[1])
-        x, y = project(lat, lon, width, height)
+        x = 100 * (lon - proj["lon-min"]) * kx * proj["scale"] / width
+        y = 100 * (proj["lat-max"] - lat) * proj["scale"] / height
         style = f'left:calc({x:.2f}% + {dx:g}px);top:calc({y:.2f}% + {dy:g}px)'
         return f'<{tag} style="{style}"{rest}'
 
-    inner = re.sub(r"<(i|b)(\s[^>]*data-lat=[^>]*)", place, inner)
+    inner = re.sub(r"<(i|b|span|div)(\s[^>]*data-lat=[^>]*)", place, inner)
     return f'<div class="map"{attrs}>{svg}{inner}</div>'
 
 
 def build():
     source = (DECK / "slides.html").read_text()
     logo = data_uri(ASSETS / "logo.png", "image/png")
-    source = source.replace('src="assets/logo.png"', f'src="{logo}"')
     source = re.sub(r'<div class="map"([^>]*)>(.*?)</div><!--/map-->', render_map, source, flags=re.S)
+    source = inline_assets(source)
 
     slides = re.findall(r"<section\b.*?</section>", source, flags=re.S)
     frames = []

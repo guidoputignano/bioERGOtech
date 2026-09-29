@@ -21,7 +21,8 @@ URL = ("https://cdn.jsdelivr.net/gh/openpolis/geojson-italy@master/"
        "geojson/limits_IT_regions.geojson")
 
 # Equirectangular projection around the middle of Italy. Good enough at this
-# scale, and it keeps the marker maths in slides.html trivial.
+# scale. The projection is written into the SVG, where build.py reads it to
+# place pins.
 LAT0 = 42.0
 KX = math.cos(math.radians(LAT0))
 LON_MIN, LAT_MAX = 6.6, 47.1
@@ -83,7 +84,8 @@ def main():
         paths.append(f'<path data-region="{name}" d="{"".join(d)}"/>')
     w, h = project(18.6, 36.6)
     OUT.write_text(
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.0f} {h:.0f}">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.0f} {h:.0f}" '
+        f'data-lat0="{LAT0}" data-lon-min="{LON_MIN}" data-lat-max="{LAT_MAX}" data-scale="{SCALE}">'
         + "".join(paths) + "</svg>\n")
     print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB, {len(paths)} regions)")
 
