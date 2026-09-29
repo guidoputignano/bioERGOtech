@@ -156,7 +156,7 @@ The step chart of 20, 500, 2,000 and later shows the order of the phases. Its he
 | Platform: consent, audit trails, AI layer, EU storage | Doc | SKIPPY §6 and §10; VIS §10 (EU infrastructure); HADI §3.2 |
 | ASL VCO follows the intake and tumour board (CAS and GIC) model of the Piedmont oncology network | Web | https://reteoncologica.it/cas/verbania-c-a-s-ospedale-verbania-asl-vco/ ; https://www.aslvco.it/come-fare-per/accedere-al-cas-centro-assistenza-servizi/ |
 | A new VIS region needs a data adapter | Doc | VIS §4.3 |
-| Hadi Health S.r.l. is our clinical AI venture | Guido, Doc | Guido; HADI §3.5 (the Foundation is a shareholder) |
+| A dedicated company for the clinical software, being set up | Guido | Guido, 29 Sept 2026: the company is not incorporated yet and the name Hadi Health is not final, so the deck presents everything as bioERGOtech. HADI is the draft business plan for it. |
 
 ### 11. Where we are in 2026
 
