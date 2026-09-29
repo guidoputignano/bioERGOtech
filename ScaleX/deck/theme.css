@@ -365,6 +365,15 @@ ul.dots li::before { content: ""; position: absolute; left: 4px; top: 0.6em; wid
 .photo .lead-2 { font-size: 32px; line-height: 1.42; color: #E8EDF3; }
 .photo .who { font-size: 26px; line-height: 1.5; color: #C9D2DD; padding-top: 30px; border-top: 1px solid rgba(232, 237, 243, 0.18); }
 .photo .who strong { font-size: 30px; display: block; margin-bottom: 4px; }
+/* Map panel on the navy slides (cover and close), in place of a photo. */
+.slide.mappanel::before { display: none; }
+.slide.mappanel::after { right: 780px; }
+.panel, .panel.crop { position: absolute; top: 0; right: 0; bottom: 0; width: 780px; overflow: hidden; background: #202B3E; }
+.map.world.navymap > svg:not(.routes) path { fill: #2C3852; stroke: #202B3E; stroke-width: 0.5; }
+.map.world.navymap > svg:not(.routes) path.on { fill: rgba(46, 196, 182, 0.28); stroke: var(--teal); stroke-width: 0.8; }
+.navymap .pin-label { background: rgba(26, 35, 50, 0.9); color: #fff; font-size: 30px; padding: 6px 14px; }
+.navymap .pin-label span { color: #C9D2DD; font-size: 24px; }
+.navymap .pin.big { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
 .photo .caption {
   position: absolute;
   right: 56px;
