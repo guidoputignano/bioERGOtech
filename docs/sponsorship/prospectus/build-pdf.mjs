@@ -30,6 +30,7 @@ const OUTPUT = {
   'prospectus-short-it.html': 'Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf',
   'prospectus-short-it-fideuram.html': 'Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Fideuram.pdf',
   'prospectus-short-it-teva.html': 'Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Teva.pdf',
+  'prospectus-short-it-gvm.html': 'Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-GVM.pdf',
   'prospectus.html': 'Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf',
 }
 

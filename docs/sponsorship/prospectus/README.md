@@ -4,13 +4,14 @@ The sponsor-facing documents for **Vivere più a lungo: sport e intelligenza
 artificiale**, Taranto, 10 and 11 December 2026. A4, in Italian and in
 English, written for national and international companies.
 
-Five versions, same offer, same sources.
+Six versions, same offer, same sources.
 
 | File | What it is |
 |---|---|
 | `prospectus-short-it.html` | **9 pagine, italiano.** For Italian companies. Built from the Italian originals, not translated back from the English. |
 | `prospectus-short-it-fideuram.html` | **10 pagine, italiano, per Fideuram.** The Italian version with a dedicated cover line and a "Perché Fideuram" page. |
 | `prospectus-short-it-teva.html` | **10 pagine, italiano, per Teva Italia.** The same, with a "Perché Teva" page. |
+| `prospectus-short-it-gvm.html` | **10 pagine, italiano, per GVM Care & Research.** The same, with a "Perché GVM" page. |
 | `prospectus-short.html` | **8 pages, English.** The same document for international companies. |
 | `prospectus.html` | **17 pages, English.** The full version, with the two-day programme and the Showcase set out in detail. |
 | `build-pdf.mjs` | Prints any of the sources to A4 PDF with Chromium. |
@@ -19,6 +20,7 @@ Five versions, same offer, same sources.
 | `Vivere-piu-a-lungo-2026-Dossier-Sponsorizzazione.pdf` | The 9 page Italian output. |
 | `Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Fideuram.pdf` | The 10 page Italian output addressed to Fideuram, Taranto. |
 | `Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-Teva.pdf` | The 10 page Italian output addressed to Teva Italia. |
+| `Vivere-piu-a-lungo-2026-Proposta-Sponsorizzazione-GVM.pdf` | The 10 page Italian output addressed to GVM Care & Research. |
 | `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus-Short.pdf` | The 8 page English output. |
 | `Vivere-piu-a-lungo-2026-Sponsorship-Prospectus.pdf` | The 17 page English output. |
 
@@ -40,8 +42,8 @@ band with the page number in a white notch.
 
 ```bash
 npm install            # playwright-core, once
-npm run check          # constraints, all five versions
-npm run build          # all five PDFs
+npm run check          # constraints, all six versions
+npm run build          # all six PDFs
 npm run build:it       # just the Italian one
 npm run proof          # PDF plus one PNG per page in shots/
 ```
@@ -107,6 +109,27 @@ Three choices are specific to this version:
   pharmaceutical company's compliance review will ask.
 
 No Teva logo and no brand colours, for the same reason as Fideuram.
+
+### The version for GVM Care & Research
+
+The same generator again (`gen3it.mjs gvm`). The cover says "Proposta di
+sponsorizzazione per GVM Care & Research", and page 2 is "Perché GVM", with
+three points of contact (the medicine on stage, clinical innovation at the
+Showcase, the schools) and two combinations at published prices:
+
+- **Proposta A, € 25.000**: the Scientific & Innovation Partner tier, with the
+  naming of the Showcase of Innovation and of a category prize, a voting seat
+  on the Commission and the reserved dossier on the projects. The Showcase
+  looks for clinical validation and partners, and its Commission includes a
+  clinical member, which is where a hospital group has the most to gain.
+- **Proposta B, € 16.000**: Official Partner with the naming of panel 5, "Il
+  corpo che si rigenera", from diagnosis to the return to activity.
+
+The namings do not overlap with the other proposals: panel 7 is offered to
+Fideuram, panel 1 to Teva. Category exclusivity is proposed on "la sanità
+privata", which is not one of the sectors listed on the rate card: confirm it
+before signing. Nothing is said about GVM's hospitals or strategy, and there is
+no GVM logo.
 
 Chromium is found through `PLAYWRIGHT_BROWSERS_PATH`, or through Playwright's
 own install, or from `CHROMIUM_PATH` if you set it.

@@ -3,13 +3,14 @@
   "private": true,
   "description": "Builds the sponsorship prospectus PDFs from the self-contained HTML sources.",
   "scripts": {
-    "build": "node build-pdf.mjs prospectus-short-it.html && node build-pdf.mjs prospectus-short-it-fideuram.html && node build-pdf.mjs prospectus-short-it-teva.html && node build-pdf.mjs prospectus-short.html && node build-pdf.mjs prospectus.html",
+    "build": "node build-pdf.mjs prospectus-short-it.html && node build-pdf.mjs prospectus-short-it-fideuram.html && node build-pdf.mjs prospectus-short-it-teva.html && node build-pdf.mjs prospectus-short-it-gvm.html && node build-pdf.mjs prospectus-short.html && node build-pdf.mjs prospectus.html",
     "build:it": "node build-pdf.mjs prospectus-short-it.html",
     "build:fideuram": "node build-pdf.mjs prospectus-short-it-fideuram.html",
     "build:teva": "node build-pdf.mjs prospectus-short-it-teva.html",
+    "build:gvm": "node build-pdf.mjs prospectus-short-it-gvm.html",
     "build:short": "node build-pdf.mjs prospectus-short.html",
     "build:long": "node build-pdf.mjs prospectus.html",
-    "check": "node check.mjs prospectus-short-it.html && node check.mjs prospectus-short-it-fideuram.html && node check.mjs prospectus-short-it-teva.html && node check.mjs prospectus-short.html && node check.mjs prospectus.html",
+    "check": "node check.mjs prospectus-short-it.html && node check.mjs prospectus-short-it-fideuram.html && node check.mjs prospectus-short-it-teva.html && node check.mjs prospectus-short-it-gvm.html && node check.mjs prospectus-short.html && node check.mjs prospectus.html",
     "proof": "node build-pdf.mjs prospectus-short-it.html --shots"
   },
   "devDependencies": {
