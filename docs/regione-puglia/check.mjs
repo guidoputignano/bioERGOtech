@@ -35,6 +35,7 @@ const images = await page.evaluate(() =>
     cw: Math.round(i.getBoundingClientRect().width),
     alt: i.alt,
   })))
+const signatures = await page.evaluate(() => document.querySelectorAll('.sign').length)
 await browser.close()
 
 let failures = 0
@@ -51,15 +52,19 @@ check('no em-dash or en-dash', dashes.length === 0, dashes.slice(0, 3).join(' | 
 
 /* 2 · Nobody appears who has not cleared the use of their name. Sofia Raffaeli
    carries daAutorizzare; the others are in older material or on the team page
-   but not on the consented speaker list. The President appears only as
-   signatory and contact. */
+   but not on the consented speaker list. The President appears only in the
+   contacts. */
 const withheld = ['Raffaeli', 'Pucci', 'Ventre', 'Caputi', 'Quarteroni', 'Mauro Mancini',
   'Marco Quarta', 'Simone Bianco', 'Leone', 'Carmine Pisano', 'Tagarelli', 'Margherita Basile',
   'Olufemi', 'Roberto Russo']
 const named = found(withheld)
 check('no unconsented names', named.length === 0, named.join(', '))
 
-/* 3 · Nothing unconfirmed or retired: the schools' first prize, the old jury,
+/* 3 · No signature block: the request goes out with the President's email,
+   and the Foundation does not want the documents signed. */
+check('no signature block', signatures === 0, signatures ? `${signatures} found` : '')
+
+/* 4 · Nothing unconfirmed or retired: the schools' first prize, the old jury,
    a verification link that does not exist yet, a stream nobody has confirmed,
    the old day-two format, the wrong venue name, the internal warning. */
 const retired = ['New York', 'giuria di sponsor', 'verificabil', 'streaming', 'diretta streaming',
@@ -68,16 +73,16 @@ const retired = ['New York', 'giuria di sponsor', 'verificabil', 'streaming', 'd
 const stale = found(retired)
 check('no unconfirmed or retired content', stale.length === 0, stale.join(', '))
 
-/* 4 · Typography the generator does not fix: straight apostrophes and quotes. */
+/* 5 · Typography the generator does not fix: straight apostrophes and quotes. */
 const straight = [...text.matchAll(/\p{L}'\p{L}|"[^"\n]{1,40}"/gu)].map((m) => m[0])
 check('curly apostrophes and quotes', straight.length === 0, straight.slice(0, 5).join(' | '))
 
-/* 5 · A measured register: no exclamation marks, no boasting. */
+/* 6 · A measured register: no exclamation marks, no boasting. */
 const loud = found([/!/, /\bmiglior[ei]\b/i, /eccellenz/i, /straordinari/i, /unic[oa] al mondo/i,
   /leader\b/i, /rivoluzion/i])
 check('measured register', loud.length === 0, loud.join(', '))
 
-/* 6 · The cost figures agree wherever they appear. The plan's totals must be
+/* 7 · The cost figures agree wherever they appear. The plan's totals must be
    the ones the Foundation approved; a stray variant is a sign of an edit that
    reached one document and not the others. */
 const amounts = ['184.970', '65.000', '103.500', '16.470']
@@ -89,7 +94,7 @@ if (/costi/.test(path.basename(src))) {
   check('cost plan figures present', missing.length === 0, missing.join(', '))
 }
 
-/* 7 · No image is enlarged past what it can carry in print. */
+/* 8 · No image is enlarged past what it can carry in print. */
 const CSS_PX_PER_MM = 96 / 25.4
 const dpi = (px, cssPx) => (cssPx > 0 ? px / (cssPx / CSS_PX_PER_MM / 25.4) : Infinity)
 const soft = images.filter((i) => dpi(i.w, i.cw) < 150)

@@ -10,7 +10,7 @@ qui.
   - La Presidenza della Giunta regionale.
   - Per i contenuti, il Dipartimento Promozione della salute e del benessere animale, che segue sport e promozione della salute.
   - Gli indirizzi PEC si prendono dal sito della Regione, oppure si scrive alla persona con cui c'è già un contatto.
-- **Canale.** La PEC della Fondazione, quando sarà attiva, con il Documento 3 firmato digitalmente dal Presidente.
+- **Canale.** La PEC della Fondazione, quando sarà attiva.
 - **Allegati:**
   - `bioERGOtech-Regione-Puglia-1-La-Fondazione.pdf`
   - `bioERGOtech-Regione-Puglia-2-Il-progetto.pdf`

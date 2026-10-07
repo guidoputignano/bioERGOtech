@@ -33,7 +33,7 @@ npm run proof        # PDF più un PNG per pagina in shots/
 3. che cosa ha già fatto;
 4. dove opera e dove vuole arrivare;
 5. il territorio e la richiesta alla Regione;
-6. organizzazione e trasparenza, con contatti e firma.
+6. organizzazione e trasparenza, con i contatti.
 
 **2. Il progetto:**
 1. in sintesi;
@@ -51,7 +51,7 @@ npm run proof        # PDF più un PNG per pagina in shots/
 3. che cosa copre il contributo regionale;
 4. note metodologiche;
 5. impegni e rendicontazione;
-6. cronoprogramma e richiesta formale, con firma.
+6. cronoprogramma e richiesta formale, con i contatti.
 
 ## Le cifre
 
@@ -71,8 +71,9 @@ npm run proof        # PDF più un PNG per pagina in shots/
 
 - **Nessun nome senza consenso.**
   - I relatori sono quelli di `RELATORI_PUBBLICI`, più la moderatrice. Le organizzazioni sono quelle di `PARTNER_PUBBLICI`.
-  - Guido Putignano compare solo come Presidente, nei contatti e nella firma.
+  - Guido Putignano compare solo come Presidente, nei contatti.
   - Non sono nominati: le scuole della rete, il team, le imprese seguite dalla Fondazione (OncoTarget, CranioTech) e chi nella vecchia brochure non ha dato il consenso.
+- **Nessuna firma nei documenti.** La richiesta parte con l'email del Presidente, in `email-accompagnamento.md`.
 - **Nessun premio del percorso per le scuole.** La voce E.3 da 15.000 euro, il viaggio del piano v2, resta nel piano:
   - si chiama "Viaggio di studio della squadra vincitrice, solo con sponsor";
   - non ha destinazione ed è esclusa dal contributo.
@@ -111,7 +112,7 @@ Bloccanti:
   - i dati RUNTS;
   - la PEC;
   - le finalità statutarie e gli organi, dallo statuto;
-  - la conferma dei poteri di firma del Presidente.
+  - la conferma dallo statuto che il Presidente è il legale rappresentante.
   - Il 347 7320692 è di SafesPro e non va indicato come recapito della Fondazione.
 - **Lo strumento regionale.** Va scelto con gli uffici e citato nella richiesta: istanza di contributo, contributo straordinario o protocollo d'intesa ai sensi della DGR 420/2026, punto 5.
 - **Le scadenze del patrocinio.**
@@ -142,7 +143,6 @@ Da definire:
 - riconciliare le ripartizioni delle voci originarie da 30.000 e 25.000 euro con preventivi e accordi;
 - tenere cena di gala, navetta e altri benefit per gli sponsor fuori dalle voci regionali;
 - l'offerta agli sponsor dei livelli più alti: oggi comprende un posto in un panel o un keynote, e un voto nella Commissione dello Showcase. Valutare se toglierli, per dire che i contenuti spettano solo alla direzione scientifica;
-- la data completa nella firma, oggi "Taranto, ottobre 2026".
 
 Sul sito, prima che la Regione lo consulti:
 
