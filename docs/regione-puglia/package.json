@@ -4,6 +4,7 @@
   "description": "Builds the three documents for Regione Puglia from the self-contained HTML sources.",
   "scripts": {
     "build": "node build-pdf.mjs regione-1-fondazione.html && node build-pdf.mjs regione-2-progetto.html && node build-pdf.mjs regione-3-costi.html",
+    "check": "node check.mjs regione-1-fondazione.html && node check.mjs regione-2-progetto.html && node check.mjs regione-3-costi.html",
     "proof": "node build-pdf.mjs regione-1-fondazione.html --shots && node build-pdf.mjs regione-2-progetto.html --shots && node build-pdf.mjs regione-3-costi.html --shots"
   },
   "devDependencies": {
