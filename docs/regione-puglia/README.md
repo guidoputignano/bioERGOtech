@@ -13,6 +13,7 @@ rimanda agli altri due.
 | `regione-3-costi.html` → `bioERGOtech-Regione-Puglia-3-Piano-dei-costi.pdf` | Documento 3, Piano dei costi e richiesta di contributo. Copertina e 6 pagine. |
 | `build-pdf.mjs` | Stampa un documento in PDF A4 con Chromium e segnala ciò che esce dalla pagina. |
 | `check.mjs` | Controlla le regole: trattini, nomi senza consenso, contenuti non confermati, apostrofi, tono, cifre del piano. |
+| `email-accompagnamento.md` | Il testo dell'email che accompagna i tre documenti, e quello della PEC per il patrocinio. |
 
 Gli HTML sono autoconsistenti, con font e immagini incorporati. Si modificano
 quelli.
