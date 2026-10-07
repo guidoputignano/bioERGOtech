@@ -4,5 +4,10 @@
   "description": "Builds the press package PDFs for Vivere più a lungo 2026 from the self-contained HTML sources.",
   "devDependencies": {
     "playwright-core": "^1.63.0"
+  },
+  "scripts": {
+    "build": "node build-pdf.mjs cartella-stampa.html && node build-pdf.mjs comunicato-lancio.html && node build-pdf.mjs nota-redazioni.html && node build-pdf.mjs guida-ufficio-stampa.html && node build-pdf.mjs rassegna-stampa.html",
+    "check": "node check.mjs cartella-stampa.html && node check.mjs comunicato-lancio.html && node check.mjs nota-redazioni.html && node check.mjs guida-ufficio-stampa.html && node check.mjs rassegna-stampa.html",
+    "proof": "node build-pdf.mjs cartella-stampa.html --shots && node build-pdf.mjs comunicato-lancio.html --shots && node build-pdf.mjs nota-redazioni.html --shots && node build-pdf.mjs guida-ufficio-stampa.html --shots && node build-pdf.mjs rassegna-stampa.html --shots"
   }
 }
