@@ -1,0 +1,8 @@
+{
+  "name": "bioergotech-stampa",
+  "private": true,
+  "description": "Builds the press package PDFs for Vivere più a lungo 2026 from the self-contained HTML sources.",
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}
