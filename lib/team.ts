@@ -71,6 +71,13 @@ export const TEAM: Member[] = [
     areas: ["biotech-innovations"],
   },
   {
+    name: "Giovanni Papa",
+    role: "Scientific Projects Lead",
+    desc: "PhD candidate in Cancer Biology at the University of Zurich and co-founder of OncoTarget Precision Oncology, working on organoid models and precision oncology.",
+    img: "/assets/images/About-us/Giovanni-Papa.webp",
+    areas: ["biotech-innovations"],
+  },
+  {
     name: "Roberto Russo",
     role: "Student Ambassador",
     desc: "High school student, working with the Foundation's operational team.",
