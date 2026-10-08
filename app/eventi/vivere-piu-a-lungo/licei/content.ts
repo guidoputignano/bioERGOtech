@@ -335,7 +335,7 @@ export const CONSENSO_PRIVACY_LICEI_TESTO =
  */
 export const PRESA_ATTO_ADESIONE = [
   "Gli studenti di almeno 14 anni si iscrivono direttamente alla piattaforma della Fondazione; l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
-  "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, classe, stato dell'iscrizione, avanzamento nel corso e squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.",
+  "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.",
   "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività.",
   "Il docente usa credenziali personali, non le condivide e non comunica o riutilizza i dati visualizzati per finalità estranee al percorso.",
   "L'istituto informa studenti e famiglie, secondo le proprie procedure, della partecipazione al percorso e della visibilità assegnata al docente referente.",
@@ -540,7 +540,7 @@ export const REGOLAMENTO_PATH = `${LICEI_PATH}/regolamento`;
 export const ISTRUZIONI_REFERENTE = [
   "custodire con cura le credenziali e non condividerle;",
   "accedere soltanto agli studenti del tuo istituto;",
-  "usare nome, classe, avanzamento e squadra degli studenti solo per seguire il percorso formativo;",
+  "usare nome, email, classe, avanzamento, squadra e progetto degli studenti solo per seguire il percorso formativo;",
   "non esportare, scaricare, fotografare o inoltrare dati e contenuti, salvo quanto strettamente richiesto dall'attività scolastica e autorizzato dall'istituto;",
   "non usare i dati per contattare gli studenti al di fuori delle normali attività scolastiche;",
   "segnalare subito a info@bioergotech.org accessi anomali, perdita di credenziali, errori o richieste degli studenti;",
