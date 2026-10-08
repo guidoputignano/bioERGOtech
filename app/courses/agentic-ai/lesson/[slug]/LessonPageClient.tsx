@@ -116,7 +116,9 @@ function YouTubeEmbed({ id, title, note }: { id: string; title: string; note?: s
         borderRadius: 12, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW,
       }}>
         <iframe
-          src={`https://www.youtube.com/embed/${id}`}
+          // Privacy-enhanced mode: no YouTube cookies until the video is played.
+          // The cookie policy says so, and these pages are used by minors.
+          src={`https://www.youtube-nocookie.com/embed/${id}`}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

@@ -155,7 +155,7 @@ export function InformativaBody({ t }: { t: Informativa }) {
         </div>
 
         <div className="pt-4 border-t border-gray-100">
-          <Link href="/cookie-policy" style={{ color: "var(--primary)", fontWeight: 600, fontSize: 14 }}>
+          <Link href={t.cookieHref} style={{ color: "var(--primary)", fontWeight: 600, fontSize: 14 }}>
             → {t.cookie}
           </Link>
         </div>

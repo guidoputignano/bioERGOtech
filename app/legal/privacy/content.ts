@@ -54,6 +54,7 @@ export type Informativa = {
   aggiornamenti: { h: string; testo: string };
   autorita: { h: string; intro: string };
   cookie: string;
+  cookieHref: string;
 };
 
 /* ── Inglese ──────────────────────────────────────────────────────────── */
@@ -62,7 +63,7 @@ const EN: Informativa = {
   titoloPagina: "Privacy Policy",
   descrizionePagina: "Privacy Policy for the bioERGOtech Foundation website.",
   titolo: "Privacy Policy",
-  aggiornamento: "Last updated: September 2026",
+  aggiornamento: "Last updated: October 2026",
   altraLingua: { etichetta: "Leggi questa informativa in italiano", href: "/legal/informativa-privacy" },
 
   titolare: {
@@ -209,10 +210,10 @@ const EN: Informativa = {
     intro:
       "We do not sell your personal data. We share data only with trusted service providers who process it on our behalf:",
     voci: [
-      "Supabase Inc. Database and authentication hosting (EU data residency available)",
+      "Supabase (Supabase Pte. Ltd.). Database and authentication hosting",
       "Vercel Inc. Website hosting and deployment",
       "Resend. Delivery of the transactional emails described in this policy",
-      "Google LLC. Maps and productivity tools (Google for Nonprofits)",
+      "Google Ireland Ltd and Google LLC. Google Analytics and Google Ads, only with your cookie consent (see the Cookie Policy); maps and productivity tools (Google for Nonprofits)",
     ],
     nota:
       "All third-party processors are bound by Data Processing Agreements and are required to process data only as instructed by us. The members of the assessment panel for our calls and programmes see the submitted projects in order to score them, and are bound to confidentiality. Students' names are not disclosed to them.",
@@ -221,7 +222,7 @@ const EN: Informativa = {
   trasferimenti: {
     h: "6. International Transfers",
     testo:
-      "Some of our service providers are based outside the European Economic Area (EEA). Where data is transferred outside the EEA, we ensure appropriate safeguards are in place, including Standard Contractual Clauses approved by the European Commission.",
+      "Some of our service providers are based outside the European Economic Area (EEA). Where data is transferred outside the EEA, we ensure appropriate safeguards are in place: the EU-US Data Privacy Framework for certified providers, or the Standard Contractual Clauses approved by the European Commission included in our providers' data processing agreements.",
   },
 
   diritti: {
@@ -250,7 +251,7 @@ const EN: Informativa = {
     h: "9. Minors",
     paragrafi: [
       "Our website and services are not directed at children under the age of 14, and we do not knowingly collect their personal data. If you believe a child under 14 has provided us with personal data, please contact us and we will delete it promptly.",
-      "Some of our educational programmes are addressed to secondary school students, who may be minors aged 14 or over. Participation in those programmes always runs through the student's school, which appoints a referring teacher, collects the parental authorisations on our behalf and keeps the signed forms on file. In those cases we process only what the programme needs: name, surname, class, year of study and contact email. We do not collect dates of birth, tax codes, identity documents or parents' contact details. Separate authorisation is always requested before a student appears in photographs or recordings of our events. Parents and guardians may exercise the rights described above on behalf of their child by writing to the address at the end of this policy.",
+      "Some of our educational programmes are addressed to secondary school students, who may be minors aged 14 or over. Students aged 14 or over enrol and consent themselves, as Italian law allows for online services (Art. 2-quinquies of the Italian Data Protection Code); their school appoints a referring teacher who confirms the enrolment, and does not collect consents on our behalf. In those cases we process only what the programme needs: the school code, name, surname, class, year of study and contact email. We do not collect dates of birth, tax codes, identity documents or parents' contact details. Before a student appears in photographs or recordings of our events, a separate choice is always requested on a form kept by the school and signed by a parent for students under 18. Full details are in the programme's own privacy notices for students and for schools. Parents and guardians may exercise the rights described above on behalf of their child by writing to the address at the end of this policy.",
       "Taking part in the programme also means following an online course, which requires an account. Alongside the data listed above we therefore keep the work the student submits during the course: the reflection that closes each lesson, the team they belong to and the project the team submits. The referring teacher sees how far their own students have got, so that the school can follow them. The assessment panel sees the projects without the names of the students who wrote them.",
     ],
   },
@@ -267,6 +268,7 @@ const EN: Informativa = {
   },
 
   cookie: "View our Cookie Policy",
+  cookieHref: "/cookie-policy",
 };
 
 /* ── Italiano ─────────────────────────────────────────────────────────── */
@@ -275,7 +277,7 @@ const IT: Informativa = {
   titoloPagina: "Informativa sulla privacy",
   descrizionePagina: "Informativa sul trattamento dei dati personali del sito della Fondazione bioERGOtech.",
   titolo: "Informativa sulla privacy",
-  aggiornamento: "Ultimo aggiornamento: settembre 2026",
+  aggiornamento: "Ultimo aggiornamento: ottobre 2026",
   altraLingua: { etichetta: "Read this policy in English", href: "/legal/privacy" },
 
   titolare: {
@@ -422,10 +424,10 @@ const IT: Informativa = {
     intro:
       "Non vendiamo i suoi dati personali. Li condividiamo solo con fornitori di fiducia che li trattano per nostro conto:",
     voci: [
-      "Supabase Inc. Database e autenticazione (con possibilità di residenza dei dati nell'Unione Europea)",
+      "Supabase (Supabase Pte. Ltd.). Database e autenticazione",
       "Vercel Inc. Hosting e pubblicazione del sito",
       "Resend. Invio delle email di servizio descritte in questa informativa",
-      "Google LLC. Mappe e strumenti di produttività (Google for Nonprofits)",
+      "Google Ireland Ltd e Google LLC. Google Analytics e Google Ads, solo con il consenso ai cookie (vedi la cookie policy); mappe e strumenti di produttività (Google for Nonprofits)",
     ],
     nota:
       "Tutti i responsabili esterni sono vincolati da accordi sul trattamento dei dati e possono trattarli solo secondo le nostre istruzioni. I membri delle commissioni di valutazione dei nostri bandi e percorsi vedono i progetti consegnati per poterli valutare, e sono tenuti alla riservatezza. I nomi degli studenti non vengono loro comunicati.",
@@ -434,7 +436,7 @@ const IT: Informativa = {
   trasferimenti: {
     h: "6. Trasferimenti fuori dall'Unione Europea",
     testo:
-      "Alcuni dei nostri fornitori hanno sede fuori dallo Spazio Economico Europeo. Quando i dati vengono trasferiti fuori dallo Spazio Economico Europeo, adottiamo garanzie adeguate, fra cui le Clausole Contrattuali Standard approvate dalla Commissione Europea.",
+      "Alcuni dei nostri fornitori hanno sede fuori dallo Spazio Economico Europeo. Quando i dati vengono trasferiti fuori dallo Spazio Economico Europeo, adottiamo garanzie adeguate: il Data Privacy Framework UE-USA per i fornitori certificati, oppure le Clausole Contrattuali Standard approvate dalla Commissione Europea, comprese negli accordi sul trattamento dei dati dei nostri fornitori.",
   },
 
   diritti: {
@@ -464,7 +466,7 @@ const IT: Informativa = {
     h: "9. Minori",
     paragrafi: [
       "Il nostro sito e i nostri servizi non si rivolgono a bambini di età inferiore ai 14 anni, e non raccogliamo consapevolmente i loro dati personali. Se ritiene che un minore di 14 anni ci abbia fornito dati personali, ci contatti e li cancelleremo tempestivamente.",
-      "Alcuni dei nostri percorsi formativi si rivolgono a studenti delle scuole secondarie di secondo grado, che possono essere minorenni di almeno 14 anni. La partecipazione a quei percorsi passa sempre dalla scuola dello studente, che nomina un docente referente, raccoglie per nostro conto le autorizzazioni dei genitori e conserva agli atti i moduli firmati. In quei casi trattiamo solo ciò che serve al percorso: nome, cognome, classe, anno di corso ed email di contatto. Non raccogliamo date di nascita, codici fiscali, documenti di identità né contatti dei genitori. Prima che uno studente compaia in fotografie o riprese dei nostri eventi viene sempre richiesta un'autorizzazione a parte. I genitori e chi esercita la responsabilità genitoriale possono esercitare i diritti sopra descritti per conto del minore scrivendo all'indirizzo indicato in fondo a questa informativa.",
+      "Alcuni dei nostri percorsi formativi si rivolgono a studenti delle scuole secondarie di secondo grado, che possono essere minorenni di almeno 14 anni. Gli studenti di almeno 14 anni si iscrivono e acconsentono da sé, come la legge consente per i servizi online (art. 2-quinquies del Codice privacy); la loro scuola nomina un docente referente che conferma l'iscrizione, e non raccoglie consensi per nostro conto. In quei casi trattiamo solo ciò che serve al percorso: codice dell'istituto, nome, cognome, classe, anno di corso ed email di contatto. Non raccogliamo date di nascita, codici fiscali, documenti di identità né contatti dei genitori. Prima che uno studente compaia in fotografie o riprese dei nostri eventi viene sempre richiesta una scelta a parte, su un modulo conservato dalla scuola e firmato da un genitore per gli studenti minorenni. I dettagli sono nelle informative del percorso per gli studenti e per le scuole. I genitori e chi esercita la responsabilità genitoriale possono esercitare i diritti sopra descritti per conto del minore scrivendo all'indirizzo indicato in fondo a questa informativa.",
       "Partecipare al percorso significa anche seguire un corso online, che richiede un account. Accanto ai dati sopra elencati conserviamo quindi il lavoro che lo studente consegna durante il corso: la riflessione che chiude ogni lezione, la squadra di cui fa parte e il progetto consegnato dalla squadra. Il docente referente vede a che punto sono arrivati i propri studenti, così che la scuola possa seguirli. La commissione di valutazione vede i progetti senza i nomi di chi li ha scritti.",
     ],
   },
@@ -480,7 +482,8 @@ const IT: Informativa = {
     intro: "Lei ha il diritto di presentare un reclamo al Garante per la protezione dei dati personali:",
   },
 
-  cookie: "Leggi la nostra Cookie Policy",
+  cookie: "Leggi la cookie policy",
+  cookieHref: "/cookie-policy/it",
 };
 
 export const INFORMATIVA: Record<Lingua, Informativa> = { en: EN, it: IT };
