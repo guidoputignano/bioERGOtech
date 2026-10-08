@@ -494,30 +494,25 @@ export const NOTA_ISCRIZIONE_STUDENTE =
 /* ── Modulo di autorizzazione per le famiglie ─────────────────────────── */
 
 /**
- * Testo del modulo che il referente stampa e fa firmare. Sono due
- * autorizzazioni distinte, e vanno tenute distinte: la prima e necessaria
- * per partecipare, la seconda no. Chi non acconsente alle riprese partecipa
- * lo stesso, e la scuola lo segnala agli organizzatori.
+ * Testo del modulo che il referente stampa e fa firmare. Le autorizzazioni
+ * sono distinte, e vanno tenute distinte: la partecipazione al percorso è
+ * necessaria, le due scelte sulle immagini (A e B, testi in
+ * `../informativa-immagini/content.ts`) no. Chi non acconsente alle riprese
+ * partecipa lo stesso, e la scuola lo segnala agli organizzatori.
+ *
+ * Il modulo esiste in due versioni, come i documenti privacy dell'evento:
+ * per lo studente minorenne lo firma il genitore e comprende anche la
+ * partecipazione al percorso; lo studente maggiorenne firma da sé le sole
+ * scelte sulle immagini.
  */
-export const AUTORIZZAZIONI_MODULO = [
-  {
-    id: "partecipazione",
-    titolo: "Partecipazione al percorso formativo",
-    testo:
-      "autorizzo la partecipazione al percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", promosso da Fondazione bioERGOtech e SafesPro, che si svolge online e fuori dall'orario scolastico, e alla connessa attività di lavoro in team e sviluppo di un progetto.",
-    obbligatoria: true,
-  },
-  {
-    id: "riprese",
-    titolo: "Riprese audiovisive durante l'evento finale",
-    testo:
-      "autorizzo la ripresa audiovisiva e fotografica durante l'evento finale del 10 dicembre 2026 al PalaMazzola di Taranto, che si svolge in seduta pubblica, e il relativo utilizzo per la documentazione e la comunicazione istituzionale dell'iniziativa, senza fini di lucro.",
-    obbligatoria: false,
-  },
-] as const;
+export const AUTORIZZAZIONE_PARTECIPAZIONE = {
+  titolo: "Partecipazione al percorso formativo",
+  testo:
+    "Autorizzo la partecipazione al percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", promosso da Fondazione bioERGOtech e SafesPro, che si svolge online e fuori dall'orario scolastico, e alla connessa attività di lavoro in team e sviluppo di un progetto.",
+} as const;
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
-  "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito.";
+  "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito: agli organizzatori arriva solo l'elenco minimo degli studenti partecipanti con le scelte A e B.";
 
 /* ═══════════════════════════════════════════════════════════════════════
    Fase 3. Squadre, progetti, Commissione e finalisti

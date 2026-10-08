@@ -26,6 +26,7 @@ import {
   NOTA_ISCRIZIONE_STUDENTE,
   STUDENTE_PATH,
 } from "../content";
+import { INFORMATIVA_IMMAGINI_PATH } from "../../informativa-immagini/content";
 import { normalizzaCodice, validateIscrizione } from "@/lib/eventi/licei-iscrizioni";
 
 function Consenso({
@@ -303,7 +304,10 @@ export function IscrizioneForm({
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <Consenso checked={autorizzazione} onChange={setAutorizzazione}>
-          {DICHIARAZIONE_AUTORIZZAZIONE_TESTO} *
+          {DICHIARAZIONE_AUTORIZZAZIONE_TESTO} *{" "}
+          <Link href={INFORMATIVA_IMMAGINI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Informativa su foto e video
+          </Link>
         </Consenso>
         <Consenso checked={privacy} onChange={setPrivacy}>
           {CONSENSO_PRIVACY_STUDENTE_TESTO} *{" "}
