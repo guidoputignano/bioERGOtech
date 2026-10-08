@@ -331,7 +331,7 @@ export default function EventPage() {
           <div className="container mx-auto px-6">
             <h2 className="section-title">Giorno 1 . Giovedì 10 dicembre . PalaMazzola, Taranto</h2>
             <p className="text-lg text-gray-700 max-w-3xl mb-10">
-              Una giornata al PalaMazzola (9:00 . 16:00). Sette panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi. Nel pomeriggio, il concerto aperto al pubblico.
+              Una giornata al PalaMazzola (9:00 . 16:00). Sei panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi. Nel pomeriggio, il concerto aperto al pubblico.
             </p>
 
             {/* Moderatrice della giornata, prima del programma che conduce */}
@@ -360,7 +360,7 @@ export default function EventPage() {
             {/* Programma del giorno 1: una sola linea del tempo, con i volti nei panel */}
             <h3 className="text-lg font-semibold text-gray-800 mb-1">Il programma della giornata</h3>
             <p className="text-sm text-gray-600 mb-8">
-              Dalle 9:00, sette panel di dialogo si alternano ai progetti dei ragazzi, fino alla proclamazione del gruppo vincitore e al concerto. Per ogni panel trovi chi sale sul palco.
+              Dalle 9:00, sei panel di dialogo si alternano ai progetti dei ragazzi, fino alla chiusura con la squadra della città, alla proclamazione del gruppo vincitore e al concerto. Per ogni panel trovi chi sale sul palco.
             </p>
             <ol style={{ listStyle: "none", padding: 0, margin: "0 0 3rem", maxWidth: 880 }}>
               {PROGRAMMA_GIORNO1.map((v, i) => {
@@ -461,8 +461,9 @@ export default function EventPage() {
                       <p className="text-gray-600" style={{ fontSize: 13, marginTop: 2 }}>{v.desc}</p>
 
                       {/* Nei panel i protagonisti hanno un volto. Nelle voci di
-                          raccordo restano una riga di nomi, per non appesantire. */}
-                      {isPanel && (relatori.length > 0 || partner.length > 0 || ospiti.length > 0) ? (
+                          raccordo restano una riga di nomi, per non appesantire,
+                          salvo chi porta un logo (la squadra in chiusura). */}
+                      {(isPanel || partner.length > 0) && (relatori.length > 0 || partner.length > 0 || ospiti.length > 0) ? (
                         <ul
                           className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
                           style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}
