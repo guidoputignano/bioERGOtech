@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,10 @@ import {
   statoIscrizioneLabel,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
+import {
+  INFORMATIVA_IMMAGINI_PATH,
+  ISTRUZIONI_SCUOLA,
+} from "../../informativa-immagini/content";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Iscrizione = any;
@@ -269,28 +274,59 @@ export function ReferenteConsole() {
 
         <div className="card" style={{ padding: 20 }}>
           <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
-            Modulo di autorizzazione
+            Moduli di autorizzazione
           </h2>
           <p className="text-sm text-gray-600 mb-3">
-            Già intestato al vostro istituto. Lo stampa, lo fa firmare a un genitore per ogni
-            studente minorenne e lo conserva agli atti. Non va inviato a noi.
+            Già intestati al vostro istituto, con le scelte A e B su foto e video dell&apos;evento.
+            Li stampa, li fa firmare e li conserva agli atti: non vanno inviati a noi. Prima di
+            firmare, famiglie e studenti leggono l&apos;
+            <Link href={INFORMATIVA_IMMAGINI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+              informativa su foto e video
+            </Link>
+            .
           </p>
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() =>
-              adesione &&
-              generaAutorizzazionePDF({
-                istituto: adesione.istituto_denominazione,
-                comune: adesione.istituto_comune,
-                provincia: adesione.istituto_provincia,
-                referente: `${adesione.referente_nome} ${adesione.referente_cognome}`,
-              })
-            }
-          >
-            <i className="fas fa-file-pdf" style={{ marginRight: 8 }} />
-            Scarica il modulo
-          </Button>
+          <div className="flex flex-col gap-2">
+            {(
+              [
+                ["minorenne", "Modulo per studenti minorenni"],
+                ["maggiorenne", "Modulo per studenti maggiorenni"],
+              ] as const
+            ).map(([versione, etichetta]) => (
+              <Button
+                key={versione}
+                type="button"
+                variant={versione === "minorenne" ? "default" : "outline"}
+                className="w-full"
+                onClick={() =>
+                  adesione &&
+                  generaAutorizzazionePDF({
+                    istituto: adesione.istituto_denominazione,
+                    comune: adesione.istituto_comune,
+                    provincia: adesione.istituto_provincia,
+                    referente: `${adesione.referente_nome} ${adesione.referente_cognome}`,
+                    versione,
+                  })
+                }
+              >
+                <i className="fas fa-file-pdf" style={{ marginRight: 8 }} />
+                {etichetta}
+              </Button>
+            ))}
+          </div>
+          <details className="mt-3 text-sm text-gray-600">
+            <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text-dark)" }}>
+              Che cosa fa la scuola con i moduli
+            </summary>
+            <ol className="list-decimal pl-5 mt-2 space-y-1">
+              {ISTRUZIONI_SCUOLA.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ol>
+            <p className="mt-2">
+              L&apos;elenco minimo si scarica qui sotto, con il pulsante &quot;Elenco per foto e
+              video&quot;: va completato con le scelte A e B e inviato prima dell&apos;evento.
+            </p>
+          </details>
         </div>
       </div>
 
@@ -352,6 +388,14 @@ export function ReferenteConsole() {
         >
           <i className="fas fa-file-csv" style={{ marginRight: 8 }} />
           Elenco confermati
+        </a>
+        <a
+          href="/api/eventi/licei/referente/export?immagini=1"
+          className="btn-outline"
+          style={{ fontSize: 13, whiteSpace: "nowrap" }}
+          title="Studente e classe dei confermati, con le colonne delle scelte A e B da completare"
+        >
+          Elenco per foto e video
         </a>
         <a
           href="/api/eventi/licei/referente/export?tutte=1"

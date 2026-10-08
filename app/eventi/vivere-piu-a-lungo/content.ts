@@ -449,7 +449,7 @@ export const PERCHE_PARTECIPARE = [
   },
 ];
 
-export const FAQ = [
+export const FAQ: { q: string; a: string; link?: { href: string; label: string } }[] = [
   {
     q: "Quando e dove si svolge l'evento?",
     a: "L'evento si tiene il 10 e l'11 dicembre 2026 a Taranto. Il giorno 1 al PalaMazzola, il giorno 2 al Teatro Fusco.",
@@ -477,5 +477,10 @@ export const FAQ = [
   {
     q: "Come faccio a presentare la mia startup nello Showcase del giorno 2?",
     a: "Con il bando di partecipazione, una selezione pubblica aperta a team di ricerca, spin-off universitari, startup, PMI innovative e imprese. Ci sono tre categorie, un premio per ciascuna e fino a 15 progetti ammessi al palco. La candidatura è gratuita e si presenta dalla pagina del bando. Iscriversi all'evento e candidarsi al bando sono due cose distinte: chi si candida deve comunque iscriversi alla giornata.",
+  },
+  {
+    q: "Durante l'evento si fanno foto e video?",
+    a: "Sì. Fondazione bioERGOtech e SafesPro realizzano foto, video, registrazioni audio e interviste in entrambe le giornate; non sono previste dirette streaming. Per gli studenti che partecipano al convegno valgono le scelte espresse nei moduli raccolti dalla scuola, e non pubblichiamo intenzionalmente immagini riconoscibili di minori presenti nel pubblico senza autorizzazione.",
+    link: { href: "/eventi/vivere-piu-a-lungo/informativa-immagini", label: "Leggi l'informativa su foto e video" },
   },
 ];

@@ -754,7 +754,17 @@ export default function EventPage() {
                     <span>{f.q}</span>
                     <i className="fas fa-chevron-down text-sm transition-transform group-open:rotate-180" style={{ color: "var(--primary)" }} aria-hidden="true" />
                   </summary>
-                  <div className="px-6 pb-6 text-gray-700 leading-relaxed">{f.a}</div>
+                  <div className="px-6 pb-6 text-gray-700 leading-relaxed">
+                    {f.a}
+                    {f.link && (
+                      <>
+                        {" "}
+                        <Link href={f.link.href} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                          {f.link.label}
+                        </Link>
+                      </>
+                    )}
+                  </div>
                 </details>
               ))}
             </div>

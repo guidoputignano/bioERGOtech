@@ -24,7 +24,42 @@ export async function GET(request: Request) {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, ctx } = guard;
 
-  const tutte = new URL(request.url).searchParams.get("tutte") === "1";
+  const params = new URL(request.url).searchParams;
+  const tutte = params.get("tutte") === "1";
+
+  // L'elenco minimo per foto e video, quello delle istruzioni per le scuole:
+  // solo studente e classe dei confermati, con le due colonne delle scelte A
+  // e B che il referente completa dai moduli firmati. Niente email, niente
+  // altro: e il file che la scuola invia agli organizzatori.
+  if (params.get("immagini") === "1") {
+    const { data, error } = await client
+      .from("licei_iscrizioni")
+      .select("cognome, nome, classe")
+      .eq("adesione_id", ctx.adesione.id)
+      .eq("stato", "confermata")
+      .order("classe", { ascending: true })
+      .order("cognome", { ascending: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    const intestazione = [
+      "Studente partecipante",
+      "Classe",
+      "A. Immagini per raccontare l'evento 2026 (SI/NO)",
+      "B. Uso promozionale futuro, incluso YouTube (SI/NO)",
+    ];
+    const righe = [intestazione.map(csvCell).join(",")];
+    for (const r of (data ?? []) as { cognome: string; nome: string; classe: string }[]) {
+      righe.push([`${r.cognome} ${r.nome}`, r.classe, "", ""].map(csvCell).join(","));
+    }
+    const slugImm = ctx.adesione.codice.toLowerCase();
+    const dataImm = new Date().toISOString().slice(0, 10);
+    return new NextResponse("\uFEFF" + righe.join("\r\n"), {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="elenco-foto-video-${slugImm}-${dataImm}.csv"`,
+      },
+    });
+  }
 
   let query = client
     .from("licei_iscrizioni")

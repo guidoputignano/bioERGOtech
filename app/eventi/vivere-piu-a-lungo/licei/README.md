@@ -124,6 +124,15 @@ codice fiscale, niente contatti dei genitori. L'anno di corso sostituisce l'eta
 ed e meno identificante. Chi aggiunge un campo a `licei_iscrizioni` aggiunge un
 dato di un minore, quindi deve poter spiegare a che cosa serve.
 
+Il modulo esiste in due versioni, per studenti minorenni (firma il genitore,
+comprende la partecipazione al percorso) e maggiorenni (firma lo studente).
+Entrambe portano le due scelte facoltative su foto e video dell'evento, A
+(raccontare l'evento 2026, 5 anni) e B (promozione futura, YouTube compreso,
+10 anni), con i testi presi da `../informativa-immagini/content.ts`: gli
+stessi della pagina pubblica `/eventi/vivere-piu-a-lungo/informativa-immagini`.
+Alla Fondazione arriva solo l'elenco minimo (studente, classe, A, B), che il
+referente scarica gia impostato con `export?immagini=1` e completa dai moduli.
+
 Le autorizzazioni restano **cartacee e in custodia all'istituto**. Il sito
 genera il modulo da far firmare (`generaAutorizzazione.ts`, che gira nel
 browser del referente e non contiene dati di studenti) ma non raccoglie il
