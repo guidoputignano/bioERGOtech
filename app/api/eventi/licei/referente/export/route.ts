@@ -15,7 +15,9 @@ function csvCell(value: unknown): string {
  * L'elenco degli studenti del proprio istituto, in CSV.
  *
  * Non e un export di comodo: e l'elenco che l'art. 4 chiede all'istituto di
- * trasmettere. Per questo di default contiene solo le iscrizioni CONFERMATE
+ * trasmettere. Contiene solo i dati necessari a quello scopo: niente email,
+ * che il referente vede a schermo ma che le istruzioni gli chiedono di non
+ * esportare. Per questo di default contiene solo le iscrizioni CONFERMATE
  * dal referente, che sono quelle di cui la scuola risponde. Con ?tutte=1 si
  * scarica anche il resto, per lavorarci sopra.
  */
@@ -94,7 +96,7 @@ export async function GET(request: Request) {
   );
 
   const headers = [
-    "Cognome", "Nome", "Classe", "Anno di corso", "Email", "Stato",
+    "Cognome", "Nome", "Classe", "Anno di corso", "Stato",
     "Entrato nel corso", `Lezioni completate (su ${TOTALE_LEZIONI})`,
     "Iscritto il", "Confermato il", "Note",
   ];
@@ -108,7 +110,6 @@ export async function GET(request: Request) {
         r.nome,
         r.classe,
         r.anno_corso,
-        r.email,
         statoIscrizioneLabel(r.stato),
         haFattoAccesso({
           ultimo_accesso: ultimoAccesso.get(r.id) ?? null,

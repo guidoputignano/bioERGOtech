@@ -88,11 +88,10 @@ export function liceiEmailHtml(input: LiceiEmailInput): string {
 
       <div style="background:#FFF8E6;border-left:3px solid #E4B33C;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
         <p style="color:#75570F;font-size:13.5px;line-height:1.65;margin:0;">
-          <strong>Da preparare intanto.</strong> Le autorizzazioni dei genitori per gli studenti
-          minorenni restano in custodia all'istituto: ne servono due, una per la partecipazione al
-          percorso e una per la ripresa audiovisiva durante l'evento finale, che si svolge in seduta
-          pubblica. Il modulo da far firmare, già intestato al vostro istituto, lo scarica dalla sua
-          area riservata:
+          <strong>Da preparare intanto.</strong> Per il corso non servono moduli: gli studenti di
+          almeno 14 anni si iscrivono e acconsentono da sé. Per gli studenti che parteciperanno
+          all'evento finale servono invece i moduli su foto e video, che restano in custodia
+          all'istituto. Li scarica, già intestati al vostro istituto, dalla sua area riservata:
           <a href="${SITE_URL}${REFERENTE_PATH}" style="color:#8A6100;font-weight:700;">${SITE_URL}${REFERENTE_PATH}</a>
         </p>
       </div>
@@ -163,10 +162,9 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
       <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Due cose da fare</p>
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 14px;">
-          <strong style="color:#0A1628;">1. Il modulo di autorizzazione.</strong> Se sei minorenne
-          serve la firma di un genitore. Il modulo lo ha il tuo docente referente: chiediglielo,
-          fallo firmare e riportaglielo. Senza quel foglio non puoi partecipare, e non è una
-          formalità che possiamo saltare.
+          <strong style="color:#0A1628;">1. Imposta la password.</strong> Il tuo account è
+          personale: non condividere password o credenziali con altre persone. Per assistenza o per
+          chiudere l'account scrivi a info@bioergotech.org.
         </p>
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0;">
           <strong style="color:#0A1628;">2. Aspetta la conferma.</strong> Il tuo referente controlla
@@ -376,10 +374,9 @@ export function finalistaEmailHtml(input: FinalistaEmailInput): string {
       </div>
 
       <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0 0 24px;">
-        Il tuo docente referente riceve le indicazioni per l'accompagnamento e gli orari. Se sei
-        minorenne, controlla con lui che in segreteria ci sia la tua autorizzazione firmata,
-        comprese le riprese: l'evento è in seduta pubblica, e chi non acconsente alle riprese
-        partecipa lo stesso.
+        Il tuo docente referente riceve le indicazioni per l'accompagnamento e gli orari. Per foto e
+        video dell'evento la scuola ti consegna un modulo con due scelte facoltative: se sei
+        minorenne lo firma un genitore. Chi non acconsente alle riprese partecipa lo stesso.
       </p>
       ${chiusura()}
     </div>

@@ -20,13 +20,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   ANNI_CORSO,
+  ACCETTAZIONE_REGOLAMENTO_TESTO,
+  CONSENSO_NEWSLETTER_STUDENTE_TESTO,
   CONSENSO_PRIVACY_STUDENTE_TESTO,
-  DICHIARAZIONE_AUTORIZZAZIONE_TESTO,
+  DICHIARAZIONE_ETA_TESTO,
+  INFORMATIVA_STUDENTI_PATH,
+  REGOLAMENTO_PATH,
   LICEI,
   NOTA_ISCRIZIONE_STUDENTE,
   STUDENTE_PATH,
 } from "../content";
-import { INFORMATIVA_IMMAGINI_PATH } from "../../informativa-immagini/content";
 import { normalizzaCodice, validateIscrizione } from "@/lib/eventi/licei-iscrizioni";
 
 function Consenso({
@@ -75,7 +78,9 @@ export function IscrizioneForm({
   const [classe, setClasse] = useState("");
   const [anno, setAnno] = useState("");
   const [privacy, setPrivacy] = useState(false);
-  const [autorizzazione, setAutorizzazione] = useState(false);
+  const [eta14, setEta14] = useState(false);
+  const [regolamento, setRegolamento] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const [website, setWebsite] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -104,7 +109,9 @@ export function IscrizioneForm({
       classe,
       anno_corso: Number(anno),
       consenso_privacy: privacy,
-      dichiara_autorizzazione: autorizzazione,
+      dichiara_14_anni: eta14,
+      accetta_regolamento: regolamento,
+      consenso_newsletter: newsletter,
       website,
     };
 
@@ -156,9 +163,9 @@ export function IscrizioneForm({
             lineHeight: 1.65,
           }}
         >
-          <strong>Due cose, adesso.</strong> Se sei minorenne, chiedi al tuo docente referente il
-          modulo di autorizzazione, fallo firmare a un genitore e riportaglielo. Poi aspetta che il
-          referente confermi la tua iscrizione: te lo diciamo per email.
+          <strong>Adesso.</strong> Imposta la password con il link che ti abbiamo mandato per email,
+          poi aspetta che il tuo docente referente confermi l&apos;iscrizione: te lo diciamo per
+          email.
         </div>
         <p style={{ fontSize: 13, color: "var(--text-light)", lineHeight: 1.7, margin: "16px 0 0" }}>
           Quando la tua iscrizione è confermata, la tua area è qui:{" "}
@@ -303,17 +310,23 @@ export function IscrizioneForm({
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <Consenso checked={autorizzazione} onChange={setAutorizzazione}>
-          {DICHIARAZIONE_AUTORIZZAZIONE_TESTO} *{" "}
-          <Link href={INFORMATIVA_IMMAGINI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
-            Informativa su foto e video
-          </Link>
+        <Consenso checked={eta14} onChange={setEta14}>
+          {DICHIARAZIONE_ETA_TESTO} *
         </Consenso>
         <Consenso checked={privacy} onChange={setPrivacy}>
           {CONSENSO_PRIVACY_STUDENTE_TESTO} *{" "}
-          <Link href="/legal/informativa-privacy" style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
-            Leggi l&apos;informativa
+          <Link href={INFORMATIVA_STUDENTI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Informativa privacy del corso
           </Link>
+        </Consenso>
+        <Consenso checked={regolamento} onChange={setRegolamento}>
+          {ACCETTAZIONE_REGOLAMENTO_TESTO} *{" "}
+          <Link href={REGOLAMENTO_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Regolamento di partecipazione
+          </Link>
+        </Consenso>
+        <Consenso checked={newsletter} onChange={setNewsletter}>
+          {CONSENSO_NEWSLETTER_STUDENTE_TESTO}
         </Consenso>
       </div>
 

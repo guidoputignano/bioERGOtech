@@ -19,8 +19,13 @@ export type IscrizioneInput = {
   classe: string;
   anno_corso: number;
 
+  /** Ho letto l'informativa del corso e chiedo di essere iscritto/a. */
   consenso_privacy: boolean;
-  dichiara_autorizzazione: boolean;
+  /** Ho compiuto 14 anni: soglia del consenso diretto ai servizi online. */
+  dichiara_14_anni: boolean;
+  accetta_regolamento: boolean;
+  /** Facoltativo, mai preselezionato. */
+  consenso_newsletter?: boolean;
 
   /** Honeypot anti-spam. Deve restare vuoto. */
   website?: string;
@@ -68,10 +73,12 @@ export function validateIscrizione(input: Partial<IscrizioneInput>): string | nu
   if (![3, 4, 5].includes(anno))
     return "Il percorso è riservato agli studenti del triennio: terza, quarta o quinta.";
 
+  if (!input.dichiara_14_anni)
+    return "Il percorso è riservato a chi ha almeno 14 anni. Se ne hai meno, scrivi a info@bioergotech.org insieme a un genitore.";
   if (!input.consenso_privacy)
-    return "Per iscriverti devi acconsentire al trattamento dei tuoi dati.";
-  if (!input.dichiara_autorizzazione)
-    return "Devi dichiarare di aver consegnato, o di voler consegnare, il modulo di autorizzazione firmato alla tua scuola.";
+    return "Per iscriverti devi dichiarare di aver letto l'informativa privacy del corso.";
+  if (!input.accetta_regolamento)
+    return "Per iscriverti devi accettare il regolamento di partecipazione.";
 
   return null;
 }

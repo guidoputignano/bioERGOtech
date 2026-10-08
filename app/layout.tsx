@@ -63,24 +63,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* =========================================
-            TRACKING — Google Analytics + Google Ads
-            Single gtag.js load, two configs
+            TRACKING
+            Google Analytics e Google Ads NON si caricano qui: li carica
+            il banner dei cookie (components/cookie-banner.tsx) solo dopo
+            il consenso, e il tag pubblicitario mai nelle pagine del corso
+            e delle aree riservate, usate anche da studenti minorenni.
         ========================================= */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-GWKKXQ2S7M"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-GWKKXQ2S7M', { send_page_view: false });
-              gtag('config', 'AW-17391421551');
-            `,
-          }}
-        />
 
         {/* =========================================
             ICONS & STYLES

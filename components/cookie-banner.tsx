@@ -28,23 +28,52 @@ function savePreferences(prefs: CookiePreferences) {
   localStorage.setItem(COOKIE_KEY, JSON.stringify(prefs));
 }
 
-/**
- * FIX: Previously this injected the gtag script and then immediately
- * called gtag("config", ...) synchronously. On page reload after prior
- * consent, the banner is hidden so the script was injected but the
- * config call fired before the script loaded — meaning GA never
- * initialised. Now we wait for script.onload before calling config.
- */
-function loadGoogleAnalytics() {
-  if (typeof window === "undefined") return;
+const ADS_ID = "AW-17391421551";
 
-  // If gtag is already initialised (script already loaded), just send config
-  if (window.gtag) {
-    window.gtag("config", GA_ID, { anonymize_ip: true });
+/**
+ * Pagine in cui il tag pubblicitario non si carica mai, nemmeno con il
+ * consenso "marketing": il corso e le aree riservate dei percorsi sono usati
+ * anche da studenti minorenni, e lì non facciamo remarketing.
+ */
+const PERCORSI_SENZA_ADS = [
+  "/courses",
+  "/eventi/vivere-piu-a-lungo/licei",
+  "/eventi/vivere-piu-a-lungo/universita",
+  "/member-portal",
+  "/auth",
+];
+
+function adsConsentiti(): boolean {
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname;
+  return !PERCORSI_SENZA_ADS.some((p) => path === p || path.startsWith(p + "/"));
+}
+
+/**
+ * Carica gtag.js una volta sola e invia le configurazioni consentite.
+ *
+ * Prima il layout caricava gtag.js e il tag Ads su ogni pagina, prima di
+ * qualsiasi scelta nel banner: il consenso decideva solo se configurare
+ * Analytics. Ora lo script parte soltanto da qui, cioè dopo il consenso, e
+ * la configurazione di ciascun tag dipende dalla sua categoria. La config
+ * parte a script caricato, altrimenti al primo caricamento con consenso già
+ * dato non arriverebbe mai.
+ */
+function loadGoogleTags(prefs: { analytics: boolean; marketing: boolean }) {
+  if (typeof window === "undefined") return;
+  const conAds = prefs.marketing && adsConsentiti();
+  if (!prefs.analytics && !conAds) return;
+
+  const configura = () => {
+    if (prefs.analytics) window.gtag?.("config", GA_ID, { anonymize_ip: true });
+    if (conAds) window.gtag?.("config", ADS_ID);
+  };
+
+  if (window.gtag && document.getElementById("gtag-script")) {
+    configura();
     return;
   }
 
-  // Set up dataLayer and gtag shim immediately so any queued calls work
   window.dataLayer = window.dataLayer || [];
   function gtag(...args: unknown[]) {
     window.dataLayer.push(args);
@@ -52,22 +81,15 @@ function loadGoogleAnalytics() {
   window.gtag = gtag as (...args: unknown[]) => void;
   window.gtag("js", new Date());
 
-  // Only inject the script once
   if (!document.getElementById("gtag-script")) {
     const script = document.createElement("script");
     script.id = "gtag-script";
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-
-    // FIX: send config AFTER the script has loaded
-    script.onload = () => {
-      window.gtag?.("config", GA_ID, { anonymize_ip: true });
-    };
-
+    script.onload = configura;
     document.head.appendChild(script);
   } else {
-    // Script tag exists but gtag wasn't ready yet — send config now
-    window.gtag("config", GA_ID, { anonymize_ip: true });
+    configura();
   }
 }
 
@@ -84,11 +106,8 @@ function removeGACookies() {
 }
 
 function applyConsent(prefs: CookiePreferences) {
-  if (prefs.analytics) {
-    loadGoogleAnalytics();
-  } else {
-    removeGACookies();
-  }
+  loadGoogleTags(prefs);
+  if (!prefs.analytics) removeGACookies();
 }
 
 declare global {

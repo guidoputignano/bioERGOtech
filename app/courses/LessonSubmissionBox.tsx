@@ -117,7 +117,7 @@ export default function LessonSubmissionBox({
             📝 Your Lesson Submission
           </h2>
           <p style={{ fontSize: 13, color: TEXT_LIGHT, margin: 0 }}>
-            Share your reflection, ask a question, or leave a comment. Your mentor will respond.
+            Share your reflection, ask a question, or leave a comment. The bioERGOtech team will respond.
           </p>
         </div>
         {existing && !editing && (
@@ -184,7 +184,7 @@ export default function LessonSubmissionBox({
           {existing.admin_reply && (
             <div style={{ marginTop: 20, background: "#F7F9FC", border: `1px solid ${BORDER}`, borderLeft: `4px solid ${TEAL}`, borderRadius: "0 10px 10px 0", padding: "14px 18px" }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: TEAL, marginBottom: 8 }}>
-                💬 Mentor Reply
+                💬 Reply from the bioERGOtech team
               </div>
               <p style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65, margin: 0 }}>{existing.admin_reply}</p>
               {existing.replied_at && (
@@ -197,7 +197,7 @@ export default function LessonSubmissionBox({
 
           {!existing.admin_reply && (
             <div style={{ marginTop: 16, padding: "12px 16px", background: "#FFF8E6", borderRadius: 8, fontSize: 13, color: "#7D5A00" }}>
-              ⏳ Awaiting mentor reply. You will see it here once your mentor responds.
+              ⏳ Awaiting a reply. You will see it here once the bioERGOtech team responds.
             </div>
           )}
         </div>
@@ -208,7 +208,7 @@ export default function LessonSubmissionBox({
         <div>
           {existing && (
             <div style={{ marginBottom: 16, padding: "10px 14px", background: "#EBF8FF", borderRadius: 8, fontSize: 13, color: "#2B6CB0" }}>
-              ✏️ You are editing your existing submission. Your mentor's reply will be preserved.
+              ✏️ You are editing your existing submission. The team's reply will be preserved.
             </div>
           )}
 

@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
 import {
   AUTORIZZAZIONE_NOTA_CUSTODIA,
-  AUTORIZZAZIONE_PARTECIPAZIONE,
   LICEI,
   SITE_URL,
 } from "../content";
@@ -13,18 +12,20 @@ import {
 } from "../../informativa-immagini/content";
 
 /**
- * Modulo di autorizzazione da far firmare a famiglie e studenti.
+ * Modulo su foto, video, voce e interviste dell'evento, da far firmare a
+ * famiglie e studenti.
  *
  * Gira nel browser del docente referente, non sul server: il PDF non
  * contiene dati di studenti, solo l'intestazione dell'istituto e i campi da
  * riempire a penna. Non c'e niente da generare lato server e niente da
  * conservare.
  *
- * Due versioni, come i documenti privacy dell'evento. Per lo studente
- * minorenne firma il genitore, e il modulo comprende anche la partecipazione
- * al percorso. Lo studente maggiorenne firma da se le sole scelte A e B sulle
- * immagini. I testi delle scelte vengono da `informativa-immagini/content.ts`,
- * gli stessi della pagina pubblica dell'informativa.
+ * Due versioni, come i documenti privacy dell'evento: per lo studente
+ * minorenne firma il genitore, lo studente maggiorenne firma da se. Il
+ * modulo contiene solo le scelte A e B sulle immagini: alla partecipazione al
+ * corso lo studente di almeno 14 anni acconsente da se, all'iscrizione. I
+ * testi delle scelte vengono da `informativa-immagini/content.ts`, gli stessi
+ * della pagina pubblica dell'informativa.
  *
  * Il foglio prodotto va stampato, firmato e conservato in segreteria. Il
  * sito non lo raccoglie indietro, e non deve: le autorizzazioni sono un
@@ -103,7 +104,7 @@ export function generaAutorizzazionePDF(input: AutorizzazioneInput): void {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text(
-    minore ? "Modulo di autorizzazione . Studente minorenne" : "Modulo di autorizzazione . Studente maggiorenne",
+    minore ? "Foto, video, voce e interviste . Studente minorenne" : "Foto, video, voce e interviste . Studente maggiorenne",
     MARGIN,
     y,
   );
@@ -175,10 +176,10 @@ export function generaAutorizzazionePDF(input: AutorizzazioneInput): void {
   y += 3;
 
   // ── Riquadri delle autorizzazioni ──
-  const riquadro = (titolo: string, testo: string, conCaselle: boolean, nota: string) => {
+  const riquadro = (titolo: string, testo: string, nota: string) => {
     doc.setFontSize(9);
     const righe = doc.splitTextToSize(testo, CONTENT_W - 10);
-    const altezza = 12 + righe.length * LINE_H + (conCaselle ? 12 : 7);
+    const altezza = 12 + righe.length * LINE_H + 12;
     spazio(altezza + 6);
 
     doc.setDrawColor(...LGRAY);
@@ -194,34 +195,21 @@ export function generaAutorizzazionePDF(input: AutorizzazioneInput): void {
     doc.setTextColor(...DARK);
     doc.text(righe, MARGIN + 5, y + 13);
 
-    const baseY = y + altezza - (conCaselle ? 6 : 4);
-    if (conCaselle) {
-      doc.setDrawColor(...DARK);
-      doc.rect(MARGIN + 5, baseY - 3.5, 4, 4, "D");
-      doc.text("SÌ, autorizzo", MARGIN + 12, baseY);
-      doc.rect(MARGIN + 45, baseY - 3.5, 4, 4, "D");
-      doc.text("NO, non autorizzo", MARGIN + 52, baseY);
-      doc.setFontSize(7.5);
-      doc.setTextColor(...GRAY);
-      doc.text(nota, MARGIN + 100, baseY);
-    } else {
-      doc.setFontSize(7.5);
-      doc.setTextColor(...GRAY);
-      doc.text(nota, MARGIN + 5, baseY);
-    }
+    const baseY = y + altezza - 6;
+    doc.setDrawColor(...DARK);
+    doc.rect(MARGIN + 5, baseY - 3.5, 4, 4, "D");
+    doc.text("SÌ, autorizzo", MARGIN + 12, baseY);
+    doc.rect(MARGIN + 45, baseY - 3.5, 4, 4, "D");
+    doc.text("NO, non autorizzo", MARGIN + 52, baseY);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY);
+    doc.text(nota, MARGIN + 100, baseY);
 
     y += altezza + 6;
   };
 
-  // La partecipazione al percorso solo per il minorenne: senza caselle,
-  // perché è necessaria per partecipare e una casella "nego" darebbe l'idea
-  // che si possa venire senza. Le scelte sulle immagini invece sono
-  // davvero facoltative.
-  if (minore) {
-    riquadro(AUTORIZZAZIONE_PARTECIPAZIONE.titolo, AUTORIZZAZIONE_PARTECIPAZIONE.testo, false, "Necessaria per la partecipazione al percorso.");
-  }
   for (const s of SCELTE_IMMAGINI) {
-    riquadro(`Scelta ${s.id} . ${s.titolo}`, s.testo(input.versione), true, `Facoltativa. Durata: ${s.durata}.`);
+    riquadro(`Scelta ${s.id} . ${s.titolo}`, s.testo(input.versione), `Facoltativa. Durata: ${s.durata}.`);
   }
 
   paragrafo(SCELTE_NOTA, 8, GRAY);
@@ -302,5 +290,5 @@ export function generaAutorizzazionePDF(input: AutorizzazioneInput): void {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 50);
-  doc.save(`autorizzazione-${input.versione}-${slug || "istituto"}.pdf`);
+  doc.save(`foto-video-${input.versione}-${slug || "istituto"}.pdf`);
 }

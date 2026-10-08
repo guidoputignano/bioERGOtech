@@ -626,10 +626,26 @@ function Lesson_3_2() {
 }
 
 // ─── Lesson 4.1 ───────────────────────────────────────────────────────────────
+/**
+ * Shown wherever a lesson asks students to sign up for an external service
+ * (n8n, Telegram, model APIs). Part of the audience is 14 to 17 years old,
+ * and these services set their own minimum age and terms; the course must
+ * not push a minor into an account they are not allowed to open, nor into
+ * pasting personal data into a third-party model.
+ */
+function ExternalServicesNote() {
+  return (
+    <CalloutBox label="Before you create an account on an external service" variant="warning">
+      Each service has its own terms and minimum age. If you are under 18, check them with your teacher before signing up, and use the shared or demo setup your teacher suggests when a service is not open to you. Never paste personal data, yours or anyone else&apos;s, into an AI model or an automation tool.
+    </CalloutBox>
+  );
+}
+
 function Lesson_4_1() {
   return (
     <>
       <TrackBadge track="A" />
+      <ExternalServicesNote />
       <SlideImage src="/assets/courses/lesson-4-1/slide-1.png" alt="Lesson Overview" />
       <Section title="Before This Session — Pre-Session Requirements">
         <p style={p}>Complete all three before attending. This session is practical — it assumes you have watched the tutorials.</p>
@@ -688,6 +704,7 @@ function Lesson_4_2() {
   return (
     <>
       <TrackBadge track="B" />
+      <ExternalServicesNote />
       <ChannelLink handle="simone_rizzo98" title="Simone Rizzo" note="practical agent building content recommended by bioERGOtech" />
       <SlideImage src="/assets/courses/lesson-4-2/slide-1.png" alt="Lesson Overview" />
 
@@ -764,6 +781,7 @@ function Lesson_4_3() {
   return (
     <>
       <TrackBadge track="C" />
+      <ExternalServicesNote />
       <Section title="Before This Session — Pre-Session Requirements">
         {[
           { num: "01", label: "Agentic AI Tutorial using Agno — Krish Naik (~45 min)", desc: "YouTube — search 'Krish Naik Agno agentic AI tutorial'. Most comprehensive single resource. Essential." },
@@ -912,6 +930,7 @@ function Lesson_5_1() {
 function Lesson_5_2() {
   return (
     <>
+      <ExternalServicesNote />
       <Section title="Session Deliverable — All Tracks">
         <CalloutBox label="What You Must Complete Today" variant="tip">One successful test run connected to your actual project domain, with a screenshot in your project log. The environment must be set up for your project — not a generic test.</CalloutBox>
       </Section>
