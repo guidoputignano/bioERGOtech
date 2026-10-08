@@ -58,6 +58,7 @@ import {
   statoRichiestaLabel,
 } from "../content";
 import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/universita-squadre";
+import { MentorElenco } from "../../mentor/MentorElenco";
 
 // Le rotte tornano righe intere delle loro tabelle, e le colonne le decide
 // la migrazione: ricopiarne qui l'elenco creerebbe un secondo posto da
@@ -1746,6 +1747,13 @@ export function StudenteUniversitaConsole({
           </div>
         </div>
       )}
+
+      {/* ══ Tutti i mentor del percorso ══
+          Accanto, e non al posto, dei mentor abbinati alla squadra qui
+          sopra: quelli li propone la Fondazione per il progetto, questi sono
+          l'elenco di tutto il percorso, con il contatto che ciascuno ha
+          messo a disposizione. Solo nell'area completa, non nelle lezioni. */}
+      {sezioni.includes("tutto") && <MentorElenco percorso="universita" />}
     </div>
   );
 }

@@ -39,6 +39,7 @@ import {
   statoMentorLabel,
   statoProgettoColoreUniversita,
 } from "../content";
+import { LINEE_GUIDA_MENTOR_PATH } from "../../linee-guida-mentor/content";
 
 // Le righe arrivano intere da `universita_mentor`, piu le squadre innestate
 // dalla rotta: le colonne le decide la migrazione.
@@ -292,6 +293,29 @@ export function MentorPanel() {
     [squadre],
   );
 
+  // Le colonne del contatto e delle linee guida arrivano con la migrazione
+  // 20261214000000, che si applica a mano. La GET legge `*`, quindi senza
+  // migrazione le chiavi semplicemente non ci sono: lo si capisce da qui e
+  // il pannello lo dice, invece di segnalare come "senza linee guida" ogni
+  // mentor dell'elenco.
+  const colonneLineeGuida = useMemo(
+    () => righe.length === 0 || righe.some((r) => "linee_guida_accettate_at" in r),
+    [righe],
+  );
+
+  // Approvati che gli studenti non possono ancora contattare: senza
+  // accettazione il contatto non esce dalla rotta dei partecipanti, senza
+  // contatto non c'e niente da far uscire.
+  const daCompletare = useMemo(
+    () =>
+      colonneLineeGuida
+        ? righe.filter(
+            (r) => r.stato === "approvata" && (!r.linee_guida_accettate_at || !r.contatto_studenti),
+          ).length
+        : 0,
+    [righe, colonneLineeGuida],
+  );
+
   // Approvati senza consenso: il numero che spiega la differenza fra questo
   // elenco e la pagina pubblica dei mentor.
   const senzaConsenso = useMemo(
@@ -328,6 +352,37 @@ export function MentorPanel() {
           Non è un errore e non si corregge da qui: non hanno dato il consenso alla
           pubblicazione, che è facoltativo. Restano mentor a tutti gli effetti, possono seguire un
           team e vederne il progetto. Per comparire in elenco devono cambiare idea loro.
+        </div>
+      )}
+
+      {!colonneLineeGuida && (
+        <div style={NOTA_ATTESA}>
+          <strong>Contatto per gli studenti e linee guida non ancora disponibili.</strong> Il
+          database non ha le colonne nuove: va applicata la migrazione{" "}
+          <code style={{ fontSize: 12.5 }}>20261214000000_mentor_contatto_linee_guida.sql</code>.
+          Fino ad allora gli studenti vedono l&apos;elenco dei mentor senza contatti.
+        </div>
+      )}
+
+      {daCompletare > 0 && (
+        <div style={NOTA_ATTESA}>
+          <strong>
+            {daCompletare === 1
+              ? "1 mentor approvato non è ancora contattabile dagli studenti"
+              : `${daCompletare} mentor approvati non sono ancora contattabili dagli studenti`}
+            .
+          </strong>{" "}
+          Il contatto compare nell&apos;area dei partecipanti solo se c&apos;è e se il mentor ha
+          accettato le{" "}
+          <a
+            href={LINEE_GUIDA_MENTOR_PATH}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#75570F", fontWeight: 600, textDecoration: "underline" }}
+          >
+            linee guida
+          </a>
+          . Le righe sono segnate qui sotto.
         </div>
       )}
 
@@ -372,6 +427,10 @@ export function MentorPanel() {
         const colore = statoMentorColore(m.stato);
         const seguite: Qualsiasi[] = m.squadre ?? [];
         const approvatoNonPubblicato = m.stato === "approvata" && !m.consenso_pubblicazione;
+        const senzaLineeGuida =
+          colonneLineeGuida && m.stato === "approvata" && !m.linee_guida_accettate_at;
+        const senzaContatto =
+          colonneLineeGuida && m.stato === "approvata" && !m.contatto_studenti;
         const aree: string[] = m.aree ?? [];
         // Le squadre che gia segue non ricompaiono nella tendina: la rotta
         // rifiuterebbe il doppione con un 409, e offrirlo e un invito a
@@ -435,6 +494,32 @@ export function MentorPanel() {
                   }}
                 >
                   Non in pagina
+                </span>
+              )}
+
+              {senzaLineeGuida && (
+                <span
+                  className="badge"
+                  style={{
+                    background: `${COLORE_ATTESA}1A`,
+                    color: COLORE_ATTESA,
+                    flexShrink: 0,
+                  }}
+                >
+                  Senza linee guida
+                </span>
+              )}
+
+              {senzaContatto && (
+                <span
+                  className="badge"
+                  style={{
+                    background: `${COLORE_ATTESA}1A`,
+                    color: COLORE_ATTESA,
+                    flexShrink: 0,
+                  }}
+                >
+                  Senza contatto
                 </span>
               )}
 
@@ -523,6 +608,95 @@ export function MentorPanel() {
                     pubblicazione</strong>, quindi non compare nella pagina pubblica dei mentor e
                     non deve comparirci. Può seguire una squadra e vederne il progetto come
                     chiunque altro.
+                  </div>
+                )}
+
+                {/* ── Contatto per gli studenti e linee guida ──
+                    Il contatto esce dalla rotta dei partecipanti solo se le
+                    linee guida risultano accettate: le due cose si guardano
+                    insieme, ed e per questo che stanno nello stesso
+                    riquadro. */}
+                {colonneLineeGuida && (
+                  <div
+                    style={{
+                      border: "1px solid var(--border-color)",
+                      borderRadius: 12,
+                      padding: 16,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                    }}
+                  >
+                    <h3 className="font-semibold text-gray-800" style={{ fontSize: 14, margin: 0 }}>
+                      Contatto per gli studenti e linee guida
+                    </h3>
+
+                    <label
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 5,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "var(--text-light)",
+                      }}
+                    >
+                      Contatto per gli studenti (email professionale o pagina web)
+                      <Input
+                        key={`contatto-${m.id}-${m.contatto_studenti ?? ""}`}
+                        defaultValue={m.contatto_studenti ?? ""}
+                        placeholder="Nessun contatto indicato"
+                        disabled={occupato === m.id}
+                        onBlur={(e) => {
+                          if (e.target.value.trim() !== (m.contatto_studenti ?? "")) {
+                            aggiorna(m, { contatto_studenti: e.target.value });
+                          }
+                        }}
+                      />
+                      <span style={{ fontWeight: 400, lineHeight: 1.55 }}>
+                        Lo vedono solo i partecipanti del percorso dopo l&apos;accesso, mai la
+                        pagina pubblica. Si salva quando si esce dal campo; vuoto lo toglie.
+                      </span>
+                    </label>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span style={{ fontSize: 13.5, color: "var(--text-dark)", flex: "1 1 260px" }}>
+                        {m.linee_guida_accettate_at ? (
+                          <>
+                            <i
+                              className="fas fa-check"
+                              style={{ color: statoMentorColore("approvata"), marginRight: 8 }}
+                              aria-hidden="true"
+                            />
+                            Linee guida accettate il {dataIt(m.linee_guida_accettate_at)}
+                          </>
+                        ) : (
+                          "Linee guida non ancora accettate: il contatto non viene mostrato agli studenti."
+                        )}
+                      </span>
+                      {/* Per chi le ha accettate fuori dal sito, per email o su
+                          carta: chi passa dal modulo le accetta li. Solo per un
+                          mentor approvato, come nella rotta. */}
+                      {!m.linee_guida_accettate_at && m.stato === "approvata" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={occupato === m.id}
+                          style={{ height: 34, fontSize: 13 }}
+                          onClick={() => {
+                            if (
+                              confirm(
+                                `Registrare che ${m.nome} ${m.cognome} ha accettato le linee guida per i mentor? Si salvano la data di oggi e il testo attuale delle linee guida. Va fatto solo se l'accettazione è arrivata per iscritto.`,
+                              )
+                            ) {
+                              aggiorna(m, { registra_linee_guida: true });
+                            }
+                          }}
+                        >
+                          Registra accettazione ricevuta
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
 

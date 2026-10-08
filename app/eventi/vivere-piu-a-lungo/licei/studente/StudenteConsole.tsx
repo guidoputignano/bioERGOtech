@@ -35,6 +35,7 @@ import {
   statoProgettoLabel,
 } from "../content";
 import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/licei-squadre";
+import { MentorElenco } from "../../mentor/MentorElenco";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Qualsiasi = any;
@@ -688,6 +689,13 @@ export function StudenteConsole({
           )}
         </>
       )}
+
+      {/* ══ Mentor ══
+          Solo nell'area completa, non dentro le lezioni: la lezione mostra
+          la parte che chiede, e i mentor non sono una consegna. Non dipende
+          dalla squadra, perche un parere si puo chiedere anche prima di
+          averne una. */}
+      {sezione === "tutto" && <MentorElenco percorso="licei" />}
     </div>
   );
 }

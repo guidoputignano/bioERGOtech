@@ -29,6 +29,14 @@ export type MentorInput = {
   linkedin: string;
   consenso_pubblicazione: boolean;
   consenso_privacy: boolean;
+  /**
+   * Email professionale o pagina di contatto, facoltativa. La vedono solo i
+   * partecipanti del percorso dopo l'accesso, e solo se il mentor ha
+   * accettato le linee guida: mai la pagina pubblica.
+   */
+  contatto_studenti: string;
+  /** La casella delle linee guida per i mentor. Obbligatoria. */
+  linee_guida_accettate: boolean;
 };
 
 const RUOLI = new Set<string>(RUOLI_MENTOR.map((r) => r.value));
@@ -61,6 +69,53 @@ function validaLink(valore: string, etichetta: string): string | null {
   if (!/^https?:\/\/.+\..+/i.test(valore))
     return `L'indirizzo ${etichetta} deve iniziare con http:// o https://`;
   return null;
+}
+
+/**
+ * Il contatto per gli studenti: un'email oppure un indirizzo web.
+ *
+ * Due forme e non una perche le linee guida chiedono un contatto
+ * professionale, e per molti quello e la pagina di contatto del laboratorio
+ * o dell'ente, non una casella di posta. Un numero di telefono non passa, di
+ * proposito: con gli studenti, che possono essere minorenni, un canale
+ * personale come il cellulare e esattamente cio che le linee guida chiedono
+ * di evitare.
+ *
+ * La usano il modulo, la rotta della candidatura e quella dello staff.
+ */
+export function validaContattoStudenti(valore: string): string | null {
+  const v = valore.trim();
+  if (!v) return null;
+  if (v.length > MAX_LINK) return "Il contatto per gli studenti è troppo lungo.";
+  if (EMAIL_RE.test(v)) return null;
+  if (/^https?:\/\/[^\s]+\.[^\s]+$/i.test(v)) return null;
+  return "Il contatto per gli studenti deve essere un indirizzo email oppure un indirizzo web che inizia con http:// o https://";
+}
+
+/**
+ * La colonna che manca perche la migrazione 20261214000000 non e ancora
+ * stata applicata in produzione.
+ *
+ * Le migrazioni qui si eseguono a mano, quindi il codice puo arrivare prima
+ * delle colonne. Postgres risponde 42703 a una SELECT che nomina una colonna
+ * che non c'e, PostgREST risponde PGRST204 a una INSERT o UPDATE che la
+ * scrive. Si guarda anche il nome della colonna, perche lo stesso codice
+ * per un'altra colonna e un errore vero e non deve essere coperto da questo
+ * ripiego.
+ */
+export const COLONNE_LINEE_GUIDA = [
+  "contatto_studenti",
+  "linee_guida_accettate_at",
+  "linee_guida_testo",
+] as const;
+
+export function colonneLineeGuidaMancanti(
+  errore: { code?: string | null; message?: string | null } | null | undefined,
+): boolean {
+  if (!errore) return false;
+  if (errore.code !== "42703" && errore.code !== "PGRST204") return false;
+  const messaggio = errore.message ?? "";
+  return COLONNE_LINEE_GUIDA.some((c) => messaggio.includes(c));
 }
 
 /**
@@ -108,6 +163,16 @@ export function validateMentor(input: Partial<MentorInput>): string | null {
 
   const linkedin = validaLink(testo(input.linkedin), "di LinkedIn");
   if (linkedin) return linkedin;
+
+  const contatto = validaContattoStudenti(testo(input.contatto_studenti));
+  if (contatto) return contatto;
+
+  // Obbligatoria per tutti, anche per chi non indica un contatto: le linee
+  // guida non riguardano solo il recapito in elenco, ma anche come ci si
+  // comporta con uno studente che il mentor incontra in un altro modo, per
+  // esempio dentro una squadra abbinata dallo staff.
+  if (!input.linee_guida_accettate)
+    return "Per candidarsi come mentor deve leggere e accettare le linee guida per i mentor.";
 
   if (!input.consenso_privacy)
     return "Per candidarti devi prendere visione dell'informativa.";

@@ -26,10 +26,12 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { universitaAdminClient } from "@/lib/eventi/universita-server";
 import {
+  colonneLineeGuidaMancanti,
   normalizzaAree,
   validateMentor,
   type MentorInput,
 } from "@/lib/eventi/universita-mentor";
+import { LINEE_GUIDA_MENTOR_TESTO } from "@/app/eventi/vivere-piu-a-lungo/linee-guida-mentor/content";
 import { messaggioErroreDb } from "@/lib/eventi/universita-squadre";
 import {
   universitaMentorEmailHtml,
@@ -93,6 +95,8 @@ export async function POST(request: Request) {
       linkedin: str(body.linkedin),
       consenso_pubblicazione: body.consenso_pubblicazione === true,
       consenso_privacy: body.consenso_privacy === true,
+      contatto_studenti: str(body.contatto_studenti),
+      linee_guida_accettate: body.linee_guida_accettate === true,
     };
 
     const errore = validateMentor(input);
@@ -122,7 +126,7 @@ export async function POST(request: Request) {
     // sarebbe una porta aperta per niente, visto che dietro non c'e ancora
     // niente da vedere. Lo crea lo staff al momento dell'approvazione,
     // insieme all'email di esito, e `user_id` resta nullo fino ad allora.
-    const { error: erroreInsert } = await client.from("universita_mentor").insert({
+    const riga: Record<string, unknown> = {
       nome: input.nome,
       cognome: input.cognome,
       email: input.email,
@@ -148,7 +152,33 @@ export async function POST(request: Request) {
       // un anno una riga con un "no" e nessun modo di sapere a che cosa.
       consenso_pubblicazione_testo: CONSENSO_PUBBLICAZIONE_MENTOR_TESTO,
       consenso_privacy_testo: CONSENSO_PRIVACY_MENTOR_TESTO,
-    });
+    };
+
+    // Le linee guida si registrano come i consensi: la data e il testo
+    // accettato, per intero. La casella e obbligatoria e `validateMentor`
+    // lo ha gia controllato, quindi qui l'accettazione c'e sempre.
+    const lineeGuida = {
+      contatto_studenti: opzionale(input.contatto_studenti),
+      linee_guida_accettate_at: new Date().toISOString(),
+      linee_guida_testo: LINEE_GUIDA_MENTOR_TESTO,
+    };
+
+    let { error: erroreInsert } = await client
+      .from("universita_mentor")
+      .insert({ ...riga, ...lineeGuida });
+
+    // Il codice puo arrivare in produzione prima della migrazione
+    // 20261214000000, che si applica a mano. In quel caso la candidatura si
+    // salva lo stesso senza i tre campi nuovi: perdere una candidatura per
+    // una colonna che manca sarebbe peggio che doverle chiedere di nuovo il
+    // contatto. Lo staff vede nel pannello che l'accettazione manca e la
+    // registra quando la colonna c'e.
+    if (erroreInsert && colonneLineeGuidaMancanti(erroreInsert)) {
+      console.warn(
+        "Universita mentor: colonne delle linee guida assenti, candidatura salvata senza (migrazione 20261214000000 da applicare).",
+      );
+      ({ error: erroreInsert } = await client.from("universita_mentor").insert(riga));
+    }
 
     if (erroreInsert) {
       // 23505: due invii simultanei dello stesso indirizzo, che il controllo

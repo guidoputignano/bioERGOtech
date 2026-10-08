@@ -21,6 +21,8 @@ import {
   areaLabel,
   ruoloMentorLabel,
 } from "../content";
+import { LICEI_PATH } from "../../licei/content";
+import { LINEE_GUIDA_MENTOR_PATH } from "../../linee-guida-mentor/content";
 
 /**
  * L'elenco pubblico dei mentor del percorso universitario.
@@ -41,11 +43,11 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `${MENTOR.titolo} . Percorso universitario . Fondazione bioERGOtech`,
+  title: `${MENTOR.titolo} . Licei e università . Fondazione bioERGOtech`,
   description: MENTOR.sottotitolo,
   alternates: { canonical: MENTOR_PATH },
   openGraph: {
-    title: `${MENTOR.titolo} . Percorso universitario`,
+    title: `${MENTOR.titolo} . Licei e università`,
     description: MENTOR.sottotitolo,
     url: `${SITE_URL}${MENTOR_PATH}`,
     images: [{ url: EVENT.ogImage }],
@@ -231,7 +233,10 @@ export default async function MentorPage() {
                   Candidarsi come mentor
                 </Link>
                 <Link href={UNIVERSITA_PATH} className="btn-outline text-center">
-                  Il bando del percorso
+                  Il bando universitario
+                </Link>
+                <Link href={LICEI_PATH} className="btn-outline text-center">
+                  Il percorso dei licei
                 </Link>
               </div>
             </div>
@@ -253,7 +258,16 @@ export default async function MentorPage() {
                     ? "Una persona in elenco."
                     : `${mentor.length} persone in elenco.`}{" "}
                   Compaiono qui i mentor che hanno acconsentito alla pubblicazione del proprio
-                  profilo: si può essere mentor del percorso senza essere in questa pagina.
+                  profilo: si può essere mentor del percorso senza essere in questa pagina. I
+                  contatti per gli studenti non sono in questa pagina: li trova chi partecipa al
+                  percorso, nella propria area dopo l&apos;accesso, insieme alle{" "}
+                  <Link
+                    href={LINEE_GUIDA_MENTOR_PATH}
+                    style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+                  >
+                    linee guida per i mentor
+                  </Link>
+                  .
                 </p>
 
                 <div className="mn-griglia">
@@ -385,6 +399,21 @@ export default async function MentorPage() {
 
             <p className="mn-nota" style={{ marginTop: 24 }}>
               {MENTOR_NOTA_APPROVAZIONE}
+            </p>
+
+            {/* Le linee guida si accettano nel modulo, ma chi sta decidendo
+                se candidarsi deve poterle leggere prima: sono la parte che
+                dice come si sta con studenti che possono essere minorenni. */}
+            <p className="mn-nota" style={{ marginTop: 12 }}>
+              Ogni mentor accetta le{" "}
+              <Link
+                href={LINEE_GUIDA_MENTOR_PATH}
+                style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+              >
+                linee guida per i mentor
+              </Link>
+              : contatto professionale, nessun dato non necessario chiesto agli studenti,
+              nessuna registrazione delle conversazioni.
             </p>
           </div>
         </section>

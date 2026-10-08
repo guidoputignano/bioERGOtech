@@ -77,6 +77,8 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Helper server | `lib/eventi/licei-server.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email di conferma | `lib/eventi/licei-email.ts` |
+| Elenco dei mentor nell'area | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx`, rotta `app/api/eventi/mentor/route.ts` |
+| Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
 | Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql` |
 
 ## Le scadenze non sono nel codice
@@ -139,6 +141,23 @@ browser del referente e non contiene dati di studenti) ma non raccoglie il
 modulo firmato: in `licei_iscrizioni` non esiste alcuna colonna per i genitori,
 ed e deliberato. Lo studente dichiara di averlo consegnato; la prova e il
 foglio in segreteria, e chi la verifica e il referente quando conferma.
+
+## Mentor
+
+I mentor sono quelli del percorso universitario (`universita_mentor`), e
+dalla migrazione `20261214000000` sono a disposizione anche dei liceali.
+Nell'area dello studente c'e una sezione "Mentor" con l'elenco e, per chi lo
+ha messo a disposizione e ha accettato le linee guida, un contatto
+professionale. Sopra l'elenco stanno le regole per lo studente, con il
+consiglio di coinvolgere il docente referente se e minorenne.
+
+Il contatto avviene di iniziativa dello studente e fuori dalla piattaforma.
+La Fondazione non comunica ai mentor nessun dato degli studenti e non
+organizza, non riceve e non registra le conversazioni: e quello che dicono
+l'informativa studenti ("Messaggi e mentor") e il regolamento (sezione 5),
+che vanno tenuti allineati a questo. La rotta controlla `requireStudente`,
+quindi a percorso chiuso l'elenco si spegne con il resto dell'area. Il
+dettaglio sta nel README del percorso universitario.
 
 ## Perche il referente deve confermare
 

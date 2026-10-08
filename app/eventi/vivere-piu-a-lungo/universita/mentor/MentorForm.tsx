@@ -28,10 +28,15 @@ import {
   DISPONIBILITA_MENTOR,
   MENTOR_BIO_MAX,
   MENTOR_COMPETENZE_MAX,
+  MENTOR_NOTA_CONTATTO,
   MENTOR_NOTA_TELEFONO,
   MENTOR_PATH,
   RUOLI_MENTOR,
 } from "../content";
+import {
+  LINEE_GUIDA_MENTOR_CONSENSO,
+  LINEE_GUIDA_MENTOR_PATH,
+} from "../../linee-guida-mentor/content";
 
 type Stato = "compilazione" | "invio" | "fatto";
 
@@ -164,6 +169,8 @@ export function MentorForm() {
   const [linkedin, setLinkedin] = useState("");
   const [pubblicazione, setPubblicazione] = useState(false);
   const [privacy, setPrivacy] = useState(false);
+  const [contattoStudenti, setContattoStudenti] = useState("");
+  const [lineeGuida, setLineeGuida] = useState(false);
   // Honeypot: invisibile a chi legge, irresistibile per i bot. La rotta
   // risponde con lo stesso successo di un invio buono, quindi da qui non si
   // capisce che il campo e una trappola.
@@ -205,6 +212,8 @@ export function MentorForm() {
       linkedin,
       consenso_pubblicazione: pubblicazione,
       consenso_privacy: privacy,
+      contatto_studenti: contattoStudenti,
+      linee_guida_accettate: lineeGuida,
     };
 
     // La stessa funzione che usa la rotta. Un campo mancante si scopre qui,
@@ -496,7 +505,40 @@ export function MentorForm() {
         </Campo>
       </div>
 
+      {/* ── Contatto per gli studenti ──
+          Separato da email e telefono, che restano allo staff: quello e il
+          recapito con cui la Fondazione scrive al mentor, questo e quello
+          che il mentor sceglie di dare agli studenti. Tenerli distinti
+          permette di indicare qui la casella del laboratorio invece della
+          propria, e di non indicare niente. */}
+      <Campo
+        id="mn-contatto"
+        label="Contatto per gli studenti"
+        aiuto={MENTOR_NOTA_CONTATTO}
+      >
+        <Input
+          id="mn-contatto"
+          value={contattoStudenti}
+          placeholder="nome@ente.it oppure https://"
+          onChange={(e) => setContattoStudenti(e.target.value)}
+        />
+      </Campo>
+
       <div style={{ display: "flex", flexDirection: "column", gap: 13, paddingTop: 4 }}>
+        {/* Obbligatoria: il contatto si mostra solo a chi ha accettato, e
+            le regole valgono anche per chi segue un team abbinato. */}
+        <Consenso checked={lineeGuida} onChange={setLineeGuida}>
+          {LINEE_GUIDA_MENTOR_CONSENSO} *{" "}
+          <Link
+            href={LINEE_GUIDA_MENTOR_PATH}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+          >
+            Leggi le linee guida
+          </Link>
+        </Consenso>
+
         <Consenso checked={pubblicazione} onChange={setPubblicazione}>
           {CONSENSO_PUBBLICAZIONE_MENTOR_TESTO}{" "}
           <strong style={{ color: "var(--text-dark)" }}>(facoltativo)</strong>

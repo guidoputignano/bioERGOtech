@@ -152,6 +152,41 @@ una riga di testo in pagina e diventa un legame fra due righe. La policy RLS
 su `universita_progetti` lo usa: un mentor vede i progetti delle squadre che
 segue, e solo quelli.
 
+### I mentor sono di tutto il percorso
+
+Migrazione `20261214000000`. Dalle "Linee guida per mentor" della
+Fondazione, i mentor sono a disposizione di **tutti** i partecipanti,
+liceali compresi, e non solo delle squadre a cui lo staff li abbina.
+L'abbinamento resta com'era; accanto c'e l'elenco completo nell'area di
+ogni partecipante (`app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx`,
+nelle console di licei e universita).
+
+Le regole, che stanno nel codice e non solo nei testi:
+
+- il mentor indica, se vuole, un `contatto_studenti` professionale (email o
+  pagina web, mai il telefono) e accetta le linee guida
+  (`linee_guida_accettate_at`, `linee_guida_testo`). Il testo vive in
+  `../linee-guida-mentor/content.ts`, pagina pubblica
+  `/eventi/vivere-piu-a-lungo/linee-guida-mentor`;
+- il contatto **non** e concesso ad anon ne ad authenticated: lo legge solo
+  `GET /api/eventi/mentor`, con la service role, dopo aver verificato che
+  chi chiama sia staff, studente dei licei confermato (percorso non chiuso)
+  o partecipante universitario confermato. Escono i mentor approvati e
+  pubblicati, con i soli campi pubblici, e il contatto solo se le linee
+  guida risultano accettate. Mai email, telefono, competenze;
+- lo studente scrive di sua iniziativa, fuori dalla piattaforma. La rotta
+  non registra chi legge e non avvisa nessuno: la Fondazione non trasmette
+  ai mentor i dati degli studenti;
+- per chi e entrato prima, o lo ha inserito la Fondazione, lo staff registra
+  dal pannello l'accettazione ricevuta per iscritto (solo mentor approvati)
+  e corregge il contatto. Un badge segnala gli approvati senza l'una o
+  l'altro.
+
+Senza la migrazione il codice regge: la candidatura si salva senza i campi
+nuovi, l'elenco esce senza contatti, il pannello dice che manca la
+migrazione. Il riconoscimento della colonna assente sta in
+`colonneLineeGuidaMancanti()` di `lib/eventi/universita-mentor.ts`.
+
 ## Le fasi, e perche partono tutte chiuse
 
 `universita_config`, chiave/valore, modificabile dal pannello staff. Come per
@@ -305,11 +340,13 @@ la policy proprio per le persone a cui serve. Tutte le altre funzioni,
 | Progetto | `app/api/eventi/universita/progetto/route.ts` |
 | Commissione | `app/api/eventi/universita/commissione/route.ts` |
 | Mentor, pubblica | `app/api/eventi/universita/mentor/route.ts` |
+| Mentor per i partecipanti (licei e universita) | `app/api/eventi/mentor/route.ts`, `../mentor/MentorElenco.tsx` |
+| Linee guida per i mentor | `../linee-guida-mentor/` |
 | Staff | `app/api/eventi/universita/admin/` |
 | Tipi e validazione | `lib/eventi/universita.ts`, `universita-squadre.ts`, `universita-mentor.ts` |
 | Client service role, config e guardie | `lib/eventi/universita-server.ts` |
 | Email | `lib/eventi/universita-email.ts` |
-| Migrazioni | `supabase/migrations/20261207000000_create_universita_candidature.sql`, `20261210000000_universita_percorso.sql` |
+| Migrazioni | `supabase/migrations/20261207000000_create_universita_candidature.sql`, `20261210000000_universita_percorso.sql`, `20261214000000_mentor_contatto_linee_guida.sql` |
 
 ## Il modulo di pre-iscrizione
 

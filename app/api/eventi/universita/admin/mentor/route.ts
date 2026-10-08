@@ -21,6 +21,11 @@ import { Resend } from "resend";
 import { getEventAdminClient } from "@/lib/eventi/admin-guard";
 import { messaggioErroreDb } from "@/lib/eventi/universita-squadre";
 import {
+  colonneLineeGuidaMancanti,
+  validaContattoStudenti,
+} from "@/lib/eventi/universita-mentor";
+import { LINEE_GUIDA_MENTOR_TESTO } from "@/app/eventi/vivere-piu-a-lungo/linee-guida-mentor/content";
+import {
   universitaEsitoMentorEmailHtml,
   universitaEsitoMentorEmailSubject,
 } from "@/lib/eventi/universita-email";
@@ -54,9 +59,22 @@ type RigaMentor = {
   consenso_pubblicazione: boolean;
   consenso_privacy: boolean;
   note_staff: string | null;
+  // Assenti finche la migrazione 20261214000000 non e applicata: la GET
+  // legge `*`, quindi senza le colonne semplicemente non arrivano.
+  contatto_studenti?: string | null;
+  linee_guida_accettate_at?: string | null;
+  linee_guida_testo?: string | null;
   created_at: string;
   updated_at: string;
 };
+
+/**
+ * Il messaggio per lo staff quando prova a scrivere il contatto o
+ * l'accettazione su un database a cui manca la migrazione. Dice che cosa
+ * fare, perche dal pannello non c'e altro modo di capirlo.
+ */
+const MIGRAZIONE_MANCANTE =
+  "Il database non ha ancora le colonne del contatto e delle linee guida. Va applicata la migrazione 20261214000000_mentor_contatto_linee_guida.sql.";
 
 type RigaAssegnazione = {
   id: string;
@@ -170,6 +188,12 @@ export async function PATCH(request: Request) {
     id?: string;
     stato?: string;
     note_staff?: string | null;
+    contatto_studenti?: string | null;
+    /**
+     * `true` registra l'accettazione delle linee guida arrivata fuori dal
+     * sito (per email, su carta), con la data di adesso e il testo vigente.
+     */
+    registra_linee_guida?: boolean;
   };
 
   if (!body.id) return NextResponse.json({ error: "Mentor non indicato." }, { status: 400 });
@@ -206,6 +230,35 @@ export async function PATCH(request: Request) {
     patch.stato = body.stato;
   }
   if (body.note_staff !== undefined) patch.note_staff = body.note_staff?.trim() || null;
+
+  // Il contatto lo puo correggere lo staff, per esempio quando un mentor
+  // scrive per cambiarlo o per toglierlo. Stessa validazione del modulo:
+  // dal pannello non deve entrare quello che dal modulo non entrerebbe.
+  if (body.contatto_studenti !== undefined) {
+    const contatto = (body.contatto_studenti ?? "").trim();
+    const problema = validaContattoStudenti(contatto);
+    if (problema) return NextResponse.json({ error: problema }, { status: 400 });
+    patch.contatto_studenti = contatto || null;
+  }
+
+  // Solo per un mentor gia approvato: e il caso per cui esiste, cioe chi e
+  // entrato prima che le linee guida fossero nel modulo, o chi lo ha
+  // inserito la Fondazione. Su una candidatura ancora da decidere si
+  // aspetta l'esito, e se arriva dal modulo l'accettazione c'e gia.
+  if (body.registra_linee_guida === true) {
+    const statoFinale = (patch.stato as string | undefined) ?? mentor.stato;
+    if (statoFinale !== "approvata") {
+      return NextResponse.json(
+        {
+          error:
+            "L'accettazione delle linee guida si registra da qui solo per un mentor approvato.",
+        },
+        { status: 409 },
+      );
+    }
+    patch.linee_guida_accettate_at = new Date().toISOString();
+    patch.linee_guida_testo = LINEE_GUIDA_MENTOR_TESTO;
+  }
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nessuna modifica richiesta." }, { status: 400 });
@@ -266,6 +319,9 @@ export async function PATCH(request: Request) {
     .maybeSingle<RigaMentor>();
 
   if (erroreUpdate) {
+    if (colonneLineeGuidaMancanti(erroreUpdate)) {
+      return NextResponse.json({ error: MIGRAZIONE_MANCANTE }, { status: 409 });
+    }
     const messaggio = messaggioErroreDb(erroreUpdate.message);
     if (messaggio) return NextResponse.json({ error: messaggio }, { status: 400 });
     console.error("Universita mentor update error:", erroreUpdate);
