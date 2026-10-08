@@ -132,6 +132,9 @@ type RigaMentor = {
   consenso_pubblicazione: boolean;
   consenso_privacy: boolean;
   note_staff: string | null;
+  // Facoltative: mancano finche la migrazione 20261214000000 non e applicata.
+  contatto_studenti?: string | null;
+  linee_guida_accettate_at?: string | null;
   created_at: string;
 };
 
@@ -437,7 +440,8 @@ async function csvMentor(client: Client): Promise<{ nome: string; righe: string[
       "Nome", "Cognome", "Email", "Telefono", "Profilo", "Organizzazione",
       "Aree disciplinari", "Presentazione", "Competenze", "Disponibilità",
       "Sito", "LinkedIn", "Stato", "Origine",
-      "Consenso alla pubblicazione", "Consenso privacy", "Ha un account",
+      "Consenso alla pubblicazione", "Consenso privacy",
+      "Contatto per gli studenti", "Linee guida accettate il", "Ha un account",
       "Squadre seguite", "Note staff", "Candidatura del",
     ]),
   ];
@@ -461,6 +465,8 @@ async function csvMentor(client: Client): Promise<{ nome: string; righe: string[
         m.origine === "staff" ? "inserito dallo staff" : "candidatura",
         siNo(m.consenso_pubblicazione),
         siNo(m.consenso_privacy),
+        m.contatto_studenti ?? "",
+        m.linee_guida_accettate_at ?? "",
         siNo(m.user_id),
         (seguite.get(m.id) ?? []).join("; "),
         m.note_staff ?? "",

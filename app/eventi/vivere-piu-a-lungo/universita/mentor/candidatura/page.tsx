@@ -17,6 +17,7 @@ import {
   UNIVERSITA,
   UNIVERSITA_PATH,
 } from "../../content";
+import { LINEE_GUIDA_MENTOR_PATH } from "../../../linee-guida-mentor/content";
 
 /**
  * Il modulo di candidatura a mentor, su una pagina sua.
@@ -119,7 +120,15 @@ export default function CandidaturaMentorPage() {
             >
               Il percorso lo prevede il bando: l&apos;art. 3 affida le attività al supporto di
               ricercatori, docenti, esperti e professionisti, e l&apos;art. 5 mette il mentoring fra
-              le cose che il progetto offre ai team. Compilare richiede qualche minuto.{" "}
+              le cose che il progetto offre ai team. I mentor sono a disposizione di tutto il
+              percorso, studenti dei licei e studenti universitari, e accettano le{" "}
+              <Link
+                href={LINEE_GUIDA_MENTOR_PATH}
+                style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+              >
+                linee guida per i mentor
+              </Link>
+              . Compilare richiede qualche minuto.{" "}
               <Link href={MENTOR_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
                 Chi c&apos;è già è in elenco qui
               </Link>

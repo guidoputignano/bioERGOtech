@@ -109,7 +109,12 @@ with oggetti as (
     ('20261211000000_universita_colonne',         'funzione', 'universita_squadra_di',        null),
 
     -- ── Ricorsione nelle policy di profiles ───────────────────────────
-    ('20261213000000_profiles_ricorsione',        'funzione', 'e_admin',                      null)
+    ('20261213000000_profiles_ricorsione',        'funzione', 'e_admin',                      null),
+
+    -- ── Mentor: contatto per gli studenti e linee guida ───────────────
+    ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'contatto_studenti'),
+    ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'linee_guida_accettate_at'),
+    ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'linee_guida_testo')
   ) as t(migrazione, tipo, oggetto, colonna)
 ),
 
@@ -202,6 +207,31 @@ select 'squadre: il codice e protetto',
            then 'DA ESEGUIRE: manca universita_squadre (migrazione 20261210000000)'
          when has_column_privilege('authenticated', 'public.universita_squadre', 'codice', 'SELECT')
            then 'NO: un utente autenticato legge ancora il codice, esegua 20261211000000'
+         else 'OK'
+       end
+
+union all
+
+-- Il contatto professionale dei mentor lo vedono solo i partecipanti del
+-- percorso, e lo ricevono dalla rotta /api/eventi/mentor, che legge con la
+-- service role. Nessuno dei due ruoli del browser deve poterlo leggere: non
+-- anon, e nemmeno authenticated, perche un account del sito non e per
+-- questo un partecipante. `has_column_privilege` tiene conto anche del
+-- privilegio di tabella, che e il caso da scoprire: se qualcuno ha ridato a
+-- mano il SELECT sull'intera tabella, qui esce NO.
+select 'mentor: il contatto per gli studenti e protetto da anon e authenticated',
+       case
+         when to_regclass('public.universita_mentor') is null
+           then 'DA ESEGUIRE: manca universita_mentor (migrazione 20261210000000)'
+         when not exists (
+           select 1 from information_schema.columns
+           where table_schema = 'public' and table_name = 'universita_mentor'
+             and column_name = 'contatto_studenti'
+         )
+           then 'DA ESEGUIRE: manca la colonna, esegua 20261214000000'
+         when has_column_privilege('anon', 'public.universita_mentor', 'contatto_studenti', 'SELECT')
+           or has_column_privilege('authenticated', 'public.universita_mentor', 'contatto_studenti', 'SELECT')
+           then 'NO: il contatto e leggibile dal browser. Controlli che il SELECT di tabella sia revocato (20261211000000) ed esegua 20261214000000'
          else 'OK'
        end
 
@@ -314,7 +344,7 @@ select 'universita_e_confermato ESEGUIBILE da authenticated',
 -- =========================================================
 -- L'ORDINE DELLE MIGRAZIONI DA ESEGUIRE
 --
--- Sono cinque e vanno eseguite in questo ordine, perche ognuna si
+-- Sono sei e vanno eseguite in questo ordine, perche ognuna si
 -- appoggia alla precedente:
 --
 --   1. 20261207000000_create_universita_candidature.sql
@@ -339,7 +369,13 @@ select 'universita_e_confermato ESEGUIBILE da authenticated',
 --      Toglie la ricorsione dalle policy di `profiles`, che bloccava ogni
 --      lettura con RLS su dodici tabelle.
 --
--- Le ultime due si possono eseguire anche su un database dove le prime
+--   6. 20261214000000_mentor_contatto_linee_guida.sql
+--      Aggiunge a `universita_mentor` il contatto per gli studenti e
+--      l'accettazione delle linee guida. Va DOPO la 3: si appoggia alla
+--      revoca del SELECT di tabella che quella fa, e senza il contatto
+--      sarebbe leggibile da chiunque.
+--
+-- La 4 e la 5 si possono eseguire anche su un database dove le prime
 -- non sono state applicate: saltano da sole cio che non trovano.
 --
 -- =========================================================

@@ -31,6 +31,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
       changeFrequency: "monthly",
     },
+    // Valgono per licei e universita, quindi stanno a livello dell'evento.
+    {
+      path: "/eventi/vivere-piu-a-lungo/linee-guida-mentor",
+      priority: 0.5,
+      changeFrequency: "monthly",
+    },
     { path: "/programmes", priority: 0.9, changeFrequency: "weekly" },
     { path: "/agents", priority: 0.8, changeFrequency: "monthly" },
     { path: "/about-us", priority: 0.9, changeFrequency: "monthly" },

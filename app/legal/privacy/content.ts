@@ -145,6 +145,7 @@ const EN: Informativa = {
           "Any links to a personal website or a professional profile",
           "The outcome of the application and the teams the mentor is paired with, if any",
           "Consent to publish the profile on the public mentors page, which is optional and separate: one can be a mentor without appearing on the page, and the consent can be withdrawn at any time",
+          "If the mentor provides one, a professional contact (email or contact page) for students. It is shown only to signed-in participants of the programme, from secondary schools and universities, and only after the mentor has accepted the mentor guidelines, together with the date and text of that acceptance. It never appears on the public page",
         ],
       },
       {
@@ -357,6 +358,7 @@ const IT: Informativa = {
           "Gli eventuali link a un sito personale o a un profilo professionale",
           "L'esito della candidatura e le squadre a cui il mentor viene eventualmente abbinato",
           "Il consenso alla pubblicazione del profilo nella pagina pubblica dei mentor, che è facoltativo e separato: si può essere mentor senza comparire in pagina, e il consenso è revocabile in qualsiasi momento",
+          "Se il mentor lo indica, un contatto professionale (email o pagina di contatto) per gli studenti. È visibile solo ai partecipanti del percorso, licei e università, dopo l'accesso, e solo dopo che il mentor ha accettato le linee guida per i mentor, di cui si registrano data e testo. Non compare mai nella pagina pubblica",
         ],
       },
       {

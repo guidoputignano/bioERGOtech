@@ -112,7 +112,8 @@ export const INFORMATIVA_STUDENTI: Documento = {
       h: "Messaggi e mentor",
       p: [
         "La piattaforma non ha una chat o messaggi tra utenti. Le domande che invii nelle lezioni le legge e le risponde lo staff della Fondazione.",
-        "La Fondazione non organizza video call e non comunica a mentor dati degli studenti. Se scegli di contattare autonomamente un mentor, il contatto avviene fuori dalla piattaforma e sotto la responsabilità di chi partecipa alla comunicazione: la Fondazione non riceve, non conserva e non registra messaggi o call tra studente e mentor.",
+        "Nella tua area trovi l'elenco dei mentor del percorso e, per chi lo ha messo a disposizione, un contatto professionale. Il contatto avviene di tua iniziativa e fuori dalla piattaforma, con un tuo indirizzo e sotto la responsabilità di chi partecipa alla comunicazione.",
+        "La Fondazione non comunica ai mentor i tuoi dati e non organizza, non riceve e non registra le comunicazioni tra studente e mentor, comprese email e video call. I mentor accettano linee guida che vietano di chiedere dati non necessari, di usarli per altri scopi e di registrare le conversazioni. Se qualcosa non ti sembra adeguato, interrompi il contatto e scrivi a info@bioergotech.org; se sei minorenne, ti suggeriamo di coinvolgere il docente referente.",
       ],
     },
     {
@@ -218,7 +219,8 @@ export const REGOLAMENTO: Documento = {
     {
       h: "5. Mentor",
       p: [
-        "L'eventuale contatto con un mentor avviene su iniziativa autonoma dello studente e fuori dalla piattaforma. La Fondazione non organizza, non registra e non controlla email, video call o altri scambi tra studente e mentor.",
+        "Nell'area dello studente sono indicati i mentor del percorso e, per chi lo ha messo a disposizione, un contatto professionale. L'eventuale contatto con un mentor avviene su iniziativa autonoma dello studente e fuori dalla piattaforma. La Fondazione non comunica ai mentor i dati degli studenti e non organizza, non registra e non controlla email, video call o altri scambi tra studente e mentor.",
+        "Lo studente non invia ai mentor dati personali non necessari e segnala a info@bioergotech.org eventuali situazioni inadeguate. I mentor sono tenuti a rispettare le linee guida per i mentor pubblicate dalla Fondazione.",
       ],
     },
     {

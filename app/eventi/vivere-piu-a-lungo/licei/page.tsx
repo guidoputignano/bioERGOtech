@@ -7,6 +7,8 @@ import { AdesioneForm } from "./AdesioneForm";
 import { LiceiIndice } from "./LiceiIndice";
 import { EVENT } from "../content";
 import { leggiConfigLicei } from "@/lib/eventi/licei-server";
+import { MENTOR_PATH } from "../universita/content";
+import { LINEE_GUIDA_MENTOR_PATH } from "../linee-guida-mentor/content";
 import {
   ANNI_CORSO,
   COMMISSIONE_LICEI,
@@ -479,9 +481,13 @@ export default async function LiceiPage() {
         <section className="section" id="corso">
           <div className="container mx-auto px-6">
             <Testata n={3} kicker="Svolgimento" articolo="Art. 3" titolo="Come funziona il percorso">
-              Un corso online, fuori dall&apos;orario scolastico, con il supporto di mentor
-              provenienti dal mondo della ricerca e dell&apos;impresa. Non sottrae ore alle lezioni e
-              non costa nulla, né alla scuola né alle famiglie.
+              Un corso online, fuori dall&apos;orario scolastico, con il supporto di{" "}
+              <Link href={MENTOR_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                mentor
+              </Link>{" "}
+              provenienti dal mondo della ricerca e dell&apos;impresa, gli stessi del percorso
+              universitario. Non sottrae ore alle lezioni e non costa nulla, né alla scuola né alle
+              famiglie.
             </Testata>
 
             <div className="lc-griglia lc-griglia-4">
@@ -656,7 +662,22 @@ export default async function LiceiPage() {
                     <i className="fas fa-circle" aria-hidden="true" />
                     <span>
                       <strong>Durante.</strong> Gli studenti seguono il corso, formano le squadre e
-                      sviluppano il progetto, seguiti dai mentor.
+                      sviluppano il progetto, seguiti dai{" "}
+                      <Link
+                        href={MENTOR_PATH}
+                        style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+                      >
+                        mentor
+                      </Link>
+                      . Nella propria area trovano l&apos;elenco e i contatti professionali da
+                      usare di propria iniziativa, secondo le{" "}
+                      <Link
+                        href={LINEE_GUIDA_MENTOR_PATH}
+                        style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+                      >
+                        linee guida per i mentor
+                      </Link>
+                      .
                     </span>
                   </li>
                   <li>

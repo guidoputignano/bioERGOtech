@@ -905,15 +905,22 @@ export const CORSO_PUNTI = [
  * che scopre l'iniziativa e vuole darle una mano.
  */
 export const MENTOR = {
-  occhiello: "Fondazione bioERGOtech e SafesPro . Percorso universitario",
+  occhiello: "Fondazione bioERGOtech e SafesPro . Licei e università",
   titolo: "I mentor del percorso",
   sottotitolo:
-    "Ricercatori, docenti, clinici e professionisti che accompagnano i team nella progettazione scientifica, dalla prima ipotesi alla proposta di pubblicazione.",
+    "Ricercatori, docenti, clinici e professionisti che accompagnano gli studenti del percorso, dei licei e delle università, nella progettazione scientifica, dalla prima ipotesi alla proposta di pubblicazione.",
 };
 
+/**
+ * I mentor sono di tutto il percorso, non del solo ramo universitario: lo
+ * stesso elenco lo vedono, dopo l'accesso, gli studenti dei licei e gli
+ * studenti universitari. La pagina resta sotto `universita/` perche e li che
+ * e nata ed e indicizzata a quell'indirizzo; il testo dice la cosa giusta.
+ */
 export const MENTOR_INTRO = [
   "L'art. 3 del bando prevede che le attività si svolgano con il supporto di ricercatori, docenti universitari, esperti, professionisti e mentor provenienti dal mondo della ricerca, dell'innovazione e dell'impresa. Questa pagina è l'elenco di chi ha accettato.",
-  "Ogni team confermato può essere affiancato da un mentor, scelto in base all'area del progetto. L'abbinamento lo propone la Fondazione: nessuno viene assegnato a un team senza saperlo, e nessun team si trova un mentor che non ha mai visto.",
+  "I mentor sono a disposizione di tutto il percorso: degli studenti dei licei e degli studenti universitari. Nella propria area, dopo l'accesso, ogni partecipante trova l'elenco e, per i mentor che lo hanno messo a disposizione, un contatto professionale da usare di propria iniziativa, secondo le linee guida per i mentor.",
+  "Nel percorso universitario un team confermato può inoltre essere affiancato da un mentor scelto in base all'area del progetto. L'abbinamento lo propone la Fondazione: nessuno viene assegnato a un team senza saperlo, e nessun team si trova un mentor che non ha mai visto.",
 ];
 
 /** I ruoli con cui un mentor si descrive. Aperti: l'ultimo lascia scrivere. */
@@ -995,13 +1002,21 @@ export const CONSENSO_PUBBLICAZIONE_MENTOR_TESTO =
   "Acconsento alla pubblicazione del mio nome, ruolo, organizzazione, aree di interesse e profilo nella pagina pubblica dei mentor del percorso. Posso chiedere la rimozione in qualsiasi momento scrivendo a info@bioergotech.org.";
 
 export const CONSENSO_PRIVACY_MENTOR_TESTO =
-  "Ho letto l'informativa e acconsento al trattamento dei miei dati personali ai sensi del Regolamento (UE) 2016/679, per le sole finalità connesse alla gestione del percorso e all'abbinamento con i team.";
+  "Ho letto l'informativa e acconsento al trattamento dei miei dati personali ai sensi del Regolamento (UE) 2016/679, per le sole finalità connesse alla gestione del percorso, all'abbinamento con i team e, se lo indico, alla messa a disposizione del mio contatto professionale per gli studenti, che è visibile solo ai partecipanti del percorso dopo l'accesso e mai nella pagina pubblica.";
 
 export const MENTOR_NOTA_APPROVAZIONE =
   "La candidatura viene letta dalla direzione scientifica della Fondazione. L'approvazione non è automatica e non è un giudizio sul suo curriculum: dipende anche dalle aree che i team stanno effettivamente affrontando.";
 
 export const MENTOR_NOTA_VUOTO =
   "L'elenco dei mentor si sta componendo. Se lavora nella ricerca, in clinica o nell'innovazione e vuole affiancare un team, la sua candidatura è benvenuta.";
+
+/**
+ * L'aiuto sotto il campo "Contatto per gli studenti". Dice le tre cose che
+ * chi compila deve sapere prima di scrivere un indirizzo: chi lo vede, chi
+ * non lo vede, e che tipo di indirizzo serve.
+ */
+export const MENTOR_NOTA_CONTATTO =
+  "Email professionale o pagina di contatto (http:// o https://). È visibile solo a chi partecipa al percorso, licei e università, dopo l'accesso alla propria area, e mai nella pagina pubblica. Usi un contatto professionale, non un recapito personale.";
 
 export const MENTOR_NOTA_TELEFONO =
   "Il numero serve solo allo staff per organizzare gli incontri. Non compare nella pagina pubblica.";
