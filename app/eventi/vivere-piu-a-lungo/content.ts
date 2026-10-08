@@ -155,6 +155,7 @@ export const RELATORI: Relatore[] = [
   { id: "siciliano", nome: "Bruno Siciliano", ruolo: "Robotica, Università Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp` },
   { id: "tari", nome: "Mariangela Tarì", ruolo: "Scrittrice, presidente de La casa di Sofia", img: `${SPEAKER_IMG}/mariangela-tari.webp` },
   { id: "marotto", nome: "Daniela Marotto", ruolo: "Reumatologa, Collegio Reumatologi Italiani", img: `${SPEAKER_IMG}/daniela-marotto.webp` },
+  { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "montano", nome: "Aldo Montano", ruolo: "Campione olimpico di scherma", img: `${SPEAKER_IMG}/aldo-montano.webp` },
   { id: "bortuzzo", nome: "Manuel Bortuzzo", ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024", img: `${SPEAKER_IMG}/manuel-bortuzzo.webp` },
   { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp` },
@@ -162,8 +163,8 @@ export const RELATORI: Relatore[] = [
   // passato a Valentina Vezzali. La scheda resta qui, inattiva, nel caso torni.
   { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
   { id: "vezzali", nome: "Valentina Vezzali", ruolo: "Campionessa olimpica di scherma", img: `${SPEAKER_IMG}/valentina-vezzali.webp` },
-  { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
-  { id: "galante", nome: "Fabio Galante", ruolo: "Ex difensore di Inter e Torino", img: `${SPEAKER_IMG}/fabio-galante.webp` },
+  // Ruolo ripreso dalla sua scheda su altoslabs.com (Institute of Computation).
+  { id: "bianco", nome: "Simone Bianco", ruolo: "Biologia computazionale, Altos Labs", img: `${SPEAKER_IMG}/simone-bianco.webp` },
 ];
 
 /**
@@ -252,15 +253,15 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 5,
     titolo: "Il corpo che si rigenera",
-    desc: "Il percorso che porta dall'infortunio o dalla diagnosi al ritorno in attività: tempi reali, terapie e la parte meno visibile del recupero, quella mentale. Reumatologia e testimonianze sportive a confronto su che cosa significa ricominciare.",
-    relatori: ["marotto", "montano", "bortuzzo"],
+    desc: "Il percorso che porta dall'infortunio o dalla diagnosi al ritorno in attività: tempi reali, terapie e la parte meno visibile del recupero, quella mentale. Reumatologia, oncologia e testimonianze sportive a confronto su che cosa significa ricominciare.",
+    relatori: ["marotto", "franchini", "montano", "bortuzzo"],
   },
   {
     tipo: "panel",
     n: 6,
     titolo: "Scienza, tecnologia e nuove generazioni",
     desc: "Come si accende la curiosità scientifica e come si tiene viva quando lo studio si fa difficile. Divulgazione, disciplina e talento: che cosa serve davvero ai ragazzi per costruirsi un percorso, dentro e fuori dall'aula.",
-    relatori: ["schettini", "vezzali"],
+    relatori: ["schettini", "vezzali", "bianco"],
   },
   {
     tipo: "ragazzi",
@@ -272,8 +273,8 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 7,
     titolo: "Vivere più a lungo",
-    desc: "Il tema che dà il titolo alla giornata: quanto pesano davvero prevenzione, movimento e diagnosi precoce sugli anni che viviamo e su come li viviamo. Oncologia e sport si incontrano sulle scelte quotidiane che fanno la differenza.",
-    relatori: ["franchini", "galante"],
+    desc: "Il tema che dà il titolo alla giornata: quanto pesano davvero prevenzione, movimento e diagnosi precoce sugli anni che viviamo e su come li viviamo. Lo sport della città racconta le scelte quotidiane che fanno la differenza, in campo e fuori.",
+    partner: ["taranto"],
   },
   {
     tipo: "premiazione",
@@ -386,6 +387,13 @@ export const PARTNER: Partner[] = [
     nome: "La casa di Sofia",
     ruolo: "Accoglienza per bambini e famiglie",
     img: `${PARTNER_IMG}/la-casa-di-sofia.webp`,
+  },
+  {
+    id: "taranto",
+    nome: "S.S. Taranto",
+    ruolo: "La squadra di calcio della città, dal 1927",
+    // Sale sul palco nel panel 7. `url` resta da confermare con la società.
+    img: `${PARTNER_IMG}/taranto.webp`,
   },
 ];
 
