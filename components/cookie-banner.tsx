@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { EVENTO_APRI_COOKIE } from "@/app/cookie-policy/content";
 
 type CookiePreferences = {
   necessary: boolean;
@@ -93,12 +95,12 @@ function loadGoogleTags(prefs: { analytics: boolean; marketing: boolean }) {
   }
 }
 
-function removeGACookies() {
+function removeGACookies(prefissi: string[]) {
   if (typeof document === "undefined") return;
   const cookies = document.cookie.split(";");
   for (let i = 0; i < cookies.length; i++) {
     const name = cookies[i].split("=")[0].trim();
-    if (name.startsWith("_ga") || name.startsWith("_gid") || name.startsWith("_gat")) {
+    if (prefissi.some((p) => name.startsWith(p))) {
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
     }
@@ -107,8 +109,57 @@ function removeGACookies() {
 
 function applyConsent(prefs: CookiePreferences) {
   loadGoogleTags(prefs);
-  if (!prefs.analytics) removeGACookies();
+  if (!prefs.analytics) removeGACookies(["_ga", "_gid", "_gat"]);
+  // Revocato il marketing, via anche i cookie di conversione di Google Ads.
+  if (!prefs.marketing) removeGACookies(["_gcl"]);
 }
+
+/**
+ * Testi del banner. Il sito è in inglese, ma le pagine dei percorsi, degli
+ * eventi e delle informative italiane le leggono scuole, famiglie e studenti:
+ * lì il banner parla italiano, perché un consenso dato su un testo che non si
+ * capisce non è un consenso informato.
+ */
+const TESTI = {
+  en: {
+    titolo: "We use cookies",
+    testo: "Technical cookies keep the site working. With your consent we also use Google Analytics to measure visits and Google Ads to measure our campaigns.",
+    policy: "Cookie Policy",
+    policyHref: "/cookie-policy",
+    privacy: "Privacy Policy",
+    privacyHref: "/legal/privacy",
+    accetta: "Accept all",
+    rifiuta: "Reject all",
+    gestisci: "Manage preferences",
+    salva: "Save preferences",
+    sempre: "Always on",
+    voci: {
+      necessary: ["Strictly necessary", "Sign-in to the reserved areas and your cookie choice. Cannot be disabled."],
+      analytics: ["Analytics (Google Analytics)", "Helps us understand how visitors use the site."],
+      marketing: ["Marketing (Google Ads)", "Measures the results of our campaigns. Never used on course pages."],
+    },
+  },
+  it: {
+    titolo: "Usiamo i cookie",
+    testo: "I cookie tecnici servono al funzionamento del sito. Con il tuo consenso usiamo anche Google Analytics per misurare le visite e Google Ads per misurare le nostre campagne.",
+    policy: "Cookie policy",
+    policyHref: "/cookie-policy/it",
+    privacy: "Informativa privacy",
+    privacyHref: "/legal/informativa-privacy",
+    accetta: "Accetta tutti",
+    rifiuta: "Rifiuta tutti",
+    gestisci: "Gestisci preferenze",
+    salva: "Salva preferenze",
+    sempre: "Sempre attivi",
+    voci: {
+      necessary: ["Tecnici necessari", "Accesso alle aree riservate e ricordo della tua scelta. Non disattivabili."],
+      analytics: ["Analisi (Google Analytics)", "Ci aiuta a capire come viene usato il sito."],
+      marketing: ["Marketing (Google Ads)", "Misura i risultati delle nostre campagne. Mai nelle pagine del corso."],
+    },
+  },
+} as const;
+
+const PERCORSI_ITALIANI = ["/eventi", "/legal/informativa-privacy", "/cookie-policy/it"];
 
 declare global {
   interface Window {
@@ -118,6 +169,8 @@ declare global {
 }
 
 export default function CookieBanner() {
+  const pathname = usePathname() ?? "";
+  const t = PERCORSI_ITALIANI.some((p) => pathname === p || pathname.startsWith(p + "/")) ? TESTI.it : TESTI.en;
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [prefs, setPrefs] = useState<CookiePreferences>({
@@ -130,13 +183,27 @@ export default function CookieBanner() {
   useEffect(() => {
     const stored = getStoredPreferences();
     if (!stored) {
-      // No prior consent — show banner after short delay
+      // No prior consent: show banner after short delay
       const timer = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(timer);
     }
-    // Prior consent exists — apply immediately (this is the reload path)
+    // Prior consent exists: apply immediately (this is the reload path)
     setPrefs(stored);
     applyConsent(stored);
+  }, []);
+
+  // "Impostazioni dei cookie" dal piè di pagina o dalla cookie policy: riapre
+  // il banner con le scelte attuali, così il consenso si cambia o si revoca
+  // in qualsiasi momento.
+  useEffect(() => {
+    const apri = () => {
+      const stored = getStoredPreferences();
+      if (stored) setPrefs(stored);
+      setShowDetails(true);
+      setVisible(true);
+    };
+    window.addEventListener(EVENTO_APRI_COOKIE, apri);
+    return () => window.removeEventListener(EVENTO_APRI_COOKIE, apri);
   }, []);
 
   const acceptAll = () => {
@@ -190,16 +257,16 @@ export default function CookieBanner() {
         <div style={{ fontSize: 22, lineHeight: 1 }}>🍪</div>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#1A2332", fontFamily: "'Poppins', sans-serif" }}>
-            We use cookies
+            {t.titolo}
           </div>
           <p style={{ fontSize: 13, color: "#4A5568", margin: "4px 0 0", lineHeight: 1.55, fontFamily: "'Poppins', sans-serif" }}>
-            We use cookies to improve your experience and comply with EU privacy law.{" "}
-            <Link href="/cookie-policy" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
-              Cookie Policy
+            {t.testo}{" "}
+            <Link href={t.policyHref} style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
+              {t.policy}
             </Link>
             {" · "}
-            <Link href="/legal/privacy" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
-              Privacy Policy
+            <Link href={t.privacyHref} style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
+              {t.privacy}
             </Link>
           </p>
         </div>
@@ -208,10 +275,9 @@ export default function CookieBanner() {
       {showDetails && (
         <div style={{ margin: "16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
           {[
-            { key: "necessary" as const, label: "Strictly Necessary", desc: "Required for the site to function. Cannot be disabled.", locked: true },
-            { key: "functional" as const, label: "Functional", desc: "Remembers your preferences and settings.", locked: false },
-            { key: "analytics" as const, label: "Analytics (Google Analytics)", desc: "Helps us understand how visitors use the site.", locked: false },
-            { key: "marketing" as const, label: "Marketing", desc: "Used to deliver relevant content and track campaign performance.", locked: false },
+            { key: "necessary" as const, label: t.voci.necessary[0], desc: t.voci.necessary[1], locked: true },
+            { key: "analytics" as const, label: t.voci.analytics[0], desc: t.voci.analytics[1], locked: false },
+            { key: "marketing" as const, label: t.voci.marketing[0], desc: t.voci.marketing[1], locked: false },
           ].map((item) => (
             <div
               key={item.key}
@@ -220,7 +286,7 @@ export default function CookieBanner() {
               <div style={{ flex: 1, paddingRight: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#1A2332", fontFamily: "'Poppins', sans-serif" }}>
                   {item.label}
-                  {item.locked && <span style={{ fontSize: 10, marginLeft: 6, color: "#8896A6", fontWeight: 500 }}>Always on</span>}
+                  {item.locked && <span style={{ fontSize: 10, marginLeft: 6, color: "#8896A6", fontWeight: 500 }}>{t.sempre}</span>}
                 </div>
                 <div style={{ fontSize: 11, color: "#8896A6", marginTop: 2, fontFamily: "'Poppins', sans-serif" }}>{item.desc}</div>
               </div>
@@ -242,7 +308,7 @@ export default function CookieBanner() {
           onClick={acceptAll}
           style={{ flex: 2, padding: "10px 0", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #2EC4B6, #1A9E92)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Poppins', sans-serif", boxShadow: "0 2px 8px #2EC4B633" }}
         >
-          Accept All
+          {t.accetta}
         </button>
 
         {showDetails ? (
@@ -250,22 +316,24 @@ export default function CookieBanner() {
             onClick={saveCustom}
             style={{ flex: 2, padding: "10px 0", borderRadius: 12, border: "1.5px solid #2EC4B6", background: "#E8F8F6", color: "#1A9E92", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}
           >
-            Save Preferences
+            {t.salva}
           </button>
         ) : (
           <button
             onClick={() => setShowDetails(true)}
             style={{ flex: 2, padding: "10px 0", borderRadius: 12, border: "1.5px solid #E8EDF3", background: "#F7F9FC", color: "#4A5568", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}
           >
-            Manage Preferences
+            {t.gestisci}
           </button>
         )}
 
+        {/* Rifiutare deve essere facile quanto accettare (linee guida del
+            Garante, 10 giugno 2021): stesso peso, stessa dimensione. */}
         <button
           onClick={rejectAll}
-          style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1.5px solid #E8EDF3", background: "#fff", color: "#8896A6", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}
+          style={{ flex: 2, padding: "10px 0", borderRadius: 12, border: "1.5px solid #2EC4B6", background: "#fff", color: "#1A9E92", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}
         >
-          Reject
+          {t.rifiuta}
         </button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { CookieSettingsButton } from "@/components/cookie-settings-button";
 
 export function SiteFooter() {
   return (
@@ -119,9 +120,18 @@ export function SiteFooter() {
           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}>
             &copy; 2025 bioERGOtech Foundation. All rights reserved.
           </p>
-          <Link href="/cookie-policy" style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", textDecoration: "none" }}>
-            Cookie Policy
-          </Link>
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
+            <Link href="/legal/privacy" style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", textDecoration: "none" }}>
+              Privacy Policy
+            </Link>
+            <Link href="/cookie-policy" style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", textDecoration: "none" }}>
+              Cookie Policy
+            </Link>
+            <CookieSettingsButton
+              label="Cookie settings"
+              style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}
+            />
+          </div>
         </div>
       </div>
     </footer>
