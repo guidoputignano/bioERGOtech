@@ -391,8 +391,8 @@ export const PARTNER: Partner[] = [
   {
     id: "taranto",
     nome: "S.S. Taranto",
-    // Sale sul palco nel panel 7. `ruolo` e `url` restano da confermare con la
-    // società, come per le altre realtà.
+    ruolo: "La squadra di calcio della città, dal 1927",
+    // Sale sul palco nel panel 7. `url` resta da confermare con la società.
     img: `${PARTNER_IMG}/taranto.webp`,
   },
 ];
