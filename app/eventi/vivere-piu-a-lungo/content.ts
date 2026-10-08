@@ -390,11 +390,10 @@ export const PARTNER: Partner[] = [
   },
   {
     id: "taranto",
-    nome: "Taranto",
-    // Sale sul palco nel panel 7. Nome esteso, `ruolo` e `url` da confermare
-    // con la società; il logo è in arrivo.
+    nome: "S.S. Taranto",
+    // Sale sul palco nel panel 7. `ruolo` e `url` restano da confermare con la
+    // società, come per le altre realtà.
     img: `${PARTNER_IMG}/taranto.webp`,
-    daCaricare: true,
   },
 ];
 
