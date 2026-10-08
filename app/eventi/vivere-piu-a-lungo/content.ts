@@ -70,7 +70,7 @@ export const SESSIONS: EventSession[] = [
     luogo: "PalaMazzola, Taranto",
     capienza: 300,
     descrizione:
-      "Una giornata al PalaMazzola. Sette panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi: dieci gruppi in gara presentano le loro idee davanti a una commissione. Nel pomeriggio, il concerto aperto al pubblico.",
+      "Una giornata al PalaMazzola. Sei panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi: dieci gruppi in gara presentano le loro idee davanti a una commissione. Nel pomeriggio, il concerto aperto al pubblico.",
   },
   {
     slug: "giorno-2",
@@ -168,10 +168,11 @@ export const RELATORI: Relatore[] = [
 ];
 
 /**
- * Il programma della mattina del giorno 1, come sequenza. Sette panel da circa
- * 25 minuti (dialogo sul tema, senza slide) si alternano ai blocchi di
- * presentazione dei ragazzi, al coffee break e alla proclamazione, fino al
- * concerto. Qui pubblichiamo temi, protagonisti e ritmo, non gli orari
+ * Il programma della mattina del giorno 1, come sequenza. Sei panel di
+ * dialogo sul tema, senza slide, si alternano ai blocchi di presentazione dei
+ * ragazzi, al coffee break, alla chiusura con la squadra della città e alla
+ * proclamazione, fino al concerto. I panel durano circa 25 minuti; il 5 e il
+ * 6 circa 30, con il tempo liberato dal vecchio panel 7. Qui pubblichiamo temi, protagonisti e ritmo, non gli orari
  * puntuali: la fonte di verità resta il piano interno.
  *
  * `tipo` distingue i panel (nodo numerato) dalle voci di raccordo (nodo con
@@ -179,7 +180,7 @@ export const RELATORI: Relatore[] = [
  * quella voce, `ospiti` i nomi senza foto (gruppi, squadre, istituzioni).
  */
 export type ProgrammaVoce = {
-  tipo: "apertura" | "panel" | "ragazzi" | "pausa" | "premiazione" | "lunch" | "concerto";
+  tipo: "apertura" | "panel" | "ragazzi" | "pausa" | "chiusura" | "premiazione" | "lunch" | "concerto";
   n?: number;
   icona?: string;
   titolo: string;
@@ -205,14 +206,14 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
   {
     tipo: "panel",
     n: 1,
-    titolo: "Salute, prevenzione e sport",
+    titolo: "Allenarsi a stare bene",
     desc: "Come si riconosce e si previene il rischio tromboembolico, e che cosa cambia quando il corpo è quello di chi si allena ogni giorno. Dalla diagnosi precoce alle abitudini che proteggono la circolazione, anche lontano dall'agonismo.",
     relatori: ["piovella", "abbagnale", "botticelli"],
   },
   {
     tipo: "panel",
     n: 2,
-    titolo: "Regole, professioni e istituzioni",
+    titolo: "Chi costruisce la salute di domani",
     desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Un confronto tra ordine professionale e legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
     relatori: ["mandelli", "loizzo"],
   },
@@ -225,14 +226,14 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
   {
     tipo: "panel",
     n: 3,
-    titolo: "Il gesto atletico e la macchina",
+    titolo: "Il talento si può misurare?",
     desc: "Che cosa impara un robot osservando un atleta, e che cosa impara un atleta dalla misura del proprio movimento. Equilibrio, coordinazione e tempi di reazione letti dalla robotica, fino ai limiti che la macchina ancora non supera.",
     relatori: ["montervino", "siciliano"],
   },
   {
     tipo: "panel",
     n: 4,
-    titolo: "Sport, disabilità e inclusione",
+    titolo: "Nessuno resta in panchina",
     desc: "Che cosa succede quando una squadra si apre davvero: autonomia, fiducia e legami che nascono in campo prima che nei percorsi di cura. Le esperienze di chi accompagna ragazzi con disabilità, raccontate da chi le vive ogni giorno.",
     relatori: ["tari"],
     partner: ["giffoni", "diavoli-rossi", "casa-di-sofia"],
@@ -252,14 +253,14 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
   {
     tipo: "panel",
     n: 5,
-    titolo: "Il corpo che si rigenera",
+    titolo: "Cadere e rialzarsi",
     desc: "Il percorso che porta dall'infortunio o dalla diagnosi al ritorno in attività: tempi reali, terapie e la parte meno visibile del recupero, quella mentale. Reumatologia, oncologia e testimonianze sportive a confronto su che cosa significa ricominciare.",
     relatori: ["marotto", "franchini", "montano", "bortuzzo"],
   },
   {
     tipo: "panel",
     n: 6,
-    titolo: "Scienza, tecnologia e nuove generazioni",
+    titolo: "La curiosità che non si spegne",
     desc: "Come si accende la curiosità scientifica e come si tiene viva quando lo studio si fa difficile. Divulgazione, disciplina e talento: che cosa serve davvero ai ragazzi per costruirsi un percorso, dentro e fuori dall'aula.",
     relatori: ["schettini", "vezzali", "bianco"],
   },
@@ -270,10 +271,10 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     desc: "I gruppi da 8 a 10 chiudono la gara.",
   },
   {
-    tipo: "panel",
-    n: 7,
-    titolo: "Vivere più a lungo",
-    desc: "Il tema che dà il titolo alla giornata: quanto pesano davvero prevenzione, movimento e diagnosi precoce sugli anni che viviamo e su come li viviamo. Lo sport della città racconta le scelte quotidiane che fanno la differenza, in campo e fuori.",
+    tipo: "chiusura",
+    icona: "fa-futbol",
+    titolo: "La squadra della città",
+    desc: "L'S.S. Taranto sale sul palco per chiudere la mattinata: lo sport come impegno di ogni giorno, per chi gioca e per chi tifa.",
     partner: ["taranto"],
   },
   {
@@ -302,6 +303,7 @@ export const ETICHETTA_VOCE: Record<ProgrammaVoce["tipo"], string> = {
   panel: "Panel",
   ragazzi: "Ragazzi",
   pausa: "Pausa",
+  chiusura: "Chiusura",
   premiazione: "Premiazione",
   lunch: "Lunch",
   concerto: "Concerto",
@@ -392,7 +394,7 @@ export const PARTNER: Partner[] = [
     id: "taranto",
     nome: "S.S. Taranto",
     ruolo: "La squadra di calcio della città, dal 1927",
-    // Sale sul palco nel panel 7. `url` resta da confermare con la società.
+    // Chiude la mattinata, prima della proclamazione. `url` resta da confermare con la società.
     img: `${PARTNER_IMG}/taranto.webp`,
   },
 ];
