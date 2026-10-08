@@ -455,6 +455,58 @@ la vera difesa contro le adesioni finte.
   Gli ultimi due servono a dimensionare il percorso e i posti dell'evento.
 - Stato e note interne per adesione, export CSV.
 
+## Chiusura del percorso
+
+L'informativa promette due cose: l'accesso di referenti e commissari si spegne
+a fine corso, e account, elaborati, progetti e avanzamento si cancellano entro
+un mese dalla conclusione. La scheda **Chiusura** del pannello staff le
+mantiene, con due comandi separati e la parola `CHIUDI` da scrivere per
+ciascuno (il controllo e ripetuto nella rotta, non solo nel browser).
+
+1. **Disattiva gli accessi.** Scrive `percorso_chiuso_at` in `licei_config`.
+   Da quel momento `requireReferente`, `requireStudente` e
+   `requireCommissario` rispondono 403 con "Il percorso si è concluso e
+   l'accesso è stato disattivato.", e i cancelli di adesioni e iscrizioni
+   respingono i non staff. Le pagine pubbliche non cambiano. Si annulla con
+   "Riattiva gli accessi", ma solo finche i dati ci sono.
+2. **Cancella i dati del percorso.** Abilitata solo dopo il passo 1. In
+   quest'ordine: riflessioni delle lezioni (`lesson_submissions`), account,
+   poi schede, commissari e adesioni (la cascata porta via iscrizioni,
+   squadre e progetti). Gli account vanno prima delle righe perche le righe
+   sono l'unico registro di quali account appartengono al percorso: se un
+   account non si cancella, la rotta si ferma con le righe ancora al loro
+   posto e il comando si puo ripetere.
+
+Rotta: `app/api/eventi/licei/admin/chiusura/route.ts` (GET anteprima, POST
+`disattiva`, `riattiva`, `cancella`).
+
+**Quali account si cancellano.** Solo quelli che il database mostra usati
+dal percorso licei e da nient'altro (referenti, studenti, commissari). Un
+account resta se e staff (`partnership_level = admin`), se e membro o
+partner del portale o ha una domanda di adesione, se compare in
+`applications`, `projects`, `knowledge_documents`, `equipment_proposals`,
+`event_attendees`, `events`, `coin_transactions`, `redemption_requests`, nelle
+tabelle `universita_*`, in `bando_applications` o in `event_registrations`
+(per id o per email). Di chi resta si cancellano comunque i dati del
+percorso; le riflessioni si tengono solo se la persona segue il corso anche
+per un'altra via (staff, portale, percorso universitario). Se una qualsiasi
+di queste verifiche va in errore, la cancellazione si rifiuta: una tabella
+assente conta come vuota, una query fallita no.
+
+**Che cosa resta.** `event_registrations` (i finalisti iscritti all'evento
+seguono la conservazione dell'evento) e `newsletter_subscribers` (consenso a
+parte).
+
+**Il registro.** `dati_cancellati_at` e `dati_cancellati_esito` (JSON con i
+soli conteggi: `licei_config` e leggibile da chiunque, quindi niente email
+ne id). Il pannello mostra "Dati cancellati il ..." con i numeri.
+
+Nessuna migrazione: tutto vive in `licei_config`, che e gia chiave/valore.
+Le tre chiavi non stanno in `CONFIG_CHIAVI`, quindi la rotta generica della
+configurazione non le puo scrivere. Per una nuova edizione del percorso le
+tre righe vanno tolte a mano:
+`delete from public.licei_config where chiave in ('percorso_chiuso_at', 'dati_cancellati_at', 'dati_cancellati_esito');`
+
 ## Debito noto
 
 Le primitive del form (`FieldLabel`, `AreaTesto`, `Consenso`, l'indicatore dei

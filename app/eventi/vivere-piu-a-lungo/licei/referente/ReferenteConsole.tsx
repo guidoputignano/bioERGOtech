@@ -28,6 +28,8 @@ import {
   haFattoAccesso,
   statoIscrizioneColore,
   statoIscrizioneLabel,
+  INFORMATIVA_SCUOLE_PATH,
+  ISTRUZIONI_REFERENTE,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
 import {
@@ -274,12 +276,13 @@ export function ReferenteConsole() {
 
         <div className="card" style={{ padding: 20 }}>
           <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
-            Moduli di autorizzazione
+            Moduli su foto e video dell&apos;evento
           </h2>
           <p className="text-sm text-gray-600 mb-3">
-            Già intestati al vostro istituto, con le scelte A e B su foto e video dell&apos;evento.
-            Li stampa, li fa firmare e li conserva agli atti: non vanno inviati a noi. Prima di
-            firmare, famiglie e studenti leggono l&apos;
+            Per gli studenti che partecipano all&apos;evento finale. Già intestati al vostro
+            istituto, con le scelte A e B. Li stampa, li fa firmare e li conserva agli atti: non
+            vanno inviati a noi. Per il corso non servono moduli: gli studenti di almeno 14 anni si
+            iscrivono e acconsentono da sé. Prima di firmare, famiglie e studenti leggono l&apos;
             <Link href={INFORMATIVA_IMMAGINI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
               informativa su foto e video
             </Link>
@@ -624,10 +627,32 @@ export function ReferenteConsole() {
         </div>
       )}
 
+      <details className="card-sm" style={{ padding: 16, fontSize: 13, color: "var(--text-mid)", lineHeight: 1.7 }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text-dark)" }}>
+          Le regole del tuo accesso
+        </summary>
+        <p className="mt-2">
+          L&apos;accesso è personale e collegato al solo vostro istituto. Usandolo ti impegni a:
+        </p>
+        <ul className="list-disc pl-5 mt-1 space-y-1">
+          {ISTRUZIONI_REFERENTE.map((x) => (
+            <li key={x}>{x}</li>
+          ))}
+        </ul>
+        <p className="mt-2">
+          Dettagli nell&apos;
+          <Link href={INFORMATIVA_SCUOLE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            informativa per scuole e docenti referenti
+          </Link>
+          .
+        </p>
+      </details>
+
       <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.7, margin: 0 }}>
         L&apos;elenco dei confermati è quello che l&apos;art. 4 chiede all&apos;istituto di
-        trasmettere: lo scarica da qui invece di compilarlo. Le autorizzazioni firmate restano in
-        custodia alla scuola, non vanno caricate su questo sito.
+        trasmettere: lo scarica da qui invece di compilarlo, e contiene solo i dati necessari,
+        senza email. I moduli su foto e video firmati restano in custodia alla scuola, non vanno
+        caricati su questo sito.
       </p>
     </div>
   );

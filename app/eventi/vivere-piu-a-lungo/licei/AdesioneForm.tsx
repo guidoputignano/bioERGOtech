@@ -8,9 +8,9 @@
  * il referente con i numeri previsti, gli impegni e le dichiarazioni.
  *
  * Nessun dato di studenti viene raccolto qui, solo quanti se ne prevedono per
- * anno di corso. I ragazzi si iscriveranno da soli in una fase successiva, e
- * le autorizzazioni dei genitori restano cartacee e in custodia alla scuola:
- * il sito non le raccoglie e non le conserva.
+ * anno di corso. I ragazzi di almeno 14 anni si iscriveranno da soli in una
+ * fase successiva, e i moduli su foto e video dell'evento restano cartacei e
+ * in custodia alla scuola: il sito non li raccoglie e non li conserva.
  *
  * Le primitive del form (etichetta, area di testo, spunta) sono le stesse di
  * BandoForm, deliberatamente duplicate: la pagina del bando e in
@@ -34,6 +34,8 @@ import {
   IMPEGNI_ISTITUTO,
   LICEI,
   NOTA_DATI_STUDENTI,
+  PRESA_ATTO_ADESIONE,
+  INFORMATIVA_SCUOLE_PATH,
 } from "./content";
 import { validateAdesione, type AdesioneInput } from "@/lib/eventi/licei";
 
@@ -681,6 +683,12 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
             }}
           >
             <strong>Sui dati degli studenti.</strong> {NOTA_DATI_STUDENTI}
+            <p style={{ margin: "10px 0 4px", fontWeight: 600 }}>Aderendo, l&apos;istituto prende atto che:</p>
+            <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
+              {PRESA_ATTO_ADESIONE.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -692,7 +700,7 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
             </Consenso>
             <Consenso checked={privacy} onChange={setPrivacy}>
               {CONSENSO_PRIVACY_LICEI_TESTO} *{" "}
-              <Link href="/legal/informativa-privacy" style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+              <Link href={INFORMATIVA_SCUOLE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
                 Leggi l&apos;informativa
               </Link>
             </Consenso>

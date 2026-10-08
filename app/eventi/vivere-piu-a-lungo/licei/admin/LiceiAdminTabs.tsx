@@ -1,23 +1,26 @@
 "use client";
 
 /**
- * Le tre schermate dello staff, in una pagina sola.
+ * Le schermate dello staff, in una pagina sola.
  *
  * L'ordine non e alfabetico ma cronologico, ed e lo stesso in cui il
  * percorso accade: prima gli istituti aderiscono, poi le squadre lavorano,
  * infine la Commissione valuta. Chi apre il pannello a meta percorso trova
- * per prima la fase in cui e entrato.
+ * per prima la fase in cui e entrato. La chiusura sta in fondo perche e
+ * l'ultima cosa che il percorso fa.
  */
 
 import { useState } from "react";
 import { LiceiAdminPanel } from "./LiceiAdminPanel";
 import { ProgettiPanel } from "./ProgettiPanel";
 import { CommissariPanel } from "./CommissariPanel";
+import { ChiusuraPanel } from "./ChiusuraPanel";
 
 const SCHERMATE = [
   { id: "adesioni", label: "Adesioni e iscrizioni" },
   { id: "progetti", label: "Squadre e progetti" },
   { id: "commissione", label: "Commissione" },
+  { id: "chiusura", label: "Chiusura" },
 ] as const;
 
 type Schermata = (typeof SCHERMATE)[number]["id"];
@@ -55,6 +58,7 @@ export function LiceiAdminTabs() {
       {attiva === "adesioni" && <LiceiAdminPanel />}
       {attiva === "progetti" && <ProgettiPanel />}
       {attiva === "commissione" && <CommissariPanel />}
+      {attiva === "chiusura" && <ChiusuraPanel />}
     </div>
   );
 }

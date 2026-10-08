@@ -7,6 +7,7 @@
  * licei. Lo staff li inserisce dal pannello, senza un rilascio del sito.
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { bandoAdminClient } from "@/lib/eventi/bando-server";
 import {
@@ -111,6 +112,101 @@ export async function leggiConfigLicei(): Promise<LiceiConfig> {
 /** Client con service role, condiviso con il modulo bando. */
 export const liceiAdminClient = bandoAdminClient;
 
+/* ── Chiusura del percorso ────────────────────────────────────────────── */
+
+/**
+ * Le chiavi della chiusura vivono in `licei_config` e non in una tabella
+ * nuova: la configurazione e gia chiave/valore, e le migrazioni in
+ * produzione si applicano a mano. Con una colonna o una tabella dedicate,
+ * un rilascio arrivato prima della migrazione avrebbe rotto le guardie di
+ * tutti; cosi, se la chiave non c'e, il percorso risulta semplicemente
+ * aperto.
+ *
+ * Non stanno in `CONFIG_CHIAVI` di proposito: la rotta generica della
+ * configurazione accetta solo quelle, e una chiusura che si potesse
+ * scrivere e cancellare da li salterebbe la conferma e il registro.
+ */
+export const CHIAVE_PERCORSO_CHIUSO = "percorso_chiuso_at";
+export const CHIAVE_DATI_CANCELLATI = "dati_cancellati_at";
+export const CHIAVE_ESITO_CANCELLAZIONE = "dati_cancellati_esito";
+
+export const MESSAGGIO_PERCORSO_CHIUSO =
+  "Il percorso si è concluso e l'accesso è stato disattivato.";
+
+/**
+ * Che cosa e stato cancellato, in soli numeri. `licei_config` e leggibile
+ * da chiunque, quindi qui non finiscono mai email, nomi o id: solo i
+ * conteggi che il pannello mostra dopo l'operazione.
+ */
+export type EsitoCancellazione = {
+  adesioni: number;
+  iscrizioni: number;
+  squadre: number;
+  progetti: number;
+  valutazioni: number;
+  commissari: number;
+  riflessioni: number;
+  account_cancellati: number;
+  account_mantenuti: number;
+  mantenuti_per_motivo: Record<string, number>;
+};
+
+export type ChiusuraPercorso = {
+  chiusoAt: string | null;
+  cancellatiAt: string | null;
+  esito: EsitoCancellazione | null;
+};
+
+/**
+ * Legge lo stato della chiusura. Accetta il client gia aperto dalla guardia
+ * che la chiama, per non aprirne un secondo a ogni richiesta.
+ *
+ * Se la lettura fallisce si torna a "aperto": e la stessa scelta di
+ * `leggiConfigLicei`, e qui e anche l'unica sensata, perche l'alternativa
+ * sarebbe chiudere fuori tutti per un errore di rete.
+ */
+export async function leggiChiusuraPercorso(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client?: SupabaseClient<any, "public", any> | null,
+): Promise<ChiusuraPercorso> {
+  const vuota: ChiusuraPercorso = { chiusoAt: null, cancellatiAt: null, esito: null };
+  try {
+    const db = client ?? (await createClient());
+    const { data, error } = await db
+      .from("licei_config")
+      .select("chiave, valore")
+      .in("chiave", [CHIAVE_PERCORSO_CHIUSO, CHIAVE_DATI_CANCELLATI, CHIAVE_ESITO_CANCELLAZIONE]);
+    if (error || !data) return vuota;
+
+    const mappa = new Map(data.map((r) => [r.chiave as string, ((r.valore as string) ?? "").trim()]));
+    let esito: EsitoCancellazione | null = null;
+    const grezzo = mappa.get(CHIAVE_ESITO_CANCELLAZIONE);
+    if (grezzo) {
+      try {
+        esito = JSON.parse(grezzo) as EsitoCancellazione;
+      } catch {
+        esito = null;
+      }
+    }
+    return {
+      chiusoAt: mappa.get(CHIAVE_PERCORSO_CHIUSO) || null,
+      cancellatiAt: mappa.get(CHIAVE_DATI_CANCELLATI) || null,
+      esito,
+    };
+  } catch {
+    return vuota;
+  }
+}
+
+/** Scorciatoia per le guardie: il percorso e stato chiuso dallo staff? */
+async function percorsoChiuso(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client?: SupabaseClient<any, "public", any> | null,
+): Promise<boolean> {
+  const chiusura = await leggiChiusuraPercorso(client);
+  return chiusura.chiusoAt !== null;
+}
+
 /**
  * Cancello sulla raccolta delle adesioni. Lo staff passa comunque, cosi il
  * flusso si puo provare end to end anche a raccolta chiusa.
@@ -119,6 +215,9 @@ export async function verificaAdesioniAperte(
   staff: boolean,
 ): Promise<{ ok: true } | { ok: false; errore: string }> {
   if (staff) return { ok: true };
+  // A percorso chiuso non si raccolgono dati nuovi: finirebbero in tabelle
+  // che lo staff ha appena svuotato, o sta per svuotare.
+  if (await percorsoChiuso()) return { ok: false, errore: MESSAGGIO_PERCORSO_CHIUSO };
   const config = await leggiConfigLicei();
   if (!adesioniAperte(config.stato_adesioni)) {
     return {
@@ -137,6 +236,7 @@ export async function verificaIscrizioniAperte(
   staff: boolean,
 ): Promise<{ ok: true } | { ok: false; errore: string }> {
   if (staff) return { ok: true };
+  if (await percorsoChiuso()) return { ok: false, errore: MESSAGGIO_PERCORSO_CHIUSO };
   const config = await leggiConfigLicei();
   if (!iscrizioniAperte(config.stato_iscrizioni)) {
     return {
@@ -188,6 +288,10 @@ export async function requireReferente(): Promise<
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Non autenticato.", status: 401 };
+
+  // Chiusura del percorso: l'informativa promette che l'accesso termina a
+  // fine corso, e questo e il punto in cui la promessa si mantiene.
+  if (await percorsoChiuso(client)) return { error: MESSAGGIO_PERCORSO_CHIUSO, status: 403 };
 
   const { data: adesione } = await client
     .from("licei_adesioni")
@@ -302,6 +406,10 @@ export async function requireStudente(): Promise<
   } = await supabase.auth.getUser();
   if (!user) return { error: "Non autenticato.", status: 401 };
 
+  // Chiusura del percorso: l'informativa promette che l'accesso termina a
+  // fine corso, e questo e il punto in cui la promessa si mantiene.
+  if (await percorsoChiuso(client)) return { error: MESSAGGIO_PERCORSO_CHIUSO, status: 403 };
+
   const { data: righe } = await client
     .from("licei_iscrizioni")
     .select(
@@ -386,6 +494,10 @@ export async function requireCommissario(): Promise<
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Non autenticato.", status: 401 };
+
+  // Chiusura del percorso: l'informativa promette che l'accesso termina a
+  // fine corso, e questo e il punto in cui la promessa si mantiene.
+  if (await percorsoChiuso(client)) return { error: MESSAGGIO_PERCORSO_CHIUSO, status: 403 };
 
   const { data: commissario } = await client
     .from("licei_commissari")

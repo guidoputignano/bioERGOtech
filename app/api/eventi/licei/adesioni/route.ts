@@ -17,6 +17,7 @@ import {
   DICHIARAZIONE_POTERI_TESTO,
   IMPEGNI_ISTITUTO,
   NOTA_DATI_STUDENTI,
+  PRESA_ATTO_ADESIONE,
   SITE_URL,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
@@ -162,6 +163,7 @@ export async function POST(request: Request) {
         accettazione: DICHIARAZIONE_ACCETTAZIONE_LICEI_TESTO,
         privacy: CONSENSO_PRIVACY_LICEI_TESTO,
         nota_dati_studenti: NOTA_DATI_STUDENTI,
+        presa_atto: PRESA_ATTO_ADESIONE,
       },
     };
 

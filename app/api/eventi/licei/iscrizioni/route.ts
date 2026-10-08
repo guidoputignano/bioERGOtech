@@ -9,8 +9,10 @@ import {
 } from "@/lib/eventi/licei-iscrizioni";
 import { studenteEmailHtml, studenteEmailSubject } from "@/lib/eventi/licei-email";
 import {
+  ACCETTAZIONE_REGOLAMENTO_TESTO,
+  CONSENSO_NEWSLETTER_STUDENTE_TESTO,
   CONSENSO_PRIVACY_STUDENTE_TESTO,
-  DICHIARAZIONE_AUTORIZZAZIONE_TESTO,
+  DICHIARAZIONE_ETA_TESTO,
   SITE_URL,
   STATI_ADESIONE_CHE_ACCETTANO,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
@@ -141,10 +143,17 @@ export async function POST(request: Request) {
       anno_corso: Number(input.anno_corso),
       consenso_privacy: true,
       consenso_privacy_ts: adesso,
-      dichiara_autorizzazione: true,
+      // La colonna dichiara_autorizzazione resta per le iscrizioni fatte con il
+      // modello precedente (modulo dei genitori). Le dichiarazioni di adesso
+      // vivono nel jsonb, con il testo esatto mostrato e l'ora: così non serve
+      // una migrazione per registrarle.
+      dichiara_autorizzazione: false,
       dichiarazioni_testo: {
         privacy: CONSENSO_PRIVACY_STUDENTE_TESTO,
-        autorizzazione: DICHIARAZIONE_AUTORIZZAZIONE_TESTO,
+        eta_14: DICHIARAZIONE_ETA_TESTO,
+        regolamento: ACCETTAZIONE_REGOLAMENTO_TESTO,
+        newsletter: input.consenso_newsletter ? CONSENSO_NEWSLETTER_STUDENTE_TESTO : null,
+        ts: adesso,
       },
     });
 
@@ -159,6 +168,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Non e stato possibile registrare l'iscrizione. Riprova." },
         { status: 500 },
+      );
+    }
+
+    // ── Newsletter, solo se scelta: casella facoltativa e mai preselezionata ──
+    if (input.consenso_newsletter) {
+      await client.from("newsletter_subscribers").upsert(
+        {
+          email,
+          full_name: `${nome} ${cognome}`,
+          source: "corso-licei",
+          is_active: true,
+          subscribed_at: adesso,
+        },
+        { onConflict: "email" },
       );
     }
 

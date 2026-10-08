@@ -669,9 +669,10 @@ export default async function LiceiPage() {
                 </ul>
 
                 <p className="lc-nota" style={{ marginTop: 26 }}>
-                  Qui non chiediamo i nomi degli studenti, solo quanti prevedete di coinvolgere. Le
-                  autorizzazioni dei genitori restano cartacee e in custodia all&apos;istituto: il
-                  sito non le raccoglie e non le conserva.
+                  Qui non chiediamo i nomi degli studenti, solo quanti prevedete di coinvolgere. Gli
+                  studenti di almeno 14 anni si iscrivono da soli; i moduli su foto e video
+                  dell&apos;evento restano cartacei e in custodia all&apos;istituto: il sito non li
+                  raccoglie e non li conserva.
                 </p>
 
                 {/* Chi arriva qui e uno studente ha sbagliato pagina: questo modulo
@@ -699,14 +700,14 @@ export default async function LiceiPage() {
                 </div>
 
                 {/* Il referente che torna dopo aver aderito cerca il suo codice e il
-                    modulo di autorizzazione: entrambi sono nella sua area. */}
+                    i moduli su foto e video: entrambi sono nella sua area. */}
                 <p className="lc-nota" style={{ marginTop: 18 }}>
                   Ha già aderito?{" "}
                   <Link href={REFERENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
                     La sua area riservata è qui
                   </Link>
-                  : ci trova il codice dell&apos;istituto, il modulo di autorizzazione da far
-                  firmare e le iscrizioni dei suoi studenti da confermare.
+                  : ci trova il codice dell&apos;istituto, i moduli su foto e video da far firmare
+                  e le iscrizioni dei suoi studenti da confermare.
                 </p>
               </div>
 

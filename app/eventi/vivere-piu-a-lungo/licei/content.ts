@@ -111,8 +111,9 @@ export const AMBITI_PROGETTO = [
  * I quattro impegni dell'art. 4, che nel modulo diventano quattro spunte
  * separate: firmarli in blocco con una casella sola non è un impegno, è un
  * clic. Il quinto non è nel testo del bando ma discende dall'art. 4 e dalla
- * natura del percorso: gli studenti sono in larga parte minorenni, e le
- * autorizzazioni dei genitori le raccoglie e le custodisce la scuola.
+ * natura del percorso: per foto e video dell'evento finale servono i moduli
+ * delle famiglie, e li raccoglie e li custodisce la scuola. Per il corso no:
+ * lo studente di almeno 14 anni si iscrive e acconsente da sé.
  */
 export const IMPEGNI_ISTITUTO = [
   {
@@ -135,9 +136,9 @@ export const IMPEGNI_ISTITUTO = [
   },
   {
     campo: "impegno_consensi",
-    titolo: "Autorizzazioni delle famiglie",
+    titolo: "Moduli su foto e video dell'evento",
     testo:
-      "L'istituto raccoglie e custodisce le autorizzazioni dei genitori o di chi esercita la responsabilità genitoriale per la partecipazione degli studenti minorenni e per l'eventuale ripresa audiovisiva durante l'evento finale, e le conserva agli atti.",
+      "Per gli studenti che partecipano all'evento finale, l'istituto consegna a famiglie e studenti maggiorenni l'informativa e i moduli su foto e video, conserva agli atti quelli firmati e trasmette agli organizzatori solo l'elenco minimo con le scelte espresse.",
   },
 ] as const;
 
@@ -325,7 +326,21 @@ export const DICHIARAZIONE_ACCETTAZIONE_LICEI_TESTO =
   "Ho letto il bando in ogni sua parte e ne accetto le disposizioni, comprese l'insindacabilità delle valutazioni della Commissione e la facoltà degli organizzatori di definire i termini e le modalità operative del percorso.";
 
 export const CONSENSO_PRIVACY_LICEI_TESTO =
-  "Acconsento al trattamento dei dati del docente referente e dell'istituto, ai sensi del Regolamento (UE) 2016/679, per le sole finalità connesse alla gestione del percorso formativo e dell'evento.";
+  "Ho letto l'informativa privacy per scuole e docenti referenti.";
+
+/**
+ * Di che cosa l'istituto prende atto aderendo: è il documento «Adesione della
+ * scuola e accesso del docente referente», mostrato nel modulo e registrato
+ * insieme all'adesione.
+ */
+export const PRESA_ATTO_ADESIONE = [
+  "Gli studenti di almeno 14 anni si iscrivono direttamente alla piattaforma della Fondazione; l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
+  "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.",
+  "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività.",
+  "Il docente usa credenziali personali, non le condivide e non comunica o riutilizza i dati visualizzati per finalità estranee al percorso.",
+  "L'istituto informa studenti e famiglie, secondo le proprie procedure, della partecipazione al percorso e della visibilità assegnata al docente referente.",
+  "L'accesso del docente termina al più tardi un mese dopo la conclusione del corso.",
+] as const;
 
 export const CONSENSO_MARKETING_LICEI_TESTO =
   "Acconsento a ricevere comunicazioni della Fondazione bioERGOtech sulle sue iniziative per le scuole. Potrò revocare il consenso in qualsiasi momento.";
@@ -336,7 +351,7 @@ export const CONSENSO_MARKETING_LICEI_TESTO =
  * tocca nessun dato di minori, solo numeri.
  */
 export const NOTA_DATI_STUDENTI =
-  "In questa fase non chiediamo i nomi degli studenti, ma solo quanti prevedete di coinvolgere. I ragazzi si iscriveranno da soli al percorso, con il codice che riceverete via email, e sarete voi a confermare l'elenco. Le autorizzazioni dei genitori restano cartacee e in custodia all'istituto: il sito non le raccoglie e non le conserva.";
+  "In questa fase non chiediamo i nomi degli studenti, ma solo quanti prevedete di coinvolgere. I ragazzi si iscriveranno da soli al percorso, con il codice che riceverete via email, e sarete voi a confermare l'elenco. I moduli su foto e video dell'evento restano cartacei e in custodia all'istituto: il sito non li raccoglie e non li conserva.";
 
 /* ── FAQ ──────────────────────────────────────────────────────────────── */
 
@@ -363,7 +378,7 @@ export const FAQ_LICEI = [
   },
   {
     q: "Dobbiamo raccogliere le autorizzazioni dei genitori?",
-    a: "Sì, e restano in custodia all'istituto. Il sito non raccoglie moduli firmati e non conserva dati dei genitori. Servono due autorizzazioni distinte: una per la partecipazione al percorso e una per l'eventuale ripresa audiovisiva durante l'evento finale, che si svolge in seduta pubblica.",
+    a: "Per il corso no: gli studenti di almeno 14 anni si iscrivono e acconsentono da sé, e la scuola non raccoglie consensi per conto della Fondazione. Per foto e video dell'evento finale sì: per gli studenti che partecipano al convegno la scuola consegna i moduli con le scelte A e B, firmati dal genitore per i minorenni e dallo studente se maggiorenne, li conserva agli atti e ci invia solo l'elenco minimo. Il sito non raccoglie moduli firmati e non conserva dati dei genitori.",
   },
   {
     q: "Quanti studenti possiamo iscrivere?",
@@ -375,7 +390,7 @@ export const FAQ_LICEI = [
   },
   {
     q: "Perché una squadra non può unire studenti di due scuole diverse?",
-    a: "Perché è l'istituto che risponde dei suoi studenti: raccoglie le candidature, custodisce le autorizzazioni dei genitori e accompagna i ragazzi all'evento finale. Una squadra a cavallo di due scuole non avrebbe un referente che ne risponde. Il tetto di cinque coincide con la rappresentanza dell'art. 6, così la squadra vincitrice parte al completo.",
+    a: "Perché è l'istituto che risponde dei suoi studenti: raccoglie le candidature, custodisce i moduli su foto e video e accompagna i ragazzi all'evento finale. Una squadra a cavallo di due scuole non avrebbe un referente che ne risponde. Il tetto di cinque coincide con la rappresentanza dell'art. 6, così la squadra vincitrice parte al completo.",
   },
 ] as const;
 
@@ -390,9 +405,10 @@ export const FAQ_LICEI = [
    Il minimo per far funzionare corso e valutazione, e nient'altro: nome,
    cognome, classe, anno di corso, email. Niente data di nascita, niente
    codice fiscale, niente contatti dei genitori. L'anno di corso sostituisce
-   l'eta ed e meno identificante. Le autorizzazioni restano cartacee e in
-   custodia all'istituto: il sito genera il modulo da far firmare, non
-   raccoglie il modulo firmato.
+   l'eta ed e meno identificante. Lo studente dichiara di avere almeno 14
+   anni e acconsente da se. I moduli su foto e video dell'evento restano
+   cartacei e in custodia all'istituto: il sito genera il modulo da far
+   firmare, non raccoglie il modulo firmato.
    ═══════════════════════════════════════════════════════════════════════ */
 
 export const ISCRIZIONE_SLUG = "iscrizione";
@@ -477,39 +493,59 @@ export const statoIscrizioneColore = (v: string): string =>
 
 /* ── Dichiarazioni dello studente ─────────────────────────────────────── */
 
-export const CONSENSO_PRIVACY_STUDENTE_TESTO =
-  "Acconsento al trattamento dei miei dati per la partecipazione al percorso formativo e alla selezione dei progetti, ai sensi del Regolamento (UE) 2016/679.";
+/*
+ * Il modello è quello dei documenti privacy del percorso: lo studente di
+ * almeno 14 anni si iscrive e acconsente da sé (art. 2-quinquies del Codice
+ * privacy), la scuola non raccoglie consensi per conto della Fondazione. Il
+ * modulo firmato dai genitori resta solo per foto e video dell'evento.
+ * I testi delle caselle sono quelli della «schermata di iscrizione».
+ */
+export const DICHIARAZIONE_ETA_TESTO = "Dichiaro di avere compiuto 14 anni.";
 
-export const DICHIARAZIONE_AUTORIZZAZIONE_TESTO =
-  "Se sono minorenne, ho consegnato o consegnerò alla scuola il modulo di autorizzazione firmato da un genitore o da chi esercita la responsabilità genitoriale.";
+export const CONSENSO_PRIVACY_STUDENTE_TESTO =
+  "Ho letto l'informativa privacy del corso e chiedo di essere iscritto/a al percorso.";
+
+export const ACCETTAZIONE_REGOLAMENTO_TESTO =
+  "Ho letto e accetto il regolamento di partecipazione.";
+
+export const CONSENSO_NEWSLETTER_STUDENTE_TESTO =
+  "Desidero ricevere, all'indirizzo indicato, la newsletter e informazioni su future iniziative di Fondazione bioERGOtech ETS. Facoltativo: non incide sulla partecipazione al corso e si può revocare in qualsiasi momento scrivendo a info@bioergotech.org.";
 
 /**
- * Avviso mostrato allo studente prima dell'invio. Dice due cose che
- * altrimenti scoprirebbe dopo: che la scuola lo deve riconoscere, e che
- * senza il modulo firmato non partecipa.
+ * Avviso mostrato allo studente prima dell'invio: che la scuola lo deve
+ * riconoscere, e le due regole che valgono dal primo accesso.
  */
 export const NOTA_ISCRIZIONE_STUDENTE =
-  "La tua iscrizione arriva al docente referente del tuo istituto, che la conferma. Se sei minorenne serve anche il modulo di autorizzazione firmato da un genitore: lo chiedi al tuo referente, che ce l'ha già pronto.";
+  "Il percorso è gratuito e riservato agli studenti del triennio che hanno almeno 14 anni. La tua iscrizione arriva al docente referente del tuo istituto, che la conferma. L'account è personale: non condividere password o credenziali con altre persone. Per assistenza o per chiudere l'account scrivi a info@bioergotech.org.";
+
+/* Documenti pubblici del percorso: informative e regolamento. */
+export const INFORMATIVA_STUDENTI_PATH = `${LICEI_PATH}/informativa-studenti`;
+export const INFORMATIVA_SCUOLE_PATH = `${LICEI_PATH}/informativa-scuole`;
+export const REGOLAMENTO_PATH = `${LICEI_PATH}/regolamento`;
 
 /* ── Modulo di autorizzazione per le famiglie ─────────────────────────── */
 
 /**
- * Testo del modulo che il referente stampa e fa firmare. Le autorizzazioni
- * sono distinte, e vanno tenute distinte: la partecipazione al percorso è
- * necessaria, le due scelte sulle immagini (A e B, testi in
- * `../informativa-immagini/content.ts`) no. Chi non acconsente alle riprese
- * partecipa lo stesso, e la scuola lo segnala agli organizzatori.
- *
- * Il modulo esiste in due versioni, come i documenti privacy dell'evento:
- * per lo studente minorenne lo firma il genitore e comprende anche la
- * partecipazione al percorso; lo studente maggiorenne firma da sé le sole
- * scelte sulle immagini.
+ * Modulo su foto e video che il referente stampa e fa firmare, in due
+ * versioni: per lo studente minorenne lo firma il genitore, lo studente
+ * maggiorenne lo firma da sé. Le due scelte, A e B, sono facoltative e i loro
+ * testi stanno in `../informativa-immagini/content.ts`. La partecipazione al
+ * corso non è nel modulo: lo studente di almeno 14 anni vi acconsente da sé
+ * al momento dell'iscrizione.
  */
-export const AUTORIZZAZIONE_PARTECIPAZIONE = {
-  titolo: "Partecipazione al percorso formativo",
-  testo:
-    "Autorizzo la partecipazione al percorso formativo gratuito \"Biotecnologie e Intelligenza Artificiale\", promosso da Fondazione bioERGOtech e SafesPro, che si svolge online e fuori dall'orario scolastico, e alla connessa attività di lavoro in team e sviluppo di un progetto.",
-} as const;
+/**
+ * Impegni del docente referente, dal documento «Istruzioni per il docente
+ * referente». Mostrati nella sua area: valgono dal primo accesso.
+ */
+export const ISTRUZIONI_REFERENTE = [
+  "custodire con cura le credenziali e non condividerle;",
+  "accedere soltanto agli studenti del tuo istituto;",
+  "usare nome, email, classe, avanzamento, squadra e progetto degli studenti solo per seguire il percorso formativo;",
+  "non esportare, scaricare, fotografare o inoltrare dati e contenuti, salvo quanto strettamente richiesto dall'attività scolastica e autorizzato dall'istituto;",
+  "non usare i dati per contattare gli studenti al di fuori delle normali attività scolastiche;",
+  "segnalare subito a info@bioergotech.org accessi anomali, perdita di credenziali, errori o richieste degli studenti;",
+  "interrompere l'uso dell'account alla conclusione del corso o quando l'istituto revoca il ruolo di referente. L'accesso viene disattivato entro un mese dalla conclusione del percorso.",
+] as const;
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
   "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito: agli organizzatori arriva solo l'elenco minimo degli studenti partecipanti con le scelte A e B.";
@@ -663,6 +699,15 @@ export const SQUADRA_NOME_MAX = 60;
  */
 export const NOTA_MATERIALI =
   "Se avete una presentazione, un video o un prototipo, incollate qui il link e controllate che sia visibile a chi lo apre senza essere loggato. Non carichiamo file su questo sito.";
+
+/**
+ * Avviso sopra i campi del progetto. I progetti parlano di biotecnologie e
+ * salute, e un esempio vero (il nonno, la compagna di classe) è la cosa più
+ * naturale da scrivere: ma sarebbe un dato sanitario di una persona reale,
+ * letto dalla Commissione e dal referente. Meglio dirlo prima.
+ */
+export const NOTA_DATI_PROGETTO =
+  "Nei testi del progetto non inserite informazioni sulla salute o altri dati personali vostri o di persone reali, nemmeno come esempio: la Commissione e il docente referente leggono quello che scrivete. Descrivete il problema in modo generale o con casi inventati.";
 
 export const NOTA_CONSEGNA =
   "Una volta consegnato, il progetto non è più modificabile. Fino ad allora resta una bozza che potete salvare e riprendere quando volete, e che nessuno all'infuori della vostra squadra può leggere.";

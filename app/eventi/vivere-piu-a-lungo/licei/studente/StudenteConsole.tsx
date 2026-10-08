@@ -24,6 +24,7 @@ import {
   LICEI,
   LICEI_PATH,
   NOTA_CONSEGNA,
+  NOTA_DATI_PROGETTO,
   NOTA_MATERIALI,
   SQUADRA_MAX,
   SQUADRA_MIN,
@@ -587,6 +588,22 @@ export function StudenteConsole({
                     ))}
                   </select>
                 </div>
+
+                <p
+                  role="note"
+                  style={{
+                    background: "#FFF8E6",
+                    border: "1px solid #F0D89B",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    fontSize: 12.5,
+                    color: "#75570F",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  {NOTA_DATI_PROGETTO}
+                </p>
 
                 {CAMPI_PROGETTO.map((c) => {
                   const criterio = CRITERI_LICEI.find((k) => k.criterio === c.criterio);
