@@ -174,7 +174,7 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ codice: string; aggiornata: boolean } | null>(null);
+  const [success, setSuccess] = useState<{ codice: string; aggiornata: boolean; confermata: boolean } | null>(null);
 
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -292,7 +292,7 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Invio non riuscito.");
-      setSuccess({ codice: data.codice, aggiornata: !!data.aggiornata });
+      setSuccess({ codice: data.codice, aggiornata: !!data.aggiornata, confermata: !!data.confermata });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invio non riuscito.");
     } finally {
@@ -307,11 +307,14 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
           <i className="fas fa-check text-2xl" />
         </div>
         <h3 className="text-2xl font-bold mb-2 text-gray-800">
-          {success.aggiornata ? "Adesione aggiornata" : "Adesione ricevuta"}
+          {success.aggiornata ? "Adesione aggiornata" : success.confermata ? "Adesione confermata" : "Adesione ricevuta"}
         </h3>
         <p className="text-gray-600 mb-6">
           Le abbiamo inviato un&apos;email di conferma con il codice dell&apos;istituto e i prossimi
-          passi. Verifichiamo l&apos;adesione e le confermiamo l&apos;attivazione nei prossimi giorni.
+          passi.{" "}
+          {success.confermata
+            ? "L'istituto è già attivo: nella seconda email trova il link di iscrizione da girare agli studenti."
+            : "Verifichiamo l'adesione e le confermiamo l'attivazione nei prossimi giorni."}
         </p>
         <div
           style={{

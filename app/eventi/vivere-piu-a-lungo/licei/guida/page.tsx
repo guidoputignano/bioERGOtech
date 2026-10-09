@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { GeneratoreCircolare } from "./GeneratoreCircolare";
+import { leggiConfigLicei } from "@/lib/eventi/licei-server";
 import {
   CONTATTI_LICEI,
   GUIDA_PATH,
@@ -29,6 +30,9 @@ import {
  * cosi la pagina si stampa e si inoltra senza che sparisca meta contenuto, e
  * chi la apre da un link vede subito che esiste anche la parte degli altri.
  */
+
+// Il secondo passo del docente segue la configurazione dello staff.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: `Chi fa cosa nel percorso . ${LICEI.titolo} . Fondazione bioERGOtech`,
@@ -119,7 +123,41 @@ type Passo = {
   avvisi?: { grave?: boolean; forte: string; testo: string }[];
 };
 
-const DOCENTE: Passo[] = [
+/**
+ * Il secondo passo del docente dipende da come lo staff conferma le adesioni
+ * (`conferma_adesioni` in licei_config): con la conferma manuale aspetta la
+ * nostra verifica, con quella automatica l'istituto è attivo da subito.
+ */
+const PASSO_CONFERMA_MANUALE: Passo = {
+  titolo: "Aspetti la nostra conferma",
+  testo:
+    "Verifichiamo a mano ogni adesione. Il modulo è pubblico e il codice meccanografico di una scuola si trova online: il controllo serve a impedire che qualcuno aderisca al posto vostro.",
+  avvisi: [
+    {
+      forte: "Non diffonda ancora il codice.",
+      testo:
+        "Finché non confermiamo, gli studenti che provano a iscriversi vengono respinti, e lei si ritrova a rispiegare tutto.",
+    },
+  ],
+  poi: {
+    titolo: "Cosa succede dopo",
+    testo:
+      'Le arriva una seconda email, "Adesione confermata", con il codice del suo istituto e un link di iscrizione già pronto.',
+  },
+};
+
+const PASSO_CONFERMA_AUTOMATICA: Passo = {
+  titolo: "Riceva la conferma",
+  testo:
+    "L'adesione è confermata subito, senza attese: il codice del suo istituto accetta le iscrizioni dal momento in cui le aprono gli organizzatori. Verifichiamo le adesioni anche dopo, e ritiriamo quelle che non risultano autentiche.",
+  poi: {
+    titolo: "Cosa succede dopo",
+    testo:
+      'Insieme alla prima email le arriva "Adesione confermata", con il codice del suo istituto e un link di iscrizione già pronto.',
+  },
+};
+
+const DOCENTE_BASE: Passo[] = [
   {
     titolo: "Aderisca a nome dell'istituto",
     testo:
@@ -129,23 +167,6 @@ const DOCENTE: Passo[] = [
       titolo: "Cosa succede dopo",
       testo:
         "Riceve subito una email con il link per impostare la sua password. La apra: le servirà al passo 3.",
-    },
-  },
-  {
-    titolo: "Aspetti la nostra conferma",
-    testo:
-      "Verifichiamo a mano ogni adesione. Il modulo è pubblico e il codice meccanografico di una scuola si trova online: il controllo serve a impedire che qualcuno aderisca al posto vostro.",
-    avvisi: [
-      {
-        forte: "Non diffonda ancora il codice.",
-        testo:
-          "Finché non confermiamo, gli studenti che provano a iscriversi vengono respinti, e lei si ritrova a rispiegare tutto.",
-      },
-    ],
-    poi: {
-      titolo: "Cosa succede dopo",
-      testo:
-        'Le arriva una seconda email, "Adesione confermata", con il codice del suo istituto e un link di iscrizione già pronto.',
     },
   },
   {
@@ -409,10 +430,18 @@ function Testata({
   );
 }
 
-export default function GuidaPage() {
+/** I passi del docente, con il secondo scelto in base alla configurazione. */
+const passiDocente = (automatica: boolean): Passo[] => [
+  DOCENTE_BASE[0],
+  automatica ? PASSO_CONFERMA_AUTOMATICA : PASSO_CONFERMA_MANUALE,
+  ...DOCENTE_BASE.slice(1),
+];
+
+export default async function GuidaPage() {
+  const automatica = (await leggiConfigLicei()).conferma_adesioni === "automatica";
   const catena = [
     { t: "L'istituto aderisce", noi: false },
-    { t: "Noi confermiamo", noi: true },
+    { t: automatica ? "Conferma immediata" : "Noi confermiamo", noi: true },
     { t: "Gli studenti si iscrivono", noi: false },
     { t: "Il docente li riconosce", noi: false },
     { t: "Corso online", noi: false },
@@ -459,7 +488,7 @@ export default function GuidaPage() {
               titolo="Il docente referente"
               sommario="È la persona che l'istituto individua. Aderisce a nome della scuola, diffonde il codice e riconosce i propri studenti. Senza di lei il percorso non parte."
             />
-            <Passi passi={DOCENTE} />
+            <Passi passi={passiDocente(automatica)} />
             <div style={{ maxWidth: 760, marginTop: 32 }}>
               <GeneratoreCircolare />
             </div>

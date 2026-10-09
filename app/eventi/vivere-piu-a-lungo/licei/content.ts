@@ -275,7 +275,19 @@ export const CONFIG_CHIAVI = {
   scadenza_consegna_label:
     "Termine per la consegna dei progetti, in chiaro. Vuoto finché non è stato fissato.",
   stato_valutazione: "Schede della Commissione: chiusa oppure aperta.",
+  conferma_adesioni: "Conferma delle adesioni degli istituti: automatica oppure manuale.",
 } as const;
+
+/**
+ * Come si conferma un'adesione. `manuale`: lo staff verifica ogni istituto
+ * prima che il suo codice accetti iscrizioni, perché il modulo è pubblico e il
+ * codice meccanografico di una scuola si trova online. `automatica`:
+ * l'adesione nasce già confermata, per quando i tempi non permettono la
+ * verifica; lo staff controlla dopo e, se un'adesione non è autentica, la
+ * mette su "Ritirata", che chiude subito il codice.
+ */
+export type ConfermaAdesioni = "automatica" | "manuale";
+export const CONFERMA_ADESIONI_DEFAULT: ConfermaAdesioni = "automatica";
 
 /** Le adesioni si accettano davvero? Lo stato `chiuse` e l'archivio fermano tutto. */
 export const adesioniAperte = (stato: StatoAdesioni): boolean =>

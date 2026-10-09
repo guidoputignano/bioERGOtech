@@ -567,3 +567,13 @@ si sovrappongono.
 E' una decisione del consorzio, non del sito, ma condiziona quando i quattro
 interruttori vanno messi su `aperte`, e vanno messi in quest'ordine:
 `stato_iscrizioni`, `stato_squadre`, `stato_consegne`, `stato_valutazione`.
+
+## Conferma automatica delle adesioni
+
+`conferma_adesioni` in `licei_config`, modificabile dal pannello staff:
+`automatica` (default) oppure `manuale`. In automatico un'adesione nuova
+nasce `confermata`: il codice accetta subito le iscrizioni e il referente
+riceve insieme l'email di adesione e quella di conferma. La verifica dello
+staff si sposta dopo: un'adesione non autentica si mette su `ritirata`, e il
+codice smette di accettare iscrizioni. La guida del docente mostra il passo
+giusto per la modalità in uso. Le adesioni gia esistenti non cambiano stato.

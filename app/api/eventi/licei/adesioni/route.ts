@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { utenteCorrente } from "@/lib/eventi/bando-server";
-import { liceiAdminClient, verificaAdesioniAperte } from "@/lib/eventi/licei-server";
+import { leggiConfigLicei, liceiAdminClient, verificaAdesioniAperte } from "@/lib/eventi/licei-server";
 import {
   generateCodiceAdesione,
   normalizzaMeccanografico,
@@ -9,7 +9,12 @@ import {
   validateAdesione,
   type AdesioneInput,
 } from "@/lib/eventi/licei";
-import { liceiEmailHtml, liceiEmailSubject } from "@/lib/eventi/licei-email";
+import {
+  adesioneConfermataEmailHtml,
+  adesioneConfermataEmailSubject,
+  liceiEmailHtml,
+  liceiEmailSubject,
+} from "@/lib/eventi/licei-email";
 import {
   CONSENSO_MARKETING_LICEI_TESTO,
   CONSENSO_PRIVACY_LICEI_TESTO,
@@ -169,6 +174,11 @@ export async function POST(request: Request) {
 
     let codice: string;
     const aggiornata = Boolean(esistente);
+    // Conferma automatica: l'adesione nuova nasce già "confermata", e il
+    // codice accetta subito le iscrizioni. Una modifica a un'adesione
+    // esistente non tocca mai lo stato.
+    const confermaAutomatica =
+      !esistente && (await leggiConfigLicei()).conferma_adesioni === "automatica";
 
     if (esistente) {
       codice = esistente.codice;
@@ -189,7 +199,7 @@ export async function POST(request: Request) {
       codice = generateCodiceAdesione();
       const { error: erroreInsert } = await client
         .from("licei_adesioni")
-        .insert({ ...riga, codice });
+        .insert({ ...riga, codice, ...(confermaAutomatica ? { stato: "confermata" } : {}) });
       if (erroreInsert) {
         if (erroreInsert.code === "23505") {
           return NextResponse.json(
@@ -237,15 +247,31 @@ export async function POST(request: Request) {
             studentiPrevisti: totaleStudenti(input),
             aggiornata,
             setPasswordUrl,
+            confermataSubito: confermaAutomatica,
           }),
         });
+        // Con la conferma automatica parte subito anche l'email che lo staff
+        // manderebbe alla conferma manuale: codice e link pronti da girare.
+        if (confermaAutomatica) {
+          await resend.emails.send({
+            from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+            to: referenteEmail,
+            subject: adesioneConfermataEmailSubject(),
+            html: adesioneConfermataEmailHtml({
+              referente: `${input.referente_nome.trim()} ${input.referente_cognome.trim()}`,
+              istituto,
+              codice,
+              attiva: false,
+            }),
+          });
+        }
       } catch (mailErr) {
         // L'adesione e salvata: un problema email non deve farla fallire.
         console.error("Licei confirmation email failed:", mailErr);
       }
     }
 
-    return NextResponse.json({ success: true, codice, aggiornata });
+    return NextResponse.json({ success: true, codice, aggiornata, confermata: confermaAutomatica });
   } catch (err) {
     console.error("Licei adesione error:", err);
     return NextResponse.json(

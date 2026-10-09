@@ -28,6 +28,8 @@ export type LiceiEmailInput = {
   aggiornata: boolean;
   /** Link per impostare la password, se l'account e stato appena creato. */
   setPasswordUrl?: string;
+  /** Conferma automatica: l'adesione e gia attiva, il codice si puo usare. */
+  confermataSubito?: boolean;
 };
 
 export function liceiEmailSubject(aggiornata: boolean): string {
@@ -37,7 +39,7 @@ export function liceiEmailSubject(aggiornata: boolean): string {
 }
 
 export function liceiEmailHtml(input: LiceiEmailInput): string {
-  const { referente, istituto, codice, studentiPrevisti, aggiornata, setPasswordUrl } = input;
+  const { referente, istituto, codice, studentiPrevisti, aggiornata, setPasswordUrl, confermataSubito } = input;
   const bandoUrl = `${SITE_URL}${LICEI_PATH}`;
 
   return `
@@ -53,23 +55,33 @@ export function liceiEmailHtml(input: LiceiEmailInput): string {
       </h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
         Gentile ${referente}, abbiamo registrato l'adesione di <strong>${istituto}</strong> al percorso
-        formativo, con ${studentiPrevisti} studenti previsti. La verifichiamo e le confermiamo
-        l'attivazione nei prossimi giorni.
+        formativo, con ${studentiPrevisti} studenti previsti. ${
+          confermataSubito
+            ? "L'adesione è già confermata: in un'email separata trova il codice e il link da girare agli studenti."
+            : "La verifichiamo e le confermiamo l'attivazione nei prossimi giorni."
+        }
       </p>
 
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:24px;text-align:center;margin-bottom:24px;">
         <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Codice del vostro istituto</p>
         <p style="color:#0A1628;font-size:26px;font-weight:800;letter-spacing:0.12em;font-family:monospace;margin:0 0 12px;">${codice}</p>
         <p style="color:#4A5568;font-size:13px;line-height:1.6;margin:0;">
-          Serve agli studenti per iscriversi al percorso. Lo riceverà di nuovo, insieme al link di
-          iscrizione, quando apriremo le iscrizioni: non deve distribuirlo adesso.
+          ${
+            confermataSubito
+              ? "Serve agli studenti per iscriversi al percorso. Il link pronto da mettere in circolare è nell'email di conferma."
+              : "Serve agli studenti per iscriversi al percorso. Lo riceverà di nuovo, insieme al link di iscrizione, quando apriremo le iscrizioni: non deve distribuirlo adesso."
+          }
         </p>
       </div>
 
       <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Che cosa succede adesso</p>
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
-          <strong style="color:#0A1628;">1.</strong> Confermiamo l'adesione dell'istituto e le scriviamo.
+          <strong style="color:#0A1628;">1.</strong> ${
+            confermataSubito
+              ? "L'adesione dell'istituto è già confermata."
+              : "Confermiamo l'adesione dell'istituto e le scriviamo."
+          }
         </p>
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
           <strong style="color:#0A1628;">2.</strong> Le comunichiamo i termini per la raccolta delle
@@ -534,7 +546,7 @@ export function adesioneConfermataEmailHtml(input: AdesioneConfermataEmailInput)
         L'adesione è confermata.
       </h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
-        Gentile ${referente}, abbiamo verificato e confermato l'adesione di
+        Gentile ${referente}, abbiamo confermato l'adesione di
         <strong>${istituto}</strong>${attiva ? ", che risulta ora attiva sul corso" : ""}. Da adesso
         il codice del vostro istituto accetta le iscrizioni dei suoi studenti.
       </p>
