@@ -1,7 +1,9 @@
 "use client";
 
 /**
- * Le consegne delle lezioni di uno studente, dentro la riga del referente.
+ * Le riflessioni di uno studente, dentro la riga del referente. Solo la
+ * riflessione: domanda e commento restano alla Fondazione, a cui lo studente
+ * li indirizza.
  *
  * Si caricano quando il docente apre la riga, non con l'elenco: vedi la rotta
  * `api/eventi/licei/referente/riflessioni`. La nota in cima ricorda da quando
@@ -16,16 +18,8 @@ type Consegna = {
   lezione: string;
   titolo: string;
   riflessione: string | null;
-  domanda: string | null;
-  commento: string | null;
   salvata_il: string;
 };
-
-const CAMPI: { chiave: "riflessione" | "domanda" | "commento"; label: string }[] = [
-  { chiave: "riflessione", label: "Riflessione" },
-  { chiave: "domanda", label: "Domanda" },
-  { chiave: "commento", label: "Commento" },
-];
 
 export function RiflessioniStudente({ iscrizioneId }: { iscrizioneId: string }) {
   const [consegne, setConsegne] = useState<Consegna[] | null>(null);
@@ -62,8 +56,9 @@ export function RiflessioniStudente({ iscrizioneId }: { iscrizioneId: string }) 
       }}
     >
       <p style={{ fontSize: 12, color: "var(--text-light)", margin: "0 0 10px", lineHeight: 1.6 }}>
-        Consegne salvate dal {riflessioniAlReferenteDalLabel()}. Quelle precedenti le legge solo la
-        Fondazione, come diceva l&apos;informativa quando lo studente le ha scritte.
+        Riflessioni salvate dal {riflessioniAlReferenteDalLabel()}. Quelle precedenti le legge solo
+        la Fondazione, come diceva l&apos;informativa quando lo studente le ha scritte. Domande e
+        commenti restano alla Fondazione.
       </p>
 
       {errore && <p style={{ fontSize: 13.5, color: "#B44A5E", margin: 0 }}>{errore}</p>}
@@ -72,7 +67,7 @@ export function RiflessioniStudente({ iscrizioneId }: { iscrizioneId: string }) 
       )}
       {consegne && consegne.length === 0 && (
         <p style={{ fontSize: 13.5, color: "var(--text-mid)", margin: 0 }}>
-          Nessuna consegna da questa data.
+          Nessuna riflessione da questa data.
         </p>
       )}
 
@@ -94,33 +89,18 @@ export function RiflessioniStudente({ iscrizioneId }: { iscrizioneId: string }) 
               })}
             </span>
           </div>
-          {CAMPI.map(({ chiave, label }) =>
-            c[chiave] ? (
-              <div key={chiave} style={{ marginTop: 6 }}>
-                <div
-                  style={{
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    letterSpacing: ".08em",
-                    textTransform: "uppercase",
-                    color: "var(--text-light)",
-                  }}
-                >
-                  {label}
-                </div>
-                <p
-                  style={{
-                    fontSize: 13.5,
-                    color: "var(--text-mid)",
-                    lineHeight: 1.65,
-                    margin: "2px 0 0",
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {c[chiave]}
-                </p>
-              </div>
-            ) : null,
+          {c.riflessione && (
+            <p
+              style={{
+                fontSize: 13.5,
+                color: "var(--text-mid)",
+                lineHeight: 1.65,
+                margin: "6px 0 0",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {c.riflessione}
+            </p>
           )}
         </div>
       ))}

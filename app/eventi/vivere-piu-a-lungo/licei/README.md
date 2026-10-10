@@ -279,8 +279,9 @@ sta in un posto solo: `RIFLESSIONI_AL_REFERENTE_DAL` in
   aggiornati di informativa studenti, informativa scuole, regolamento,
   presa d'atto dell'adesione e privacy del sito.
 
-Il referente vede riflessione, domanda e commento salvati da quella data
-(`updated_at`). Una consegna di prima resta della Fondazione finche lo
+Il referente vede la sola riflessione salvata da quella data (`updated_at`):
+domanda e commento lo studente li indirizza alla Fondazione e restano li.
+Una consegna di prima resta della Fondazione finche lo
 studente non la modifica, e l'avviso glielo dice prima che salvi.
 
 ## Una squadra sta dentro un istituto

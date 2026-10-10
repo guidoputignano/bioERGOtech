@@ -2,8 +2,10 @@
  * Il docente referente legge le riflessioni dei suoi studenti, da una data.
  *
  * Le scuole hanno chiesto di vedere che cosa scrivono i loro studenti alla
- * fine di ogni lezione. Fino a questa funzione le informative dicevano il
- * contrario: il referente vedeva quante lezioni uno studente aveva completato,
+ * fine di ogni lezione. Il referente vede la sola riflessione: domanda e
+ * commento lo studente li indirizza alla Fondazione. Fino a questa funzione
+ * le informative dicevano il contrario: il referente vedeva quante lezioni
+ * uno studente aveva completato,
  * non che cosa aveva scritto, e le riflessioni le leggeva solo la Fondazione.
  * Molti studenti sono minorenni e hanno scritto fidandosi di quella frase.
  *

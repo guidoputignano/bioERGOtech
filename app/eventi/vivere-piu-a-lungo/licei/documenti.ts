@@ -105,7 +105,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
       ul: [
         "Tu, che vedi i dati e i contenuti del tuo account.",
         DAL
-          ? `Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Dal ${DAL} vede anche il testo delle riflessioni, delle domande e dei commenti che consegni nelle lezioni; quelli salvati prima di quella data restano visibili solo alla Fondazione, a meno che tu non li modifichi dopo. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.`
+          ? `Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Dal ${DAL} vede anche il testo delle riflessioni che consegni nelle lezioni; quelle salvate prima di quella data restano visibili solo alla Fondazione, a meno che tu non le modifichi dopo. Domande e commenti restano visibili solo alla Fondazione. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.`
           : "Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.",
         "I compagni della tua squadra, che vedono nome, cognome e classe. Quando il progetto viene consegnato, un'email di conferma con i nomi dei componenti arriva a tutta la squadra e al docente referente.",
         "La Commissione di valutazione, con account personali: legge i progetti consegnati con il nome della squadra e dell'istituto, senza i nomi degli studenti, ed è tenuta alla riservatezza.",
@@ -168,7 +168,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
       h: "Accesso alla piattaforma",
       p: [
         DAL
-          ? `Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Dal ${DAL} vede anche il testo delle riflessioni, delle domande e dei commenti che gli studenti confermati consegnano nelle lezioni da quella data in poi, per seguirne il percorso formativo; gli studenti ne sono informati sopra il campo in cui scrivono. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.`
+          ? `Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Dal ${DAL} vede anche il testo delle riflessioni che gli studenti confermati consegnano nelle lezioni da quella data in poi, non domande e commenti, per seguirne il percorso formativo; gli studenti ne sono informati sopra il campo in cui scrivono. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.`
           : "Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.",
         "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività: l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
       ],
@@ -229,7 +229,7 @@ export const REGOLAMENTO: Documento = {
       h: "4. Docente referente",
       p: [
         DAL
-          ? `Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto. Dal ${DAL} questi dati comprendono il testo delle riflessioni, delle domande e dei commenti che lo studente consegna nelle lezioni.`
+          ? `Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto. Dal ${DAL} questi dati comprendono il testo delle riflessioni che lo studente consegna nelle lezioni.`
           : "Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto.",
       ],
     },

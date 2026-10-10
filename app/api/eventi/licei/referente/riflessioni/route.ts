@@ -4,7 +4,10 @@ import { COURSE_LESSONS } from "@/app/courses/course-data";
 import { riflessioniAlReferenteDal } from "@/app/eventi/vivere-piu-a-lungo/licei/riflessioni-referente";
 
 /**
- * Le consegne delle lezioni di uno studente del proprio istituto.
+ * Le riflessioni di uno studente del proprio istituto.
+ *
+ * Solo la riflessione: domanda e commento lo studente li indirizza al team
+ * della Fondazione (e il campo lo dice), quindi restano alla Fondazione.
  *
  * Una rotta a parte e non un campo in piu nella GET del referente: i testi si
  * chiedono uno studente alla volta, quando il docente apre la sua riga. Cosi
@@ -46,7 +49,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await client
     .from("lesson_submissions")
-    .select("lesson_slug, lesson_title, reflection, question, comment, updated_at")
+    .select("lesson_slug, lesson_title, reflection, updated_at")
     .eq("user_id", iscrizione.user_id)
     .gte("updated_at", dal.toISOString());
 
@@ -69,8 +72,6 @@ export async function GET(request: Request) {
       lezione: numero.get(r.lesson_slug) ?? "",
       titolo: r.lesson_title as string,
       riflessione: (r.reflection as string | null) ?? null,
-      domanda: (r.question as string | null) ?? null,
-      commento: (r.comment as string | null) ?? null,
       salvata_il: r.updated_at as string,
     }));
 

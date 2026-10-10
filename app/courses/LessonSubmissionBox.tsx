@@ -358,8 +358,8 @@ function FormField({
 }
 
 /**
- * L'avviso per gli studenti dei licei: il docente referente legge quello che
- * scrivono qui, dalla data in `riflessioni-referente.ts`. Se la consegna
+ * L'avviso per gli studenti dei licei: il docente referente legge la
+ * riflessione (non domanda e commento), dalla data in `riflessioni-referente.ts`. Se la consegna
  * esistente e di prima, lo dice: oggi il docente non la vede, ma se lo
  * studente la aggiorna la vedra.
  */
@@ -379,10 +379,10 @@ function AvvisoReferente({ giaSalvataPrima }: { giaSalvataPrima: boolean }) {
       }}
     >
       <strong style={{ color: TEXT }}>Percorso istituti superiori.</strong> Dal{" "}
-      {riflessioniAlReferenteDalLabel()} quello che scrivi qui lo legge anche il docente referente
-      del tuo istituto, oltre alla Fondazione.
+      {riflessioniAlReferenteDalLabel()} la riflessione che scrivi qui la legge anche il docente
+      referente del tuo istituto, oltre alla Fondazione. Domanda e commento restano alla Fondazione.
       {giaSalvataPrima &&
-        " Questa consegna l'hai salvata prima di quella data e il docente non la vede: se la aggiorni, la vedrà."}
+        " Questa riflessione l'hai salvata prima di quella data e il docente non la vede: se la aggiorni, la vedrà."}
     </div>
   );
 }
