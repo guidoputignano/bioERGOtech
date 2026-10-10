@@ -230,6 +230,11 @@ export function universitaConfermaEmailHtml(input: { nome: string }): string {
                   <a href="${URL_AREA}" ${LINK}>nella tua area</a>, e le stesse cose
                   compaiono dentro il corso nel punto in cui la lezione te le chiede.
                 </p>
+                <p ${P}>
+                  Nella tua area, in fondo, trovi anche i mentor: ricercatori, docenti e
+                  professionisti a cui puoi chiedere un parere sul progetto.
+                  <a href="${URL_AREA}#mentor" ${LINK}>Vai all'elenco dei mentor</a>.
+                </p>
                 ${bottone(URL_CORSO, "Vai al corso")}
                 <p style="margin:0;font-size:13px;line-height:1.7;color:#6B7793;">
                   Non aspettare la squadra per cominciare: il lavoro in team è uno dei
