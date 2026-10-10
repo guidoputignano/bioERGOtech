@@ -12,8 +12,15 @@ import {
   StudenteUniversitaConsole,
   type SezioneStudenteUniversita,
 } from "@/app/eventi/vivere-piu-a-lungo/universita/studente/StudenteUniversitaConsole";
-import { LICEI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
-import { UNIVERSITA } from "@/app/eventi/vivere-piu-a-lungo/universita/content";
+import Link from "next/link";
+import {
+  LICEI,
+  STUDENTE_PATH as LICEI_STUDENTE_PATH,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  UNIVERSITA,
+  STUDENTE_PATH as UNIVERSITA_STUDENTE_PATH,
+} from "@/app/eventi/vivere-piu-a-lungo/universita/content";
 import { JsonLd, breadcrumbs } from "@/components/json-ld";
 import { lessonLd } from "../../course-ld";
 
@@ -107,6 +114,36 @@ export async function generateMetadata({ params }: Props) {
 }
 
 /**
+ * La riga sui mentor in fondo ai riquadri del percorso.
+ *
+ * La squadra e la consegna sono i due momenti in cui un parere serve davvero,
+ * e i mentor stanno nell'area, non qui: la console incorporata mostra solo la
+ * sezione che la lezione chiede. Il link porta dritto al riquadro (`#mentor`,
+ * vedi `MentorElenco`). Non costa niente: chi vede il riquadro e gia stato
+ * verificato come iscritto confermato.
+ */
+function RimandoMentor({ area }: { area: string }) {
+  return (
+    <p
+      style={{
+        fontSize: 13.5,
+        color: "#5A6B85",
+        lineHeight: 1.6,
+        margin: "18px 0 0",
+        paddingTop: 14,
+        borderTop: "1px solid #E2E8F0",
+      }}
+    >
+      Ti serve un parere sul progetto?{" "}
+      <Link href={`${area}#mentor`} style={{ color: "#0A7A66", fontWeight: 700 }}>
+        Chiedi a un mentor
+      </Link>
+      : l&apos;elenco con i contatti è nella tua area.
+    </p>
+  );
+}
+
+/**
  * Il riquadro del bando dentro la lezione.
  *
  * Si presenta per quello che e, invece di confondersi con il contenuto del
@@ -162,6 +199,7 @@ function RiquadroLicei({
         {sottotitolo}
       </p>
       <StudenteConsole sezione={sezione} intestazione={false} />
+      <RimandoMentor area={LICEI_STUDENTE_PATH} />
     </div>
   );
 }
@@ -222,6 +260,7 @@ function RiquadroUniversita({
         {sottotitolo}
       </p>
       <StudenteUniversitaConsole sezione={sezione} intestazione={false} />
+      <RimandoMentor area={UNIVERSITA_STUDENTE_PATH} />
     </div>
   );
 }

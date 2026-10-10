@@ -426,6 +426,13 @@ export function confermaEmailHtml(input: ConfermaEmailInput): string {
           dalla stessa area. I ${LICEI.progettiSulPalco} migliori vanno sul palco il
           ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}.
         </p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:12px 0 0;">
+          <strong style="color:#0A1628;">I mentor.</strong> Ricercatori, docenti e professionisti a
+          disposizione del percorso, a cui puoi chiedere un parere sul progetto. Li trovi in fondo
+          alla tua area, non nella pagina del corso:
+          <a href="${areaUrl}#mentor" style="color:#008F6B;font-weight:700;">vai all'elenco dei mentor</a>.
+          Se sei minorenne, coinvolgi il tuo docente referente prima di scrivere.
+        </p>
       </div>
 
       <div style="text-align:center;margin-bottom:8px;">
