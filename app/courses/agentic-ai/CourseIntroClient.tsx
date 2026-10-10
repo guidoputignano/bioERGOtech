@@ -154,7 +154,14 @@ function PhasePill({ children }: { children: React.ReactNode }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated: boolean }) {
+export default function CourseIntroClient({
+  isAuthenticated,
+  area,
+}: {
+  isAuthenticated: boolean;
+  /** Il rimando all'area del percorso, solo per chi e confermato in un percorso. */
+  area?: React.ReactNode;
+}) {
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -216,6 +223,7 @@ export default function CourseIntroClient({ isAuthenticated }: { isAuthenticated
       >
         {/* Left content */}
         <div style={{ flex: 1, minWidth: 0 }}>
+          {area}
 
           {/* Introduction */}
           <Block>
