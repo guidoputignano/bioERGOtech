@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { riflessioniAlReferenteDal } from "@/app/eventi/vivere-piu-a-lungo/licei/riflessioni-referente";
 
 const getAdmin = () =>
   createAdminClient(
@@ -28,7 +29,25 @@ export async function GET(req: NextRequest) {
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ submission: data ?? null });
+
+    // Il docente referente legge quello che uno studente dei licei scrive qui
+    // (vedi `riflessioni-referente.ts`), e lo studente deve saperlo prima di
+    // scrivere, non dall'informativa. La domanda si fa solo a funzione accesa
+    // e costa una query su una riga: chi segue il corso per conto suo non e
+    // in `licei_iscrizioni` e riceve false.
+    let lettaDalReferente = false;
+    if (riflessioniAlReferenteDal()) {
+      const { data: iscrizione } = await admin
+        .from("licei_iscrizioni")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("stato", "confermata")
+        .limit(1)
+        .maybeSingle();
+      lettaDalReferente = !!iscrizione;
+    }
+
+    return NextResponse.json({ submission: data ?? null, letta_dal_referente: lettaDalReferente });
   } catch (error: unknown) {
     return NextResponse.json({ error: (error as Error)?.message || "Failed" }, { status: 500 });
   }

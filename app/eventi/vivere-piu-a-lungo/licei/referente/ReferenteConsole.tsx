@@ -32,6 +32,8 @@ import {
   ISTRUZIONI_REFERENTE,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
+import { RiflessioniStudente } from "./RiflessioniStudente";
+import { riflessioniAlReferenteDal } from "../riflessioni-referente";
 import {
   INFORMATIVA_IMMAGINI_PATH,
   ISTRUZIONI_SCUOLA,
@@ -55,6 +57,17 @@ export function ReferenteConsole() {
   // di fila, e con un id solo la conferma sul primo sparirebbe appena tocca
   // il secondo, facendogli credere di non averlo fatto.
   const [rimandati, setRimandati] = useState<Set<string>>(new Set());
+  // Le righe di cui il referente ha aperto le consegne. Un insieme, come per
+  // i link rimandati: confrontare due studenti e una cosa che si fa.
+  const [aperte, setAperte] = useState<Set<string>>(new Set());
+  const riflessioniAttive = riflessioniAlReferenteDal() !== null;
+  const apriChiudi = (id: string) =>
+    setAperte((prima) => {
+      const dopo = new Set(prima);
+      if (dopo.has(id)) dopo.delete(id);
+      else dopo.add(id);
+      return dopo;
+    });
   // Il denominatore del "9 su 23" arriva dal server invece di essere scritto
   // qui: le lezioni del corso possono cambiare, e un numero copiato a mano
   // diventerebbe falso senza che nessuno se ne accorga.
@@ -514,6 +527,18 @@ export function ReferenteConsole() {
                 </div>
               )}
 
+              {riflessioniAttive && r.stato === "confermata" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => apriChiudi(r.id)}
+                  aria-expanded={aperte.has(r.id)}
+                  style={{ height: 34, fontSize: 13, flexShrink: 0 }}
+                >
+                  {aperte.has(r.id) ? "Chiudi riflessioni" : "Riflessioni"}
+                </Button>
+              )}
+
               {r.stato === "in_attesa" ? (
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <Button
@@ -554,6 +579,10 @@ export function ReferenteConsole() {
                     </option>
                   ))}
                 </select>
+              )}
+
+              {riflessioniAttive && r.stato === "confermata" && aperte.has(r.id) && (
+                <RiflessioniStudente iscrizioneId={r.id} />
               )}
             </div>
           ))}

@@ -10,6 +10,15 @@
  * descrive un'altra piattaforma non informa nessuno.
  */
 
+import { riflessioniAlReferenteDalLabel } from "./riflessioni-referente";
+
+/**
+ * Da quando il docente referente legge anche le consegne delle lezioni.
+ * Stringa vuota finche la funzione e spenta: i testi qui sotto restano quelli
+ * di prima, parola per parola, e cambiano solo quando la data si imposta.
+ */
+const DAL = riflessioniAlReferenteDalLabel();
+
 export type SezioneDoc = {
   h: string;
   p?: string[];
@@ -77,7 +86,9 @@ export const INFORMATIVA_STUDENTI: Documento = {
       dopo: [
         "La password la scegli tu, con il link che ricevi per email: la Fondazione non la vede.",
         "Durante il corso registriamo le lezioni completate, le riflessioni e le domande che invii nelle lezioni, la squadra di cui fai parte con il tuo ruolo, il progetto della squadra (titolo, ambito, testi ed eventuale link ai materiali) e alcuni dati tecnici di accesso, come la data dell'ultimo accesso.",
-        "Nei testi del progetto e nelle riflessioni non inserire informazioni sulla salute o altri dati personali tuoi o di persone reali: non servono al percorso.",
+        DAL
+          ? "Nei testi del progetto e nelle riflessioni, che legge anche il tuo docente referente, non inserire informazioni sulla salute o altri dati personali tuoi o di persone reali: non servono al percorso."
+          : "Nei testi del progetto e nelle riflessioni non inserire informazioni sulla salute o altri dati personali tuoi o di persone reali: non servono al percorso.",
       ],
     },
     {
@@ -93,7 +104,9 @@ export const INFORMATIVA_STUDENTI: Documento = {
       h: "Chi può vedere i dati",
       ul: [
         "Tu, che vedi i dati e i contenuti del tuo account.",
-        "Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.",
+        DAL
+          ? `Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Dal ${DAL} vede anche il testo delle riflessioni, delle domande e dei commenti che consegni nelle lezioni; quelli salvati prima di quella data restano visibili solo alla Fondazione, a meno che tu non li modifichi dopo. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.`
+          : "Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.",
         "I compagni della tua squadra, che vedono nome, cognome e classe. Quando il progetto viene consegnato, un'email di conferma con i nomi dei componenti arriva a tutta la squadra e al docente referente.",
         "La Commissione di valutazione, con account personali: legge i progetti consegnati con il nome della squadra e dell'istituto, senza i nomi degli studenti, ed è tenuta alla riservatezza.",
         "Il personale autorizzato della Fondazione, nei limiti necessari: gestisce iscrizioni, squadre e finalisti, legge e risponde alle riflessioni e alle domande che invii nelle lezioni, dà assistenza e si occupa della sicurezza.",
@@ -154,7 +167,9 @@ export const INFORMATIVA_SCUOLE: Documento = {
     {
       h: "Accesso alla piattaforma",
       p: [
-        "Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.",
+        DAL
+          ? `Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Dal ${DAL} vede anche il testo delle riflessioni, delle domande e dei commenti che gli studenti confermati consegnano nelle lezioni da quella data in poi, per seguirne il percorso formativo; gli studenti ne sono informati sopra il campo in cui scrivono. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.`
+          : "Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.",
         "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività: l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
       ],
     },
@@ -213,7 +228,9 @@ export const REGOLAMENTO: Documento = {
     {
       h: "4. Docente referente",
       p: [
-        "Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto.",
+        DAL
+          ? `Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto. Dal ${DAL} questi dati comprendono il testo delle riflessioni, delle domande e dei commenti che lo studente consegna nelle lezioni.`
+          : "Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto.",
       ],
     },
     {
