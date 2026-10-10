@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import { AnteprimaMentor } from "./AnteprimaMentor";
 import { GeneratoreCircolare } from "./GeneratoreCircolare";
 import {
   CONTATTI_LICEI,
@@ -77,7 +78,7 @@ const STILE = `
 }
 .gd-filo { width: 2px; flex: 1; background: var(--border-color); margin: 6px 0; min-height: 10px; }
 .gd-passo:last-child .gd-filo { display: none; }
-.gd-corpo { padding-bottom: 26px; display: flex; flex-direction: column; gap: 10px; max-width: 720px; }
+.gd-corpo { padding-bottom: 26px; display: flex; flex-direction: column; gap: 10px; max-width: 720px; min-width: 0; }
 .gd-passo:last-child .gd-corpo { padding-bottom: 0; }
 .gd-corpo h3 { font-size: 16.5px; font-weight: 700; color: var(--text-dark); margin: 2px 0 0; }
 .gd-corpo p { font-size: 15.5px; line-height: 1.75; color: var(--text-mid); margin: 0; }
@@ -105,6 +106,36 @@ const STILE = `
 .gd-guasto dt { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
 .gd-guasto dd { margin: 0; font-size: 15px; line-height: 1.75; color: var(--text-mid); max-width: 760px; }
 
+/* ── Schema dell'area, passo dei mentor ── */
+.am-figura { margin: 4px 0 0; width: 100%; max-width: 460px; }
+.am-browser { border: 1px solid var(--border-color); border-radius: 12px; background: #fff; overflow: hidden; }
+.am-barra { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #F1F4F7; border-bottom: 1px solid var(--border-color); }
+.am-pallini { display: inline-flex; gap: 5px; flex: none; }
+.am-pallini i { width: 8px; height: 8px; border-radius: 50%; background: #D3DAE1; }
+.am-url { flex: 1; min-width: 0; font-family: monospace; font-size: 11px; color: var(--text-light); background: #fff; border-radius: 6px; padding: 3px 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.am-pagina { background: var(--bg-light); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.am-saluto { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+.am-sotto { font-size: 11px; color: var(--text-light); }
+.am-card { background: #fff; border: 1px solid var(--border-color); border-radius: 10px; padding: 11px 13px; display: flex; flex-direction: column; gap: 7px; }
+.am-spenta { opacity: .55; }
+.am-accesa { border: 2px solid #2EC4B6; box-shadow: 0 0 0 4px rgba(46,196,182,.16); }
+.am-titolo { font-size: 12.5px; font-weight: 700; color: var(--text-dark); }
+.am-righe { display: flex; flex-direction: column; gap: 5px; }
+.am-righe span { display: block; height: 6px; border-radius: 3px; background: #E3E8ED; }
+.am-nota { background: #FFF8E6; border: 1px solid #F0D89B; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.am-nota b { font-size: 11px; color: #75570F; }
+.am-nota .am-righe span { background: #F0DFB4; }
+.am-mentor { border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.am-nome { display: flex; align-items: center; gap: 6px; }
+.am-nome span { width: 38%; height: 8px; border-radius: 4px; background: #CBD3DB; }
+.am-nome em { width: 18%; height: 12px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-light); }
+.am-contatto { font-size: 10.5px; font-weight: 600; color: var(--primary-dark); }
+.am-contatto i { margin-right: 4px; }
+.am-richiamo { display: flex; align-items: flex-end; justify-content: flex-end; gap: 4px; margin: 2px 6px -8px 0; color: #0A7A66; }
+.am-etichetta { order: 2; font-size: 12px; font-weight: 700; background: #2EC4B6; color: #fff; padding: 5px 11px; border-radius: 999px; margin-bottom: 26px; }
+.am-freccia { order: 1; width: 58px; height: 40px; flex: none; color: #2EC4B6; }
+.gd-page figcaption { font-size: 12.5px; line-height: 1.6; color: var(--text-light); margin-top: 8px; }
+
 @media (max-width: 460px) {
   .gd-passo { grid-template-columns: 26px 1fr; gap: 0 12px; }
   .gd-num { width: 26px; height: 26px; font-size: 12px; }
@@ -117,6 +148,8 @@ type Passo = {
   link?: { etichetta: string; href: string; mostra: string };
   poi?: { titolo: string; testo: string };
   avvisi?: { grave?: boolean; forte: string; testo: string }[];
+  /** Uno schema da mostrare sotto il testo, quando il "dove" si spiega meglio con una figura. */
+  figura?: "mentor";
 };
 
 const DOCENTE: Passo[] = [
@@ -246,6 +279,25 @@ const STUDENTE: Passo[] = [
     },
   },
   {
+    titolo: "Trova il tuo mentor",
+    testo:
+      "Nella tua area, sotto la squadra e il progetto, c'è il riquadro Mentor: ricercatori, docenti e professionisti a disposizione del percorso. Per chi lo ha messo a disposizione trovi un contatto professionale, a cui puoi scrivere per un parere sul progetto, una fonte o un metodo. Non serve avere già una squadra.",
+    link: { etichetta: "La tua area", href: STUDENTE_PATH, mostra: "bioergotech.org" + STUDENTE_PATH },
+    figura: "mentor",
+    avvisi: [
+      {
+        forte: "Prima di scrivere, leggi le regole in cima al riquadro.",
+        testo:
+          "Se sei minorenne, ti suggeriamo di coinvolgere il tuo docente referente prima di scrivere o di fissare una call.",
+      },
+    ],
+    poi: {
+      titolo: "Non vedi il riquadro?",
+      testo:
+        "Compare quando il tuo professore ti ha confermato e resta finché il percorso è aperto. La pagina del corso nomina i mentor, ma l'elenco con i contatti è solo nella tua area.",
+    },
+  },
+  {
     titolo: "Fai squadra e consegnate il progetto",
     testo:
       "Da 2 a 5 persone, tutte della tua scuola. Chi crea la squadra riceve un codice SQ da passare ai compagni. Il progetto lo scrivete insieme, lo consegna il capitano.",
@@ -366,6 +418,9 @@ function Passi({ passi }: { passi: Passo[] }) {
                 <b>{p.link.etichetta}</b>
                 {p.link.mostra}
               </Link>
+            )}
+            {p.figura === "mentor" && (
+              <AnteprimaMentor indirizzo={"bioergotech.org" + STUDENTE_PATH} />
             )}
             {p.avvisi?.map((a) => (
               <div key={a.forte} className="gd-avviso" data-grave={a.grave ? "1" : undefined}>
