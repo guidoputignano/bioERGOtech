@@ -129,6 +129,12 @@ export type Relatore = {
    * strutturati. Quando l'autorizzazione arriva basta togliere questa riga.
    */
   daAutorizzare?: boolean;
+  /**
+   * Chi non interviene più all'evento. Stesso effetto di `daAutorizzare`: la
+   * scheda resta qui, pronta nel caso torni, ma la persona non compare da
+   * nessuna parte sulla pagina. Per farla ricomparire basta togliere la riga.
+   */
+  nascosto?: boolean;
 };
 
 /**
@@ -141,8 +147,8 @@ export type Relatore = {
  * del panel, in quell'ordine. Per spostare qualcuno da un panel a un altro
  * basta spostare il suo `id` là sotto, senza toccare questo array.
  *
- * Questo è il registro completo, autorizzati e non. Quello che la pagina
- * pubblica è RELATORI_PUBBLICI, qui sotto.
+ * Questo è il registro completo: autorizzati, in attesa e nascosti. Quello che
+ * la pagina pubblica è RELATORI_PUBBLICI, qui sotto.
  */
 export const RELATORI: Relatore[] = [
   { id: "piovella", nome: "Franco Piovella", ruolo: "Angiologo, malattie tromboemboliche", img: `${SPEAKER_IMG}/franco-piovella.webp` },
@@ -158,7 +164,9 @@ export const RELATORI: Relatore[] = [
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "montano", nome: "Aldo Montano", ruolo: "Campione olimpico di scherma", img: `${SPEAKER_IMG}/aldo-montano.webp` },
   { id: "bortuzzo", nome: "Manuel Bortuzzo", ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024", img: `${SPEAKER_IMG}/manuel-bortuzzo.webp` },
-  { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp` },
+  // Vincenzo Schettini non interviene più. La scheda resta, nascosta, e il suo
+  // id nel panel 6 non risolve: il panel mostra gli altri relatori.
+  { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp`, nascosto: true },
   // Sofia Raffaeli non è più assegnata a un panel: il suo posto nel panel 6 è
   // passato a Valentina Vezzali. La scheda resta qui, inattiva, nel caso torni.
   { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
@@ -312,13 +320,13 @@ export const ETICHETTA_VOCE: Record<ProgrammaVoce["tipo"], string> = {
 /**
  * I relatori che possiamo pubblicare. È l'unica lista che la pagina deve usare:
  * volti nei panel, nomi in riga, contatore delle stats e `performer` nei dati
- * strutturati passano tutti di qui, così un nome non autorizzato non può
- * sfuggire da una sola di quelle strade.
+ * strutturati passano tutti di qui, così un nome non autorizzato o nascosto
+ * non può sfuggire da una sola di quelle strade.
  */
-export const RELATORI_PUBBLICI = RELATORI.filter((r) => !r.daAutorizzare);
+export const RELATORI_PUBBLICI = RELATORI.filter((r) => !r.daAutorizzare && !r.nascosto);
 
-// Costruita sui soli autorizzati: un id in attesa non risolve, e la voce di
-// programma che lo cita mostra semplicemente gli altri.
+// Costruita sui soli pubblicabili: un id in attesa o nascosto non risolve, e
+// la voce di programma che lo cita mostra semplicemente gli altri.
 const RELATORE_BY_ID = new Map(RELATORI_PUBBLICI.map((r) => [r.id, r]));
 
 /** I relatori con foto di una voce, risolti dagli id. Alimentano i volti nei panel. */
