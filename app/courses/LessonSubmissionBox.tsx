@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  consegnaVisibileAlReferente,
+  riflessioniAlReferenteDalLabel,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/riflessioni-referente";
 
 const TEAL = "#00C4B4";
 const TEAL_DARK = "#009688";
@@ -49,12 +53,14 @@ export default function LessonSubmissionBox({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [lettaDalReferente, setLettaDalReferente] = useState(false);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) { setLoading(false); return; }
     try {
       const res = await fetch(`/api/courses/submissions?lesson_slug=${lessonSlug}`);
       const data = await res.json();
+      setLettaDalReferente(data.letta_dal_referente === true);
       if (data.submission) {
         setExisting(data.submission);
         setReflection(data.submission.reflection ?? "");
@@ -152,6 +158,15 @@ export default function LessonSubmissionBox({
           <div style={{ width: 24, height: 24, border: `2px solid ${TEAL}`, borderTop: "2px solid transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
+      )}
+
+      {/* Percorso licei: chi legge anche questa consegna. In italiano, come
+          i riquadri del percorso nelle lezioni, e prima di qualunque campo:
+          lo studente lo deve sapere prima di scrivere. */}
+      {isAuthenticated && !loading && lettaDalReferente && (
+        <AvvisoReferente
+          giaSalvataPrima={!!existing && !consegnaVisibileAlReferente(existing.updated_at)}
+        />
       )}
 
       {/* Existing submission — read view */}
@@ -338,6 +353,36 @@ function FormField({
         onFocus={(e) => (e.target.style.borderColor = color)}
         onBlur={(e) => (e.target.style.borderColor = value ? color : BORDER)}
       />
+    </div>
+  );
+}
+
+/**
+ * L'avviso per gli studenti dei licei: il docente referente legge la
+ * riflessione (non domanda e commento), dalla data in `riflessioni-referente.ts`. Se la consegna
+ * esistente e di prima, lo dice: oggi il docente non la vede, ma se lo
+ * studente la aggiorna la vedra.
+ */
+function AvvisoReferente({ giaSalvataPrima }: { giaSalvataPrima: boolean }) {
+  return (
+    <div
+      role="note"
+      style={{
+        marginBottom: 18,
+        padding: "12px 16px",
+        background: TEAL_LIGHT,
+        border: `1px solid ${BORDER}`,
+        borderRadius: 8,
+        fontSize: 13,
+        lineHeight: 1.6,
+        color: TEXT_MID,
+      }}
+    >
+      <strong style={{ color: TEXT }}>Percorso istituti superiori.</strong> Dal{" "}
+      {riflessioniAlReferenteDalLabel()} la riflessione che scrivi qui la legge anche il docente
+      referente del tuo istituto, oltre alla Fondazione. Domanda e commento restano alla Fondazione.
+      {giaSalvataPrima &&
+        " Questa riflessione l'hai salvata prima di quella data e il docente non la vede: se la aggiorni, la vedrà."}
     </div>
   );
 }

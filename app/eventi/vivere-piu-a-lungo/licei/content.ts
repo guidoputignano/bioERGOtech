@@ -19,6 +19,7 @@
  */
 
 import { ARCHIVE_MODE, EVENT_SLUG, SITE_URL } from "../content";
+import { riflessioniAlReferenteDalLabel } from "./riflessioni-referente";
 
 export { ARCHIVE_MODE, EVENT_SLUG, SITE_URL };
 
@@ -335,7 +336,9 @@ export const CONSENSO_PRIVACY_LICEI_TESTO =
  */
 export const PRESA_ATTO_ADESIONE = [
   "Gli studenti di almeno 14 anni si iscrivono direttamente alla piattaforma della Fondazione; l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
-  "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.",
+  riflessioniAlReferenteDalLabel()
+    ? `La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, testo delle riflessioni consegnate nelle lezioni dal ${riflessioniAlReferenteDalLabel()}, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.`
+    : "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.",
   "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività.",
   "Il docente usa credenziali personali, non le condivide e non comunica o riutilizza i dati visualizzati per finalità estranee al percorso.",
   "L'istituto informa studenti e famiglie, secondo le proprie procedure, della partecipazione al percorso e della visibilità assegnata al docente referente.",

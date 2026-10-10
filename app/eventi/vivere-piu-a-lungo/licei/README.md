@@ -79,6 +79,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Email di conferma | `lib/eventi/licei-email.ts` |
 | Elenco dei mentor nell'area | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx`, rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
+| Riflessioni al referente | `riflessioni-referente.ts`, `referente/RiflessioniStudente.tsx`, rotta `app/api/eventi/licei/referente/riflessioni/route.ts` |
 | Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql` |
 
 ## Le scadenze non sono nel codice
@@ -258,6 +259,30 @@ dal proxy, e il tetto di righe per risposta, perche un blocco di N studenti ne
 produce fino a N per il numero di lezioni. Con blocchi grandi la risposta
 verrebbe troncata senza dirlo, e mancherebbero lezioni proprio alle scuole
 piu avanti, cioe il conteggio sarebbe sbagliato per difetto dove conta di piu.
+
+## Le riflessioni al referente, da una data
+
+Le scuole hanno chiesto di leggere che cosa scrivono i loro studenti alla
+fine delle lezioni. Le informative dicevano il contrario (il referente vede
+quante lezioni, non che cosa), e gli studenti, molti minorenni, hanno scritto
+fidandosi. Per questo la funzione vale solo da una data in avanti, e la data
+sta in un posto solo: `RIFLESSIONI_AL_REFERENTE_DAL` in
+`riflessioni-referente.ts`.
+
+- `null`: non cambia niente. Nessun testo esce, nessun avviso, informative
+  invariate parola per parola.
+- una data: nello stesso rilascio si accendono il pulsante "Riflessioni" nel
+  pannello del referente (solo confermati, `api/eventi/licei/referente/riflessioni`,
+  una richiesta per studente quando il docente apre la riga), l'avviso in
+  italiano sopra il campo della consegna per i liceali confermati (lo dice
+  `GET /api/courses/submissions` con `letta_dal_referente`) e i testi
+  aggiornati di informativa studenti, informativa scuole, regolamento,
+  presa d'atto dell'adesione e privacy del sito.
+
+Il referente vede la sola riflessione salvata da quella data (`updated_at`):
+domanda e commento lo studente li indirizza alla Fondazione e restano li.
+Una consegna di prima resta della Fondazione finche lo
+studente non la modifica, e l'avviso glielo dice prima che salvi.
 
 ## Una squadra sta dentro un istituto
 
