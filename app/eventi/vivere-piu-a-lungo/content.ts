@@ -164,9 +164,10 @@ export const RELATORI: Relatore[] = [
   { id: "franchini", nome: "Mario Franchini", ruolo: "Oncologo", img: `${SPEAKER_IMG}/mario-franchini.webp` },
   { id: "montano", nome: "Aldo Montano", ruolo: "Campione olimpico di scherma", img: `${SPEAKER_IMG}/aldo-montano.webp` },
   { id: "bortuzzo", nome: "Manuel Bortuzzo", ruolo: "Nuotatore paralimpico, bronzo a Parigi 2024", img: `${SPEAKER_IMG}/manuel-bortuzzo.webp` },
-  // Vincenzo Schettini non interviene più. La scheda resta, nascosta, e il suo
-  // id nel panel 6 non risolve: il panel mostra gli altri relatori.
+  // Vincenzo Schettini non interviene più: il suo posto nel panel 6 è passato
+  // ad Alberto Costantini. La scheda resta qui, nascosta, nel caso torni.
   { id: "schettini", nome: "Vincenzo Schettini", ruolo: "Divulgatore, La fisica che ci piace", img: `${SPEAKER_IMG}/vincenzo-schettini.webp`, nascosto: true },
+  { id: "costantini", nome: "Alberto Costantini", ruolo: "Dirigente del Servizio Assistenza Farmaceutica, Regione Abruzzo", img: `${SPEAKER_IMG}/alberto-costantini.webp` },
   // Sofia Raffaeli non è più assegnata a un panel: il suo posto nel panel 6 è
   // passato a Valentina Vezzali. La scheda resta qui, inattiva, nel caso torni.
   { id: "raffaeli", nome: "Sofia Raffaeli", ruolo: "Campionessa mondiale di ginnastica ritmica", img: `${SPEAKER_IMG}/sofia-raffaeli.webp`, daAutorizzare: true },
@@ -269,8 +270,8 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 6,
     titolo: "La curiosità che non si spegne",
-    desc: "Come si accende la curiosità scientifica e come si tiene viva quando lo studio si fa difficile. Divulgazione, disciplina e talento: che cosa serve davvero ai ragazzi per costruirsi un percorso, dentro e fuori dall'aula.",
-    relatori: ["schettini", "vezzali", "bianco"],
+    desc: "Come si accende la curiosità scientifica e come si tiene viva quando lo studio si fa difficile. Dalla scienza che crea nuova materia al modo in cui arriva in clinica, fino alla disciplina dello sport di alto livello: che cosa serve davvero ai ragazzi per costruirsi un percorso, dentro e fuori dall'aula.",
+    relatori: ["costantini", "vezzali", "bianco"],
   },
   {
     tipo: "ragazzi",
