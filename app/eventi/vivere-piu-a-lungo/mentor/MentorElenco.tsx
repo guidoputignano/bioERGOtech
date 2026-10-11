@@ -16,7 +16,7 @@
  * percorsi piu che all'altro.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   MENTOR_PATH,
@@ -60,6 +60,18 @@ const pillolaStyle: React.CSSProperties = {
 export function MentorElenco({ percorso }: { percorso: Percorso }) {
   const [mentor, setMentor] = useState<MentorPerPartecipanti[] | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // Il link "Vai ai mentor" della pagina del corso arriva con `#mentor`. Il
+  // browser da solo non ci scorre: quando carica la pagina questo riquadro
+  // non esiste ancora, perche la console lo monta solo dopo aver letto i
+  // dati dello studente. Lo si fa qui, al montaggio, che e il primo momento
+  // in cui c'e qualcosa su cui scorrere.
+  useEffect(() => {
+    if (window.location.hash === "#mentor") {
+      boxRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   useEffect(() => {
     let attivo = true;
@@ -86,7 +98,12 @@ export function MentorElenco({ percorso }: { percorso: Percorso }) {
       : REGOLE_STUDENTI_MENTOR;
 
   return (
-    <div className="card" style={{ padding: 22 }}>
+    <div
+      id="mentor"
+      ref={boxRef}
+      className="card"
+      style={{ padding: 22, scrollMarginTop: 100 }}
+    >
       <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 16 }}>
         Mentor
       </h2>
