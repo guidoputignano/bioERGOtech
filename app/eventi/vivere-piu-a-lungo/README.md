@@ -36,6 +36,11 @@ Tutto cio che cambia tra edizioni sta in `content.ts`:
   strade. Puoi lasciare il suo `id` nella voce di programma, non risolve e il
   panel mostra gli altri. Quando l'autorizzazione arriva, togli la riga e
   ricompare ovunque.
+- `nascosto: true` su un relatore: chi non interviene piu' all'evento. Stesso
+  effetto di `daAutorizzare` (fuori da `RELATORI_PUBBLICI`, quindi da volti,
+  nomi, contatore e dati strutturati), ma dice il motivo giusto. La scheda
+  resta e l'`id` nel programma, se lo lasci, non risolve: se la persona torna,
+  togli la riga.
 - `STATS`: il numero di panel e di relatori e' calcolato dai dati, quindi non
   puo' divergere dal programma. Se aggiungi una voce o un relatore, i contatori
   si aggiornano da soli. Il contatore dei relatori conta i soli autorizzati,

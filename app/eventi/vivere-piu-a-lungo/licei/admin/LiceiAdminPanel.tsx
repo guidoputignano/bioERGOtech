@@ -261,6 +261,29 @@ export function LiceiAdminPanel() {
         <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "18px 0" }} />
 
         <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+          Conferma delle adesioni
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Con la conferma automatica l&apos;adesione nasce già confermata e il docente riceve
+          subito il codice per gli studenti. Le adesioni vanno comunque controllate qui: se una
+          non è autentica, mettila su &quot;Ritirata&quot; e il codice smette di accettare
+          iscrizioni. Vale solo per le adesioni nuove.
+        </p>
+        <label style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--text-light)", maxWidth: 360 }}>
+          Modalità
+          <select
+            value={config.conferma_adesioni ?? "automatica"}
+            onChange={(e) => salvaConfig({ conferma_adesioni: e.target.value })}
+            style={{ ...selectStyle, minWidth: 280 }}
+          >
+            <option value="automatica">Automatica, l&apos;istituto è attivo subito</option>
+            <option value="manuale">Manuale, la conferma la dà lo staff</option>
+          </select>
+        </label>
+
+        <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "18px 0" }} />
+
+        <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
           Iscrizione degli studenti
         </h2>
         <p className="text-sm text-gray-600 mb-4">

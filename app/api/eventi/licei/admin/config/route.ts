@@ -18,6 +18,7 @@ const VALORI_AMMESSI: Record<string, Set<string>> = {
   stato_squadre: new Set(["chiuse", "aperte"]),
   stato_consegne: new Set(["chiuse", "aperte"]),
   stato_valutazione: new Set(["chiusa", "aperta"]),
+  conferma_adesioni: new Set(["automatica", "manuale"]),
 };
 
 /**

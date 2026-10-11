@@ -26,6 +26,8 @@ import {
   type StatoIscrizioni,
   type StatoSquadre,
   type StatoValutazione,
+  CONFERMA_ADESIONI_DEFAULT,
+  type ConfermaAdesioni,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 export type LiceiConfig = {
@@ -38,6 +40,7 @@ export type LiceiConfig = {
   stato_consegne: StatoConsegne;
   scadenza_consegna_label: string;
   stato_valutazione: StatoValutazione;
+  conferma_adesioni: ConfermaAdesioni;
 };
 
 const DEFAULT: LiceiConfig = {
@@ -50,6 +53,7 @@ const DEFAULT: LiceiConfig = {
   stato_consegne: STATO_CONSEGNE_DEFAULT,
   scadenza_consegna_label: "",
   stato_valutazione: STATO_VALUTAZIONE_DEFAULT,
+  conferma_adesioni: CONFERMA_ADESIONI_DEFAULT,
 };
 
 const STATI_VALIDI = new Set<StatoAdesioni>([
@@ -103,6 +107,10 @@ export async function leggiConfigLicei(): Promise<LiceiConfig> {
         statoValut && STATI_VALUTAZIONE_VALIDI.has(statoValut)
           ? statoValut
           : DEFAULT.stato_valutazione,
+      conferma_adesioni:
+        mappa.get("conferma_adesioni") === "manuale" || mappa.get("conferma_adesioni") === "automatica"
+          ? (mappa.get("conferma_adesioni") as ConfermaAdesioni)
+          : DEFAULT.conferma_adesioni,
     };
   } catch {
     return DEFAULT;
