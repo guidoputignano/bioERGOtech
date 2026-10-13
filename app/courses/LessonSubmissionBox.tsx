@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  DomandaRiflessioniPassate,
+  type StatoSceltaPassate,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/studente/RiflessioniPassate";
+import { TITOLO_RIFLESSIONI_PASSATE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 const TEAL = "#00C4B4";
 const TEAL_DARK = "#009688";
@@ -63,6 +68,12 @@ export default function LessonSubmissionBox({
   const [editing, setEditing] = useState(false);
   // Licei students only: `{ istituto }` when the notice must be shown.
   const [avviso, setAvviso] = useState<{ istituto: string } | null>(null);
+  // Licei students only: their choice on the submissions saved before the
+  // notice, and whether to ask it here. Asked once, above the notice, only
+  // when nothing is recorded yet and there is something to share; the
+  // answer then stays on screen until the page is reloaded.
+  const [passate, setPassate] = useState<StatoSceltaPassate | null>(null);
+  const [chiediPassate, setChiediPassate] = useState(false);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) { setLoading(false); return; }
@@ -70,6 +81,9 @@ export default function LessonSubmissionBox({
       const res = await fetch(`/api/courses/submissions?lesson_slug=${lessonSlug}`);
       const data = await res.json();
       setAvviso(data.avviso_referente ?? null);
+      const rp = data.avviso_referente ? (data.riflessioni_passate ?? null) : null;
+      setPassate(rp ? { scelta: rp.scelta ?? null, scelta_at: null } : null);
+      setChiediPassate(!!rp && rp.scelta == null && rp.riservate > 0);
       if (data.submission) {
         setExisting(data.submission);
         setReflection(data.submission.reflection ?? "");
@@ -125,6 +139,9 @@ export default function LessonSubmissionBox({
   };
 
   const showForm = !existing || editing;
+  // Read by the school's teachers: saved after the notice, or saved before
+  // it by a student who chose to share those too.
+  const visibileDocenti = !!existing?.condivisa_referente_at || (!!avviso && passate?.scelta === "si");
 
   return (
     <div style={{
@@ -198,12 +215,12 @@ export default function LessonSubmissionBox({
           {/* Percorso licei: who can read this submission. */}
           {(avviso || existing.condivisa_referente_at) && (
             <p lang="it" style={{ fontSize: 12.5, color: TEXT_MID, margin: "-8px 0 18px", lineHeight: 1.6 }}>
-              <strong style={{ color: existing.condivisa_referente_at ? TEAL_DARK : TEXT }}>
-                {existing.condivisa_referente_at
+              <strong style={{ color: visibileDocenti ? TEAL_DARK : TEXT }}>
+                {visibileDocenti
                   ? "Visibile anche ai docenti del tuo istituto"
                   : "Visibile solo allo staff"}
               </strong>
-              {existing.condivisa_referente_at && existing.comment ? ". Il commento lo legge solo lo staff." : ""}
+              {visibileDocenti && existing.comment ? ". Il commento lo legge solo lo staff." : ""}
             </p>
           )}
 
@@ -243,6 +260,22 @@ export default function LessonSubmissionBox({
       {/* Form: new or editing */}
       {isAuthenticated && !loading && showForm && (
         <div>
+          {/* Percorso licei: the choice on the earlier submissions. It has
+              its own request and never touches the form below. */}
+          {avviso && passate && chiediPassate && (
+            <div
+              lang="it"
+              role="group"
+              aria-label={TITOLO_RIFLESSIONI_PASSATE}
+              style={{ marginBottom: 12, padding: "12px 16px", background: "#F7F9FC", border: `1px solid ${BORDER}`, borderRadius: 8 }}
+            >
+              <strong style={{ display: "block", fontSize: 13.5, color: TEAL_DARK, marginBottom: 4 }}>
+                {TITOLO_RIFLESSIONI_PASSATE}
+              </strong>
+              <DomandaRiflessioniPassate stato={passate} onCambio={setPassate} compatta />
+            </div>
+          )}
+
           {avviso && (
             <div
               lang="it"

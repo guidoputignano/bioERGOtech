@@ -7,6 +7,7 @@ import {
   iscrizioneLiceiPerAvviso,
   statoColonnaRiflessioni,
 } from "@/lib/eventi/licei-server";
+import { riflessioniPassatePerBox } from "@/lib/eventi/licei-riflessioni";
 
 const getAdmin = () =>
   createAdminClient(
@@ -25,11 +26,17 @@ const getAdmin = () =>
  * the box whether to show that notice: `{ istituto }`, or null for everyone
  * else, and also while the `condivisa_referente_at` column does not exist
  * yet (the migration is applied by hand, after the deploy).
+ *
+ * Submissions saved before the notice stay staff only, unless the student
+ * chooses, on the platform, to share them too. `riflessioni_passate` tells
+ * the box whether to ask: `{ scelta, riservate }` for licei students only,
+ * null when the choice is not available (or cannot be read: never an error
+ * here, the lesson must stay submittable).
  */
 async function avvisoReferente(
   admin: ReturnType<typeof getAdmin>,
   userId: string,
-): Promise<{ istituto: string } | null> {
+): Promise<{ istituto: string; adesioneId: string } | null> {
   const iscrizione = await iscrizioneLiceiPerAvviso(admin, userId);
   if (!iscrizione) return null;
   return (await statoColonnaRiflessioni(admin)) === "presente" ? iscrizione : null;
@@ -46,18 +53,29 @@ export async function GET(req: NextRequest) {
     if (!lessonSlug) return NextResponse.json({ error: "lesson_slug required" }, { status: 400 });
 
     const admin = getAdmin();
-    const [{ data, error }, avviso] = await Promise.all([
+    const [{ data, error }, { avviso, passate }] = await Promise.all([
       admin
         .from("lesson_submissions")
         .select("*")
         .eq("lesson_slug", lessonSlug)
         .eq("user_id", user.id)
         .maybeSingle(),
-      avvisoReferente(admin, user.id),
+      // The choice is read only for licei students: everyone else stops at
+      // the first query of `avvisoReferente`, as before. It counts only
+      // when made for the school of the current enrolment, as for the
+      // teachers. The box gets the school name, never the adhesion id.
+      avvisoReferente(admin, user.id).then(async (a) => ({
+        avviso: a ? { istituto: a.istituto } : null,
+        passate: a ? await riflessioniPassatePerBox(admin, user.id, a.adesioneId) : null,
+      })),
     ]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ submission: data ?? null, avviso_referente: avviso });
+    return NextResponse.json({
+      submission: data ?? null,
+      avviso_referente: avviso,
+      ...(avviso ? { riflessioni_passate: passate } : {}),
+    });
   } catch (error: unknown) {
     return NextResponse.json({ error: (error as Error)?.message || "Failed" }, { status: 500 });
   }

@@ -279,8 +279,9 @@ async function calcolaPiano(client: Db): Promise<Piano> {
   const tabelleAssenti = new Set<string>();
   if (docentiOppureNull === null) tabelleAssenti.add("licei_docenti");
 
-  // Le accettazioni delle istruzioni non portano account nuovi (sono di
-  // docenti gia contati), ma vanno cancellate anch'esse: basta sapere se la
+  // Le accettazioni non portano account nuovi: quelle delle istruzioni sono
+  // di docenti gia contati, le scelte sulle riflessioni passate di studenti
+  // gia contati. Vanno cancellate anch'esse, tutte e due: basta sapere se la
   // tabella c'e.
   {
     const { error } = await client.from("licei_accettazioni").select("id", { count: "exact", head: true });
@@ -541,8 +542,9 @@ export async function POST(request: Request) {
     //    adesioni, che in cascata portano via iscrizioni, squadre, progetti e
     //    le schede rimaste. Le ultime tre cancellazioni a tappeto raccolgono
     //    righe orfane, se mai ce ne fossero: la cascata dovrebbe averle gia
-    //    tolte tutte. Le accettazioni vanno tolte a mano anche perche quelle
-    //    di un account che resta (lo staff, un membro del portale) non
+    //    tolte tutte. Le accettazioni (istruzioni dei docenti e scelte degli
+    //    studenti sulle riflessioni passate) vanno tolte a mano anche perche
+    //    quelle di un account che resta (lo staff, un membro del portale) non
     //    seguirebbero l'account. Le tabelle assenti si saltano.
     const tabelle = [
       "licei_valutazioni",

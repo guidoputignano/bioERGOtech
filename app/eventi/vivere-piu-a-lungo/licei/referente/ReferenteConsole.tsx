@@ -53,7 +53,7 @@ import { AccettazioneIstruzioni } from "./AccettazioneIstruzioni";
 import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
 import { FiltroClasse } from "./FiltroClasse";
 import { QuadroSquadre } from "./QuadroSquadre";
-import { RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
+import { LinkRiflessioniStudenti, RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
 import type { IscrizioneQuadroInput, SquadraQuadroInput } from "@/lib/eventi/licei-squadre";
 import {
   TUTTE_LE_CLASSI,
@@ -787,6 +787,11 @@ export function ReferenteConsole() {
           }
         />
       )}
+
+      {/* ── Il link per la scelta degli studenti sulle riflessioni di prima ──
+          Sempre, anche senza confermati: scelgono anche gli studenti in
+          attesa, e il docente lo puo dare alla classe da subito. */}
+      <LinkRiflessioniStudenti />
 
       {/* ── Docenti del progetto: solo il referente principale li indica ── */}
       {principale && <DocentiProgetto iniziale={docentiProgetto} classiPresenti={opzioni} />}

@@ -11,6 +11,10 @@
  * girata in domande, e sopra ogni campo c'e scritto quale criterio alimenta.
  * Uno studente che sa che gli aspetti etici valgono 15 punti su 100 li
  * scrive; uno che non lo sa li salta e perde quei punti senza capire perche.
+ *
+ * Nell'area completa c'e anche la scelta sulle riflessioni inviate prima
+ * dell'avviso (`RiflessioniPassate.tsx`), che si mostra anche a chi e ancora
+ * in attesa di conferma.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -36,6 +40,7 @@ import {
 } from "../content";
 import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/licei-squadre";
 import { MentorElenco } from "../../mentor/MentorElenco";
+import { RiflessioniPassateCard } from "./RiflessioniPassate";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Qualsiasi = any;
@@ -208,13 +213,19 @@ export function StudenteConsole({
     // licei sta leggendo il corso per conto suo, e un riquadro d'errore su un
     // bando che non lo riguarda e solo rumore.
     if (sezione !== "tutto") return null;
+    // Chi e ancora in attesa di conferma non ha squadra e progetto, ma la
+    // scelta sulle sue riflessioni di prima la puo fare e cambiare gia da
+    // qui: la card si mostra da se solo a chi riguarda.
     return (
-      <div className="card text-center" style={{ padding: 40 }}>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Area non disponibile</h2>
-        <p className="text-gray-600 mb-5">{errore}</p>
-        <Link href={LICEI_PATH} className="btn-outline inline-block">
-          Torna al bando
-        </Link>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="card text-center" style={{ padding: 40 }}>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Area non disponibile</h2>
+          <p className="text-gray-600 mb-5">{errore}</p>
+          <Link href={LICEI_PATH} className="btn-outline inline-block">
+            Torna al bando
+          </Link>
+        </div>
+        <RiflessioniPassateCard />
       </div>
     );
   }
@@ -689,6 +700,11 @@ export function StudenteConsole({
           )}
         </>
       )}
+
+      {/* ══ Riflessioni di prima dell'avviso ══
+          Solo nell'area completa: dentro le lezioni la stessa domanda la
+          fa il box della consegna. */}
+      {sezione === "tutto" && <RiflessioniPassateCard />}
 
       {/* ══ Mentor ══
           Solo nell'area completa, non dentro le lezioni: la lezione mostra

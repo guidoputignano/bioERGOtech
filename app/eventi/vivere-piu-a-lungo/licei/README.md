@@ -62,7 +62,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Iscrizione studenti | `app/eventi/vivere-piu-a-lungo/licei/iscrizione/` |
 | Area dei docenti (referente e docenti del progetto) | `app/eventi/vivere-piu-a-lungo/licei/referente/`: `ReferenteConsole.tsx`, `AccettazioneIstruzioni.tsx`, `DocentiProgetto.tsx`, `QuadroSquadre.tsx`, `RiflessioniReferente.tsx`, `FiltroClasse.tsx`, `filtroPerClasse.ts` |
 | Modulo autorizzazione | `licei/referente/generaAutorizzazione.ts` |
-| Area dello studente | `app/eventi/vivere-piu-a-lungo/licei/studente/` |
+| Area dello studente | `app/eventi/vivere-piu-a-lungo/licei/studente/` (`StudenteConsole.tsx`, `RiflessioniPassate.tsx` per la scelta sulle riflessioni di prima, `riflessioni/page.tsx` per il link diretto alla scelta) |
 | Area della Commissione | `app/eventi/vivere-piu-a-lungo/licei/commissione/` |
 | Aggancio al corso | `app/courses/agentic-ai/lesson/[slug]/page.tsx` (`LEZIONI_LICEI`) |
 | Pannello staff | `app/eventi/vivere-piu-a-lungo/licei/admin/` |
@@ -70,13 +70,14 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Invio iscrizione | `app/api/eventi/licei/iscrizioni/route.ts` |
 | API dei docenti | `app/api/eventi/licei/referente/`: elenco (`route.ts`), `export`, `docenti`, `istruzioni`, `riflessioni` |
 | API squadre | `app/api/eventi/licei/squadre/route.ts` |
+| API della scelta sulle riflessioni di prima | `app/api/eventi/licei/studente/riflessioni-passate/route.ts` |
 | API progetto | `app/api/eventi/licei/progetto/route.ts` |
 | API Commissione | `app/api/eventi/licei/commissione/route.ts` |
 | API staff | `app/api/eventi/licei/admin/` |
 | Tipi e validazione | `lib/eventi/licei.ts`, `licei-iscrizioni.ts` (anche `normalizzaClasse`), `licei-squadre.ts` (anche `quadroSquadre`) |
 | Helper server e guardie | `lib/eventi/licei-server.ts` (`requireDocente`, `requireStudente`, `requireCommissario`) |
 | Docenti del progetto | `lib/eventi/licei-docenti.ts` |
-| Riflessioni lette dai docenti | `lib/eventi/licei-riflessioni.ts`; il flag lo scrive `app/api/courses/submissions/route.ts`, l'avviso allo studente sta in `app/courses/LessonSubmissionBox.tsx` |
+| Riflessioni lette dai docenti | `lib/eventi/licei-riflessioni.ts` (anche la scelta dello studente sulle consegne di prima); il flag lo scrive `app/api/courses/submissions/route.ts`, l'avviso e la domanda allo studente stanno in `app/courses/LessonSubmissionBox.tsx` |
 | Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
@@ -273,7 +274,10 @@ squadre e, da ora in avanti, riflessioni e domande delle lezioni.
 - **Accettazioni**: `licei_accettazioni`, una riga per `(user_id, documento,
   versione)`, con `adesione_id`, il testo congelato in `testo` (jsonb: titolo,
   intro, sezioni, voci, dichiarazione della casella) e `accettato_at`.
-  `documento` vale `istruzioni_docente`.
+  `documento` vale `istruzioni_docente` per i docenti e
+  `riflessioni_passate` per la scelta degli studenti sulle riflessioni di
+  prima (vedi sotto): ogni lettura filtra per `documento`, quindi le due non
+  si mescolano.
 
 Entrambe con RLS e sole policy di lettura (la propria riga, e lo staff con
 `public.e_admin()`); `anon` non ha privilegi, `authenticated` solo `select`.
@@ -325,7 +329,8 @@ con la riga che ha gia.
 | `POST .../referente/docenti` | solo referente | Invito: `{ nome, cognome, email, classi, dichiarazione: true }`. Risponde `{ success, email_inviata, avviso_istituto }`. |
 | `PATCH .../referente/docenti` | vedi a destra | `{ id, azione: 'classi' \| 'revoca' \| 'rimanda_invito', classi? }`. `classi` il referente o il docente sulla propria riga; `revoca` e `rimanda_invito` solo il referente. Un id di un altro istituto risponde 404. |
 | `GET .../referente/riflessioni` | docenti | `?iscrizione=<id>` oppure `?lezione=<slug>`, solo studenti confermati dell'istituto. |
-| `GET`, `POST /api/courses/submissions` | studenti | Il GET aggiunge `avviso_referente: { istituto } \| null`; il POST scrive `condivisa_referente_at` solo con `avviso_referente: true` e un'iscrizione licei valida. |
+| `GET`, `POST /api/courses/submissions` | studenti | Il GET aggiunge `avviso_referente: { istituto } \| null` e, quando l'avviso c'e, `riflessioni_passate: { scelta, riservate } \| null`; il POST scrive `condivisa_referente_at` solo con `avviso_referente: true` e un'iscrizione licei valida. |
+| `GET`, `POST /api/eventi/licei/studente/riflessioni-passate` | studenti in attesa o confermati | La scelta sulle riflessioni di prima: GET `{ disponibile, scelta, scelta_at, riservate }`, POST `{ scelta: 'si' \| 'no' }`. Solo per l'account che chiama, e per l'istituto della sua iscrizione attuale. La pagina del link diretto la usa come la card dell'area. |
 | `GET /api/eventi/licei/admin` | staff | Aggiunge `docenti` (per adesione) e `avviso_riflessioni` (stato dell'invio). |
 | `POST /api/eventi/licei/admin` | staff | `{ azione: 'revoca_docente', id }` oppure `{ azione: 'avviso_riflessioni' }`. |
 
@@ -410,7 +415,8 @@ lo impedisce il trigger) comparirebbe solo come "Studente di altro istituto".
   righe salvate prima della migrazione restano null, quindi restano allo
   staff: un docente ne vede solo il numero ("consegne riservate"). Per
   renderne visibile una vecchia, lo studente la riapre e la salva con
-  l'avviso davanti.
+  l'avviso davanti, oppure sceglie di condividere tutte quelle di prima
+  (sezione qui sotto).
 - **Che cosa legge il docente**: per gli studenti CONFERMATI del proprio
   istituto, solo `reflection` e `question` delle righe condivise, piu se e
   quando lo staff ha risposto (`replied_at`). `comment` e `admin_reply` non
@@ -427,7 +433,91 @@ lo impedisce il trigger) comparirebbe solo come "Studente di altro istituto".
   (fuori da `CONFIG_CHIAVI`, come le chiavi della chiusura): parte una volta
   sola, e non parte finche la colonna non esiste. Invio a lotti di 50, con i
   conteggi salvati in `avviso_riflessioni_esito` e i fallimenti nei log, per
-  id di iscrizione e mai per email.
+  id di iscrizione e mai per email. Il testo dice che quelle gia inviate
+  restano allo staff "a meno che tu non scelga di condividerle dalla tua
+  area": la scelta si fa sulla piattaforma, l'email non chiede risposta.
+
+### Le riflessioni di prima: la scelta dello studente
+
+Decisione approvata dalla Fondazione: ogni studente sceglie, da solo e per
+se, se i docenti del suo istituto possono leggere anche le riflessioni e le
+domande inviate prima dell'avviso (le righe con `condivisa_referente_at`
+null). Scelta individuale, mai di classe o a maggioranza; nessuna risposta
+gia segnata; revocabile quando vuole. Tutto sulla piattaforma, nessuna email
+nuova.
+
+- **La domanda**: "I docenti del tuo istituto che seguono il percorso leggono le riflessioni e le domande che invii nelle lezioni. Vuoi che possano leggere anche quelle che hai inviato prima? Il commento resta comunque solo allo staff.".
+  Bottoni "Sì, anche quelle" e "No, quelle restano allo staff", con lo stesso
+  aspetto e nessuno preselezionato; sotto, "Puoi cambiare idea quando vuoi
+  dalla tua area.". Dopo la scelta: "Hai scelto: «...» il gg/mm/aaaa." e
+  "Cambia scelta". Testi in `content.ts` (`DOMANDA_RIFLESSIONI_PASSATE`,
+  `ETICHETTE_RIFLESSIONI_PASSATE`, `NOTA_RIFLESSIONI_PASSATE`).
+- **Dove si risponde**: nell'area dello studente, card "Le tue riflessioni
+  e i docenti", che compare a chi ha almeno una consegna di prima o ha gia
+  scelto, anche se e ancora in attesa di conferma; e nel box della lezione,
+  solo agli iscritti licei (`avviso_referente` non null), una volta, sopra
+  l'avviso, se non c'e ancora una scelta e c'e almeno una consegna di prima.
+  La domanda ha la sua richiesta: non blocca e non rallenta il salvataggio
+  della consegna. Nel box, una consegna di prima di chi ha detto si risulta
+  "Visibile anche ai docenti del tuo istituto".
+- **Il link diretto**: `/eventi/vivere-piu-a-lungo/licei/studente/riflessioni`
+  (`RIFLESSIONI_STUDENTE_PATH`), noindex e fuori dalla sitemap come l'area.
+  Senza login mostra "Accedi" con `returnTo` alla pagina stessa, quindi dopo
+  l'accesso lo studente torna li. Mostra solo la card della scelta, la
+  stessa dell'area (`RiflessioniPassatePagina` in `RiflessioniPassate.tsx`).
+  Dove l'area non mostrerebbe niente, una frase e un link per tornare: a chi
+  non e studente del percorso (la rotta risponde 401 o 403) il suo messaggio
+  e "Torna al bando"; a chi non ha consegne di prima e non ha mai scelto,
+  prima della migrazione o su un errore, una frase e "Vai alla tua area".
+  Nella console dei docenti la card "Link da dare agli studenti"
+  (`LinkRiflessioniStudenti` in `RiflessioniReferente.tsx`, testi
+  `LINK_RIFLESSIONI_STUDENTI_*` in `content.ts`) mostra l'indirizzo
+  completo (`SITE_URL` + percorso) con un bottone **Copia**. C'e sempre,
+  anche senza confermati: scelgono anche gli studenti in attesa. Il docente
+  lo passa alla classe come preferisce; nessuna email parte dalla
+  piattaforma.
+- **Una conferma sola**: dopo "Sì" i docenti leggono tutte le consegne di
+  quello studente, di prima e di dopo, e la domanda non si ripresenta (si
+  fa solo finche non c'e una scelta). Lo studente la puo sempre cambiare
+  dalla sua area o dal link.
+- **Dove si registra**: `licei_accettazioni`, nessuna migrazione nuova.
+  `documento = 'riflessioni_passate'`, `versione = '2026-10-13'`
+  (`DOCUMENTO_RIFLESSIONI_PASSATE`, `VERSIONE_RIFLESSIONI_PASSATE`),
+  `adesione_id` dell'iscrizione dello studente, `testo = { domanda, scelta:
+  'si' | 'no', etichetta }` con la domanda e il bottone premuto congelati
+  dal server, `accettato_at` aggiornato a ogni cambio. Una riga per persona
+  (unico su `user_id, documento, versione`), riscritta con un upsert. Se la
+  domanda cambia, cambia la versione e la scelta si chiede di nuovo.
+- **Vale per l'istituto di oggi**: studente e docenti leggono la scelta con
+  la stessa regola, cioe solo se `adesione_id` e quello dell'iscrizione
+  attuale (per lo studente quella di `requireStudente` o di
+  `iscrizioneLiceiPerAvviso`, dove vince la confermata; per il docente il
+  suo istituto). Una scelta registrata da iscritto a un'altra scuola (per
+  esempio con il codice sbagliato, poi rifiutato) per lo studente vale come
+  nessuna scelta: la domanda si rifa, e la risposta riscrive la riga con
+  l'istituto giusto. Cosi lo schermo dello studente dice sempre quello che i
+  docenti della sua scuola possono leggere. L'id dell'adesione resta al
+  server: al box arriva solo il nome dell'istituto.
+- **Chi puo scegliere**: `requireStudente({ ancheInAttesa: true })`, cioe
+  gli iscritti in attesa o confermati, a percorso aperto, come per
+  l'avviso nel box (`iscrizioneLiceiPerAvviso`). Squadre e progetti restano
+  dei soli confermati (`requireStudente()` senza opzioni, invariata). La
+  scelta e sempre quella dell'account che chiama: la rotta non accetta un
+  `user_id`, e l'istituto lo prende dall'iscrizione.
+- **Che cosa cambia per i docenti**: la rotta delle riflessioni legge, per
+  gli studenti confermati gia selezionati (a blocchi come il resto), le
+  scelte "si" fatte per il proprio istituto (`adesione_id`, `testo->>scelta`
+  = `si`). Per quegli studenti tutte le consegne sono condivise: le righe
+  con il flag null entrano fra le consegne e non contano piu come riservate.
+  "No", o nessuna risposta: le consegne di prima restano allo staff e se ne
+  vede solo il numero. Passare da si a no le nasconde di nuovo alla
+  richiesta successiva; le consegne salvate dopo l'avviso restano visibili,
+  come l'avviso diceva. Il docente non vede chi ha scelto che cosa: le
+  consegne di prima compaiono e basta. `comment` e `admin_reply` non si
+  selezionano mai, `user_id` non esce, il filtro per istituto e lo stesso.
+- **Chiusura**: la cancellazione del percorso svuota tutta
+  `licei_accettazioni`, quindi anche queste righe; vanno via anche in
+  cascata con l'account o con l'adesione.
 
 ### Prima della migrazione
 
@@ -441,7 +531,12 @@ mancante):
   `{ disponibile: false }` (503 su POST e PATCH), la revoca dello staff 503;
 - senza la colonna: il box della lezione non mostra l'avviso, il salvataggio
   riprova senza la colonna e riesce, le riflessioni rispondono
-  `{ disponibile: false }`, il bottone dell'avviso nel pannello e spento.
+  `{ disponibile: false }`, il bottone dell'avviso nel pannello e spento;
+- scelta sulle riflessioni di prima: senza `licei_accettazioni`, senza la
+  colonna o senza `lesson_submissions` la funzione non c'e. La rotta dello
+  studente risponde `{ disponibile: false }` (503 sul POST), la card e la
+  domanda nel box non compaiono (`riflessioni_passate` e null), e la rotta
+  dei docenti si comporta come prima.
 
 ## Chi risulta iscritto e chi c'e davvero
 
@@ -777,7 +872,8 @@ non solo nel browser).
    "Riattiva gli accessi", ma solo finche i dati ci sono.
 2. **Cancella i dati del percorso.** Abilitata solo dopo il passo 1. In
    quest'ordine: riflessioni delle lezioni (`lesson_submissions`), account,
-   poi schede, commissari, accettazioni delle istruzioni, docenti del
+   poi schede, commissari, accettazioni (istruzioni dei docenti e scelte
+   degli studenti sulle riflessioni di prima), docenti del
    progetto e adesioni (la cascata porta via iscrizioni, squadre e progetti).
    Le tabelle che non esistono ancora si saltano. Gli account vanno prima
    delle righe perche le righe sono l'unico registro di quali account
