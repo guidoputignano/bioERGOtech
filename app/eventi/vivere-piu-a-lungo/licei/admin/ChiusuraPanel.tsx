@@ -30,6 +30,8 @@ type Conteggi = {
   progetti: number;
   valutazioni: number;
   commissari: number;
+  /** Assente negli esiti registrati prima dei docenti del progetto. */
+  docenti?: number;
   riflessioni: number;
 };
 
@@ -59,6 +61,7 @@ const VOCI: { chiave: keyof Conteggi; label: string }[] = [
   { chiave: "progetti", label: "Progetti" },
   { chiave: "valutazioni", label: "Schede di valutazione" },
   { chiave: "commissari", label: "Commissari" },
+  { chiave: "docenti", label: "Docenti del progetto" },
   { chiave: "riflessioni", label: "Riflessioni delle lezioni" },
 ];
 
@@ -76,7 +79,7 @@ function Numeri({ conteggi, account }: { conteggi: Conteggi; account: number }) 
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {VOCI.map((v) => (
         <div key={v.chiave} className="card-sm" style={{ padding: 14 }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-dark)" }}>{conteggi[v.chiave]}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-dark)" }}>{conteggi[v.chiave] ?? 0}</div>
           <div style={{ fontSize: 12, color: "var(--text-light)" }}>{v.label}</div>
         </div>
       ))}
@@ -226,16 +229,18 @@ export function ChiusuraPanel() {
           </h2>
           <ol className="text-sm text-gray-600" style={{ lineHeight: 1.8, paddingLeft: 18, margin: "0 0 4px" }}>
             <li>
-              <strong>Disattiva gli accessi.</strong> Docenti referenti, studenti e commissari non
-              entrano più nelle loro aree e vedono il messaggio &laquo;Il percorso si è concluso e
-              l&apos;accesso è stato disattivato.&raquo; Le pagine pubbliche restano come sono. Si
-              può annullare finché i dati non sono stati cancellati.
+              <strong>Disattiva gli accessi.</strong> Docenti referenti e docenti del progetto,
+              studenti e commissari non entrano più nelle loro aree e vedono il messaggio
+              &laquo;Il percorso si è concluso e l&apos;accesso è stato disattivato.&raquo; Le
+              pagine pubbliche restano come sono. Si può annullare finché i dati non sono stati
+              cancellati.
             </li>
             <li>
               <strong>Cancella i dati del percorso.</strong> Si cancellano adesioni, iscrizioni,
-              squadre, progetti, schede di valutazione, commissari, le riflessioni delle lezioni
-              degli studenti e gli account creati solo per il percorso. Non si può annullare:
-              prima esporta classifica, progetti ed elenchi che servono ancora.
+              squadre, progetti, schede di valutazione, commissari, docenti del progetto con le
+              accettazioni delle istruzioni, le riflessioni delle lezioni degli studenti e gli
+              account creati solo per il percorso. Non si può annullare: prima esporta
+              classifica, progetti ed elenchi che servono ancora.
             </li>
           </ol>
           <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: "10px 0 0" }}>

@@ -385,7 +385,7 @@ export const CONTATTI_UNIVERSITA = {
   },
   organizzazione: {
     ruolo: "Referente organizzazione, SafesPro",
-    email: "info@altaformazioneprofessionisti.it",
+    email: "info@safespro.it",
   },
   telefono: {
     numero: "347 7320692",

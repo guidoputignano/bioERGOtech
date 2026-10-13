@@ -8,10 +8,16 @@
  */
 
 import {
+  AVVISO_RIFLESSIONI_OGGETTO,
+  AVVISO_RIFLESSIONI_TESTO,
   COMMISSIONE_PATH,
   CONTATTI_LICEI,
+  DICHIARAZIONE_INVITO_DOCENTE_TESTO,
   GUIDA_PATH,
+  INFORMATIVA_SCUOLE_PATH,
+  INFORMATIVA_STUDENTI_PATH,
   ISCRIZIONE_PATH,
+  ISTRUZIONI_DOCENTE_PATH,
   LICEI,
   LICEI_PATH,
   REFERENTE_PATH,
@@ -636,6 +642,242 @@ export function accessoEmailHtml(input: AccessoEmailInput): string {
       <p style="color:#718096;font-size:13px;line-height:1.7;margin:0;">
         Il link scade dopo un po'. Se lo trovi scaduto, chiedi al tuo docente referente di
         rimandartelo: gli basta un clic.
+      </p>
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+/* ── Docenti del progetto ─────────────────────────────────────────────── */
+
+/**
+ * Le due email che partono quando il referente indica un collega. Qui i
+ * nomi li scrive a mano il referente, e la denominazione dell'istituto
+ * arriva dal modulo pubblico: si escapano, a differenza dei testi fissi.
+ */
+const esc = (s: string): string =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const dataEstesa = (iso: string): string =>
+  new Date(iso).toLocaleDateString("it-IT", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Rome",
+  });
+
+export type DocenteInvitoEmailInput = {
+  nome: string;
+  cognome: string;
+  /** Nome e cognome del referente principale che lo ha indicato. */
+  referente: string;
+  istituto: string;
+  classi: string[];
+  /** La pagina di accesso, che poi apre l'area dei docenti. */
+  loginUrl: string;
+  /** Link per impostare la password, se l'account non ne ha ancora una. */
+  setPasswordUrl?: string;
+};
+
+export function docenteInvitoEmailSubject(): string {
+  return `Il suo accesso come docente del progetto . ${LICEI.titolo}`;
+}
+
+/**
+ * Email al docente indicato dal referente. Dice chi lo ha indicato e per
+ * quale istituto, che cosa vedra e che al primo accesso dovra accettare le
+ * istruzioni: e la prima cosa che trova entrando, meglio che non lo
+ * sorprenda. Il link per la password c'e solo se serve; altrimenti basta
+ * quello di accesso.
+ *
+ * In fondo, la via d'uscita: chi riceve l'email per sbaglio deve sapere a
+ * chi dirlo, e un accesso non suo si spegne con una riga.
+ */
+export function docenteInvitoEmailHtml(input: DocenteInvitoEmailInput): string {
+  const { nome, cognome, referente, istituto, classi, loginUrl, setPasswordUrl } = input;
+  const istruzioniUrl = `${SITE_URL}${ISTRUZIONI_DOCENTE_PATH}`;
+  const informativaUrl = `${SITE_URL}${INFORMATIVA_SCUOLE_PATH}`;
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Gentile ${esc(nome)} ${esc(cognome)},</h2>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        ${esc(referente)}, docente referente di <strong>${esc(istituto)}</strong>, l'ha indicata fra i
+        docenti dell'istituto che seguono gli studenti nel percorso ${LICEI.titolo}. Per questo le
+        abbiamo attivato un accesso personale alla piattaforma.
+      </p>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:22px;margin-bottom:24px;">
+        <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
+          <strong style="color:#0A1628;">Che cosa vede.</strong> Gli studenti del vostro istituto
+          iscritti al percorso, con i dati indicati nell'informativa privacy per scuole e docenti
+          referenti. Può confermare le iscrizioni e rimandare agli studenti il link di accesso. Gli
+          elenchi da scaricare restano al docente referente.
+        </p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0;">
+          <strong style="color:#0A1628;">Al primo accesso.</strong> Le chiediamo di leggere e
+          accettare le istruzioni per i docenti. Finché non lo fa, l'area non mostra alcun dato degli
+          studenti.
+        </p>
+        ${
+          classi.length > 0
+            ? `<p style="color:#4A5568;font-size:14px;line-height:1.75;margin:12px 0 0;">
+          <strong style="color:#0A1628;">Le sue classi.</strong> Il referente ha indicato
+          ${esc(classi.join(", "))}. Nell'area sono il filtro di partenza: può sempre passare a tutte
+          le classi dell'istituto.
+        </p>`
+            : ""
+        }
+      </div>
+
+      <div style="text-align:center;margin-bottom:16px;">
+        <a href="${setPasswordUrl ?? loginUrl}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
+          ${setPasswordUrl ? "Imposti la password" : "Entri nell'area dei docenti"}
+        </a>
+      </div>
+      <p style="color:#718096;font-size:13px;line-height:1.7;margin:0 0 24px;text-align:center;">
+        ${
+          setPasswordUrl
+            ? `Poi entri nell'area dei docenti da <a href="${SITE_URL}${REFERENTE_PATH}" style="color:#008F6B;">questa pagina</a>, con questa email e la password scelta. Il link per la password scade dopo un po': se lo trova scaduto, chieda al referente di rimandarle l'invito.`
+            : `Acceda con questa email e la sua password. Se non la ricorda, nella pagina di accesso usi &laquo;Password dimenticata&raquo;.`
+        }
+      </p>
+
+      <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0 0 24px;">
+        Prima di accedere può leggere le
+        <a href="${istruzioniUrl}" style="color:#008F6B;font-weight:600;">istruzioni per i docenti</a>
+        e l'<a href="${informativaUrl}" style="color:#008F6B;font-weight:600;">informativa privacy per scuole e docenti referenti</a>.
+        Le credenziali sono personali e non vanno condivise.
+      </p>
+
+      <div style="background:#FFF8E6;border-left:3px solid #E4B33C;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:8px;">
+        <p style="color:#75570F;font-size:13.5px;line-height:1.65;margin:0;">
+          Se non insegna in questo istituto o non si aspettava questo messaggio, scriva a
+          <a href="mailto:${CONTATTI_LICEI.fondazione.email}" style="color:#8A6100;font-weight:700;">${CONTATTI_LICEI.fondazione.email}</a>
+          e disattiviamo l'accesso.
+        </p>
+      </div>
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+export type DocenteAggiuntoIstitutoEmailInput = {
+  istituto: string;
+  /** Nome e cognome del referente principale. */
+  referente: string;
+  docente: string;
+  docenteEmail: string;
+  classi: string[];
+  /** Quando il referente lo ha indicato, ISO. */
+  quando: string;
+};
+
+export function docenteAggiuntoIstitutoEmailSubject(istituto: string): string {
+  return `Un nuovo docente del progetto per ${istituto} . ${LICEI.titolo}`;
+}
+
+/**
+ * Avviso all'indirizzo istituzionale della scuola, con copia alla
+ * Fondazione, ogni volta che il referente indica un collega.
+ *
+ * Sostituisce un modulo firmato dal dirigente per ogni docente: il
+ * referente dichiara, e l'istituto lo viene a sapere dal suo indirizzo
+ * ufficiale, con il nome della persona e la dichiarazione esatta. E il
+ * controllo che rende visibile un invito sbagliato, e lascia alla scuola,
+ * che dei suoi dati risponde, l'ultima parola.
+ */
+export function docenteAggiuntoIstitutoEmailHtml(input: DocenteAggiuntoIstitutoEmailInput): string {
+  const { istituto, referente, docente, docenteEmail, classi, quando } = input;
+  const fondazione = CONTATTI_LICEI.fondazione.email;
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Un nuovo docente del progetto</h2>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Vi informiamo che ${esc(referente)}, docente referente di <strong>${esc(istituto)}</strong> per
+        il percorso ${LICEI.titolo}, ha indicato sulla piattaforma un altro docente dell'istituto fra
+        quelli che seguono gli studenti del percorso.
+      </p>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:22px;margin-bottom:24px;">
+        <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Docente indicato</p>
+        <p style="color:#0A1628;font-size:16px;font-weight:700;margin:0 0 4px;line-height:1.5;">${esc(docente)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0;">
+          ${esc(docenteEmail)}${classi.length > 0 ? ` . classi ${esc(classi.join(", "))}` : ""} . indicato il ${dataEstesa(quando)}
+        </p>
+      </div>
+
+      <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
+        Il docente riceve un accesso personale. Dopo aver accettato le istruzioni per i docenti vede
+        gli studenti del vostro istituto iscritti al percorso, nei limiti indicati
+        nell'<a href="${SITE_URL}${INFORMATIVA_SCUOLE_PATH}" style="color:#008F6B;">informativa privacy per scuole e docenti referenti</a>.
+        Nell'indicarlo, il referente ha dichiarato:
+      </p>
+      <p style="color:#0A1628;font-size:14px;line-height:1.7;margin:0 0 24px;padding:12px 16px;border-left:3px solid #E2E8F0;font-style:italic;">
+        &laquo;${DICHIARAZIONE_INVITO_DOCENTE_TESTO}&raquo;
+      </p>
+
+      <div style="background:#FFF8E6;border-left:3px solid #E4B33C;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
+        <p style="color:#75570F;font-size:13.5px;line-height:1.65;margin:0;">
+          <strong>Se non è corretto scrivete a
+          <a href="mailto:${fondazione}" style="color:#8A6100;">${fondazione}</a></strong>: disattiviamo
+          subito l'accesso. L'istituto può chiederne la revoca in qualsiasi momento, anche più avanti.
+        </p>
+      </div>
+
+      <p style="color:#718096;font-size:12.5px;line-height:1.7;margin:0;">
+        Ricevete questo messaggio all'indirizzo istituzionale indicato nell'adesione al percorso. Una
+        copia arriva alla Fondazione.
+      </p>
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+/* ── Avviso agli studenti: chi legge le riflessioni ───────────────────── */
+
+export type AvvisoRiflessioniEmailInput = {
+  nome: string;
+};
+
+export function avvisoRiflessioniEmailSubject(): string {
+  return AVVISO_RIFLESSIONI_OGGETTO;
+}
+
+/**
+ * Email una tantum a tutti gli iscritti, confermati e in attesa, il giorno
+ * in cui i docenti dell'istituto cominciano a leggere riflessioni e domande.
+ *
+ * Esiste perche l'informativa del sito promette di comunicare via email ogni
+ * modifica significativa, e questa lo e: chi ha scritto finora lo ha fatto
+ * sapendo che leggeva solo lo staff. Dice che quello che e gia stato inviato
+ * resta allo staff, che il commento resta sempre allo staff, e dove leggere
+ * l'informativa aggiornata. Il testo e in `AVVISO_RIFLESSIONI_TESTO`, lo
+ * stesso che lo staff vede in anteprima prima di inviarlo.
+ */
+export function avvisoRiflessioniEmailHtml(input: AvvisoRiflessioniEmailInput): string {
+  const informativaUrl = `${SITE_URL}${INFORMATIVA_STUDENTI_PATH}`;
+  const nome = input.nome.trim();
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">${nome ? `Ciao ${esc(nome)},` : "Ciao,"}</h2>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 20px;">
+        ${AVVISO_RIFLESSIONI_TESTO.apertura}
+      </p>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 20px;">
+        ${AVVISO_RIFLESSIONI_TESTO.informativa}
+        <a href="${informativaUrl}" style="color:#008F6B;font-weight:700;">${informativaUrl}</a>.
+      </p>
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 8px;">
+        ${AVVISO_RIFLESSIONI_TESTO.dubbi}
       </p>
       ${chiusura()}
     </div>

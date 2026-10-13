@@ -472,7 +472,7 @@ export const COMMISSIONE = [
 
 export const CONTATTI = {
   fondazione: { ruolo: "Referente Fondazione bioERGOtech", nome: "Guido Putignano", email: "info@bioergotech.org" },
-  organizzazione: { ruolo: "Referente Organizzazione (SafesPro)", email: "info@altaformazioneprofessionisti.it" },
+  organizzazione: { ruolo: "Referente Organizzazione (SafesPro)", email: "info@safespro.it" },
   telefono: {
     numero: "347 7320692",
     riferimento:

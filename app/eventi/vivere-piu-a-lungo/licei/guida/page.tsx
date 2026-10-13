@@ -200,7 +200,7 @@ const DOCENTE_BASE: Passo[] = [
     poi: {
       titolo: "Cosa succede dopo",
       testo:
-        "Riceve subito una email con il link per impostare la sua password. La apra: le servirà al passo 3.",
+        "Riceve subito una email con il link per impostare la sua password. La apra: le servirà al passo 4.",
     },
   },
   {
@@ -215,7 +215,7 @@ const DOCENTE_BASE: Passo[] = [
   {
     titolo: "Riconosca i suoi studenti",
     testo:
-      "Nella sua area riservata compaiono le iscrizioni arrivate. Su ciascuna sceglie È mio studente oppure Non lo riconosco. L'elenco che conferma è esattamente quello che l'art. 4 del bando chiede all'istituto di trasmettere.",
+      "Al primo accesso alla sua area riservata accetta le istruzioni per i docenti: fino ad allora l'area non mostra i dati degli studenti. Poi compaiono le iscrizioni arrivate, e su ciascuna sceglie È mio studente oppure Non lo riconosco. L'elenco che conferma è esattamente quello che l'art. 4 del bando chiede all'istituto di trasmettere. Se altri colleghi seguono i ragazzi con lei, dalla stessa pagina può indicarne fino a cinque: ognuno riceve un accesso personale, accetta le stesse istruzioni e può confermare le iscrizioni, mentre gli elenchi da scaricare restano a lei.",
     link: {
       etichetta: "Area riservata",
       href: REFERENTE_PATH,
@@ -230,7 +230,7 @@ const DOCENTE_BASE: Passo[] = [
   {
     titolo: "Tenga d'occhio due numeri",
     testo:
-      "Nella stessa pagina, accanto a ogni studente, vede a che punto è del corso. In cima ci sono due contatori che indicano due problemi diversi.",
+      "Nella stessa pagina, accanto a ogni studente, vede a che punto è del corso. Per i confermati, il bottone Riflessioni apre la riflessione e la domanda inviate nelle lezioni dopo che la lezione ha avvisato lo studente che le leggono anche i docenti; le precedenti e i commenti restano allo staff. In cima ci sono due contatori che indicano due problemi diversi.",
     avvisi: [
       {
         grave: true,
@@ -248,7 +248,7 @@ const DOCENTE_BASE: Passo[] = [
   {
     titolo: "Le resta un controllo, verso la fine",
     testo:
-      "Quando apriamo la fase delle squadre, dalla sua pagina vede quali si sono formate e chi è rimasto fuori. Uno studente confermato senza squadra non può consegnare, e lei è l'unica che può accorgersene in tempo e andarlo a cercare in corridoio.",
+      "Quando apriamo la fase delle squadre, dalla sua pagina vede quali si sono formate, con capitano e componenti, e chi è rimasto fuori. Uno studente confermato senza squadra non può consegnare, e lei è l'unica che può accorgersene in tempo e andarlo a cercare in corridoio.",
   },
 ];
 
@@ -411,7 +411,7 @@ const GUASTI = [
   },
   {
     d: "Il docente non trova l'area riservata",
-    r: "Deve entrare con lo stesso indirizzo email usato nel modulo di adesione. L'area è legata a quell'account, non alla scuola.",
+    r: "Il referente entra con lo stesso indirizzo email usato nel modulo di adesione, un collega indicato dal referente con quello a cui è arrivato l'invito. L'area è legata all'account, non alla scuola.",
   },
   {
     d: "La squadra non riesce a consegnare",
@@ -546,8 +546,8 @@ export default async function GuidaPage() {
             />
             <Passi passi={passiDocente(automatica)} />
             <p className="lc-nota" style={{ maxWidth: 760, marginTop: 28 }}>
-              I documenti da firmare, cioè l&apos;adesione della scuola per il dirigente e le
-              istruzioni per il docente referente, sono con le informative nella pagina{" "}
+              L&apos;adesione della scuola, che firma il dirigente, e le istruzioni per i docenti,
+              che si accettano al primo accesso, sono con le informative nella pagina{" "}
               <Link href={DOCUMENTI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
                 Documenti del percorso
               </Link>

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { ReferenteConsole } from "./ReferenteConsole";
-import { LICEI_PATH } from "../content";
+import { LICEI_PATH, REFERENTE_PATH } from "../content";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +28,12 @@ export default async function ReferentePage() {
             <div className="card max-w-md mx-auto text-center">
               <h1 className="text-2xl font-bold text-gray-800 mb-2">Area riservata</h1>
               <p className="text-gray-600 mb-6">
-                Questa area è del docente referente dell&apos;istituto. Acceda con l&apos;email con
-                cui ha trasmesso l&apos;adesione.
+                Questa area è del docente referente dell&apos;istituto e dei docenti del progetto
+                che il referente indica. Acceda con l&apos;email con cui ha trasmesso l&apos;adesione,
+                o con quella a cui è arrivato l&apos;invito.
               </p>
               <div className="flex flex-col gap-3">
-                <Link href="/auth/login" className="btn-primary">
+                <Link href={`/auth/login?returnTo=${encodeURIComponent(REFERENTE_PATH)}`} className="btn-primary">
                   Accedi
                 </Link>
                 <Link href={LICEI_PATH} className="btn-outline">

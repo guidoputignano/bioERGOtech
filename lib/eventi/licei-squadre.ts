@@ -13,9 +13,11 @@ import {
   SQUADRA_MIN,
   SQUADRA_NOME_MAX,
   TITOLO_MAX,
+  haFattoAccesso,
   type CampoProgetto,
   type CampoPunteggio,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { normalizzaClasse } from "@/lib/eventi/licei-iscrizioni";
 
 const testo = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
@@ -63,6 +65,301 @@ export function validateCodiceSquadra(codice: unknown): string | null {
   if (!CODICE_SQUADRA_RE.test(c))
     return "Il codice non sembra valido: è nel formato SQ- seguito da sei caratteri. Chiedilo a chi ha creato la squadra.";
   return null;
+}
+
+/* ── Quadro delle squadre, per i docenti ──────────────────────────────── */
+
+/*
+ * Il quadro che il referente e i docenti del progetto vedono nella console:
+ * quali squadre si sono formate, con chi, e chi e rimasto fuori. Si calcola
+ * dai dati che la rotta del referente manda gia, senza leggere niente di
+ * nuovo, ed e in sola lettura: le squadre le formano gli studenti.
+ *
+ * Del quadro escono solo nome, cognome, classe, ruolo e stato
+ * dell'iscrizione. Email, account e date di accesso restano fuori: al
+ * monitoraggio non servono, e un quadro si guarda in piu persone di un
+ * elenco.
+ */
+
+/**
+ * Un'iscrizione come la riceve il quadro. Va bene cosi com'e quella della
+ * rotta del referente, che ne porta di piu: qui si leggono solo questi campi.
+ */
+export type IscrizioneQuadroInput = {
+  id?: string | null;
+  /**
+   * L'istituto dell'iscrizione. Se manca vale quello del quadro: la rotta
+   * del referente legge gia le sole iscrizioni del proprio istituto.
+   */
+  adesione_id?: string | null;
+  /** Un componente di un altro istituto, che la rotta segnala senza nome ne classe. */
+  altro_istituto?: boolean;
+  nome?: string | null;
+  cognome?: string | null;
+  classe?: string | null;
+  stato?: string | null;
+  squadra_id?: string | null;
+  squadra_ruolo?: string | null;
+  /** Serve solo a dire "Mai entrato": la data non esce dal quadro. */
+  ultimo_accesso?: string | null;
+  lezioni_completate?: number | null;
+};
+
+type ProgettoQuadroInput = {
+  stato?: string | null;
+  titolo?: string | null;
+  finalista?: boolean | null;
+};
+
+export type SquadraQuadroInput = {
+  id: string;
+  nome?: string | null;
+  created_at?: string | null;
+  /** PostgREST lo manda come oggetto, perche squadra_id e unico, o come lista. */
+  licei_progetti?: ProgettoQuadroInput | ProgettoQuadroInput[] | null;
+};
+
+/**
+ * Un componente di una squadra. Uno di un altro istituto (oggi impossibile:
+ * lo impedisce il trigger `licei_squadra_capienza`) si conta e basta, senza
+ * nome ne classe: se un giorno le regole cambiassero, il quadro non
+ * diventerebbe un canale fra scuole.
+ */
+export type ComponenteQuadro =
+  | {
+      altroIstituto: false;
+      id: string;
+      nome: string;
+      cognome: string;
+      classe: string;
+      capitano: boolean;
+      /** Falso se l'iscrizione non e piu 'confermata': il quadro lo segnala. */
+      confermata: boolean;
+      stato: string;
+    }
+  | { altroIstituto: true; capitano: boolean };
+
+/** Lo stato che il badge della squadra dice a parole. */
+export type StatoSquadraQuadro = "sotto_minimo" | "bozza" | "consegnato" | "finalista" | "ritirato";
+
+export type SquadraQuadro = {
+  id: string;
+  nome: string;
+  created_at: string | null;
+  progetto: { stato: string; titolo: string; finalista: boolean } | null;
+  capitano: ComponenteQuadro | null;
+  /** Gli altri componenti, senza il capitano. */
+  membri: ComponenteQuadro[];
+  /** Tutti i componenti, capitano compreso: e il "n su 5". */
+  n: number;
+  /** Meno di SQUADRA_MIN componenti e progetto non ancora consegnato. */
+  sottoMinimo: boolean;
+  stato: StatoSquadraQuadro;
+};
+
+export type StudenteSenzaSquadra = {
+  id: string;
+  nome: string;
+  cognome: string;
+  classe: string;
+  maiEntrato: boolean;
+  lezioniCompletate: number;
+};
+
+export type ClasseSenzaSquadra = {
+  /** La classe normalizzata, "" se lo studente non l'ha indicata. */
+  chiave: string;
+  /** Come la si legge: la scrittura piu frequente fra gli iscritti di quella classe. */
+  etichetta: string;
+  studenti: StudenteSenzaSquadra[];
+};
+
+export type QuadroSquadreVista = {
+  squadre: SquadraQuadro[];
+  /** I confermati senza squadra, per classe. */
+  senzaSquadra: ClasseSenzaSquadra[];
+  /** In attesa di conferma e senza squadra: finche non li si conferma, non possono entrarci. */
+  inAttesa: number;
+  numeri: {
+    squadre: number;
+    confermati: number;
+    inSquadra: number;
+    senzaSquadra: number;
+    sottoMinimo: number;
+  };
+};
+
+const perNome = (a: { cognome: string; nome: string }, b: { cognome: string; nome: string }) =>
+  a.cognome.localeCompare(b.cognome, "it", { sensitivity: "base" }) ||
+  a.nome.localeCompare(b.nome, "it", { sensitivity: "base" });
+
+/**
+ * Il quadro delle squadre di un istituto.
+ *
+ * `classi` e il filtro della console, gia normalizzato (null per tutto
+ * l'istituto). E un filtro e non un confine: una squadra compare se ha
+ * almeno un componente di quelle classi, e compare con tutti i suoi
+ * componenti, perche le squadre attraversano le classi e una squadra a meta
+ * direbbe una cosa falsa. I numeri e chi e senza squadra seguono il filtro.
+ */
+export function quadroSquadre(
+  iscrizioni: readonly IscrizioneQuadroInput[],
+  squadre: readonly SquadraQuadroInput[],
+  adesioneId: string,
+  opzioni: { classi?: ReadonlySet<string> | null } = {},
+): QuadroSquadreVista {
+  const chiavi = opzioni.classi ?? null;
+  const passa = (classe: string | null | undefined) => chiavi === null || chiavi.has(normalizzaClasse(classe));
+  const daAltroIstituto = (r: IscrizioneQuadroInput) =>
+    r.altro_istituto === true || (r.adesione_id != null && r.adesione_id !== adesioneId);
+
+  // Per l'etichetta di ogni classe: le scritture usate, contate su tutto
+  // l'istituto, con le stesse regole della select del filtro.
+  const forme = new Map<string, Map<string, number>>();
+  const perSquadra = new Map<string, IscrizioneQuadroInput[]>();
+  for (const r of iscrizioni) {
+    if (r.squadra_id) perSquadra.set(r.squadra_id, [...(perSquadra.get(r.squadra_id) ?? []), r]);
+    if (daAltroIstituto(r)) continue;
+    const chiave = normalizzaClasse(r.classe);
+    if (!chiave) continue;
+    const forma = String(r.classe).trim();
+    const conteggio = forme.get(chiave) ?? new Map<string, number>();
+    conteggio.set(forma, (conteggio.get(forma) ?? 0) + 1);
+    forme.set(chiave, conteggio);
+  }
+  const etichetta = (chiave: string): string => {
+    const f = forme.get(chiave);
+    if (!f) return chiave;
+    return [...f.entries()].sort(
+      (a, b) =>
+        b[1] - a[1] ||
+        Number(b[0].toUpperCase() === chiave) - Number(a[0].toUpperCase() === chiave) ||
+        a[0].length - b[0].length ||
+        a[0].localeCompare(b[0]),
+    )[0][0];
+  };
+
+  const vistaSquadre: SquadraQuadro[] = [];
+  for (const s of squadre) {
+    const righe = perSquadra.get(s.id) ?? [];
+    if (chiavi !== null && !righe.some((r) => !daAltroIstituto(r) && passa(r.classe))) continue;
+
+    // Il capitano in testa, poi gli altri per cognome, quelli di un altro
+    // istituto in fondo. Il capitano e uno solo (lo garantisce un indice
+    // univoco): se per un errore ce ne fossero due, il secondo resta fra i
+    // componenti.
+    let capitano: ComponenteQuadro | null = null;
+    const stessi: Extract<ComponenteQuadro, { altroIstituto: false }>[] = [];
+    const altri: ComponenteQuadro[] = [];
+    for (const r of righe) {
+      const capo: boolean = r.squadra_ruolo === "capo" && capitano === null;
+      const c: ComponenteQuadro = daAltroIstituto(r)
+        ? { altroIstituto: true, capitano: capo }
+        : {
+            altroIstituto: false,
+            id: String(r.id ?? ""),
+            nome: String(r.nome ?? "").trim(),
+            cognome: String(r.cognome ?? "").trim(),
+            classe: String(r.classe ?? "").trim(),
+            capitano: capo,
+            confermata: r.stato === "confermata",
+            stato: String(r.stato ?? ""),
+          };
+      if (capo) capitano = c;
+      else if (c.altroIstituto) altri.push(c);
+      else stessi.push(c);
+    }
+    stessi.sort(perNome);
+
+    const p = Array.isArray(s.licei_progetti) ? s.licei_progetti[0] : s.licei_progetti;
+    const progetto = p
+      ? { stato: String(p.stato ?? "bozza"), titolo: String(p.titolo ?? "").trim(), finalista: p.finalista === true }
+      : null;
+    const n = righe.length;
+    // Il badge dice una cosa sola, la piu avanzata. Il minimo conta finche
+    // il progetto non e consegnato: dopo non c'e piu niente da sistemare.
+    const stato: StatoSquadraQuadro = progetto?.finalista
+      ? "finalista"
+      : progetto?.stato === "consegnato"
+        ? "consegnato"
+        : progetto?.stato === "ritirato"
+          ? "ritirato"
+          : n < SQUADRA_MIN
+            ? "sotto_minimo"
+            : "bozza";
+
+    vistaSquadre.push({
+      id: s.id,
+      nome: String(s.nome ?? "").trim(),
+      created_at: s.created_at ?? null,
+      progetto,
+      capitano,
+      membri: [...stessi, ...altri],
+      n,
+      sottoMinimo: stato === "sotto_minimo",
+      stato,
+    });
+  }
+  vistaSquadre.sort(
+    (a, b) =>
+      (a.created_at ?? "￿").localeCompare(b.created_at ?? "￿") || a.nome.localeCompare(b.nome, "it"),
+  );
+
+  // I numeri e chi e rimasto fuori: solo gli studenti del proprio istituto.
+  let confermati = 0;
+  let inSquadra = 0;
+  let inAttesa = 0;
+  const senza = new Map<string, StudenteSenzaSquadra[]>();
+  for (const r of iscrizioni) {
+    if (daAltroIstituto(r) || !passa(r.classe)) continue;
+    if (r.stato === "confermata") {
+      confermati += 1;
+      if (r.squadra_id) {
+        inSquadra += 1;
+        continue;
+      }
+      const chiave = normalizzaClasse(r.classe);
+      senza.set(chiave, [
+        ...(senza.get(chiave) ?? []),
+        {
+          id: String(r.id ?? ""),
+          nome: String(r.nome ?? "").trim(),
+          cognome: String(r.cognome ?? "").trim(),
+          classe: String(r.classe ?? "").trim(),
+          maiEntrato: !haFattoAccesso(r),
+          lezioniCompletate: r.lezioni_completate ?? 0,
+        },
+      ]);
+    } else if (r.stato === "in_attesa" && !r.squadra_id) {
+      inAttesa += 1;
+    }
+  }
+
+  // Le classi in ordine, quella non indicata in fondo.
+  const senzaSquadra: ClasseSenzaSquadra[] = [...senza.entries()]
+    .sort(([a], [b]) =>
+      a === "" || b === ""
+        ? Number(a === "") - Number(b === "")
+        : a.localeCompare(b, "it", { numeric: true }),
+    )
+    .map(([chiave, studenti]) => ({
+      chiave,
+      etichetta: chiave ? etichetta(chiave) : "",
+      studenti: studenti.sort(perNome),
+    }));
+
+  return {
+    squadre: vistaSquadre,
+    senzaSquadra,
+    inAttesa,
+    numeri: {
+      squadre: vistaSquadre.length,
+      confermati,
+      inSquadra,
+      senzaSquadra: confermati - inSquadra,
+      sottoMinimo: vistaSquadre.filter((s) => s.sottoMinimo).length,
+    },
+  };
 }
 
 /* ── Progetti ─────────────────────────────────────────────────────────── */

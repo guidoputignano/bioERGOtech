@@ -50,6 +50,32 @@ export function normalizzaCodice(v: string): string {
   return pulito;
 }
 
+/**
+ * La classe come chiave di confronto: "4^ A", "4°a", "IV A" e "4-A" sono la
+ * stessa classe, "4A".
+ *
+ * La classe la scrive lo studente, a testo libero, e ognuno la scrive a modo
+ * suo. Serve per filtrare e raggruppare nella console dei docenti, e solo a
+ * quello: il dato salvato resta com'e stato scritto, e la console mostra
+ * quello. Non e mai un confine di visibilita: uno studente con la classe
+ * scritta male finirebbe fuori dalla vista del suo docente.
+ *
+ * Maiuscolo, senza spazi, punti, trattini (anche quelli tipografici, da
+ * U+2010 a U+2015) e segni di ordinale (^, °, ª, º); i numeri romani III,
+ * IV e V in testa diventano 3, 4 e 5. Il romano si converte solo se dopo
+ * viene una lettera o niente: "VB" e una quinta, ma non si inventa una
+ * classe da una parola qualsiasi.
+ */
+export function normalizzaClasse(v: string | null | undefined): string {
+  const pulita = String(v ?? "")
+    .toUpperCase()
+    .replace(/[\s.^°ºª\-\u2010-\u2015]/g, "");
+  const romano = /^(III|IV|V)(?=[A-Z]|$)/.exec(pulita);
+  if (!romano) return pulita;
+  const arabo = { III: "3", IV: "4", V: "5" }[romano[1] as "III" | "IV" | "V"];
+  return arabo + pulita.slice(romano[1].length);
+}
+
 export function validateIscrizione(input: Partial<IscrizioneInput>): string | null {
   if (input.website && input.website.trim() !== "") return "Richiesta non valida.";
 

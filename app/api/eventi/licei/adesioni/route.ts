@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { utenteCorrente } from "@/lib/eventi/bando-server";
-import { leggiConfigLicei, liceiAdminClient, verificaAdesioniAperte } from "@/lib/eventi/licei-server";
+import {
+  erroreSchemaMancante,
+  leggiConfigLicei,
+  liceiAdminClient,
+  verificaAdesioniAperte,
+} from "@/lib/eventi/licei-server";
 import {
   generateCodiceAdesione,
   normalizzaMeccanografico,
@@ -91,6 +96,7 @@ export async function POST(request: Request) {
     // fase, e nessun dato di minori entra nel database.
     let userId: string | null = utente.id;
     let setPasswordUrl: string | undefined;
+    let accountNuovo = false;
 
     if (!userId) {
       const { data: profilo } = await client
@@ -114,6 +120,7 @@ export async function POST(request: Request) {
           );
         }
         userId = creato.user.id;
+        accountNuovo = true;
 
         const { data: link } = await client.auth.admin.generateLink({
           type: "recovery",
@@ -121,6 +128,45 @@ export async function POST(request: Request) {
           options: { redirectTo: `${SITE_URL}/auth/update-password` },
         });
         setPasswordUrl = link?.properties?.action_link;
+      }
+    }
+
+    // ── Un account, un istituto ──
+    // Il modulo e pubblico e lega l'account trovato per email. Un'adesione
+    // nuova per un account gia referente o docente del progetto di un altro
+    // istituto gli farebbe rispondere 409 dalla guardia dei docenti: chiunque
+    // conosca l'email di un docente potrebbe togliergli l'accesso alla sua
+    // scuola. Lo staff passa, come sempre; il caso vero, un docente che segue
+    // due scuole, lo sistemiamo a mano.
+    if (!esistente && !utente.staff && userId && !accountNuovo) {
+      const [comeReferente, comeDocente] = await Promise.all([
+        client.from("licei_adesioni").select("id").eq("user_id", userId).limit(1),
+        client
+          .from("licei_docenti")
+          .select("id")
+          .eq("user_id", userId)
+          .in("stato", ["invitato", "attivo"])
+          .limit(1),
+      ]);
+      const erroreLegami = [
+        comeReferente.error,
+        erroreSchemaMancante(comeDocente.error, "tabella") ? null : comeDocente.error,
+      ].find((e) => e);
+      if (erroreLegami) {
+        console.error("Licei adesione: controllo account fallito:", erroreLegami.message);
+        return NextResponse.json(
+          { error: "Non è stato possibile registrare l'adesione. Riprova." },
+          { status: 500 },
+        );
+      }
+      if ((comeReferente.data ?? []).length > 0 || (!comeDocente.error && (comeDocente.data ?? []).length > 0)) {
+        return NextResponse.json(
+          {
+            error:
+              "Non è possibile registrare l'adesione con questa email del referente. Scrivi a info@bioergotech.org e sistemiamo noi.",
+          },
+          { status: 409 },
+        );
       }
     }
 
@@ -190,9 +236,21 @@ export async function POST(request: Request) {
       codice = esistente.codice;
       // stato e note_staff restano fuori: una modifica del referente non
       // azzera il lavoro di verifica gia fatto dallo staff.
+      //
+      // E resta fuori anche user_id. Quando lo staff corregge dal modulo
+      // pubblico l'adesione di una scuola, `userId` e l'account dello staff:
+      // scriverlo qui toglieva l'accesso al referente vero e lo dava allo
+      // staff, in silenzio. Il proprietario si sceglie all'inserimento; in
+      // un aggiornamento si completa solo se manca, e solo se chi scrive non
+      // e lo staff. Il cambio di referente resta un'operazione a mano.
+      const { user_id: userIdNuovo, ...rigaSenzaUtente } = riga;
+      const aggiornamento =
+        !esistente.user_id && !utente.staff && userIdNuovo
+          ? { ...rigaSenzaUtente, user_id: userIdNuovo }
+          : rigaSenzaUtente;
       const { error: erroreUpdate } = await client
         .from("licei_adesioni")
-        .update(riga)
+        .update(aggiornamento)
         .eq("id", esistente.id);
       if (erroreUpdate) {
         console.error("Licei adesione update error:", erroreUpdate);
@@ -218,7 +276,7 @@ export async function POST(request: Request) {
         }
         console.error("Licei adesione insert error:", erroreInsert);
         return NextResponse.json(
-          { error: "Non e stato possibile registrare l'adesione. Riprova." },
+          { error: "Non è stato possibile registrare l'adesione. Riprova." },
           { status: 500 },
         );
       }

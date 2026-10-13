@@ -15,10 +15,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  AVVISO_RIFLESSIONI_OGGETTO,
+  AVVISO_RIFLESSIONI_TESTO,
+  INFORMATIVA_STUDENTI_PATH,
+  SITE_URL,
   STATI_ADESIONE,
   statoAdesioneColore,
   statoAdesioneLabel,
+  statoDocenteColore,
+  statoDocenteLabel,
 } from "../content";
+// Solo i tipi: i moduli sono del server.
+import type { DocenteProgettoVista } from "@/lib/eventi/licei-docenti";
+import type { StatoAvvisoRiflessioni } from "@/lib/eventi/licei-server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Adesione = any;
@@ -31,6 +40,18 @@ type ProgressoIstituto = {
   /** Non arriva piu da SQL: dipende anche dalle lezioni consegnate. */
   mai_entrati: number;
 };
+
+/** I docenti del progetto di tutti gli istituti, come li manda la rotta. */
+type DocentiStaff = {
+  /** Falso prima della migrazione 20261215000000. */
+  disponibile: boolean;
+  /** La tabella c'e, ma la lettura e fallita. */
+  errore: boolean;
+  per_adesione: Record<string, DocenteProgettoVista[]>;
+};
+
+const dataBreve = (iso: string | null): string =>
+  iso ? new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" }) : "";
 
 /** Una riga di `licei_iscrizioni_stats()`: gli studenti veri di un istituto. */
 type IscrizioniStat = {
@@ -56,6 +77,176 @@ const STATI_RACCOLTA = [
   { value: "chiuse", label: "Chiuse" },
 ] as const;
 
+const dataOra = (iso: string): string =>
+  new Date(iso).toLocaleString("it-IT", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+/**
+ * L'avviso una tantum agli studenti: da ora i docenti dell'istituto leggono
+ * riflessioni e domande delle consegne salvate dopo l'avviso nel box della
+ * lezione. Parte una volta sola, e il bottone resta spento finche manca la
+ * migrazione: annuncerebbe una funzione che non c'e ancora. Lo staff legge
+ * qui il testo esatto prima di premere.
+ */
+export function AvvisoRiflessioni({
+  stato,
+  onAggiornato,
+}: {
+  stato: StatoAvvisoRiflessioni | null;
+  onAggiornato: (s: StatoAvvisoRiflessioni) => void;
+}) {
+  const [inviando, setInviando] = useState(false);
+  const [messaggio, setMessaggio] = useState<{ testo: string; errore: boolean } | null>(null);
+
+  if (!stato) return null;
+
+  const invia = async () => {
+    if (
+      !window.confirm(
+        `Inviare l'avviso sulle riflessioni a ${stato.iscritti} iscritti (confermati e in attesa)? Si può inviare una volta sola.`,
+      )
+    ) {
+      return;
+    }
+    setInviando(true);
+    setMessaggio(null);
+    try {
+      const res = await fetch("/api/eventi/licei/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ azione: "avviso_riflessioni" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const esito = { destinatari: data.destinatari ?? 0, inviate: data.inviate ?? 0, fallite: data.fallite ?? 0 };
+        onAggiornato({ ...stato, inviato_at: data.inviato_at ?? new Date().toISOString(), esito });
+        setMessaggio({
+          testo: `Inviato: ${esito.inviate} email partite su ${esito.destinatari}${
+            esito.fallite > 0 ? `, ${esito.fallite} non riuscite (i dettagli sono nei log)` : ""
+          }.`,
+          errore: false,
+        });
+        return;
+      }
+      // Gia inviato da un altro, nel frattempo: il pannello lo mostra.
+      if (res.status === 409 && data.inviato_at) {
+        onAggiornato({ ...stato, inviato_at: data.inviato_at });
+      }
+      if (data.colonna === "assente") onAggiornato({ ...stato, colonna: "assente" });
+      setMessaggio({ testo: data.error || "Invio non riuscito.", errore: true });
+    } catch {
+      setMessaggio({ testo: "Invio non riuscito: controlla la connessione e riprova.", errore: true });
+    } finally {
+      setInviando(false);
+    }
+  };
+
+  const informativaUrl = `${SITE_URL}${INFORMATIVA_STUDENTI_PATH}`;
+
+  return (
+    <div className="card" style={{ padding: 18 }}>
+      <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: 4 }}>
+        <h2 className="font-semibold text-gray-800" style={{ fontSize: 15, margin: 0 }}>
+          Avviso agli studenti sulle riflessioni
+        </h2>
+        {stato.inviato_at ? (
+          <span className="badge" style={{ background: "#0A7A661A", color: "#0A7A66" }}>
+            Inviato
+          </span>
+        ) : (
+          <span className="badge" style={{ background: "#8A61001A", color: "#8A6100" }}>
+            Non ancora inviato
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, marginBottom: 12 }}>
+        I docenti dell&apos;istituto leggono riflessione e domanda delle sole consegne salvate dopo
+        l&apos;avviso nel box della lezione; le precedenti e i commenti restano allo staff. Questa
+        email lo comunica a tutti gli iscritti, confermati e in attesa. Parte una volta sola.
+      </p>
+
+      {stato.inviato_at ? (
+        <p className="text-sm" style={{ color: "var(--text-dark)", lineHeight: 1.7, margin: "0 0 12px" }}>
+          Inviato il {dataOra(stato.inviato_at)}
+          {stato.esito
+            ? `: ${stato.esito.inviate} email partite su ${stato.esito.destinatari}${
+                stato.esito.fallite > 0 ? `, ${stato.esito.fallite} non riuscite (i dettagli sono nei log)` : ""
+              }.`
+            : "."}
+        </p>
+      ) : stato.colonna === "assente" ? (
+        <p className="text-sm" style={{ color: "#8A6100", lineHeight: 1.7, margin: "0 0 12px" }}>
+          Prima applica la migrazione 20261215000000: senza la colonna condivisa_referente_at
+          l&apos;avviso annuncerebbe una funzione non ancora attiva.
+        </p>
+      ) : stato.colonna === "errore" ? (
+        <p className="text-sm" style={{ color: "#B44A5E", lineHeight: 1.7, margin: "0 0 12px" }}>
+          Non è stato possibile verificare la migrazione: ricarica il pannello.
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: 12 }}>
+          <Button type="button" disabled={inviando || stato.iscritti === 0} onClick={invia}>
+            <i className="fas fa-envelope" style={{ marginRight: 8 }} />
+            {inviando ? "Invio in corso…" : "Invia avviso sulle riflessioni"}
+          </Button>
+          <span style={{ fontSize: 12.5, color: "var(--text-light)" }}>
+            {stato.iscritti === 0
+              ? "Nessuno studente iscritto per ora."
+              : `${stato.iscritti} iscritti, un'email per indirizzo.`}
+          </span>
+        </div>
+      )}
+
+      {messaggio && (
+        <p
+          style={{
+            color: messaggio.errore ? "#E74C6F" : "#0A7A66",
+            fontSize: 13.5,
+            margin: "0 0 12px",
+            lineHeight: 1.6,
+          }}
+        >
+          {messaggio.testo}
+        </p>
+      )}
+
+      <details className="text-sm text-gray-600">
+        <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text-dark)" }}>
+          Il testo dell&apos;email
+        </summary>
+        <div
+          style={{
+            marginTop: 10,
+            background: "var(--bg-light)",
+            borderRadius: 10,
+            padding: "12px 14px",
+            lineHeight: 1.7,
+          }}
+        >
+          <p style={{ margin: "0 0 8px" }}>
+            <strong>Oggetto:</strong> {AVVISO_RIFLESSIONI_OGGETTO}
+          </p>
+          <p style={{ margin: "0 0 8px" }}>Ciao (nome dello studente),</p>
+          <p style={{ margin: "0 0 8px" }}>{AVVISO_RIFLESSIONI_TESTO.apertura}</p>
+          <p style={{ margin: "0 0 8px", overflowWrap: "anywhere" }}>
+            {AVVISO_RIFLESSIONI_TESTO.informativa}{" "}
+            <a href={informativaUrl} target="_blank" rel="noreferrer" style={{ color: "var(--primary-dark)" }}>
+              {informativaUrl}
+            </a>
+            .
+          </p>
+          <p style={{ margin: 0 }}>{AVVISO_RIFLESSIONI_TESTO.dubbi}</p>
+        </div>
+      </details>
+    </div>
+  );
+}
+
 function Riga({ label, children }: { label: string; children: React.ReactNode }) {
   if (children === null || children === undefined || children === "") return null;
   return (
@@ -78,6 +269,8 @@ export function LiceiAdminPanel() {
   const [iscrizioni, setIscrizioni] = useState<Record<string, IscrizioniStat>>({});
   const [progresso, setProgresso] = useState<Record<string, ProgressoIstituto>>({});
   const [totaleLezioni, setTotaleLezioni] = useState(0);
+  const [docenti, setDocenti] = useState<DocentiStaff>({ disponibile: false, errore: false, per_adesione: {} });
+  const [avvisoRiflessioni, setAvvisoRiflessioni] = useState<StatoAvvisoRiflessioni | null>(null);
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -103,6 +296,8 @@ export function LiceiAdminPanel() {
       setIscrizioni(perAdesione);
       setProgresso(data.progresso ?? {});
       setTotaleLezioni(data.totale_lezioni ?? 0);
+      setDocenti(data.docenti ?? { disponibile: false, errore: false, per_adesione: {} });
+      setAvvisoRiflessioni(data.avviso_riflessioni ?? null);
       const mappa: Record<string, string> = {};
       for (const c of data.config ?? []) mappa[c.chiave] = c.valore ?? "";
       setConfig(mappa);
@@ -131,6 +326,42 @@ export function LiceiAdminPanel() {
       setRows((prev) => prev.map((r) => (r.id === id ? data.adesione : r)));
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Salvataggio non riuscito.");
+    } finally {
+      setSalvando(null);
+    }
+  };
+
+  // Revoca di un docente del progetto, per esempio su richiesta
+  // dell'istituto. Ha effetto alla sua richiesta successiva.
+  const revocaDocente = async (d: DocenteProgettoVista) => {
+    if (
+      !window.confirm(
+        `Revocare l'accesso di ${d.nome} ${d.cognome}? Da subito non vedrà più i dati degli studenti dell'istituto.`,
+      )
+    ) {
+      return;
+    }
+    setSalvando(d.id);
+    setErrore(null);
+    try {
+      const res = await fetch("/api/eventi/licei/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ azione: "revoca_docente", id: d.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Revoca non riuscita.");
+      setDocenti((prima) => {
+        const per_adesione: Record<string, DocenteProgettoVista[]> = {};
+        for (const [k, v] of Object.entries(prima.per_adesione)) {
+          per_adesione[k] = v.map((x) =>
+            x.id === d.id ? { ...x, stato: "revocato", revocato_at: new Date().toISOString(), rimanda_dal: null } : x,
+          );
+        }
+        return { ...prima, per_adesione };
+      });
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Revoca non riuscita.");
     } finally {
       setSalvando(null);
     }
@@ -314,6 +545,9 @@ export function LiceiAdminPanel() {
           </label>
         </div>
       </div>
+
+      {/* L'avviso agli studenti sulle riflessioni lette dai docenti. */}
+      <AvvisoRiflessioni stato={avvisoRiflessioni} onAggiornato={setAvvisoRiflessioni} />
 
       {/* Conteggi. La prima riga sono gli istituti e le previsioni che hanno
           dichiarato aderendo. La seconda sono gli studenti veri: fino a che
@@ -509,6 +743,66 @@ export function LiceiAdminPanel() {
                     {r.referente_materia ? `, ${r.referente_materia}` : ""} . {r.referente_email} .{" "}
                     {r.referente_telefono}
                   </Riga>
+                  {/* I docenti del progetto indicati dal referente. Lo
+                      staff li vede tutti, revocati compresi, e li revoca
+                      quando l'istituto scrive che non e corretto. */}
+                  <div style={{ display: "flex", gap: 14, padding: "9px 0", borderTop: "1px solid var(--border-color)" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-light)", width: 190, flexShrink: 0 }}>
+                      Docenti del progetto
+                    </span>
+                    <div style={{ fontSize: 13.5, color: "var(--text-dark)", lineHeight: 1.6, flex: 1, minWidth: 0 }}>
+                      {!docenti.disponibile ? (
+                        <span style={{ color: "var(--text-light)" }}>
+                          {docenti.errore
+                            ? "Lettura non riuscita: ricarica il pannello."
+                            : "Funzione in attivazione: manca la migrazione 20261215000000."}
+                        </span>
+                      ) : (docenti.per_adesione[r.id] ?? []).length === 0 ? (
+                        <span style={{ color: "var(--text-light)" }}>Nessuno indicato.</span>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {(docenti.per_adesione[r.id] ?? []).map((d) => (
+                            <div key={d.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                              <span style={{ flex: "1 1 260px", minWidth: 0, overflowWrap: "anywhere" }}>
+                                {d.nome} {d.cognome} . {d.email}
+                                {d.classi.length > 0 ? ` . classi ${d.classi.join(", ")}` : ""}
+                                <span style={{ display: "block", fontSize: 11.5, color: "var(--text-light)" }}>
+                                  Indicato il {dataBreve(d.invitato_at)}
+                                  {d.stato === "revocato"
+                                    ? ` . revocato il ${dataBreve(d.revocato_at)}`
+                                    : d.istruzioni_accettate_at
+                                      ? ` . istruzioni accettate il ${dataBreve(d.istruzioni_accettate_at)}`
+                                      : " . istruzioni non ancora accettate"}
+                                </span>
+                              </span>
+                              <span
+                                className="badge"
+                                style={{
+                                  background: `${statoDocenteColore(d.stato)}1A`,
+                                  color: statoDocenteColore(d.stato),
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {statoDocenteLabel(d.stato)}
+                              </span>
+                              {d.stato !== "revocato" && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={salvando === d.id}
+                                  onClick={() => revocaDocente(d)}
+                                  style={{ color: "#B44A5E" }}
+                                >
+                                  Revoca
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <Riga label="Studenti iscritti davvero">
                     {iscrizioni[r.id]
                       ? `${iscrizioni[r.id].iscritti} iscritti . ${iscrizioni[r.id].confermate} confermati dal referente . ${iscrizioni[r.id].in_attesa} da confermare${

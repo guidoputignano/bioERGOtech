@@ -23,7 +23,19 @@ interface Submission {
   replied_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Percorso licei: saved after the notice, so the school's teachers read it. */
+  condivisa_referente_at?: string | null;
 }
+
+/**
+ * Percorso licei only. What the student reads before writing: reflection and
+ * question are also read by the teachers of their school. Shown only when
+ * the server says the student is enrolled (`avviso_referente`), and the
+ * submission is shared only when this was on screen. Italian, like the rest
+ * of the licei programme.
+ */
+const AVVISO_REFERENTE_TESTO =
+  "Quello che scrivi in Riflessione e Domanda lo leggono lo staff della Fondazione e i docenti del tuo istituto che seguono il percorso. Il commento lo legge solo lo staff. Per qualcosa che vuoi dire solo alla Fondazione scrivi a info@bioergotech.org.";
 
 interface Props {
   lessonSlug: string;
@@ -49,12 +61,15 @@ export default function LessonSubmissionBox({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  // Licei students only: `{ istituto }` when the notice must be shown.
+  const [avviso, setAvviso] = useState<{ istituto: string } | null>(null);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) { setLoading(false); return; }
     try {
       const res = await fetch(`/api/courses/submissions?lesson_slug=${lessonSlug}`);
       const data = await res.json();
+      setAvviso(data.avviso_referente ?? null);
       if (data.submission) {
         setExisting(data.submission);
         setReflection(data.submission.reflection ?? "");
@@ -83,7 +98,17 @@ export default function LessonSubmissionBox({
       const res = await fetch("/api/courses/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lesson_slug: lessonSlug, lesson_title: lessonTitle, reflection, question, comment }),
+        body: JSON.stringify({
+          lesson_slug: lessonSlug,
+          lesson_title: lessonTitle,
+          reflection,
+          question,
+          comment,
+          // Sent only when the notice is on screen: the form below shows it
+          // whenever `avviso` is set, and this runs only from that form. The
+          // server checks the enrolment again before sharing anything.
+          ...(avviso ? { avviso_referente: true } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to save"); return; }
@@ -154,7 +179,7 @@ export default function LessonSubmissionBox({
         </div>
       )}
 
-      {/* Existing submission — read view */}
+      {/* Existing submission: read view */}
       {isAuthenticated && !loading && existing && !editing && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -169,6 +194,18 @@ export default function LessonSubmissionBox({
               {new Date(existing.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </span>
           </div>
+
+          {/* Percorso licei: who can read this submission. */}
+          {(avviso || existing.condivisa_referente_at) && (
+            <p lang="it" style={{ fontSize: 12.5, color: TEXT_MID, margin: "-8px 0 18px", lineHeight: 1.6 }}>
+              <strong style={{ color: existing.condivisa_referente_at ? TEAL_DARK : TEXT }}>
+                {existing.condivisa_referente_at
+                  ? "Visibile anche ai docenti del tuo istituto"
+                  : "Visibile solo allo staff"}
+              </strong>
+              {existing.condivisa_referente_at && existing.comment ? ". Il commento lo legge solo lo staff." : ""}
+            </p>
+          )}
 
           {existing.reflection && (
             <SubmissionField label="Reflection" value={existing.reflection} color={TEAL} />
@@ -203,18 +240,32 @@ export default function LessonSubmissionBox({
         </div>
       )}
 
-      {/* Form — new or editing */}
+      {/* Form: new or editing */}
       {isAuthenticated && !loading && showForm && (
         <div>
+          {avviso && (
+            <div
+              lang="it"
+              role="note"
+              style={{ marginBottom: 16, padding: "12px 16px", background: TEAL_LIGHT, border: `1px solid ${TEAL}`, borderRadius: 8, fontSize: 13.5, color: NAVY, lineHeight: 1.6 }}
+            >
+              <strong style={{ display: "block", color: TEAL_DARK, marginBottom: 4 }}>
+                Chi legge quello che scrivi
+                {avviso.istituto && <span style={{ fontWeight: 400, color: TEXT_MID }}> . {avviso.istituto}</span>}
+              </strong>
+              {AVVISO_REFERENTE_TESTO}
+            </div>
+          )}
+
           {existing && (
             <div style={{ marginBottom: 16, padding: "10px 14px", background: "#EBF8FF", borderRadius: 8, fontSize: 13, color: "#2B6CB0" }}>
-              ✏️ You are editing your existing submission. The team's reply will be preserved.
+              ✏️ You are editing your existing submission. The team&apos;s reply will be preserved.
             </div>
           )}
 
           <FormField
             label="Reflection"
-            placeholder="Write your reflection on this lesson — what stood out to you, what confirmed or challenged your thinking, what you want to explore further..."
+            placeholder="Write your reflection on this lesson: what stood out to you, what confirmed or challenged your thinking, what you want to explore further..."
             value={reflection}
             onChange={setReflection}
             color={TEAL}
@@ -222,14 +273,14 @@ export default function LessonSubmissionBox({
           />
           <FormField
             label="Question"
-            placeholder="Any question you want your mentor to answer — technical, conceptual, or about your specific project..."
+            placeholder="Any question you want the bioERGOtech team to answer: technical, conceptual, or about your specific project..."
             value={question}
             onChange={setQuestion}
             color="#4A7DFF"
           />
           <FormField
             label="Comment or Note"
-            placeholder="Anything else — feedback on the lesson, something you want to flag, a thought that doesn't fit elsewhere..."
+            placeholder="Anything else: feedback on the lesson, something you want to flag, a thought that doesn't fit elsewhere..."
             value={comment}
             onChange={setComment}
             color="#9B59B6"
@@ -274,7 +325,7 @@ export default function LessonSubmissionBox({
             )}
           </div>
           <p style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 10 }}>
-            All fields are optional — fill in whichever are relevant to you.
+            All fields are optional. Fill in whichever are relevant to you.
           </p>
         </div>
       )}
