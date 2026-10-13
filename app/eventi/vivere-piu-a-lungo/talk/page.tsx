@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { EVENT } from "../content";
 import { LICEI_PATH } from "../licei/content";
 import { UNIVERSITA_PATH } from "../universita/content";
-import { VoltoRelatore } from "./Relatore";
+import { RitrattoRelatore, VoltoRelatore } from "./Relatore";
 import { STILE_TALK } from "./stile";
 import {
   SITE_URL,
@@ -27,6 +27,9 @@ import {
  * L'ordine dipende dalla data, quindi la pagina si rigenera ogni ora invece
  * di restare ferma al giorno del deploy. Nessun dato di chi la guarda: per
  * iscriversi si apre la pagina del talk.
+ *
+ * Nella scheda di un talk il relatore ha un ritratto medio se c'e la foto
+ * (`relatore.foto`), altrimenti il monogramma nel cerchio.
  */
 
 export const revalidate = 3600;
@@ -71,8 +74,18 @@ function SchedaTalk({ t, passato }: { t: Talk; passato: boolean }) {
         </h3>
         <p style={{ fontSize: 14.5, color: "var(--text-mid)", lineHeight: 1.65, margin: 0 }}>{t.sottotitolo}</p>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <VoltoRelatore nome={t.relatore.nome} iniziali={iniziali(t.relatore.nome)} foto={t.relatore.foto} dimensione={52} />
+      <div style={{ display: "flex", alignItems: "center", gap: t.relatore.foto ? 16 : 12 }}>
+        {t.relatore.foto ? (
+          <RitrattoRelatore
+            nome={t.relatore.nome}
+            foto={t.relatore.foto}
+            sizes="(min-width: 480px) 136px, 104px"
+            raggio={18}
+            className="tk-ritratto-medio"
+          />
+        ) : (
+          <VoltoRelatore nome={t.relatore.nome} iniziali={iniziali(t.relatore.nome)} foto={null} dimensione={52} />
+        )}
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-dark)", lineHeight: 1.3 }}>{t.relatore.nome}</div>
           <div style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.5 }}>{t.relatore.ruolo}</div>

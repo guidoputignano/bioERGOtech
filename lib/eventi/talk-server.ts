@@ -22,7 +22,13 @@ import {
   requireDocente,
   type ErroreDb,
 } from "@/lib/eventi/licei-server";
-import { talkConcluso, type Talk } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
+import { googleCalendarUrl } from "@/lib/eventi/talk";
+import {
+  SITE_URL,
+  talkConcluso,
+  talkPath,
+  type Talk,
+} from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = SupabaseClient<any, "public", any>;
@@ -352,6 +358,12 @@ export type StatoTalk = {
   iscritto: boolean;
   /** Il link della riunione: solo a chi e iscritto e ancora idoneo. */
   link: string | null;
+  /**
+   * Il link "aggiungi a Google Calendar", costruito qui con il link della
+   * riunione dentro (se c'e gia): solo a chi e iscritto e ancora idoneo,
+   * come `link`. Il riquadro mostra il calendario solo con questo.
+   */
+  calendarioGoogle: string | null;
   /** Solo se il talk ha una capienza. */
   posti: { capienza: number; liberi: number } | null;
   /** Solo per lo staff: tutti gli iscritti al talk. */
@@ -361,8 +373,34 @@ export type StatoTalk = {
 };
 
 /** Un link si mostra solo se e un indirizzo web vero: niente `javascript:` per sbaglio. */
-const linkSicuro = (v: string | null): string | null =>
+export const linkSicuro = (v: string | null): string | null =>
   v && /^https:\/\/\S+$/i.test(v.trim()) ? v.trim() : null;
+
+/** La URL pubblica della pagina del talk, quella che il calendario cita. */
+const urlTalk = (talk: Talk): string => `${SITE_URL}${talkPath(talk.slug)}`;
+
+/**
+ * Il link della riunione per chi chiama, o null. Le stesse condizioni di
+ * `statoTalk` e della rotta dell'iscrizione: link impostato e `https`,
+ * accesso fatto, tabella presente, iscrizione a questo talk e idoneita
+ * ancora valida. Lo usa il file .ics, che solo cosi contiene il link.
+ *
+ * Le letture si fanno solo se il link c'e: finche e null il file e quello
+ * pubblico per tutti, senza toccare il database.
+ */
+export async function linkPerIscritto(
+  db: Db,
+  talk: Talk,
+  utente: { id: string | null; staff: boolean },
+): Promise<string | null> {
+  const link = linkSicuro(talk.link);
+  if (!link || !utente.id) return null;
+  const conteggio = await contaIscritti(db, talk.slug);
+  if (!conteggio.presente) return null;
+  if (!(await giaIscritto(db, talk.slug, utente.id))) return null;
+  const idoneita = await idoneitaTalk(db, utente.id, utente.staff);
+  return idoneita.idoneo ? link : null;
+}
 
 /**
  * Lo stato di un talk per chi chiama. `utente` e la sessione gia letta
@@ -395,6 +433,7 @@ export async function statoTalk(
     ruolo: null,
     iscritto: false,
     link: null,
+    calendarioGoogle: null,
     posti,
   };
   if (!utente.id) return base;
@@ -404,7 +443,10 @@ export async function statoTalk(
   if (!conteggio.presente) return stato;
 
   stato.iscritto = await giaIscritto(db, talk.slug, utente.id);
-  if (stato.iscritto && stato.idoneo) stato.link = linkSicuro(talk.link);
+  if (stato.iscritto && stato.idoneo) {
+    stato.link = linkSicuro(talk.link);
+    stato.calendarioGoogle = googleCalendarUrl(talk, urlTalk(talk), stato.link);
+  }
   if (utente.staff) stato.iscritti = conteggio.totale;
 
   if (idoneita.ruolo === "docente") {

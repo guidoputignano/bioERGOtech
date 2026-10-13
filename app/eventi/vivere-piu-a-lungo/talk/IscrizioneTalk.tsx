@@ -11,7 +11,14 @@
  * iscrivibile.
  *
  * Il link della riunione non e nelle props e non e nella pagina: arriva solo
- * dalla risposta della rotta, e solo a chi e iscritto.
+ * dalla risposta della rotta, e solo a chi e iscritto e ancora idoneo.
+ *
+ * Il calendario compare solo a chi e iscritto. Il link per Google Calendar
+ * lo costruisce il server e arriva nella stessa risposta
+ * (`calendarioGoogle`), con il link della riunione dentro; il file .ics lo
+ * contiene se la rotta riconosce un iscritto dalla sessione, che il browser
+ * manda con il download. Nessuno dei due si costruisce qui con dati della
+ * pagina.
  *
  * Importa i testi da `testi.ts` e mai da `content.ts`, che contiene il link:
  * vedi la nota in cima a quel file.
@@ -26,7 +33,6 @@ import type { StatoTalk } from "@/lib/eventi/talk-server";
 type Props = {
   slug: string;
   fine: string;
-  googleUrl: string;
   icsUrl: string;
   loginHref: string;
   liceiPath: string;
@@ -74,19 +80,20 @@ const linkTesto: React.CSSProperties = {
   fontFamily: "inherit",
 };
 
-/** Google Calendar e il file .ics. In evidenza dopo l'iscrizione, discreti prima. */
+/**
+ * Google Calendar e il file .ics, solo per chi e iscritto. `googleUrl` e
+ * quello che il server ha mandato a questo iscritto; senza, resta il .ics.
+ */
 function Calendario({
   googleUrl,
   icsUrl,
-  evidenza,
+  conLink,
 }: {
-  googleUrl: string;
+  googleUrl: string | null;
   icsUrl: string;
-  evidenza: boolean;
+  conLink: boolean;
 }) {
-  const stile: React.CSSProperties = evidenza
-    ? { ...pieno, padding: "11px 18px", fontSize: 13.5 }
-    : { ...pieno, padding: "9px 16px", fontSize: 13, borderWidth: 1.5 };
+  const stile: React.CSSProperties = { ...pieno, padding: "11px 18px", fontSize: 13.5 };
   return (
     <div>
       <div
@@ -95,20 +102,23 @@ function Calendario({
           fontWeight: 700,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: evidenza ? "#0A7A66" : "var(--text-light)",
+          color: "#0A7A66",
           margin: "0 0 8px",
         }}
       >
         {T.aggiungiCalendario}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="btn-outline" style={stile}>
-          <i className="fab fa-google" aria-hidden="true" /> {T.googleCalendar}
-        </a>
+        {googleUrl && (
+          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="btn-outline" style={stile}>
+            <i className="fab fa-google" aria-hidden="true" /> {T.googleCalendar}
+          </a>
+        )}
         <a href={icsUrl} className="btn-outline" style={stile} download>
           <i className="fas fa-calendar-plus" aria-hidden="true" /> {T.ics}
         </a>
       </div>
+      {conLink && <p style={{ ...nota, fontSize: 12.5, margin: "8px 0 0" }}>{T.calendarioConLink}</p>}
     </div>
   );
 }
@@ -116,7 +126,6 @@ function Calendario({
 export function IscrizioneTalk({
   slug,
   fine,
-  googleUrl,
   icsUrl,
   loginHref,
   liceiPath,
@@ -199,9 +208,6 @@ export function IscrizioneTalk({
         ) : (
           <p style={nota}>{T.caricamento}</p>
         )}
-        <div style={{ marginTop: 18 }}>
-          <Calendario googleUrl={googleUrl} icsUrl={icsUrl} evidenza={false} />
-        </div>
       </div>
     );
   }
@@ -211,8 +217,7 @@ export function IscrizioneTalk({
     return (
       <div style={box} aria-live="polite">
         <p style={titoloStato}>{T.nonDisponibile}</p>
-        <p style={{ ...nota, marginBottom: 18 }}>{T.nonDisponibileNota}</p>
-        <Calendario googleUrl={googleUrl} icsUrl={icsUrl} evidenza={false} />
+        <p style={nota}>{T.nonDisponibileNota}</p>
         {messaggioErrore}
       </div>
     );
@@ -225,8 +230,7 @@ export function IscrizioneTalk({
         <Link href={loginHref} className="btn-primary" style={pieno}>
           {T.accedi}
         </Link>
-        <p style={{ ...nota, margin: "10px 0 18px", textAlign: "center" }}>{T.accediNota}</p>
-        <Calendario googleUrl={googleUrl} icsUrl={icsUrl} evidenza={false} />
+        <p style={{ ...nota, margin: "10px 0 0", textAlign: "center" }}>{T.accediNota}</p>
       </div>
     );
   }
@@ -281,7 +285,7 @@ export function IscrizioneTalk({
           <p style={{ ...titoloStato, margin: 0 }}>{T.iscritto}</p>
         </div>
 
-        <Calendario googleUrl={googleUrl} icsUrl={icsUrl} evidenza />
+        <Calendario googleUrl={stato.calendarioGoogle} icsUrl={icsUrl} conLink={!!stato.link} />
 
         <div style={{ marginTop: 16 }}>
           {stato.link ? (
@@ -348,9 +352,7 @@ export function IscrizioneTalk({
           {stato.posti.liberi === 1 ? "Resta 1 posto." : `Restano ${stato.posti.liberi} posti.`}
         </p>
       )}
-      <div style={{ marginTop: 18 }}>
-        <Calendario googleUrl={googleUrl} icsUrl={icsUrl} evidenza={false} />
-      </div>
+      <p style={{ ...nota, margin: "6px 0 0", textAlign: "center" }}>{T.calendarioDopo}</p>
       {conteggioStaff}
       {messaggioErrore}
     </div>
