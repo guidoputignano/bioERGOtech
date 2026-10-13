@@ -1,87 +1,188 @@
 "use client";
 
 /**
- * Le consegne inviate prima dell'avviso: le possono leggere anche i docenti
- * dell'istituto? Lo sceglie lo studente, per se, sulla piattaforma.
+ * Le consegne inviate prima dell'avviso: le leggono anche i docenti
+ * dell'istituto, tre giorni dopo che la piattaforma lo segnala allo
+ * studente, a meno che lui dica di no. Con «Va bene», subito.
  *
- * Tre posti, la stessa domanda e la stessa scelta:
- * - `RiflessioniPassateCard`: la card nell'area dello studente, con la
- *   scelta in vigore e «Cambia scelta». Compare solo a chi ha almeno una
+ * Tre posti, lo stesso avviso e la stessa scelta:
+ * - `RiflessioniPassateCard`: la card nell'area dello studente, con lo
+ *   stato in vigore e «Cambia scelta». Compare solo a chi ha almeno una
  *   consegna di prima, o ha gia scelto;
  * - `RiflessioniPassatePagina`: la stessa card da sola, nella pagina del
  *   link che i docenti danno agli studenti (`RIFLESSIONI_STUDENTE_PATH`).
  *   Dove l'area non mostrerebbe niente, qui una frase e un link per tornare;
- * - `DomandaRiflessioniPassate` in versione compatta: il box della lezione
- *   la mostra una volta, sopra l'avviso, a chi non ha ancora scelto.
+ * - `AvvisoRiflessioniPassate` in versione compatta: il box della lezione
+ *   lo mostra, in qualsiasi lezione, a chi non ha ancora scelto, finche non
+ *   preme uno dei due bottoni. Passati i giorni di preavviso, con il testo
+ *   al presente.
+ *
+ * La prima volta che l'avviso e davvero a schermo (almeno a meta, per un
+ * secondo, con la scheda in primo piano), il componente lo dice al server
+ * (`{ azione: 'visto' }`): da li si contano i giorni di preavviso. Montato
+ * e basta non conta: il box sta in fondo alla lezione e la card in fondo
+ * all'area, e chi non ci arriva non l'ha visto. Una volta sola, e senza
+ * bloccare niente: se non riesce, l'avviso resta a schermo e lo si segnala
+ * alla prossima apertura. Prima di quella risposta la data mostrata e oggi
+ * piu i giorni di preavviso.
+ *
+ * Chi legge adesso le consegne di prima lo dice il server, con la sua ora
+ * (`visibili`): il browser non lo rifa con l'orologio del dispositivo, che
+ * puo essere indietro.
  *
  * Nessuna risposta e segnata in partenza: i due bottoni hanno lo stesso
- * peso, e finche lo studente non ne preme uno vale "restano allo staff".
- * La domanda e le etichette vengono da `content.ts`, le stesse che il
- * server congela con la scelta.
+ * aspetto. Testi da `content.ts`, gli stessi che il server congela.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  DOMANDA_RIFLESSIONI_PASSATE,
+  ESITO_RIFLESSIONI_PASSATE,
   ETICHETTE_RIFLESSIONI_PASSATE,
   LICEI_PATH,
   NOTA_RIFLESSIONI_PASSATE,
   STUDENTE_PATH,
   TITOLO_RIFLESSIONI_PASSATE,
+  testoAvvisoRiflessioniPassate,
+  visibiliDalRiflessioniPassate,
   type SceltaRiflessioniPassate,
 } from "../content";
 
 const ROTTA = "/api/eventi/licei/studente/riflessioni-passate";
 
-/** La scelta in vigore, come la usano i due posti. */
+/**
+ * Quando l'avviso conta come visto: almeno questa parte a schermo, per
+ * almeno questo tempo, con la scheda in primo piano.
+ */
+const SOGLIA_VISTO = 0.5;
+const PERMANENZA_VISTO_MS = 1000;
+
+/** Avviso e scelta in vigore, come li usano i tre posti. */
 export type StatoSceltaPassate = {
   scelta: SceltaRiflessioniPassate | null;
-  scelta_at: string | null;
+  /** Quando l'avviso e stato mostrato la prima volta; null se mai. */
+  avvisato_at: string | null;
+  /** Da quando, senza una scelta, i docenti leggono; null se mai mostrato. */
+  visibili_dal: string | null;
+  /**
+   * I docenti leggono adesso le consegne di prima? Lo dice il server, con
+   * la sua ora; assente solo se la risposta non lo porta.
+   */
+  visibili?: boolean;
 };
 
-const dataIt = (iso: string | null): string =>
-  iso ? new Date(iso).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
+/**
+ * Il box della lezione mostra l'avviso? Solo finche non c'e una scelta, e
+ * solo a chi ha almeno una consegna di prima. `rp` e `riflessioni_passate`
+ * della rotta delle consegne: null per chi non e del percorso, o quando la
+ * funzione non c'e.
+ */
+export const avvisoPassateNelBox = (
+  rp: { scelta?: unknown; riservate?: unknown } | null | undefined,
+): boolean => !!rp && rp.scelta == null && typeof rp.riservate === "number" && rp.riservate > 0;
 
-/** Registra la scelta. Solleva con il messaggio della rotta. */
-async function inviaScelta(scelta: SceltaRiflessioniPassate): Promise<StatoSceltaPassate> {
+/** Registra l'avviso visto o una scelta. Solleva con il messaggio della rotta. */
+async function invia(
+  corpo: { azione: "visto" } | { scelta: SceltaRiflessioniPassate },
+): Promise<StatoSceltaPassate> {
   const res = await fetch(ROTTA, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scelta }),
+    body: JSON.stringify(corpo),
   });
-  const corpo = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(corpo.error || "Non è stato possibile registrare la scelta.");
-  return { scelta: corpo.scelta, scelta_at: corpo.scelta_at ?? null };
+  const dati = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(dati.error || "Non è stato possibile registrare la scelta.");
+  return {
+    scelta: dati.scelta ?? null,
+    avvisato_at: dati.avvisato_at ?? null,
+    visibili_dal: dati.visibili_dal ?? null,
+    ...(typeof dati.visibili === "boolean" ? { visibili: dati.visibili } : {}),
+  };
 }
 
 /**
- * La domanda, i due bottoni e la scelta fatta. Registra da se e avvisa chi
- * la usa con `onCambio`. Non tocca nient'altro: nel box della lezione la
- * consegna si salva anche mentre questa e in corso, o se fallisce.
+ * L'avviso, i due bottoni e l'esito della scelta. Registra da se e avvisa
+ * chi lo usa con `onCambio`, che riceve solo i campi cambiati. Non tocca
+ * nient'altro: nel box della lezione la consegna si salva anche mentre una
+ * richiesta e in corso, o se fallisce.
  */
-export function DomandaRiflessioniPassate({
+export function AvvisoRiflessioniPassate({
   stato,
   onCambio,
   compatta = false,
 }: {
   stato: StatoSceltaPassate;
-  onCambio: (nuovo: StatoSceltaPassate) => void;
-  /** Nel box della lezione: piu piccola, con il link all'area. */
+  onCambio: (nuovo: Partial<StatoSceltaPassate>) => void;
+  /** Nel box della lezione: piu piccolo, con il link all'area. */
   compatta?: boolean;
 }) {
   const [cambia, setCambia] = useState(false);
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
+  const segnalato = useRef(false);
+  // Il testo dell'avviso e i due bottoni: e questo che deve essere a
+  // schermo perche l'avviso conti come visto.
+  const avvisoRef = useRef<HTMLDivElement>(null);
 
-  const chiedi = stato.scelta === null || cambia;
+  // L'avviso (prima o dopo la data) e a schermo finche non c'e una scelta,
+  // o dopo «Cambia scelta».
+  const mostraAvviso = stato.scelta === null || cambia;
+
+  // La prima volta che l'avviso e davvero a schermo e il server non lo sa
+  // ancora: almeno a meta nel viewport, per PERMANENZA_VISTO_MS di fila,
+  // con la scheda in primo piano. Montato fuori dallo schermo, o in una
+  // scheda in background, non conta. Senza IntersectionObserver non lo si
+  // puo sapere, e non si segnala: conta il clic su un bottone. Della
+  // risposta servono solo le date: la scelta, se nel frattempo e arrivata,
+  // resta quella del bottone.
+  useEffect(() => {
+    const el = avvisoRef.current;
+    if (!mostraAvviso || stato.avvisato_at || segnalato.current || !el) return;
+    if (typeof IntersectionObserver === "undefined") return;
+
+    let aSchermo = false;
+    let attesa: ReturnType<typeof setTimeout> | undefined;
+    const osservatore = new IntersectionObserver(
+      (voci) => {
+        const ultima = voci[voci.length - 1];
+        aSchermo = !!ultima && ultima.isIntersecting && ultima.intersectionRatio >= SOGLIA_VISTO;
+        ricontrolla();
+      },
+      { threshold: SOGLIA_VISTO },
+    );
+
+    function visibile() {
+      return aSchermo && document.visibilityState === "visible";
+    }
+    function ricontrolla() {
+      clearTimeout(attesa);
+      if (visibile()) attesa = setTimeout(segnala, PERMANENZA_VISTO_MS);
+    }
+    function smetti() {
+      clearTimeout(attesa);
+      osservatore.disconnect();
+      document.removeEventListener("visibilitychange", ricontrolla);
+    }
+    function segnala() {
+      if (segnalato.current || !visibile()) return;
+      segnalato.current = true;
+      smetti();
+      invia({ azione: "visto" })
+        .then((nuovo) => onCambio({ avvisato_at: nuovo.avvisato_at, visibili_dal: nuovo.visibili_dal }))
+        .catch(() => {});
+    }
+
+    osservatore.observe(el);
+    document.addEventListener("visibilitychange", ricontrolla);
+    return smetti;
+  }, [mostraAvviso, stato.avvisato_at, onCambio]);
 
   const scegli = async (scelta: SceltaRiflessioniPassate) => {
     setInvio(true);
     setErrore(null);
     try {
-      onCambio(await inviaScelta(scelta));
+      onCambio(await invia({ scelta }));
       setCambia(false);
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Non è stato possibile registrare la scelta.");
@@ -90,6 +191,21 @@ export function DomandaRiflessioniPassate({
     }
   };
 
+  const adesso = new Date();
+  const visibiliDal = stato.visibili_dal
+    ? new Date(stato.visibili_dal)
+    : visibiliDalRiflessioniPassate(adesso);
+  // Senza una scelta, i docenti leggono se e solo se la data e passata: lo
+  // dice il server. Con una scelta (dopo «Cambia scelta») `visibili` segue
+  // la scelta, non la data, e si confronta con l'ora del dispositivo.
+  const dataPassata = stato.scelta === null && typeof stato.visibili === "boolean" ? stato.visibili : undefined;
+
+  const testo: React.CSSProperties = {
+    fontSize: compatta ? 13 : 14,
+    color: "var(--text-mid)",
+    lineHeight: 1.65,
+    margin: 0,
+  };
   const piccolo: React.CSSProperties = {
     fontSize: compatta ? 12 : 12.5,
     color: "var(--text-light)",
@@ -113,57 +229,60 @@ export function DomandaRiflessioniPassate({
 
   return (
     <div>
-      <p style={{ fontSize: compatta ? 13 : 14, color: "var(--text-mid)", lineHeight: 1.65, margin: 0 }}>
-        {DOMANDA_RIFLESSIONI_PASSATE}
-      </p>
-
-      {chiedi ? (
+      {mostraAvviso ? (
         <>
-          <div className="flex flex-wrap gap-2 items-center" style={{ marginTop: 10 }}>
-            {(["si", "no"] as const).map((s) => (
-              <Button
-                key={s}
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={invio}
-                onClick={() => scegli(s)}
-              >
-                {ETICHETTE_RIFLESSIONI_PASSATE[s]}
-              </Button>
-            ))}
-            {cambia && (
-              <button
-                type="button"
-                onClick={() => setCambia(false)}
-                disabled={invio}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  fontSize: 13,
-                  color: "var(--text-light)",
-                  textDecoration: "underline",
-                  cursor: "pointer",
-                }}
-              >
-                Annulla
-              </button>
-            )}
+          <div ref={avvisoRef}>
+            <p style={testo}>{testoAvvisoRiflessioniPassate(visibiliDal, adesso, dataPassata)}</p>
+            <div className="flex flex-wrap gap-2 items-center" style={{ marginTop: 10 }}>
+              {/* "Va bene" in evidenza: i docenti sono gia lo standard, e
+                  accettare deve essere facile. "Preferisco di no" resta
+                  accanto, visibile e a un clic, senza altri passaggi. */}
+              {(["si", "no"] as const).map((s) => (
+                <Button
+                  key={s}
+                  type="button"
+                  variant={s === "si" ? "default" : "outline"}
+                  size="sm"
+                  disabled={invio}
+                  onClick={() => scegli(s)}
+                >
+                  {ETICHETTE_RIFLESSIONI_PASSATE[s]}
+                </Button>
+              ))}
+              {cambia && (
+                <button
+                  type="button"
+                  onClick={() => setCambia(false)}
+                  disabled={invio}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    fontSize: 13,
+                    color: "var(--text-light)",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }}
+                >
+                  Annulla
+                </button>
+              )}
+            </div>
           </div>
           <p style={piccolo}>{nota}</p>
         </>
       ) : (
-        <div className="flex flex-wrap gap-3 items-center" style={{ marginTop: 10 }}>
-          <p style={{ fontSize: compatta ? 13 : 14, color: "var(--text-dark)", lineHeight: 1.6, margin: 0 }}>
-            Hai scelto: <strong>«{ETICHETTE_RIFLESSIONI_PASSATE[stato.scelta as SceltaRiflessioniPassate]}»</strong>
-            {stato.scelta_at ? ` il ${dataIt(stato.scelta_at)}` : ""}.
+        <>
+          <p style={{ ...testo, color: "var(--text-dark)" }}>
+            {ESITO_RIFLESSIONI_PASSATE[stato.scelta as SceltaRiflessioniPassate]}
           </p>
-          <Button type="button" variant="outline" size="sm" onClick={() => setCambia(true)}>
-            Cambia scelta
-          </Button>
-          {compatta && <p style={{ ...piccolo, flexBasis: "100%", margin: 0 }}>{nota}</p>}
-        </div>
+          <div className="flex flex-wrap gap-3 items-center" style={{ marginTop: 10 }}>
+            <Button type="button" variant="outline" size="sm" onClick={() => setCambia(true)}>
+              Cambia scelta
+            </Button>
+          </div>
+          {compatta && <p style={piccolo}>{nota}</p>}
+        </>
       )}
 
       {errore && (
@@ -177,7 +296,7 @@ export function DomandaRiflessioniPassate({
 
 type RispostaArea =
   | { disponibile: false }
-  | (StatoSceltaPassate & { disponibile: true; riservate: number });
+  | (StatoSceltaPassate & { disponibile: true; riservate: number; scelta_at?: string | null });
 
 /**
  * Come ha risposto la rotta. `negata` e un 401 o un 403: chi chiama non e
@@ -190,8 +309,8 @@ export type LetturaPassate =
   | { fase: "errore" }
   | { fase: "pronta"; dati: RispostaArea };
 
-/** Legge la scelta una volta, e la aggiorna quando lo studente la cambia. */
-function useLetturaPassate(): [LetturaPassate, (nuovo: StatoSceltaPassate) => void] {
+/** Legge avviso e scelta una volta, e li aggiorna quando cambiano. */
+function useLetturaPassate(): [LetturaPassate, (nuovo: Partial<StatoSceltaPassate>) => void] {
   const [lettura, setLettura] = useState<LetturaPassate>({ fase: "carico" });
 
   const carica = useCallback(async () => {
@@ -214,7 +333,7 @@ function useLetturaPassate(): [LetturaPassate, (nuovo: StatoSceltaPassate) => vo
     carica();
   }, [carica]);
 
-  const aggiorna = useCallback((nuovo: StatoSceltaPassate) => {
+  const aggiorna = useCallback((nuovo: Partial<StatoSceltaPassate>) => {
     setLettura((prima) =>
       prima.fase === "pronta" && prima.dati.disponibile
         ? { fase: "pronta", dati: { ...prima.dati, ...nuovo } }
@@ -225,7 +344,7 @@ function useLetturaPassate(): [LetturaPassate, (nuovo: StatoSceltaPassate) => vo
   return [lettura, aggiorna];
 }
 
-/** C'e qualcosa da decidere: consegne di prima, o una scelta gia fatta. */
+/** C'e qualcosa da mostrare: consegne di prima, o una scelta gia fatta. */
 function daMostrare(lettura: LetturaPassate): (StatoSceltaPassate & { riservate: number }) | null {
   if (lettura.fase !== "pronta" || !lettura.dati.disponibile) return null;
   const dati = lettura.dati;
@@ -235,7 +354,7 @@ function daMostrare(lettura: LetturaPassate): (StatoSceltaPassate & { riservate:
 /**
  * La card nell'area dello studente. Legge da se, e non mostra niente se la
  * funzione non c'e, se lo studente non e iscritto, o se non ha consegne di
- * prima e non ha mai scelto: in quel caso non c'e niente da decidere.
+ * prima e non ha mai scelto: in quel caso non c'e niente da segnalare.
  * Silenziosa anche sugli errori: e una card in piu, non deve fare rumore.
  */
 export function RiflessioniPassateCard() {
@@ -261,7 +380,7 @@ export function VistaRiflessioniPassatePagina({
   onCambio,
 }: {
   lettura: LetturaPassate;
-  onCambio: (nuovo: StatoSceltaPassate) => void;
+  onCambio: (nuovo: Partial<StatoSceltaPassate>) => void;
 }) {
   if (lettura.fase === "carico") return <p className="text-gray-600">Caricamento…</p>;
 
@@ -297,14 +416,14 @@ export function CardRiflessioniPassate({
   onCambio,
 }: {
   dati: StatoSceltaPassate;
-  onCambio: (nuovo: StatoSceltaPassate) => void;
+  onCambio: (nuovo: Partial<StatoSceltaPassate>) => void;
 }) {
   return (
     <div className="card" style={{ padding: 22 }} lang="it">
       <h2 className="font-semibold text-gray-800 mb-2" style={{ fontSize: 16 }}>
         {TITOLO_RIFLESSIONI_PASSATE}
       </h2>
-      <DomandaRiflessioniPassate stato={dati} onCambio={onCambio} />
+      <AvvisoRiflessioniPassate stato={dati} onCambio={onCambio} />
     </div>
   );
 }

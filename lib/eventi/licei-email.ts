@@ -856,7 +856,8 @@ export function avvisoRiflessioniEmailSubject(): string {
  * Esiste perche l'informativa del sito promette di comunicare via email ogni
  * modifica significativa, e questa lo e: chi ha scritto finora lo ha fatto
  * sapendo che leggeva solo lo staff. Dice che quello che e gia stato inviato
- * resta allo staff, che il commento resta sempre allo staff, e dove leggere
+ * lo leggono tre giorni dopo che la piattaforma lo segnala, salvo un no
+ * dello studente, che il commento resta sempre allo staff, e dove leggere
  * l'informativa aggiornata. Il testo e in `AVVISO_RIFLESSIONI_TESTO`, lo
  * stesso che lo staff vede in anteprima prima di inviarlo.
  */

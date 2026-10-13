@@ -275,8 +275,8 @@ squadre e, da ora in avanti, riflessioni e domande delle lezioni.
   versione)`, con `adesione_id`, il testo congelato in `testo` (jsonb: titolo,
   intro, sezioni, voci, dichiarazione della casella) e `accettato_at`.
   `documento` vale `istruzioni_docente` per i docenti e
-  `riflessioni_passate` per la scelta degli studenti sulle riflessioni di
-  prima (vedi sotto): ogni lettura filtra per `documento`, quindi le due non
+  `riflessioni_passate` per l'avviso e la scelta degli studenti sulle
+  riflessioni di prima (vedi sotto): ogni lettura filtra per `documento`, quindi le due non
   si mescolano.
 
 Entrambe con RLS e sole policy di lettura (la propria riga, e lo staff con
@@ -329,8 +329,8 @@ con la riga che ha gia.
 | `POST .../referente/docenti` | solo referente | Invito: `{ nome, cognome, email, classi, dichiarazione: true }`. Risponde `{ success, email_inviata, avviso_istituto }`. |
 | `PATCH .../referente/docenti` | vedi a destra | `{ id, azione: 'classi' \| 'revoca' \| 'rimanda_invito', classi? }`. `classi` il referente o il docente sulla propria riga; `revoca` e `rimanda_invito` solo il referente. Un id di un altro istituto risponde 404. |
 | `GET .../referente/riflessioni` | docenti | `?iscrizione=<id>` oppure `?lezione=<slug>`, solo studenti confermati dell'istituto. |
-| `GET`, `POST /api/courses/submissions` | studenti | Il GET aggiunge `avviso_referente: { istituto } \| null` e, quando l'avviso c'e, `riflessioni_passate: { scelta, riservate } \| null`; il POST scrive `condivisa_referente_at` solo con `avviso_referente: true` e un'iscrizione licei valida. |
-| `GET`, `POST /api/eventi/licei/studente/riflessioni-passate` | studenti in attesa o confermati | La scelta sulle riflessioni di prima: GET `{ disponibile, scelta, scelta_at, riservate }`, POST `{ scelta: 'si' \| 'no' }`. Solo per l'account che chiama, e per l'istituto della sua iscrizione attuale. La pagina del link diretto la usa come la card dell'area. |
+| `GET`, `POST /api/courses/submissions` | studenti | Il GET aggiunge `avviso_referente: { istituto } \| null` e, quando l'avviso c'e, `riflessioni_passate: { scelta, avvisato_at, visibili_dal, visibili, riservate } \| null`; il POST scrive `condivisa_referente_at` solo con `avviso_referente: true` e un'iscrizione licei valida. |
+| `GET`, `POST /api/eventi/licei/studente/riflessioni-passate` | studenti in attesa o confermati | Avviso e scelta sulle riflessioni di prima: GET `{ disponibile, scelta, scelta_at, avvisato_at, visibili_dal, visibili, riservate }`, POST `{ azione: 'visto' }` oppure `{ scelta: 'si' \| 'no' }`. Solo per l'account che chiama, e per l'istituto della sua iscrizione attuale. La pagina del link diretto la usa come la card dell'area. |
 | `GET /api/eventi/licei/admin` | staff | Aggiunge `docenti` (per adesione) e `avviso_riflessioni` (stato dell'invio). |
 | `POST /api/eventi/licei/admin` | staff | `{ azione: 'revoca_docente', id }` oppure `{ azione: 'avviso_riflessioni' }`. |
 
@@ -413,10 +413,11 @@ lo impedisce il trigger) comparirebbe solo come "Studente di altro istituto".
   true` (cioe il box mostrava l'avviso) e lo studente ha un'iscrizione licei
   `in_attesa` o `confermata` a percorso aperto; altrimenti null. Tutte le
   righe salvate prima della migrazione restano null, quindi restano allo
-  staff: un docente ne vede solo il numero ("consegne riservate"). Per
-  renderne visibile una vecchia, lo studente la riapre e la salva con
-  l'avviso davanti, oppure sceglie di condividere tutte quelle di prima
-  (sezione qui sotto).
+  staff: un docente ne vede solo il numero ("consegne riservate"), finche
+  la regola delle consegne di prima non le rende leggibili (sezione qui
+  sotto: tre giorni dopo l'avviso, o subito con «Va bene», mai con
+  «Preferisco di no»). Una vecchia diventa visibile anche se lo studente la
+  riapre e la salva con l'avviso davanti.
 - **Che cosa legge il docente**: per gli studenti CONFERMATI del proprio
   istituto, solo `reflection` e `question` delle righe condivise, piu se e
   quando lo staff ha risposto (`replied_at`). `comment` e `admin_reply` non
@@ -434,87 +435,152 @@ lo impedisce il trigger) comparirebbe solo come "Studente di altro istituto".
   sola, e non parte finche la colonna non esiste. Invio a lotti di 50, con i
   conteggi salvati in `avviso_riflessioni_esito` e i fallimenti nei log, per
   id di iscrizione e mai per email. Il testo dice che quelle gia inviate
-  restano allo staff "a meno che tu non scelga di condividerle dalla tua
-  area": la scelta si fa sulla piattaforma, l'email non chiede risposta.
+  "le potranno leggere tre giorni dopo che la piattaforma te lo segnala, a
+  meno che tu scelga che restino solo allo staff": l'avviso e la scelta
+  sono sulla piattaforma, l'email non chiede risposta.
 
-### Le riflessioni di prima: la scelta dello studente
+### Le riflessioni di prima: ai docenti dopo tre giorni, salvo un no
 
-Decisione approvata dalla Fondazione: ogni studente sceglie, da solo e per
-se, se i docenti del suo istituto possono leggere anche le riflessioni e le
-domande inviate prima dell'avviso (le righe con `condivisa_referente_at`
-null). Scelta individuale, mai di classe o a maggioranza; nessuna risposta
-gia segnata; revocabile quando vuole. Tutto sulla piattaforma, nessuna email
-nuova.
+Decisione approvata dalla Fondazione, che sostituisce la scelta esplicita
+della prima stesura: le riflessioni e le domande inviate prima dell'avviso
+(le righe con `condivisa_referente_at` null) le leggono anche i docenti
+dell'istituto, ma solo dopo che la piattaforma lo ha segnalato allo
+studente e sono passati tre giorni, a meno che lui dica di no. Ogni
+studente per se, mai una scelta di classe; nessuna risposta gia segnata;
+revocabile quando vuole, nei due sensi. Tutto sulla piattaforma, nessuna
+email nuova.
 
-- **La domanda**: "I docenti del tuo istituto che seguono il percorso leggono le riflessioni e le domande che invii nelle lezioni. Vuoi che possano leggere anche quelle che hai inviato prima? Il commento resta comunque solo allo staff.".
-  Bottoni "Sì, anche quelle" e "No, quelle restano allo staff", con lo stesso
-  aspetto e nessuno preselezionato; sotto, "Puoi cambiare idea quando vuoi
-  dalla tua area.". Dopo la scelta: "Hai scelto: «...» il gg/mm/aaaa." e
-  "Cambia scelta". Testi in `content.ts` (`DOMANDA_RIFLESSIONI_PASSATE`,
-  `ETICHETTE_RIFLESSIONI_PASSATE`, `NOTA_RIFLESSIONI_PASSATE`).
-- **Dove si risponde**: nell'area dello studente, card "Le tue riflessioni
-  e i docenti", che compare a chi ha almeno una consegna di prima o ha gia
-  scelto, anche se e ancora in attesa di conferma; e nel box della lezione,
-  solo agli iscritti licei (`avviso_referente` non null), una volta, sopra
-  l'avviso, se non c'e ancora una scelta e c'e almeno una consegna di prima.
-  La domanda ha la sua richiesta: non blocca e non rallenta il salvataggio
-  della consegna. Nel box, una consegna di prima di chi ha detto si risulta
-  "Visibile anche ai docenti del tuo istituto".
+- **La regola**, per studente, calcolata sul server con l'ora del server
+  (`riflessioniPassateVisibili` in `content.ts`, usata da
+  `utentiConPassateVisibili` in `lib/eventi/licei-riflessioni.ts`). I
+  docenti leggono le sue consegne di prima se ha premuto «Va bene» (subito),
+  oppure se non ha scelto e il primo avviso gli e stato mostrato almeno
+  `GIORNI_PREAVVISO_RIFLESSIONI = 3` giorni fa (72 ore da `avvisato_at`).
+  Non le leggono se ha premuto «Preferisco di no», anche dopo i tre giorni,
+  se l'avviso non gli e mai stato mostrato, o se non sono passati tre giorni
+  e non ha risposto. Le consegne salvate dopo l'avviso della lezione (flag
+  valorizzato) restano visibili come prima, qualunque sia la scelta.
+- **Il primo avviso**: la prima volta che l'avviso e davvero a schermo
+  (box della lezione, card dell'area, pagina del link diretto) il
+  componente manda `POST { azione: 'visto' }` alla rotta dello studente,
+  che segna `avvisato_at` se non c'e. "Davvero a schermo" vuol dire: il
+  testo dell'avviso con i due bottoni almeno a meta nel viewport, per
+  almeno un secondo di fila, con la scheda in primo piano
+  (IntersectionObserver piu `document.visibilityState`, `SOGLIA_VISTO` e
+  `PERMANENZA_VISTO_MS` in `RiflessioniPassate.tsx`). Aprire una lezione o
+  l'area senza scorrere fino al box o alla card non conta, e nemmeno una
+  scheda in background; senza IntersectionObserver non si segnala, e conta
+  il clic su un bottone. Una volta sola per apertura, e mai piu una volta
+  segnato: la data non si sposta in avanti e la scelta non si tocca.
+  Se la richiesta fallisce non blocca niente (il box si consegna lo stesso)
+  e si riprova alla prossima apertura. Prima della risposta la data a
+  schermo e oggi piu tre giorni; dopo, `avvisato_at` piu tre giorni.
+- **I testi** (in `content.ts`). Titolo "Le tue riflessioni e i docenti".
+  Senza una scelta, prima della data (`AVVISO_RIFLESSIONI_PASSATE.prima`):
+  "Dal {data} i docenti del tuo istituto che seguono il percorso potranno leggere anche le riflessioni e le domande che hai inviato prima. Servono a seguire il tuo percorso. Il commento resta comunque solo allo staff.";
+  dalla data in poi (`AVVISO_RIFLESSIONI_PASSATE.dopo`) lo stesso testo con
+  "possono leggere". `{data}` e `avvisato_at` piu tre giorni, come "20
+  ottobre", con l'anno solo se diverso da quello in corso, in ora italiana
+  (`dataRiflessioniPassate`). Bottoni "Va bene" (`si`) e "Preferisco di no"
+  (`no`), con lo stesso aspetto e nessuno preselezionato; sotto, "Puoi
+  cambiare idea quando vuoi dalla tua area.". Dopo "Va bene": "I docenti del
+  tuo istituto possono leggere anche le riflessioni e le domande che hai
+  inviato prima."; dopo "Preferisco di no": "Le riflessioni e le domande che
+  hai inviato prima restano visibili solo allo staff."; in tutti e due i
+  casi **Cambia scelta**, che rimostra l'avviso (prima o dopo la data) con i
+  due bottoni. Nessun messaggio di colpa, nessuna conferma in piu sul no.
+- **Dove compare**: nel box della lezione, solo agli iscritti licei
+  (`avviso_referente` non null), in qualsiasi lezione (consegnata o no,
+  sopra la consegna o sopra il modulo), finche non c'e una scelta e c'e
+  almeno una consegna di prima. Passati i tre giorni senza risposta resta,
+  con il testo al presente, finche lo studente non preme un bottone; dopo
+  una risposta non compare piu nel box. Ha le sue richieste: non blocca e
+  non rallenta il salvataggio della consegna. Nell'area dello studente, card
+  "Le tue riflessioni e i docenti", che compare a chi ha almeno una
+  consegna di prima o ha gia scelto, anche se e ancora in attesa di
+  conferma, e mostra sempre lo stato in vigore con **Cambia scelta**. Nella
+  consegna gia inviata il box dice "Visibile anche ai docenti del tuo
+  istituto" quando la regola qui sopra la rende leggibile.
 - **Il link diretto**: `/eventi/vivere-piu-a-lungo/licei/studente/riflessioni`
   (`RIFLESSIONI_STUDENTE_PATH`), noindex e fuori dalla sitemap come l'area.
   Senza login mostra "Accedi" con `returnTo` alla pagina stessa, quindi dopo
-  l'accesso lo studente torna li. Mostra solo la card della scelta, la
-  stessa dell'area (`RiflessioniPassatePagina` in `RiflessioniPassate.tsx`).
-  Dove l'area non mostrerebbe niente, una frase e un link per tornare: a chi
-  non e studente del percorso (la rotta risponde 401 o 403) il suo messaggio
-  e "Torna al bando"; a chi non ha consegne di prima e non ha mai scelto,
-  prima della migrazione o su un errore, una frase e "Vai alla tua area".
-  Nella console dei docenti la card "Link da dare agli studenti"
+  l'accesso lo studente torna li. Mostra solo la card, la stessa dell'area
+  (`RiflessioniPassatePagina` in `RiflessioniPassate.tsx`): l'avviso conta
+  come mostrato quando e a schermo, come nell'area. Dove l'area non
+  mostrerebbe niente, una frase e un link per tornare: a chi non e studente
+  del percorso (la rotta risponde 401 o 403) il suo messaggio e "Torna al
+  bando"; a chi non ha consegne di prima e non ha mai scelto, prima della
+  migrazione o su un errore, una frase e "Vai alla tua area". Nella console
+  dei docenti la card "Link da dare agli studenti"
   (`LinkRiflessioniStudenti` in `RiflessioniReferente.tsx`, testi
-  `LINK_RIFLESSIONI_STUDENTI_*` in `content.ts`) mostra l'indirizzo
-  completo (`SITE_URL` + percorso) con un bottone **Copia**. C'e sempre,
-  anche senza confermati: scelgono anche gli studenti in attesa. Il docente
-  lo passa alla classe come preferisce; nessuna email parte dalla
-  piattaforma.
-- **Una conferma sola**: dopo "Sì" i docenti leggono tutte le consegne di
-  quello studente, di prima e di dopo, e la domanda non si ripresenta (si
-  fa solo finche non c'e una scelta). Lo studente la puo sempre cambiare
-  dalla sua area o dal link.
+  `LINK_RIFLESSIONI_STUDENTI_*` in `content.ts`) mostra l'indirizzo completo
+  (`SITE_URL` + percorso) con un bottone **Copia** e la frase "Gli studenti
+  lo aprono, accedono e vedono l'avviso sulle riflessioni inviate prima:
+  dopo tre giorni le vedete anche voi, a meno che scelgano di no. Con «Va
+  bene» le vedete subito.". C'e sempre, anche senza confermati.
 - **Dove si registra**: `licei_accettazioni`, nessuna migrazione nuova.
   `documento = 'riflessioni_passate'`, `versione = '2026-10-13'`
-  (`DOCUMENTO_RIFLESSIONI_PASSATE`, `VERSIONE_RIFLESSIONI_PASSATE`),
-  `adesione_id` dell'iscrizione dello studente, `testo = { domanda, scelta:
-  'si' | 'no', etichetta }` con la domanda e il bottone premuto congelati
-  dal server, `accettato_at` aggiornato a ogni cambio. Una riga per persona
-  (unico su `user_id, documento, versione`), riscritta con un upsert. Se la
-  domanda cambia, cambia la versione e la scelta si chiede di nuovo.
-- **Vale per l'istituto di oggi**: studente e docenti leggono la scelta con
-  la stessa regola, cioe solo se `adesione_id` e quello dell'iscrizione
-  attuale (per lo studente quella di `requireStudente` o di
+  (`DOCUMENTO_RIFLESSIONI_PASSATE`, `VERSIONE_RIFLESSIONI_PASSATE`, la stessa
+  della prima stesura), `adesione_id` dell'iscrizione dello studente,
+  `testo = { avviso, avvisato_at, scelta: 'si' | 'no' | null, scelta_at,
+  etichetta }` con l'avviso come lo studente lo aveva a schermo e il bottone
+  premuto, congelati dal server, `accettato_at` = ora dell'ultima scrittura.
+  Una riga per persona (unico su `user_id, documento, versione`). La
+  scrittura (`registraRiflessioniPassate`) crea la riga solo se non c'e e la
+  riscrive solo se non e cambiata dopo la lettura (stesso `accettato_at`),
+  altrimenti rilegge e riprova: un "visto" e un clic che arrivano insieme non
+  si cancellano a vicenda. Le righe della prima stesura (`{ domanda, scelta,
+  etichetta }`) restano valide: "si" e "no" valgono come prima, la scelta
+  vale da `accettato_at`, e l'avviso si segna la prima volta che si mostra.
+- **Le rotte**: `GET /api/eventi/licei/studente/riflessioni-passate`
+  risponde `{ disponibile, scelta, scelta_at, avvisato_at, visibili_dal,
+  visibili, riservate }` (`visibili_dal` = `avvisato_at` piu tre giorni,
+  null se l'avviso non e mai stato mostrato; `visibili` = la regola dei
+  docenti adesso, con l'ora del server); `POST { azione: 'visto' }` o `POST
+  { scelta: 'si' | 'no' }`, nient'altro (le due insieme: 400), che risponde
+  con gli stessi campi. Il GET di `/api/courses/submissions` porta al box
+  `riflessioni_passate: { scelta, avvisato_at, visibili_dal, visibili,
+  riservate } | null`. Il browser usa `visibili` per dire chi legge
+  ("Visibile anche ai docenti del tuo istituto") e, senza una scelta, per
+  scegliere fra "potranno" e "possono": un orologio del dispositivo
+  indietro non fa credere allo studente che le sue consegne siano ancora
+  solo dello staff quando i docenti le leggono gia.
+- **Vale per l'istituto di oggi**: studente e docenti leggono la riga con la
+  stessa regola, cioe solo se `adesione_id` e quello dell'iscrizione attuale
+  (per lo studente quella di `requireStudente` o di
   `iscrizioneLiceiPerAvviso`, dove vince la confermata; per il docente il
-  suo istituto). Una scelta registrata da iscritto a un'altra scuola (per
-  esempio con il codice sbagliato, poi rifiutato) per lo studente vale come
-  nessuna scelta: la domanda si rifa, e la risposta riscrive la riga con
-  l'istituto giusto. Cosi lo schermo dello studente dice sempre quello che i
-  docenti della sua scuola possono leggere. L'id dell'adesione resta al
-  server: al box arriva solo il nome dell'istituto.
+  suo istituto). Un avviso visto o una scelta registrati da iscritto a
+  un'altra scuola per lo studente valgono come niente: l'avviso riparte da
+  capo e la prossima scrittura riscrive la riga con l'istituto giusto. I
+  docenti della scuola di oggi non leggono niente finche i tre giorni non
+  ripartono e passano. L'id dell'adesione resta al server: al box arriva
+  solo il nome dell'istituto.
 - **Chi puo scegliere**: `requireStudente({ ancheInAttesa: true })`, cioe
   gli iscritti in attesa o confermati, a percorso aperto, come per
   l'avviso nel box (`iscrizioneLiceiPerAvviso`). Squadre e progetti restano
-  dei soli confermati (`requireStudente()` senza opzioni, invariata). La
-  scelta e sempre quella dell'account che chiama: la rotta non accetta un
-  `user_id`, e l'istituto lo prende dall'iscrizione.
+  dei soli confermati. La riga e sempre quella dell'account che chiama: la
+  rotta non accetta un `user_id`, e l'istituto lo prende dall'iscrizione.
 - **Che cosa cambia per i docenti**: la rotta delle riflessioni legge, per
   gli studenti confermati gia selezionati (a blocchi come il resto), le
-  scelte "si" fatte per il proprio istituto (`adesione_id`, `testo->>scelta`
-  = `si`). Per quegli studenti tutte le consegne sono condivise: le righe
-  con il flag null entrano fra le consegne e non contano piu come riservate.
-  "No", o nessuna risposta: le consegne di prima restano allo staff e se ne
-  vede solo il numero. Passare da si a no le nasconde di nuovo alla
-  richiesta successiva; le consegne salvate dopo l'avviso restano visibili,
-  come l'avviso diceva. Il docente non vede chi ha scelto che cosa: le
-  consegne di prima compaiono e basta. `comment` e `admin_reply` non si
-  selezionano mai, `user_id` non esce, il filtro per istituto e lo stesso.
+  righe `riflessioni_passate` del proprio istituto (`user_id, testo`, senza
+  filtri sul jsonb) e applica la regola nel codice. Per gli studenti le cui
+  consegne di prima sono leggibili tutte le consegne sono condivise: le
+  righe con il flag null entrano fra le consegne e non contano piu come
+  riservate. Per gli altri restano allo staff e se ne vede solo il numero.
+  Passare a "Preferisco di no" le nasconde di nuovo alla richiesta
+  successiva; le consegne salvate dopo l'avviso restano visibili. Il
+  docente non vede chi ha scelto che cosa: le consegne di prima compaiono e
+  basta. La nota fissa della console dice: "Le consegne inviate prima
+  dell'avviso diventano visibili tre giorni dopo che lo studente ha visto
+  l'avviso, o subito se ha scelto «Va bene». Restano riservate se ha scelto
+  che restino allo staff.". `comment` e `admin_reply` non si selezionano
+  mai, `user_id` non esce, il filtro per istituto e lo stesso.
+- **Informativa e email**: nell'informativa per gli studenti la frase sulle
+  consegne di prima e "Quelle inviate prima le vedono tre giorni dopo che la
+  piattaforma te lo segnala, a meno che tu scelga che restino solo allo
+  staff." (`aggiornato` resta 2026-10-13); l'email una tantum dice "Quelle
+  che hai già inviato le potranno leggere tre giorni dopo che la piattaforma
+  te lo segnala, a meno che tu scelga che restino solo allo staff.".
 - **Chiusura**: la cancellazione del percorso svuota tutta
   `licei_accettazioni`, quindi anche queste righe; vanno via anche in
   cascata con l'account o con l'adesione.
@@ -532,11 +598,13 @@ mancante):
 - senza la colonna: il box della lezione non mostra l'avviso, il salvataggio
   riprova senza la colonna e riesce, le riflessioni rispondono
   `{ disponibile: false }`, il bottone dell'avviso nel pannello e spento;
-- scelta sulle riflessioni di prima: senza `licei_accettazioni`, senza la
-  colonna o senza `lesson_submissions` la funzione non c'e. La rotta dello
-  studente risponde `{ disponibile: false }` (503 sul POST), la card e la
-  domanda nel box non compaiono (`riflessioni_passate` e null), e la rotta
-  dei docenti si comporta come prima.
+- avviso e scelta sulle riflessioni di prima: senza `licei_accettazioni`,
+  senza la colonna o senza `lesson_submissions` la funzione non c'e. La
+  rotta dello studente risponde `{ disponibile: false }` (503 sul POST,
+  anche per `visto`, e niente si registra), la card e l'avviso nel box non
+  compaiono (`riflessioni_passate` e null), la consegna si salva lo stesso,
+  e la rotta dei docenti si comporta come prima: le consegne di prima
+  restano allo staff, perche nessun avviso risulta mostrato.
 
 ## Chi risulta iscritto e chi c'e davvero
 

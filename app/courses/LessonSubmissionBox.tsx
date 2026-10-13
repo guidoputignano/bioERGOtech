@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  DomandaRiflessioniPassate,
+  AvvisoRiflessioniPassate,
+  avvisoPassateNelBox,
   type StatoSceltaPassate,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/studente/RiflessioniPassate";
-import { TITOLO_RIFLESSIONI_PASSATE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  TITOLO_RIFLESSIONI_PASSATE,
+  riflessioniPassateVisibili,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 const TEAL = "#00C4B4";
 const TEAL_DARK = "#009688";
@@ -68,12 +72,17 @@ export default function LessonSubmissionBox({
   const [editing, setEditing] = useState(false);
   // Licei students only: `{ istituto }` when the notice must be shown.
   const [avviso, setAvviso] = useState<{ istituto: string } | null>(null);
-  // Licei students only: their choice on the submissions saved before the
-  // notice, and whether to ask it here. Asked once, above the notice, only
-  // when nothing is recorded yet and there is something to share; the
-  // answer then stays on screen until the page is reloaded.
+  // Licei students only: the notice on the submissions saved before the
+  // lesson notice, and the student's choice. Shown here, in any lesson,
+  // only while no choice is recorded and there is at least one such
+  // submission; after an answer it stays on screen until the page is
+  // reloaded, and then it is no longer shown.
   const [passate, setPassate] = useState<StatoSceltaPassate | null>(null);
-  const [chiediPassate, setChiediPassate] = useState(false);
+  const [mostraPassate, setMostraPassate] = useState(false);
+  const aggiornaPassate = useCallback(
+    (nuovo: Partial<StatoSceltaPassate>) => setPassate((p) => (p ? { ...p, ...nuovo } : p)),
+    [],
+  );
 
   const load = useCallback(async () => {
     if (!isAuthenticated) { setLoading(false); return; }
@@ -82,8 +91,17 @@ export default function LessonSubmissionBox({
       const data = await res.json();
       setAvviso(data.avviso_referente ?? null);
       const rp = data.avviso_referente ? (data.riflessioni_passate ?? null) : null;
-      setPassate(rp ? { scelta: rp.scelta ?? null, scelta_at: null } : null);
-      setChiediPassate(!!rp && rp.scelta == null && rp.riservate > 0);
+      setPassate(
+        rp
+          ? {
+              scelta: rp.scelta ?? null,
+              avvisato_at: rp.avvisato_at ?? null,
+              visibili_dal: rp.visibili_dal ?? null,
+              ...(typeof rp.visibili === "boolean" ? { visibili: rp.visibili } : {}),
+            }
+          : null,
+      );
+      setMostraPassate(avvisoPassateNelBox(rp));
       if (data.submission) {
         setExisting(data.submission);
         setReflection(data.submission.reflection ?? "");
@@ -140,8 +158,13 @@ export default function LessonSubmissionBox({
 
   const showForm = !existing || editing;
   // Read by the school's teachers: saved after the notice, or saved before
-  // it by a student who chose to share those too.
-  const visibileDocenti = !!existing?.condivisa_referente_at || (!!avviso && passate?.scelta === "si");
+  // it and readable under the rule for earlier submissions ("Va bene", or
+  // no answer three days after the first notice). The server computes that
+  // rule with its own clock (`visibili`); the device clock, which may be
+  // behind, is used only if the field is missing.
+  const visibileDocenti =
+    !!existing?.condivisa_referente_at ||
+    (!!avviso && !!passate && (passate.visibili ?? riflessioniPassateVisibili(passate)));
 
   return (
     <div style={{
@@ -193,6 +216,23 @@ export default function LessonSubmissionBox({
         <div style={{ textAlign: "center", padding: 24 }}>
           <div style={{ width: 24, height: 24, border: `2px solid ${TEAL}`, borderTop: "2px solid transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
+      {/* Percorso licei: the notice on the earlier submissions, in any
+          lesson, above the read view or the form. It has its own requests
+          and never touches the submission. */}
+      {isAuthenticated && !loading && avviso && passate && mostraPassate && (
+        <div
+          lang="it"
+          role="group"
+          aria-label={TITOLO_RIFLESSIONI_PASSATE}
+          style={{ marginBottom: 12, padding: "12px 16px", background: "#F7F9FC", border: `1px solid ${BORDER}`, borderRadius: 8 }}
+        >
+          <strong style={{ display: "block", fontSize: 13.5, color: TEAL_DARK, marginBottom: 4 }}>
+            {TITOLO_RIFLESSIONI_PASSATE}
+          </strong>
+          <AvvisoRiflessioniPassate stato={passate} onCambio={aggiornaPassate} compatta />
         </div>
       )}
 
@@ -260,22 +300,6 @@ export default function LessonSubmissionBox({
       {/* Form: new or editing */}
       {isAuthenticated && !loading && showForm && (
         <div>
-          {/* Percorso licei: the choice on the earlier submissions. It has
-              its own request and never touches the form below. */}
-          {avviso && passate && chiediPassate && (
-            <div
-              lang="it"
-              role="group"
-              aria-label={TITOLO_RIFLESSIONI_PASSATE}
-              style={{ marginBottom: 12, padding: "12px 16px", background: "#F7F9FC", border: `1px solid ${BORDER}`, borderRadius: 8 }}
-            >
-              <strong style={{ display: "block", fontSize: 13.5, color: TEAL_DARK, marginBottom: 4 }}>
-                {TITOLO_RIFLESSIONI_PASSATE}
-              </strong>
-              <DomandaRiflessioniPassate stato={passate} onCambio={setPassate} compatta />
-            </div>
-          )}
-
           {avviso && (
             <div
               lang="it"

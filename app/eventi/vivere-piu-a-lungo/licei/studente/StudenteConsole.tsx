@@ -12,9 +12,9 @@
  * Uno studente che sa che gli aspetti etici valgono 15 punti su 100 li
  * scrive; uno che non lo sa li salta e perde quei punti senza capire perche.
  *
- * Nell'area completa c'e anche la scelta sulle riflessioni inviate prima
- * dell'avviso (`RiflessioniPassate.tsx`), che si mostra anche a chi e ancora
- * in attesa di conferma.
+ * Nell'area completa c'e anche l'avviso, con la scelta, sulle riflessioni
+ * inviate prima dell'avviso della lezione (`RiflessioniPassate.tsx`), che
+ * si mostra anche a chi e ancora in attesa di conferma.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -213,9 +213,10 @@ export function StudenteConsole({
     // licei sta leggendo il corso per conto suo, e un riquadro d'errore su un
     // bando che non lo riguarda e solo rumore.
     if (sezione !== "tutto") return null;
-    // Chi e ancora in attesa di conferma non ha squadra e progetto, ma la
-    // scelta sulle sue riflessioni di prima la puo fare e cambiare gia da
-    // qui: la card si mostra da se solo a chi riguarda.
+    // Chi e ancora in attesa di conferma non ha squadra e progetto, ma
+    // l'avviso sulle sue riflessioni di prima lo vede gia da qui, e la
+    // scelta la puo fare e cambiare: la card si mostra da se solo a chi
+    // riguarda.
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="card text-center" style={{ padding: 40 }}>
@@ -702,8 +703,8 @@ export function StudenteConsole({
       )}
 
       {/* ══ Riflessioni di prima dell'avviso ══
-          Solo nell'area completa: dentro le lezioni la stessa domanda la
-          fa il box della consegna. */}
+          Solo nell'area completa: dentro le lezioni lo stesso avviso lo
+          mostra il box della consegna. */}
       {sezione === "tutto" && <RiflessioniPassateCard />}
 
       {/* ══ Mentor ══

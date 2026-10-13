@@ -788,9 +788,9 @@ export function ReferenteConsole() {
         />
       )}
 
-      {/* ── Il link per la scelta degli studenti sulle riflessioni di prima ──
-          Sempre, anche senza confermati: scelgono anche gli studenti in
-          attesa, e il docente lo puo dare alla classe da subito. */}
+      {/* ── Il link all'avviso sulle riflessioni di prima, per gli studenti ──
+          Sempre, anche senza confermati: l'avviso lo vedono anche gli
+          studenti in attesa, e il docente lo puo dare alla classe da subito. */}
       <LinkRiflessioniStudenti />
 
       {/* ── Docenti del progetto: solo il referente principale li indica ── */}
