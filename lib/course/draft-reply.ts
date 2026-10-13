@@ -75,7 +75,9 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
 
   const response = await client.beta.messages.create({
     model: MODEL,
-    max_tokens: 16000,
+    // A reply is 80 to 200 words. This leaves room for the model's thinking
+    // and keeps the call well inside the route's 60 second limit.
+    max_tokens: 4000,
     // On a safety decline, the API retries on a suitable fallback model
     // inside the same call instead of returning nothing.
     betas: ["server-side-fallback-2026-07-01"],
@@ -92,6 +94,10 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
 
   if (response.stop_reason === "refusal") {
     return { draft: "FLAG FOR STAFF: the drafting model declined this submission. Please read it and reply by hand.", flagged: true };
+  }
+  if (response.stop_reason === "max_tokens") {
+    // A cut-off draft reads as finished but is not: better no draft.
+    throw new Error("The draft was cut off before it finished. Try again, or write this one by hand.");
   }
 
   const draft = response.content

@@ -33,6 +33,8 @@ interface CertRecord {
   project_url: string | null;
   issued_at: string;
   revoked_at: string | null;
+  legacy: boolean;
+  confirmed_at: string | null;
 }
 
 async function lookup(certId: string): Promise<CertRecord | null> {
@@ -43,7 +45,7 @@ async function lookup(certId: string): Promise<CertRecord | null> {
   });
   const { data } = await client
     .from("course_certificates")
-    .select("cert_id, recipient_name, student_id, course_title, project_url, issued_at, revoked_at")
+    .select("cert_id, recipient_name, student_id, course_title, project_url, issued_at, revoked_at, legacy, confirmed_at")
     .eq("cert_id", certId)
     .maybeSingle();
   return (data as CertRecord | null) ?? null;
@@ -51,8 +53,19 @@ async function lookup(certId: string): Promise<CertRecord | null> {
 
 export default async function VerifyPage({ params }: Props) {
   const { certId: raw } = await params;
-  const certId = decodeURIComponent(raw).trim().toUpperCase();
-  const cert = await lookup(certId);
+  let certId: string;
+  try {
+    certId = decodeURIComponent(raw).trim().toUpperCase();
+  } catch {
+    // A stray "%" in a hand-typed ID: treat as not found, not a server error.
+    certId = raw.trim().toUpperCase();
+  }
+  const found = await lookup(certId);
+  // A legacy certificate came from a field students could write. Until staff
+  // confirm it, the page neither vouches for it nor shows its details: a
+  // forged row must not get a bioERGOtech page with the forger's name on it.
+  const pending = !!found && !found.revoked_at && found.legacy && !found.confirmed_at;
+  const cert = pending ? null : found;
   const valid = !!cert && !cert.revoked_at;
 
   return (
@@ -64,7 +77,13 @@ export default async function VerifyPage({ params }: Props) {
             Certificate verification
           </p>
           <h1 className="section-title" style={{ fontSize: "clamp(1.6rem, 4vw, 2.25rem)" }}>
-            {valid ? "This certificate is valid" : cert ? "This certificate has been revoked" : "Certificate not found"}
+            {valid
+              ? "This certificate is valid"
+              : cert
+                ? "This certificate has been revoked"
+                : pending
+                  ? "This certificate is being confirmed"
+                  : "Certificate not found"}
           </h1>
 
           <div className="card-sm" style={{ padding: 28, borderLeft: `4px solid ${valid ? "#2EC4B6" : "#E67E22"}` }}>
@@ -105,6 +124,12 @@ export default async function VerifyPage({ params }: Props) {
                   </>
                 )}
               </dl>
+            ) : pending ? (
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-mid)", lineHeight: 1.7 }}>
+                Certificate <strong style={{ fontFamily: "monospace", overflowWrap: "anywhere" }}>{certId}</strong> was
+                issued before online verification started, and the bioERGOtech team is confirming it. Please check back
+                shortly, or write to info@bioergotech.org to confirm it directly.
+              </p>
             ) : (
               <p style={{ margin: 0, fontSize: 15, color: "var(--text-mid)", lineHeight: 1.7 }}>
                 No certificate with the ID <strong style={{ fontFamily: "monospace", overflowWrap: "anywhere" }}>{certId}</strong> was

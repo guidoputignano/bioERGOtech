@@ -37,7 +37,13 @@ export async function POST() {
 
   const commit = await headCommit(cfg, state.project.full_name);
   const result = commit
-    ? await runProjectChecks(cfg, state.project.full_name, state.github?.login ?? null, commit)
+    ? await runProjectChecks(
+        cfg,
+        state.project.full_name,
+        state.github?.login ?? null,
+        commit,
+        state.project.created_via === "template",
+      )
     : {
         ref: null,
         ran_at: new Date().toISOString(),
@@ -46,14 +52,17 @@ export async function POST() {
         error: "The repository has no commits yet, or the mentor account cannot see it.",
       };
 
+  // Without a commit there is nothing to pin, so it is not a submission:
+  // record the failed check only, and the student submits again once the
+  // repository can be read. Otherwise a later check would assess whatever
+  // HEAD happens to be at that moment.
   const { error } = await client
     .from("course_project_members")
-    .update({
-      submitted_at: new Date().toISOString(),
-      submitted_commit: commit,
-      check_result: result,
-      checked_at: result.ran_at,
-    })
+    .update(
+      commit
+        ? { submitted_at: new Date().toISOString(), submitted_commit: commit, check_result: result, checked_at: result.ran_at }
+        : { check_result: result, checked_at: result.ran_at },
+    )
     .eq("user_id", chiamante.id);
   if (error) {
     console.error("course submit:", error.message);

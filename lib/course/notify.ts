@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COURSE_LESSONS } from "@/app/courses/course-data";
 import { siteOrigin } from "@/lib/github/client";
+import { escapeHtml } from "./html";
 
 /**
  * Emails the course team when a student asks a question or leaves a
@@ -43,8 +44,7 @@ export function submissionChanges(
 
 // Student text goes into an HTML email: escape it, so nobody can put links
 // or markup in front of the team.
-const esc = (s: string): string =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const esc = escapeHtml;
 
 const block = (label: string, color: string, text: string, isNew: boolean) => `
   <tr><td style="padding:0 32px 16px;">

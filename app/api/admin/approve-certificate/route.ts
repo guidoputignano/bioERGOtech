@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { Resend } from "resend";
 import { generateCertificatePptx, generateCertId } from "@/lib/certificate/generate";
 import { loadStudentState, studentIdFor } from "@/lib/course/data";
+import { escapeHtml } from "@/lib/course/html";
 
 /** Printed on the certificate, stored with it, and shown on /verify. */
 const COURSE_TITLE = "Agentic AI Program";
@@ -37,13 +38,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "user_id is required" }, { status: 400 });
     }
 
-    const { data: profile, error: profileError } = await client
-      .from("profiles")
-      .select("id, email, full_name, student_id")
-      .eq("id", userId)
-      .single();
-    if (profileError || !profile) {
-      return NextResponse.json({ error: "Student profile not found" }, { status: 404 });
+    // The address comes from the login account, not profiles.email: students
+    // can edit their profile row, and a certificate must not be sent, under
+    // the bioERGOtech name, to any address they type there.
+    const [{ data: profile }, { data: account }] = await Promise.all([
+      client.from("profiles").select("id, full_name").eq("id", userId).maybeSingle(),
+      client.auth.admin.getUserById(userId),
+    ]);
+    const email = account?.user?.email ?? null;
+    if (!email) {
+      return NextResponse.json({ error: "Student account not found" }, { status: 404 });
     }
 
     const state = await loadStudentState(client, userId);
@@ -57,6 +61,12 @@ export async function POST(req: NextRequest) {
           { status: 409 },
         );
       }
+      if (existing.legacy && !existing.confirmed_at) {
+        return NextResponse.json(
+          { error: "This certificate was imported from the old system. Confirm it in the Course Monitor before resending it." },
+          { status: 409 },
+        );
+      }
       const { data: cert } = await client
         .from("course_certificates")
         .select("cert_id, recipient_name, student_id, course_title, issued_at")
@@ -66,16 +76,18 @@ export async function POST(req: NextRequest) {
       // The stored title, not today's: a resend reproduces the certificate
       // exactly as issued, matching what /verify shows for this id.
       const sent = await sendCertificate({
-        to: profile.email,
+        to: email,
         recipientName: cert.recipient_name,
-        studentId: cert.student_id ?? studentIdFor(userId),
+        // Legacy rows carry no student id: derive it with the year of issue,
+        // as the old route did, so the resent file matches the original.
+        studentId: cert.student_id ?? studentIdFor(userId, new Date(cert.issued_at).getFullYear()),
         certId: cert.cert_id,
         courseTitle: cert.course_title,
         issuedAt: cert.issued_at,
       });
       if (!sent.ok) return NextResponse.json({ error: "Email failed", detail: sent.error }, { status: 502 });
       await client.from("course_certificates").update({ emailed_at: new Date().toISOString() }).eq("cert_id", cert.cert_id);
-      return NextResponse.json({ success: true, resent: true, certId: cert.cert_id, sentTo: profile.email });
+      return NextResponse.json({ success: true, resent: true, certId: cert.cert_id, sentTo: email });
     }
 
     // ── Issue a new one ──
@@ -87,7 +99,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // The id the student already sees on every lesson page.
+    // The id the student already sees on every lesson page, as the server
+    // wrote it. Not profiles.student_id: students can edit their profile, and
+    // /verify publishes this value.
     const { data: firstSub } = await client
       .from("lesson_submissions")
       .select("student_id")
@@ -96,8 +110,8 @@ export async function POST(req: NextRequest) {
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    const studentId = profile.student_id || firstSub?.student_id || studentIdFor(userId);
-    const recipientName = profile.full_name || profile.email;
+    const studentId = firstSub?.student_id || studentIdFor(userId);
+    const recipientName = profile?.full_name?.trim() || email;
     const issuedAt = new Date().toISOString();
 
     let certId = "";
@@ -127,7 +141,7 @@ export async function POST(req: NextRequest) {
     if (!certId) throw new Error("Could not allocate a certificate id");
 
     const sent = await sendCertificate({
-      to: profile.email,
+      to: email,
       recipientName,
       studentId,
       certId,
@@ -144,7 +158,7 @@ export async function POST(req: NextRequest) {
     }
     await client.from("course_certificates").update({ emailed_at: new Date().toISOString() }).eq("cert_id", certId);
 
-    return NextResponse.json({ success: true, certId, sentTo: profile.email, recipientName });
+    return NextResponse.json({ success: true, certId, sentTo: email, recipientName });
   } catch (error: unknown) {
     console.error("Certificate generation error:", error);
     return NextResponse.json(
@@ -183,7 +197,10 @@ async function sendCertificate(input: {
   return error ? { ok: false, error } : { ok: true };
 }
 
-function buildEmailHtml(name: string, certId: string, issueDate: string, courseTitle: string): string {
+function buildEmailHtml(rawName: string, certId: string, issueDate: string, rawTitle: string): string {
+  // The name is whatever the student typed into their profile.
+  const name = escapeHtml(rawName);
+  const courseTitle = escapeHtml(rawTitle);
   return `
 <!DOCTYPE html>
 <html>

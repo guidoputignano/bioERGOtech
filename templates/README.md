@@ -27,7 +27,9 @@ Member portal, Admin Panel, **Course Monitor** tab:
 - **Students.** Everyone who has started, with lessons done, GitHub project,
   check result and certificate status. Filter "Ready to certify", select,
   and issue in bulk. "Issue anyway…" certifies outside the rule and asks for
-  a reason, which is stored with the certificate.
+  a reason, which is stored with the certificate. A certificate whose email
+  failed is marked "Not emailed": press Resend. "Revoke…" withdraws a
+  certificate (it stops verifying) and lets a corrected one be issued.
 - **Questions.** Open questions oldest first. "Draft with Claude" writes a
   reply grounded in the lesson content; read it, edit it, send it. Drafts
   that start "FLAG FOR STAFF" mean the submission needs a human.
@@ -55,13 +57,21 @@ passes.
 
 ## One-time setup
 
-### 1. Run the migration
+### 1. Run the migration, then merge (in that order)
 
-`supabase/migrations/20261216000000_course_github_projects_certificates.sql`
-in the Supabase SQL editor. It is idempotent. It also copies certificates
-already issued (from `profiles.cert_id`) into the new table, flagged `legacy`:
-those values were writable by students, so confirm them by hand with the query
-at the bottom of the file.
+1. Run `supabase/migrations/20261216000000_course_github_projects_certificates.sql`
+   in the Supabase SQL editor.
+2. Merge the pull request and wait for the Vercel deploy to go live.
+3. Between steps 1 and 2, do not issue certificates from the old Submissions
+   tab: the copy below has already run and would miss them.
+
+The migration copies certificates already issued (from `profiles.cert_id`)
+into the new table, once, marked as from the old system. Students could
+write that field, so those certificates show as "being confirmed" on
+`/verify` until you check each against the certificate emails the old system
+actually sent (Resend log), then press **Confirm** on the student's row in the
+Course Monitor (filter "Certificate needs action"). Use **Revoke** for any
+that do not match. Re-running the file is safe: the copy does not run again.
 
 ### 2. Create the mentor GitHub account
 

@@ -70,7 +70,15 @@ export interface CertificateRow {
   issued_at: string;
   revoked_at: string | null;
   legacy: boolean;
+  confirmed_at: string | null;
+  emailed_at: string | null;
 }
+
+const CERT_COLUMNS = "cert_id, user_id, issued_at, revoked_at, legacy, confirmed_at, emailed_at";
+
+/** A legacy row stays unverified until staff confirm it (see the migration). */
+export const certificateVerified = (c: Pick<CertificateRow, "revoked_at" | "legacy" | "confirmed_at">) =>
+  !c.revoked_at && (!c.legacy || !!c.confirmed_at);
 
 // ── One student ─────────────────────────────────────────────────────────
 
@@ -94,8 +102,10 @@ export async function loadStudentState(client: Client, userId: string): Promise<
       .maybeSingle(),
     client
       .from("course_certificates")
-      .select("cert_id, user_id, issued_at, revoked_at, legacy")
+      .select(CERT_COLUMNS)
       .eq("user_id", userId)
+      // Revoked ones are history: at most one active row per student.
+      .is("revoked_at", null)
       .maybeSingle(),
   ]);
   for (const r of [subs, account, membership, certificate]) {
@@ -158,6 +168,10 @@ export interface StudentRow {
   cert_id: string | null;
   cert_issued_at: string | null;
   cert_legacy: boolean;
+  /** False for a legacy certificate staff have not confirmed yet. */
+  cert_verified: boolean;
+  /** False when the certificate exists but its email never went out. */
+  cert_emailed: boolean;
   eligible: boolean;
   reasons: string[];
 }
@@ -226,7 +240,8 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
     readAll<CertificateRow>((from, to) =>
       client
         .from("course_certificates")
-        .select("cert_id, user_id, issued_at, revoked_at, legacy")
+        .select(CERT_COLUMNS)
+        .is("revoked_at", null)
         .order("cert_id")
         .range(from, to),
     ),
@@ -299,6 +314,9 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
       cert_id: cert?.cert_id ?? null,
       cert_issued_at: cert?.issued_at ?? null,
       cert_legacy: cert?.legacy ?? false,
+      cert_verified: cert ? certificateVerified(cert) : false,
+      // Legacy rows were emailed by the old route, which did not record it.
+      cert_emailed: cert ? cert.legacy || !!cert.emailed_at : false,
       eligible: elig.eligible,
       reasons: elig.reasons,
     };

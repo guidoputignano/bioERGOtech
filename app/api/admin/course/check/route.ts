@@ -34,8 +34,12 @@ export async function POST(req: NextRequest) {
     state.project.full_name,
     state.github?.login ?? null,
     state.membership.submitted_commit,
+    state.project.created_via === "template",
   );
 
+  // Only a submission carries a pinned commit. A preview check of an
+  // unsubmitted project must not look like a passed submission, so it
+  // updates the result but never submitted_at.
   const { error } = await client
     .from("course_project_members")
     .update({ check_result: result, checked_at: result.ran_at })

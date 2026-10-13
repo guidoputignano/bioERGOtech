@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -50,7 +50,7 @@ export function githubMessage(code: string, p: URLSearchParams, mentor: string |
     case "connected": return { ok: true, text: `GitHub connected as @${p.get("login") ?? ""}.` };
     case "created": return { ok: true, text: `Your project repository ${p.get("repo") ?? ""} is ready, and the bioERGOtech mentors have access.` };
     case "linked": return { ok: true, text: `Linked ${p.get("repo") ?? "your repository"}. The bioERGOtech mentors have access.` };
-    case "mentor_failed": return { ok: false, text: `Your repository is linked, but we could not add ${mentorName}. In the repository on GitHub, open Settings, then Collaborators, and add ${mentorName}.` };
+    case "mentor_failed": return { ok: false, text: `Your repository is linked, but we could not add ${mentorName} as a collaborator. Press "Use a different repository" below and link the same repository again: that retries it.` };
     case "cancelled": return { ok: false, text: "GitHub sign-in was cancelled. Nothing was changed." };
     case "expired": return { ok: false, text: "That GitHub sign-in took too long or was started in another tab. Please try again." };
     case "signed_out": return { ok: false, text: "Your course login changed during GitHub sign-in. Log in again and retry." };
@@ -60,7 +60,7 @@ export function githubMessage(code: string, p: URLSearchParams, mentor: string |
     case "bad_repo": return { ok: false, text: "That does not look like a GitHub repository link. It should look like github.com/your-name/your-project." };
     case "repo_exists": return { ok: false, text: "You already have a repository with that name. Choose another name, or link the existing one instead." };
     case "template_missing": return { ok: false, text: "The project template is unavailable right now. Please ask a question in your lesson submission and the team will help." };
-    case "repo_not_found": return { ok: false, text: "We could not find that repository. Check the link, and that the repository exists." };
+    case "repo_not_found": return { ok: false, text: "We could not find that repository. Check the link. If it is private, make it public first (Settings, then Danger Zone, then Change visibility): the course asks for public projects." };
     case "not_your_repo": return { ok: false, text: "You need write access to a repository to link it. Ask its owner to add you as a collaborator first." };
     case "repo_private": return { ok: false, text: "That repository is private. Make it public first (Settings, then Danger Zone, then Change visibility): the course asks for public projects." };
     case "owner_must_link": return { ok: false, text: `Ask @${p.get("owner") ?? "the owner"}, who owns the repository, to link it first. You can then link the same repository to join.` };
@@ -95,12 +95,26 @@ export function useCourseState() {
 interface Props {
   /** setup: Lesson 4.4, create or link the repo. submit: course closing. */
   mode: "setup" | "submit";
+  /** Whether this lesson's reflection is saved: when it flips, the progress shown is stale. */
+  lessonSubmitted?: boolean;
 }
 
-export default function CourseProjectBox({ mode }: Props) {
+export default function CourseProjectBox({ mode, lessonSubmitted }: Props) {
   const pathname = usePathname();
-  const { state, setState, loading } = useCourseState();
-  const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
+  const { state, setState, loading, reload } = useCourseState();
+
+  // Reload when this lesson's reflection gets saved. Not on the first render
+  // (the hook already loads), and not by remounting, which would lose the
+  // GitHub result message read from the URL.
+  const lastSubmitted = useRef(lessonSubmitted);
+  useEffect(() => {
+    if (lastSubmitted.current === lessonSubmitted) return;
+    lastSubmitted.current = lessonSubmitted;
+    if (lessonSubmitted) reload();
+  }, [lessonSubmitted, reload]);
+  // The raw result of the GitHub round trip. The message is built at render
+  // time, so it can name the mentor account once the state has loaded.
+  const [ghResult, setGhResult] = useState<{ code: string; params: URLSearchParams } | null>(null);
   const [repoName, setRepoName] = useState("");
   const [repoUrl, setRepoUrl] = useState("");
   const [changing, setChanging] = useState(false);
@@ -112,12 +126,13 @@ export default function CourseProjectBox({ mode }: Props) {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("github");
     if (!code) return;
-    setFlash(githubMessage(code, params, state?.mentor_login ?? null));
+    setGhResult({ code, params: new URLSearchParams(params) });
     for (const k of ["github", "login", "repo", "owner"]) params.delete(k);
     const qs = params.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}#project`);
     document.getElementById("project")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [state?.mentor_login]);
+  }, []);
+  const flash = ghResult ? githubMessage(ghResult.code, ghResult.params, state?.mentor_login ?? null) : null;
 
   const submit = async () => {
     setSubmitting(true);
@@ -202,7 +217,7 @@ export default function CourseProjectBox({ mode }: Props) {
                 <div style={{ fontSize: 13, color: state.project.mentor_access ? TEAL_DARK : AMBER_TEXT }}>
                   {state.project.mentor_access
                     ? `✓ bioERGOtech mentors (@${state.mentor_login}) have access`
-                    : `⚠ Add @${state.mentor_login} as a collaborator in your repository settings`}
+                    : `⚠ The mentors do not have access yet. Press "Use a different repository" and link this same repository again.`}
                 </div>
                 {!certified && (
                   <button onClick={() => setChanging(true)} style={{ ...linkBtn, marginTop: 6 }}>Use a different repository</button>

@@ -76,9 +76,9 @@ create index if not exists course_project_members_project_idx
 create table if not exists public.course_certificates (
   cert_id           text        primary key,
   -- Nullable and SET NULL on purpose: a certificate must stay verifiable
-  -- after the student deletes their account. Unique, so a student can
-  -- never hold two.
-  user_id           uuid        unique references auth.users on delete set null,
+  -- after the student deletes their account. At most one active (not
+  -- revoked) certificate per student: see the partial index below.
+  user_id           uuid        references auth.users on delete set null,
   recipient_name    text        not null,
   student_id        text,
   course_title      text        not null,
@@ -93,9 +93,18 @@ create table if not exists public.course_certificates (
   revoked_at        timestamptz,
   revoked_reason    text,
   -- Copied from profiles.cert_id by the backfill below. Those values were
-  -- writable by students, so they are flagged for a human to confirm.
-  legacy            boolean     not null default false
+  -- writable by students, so a legacy row does not verify as valid until
+  -- staff set confirmed_at (Course Monitor, "Confirm").
+  legacy            boolean     not null default false,
+  confirmed_at      timestamptz
 );
+
+-- One active certificate per student. Partial, so a revoked certificate
+-- (wrong name, forged legacy row) can be replaced by a new one. The name
+-- contains "user_id": approve-certificate matches on it to tell a second
+-- issue apart from a cert_id collision.
+create unique index if not exists course_certificates_active_user_id_idx
+  on public.course_certificates (user_id) where revoked_at is null;
 
 -- ── 5. Row level security ─────────────────────────────────────────────
 -- The API routes use the service role and bypass RLS. These policies are
@@ -139,9 +148,16 @@ create policy "Read own certificate"
 -- ── 6. Backfill certificates already issued ───────────────────────────
 -- profiles.cert_id and cert_issued_at were added outside the migrations,
 -- so they may not exist on a fresh database. Only copy when they do.
+--
+-- Runs once. Students can still write profiles.cert_id, and since the
+-- server no longer does, anything that appears there after the first run is
+-- forged: a re-run of this file must not import it. Imported rows are
+-- unconfirmed (legacy, no confirmed_at) and do not verify as valid until
+-- staff check them against the certificates actually emailed. A cert_id
+-- claimed by two profiles is skipped outright: at least one is a copy.
 do $$
 begin
-  if exists (
+  if not exists (select 1 from public.course_certificates where legacy) and exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'profiles' and column_name = 'cert_id'
   ) and exists (
@@ -162,6 +178,11 @@ begin
         true
       from public.profiles p
       where p.cert_id is not null
+        and p.cert_id in (
+          select cert_id from public.profiles
+          where cert_id is not null
+          group by cert_id having count(*) = 1
+        )
       on conflict do nothing
     $q$;
   end if;
@@ -174,7 +195,10 @@ $$;
 --   select tablename, rowsecurity from pg_tables
 --   where schemaname = 'public' and tablename like 'course\_%';
 --
--- Legacy certificates to confirm by hand:
+-- Legacy certificates waiting for confirmation. Check each against the
+-- certificate emails actually sent (Resend log), then press Confirm or
+-- Revoke on the student's row in the Course Monitor:
 --
 --   select cert_id, recipient_name, issued_at from public.course_certificates
---   where legacy order by issued_at;
+--   where legacy and confirmed_at is null and revoked_at is null
+--   order by issued_at;

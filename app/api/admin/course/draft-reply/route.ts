@@ -52,6 +52,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Claude API error (${err.status})` }, { status: 502 });
     }
     console.error("draft-reply:", (err as Error).message);
-    return NextResponse.json({ error: "Could not draft a reply" }, { status: 500 });
+    return NextResponse.json({ error: (err as Error).message || "Could not draft a reply" }, { status: 500 });
   }
 }

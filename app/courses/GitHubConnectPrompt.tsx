@@ -28,7 +28,7 @@ export default function GitHubConnectPrompt() {
   const pathname = usePathname();
   const { state, loading } = useCourseState();
   const [snoozed, setSnoozed] = useState(true);
-  const [justConnected, setJustConnected] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     try {
@@ -40,8 +40,10 @@ export default function GitHubConnectPrompt() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("github");
     if (code) {
-      const msg = githubMessage(code, params, null);
-      if (msg) setJustConnected(msg.text);
+      setFlash(githubMessage(code, params, null));
+      // Coming back from GitHub, failed or not, is not "later": show the
+      // prompt again so a cancelled or refused connect can be retried.
+      setSnoozed(false);
       for (const k of ["github", "login", "repo", "owner"]) params.delete(k);
       const qs = params.toString();
       window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
@@ -57,20 +59,32 @@ export default function GitHubConnectPrompt() {
     setSnoozed(true);
   };
 
-  if (justConnected) {
+  if (flash?.ok) {
     return (
       <div role="status" style={{ ...box, background: TEAL_LIGHT, borderColor: TEAL }}>
-        <span style={{ fontSize: 14, color: TEAL_DARK, fontWeight: 600 }}>{justConnected}</span>
-        <button onClick={() => setJustConnected(null)} style={laterBtn} aria-label="Close">×</button>
+        <span style={{ fontSize: 14, color: TEAL_DARK, fontWeight: 600 }}>✓ {flash.text}</span>
+        <button onClick={() => setFlash(null)} style={laterBtn} aria-label="Close">×</button>
       </div>
     );
   }
 
-  if (loading || !state || !state.github_enabled || state.separate_track || state.github || snoozed) return null;
+  const warning = flash && (
+    <div role="status" style={{ ...box, background: "#FFF8E6", borderColor: "#F0A500", marginBottom: 8 }}>
+      <span style={{ fontSize: 14, color: "#7D5A00" }}>⚠ {flash.text}</span>
+      <button onClick={() => setFlash(null)} style={laterBtn} aria-label="Close">×</button>
+    </div>
+  );
+
+  if (loading || !state || !state.github_enabled || state.separate_track || state.github || snoozed) {
+    // A failed switch of account for someone already connected still says why.
+    return warning || null;
+  }
 
   const href = `/api/courses/github/connect?${new URLSearchParams({ intent: "connect", next: pathname || "/courses/agentic-ai" })}`;
 
   return (
+    <>
+    {warning}
     <div style={box}>
       <div style={{ fontSize: 26, lineHeight: 1 }} aria-hidden>🐙</div>
       <div style={{ flex: "1 1 260px", minWidth: 0 }}>
@@ -89,6 +103,7 @@ export default function GitHubConnectPrompt() {
         <button onClick={later} style={laterBtn}>Later</button>
       </div>
     </div>
+    </>
   );
 }
 

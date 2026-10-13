@@ -80,7 +80,26 @@ export async function addMentor(
 /** Whether the mentor can already push, for teammates linking a repo. */
 export async function mentorHasAccess(cfg: GitHubConfig, fullName: string): Promise<boolean> {
   const res = await gh<GhRepo>(`/repos/${fullName}`, cfg.mentorToken);
-  return !!res.data?.permissions?.push;
+  if (res.data?.permissions?.push) return true;
+  return acceptPendingInvite(cfg, fullName);
+}
+
+/**
+ * Accepts a collaborator invitation the mentor has not accepted yet.
+ *
+ * Covers a student who added the mentor by hand, and an automatic accept
+ * that failed (rate limit, network). Without it the invitation would sit
+ * pending, the access check would fail, and nobody would know why.
+ */
+export async function acceptPendingInvite(cfg: GitHubConfig, fullName: string): Promise<boolean> {
+  const list = await gh<{ id: number; repository: { full_name: string } }[]>(
+    "/user/repository_invitations?per_page=100",
+    cfg.mentorToken,
+  );
+  const invite = list.data?.find((i) => i.repository.full_name.toLowerCase() === fullName.toLowerCase());
+  if (!invite) return false;
+  const accept = await gh(`/user/repository_invitations/${invite.id}`, cfg.mentorToken, { method: "PATCH" });
+  return accept.status === 204;
 }
 
 // ── Checks (mentor token) ───────────────────────────────────────────────
@@ -137,6 +156,8 @@ export async function runProjectChecks(
   fullName: string,
   studentLogin: string | null,
   pinnedRef: string | null,
+  /** The repo was generated from the template, so its first commit is not the student's work. */
+  createdViaTemplate = false,
 ): Promise<ProjectCheckResult> {
   const ranAt = new Date().toISOString();
   const fail = (error: string): ProjectCheckResult => ({
@@ -155,17 +176,38 @@ export async function runProjectChecks(
         : `GitHub returned ${repoRes.status}`,
     );
   }
-  const repo = repoRes.data;
+  let repo = repoRes.data;
+  if (!repo.permissions?.push && (await acceptPendingInvite(cfg, fullName))) {
+    repo = (await gh<GhRepo>(`/repos/${fullName}`, cfg.mentorToken)).data ?? repo;
+  }
 
   const ref = pinnedRef ?? (await headCommit(cfg, fullName));
   if (!ref) return fail("The repository has no commits yet.");
 
-  const treeRes = await gh<{ tree: { path: string; type: string }[]; truncated: boolean }>(
+  type TreeEntry = { path: string; type: string; sha: string };
+  const treeRes = await gh<{ tree: TreeEntry[]; truncated: boolean }>(
     `/repos/${fullName}/git/trees/${ref}?recursive=1`,
     cfg.mentorToken,
   );
   if (!treeRes.data) return fail(`Could not read commit ${ref.slice(0, 7)}`);
   const files = treeRes.data.tree.filter((e) => e.type === "blob").map((e) => e.path);
+
+  // GitHub cuts a recursive listing off on very large repos (a committed
+  // virtualenv is enough). The files the checks look for live at the root
+  // or in docs/, so read those two levels directly rather than report
+  // README or ethics review as missing.
+  if (treeRes.data.truncated) {
+    const root = await gh<{ tree: TreeEntry[] }>(`/repos/${fullName}/git/trees/${ref}`, cfg.mentorToken);
+    for (const e of root.data?.tree ?? []) if (e.type === "blob" && !files.includes(e.path)) files.push(e.path);
+    const docsDir = root.data?.tree.find((e) => e.type === "tree" && e.path.toLowerCase() === "docs");
+    if (docsDir) {
+      const docs = await gh<{ tree: TreeEntry[] }>(`/repos/${fullName}/git/trees/${docsDir.sha}`, cfg.mentorToken);
+      for (const e of docs.data?.tree ?? []) {
+        const p = `${docsDir.path}/${e.path}`;
+        if (e.type === "blob" && !files.includes(p)) files.push(p);
+      }
+    }
+  }
 
   const items: CheckItem[] = [];
 
@@ -176,7 +218,7 @@ export async function runProjectChecks(
     required: true,
     detail: repo.permissions?.push
       ? `@${cfg.mentorLogin} is a collaborator.`
-      : `Add @${cfg.mentorLogin} as a collaborator, or relink the repository from Lesson 4.4.`,
+      : `Link the repository again from Lesson 4.4 so we can add @${cfg.mentorLogin}.`,
   });
 
   const prototypeFiles = files.filter((p) => !isScaffolding(p));
@@ -240,11 +282,14 @@ export async function runProjectChecks(
   });
 
   if (studentLogin) {
-    const commits = await gh<unknown[]>(
-      `/repos/${fullName}/commits?sha=${ref}&author=${encodeURIComponent(studentLogin)}&per_page=1`,
+    // Newest first. A repo generated from the template starts with a
+    // parentless "Initial commit" credited to whoever generated it: that is
+    // the template, not their work, so it only counts on a linked repo.
+    const commits = await gh<{ parents: unknown[] }[]>(
+      `/repos/${fullName}/commits?sha=${ref}&author=${encodeURIComponent(studentLogin)}&per_page=2`,
       cfg.mentorToken,
     );
-    const authored = (commits.data?.length ?? 0) > 0;
+    const authored = (commits.data ?? []).some((c) => !createdViaTemplate || (c.parents?.length ?? 0) > 0);
     items.push({
       key: "authored",
       label: "You have commits in this repository",

@@ -37,6 +37,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL(`${url.pathname}${url.search}`, origin));
   }
 
+  // Only from our own pages. Without this, another site could send a
+  // signed-in student here: GitHub skips the consent screen for an app the
+  // student already approved, so a hidden redirect could create or link a
+  // repository in their name and reset their submission.
+  // "same-site" covers the hop from bioergotech.org to www above; "none" is
+  // a URL typed or bookmarked by the student themself.
+  const fetchSite = req.headers.get("sec-fetch-site");
+  if (fetchSite && !["same-origin", "same-site", "none"].includes(fetchSite)) {
+    return back("expired");
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

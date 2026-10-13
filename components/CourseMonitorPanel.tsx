@@ -51,6 +51,8 @@ interface StudentRow {
   cert_id: string | null;
   cert_issued_at: string | null;
   cert_legacy: boolean;
+  cert_verified: boolean;
+  cert_emailed: boolean;
   eligible: boolean;
   reasons: string[];
 }
@@ -77,7 +79,7 @@ interface Question {
   profiles: { full_name: string | null; email: string | null } | null;
 }
 
-type Filter = "all" | "eligible" | "review" | "progress" | "certified" | "no_github";
+type Filter = "all" | "eligible" | "review" | "progress" | "certified" | "cert_action" | "no_github";
 
 const FILTERS: { id: Filter; label: string; test: (s: StudentRow) => boolean }[] = [
   { id: "all", label: "All", test: () => true },
@@ -85,6 +87,7 @@ const FILTERS: { id: Filter; label: string; test: (s: StudentRow) => boolean }[]
   { id: "review", label: "Submitted, needs fixes", test: (s) => !!s.submitted_at && !s.eligible && !s.cert_id },
   { id: "progress", label: "In progress", test: (s) => !s.submitted_at && !s.cert_id },
   { id: "certified", label: "Certified", test: (s) => !!s.cert_id },
+  { id: "cert_action", label: "Certificate needs action", test: (s) => !!s.cert_id && (!s.cert_verified || !s.cert_emailed) },
   { id: "no_github", label: "No GitHub yet", test: (s) => !s.github_login && !s.cert_id },
 ];
 
@@ -104,7 +107,8 @@ export default function CourseMonitorPanel({ adminUserId }: { adminUserId?: stri
 
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 4000);
+    // Long messages (a bulk run naming failures) stay up long enough to read.
+    setTimeout(() => setToast((t) => (t === msg ? null : t)), msg.length > 90 ? 12000 : 4000);
   };
 
   const load = useCallback(async () => {
@@ -217,13 +221,42 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
   };
 
   const issue = async (s: StudentRow, opts: { resend?: boolean; override_reason?: string } = {}) => {
-    const res = await fetch("/api/admin/approve-certificate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: s.user_id, ...opts }),
-    });
-    const json = await res.json();
-    return { ok: res.ok, json };
+    try {
+      const res = await fetch("/api/admin/approve-certificate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: s.user_id, ...opts }),
+      });
+      // A gateway timeout comes back as HTML, not JSON.
+      const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      return { ok: res.ok, json };
+    } catch {
+      return { ok: false, json: { error: "Network error" } };
+    }
+  };
+
+  const certAction = async (s: StudentRow, action: "confirm" | "revoke") => {
+    let reason: string | undefined;
+    if (action === "confirm") {
+      if (!window.confirm(`Confirm certificate ${s.cert_id} for ${s.name || s.email}? Only confirm it if it matches a certificate the old system actually emailed. It will then show as valid on /verify.`)) return;
+    } else {
+      const r = window.prompt(`Revoke certificate ${s.cert_id} for ${s.name || s.email}? It will stop verifying, and a new one can be issued.\n\nReason (kept with the record):`);
+      if (!r?.trim()) return;
+      reason = r.trim();
+    }
+    setBusy(s.user_id);
+    try {
+      const res = await fetch("/api/admin/course/certificate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cert_id: s.cert_id, action, reason }),
+      });
+      const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      showToast(res.ok ? `✓ Certificate ${s.cert_id} ${action === "confirm" ? "confirmed" : "revoked"}` : `Error: ${json.error}`);
+      onChanged();
+    } finally {
+      setBusy(null);
+    }
   };
 
   const issueOne = async (s: StudentRow) => {
@@ -263,18 +296,29 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
     const list = eligibleSelected;
     if (!list.length || !window.confirm(`Issue and email certificates to ${list.length} student${list.length === 1 ? "" : "s"}?`)) return;
     setBulk({ done: 0, total: list.length, failed: 0 });
-    let failed = 0;
-    // One at a time: each issue generates a file and sends an email, and the
-    // email provider rate-limits bursts.
-    for (let i = 0; i < list.length; i++) {
-      const { ok } = await issue(list[i]);
-      if (!ok) failed++;
-      setBulk({ done: i + 1, total: list.length, failed });
+    const notIssued: string[] = [];
+    const notEmailed: string[] = [];
+    const who = (s: StudentRow) => s.name || s.email || s.user_id;
+    try {
+      // One at a time: each issue generates a file and sends an email, and
+      // the email provider rate-limits bursts.
+      for (let i = 0; i < list.length; i++) {
+        const { ok, json } = await issue(list[i]);
+        // A certId with an error means issued, but the email did not go out.
+        if (!ok) (json?.certId ? notEmailed : notIssued).push(who(list[i]));
+        setBulk({ done: i + 1, total: list.length, failed: notIssued.length + notEmailed.length });
+      }
+      const issued = list.length - notIssued.length;
+      showToast(
+        `Issued ${issued} certificate${issued === 1 ? "" : "s"}.` +
+          (notEmailed.length ? ` Email failed for ${notEmailed.length} (marked "not emailed", use Resend): ${notEmailed.slice(0, 5).join(", ")}${notEmailed.length > 5 ? "…" : ""}.` : "") +
+          (notIssued.length ? ` Not issued: ${notIssued.slice(0, 5).join(", ")}${notIssued.length > 5 ? "…" : ""}.` : ""),
+      );
+    } finally {
+      setSelected(new Set());
+      setBulk(null);
+      onChanged();
     }
-    showToast(`Issued ${list.length - failed} certificate${list.length - failed === 1 ? "" : "s"}${failed ? `, ${failed} failed (see the list)` : ""}`);
-    setSelected(new Set());
-    setBulk(null);
-    onChanged();
   };
 
   const exportCsv = () => {
@@ -355,6 +399,8 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
                 onCheck={() => runCheck(s)}
                 onIssue={() => issueOne(s)}
                 onResend={() => resend(s)}
+                onConfirm={() => certAction(s, "confirm")}
+                onRevoke={() => certAction(s, "revoke")}
               />
             ))}
           </tbody>
@@ -370,10 +416,11 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
 }
 
 function StudentTableRow({
-  s, total, busy, selected, expanded, onToggleSelect, onToggleExpand, onCheck, onIssue, onResend,
+  s, total, busy, selected, expanded, onToggleSelect, onToggleExpand, onCheck, onIssue, onResend, onConfirm, onRevoke,
 }: {
   s: StudentRow; total: number; busy: boolean; selected: boolean; expanded: boolean;
   onToggleSelect: (on: boolean) => void; onToggleExpand: () => void; onCheck: () => void; onIssue: () => void; onResend: () => void;
+  onConfirm: () => void; onRevoke: () => void;
 }) {
   const pct = Math.round((s.lessons_done / Math.max(1, total)) * 100);
   return (
@@ -432,7 +479,9 @@ function StudentTableRow({
           {s.cert_id ? (
             <>
               <a href={`/verify/${s.cert_id}`} target="_blank" rel="noopener noreferrer" style={{ color: TEAL_DARK, fontFamily: "monospace", fontWeight: 600 }}>{s.cert_id}</a>
-              <div style={{ color: TEXT_LIGHT, fontSize: 11 }}>{fmtDate(s.cert_issued_at)}{s.cert_legacy ? " · legacy, confirm" : ""}</div>
+              <div style={{ color: TEXT_LIGHT, fontSize: 11 }}>{fmtDate(s.cert_issued_at)}{s.cert_legacy ? " · from old system" : ""}</div>
+              {!s.cert_verified && <Pill tone="warn">Pending confirmation</Pill>}
+              {s.cert_verified && !s.cert_emailed && <Pill tone="error">Not emailed</Pill>}
             </>
           ) : s.eligible ? (
             <Pill tone="ok">Ready to certify</Pill>
@@ -448,7 +497,14 @@ function StudentTableRow({
               <button onClick={onCheck} disabled={busy} style={ghostBtn}>{busy ? "…" : "Run checks"}</button>
             )}
             {s.cert_id ? (
-              <button onClick={onResend} disabled={busy} style={ghostBtn}>Resend</button>
+              <>
+                {s.cert_verified ? (
+                  <button onClick={onResend} disabled={busy} style={s.cert_emailed ? ghostBtn : primaryBtn}>Resend</button>
+                ) : (
+                  <button onClick={onConfirm} disabled={busy} style={primaryBtn} title="Only if it matches a certificate the old system emailed">Confirm</button>
+                )}
+                <button onClick={onRevoke} disabled={busy} style={{ ...ghostBtn, color: RED }}>Revoke…</button>
+              </>
             ) : (
               <button onClick={onIssue} disabled={busy} style={s.eligible ? primaryBtn : { ...ghostBtn, color: TEXT_LIGHT }} title={s.eligible ? "Issue and email the certificate" : "Issue outside the automatic rule (asks for a reason)"}>
                 {s.eligible ? "🎓 Approve & issue" : "Issue anyway…"}

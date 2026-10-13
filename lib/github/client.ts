@@ -158,6 +158,9 @@ export function authorizeUrl(cfg: GitHubConfig, state: OAuthState): string {
   u.searchParams.set("scope", scopesFor(state.intent));
   u.searchParams.set("state", state.nonce);
   u.searchParams.set("allow_signup", "true");
+  // Connecting is also how a student switches account: without the picker,
+  // GitHub silently re-approves whoever is signed in on github.com.
+  if (state.intent === "connect") u.searchParams.set("prompt", "select_account");
   return u.toString();
 }
 
@@ -195,8 +198,21 @@ export function parseRepoRef(input: string): string | null {
   return m && validRepoName(m[2]) ? `${m[1]}/${m[2]}` : null;
 }
 
-/** Only same-site relative paths, so the callback cannot be an open redirect. */
+/**
+ * Only same-site paths, so the callback cannot be an open redirect.
+ *
+ * Resolved and compared by origin rather than pattern-matched: URL parsing
+ * drops tabs and newlines and treats "\" as "/", so a string check passes
+ * "/\t/evil.com" which then resolves to //evil.com.
+ */
 export function safeNext(next: string | null | undefined, fallback = "/courses/agentic-ai"): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return fallback;
-  return next;
+  if (!next || !next.startsWith("/")) return fallback;
+  try {
+    const base = new URL(siteOrigin());
+    const u = new URL(next, base);
+    if (u.origin !== base.origin) return fallback;
+    return `${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return fallback;
+  }
 }

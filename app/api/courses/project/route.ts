@@ -16,9 +16,15 @@ export async function GET() {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, chiamante } = guard;
 
+  // Every lesson page asks this for signed-in students. Until GitHub is set
+  // up, answer without touching the course tables, which may not exist yet
+  // (the migration is run by hand): the prompt and project box then stay
+  // hidden instead of 500s on every lesson view.
+  const cfg = githubConfig();
+  if (!cfg) return NextResponse.json({ github_enabled: false });
+
   try {
     const state = await loadStudentState(client, chiamante.id);
-    const cfg = githubConfig();
     // Licei and universita students hand in their team project through their
     // own console, assessed by a Commissione. Asking them for a GitHub repo
     // as well would give them two competing submission routes.
@@ -26,9 +32,9 @@ export async function GET() {
     return NextResponse.json({
       ...state,
       separate_track: separateTrack,
-      github_enabled: !!cfg,
-      mentor_login: cfg?.mentorLogin ?? null,
-      template_repo: cfg?.templateRepo ?? null,
+      github_enabled: true,
+      mentor_login: cfg.mentorLogin,
+      template_repo: cfg.templateRepo,
     });
   } catch (error) {
     console.error("course project state:", (error as Error).message);
