@@ -4,7 +4,8 @@ import { Resend } from "resend";
 import { generateCertificatePptx, generateCertId } from "@/lib/certificate/generate";
 import { loadStudentState, studentIdFor } from "@/lib/course/data";
 
-const COURSE_TITLE = "10-Week Agentic AI High School Innovation Program";
+/** Printed on the certificate, stored with it, and shown on /verify. */
+const COURSE_TITLE = "Agentic AI Program";
 
 /**
  * POST /api/admin/approve-certificate
@@ -58,15 +59,18 @@ export async function POST(req: NextRequest) {
       }
       const { data: cert } = await client
         .from("course_certificates")
-        .select("cert_id, recipient_name, student_id, issued_at")
+        .select("cert_id, recipient_name, student_id, course_title, issued_at")
         .eq("cert_id", existing.cert_id)
         .single();
       if (!cert) return NextResponse.json({ error: "Certificate record not found" }, { status: 404 });
+      // The stored title, not today's: a resend reproduces the certificate
+      // exactly as issued, matching what /verify shows for this id.
       const sent = await sendCertificate({
         to: profile.email,
         recipientName: cert.recipient_name,
         studentId: cert.student_id ?? studentIdFor(userId),
         certId: cert.cert_id,
+        courseTitle: cert.course_title,
         issuedAt: cert.issued_at,
       });
       if (!sent.ok) return NextResponse.json({ error: "Email failed", detail: sent.error }, { status: 502 });
@@ -122,7 +126,14 @@ export async function POST(req: NextRequest) {
     }
     if (!certId) throw new Error("Could not allocate a certificate id");
 
-    const sent = await sendCertificate({ to: profile.email, recipientName, studentId, certId, issuedAt });
+    const sent = await sendCertificate({
+      to: profile.email,
+      recipientName,
+      studentId,
+      certId,
+      courseTitle: COURSE_TITLE,
+      issuedAt,
+    });
     if (!sent.ok) {
       console.error("Resend error:", sent.error);
       // The certificate exists and verifies. Only the email needs retrying.
@@ -148,6 +159,7 @@ async function sendCertificate(input: {
   recipientName: string;
   studentId: string;
   certId: string;
+  courseTitle: string;
   issuedAt: string;
 }): Promise<{ ok: boolean; error?: unknown }> {
   const issueDate = new Date(input.issuedAt).toLocaleDateString("en-GB", {
@@ -156,6 +168,7 @@ async function sendCertificate(input: {
   const pptxBuffer = await generateCertificatePptx({
     recipientName: input.recipientName,
     studentId: input.studentId,
+    courseTitle: input.courseTitle,
     certId: input.certId,
     issueDate,
   });
@@ -164,13 +177,13 @@ async function sendCertificate(input: {
     from: "bioERGOtech Foundation <certificates@bioergotech.org>",
     to: input.to,
     subject: "Your bioERGOtech Certificate of Completion 🎓",
-    html: buildEmailHtml(input.recipientName, input.certId, issueDate),
+    html: buildEmailHtml(input.recipientName, input.certId, issueDate, input.courseTitle),
     attachments: [{ filename: `bioERGOtech-Certificate-${input.certId}.pptx`, content: pptxBuffer }],
   });
   return error ? { ok: false, error } : { ok: true };
 }
 
-function buildEmailHtml(name: string, certId: string, issueDate: string): string {
+function buildEmailHtml(name: string, certId: string, issueDate: string, courseTitle: string): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -209,7 +222,7 @@ function buildEmailHtml(name: string, certId: string, issueDate: string): string
             </h1>
             <p style="margin:0 0 16px;font-size:15px;color:#4A5568;line-height:1.7;">
               You have successfully completed the
-              <strong style="color:#0A1628;"> 10-Week Agentic AI High School Innovation Program</strong>,
+              <strong style="color:#0A1628;"> ${courseTitle}</strong>,
               a rigorous, hands-on course in agentic AI, machine learning ethics, and real-world agent development.
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#4A5568;line-height:1.7;">

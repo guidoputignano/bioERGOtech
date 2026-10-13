@@ -155,6 +155,8 @@ begin
         p.cert_id,
         p.id,
         coalesce(nullif(p.full_name, ''), p.email),
+        -- The title printed on certificates issued before the rename to
+        -- "Agentic AI Program", so /verify matches the document the holder has.
         '10-Week Agentic AI High School Innovation Program',
         coalesce(p.cert_issued_at, now()),
         true
