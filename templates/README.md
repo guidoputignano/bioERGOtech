@@ -32,6 +32,11 @@ Member portal, Admin Panel, **Course Monitor** tab:
   reply grounded in the lesson content; read it, edit it, send it. Drafts
   that start "FLAG FOR STAFF" mean the submission needs a human.
 - **Lesson drop-off.** Students per lesson, to spot where people stop.
+- **Email alerts.** With `COURSE_NOTIFY_EMAILS` set, the team gets an email
+  as soon as a student submits a new or changed question or comment, with
+  the text and a link to the Course Monitor. Edits to a reflection alone do
+  not trigger one. Sent after the student's save, so a mail problem never
+  blocks a submission.
 
 ## Certificate rule
 
@@ -98,6 +103,7 @@ Generate a client secret.
 | `GITHUB_MENTOR_TOKEN` | the token from step 2 |
 | `GITHUB_TEMPLATE_REPO` | `bioergotech-mentor/agentic-ai-project-template` |
 | `ANTHROPIC_API_KEY` | for "Draft with Claude" |
+| `COURSE_NOTIFY_EMAILS` | who is emailed about new student questions and comments, comma separated (for example `info@bioergotech.org,mentors@bioergotech.org`). Empty turns it off. |
 
 `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are already in use.
 
