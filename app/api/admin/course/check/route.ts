@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
-import { loadStudentState } from "@/lib/course/data";
+import { loadStudentState, recordMentorAccess } from "@/lib/course/data";
 import { githubConfig } from "@/lib/github/client";
 import { runProjectChecks } from "@/lib/github/projects";
 
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     .update({ check_result: result, checked_at: result.ran_at })
     .eq("user_id", user_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await recordMentorAccess(client, state.project, result);
 
   return NextResponse.json({ result, state: await loadStudentState(client, user_id) });
 }

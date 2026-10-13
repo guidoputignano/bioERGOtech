@@ -203,7 +203,10 @@ export function parseRepoRef(input: string): string | null {
  *
  * Resolved and compared by origin rather than pattern-matched: URL parsing
  * drops tabs and newlines and treats "\" as "/", so a string check passes
- * "/\t/evil.com" which then resolves to //evil.com.
+ * "/\t/evil.com" which then resolves to //evil.com. The resolved path is
+ * checked too: dot segments ("/.//evil.com") normalise to "//evil.com",
+ * which is same-origin now but off-site the next time it is resolved.
+ * API paths are refused: a return address only ever names a page.
  */
 export function safeNext(next: string | null | undefined, fallback = "/courses/agentic-ai"): string {
   if (!next || !next.startsWith("/")) return fallback;
@@ -211,8 +214,20 @@ export function safeNext(next: string | null | undefined, fallback = "/courses/a
     const base = new URL(siteOrigin());
     const u = new URL(next, base);
     if (u.origin !== base.origin) return fallback;
+    if (u.pathname.startsWith("//") || u.pathname.startsWith("/api/")) return fallback;
     return `${u.pathname}${u.search}${u.hash}`;
   } catch {
     return fallback;
   }
+}
+
+/** An absolute URL on the site for a path from safeNext, built without re-resolving it. */
+export function siteUrl(path: string): URL {
+  const u = new URL(siteOrigin());
+  const [beforeHash, hash = ""] = path.split("#", 2);
+  const [pathname, search = ""] = beforeHash.split("?", 2);
+  u.pathname = pathname;
+  u.search = search;
+  u.hash = hash;
+  return u;
 }

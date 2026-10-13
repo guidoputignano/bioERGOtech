@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireMember } from "@/lib/auth/admin";
-import { loadStudentState } from "@/lib/course/data";
+import { loadStudentState, recordMentorAccess } from "@/lib/course/data";
 import { githubConfig } from "@/lib/github/client";
 import { headCommit, runProjectChecks } from "@/lib/github/projects";
 
@@ -36,6 +36,15 @@ export async function POST() {
   }
 
   const commit = await headCommit(cfg, state.project.full_name);
+  if (!commit && state.membership.submitted_commit) {
+    // GitHub unreachable or rate-limited. The earlier submission and its
+    // check describe each other: leave both alone rather than replace a
+    // passing result with an error about a different moment.
+    return NextResponse.json(
+      { error: "We could not read your repository right now. Your earlier submission is unchanged; please try again shortly." },
+      { status: 502 },
+    );
+  }
   const result = commit
     ? await runProjectChecks(
         cfg,
@@ -68,6 +77,7 @@ export async function POST() {
     console.error("course submit:", error.message);
     return NextResponse.json({ error: "Could not save your submission" }, { status: 500 });
   }
+  await recordMentorAccess(client, state.project, result);
 
   return NextResponse.json({ state: await loadStudentState(client, chiamante.id) });
 }

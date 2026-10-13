@@ -7,7 +7,7 @@ import {
   gh,
   githubConfig,
   safeNext,
-  siteOrigin,
+  siteUrl,
   stateCookieOptions,
 } from "@/lib/github/client";
 import { addMentor, createFromTemplate, mentorHasAccess, type GhRepo } from "@/lib/github/projects";
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const next = safeNext(state?.next);
 
   const back = (code: string, extra?: Record<string, string>) => {
-    const to = new URL(next, siteOrigin());
+    const to = siteUrl(next);
     to.searchParams.set("github", code);
     for (const [k, v] of Object.entries(extra ?? {})) to.searchParams.set(k, v);
     to.hash = "project";

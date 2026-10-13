@@ -9,6 +9,7 @@ import {
   parseRepoRef,
   safeNext,
   siteOrigin,
+  siteUrl,
   stateCookieOptions,
   validRepoName,
   type Intent,
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const next = safeNext(url.searchParams.get("next"));
   const back = (code: string) => {
-    const to = new URL(next, siteOrigin());
+    const to = siteUrl(next);
     to.searchParams.set("github", code);
     to.hash = "project";
     return NextResponse.redirect(to);
@@ -37,16 +38,37 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL(`${url.pathname}${url.search}`, origin));
   }
 
+  const intentParam = url.searchParams.get("intent");
+  const intent: Intent = intentParam === "create" || intentParam === "link" ? intentParam : "connect";
+
   // Only from our own pages. Without this, another site could send a
   // signed-in student here: GitHub skips the consent screen for an app the
   // student already approved, so a hidden redirect could create or link a
   // repository in their name and reset their submission.
-  // "same-site" covers the hop from bioergotech.org to www above; "none" is
-  // a URL typed or bookmarked by the student themself.
+  //
+  // Creating and linking change things, so they must come from a click on
+  // the site: "same-origin", or "same-site" for the hop from
+  // bioergotech.org to www above. Not "none", which a link opened from an
+  // email or chat app also sends. Browsers too old to send the header must
+  // show a Referer from the site instead. Connecting only reads the public
+  // profile, so a typed URL or bookmark ("none") is fine for it.
   const fetchSite = req.headers.get("sec-fetch-site");
-  if (fetchSite && !["same-origin", "same-site", "none"].includes(fetchSite)) {
-    return back("expired");
-  }
+  const fromSite = fetchSite === "same-origin" || fetchSite === "same-site";
+  const referer = req.headers.get("referer");
+  const refererFromSite = !!referer && (() => {
+    try {
+      return new URL(referer).origin === origin;
+    } catch {
+      return false;
+    }
+  })();
+  const allowed =
+    intent === "connect"
+      ? !fetchSite || fromSite || fetchSite === "none"
+      : fetchSite
+        ? fromSite
+        : refererFromSite;
+  if (!allowed) return back("expired");
 
   const supabase = await createClient();
   const {
@@ -58,9 +80,6 @@ export async function GET(req: NextRequest) {
 
   const cfg = githubConfig();
   if (!cfg) return back("not_configured");
-
-  const intentParam = url.searchParams.get("intent");
-  const intent: Intent = intentParam === "create" || intentParam === "link" ? intentParam : "connect";
 
   let repo: string | undefined;
   if (intent === "create") {

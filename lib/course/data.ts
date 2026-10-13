@@ -80,6 +80,23 @@ const CERT_COLUMNS = "cert_id, user_id, issued_at, revoked_at, legacy, confirmed
 export const certificateVerified = (c: Pick<CertificateRow, "revoked_at" | "legacy" | "confirmed_at">) =>
   !c.revoked_at && (!c.legacy || !!c.confirmed_at);
 
+/**
+ * A check can find the mentor has access when the project row says it does
+ * not (an invitation accepted during the check, or added by hand). Write it
+ * back, or the project box and the Course Monitor keep saying "no access"
+ * next to a passing access check.
+ */
+export async function recordMentorAccess(
+  client: Client,
+  project: Pick<ProjectRow, "id" | "mentor_access">,
+  result: ProjectCheckResult,
+): Promise<void> {
+  if (project.mentor_access) return;
+  if (!result.items.some((i) => i.key === "mentor_access" && i.ok)) return;
+  const { error } = await client.from("course_projects").update({ mentor_access: true }).eq("id", project.id);
+  if (error) console.error("course_projects mentor_access:", error.message);
+}
+
 // ── One student ─────────────────────────────────────────────────────────
 
 export interface StudentState {
@@ -259,7 +276,9 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
   const projectBy = new Map(projects.map((p) => [p.id, p]));
   const certBy = new Map(certs.filter((c) => c.user_id && !c.revoked_at).map((c) => [c.user_id as string, c]));
 
-  const userIds = [...new Set([...byUser.keys(), ...accountBy.keys(), ...memberBy.keys()])];
+  // Certificate holders too: an imported legacy certificate can belong to
+  // someone with no lessons, and staff must be able to confirm or revoke it.
+  const userIds = [...new Set([...byUser.keys(), ...accountBy.keys(), ...memberBy.keys(), ...certBy.keys()])];
   const profiles = await readByIds<{ id: string; full_name: string | null; email: string | null }>(
     userIds,
     (chunk) => client.from("profiles").select("id, full_name, email").in("id", chunk),

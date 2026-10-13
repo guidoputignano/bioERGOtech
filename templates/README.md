@@ -71,7 +71,19 @@ write that field, so those certificates show as "being confirmed" on
 `/verify` until you check each against the certificate emails the old system
 actually sent (Resend log), then press **Confirm** on the student's row in the
 Course Monitor (filter "Certificate needs action"). Use **Revoke** for any
-that do not match. Re-running the file is safe: the copy does not run again.
+that do not match. Re-running the file is safe: the copy is recorded and
+does not run again.
+
+Two cases the copy cannot settle on its own:
+- An old certificate stored with an email address instead of a name (the
+  profile had no name) cannot be confirmed, because /verify would publish
+  the address. Revoke it, ask the student to add their name, issue again.
+- A certificate id claimed by two profiles is skipped (one is a copy). The
+  query at the end of the migration lists them; issue the genuine holder a
+  new certificate with "Issue anyway".
+
+New certificates also need a name on the student's profile: the Course
+Monitor says so instead of issuing one with an email address on it.
 
 ### 2. Create the mentor GitHub account
 

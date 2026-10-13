@@ -15,6 +15,24 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 
+/**
+ * Where to go after signing in. Only a page on this site: anything else in
+ * returnTo (another host, "//host", a path that normalises to one, or an
+ * API route that acts on the student's behalf) falls back to the portal.
+ */
+function safeReturnTo(returnTo: string | null): string {
+  const fallback = "/member-portal";
+  if (!returnTo || !returnTo.startsWith("/")) return fallback;
+  try {
+    const u = new URL(returnTo, window.location.origin);
+    if (u.origin !== window.location.origin) return fallback;
+    if (u.pathname.startsWith("//") || u.pathname.startsWith("/api/")) return fallback;
+    return `${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
 function LoginFormInner({
   className,
   ...props
@@ -38,7 +56,7 @@ function LoginFormInner({
         password,
       });
       if (error) throw error;
-      router.push(returnTo || "/member-portal");
+      router.push(safeReturnTo(returnTo));
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

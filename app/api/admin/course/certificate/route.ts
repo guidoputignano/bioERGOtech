@@ -25,6 +25,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "A reason is required to revoke a certificate" }, { status: 400 });
   }
 
+  if (body.action === "confirm") {
+    // Old-system rows fall back to the email when the profile had no name.
+    // Confirming would publish that address on /verify under "Awarded to".
+    const { data: row } = await client
+      .from("course_certificates")
+      .select("recipient_name")
+      .eq("cert_id", body.cert_id)
+      .maybeSingle();
+    if (row?.recipient_name?.includes("@")) {
+      return NextResponse.json(
+        { error: "This certificate carries an email address instead of a name. Revoke it, ask the student to add their name, then issue a new one." },
+        { status: 422 },
+      );
+    }
+  }
+
   const now = new Date().toISOString();
   const update =
     body.action === "confirm"

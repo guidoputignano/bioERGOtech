@@ -14,6 +14,8 @@ export interface GhRepo {
   default_branch: string;
   owner: { login: string };
   permissions?: { admin?: boolean; push?: boolean; pull?: boolean };
+  /** Set by GitHub when the repo was generated from a template repository. */
+  template_repository?: { full_name: string } | null;
 }
 
 // ── Repository setup (student token) ────────────────────────────────────
@@ -156,7 +158,7 @@ export async function runProjectChecks(
   fullName: string,
   studentLogin: string | null,
   pinnedRef: string | null,
-  /** The repo was generated from the template, so its first commit is not the student's work. */
+  /** Created through the course from the template (also detected from GitHub's own record). */
   createdViaTemplate = false,
 ): Promise<ProjectCheckResult> {
   const ranAt = new Date().toISOString();
@@ -282,14 +284,35 @@ export async function runProjectChecks(
   });
 
   if (studentLogin) {
-    // Newest first. A repo generated from the template starts with a
-    // parentless "Initial commit" credited to whoever generated it: that is
-    // the template, not their work, so it only counts on a linked repo.
-    const commits = await gh<{ parents: unknown[] }[]>(
+    // A repo generated from the template starts with a parentless "Initial
+    // commit" credited to whoever generated it: that is the template, not
+    // their work. It is recognised by its content (the template's own tree),
+    // not by being parentless: a student who force-pushes their project as
+    // one root commit has done real work. Covers repos generated here and
+    // repos generated on github.com with "Use this template", then linked.
+    const fromTemplate =
+      createdViaTemplate ||
+      repo.template_repository?.full_name?.toLowerCase() === cfg.templateRepo.toLowerCase();
+    let templateTree: string | null = null;
+    if (fromTemplate) {
+      const tpl = await gh<{ commit: { tree: { sha: string } } }>(
+        `/repos/${cfg.templateRepo}/commits/HEAD`,
+        cfg.mentorToken,
+      );
+      templateTree = tpl.data?.commit.tree.sha ?? null;
+    }
+    // Newest first; two is enough to see past the template's initial commit.
+    const commits = await gh<{ parents: unknown[]; commit: { tree: { sha: string } } }[]>(
       `/repos/${fullName}/commits?sha=${ref}&author=${encodeURIComponent(studentLogin)}&per_page=2`,
       cfg.mentorToken,
     );
-    const authored = (commits.data ?? []).some((c) => !createdViaTemplate || (c.parents?.length ?? 0) > 0);
+    const isTemplateCommit = (c: { parents: unknown[]; commit: { tree: { sha: string } } }) =>
+      fromTemplate &&
+      (c.parents?.length ?? 0) === 0 &&
+      // Template tree unknown (lookup failed): fall back to treating any
+      // root commit of a template repo as the template's.
+      (templateTree === null || c.commit?.tree?.sha === templateTree);
+    const authored = (commits.data ?? []).some((c) => !isTemplateCommit(c));
     items.push({
       key: "authored",
       label: "You have commits in this repository",

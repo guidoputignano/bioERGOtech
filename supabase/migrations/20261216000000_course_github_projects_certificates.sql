@@ -99,6 +99,11 @@ create table if not exists public.course_certificates (
   confirmed_at      timestamptz
 );
 
+-- Brings a table created by an earlier draft of this file up to date: it
+-- had no confirmed_at and a plain UNIQUE(user_id). Nothing on a fresh one.
+alter table public.course_certificates add column if not exists confirmed_at timestamptz;
+alter table public.course_certificates drop constraint if exists course_certificates_user_id_key;
+
 -- One active certificate per student. Partial, so a revoked certificate
 -- (wrong name, forged legacy row) can be replaced by a new one. The name
 -- contains "user_id": approve-certificate matches on it to tell a second
@@ -149,15 +154,29 @@ create policy "Read own certificate"
 -- profiles.cert_id and cert_issued_at were added outside the migrations,
 -- so they may not exist on a fresh database. Only copy when they do.
 --
--- Runs once. Students can still write profiles.cert_id, and since the
--- server no longer does, anything that appears there after the first run is
+-- Runs once, recorded in course_backfill_runs whether or not it found
+-- anything. Students can still write profiles.cert_id, and since the server
+-- no longer does, anything that appears there after the first run is
 -- forged: a re-run of this file must not import it. Imported rows are
 -- unconfirmed (legacy, no confirmed_at) and do not verify as valid until
 -- staff check them against the certificates actually emailed. A cert_id
--- claimed by two profiles is skipped outright: at least one is a copy.
+-- claimed by two profiles is skipped outright: at least one is a copy (the
+-- query at the end lists them, to check by hand).
+create table if not exists public.course_backfill_runs (
+  name    text        primary key,
+  ran_at  timestamptz not null default now()
+);
+alter table public.course_backfill_runs enable row level security;
+revoke all on public.course_backfill_runs from anon, authenticated;
+
 do $$
 begin
-  if not exists (select 1 from public.course_certificates where legacy) and exists (
+  if exists (select 1 from public.course_backfill_runs where name = 'legacy_certificates') then
+    return;
+  end if;
+  insert into public.course_backfill_runs (name) values ('legacy_certificates');
+
+  if exists (
     select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'profiles' and column_name = 'cert_id'
   ) and exists (
@@ -190,7 +209,7 @@ end;
 $$;
 
 -- ── 7. Verify ─────────────────────────────────────────────────────────
--- Must return 4 rows, all with rowsecurity = true:
+-- Must return 5 rows, all with rowsecurity = true:
 --
 --   select tablename, rowsecurity from pg_tables
 --   where schemaname = 'public' and tablename like 'course\_%';
@@ -202,3 +221,10 @@ $$;
 --   select cert_id, recipient_name, issued_at from public.course_certificates
 --   where legacy and confirmed_at is null and revoked_at is null
 --   order by issued_at;
+--
+-- Certificate ids claimed by more than one profile, skipped by the copy.
+-- One of each is probably genuine: find it in the Resend log and issue that
+-- student a new certificate from the Course Monitor ("Issue anyway").
+--
+--   select cert_id, array_agg(id) as profiles from public.profiles
+--   where cert_id is not null group by cert_id having count(*) > 1;

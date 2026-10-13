@@ -75,8 +75,8 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
 
   const response = await client.beta.messages.create({
     model: MODEL,
-    // A reply is 80 to 200 words. This leaves room for the model's thinking
-    // and keeps the call well inside the route's 60 second limit.
+    // A reply is 80 to 200 words. This leaves room for the model's thinking;
+    // the request timeout below is what keeps the call inside the route limit.
     max_tokens: 4000,
     // On a safety decline, the API retries on a suitable fallback model
     // inside the same call instead of returning nothing.
@@ -90,6 +90,12 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
         content: `<student_submission>\n${submission}\n</student_submission>\n\nDraft the reply to this student's question.`,
       },
     ],
+  }, {
+    // The route may run 60 seconds. Stop at 50 with no automatic retry, so
+    // a slow draft ends in a readable "took too long" rather than the
+    // platform killing the function mid-call.
+    timeout: 50_000,
+    maxRetries: 0,
   });
 
   if (response.stop_reason === "refusal") {

@@ -37,18 +37,27 @@ interface CertRecord {
   confirmed_at: string | null;
 }
 
-async function lookup(certId: string): Promise<CertRecord | null> {
-  if (!/^[A-Z0-9-]{6,40}$/.test(certId)) return null;
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+/**
+ * "error" is kept apart from "missing" on purpose: during a database outage
+ * the page must not tell an employer that a genuine certificate was never
+ * issued.
+ */
+async function lookup(certId: string): Promise<{ status: "found"; cert: CertRecord } | { status: "missing" | "error" }> {
+  if (!/^[A-Z0-9-]{6,40}$/.test(certId)) return { status: "missing" };
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) return { status: "error" };
   const client = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const { data } = await client
+  const { data, error } = await client
     .from("course_certificates")
     .select("cert_id, recipient_name, student_id, course_title, project_url, issued_at, revoked_at, legacy, confirmed_at")
     .eq("cert_id", certId)
     .maybeSingle();
-  return (data as CertRecord | null) ?? null;
+  if (error) {
+    console.error("verify lookup failed:", error.message);
+    return { status: "error" };
+  }
+  return data ? { status: "found", cert: data as CertRecord } : { status: "missing" };
 }
 
 export default async function VerifyPage({ params }: Props) {
@@ -60,12 +69,17 @@ export default async function VerifyPage({ params }: Props) {
     // A stray "%" in a hand-typed ID: treat as not found, not a server error.
     certId = raw.trim().toUpperCase();
   }
-  const found = await lookup(certId);
+  const result = await lookup(certId);
+  const found = result.status === "found" ? result.cert : null;
+  const lookupFailed = result.status === "error";
   // A legacy certificate came from a field students could write. Until staff
   // confirm it, the page neither vouches for it nor shows its details: a
   // forged row must not get a bioERGOtech page with the forger's name on it.
-  const pending = !!found && !found.revoked_at && found.legacy && !found.confirmed_at;
-  const cert = pending ? null : found;
+  // That holds after a revoke too: a never-confirmed row that staff revoked
+  // was never issued by bioERGOtech, so it reads as not found.
+  const unconfirmedLegacy = !!found && found.legacy && !found.confirmed_at;
+  const pending = unconfirmedLegacy && !found!.revoked_at;
+  const cert = unconfirmedLegacy ? null : found;
   const valid = !!cert && !cert.revoked_at;
 
   return (
@@ -83,7 +97,9 @@ export default async function VerifyPage({ params }: Props) {
                 ? "This certificate has been revoked"
                 : pending
                   ? "This certificate is being confirmed"
-                  : "Certificate not found"}
+                  : lookupFailed
+                    ? "We could not check this certificate right now"
+                    : "Certificate not found"}
           </h1>
 
           <div className="card-sm" style={{ padding: 28, borderLeft: `4px solid ${valid ? "#2EC4B6" : "#E67E22"}` }}>
@@ -124,6 +140,12 @@ export default async function VerifyPage({ params }: Props) {
                   </>
                 )}
               </dl>
+            ) : lookupFailed ? (
+              <p style={{ margin: 0, fontSize: 15, color: "var(--text-mid)", lineHeight: 1.7 }}>
+                The verification service is temporarily unavailable. Please try again in a few minutes, or write to
+                info@bioergotech.org to confirm certificate{" "}
+                <strong style={{ fontFamily: "monospace", overflowWrap: "anywhere" }}>{certId}</strong> directly.
+              </p>
             ) : pending ? (
               <p style={{ margin: 0, fontSize: 15, color: "var(--text-mid)", lineHeight: 1.7 }}>
                 Certificate <strong style={{ fontFamily: "monospace", overflowWrap: "anywhere" }}>{certId}</strong> was

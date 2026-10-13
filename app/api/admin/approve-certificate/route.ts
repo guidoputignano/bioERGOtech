@@ -41,10 +41,13 @@ export async function POST(req: NextRequest) {
     // The address comes from the login account, not profiles.email: students
     // can edit their profile row, and a certificate must not be sent, under
     // the bioERGOtech name, to any address they type there.
-    const [{ data: profile }, { data: account }] = await Promise.all([
+    const [{ data: profile, error: profileError }, { data: account }] = await Promise.all([
       client.from("profiles").select("id, full_name").eq("id", userId).maybeSingle(),
       client.auth.admin.getUserById(userId),
     ]);
+    if (profileError) {
+      return NextResponse.json({ error: "Could not load the student profile. Try again." }, { status: 500 });
+    }
     const email = account?.user?.email ?? null;
     if (!email) {
       return NextResponse.json({ error: "Student account not found" }, { status: 404 });
@@ -57,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       if (!body.resend) {
         return NextResponse.json(
-          { error: "A certificate has already been issued to this student", certId: existing.cert_id },
+          { error: "A certificate has already been issued to this student", certId: existing.cert_id, alreadyIssued: true },
           { status: 409 },
         );
       }
@@ -111,7 +114,16 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle();
     const studentId = firstSub?.student_id || studentIdFor(userId);
-    const recipientName = profile?.full_name?.trim() || email;
+    // The name is printed on the certificate and published on /verify. With
+    // no name there is nothing to print: never fall back to the email, which
+    // would make a student's address public.
+    const recipientName = profile?.full_name?.replace(/\s+/g, " ").trim();
+    if (!recipientName) {
+      return NextResponse.json(
+        { error: "This student has no name on their profile. Ask them to add it (Member portal, profile), then issue." },
+        { status: 422 },
+      );
+    }
     const issuedAt = new Date().toISOString();
 
     let certId = "";
@@ -132,7 +144,7 @@ export async function POST(req: NextRequest) {
       if (!error) {
         certId = candidate;
       } else if (error.code === "23505" && error.message.includes("user_id")) {
-        return NextResponse.json({ error: "A certificate has already been issued to this student" }, { status: 409 });
+        return NextResponse.json({ error: "A certificate has already been issued to this student", alreadyIssued: true }, { status: 409 });
       } else if (error.code !== "23505") {
         throw new Error(error.message);
       }
@@ -140,19 +152,26 @@ export async function POST(req: NextRequest) {
     }
     if (!certId) throw new Error("Could not allocate a certificate id");
 
-    const sent = await sendCertificate({
-      to: email,
-      recipientName,
-      studentId,
-      certId,
-      courseTitle: COURSE_TITLE,
-      issuedAt,
-    });
+    // From here on the certificate exists and verifies, whatever happens to
+    // the file or the email: every failure must say so, with the id, so the
+    // Course Monitor reports "not emailed" rather than "not issued".
+    let sent: { ok: boolean; error?: unknown };
+    try {
+      sent = await sendCertificate({
+        to: email,
+        recipientName,
+        studentId,
+        certId,
+        courseTitle: COURSE_TITLE,
+        issuedAt,
+      });
+    } catch (e) {
+      sent = { ok: false, error: (e as Error)?.message ?? String(e) };
+    }
     if (!sent.ok) {
-      console.error("Resend error:", sent.error);
-      // The certificate exists and verifies. Only the email needs retrying.
+      console.error("Certificate email failed:", sent.error);
       return NextResponse.json(
-        { error: "Certificate issued but the email failed. Use Resend to try again.", certId, emailError: sent.error },
+        { error: "Certificate issued but the email failed. Use Resend to try again.", certId, emailFailed: true, emailError: sent.error },
         { status: 502 },
       );
     }

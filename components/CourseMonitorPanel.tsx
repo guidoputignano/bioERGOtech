@@ -116,7 +116,7 @@ export default function CourseMonitorPanel({ adminUserId }: { adminUserId?: stri
     setError(null);
     try {
       const res = await fetch("/api/admin/course/overview", { cache: "no-store" });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
       if (!res.ok) throw new Error(json.error ?? "Failed to load");
       setData(json);
     } catch (e) {
@@ -212,7 +212,7 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
     setBusy(s.user_id);
     try {
       const res = await fetch("/api/admin/course/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: s.user_id }) });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
       showToast(res.ok ? (json.result.passed ? `✓ All checks pass for ${s.name || s.email}` : `Checks ran: ${json.result.error ?? "some items still failing"}`) : `Error: ${json.error}`);
       onChanged();
     } finally {
@@ -229,9 +229,9 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
       });
       // A gateway timeout comes back as HTML, not JSON.
       const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-      return { ok: res.ok, json };
+      return { ok: res.ok, status: res.status, json };
     } catch {
-      return { ok: false, json: { error: "Network error" } };
+      return { ok: false, status: 0, json: { error: "Network error" } };
     }
   };
 
@@ -282,11 +282,15 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
   };
 
   const resend = async (s: StudentRow) => {
-    if (!window.confirm(`Email certificate ${s.cert_id} to ${s.email} again?`)) return;
+    // Not s.email: that is the editable profile address, and the certificate
+    // goes to the address the student signs in with. The toast names it.
+    if (!window.confirm(`Email certificate ${s.cert_id} again to ${s.name || "this student"}? It goes to the address they sign in with.`)) return;
     setBusy(s.user_id);
     try {
       const { ok, json } = await issue(s, { resend: true });
       showToast(ok ? `✓ Resent ${json.certId} to ${json.sentTo}` : `Error: ${json.error}`);
+      // Clears "Not emailed" at once, so nobody presses Resend twice.
+      onChanged();
     } finally {
       setBusy(null);
     }
@@ -298,21 +302,31 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
     setBulk({ done: 0, total: list.length, failed: 0 });
     const notIssued: string[] = [];
     const notEmailed: string[] = [];
+    const already: string[] = [];
+    const unknown: string[] = [];
     const who = (s: StudentRow) => s.name || s.email || s.user_id;
     try {
       // One at a time: each issue generates a file and sends an email, and
       // the email provider rate-limits bursts.
       for (let i = 0; i < list.length; i++) {
-        const { ok, json } = await issue(list[i]);
-        // A certId with an error means issued, but the email did not go out.
-        if (!ok) (json?.certId ? notEmailed : notIssued).push(who(list[i]));
-        setBulk({ done: i + 1, total: list.length, failed: notIssued.length + notEmailed.length });
+        const { ok, status, json } = await issue(list[i]);
+        if (!ok) {
+          const w = who(list[i]);
+          if (json?.emailFailed) notEmailed.push(w); // issued, email did not go out
+          else if (status === 409 && json?.alreadyIssued) already.push(w); // someone else issued it meanwhile
+          else if (status === 0 || status >= 500) unknown.push(w); // may have been issued before the failure
+          else notIssued.push(w);
+        }
+        setBulk({ done: i + 1, total: list.length, failed: notIssued.length + notEmailed.length + already.length + unknown.length });
       }
-      const issued = list.length - notIssued.length;
+      const names = (l: string[]) => `${l.slice(0, 5).join(", ")}${l.length > 5 ? "…" : ""}`;
+      const issued = list.length - notIssued.length - already.length - unknown.length;
       showToast(
         `Issued ${issued} certificate${issued === 1 ? "" : "s"}.` +
-          (notEmailed.length ? ` Email failed for ${notEmailed.length} (marked "not emailed", use Resend): ${notEmailed.slice(0, 5).join(", ")}${notEmailed.length > 5 ? "…" : ""}.` : "") +
-          (notIssued.length ? ` Not issued: ${notIssued.slice(0, 5).join(", ")}${notIssued.length > 5 ? "…" : ""}.` : ""),
+          (notEmailed.length ? ` Email failed for ${notEmailed.length} (marked "Not emailed", use Resend): ${names(notEmailed)}.` : "") +
+          (already.length ? ` Already certified: ${names(already)}.` : "") +
+          (unknown.length ? ` Outcome unknown, check these rows in the refreshed list: ${names(unknown)}.` : "") +
+          (notIssued.length ? ` Not issued: ${names(notIssued)}.` : ""),
       );
     } finally {
       setSelected(new Set());
@@ -544,7 +558,7 @@ function QuestionsView({ adminUserId, showToast, onAnswered }: { adminUserId?: s
     setError(null);
     try {
       const res = await fetch(`/api/admin/course/questions?status=${status}`, { cache: "no-store" });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
       if (!res.ok) throw new Error(json.error ?? "Failed to load");
       setItems(json.questions);
       setTotal(json.total);
@@ -607,7 +621,7 @@ function QuestionCard({ q, adminUserId, onSent }: { q: Question; adminUserId?: s
     setNote(null);
     try {
       const res = await fetch("/api/admin/course/draft-reply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submission_id: q.id }) });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
       if (!res.ok) {
         setNote({ tone: "error", text: json.error ?? "Could not draft" });
       } else if (json.flagged) {
@@ -629,7 +643,7 @@ function QuestionCard({ q, adminUserId, onSent }: { q: Question; adminUserId?: s
     try {
       const res = await fetch("/api/admin/submissions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: q.id, admin_reply: reply.trim(), replied_by: adminUserId }) });
       if (res.ok) onSent();
-      else setNote({ tone: "error", text: (await res.json()).error ?? "Failed to send" });
+      else setNote({ tone: "error", text: (await res.json().catch(() => ({}))).error ?? `Failed to send (HTTP ${res.status})` });
     } finally {
       setSending(false);
     }

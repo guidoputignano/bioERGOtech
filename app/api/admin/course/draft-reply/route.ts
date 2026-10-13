@@ -44,6 +44,9 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(result);
   } catch (err) {
+    if (err instanceof Anthropic.APIConnectionTimeoutError) {
+      return NextResponse.json({ error: "Drafting took too long. Try again, or write this one by hand." }, { status: 504 });
+    }
     if (err instanceof Anthropic.RateLimitError) {
       return NextResponse.json({ error: "Claude is rate limited. Try again in a minute." }, { status: 429 });
     }
