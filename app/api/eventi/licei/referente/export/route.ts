@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireReferente } from "@/lib/eventi/licei-server";
+import { requireDocente } from "@/lib/eventi/licei-server";
 import {
   haFattoAccesso,
   statoIscrizioneLabel,
@@ -20,9 +20,13 @@ function csvCell(value: unknown): string {
  * esportare. Per questo di default contiene solo le iscrizioni CONFERMATE
  * dal referente, che sono quelle di cui la scuola risponde. Con ?tutte=1 si
  * scarica anche il resto, per lavorarci sopra.
+ *
+ * Solo il referente principale. I docenti del progetto vedono gli stessi
+ * studenti a schermo, ma un file in piu con nomi e classi di minorenni e
+ * una copia in piu da custodire: gli elenchi restano a chi li trasmette.
  */
 export async function GET(request: Request) {
-  const guard = await requireReferente();
+  const guard = await requireDocente({ principale: true });
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, ctx } = guard;
 

@@ -60,7 +60,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Indice appiccicato | `app/eventi/vivere-piu-a-lungo/licei/LiceiIndice.tsx` |
 | Modulo di adesione | `app/eventi/vivere-piu-a-lungo/licei/AdesioneForm.tsx` |
 | Iscrizione studenti | `app/eventi/vivere-piu-a-lungo/licei/iscrizione/` |
-| Area del referente | `app/eventi/vivere-piu-a-lungo/licei/referente/` |
+| Area dei docenti (referente e docenti del progetto) | `app/eventi/vivere-piu-a-lungo/licei/referente/`: `ReferenteConsole.tsx`, `AccettazioneIstruzioni.tsx`, `DocentiProgetto.tsx`, `QuadroSquadre.tsx`, `RiflessioniReferente.tsx`, `FiltroClasse.tsx`, `filtroPerClasse.ts` |
 | Modulo autorizzazione | `licei/referente/generaAutorizzazione.ts` |
 | Area dello studente | `app/eventi/vivere-piu-a-lungo/licei/studente/` |
 | Area della Commissione | `app/eventi/vivere-piu-a-lungo/licei/commissione/` |
@@ -68,18 +68,59 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Pannello staff | `app/eventi/vivere-piu-a-lungo/licei/admin/` |
 | Invio adesione | `app/api/eventi/licei/adesioni/route.ts` |
 | Invio iscrizione | `app/api/eventi/licei/iscrizioni/route.ts` |
-| API referente | `app/api/eventi/licei/referente/` |
+| API dei docenti | `app/api/eventi/licei/referente/`: elenco (`route.ts`), `export`, `docenti`, `istruzioni`, `riflessioni` |
 | API squadre | `app/api/eventi/licei/squadre/route.ts` |
 | API progetto | `app/api/eventi/licei/progetto/route.ts` |
 | API Commissione | `app/api/eventi/licei/commissione/route.ts` |
 | API staff | `app/api/eventi/licei/admin/` |
-| Tipi e validazione | `lib/eventi/licei.ts`, `licei-iscrizioni.ts`, `licei-squadre.ts` |
-| Helper server | `lib/eventi/licei-server.ts` |
+| Tipi e validazione | `lib/eventi/licei.ts`, `licei-iscrizioni.ts` (anche `normalizzaClasse`), `licei-squadre.ts` (anche `quadroSquadre`) |
+| Helper server e guardie | `lib/eventi/licei-server.ts` (`requireDocente`, `requireStudente`, `requireCommissario`) |
+| Docenti del progetto | `lib/eventi/licei-docenti.ts` |
+| Riflessioni lette dai docenti | `lib/eventi/licei-riflessioni.ts`; il flag lo scrive `app/api/courses/submissions/route.ts`, l'avviso allo studente sta in `app/courses/LessonSubmissionBox.tsx` |
+| Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
-| Email di conferma | `lib/eventi/licei-email.ts` |
+| Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
 | Elenco dei mentor nell'area | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx`, rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
-| Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql` |
+| Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql`, `20261209000000_licei_accesso_coerente.sql`, `20261215000000_licei_docenti_accettazioni_riflessioni.sql` (da applicare a mano, vedi sotto) |
+
+## Migrazione da applicare a mano: 20261215000000
+
+**`supabase/migrations/20261215000000_licei_docenti_accettazioni_riflessioni.sql`
+non parte da sola.** Come tutte le altre, in produzione si esegue a mano
+dall'SQL editor di Supabase. Il codice e scritto per essere rilasciato prima
+e regge senza (vedi "Prima della migrazione" piu sotto), quindi l'ordine e:
+
+1. Rilasciare il codice.
+2. Incollare per intero `supabase/migrations/VERIFICA.sql` nell'SQL editor e
+   leggere la colonna `esito`. Le migrazioni precedenti devono risultare `OK`,
+   in particolare `20261213000000` (`public.e_admin()`): se manca, la nuova
+   migrazione si ferma alla prima riga con un messaggio e non crea niente.
+   `VERIFICA.sql` legge solo il catalogo, si puo eseguire quante volte si
+   vuole e non e una migrazione.
+3. Eseguire `20261215000000_licei_docenti_accettazioni_riflessioni.sql` per
+   intero. E rieseguibile: una seconda esecuzione non cambia nulla.
+4. Rieseguire `VERIFICA.sql`. La riga `20261215000000_licei_docenti` deve
+   dire `OK`, e le tre verifiche aggiunte (privilegi di `licei_docenti`,
+   privilegi di `licei_accettazioni`, RLS su `lesson_submissions`) non devono
+   dire `NO`. `PARZIALE` e atteso solo su un database nuovo senza
+   `lesson_submissions`; in produzione la tabella c'e.
+5. **Lo stesso giorno**, dal pannello staff, inviare l'avviso sulle
+   riflessioni (scheda Adesioni e iscrizioni, "Invia avviso sulle
+   riflessioni"). Da quando la colonna esiste, il box delle lezioni dice agli
+   iscritti che riflessione e domanda le leggono anche i docenti, e l'email
+   lo dice a chi non apre una lezione in quei giorni.
+6. Avvisare i referenti che al prossimo accesso, prima di vedere i loro
+   studenti, devono accettare le istruzioni per i docenti. Vale anche per
+   chi le aveva gia firmate su carta.
+
+Che cosa crea: le tabelle `licei_docenti` e `licei_accettazioni`, la colonna
+`lesson_submissions.condivisa_referente_at`, la RLS su `lesson_submissions`
+(senza policy: ci passano solo le rotte con service role), e ricrea le tre
+policy "Referents can view own school iscrizioni / squadre / progetti" con
+`and a.stato <> 'ritirata'`. Il dettaglio e nella sezione "Docenti del
+progetto, istruzioni accettate, squadre e riflessioni" qui sotto e nei
+commenti del file.
 
 ## Le scadenze non sono nel codice
 
@@ -152,11 +193,14 @@ nessuno lavora su una copia vecchia:
   gruppo e la "Guida operativa per scuole e docenti referenti" (`GUIDA_DOCUMENTI`);
 - `/licei/informativa-studenti`, `/licei/informativa-scuole`, `/licei/regolamento`;
 - `/licei/adesione-scuola` (firma il dirigente) e `/licei/istruzioni-docente`
-  (firma il docente, o accetta via email): i soli due che una scuola firma.
+  ("Istruzioni per il docente referente e i docenti del progetto": ogni
+  docente le accetta sulla piattaforma al primo accesso, e chi preferisce le
+  firma anche): i soli due che scuola e docenti sottoscrivono.
 
-I testi dei due moduli da firmare non sono copie: `ADESIONE_SCUOLA` usa
+I testi dei due moduli non sono copie: `ADESIONE_SCUOLA` usa
 `PRESA_ATTO_ADESIONE` e `ISTRUZIONI_DOCENTE` usa `ISTRUZIONI_REFERENTE`, le
-stesse costanti che il referente vede nel modulo online e nella sua area.
+stesse costanti che il referente vede nel modulo online e che ogni docente
+accetta nella sua area.
 Ogni pagina ha un pulsante per stampare o salvare in PDF; le regole
 `@media print` di `globals.css` tolgono navbar, footer e banner (`no-print`)
 e lasciano le righe da compilare.
@@ -166,6 +210,12 @@ titolo e registrato in `dichiarazioni_testo.versioni` a ogni adesione e
 iscrizione: cosi si sa quale testo ha accettato ciascuno. **Chi cambia un
 testo cambia anche la sua data, nello stesso commit.** Le firme autografe non
 vanno pubblicate sulle pagine: gli originali firmati restano agli atti.
+
+Per le istruzioni dei docenti la data e anche la versione che si accetta
+(`VERSIONE_ISTRUZIONI_DOCENTE = ISTRUZIONI_DOCENTE.aggiornato`, salvata in
+`licei_accettazioni.versione` insieme al testo intero). Cambiarla vuol dire
+che ogni docente, referente compreso, le riaccetta al prossimo accesso e fino
+ad allora non vede studenti: si cambia quando cambia il testo, e solo allora.
 
 ## Mentor
 
@@ -200,6 +250,198 @@ Da qui due conseguenze nel codice:
   Non e ridondante: il client ha la service role key, quindi RLS non lo ferma,
   e senza quel filtro conoscere l'id di un'iscrizione basterebbe a un referente
   per toccare quella di un'altra scuola.
+
+## Docenti del progetto, istruzioni accettate, squadre e riflessioni
+
+Dalla migrazione `20261215000000` (vedi "Migrazione da applicare a mano"),
+decisioni approvate dalla Fondazione. In breve: il referente puo farsi
+affiancare da altri docenti dell'istituto, ogni docente accetta online le
+istruzioni prima di vedere qualcosa, la console mostra il quadro delle
+squadre e, da ora in avanti, riflessioni e domande delle lezioni.
+
+### Chi e docente: due tabelle e una guardia
+
+- **Referente principale**: l'account di `licei_adesioni.user_id`, come
+  sempre. Non si sposta e non si duplica.
+- **Docenti del progetto**: `licei_docenti`, una riga per docente aggiunto
+  (fino a `DOCENTI_PROGETTO_MAX = 5` non revocati per istituto). Colonne:
+  `adesione_id`, `user_id`, `nome`, `cognome`, `email`, `classi text[]`,
+  `stato` (`invitato`, `attivo`, `revocato`), `invitato_da`, `invitato_at`,
+  `dichiarazione_invito` (jsonb: testo della dichiarazione, referente, ora),
+  `invito_inviato_at` (per il limite di un rinvio ogni 10 minuti),
+  `revocato_at`, `revocato_da`. Indice unico su `(adesione_id, lower(email))`.
+- **Accettazioni**: `licei_accettazioni`, una riga per `(user_id, documento,
+  versione)`, con `adesione_id`, il testo congelato in `testo` (jsonb: titolo,
+  intro, sezioni, voci, dichiarazione della casella) e `accettato_at`.
+  `documento` vale `istruzioni_docente`.
+
+Entrambe con RLS e sole policy di lettura (la propria riga, e lo staff con
+`public.e_admin()`); `anon` non ha privilegi, `authenticated` solo `select`.
+Le scritture passano dalle API con service role. Ai docenti del progetto
+**non** e stata data nessuna policy sui dati degli studenti: per loro
+l'accesso passa solo dalle API, cosi la superficie PostgREST sui dati di
+minorenni non cresce.
+
+`requireDocente({ principale?, operativo? })` in `lib/eventi/licei-server.ts`
+sostituisce `requireReferente`, che resta come alias di `requireDocente()`.
+Legge il database a ogni richiesta, quindi revoca e ritiro hanno effetto
+subito. In ordine:
+
+1. configurazione mancante: 500; nessun utente: 401; percorso chiuso: 403;
+2. legami dell'account: adesioni di cui e `user_id` e righe di
+   `licei_docenti` in stato `invitato` o `attivo`. Nessun legame: 403
+   "Nessuna adesione risulta associata a questo account."; piu di un
+   istituto: 409 "Questo account risulta collegato a più istituti. Scrivi a
+   info@bioergotech.org e sistemiamo noi." (si sistema a mano);
+3. docente del progetto il cui account e anche legato a una riga di
+   `licei_iscrizioni`: 403 "Questo account risulta iscritto al percorso come
+   studente, quindi non può avere anche l'accesso da docente. Scrivi a
+   info@bioergotech.org e sistemiamo noi.". Il referente principale non
+   passa da questo controllo;
+4. adesione `ritirata`: 403 "L'adesione del vostro istituto è stata
+   ritirata: l'accesso è disattivato. Per chiarimenti scrivi a
+   info@bioergotech.org.". Gli studenti di quell'istituto non sono bloccati;
+5. `principale: true` e chiamante non referente: 403 "Questa funzione è
+   riservata al docente referente.";
+6. `operativo` (default true) e istruzioni non accettate: 403 "Prima di
+   vedere i dati degli studenti accetta le istruzioni per i docenti.".
+
+Un docente del progetto revocato e poi indicato di nuovo torna `invitato` e
+deve riaccettare le istruzioni anche se la versione non e cambiata. Ogni
+query delle rotte dei docenti filtra per `ctx.adesione.id`, e nessuna
+risposta ai docenti contiene `user_id`: anche la `PATCH` che conferma o
+rifiuta un'iscrizione torna solo le colonne della GET, e la console le fonde
+con la riga che ha gia.
+
+### Le rotte
+
+| Rotta | Chi | Che cosa |
+| --- | --- | --- |
+| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`. A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
+| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione, rinvio del link di accesso. |
+| `GET .../referente/export` | solo referente | I due CSV (confermati senza email, elenco minimo per foto e video). |
+| `GET`, `POST .../referente/istruzioni` | docenti, anche prima di accettare | Versione, testo, se e quando accettate; `POST { accetto: true }` registra l'accettazione e porta il docente del progetto a `attivo`. |
+| `GET .../referente/docenti` | docenti | Al referente l'elenco completo; a un docente del progetto solo nome e cognome dei colleghi. |
+| `POST .../referente/docenti` | solo referente | Invito: `{ nome, cognome, email, classi, dichiarazione: true }`. Risponde `{ success, email_inviata, avviso_istituto }`. |
+| `PATCH .../referente/docenti` | vedi a destra | `{ id, azione: 'classi' \| 'revoca' \| 'rimanda_invito', classi? }`. `classi` il referente o il docente sulla propria riga; `revoca` e `rimanda_invito` solo il referente. Un id di un altro istituto risponde 404. |
+| `GET .../referente/riflessioni` | docenti | `?iscrizione=<id>` oppure `?lezione=<slug>`, solo studenti confermati dell'istituto. |
+| `GET`, `POST /api/courses/submissions` | studenti | Il GET aggiunge `avviso_referente: { istituto } \| null`; il POST scrive `condivisa_referente_at` solo con `avviso_referente: true` e un'iscrizione licei valida. |
+| `GET /api/eventi/licei/admin` | staff | Aggiunge `docenti` (per adesione) e `avviso_riflessioni` (stato dell'invio). |
+| `POST /api/eventi/licei/admin` | staff | `{ azione: 'revoca_docente', id }` oppure `{ azione: 'avviso_riflessioni' }`. |
+
+### Accettazione delle istruzioni
+
+Al primo accesso, e di nuovo quando cambia `ISTRUZIONI_DOCENTE.aggiornato`,
+la console mostra le istruzioni, la casella "Ho letto e accetto le
+istruzioni per i docenti e l'informativa privacy per scuole e docenti
+referenti." e il bottone "Accetto", e nient'altro: la rotta dell'elenco non
+manda dati di studenti finche l'accettazione non c'e. Il testo arriva dal
+server (`testoIstruzioniDocente()`), lo stesso che si congela nella riga.
+Vale per tutti, referente principale compreso.
+
+### Docenti del progetto
+
+Li indica il referente principale dalla card "Docenti del progetto": nome,
+cognome, email, classi seguite (testo libero o i bottoni delle classi
+presenti) e la dichiarazione, che si salva con l'invito:
+"Dichiaro che il docente indicato insegna nel nostro istituto, che l'istituto
+ne è informato e che mi affianca nel seguire gli studenti del percorso."
+Non serve un nuovo modulo firmato dal dirigente.
+
+- **Che cosa vede un docente del progetto**: tutto l'istituto, come il
+  referente. Le sue classi sono solo il filtro da cui parte la console ("Le
+  mie classi"), e "Tutte le classi dell'istituto" c'e sempre: non sono un
+  confine.
+- **Che cosa puo fare**: confermare o rifiutare iscrizioni, rimandare i link
+  di accesso, leggere quadro delle squadre e riflessioni, correggere le
+  proprie classi. **Non puo**: indicare o revocare docenti, scaricare i CSV.
+- **Quando l'invito si rifiuta** (prima di creare qualsiasi account): email
+  del referente; email presente in `licei_iscrizioni` di qualunque istituto,
+  o account gia legato a un'iscrizione (uno studente non deve mai avere la
+  vista del docente); email o account gia referente o docente di un altro
+  istituto; docente gia invitato o attivo qui; cinque docenti non revocati;
+  adesione non in `STATI_ADESIONE_CHE_ACCETTANO`. I casi che riguardano altri
+  hanno un messaggio solo, e la risposta non dice mai se l'account esisteva.
+  **Rimanda invito** ripete gli stessi controlli su altri istituti e
+  studenti prima di generare un link.
+- **Uno studente non diventa docente, nemmeno dopo**: oltre all'invito, lo
+  controllano la guardia (punto 3 qui sopra) e l'iscrizione degli studenti
+  (`app/api/eventi/licei/iscrizioni/route.ts`), che rifiuta con 409 un'email
+  o un account di un docente del progetto `invitato` o `attivo`. Senza la
+  tabella il controllo dell'iscrizione non si fa.
+- **Email**: al docente, con il link per impostare la password (account
+  nuovo, o mai usato) oppure per entrare, e i link alle istruzioni e
+  all'informativa per le scuole; all'indirizzo istituzionale dell'istituto
+  (`istituto_email`), in copia nascosta a info@bioergotech.org, chi ha
+  indicato chi, con la dichiarazione e "Se non è corretto scrivete a
+  info@bioergotech.org". Il link non si conserva. `avviso_istituto` e vero
+  solo se l'avviso e partito verso l'indirizzo della scuola: altrimenti la
+  console chiede al referente di segnalarlo a info@bioergotech.org, e il log
+  ha la riga "AVVISO ISTITUTO DA INOLTRARE" con adesione e docente, per
+  inoltrarlo a mano.
+- **Revoca**: dal referente nella console, o dallo staff nel pannello
+  (sotto "Referente", "Docenti del progetto"). Effetto immediato. Un docente
+  revocato e indicato di nuovo riusa la stessa riga, torna `invitato` e
+  riaccetta le istruzioni. Il nuovo invito rispetta lo stesso limite di
+  "Rimanda invito" (`invito_inviato_at` non si azzera): revocare e indicare di
+  nuovo entro 10 minuti risponde 429.
+
+### Quadro delle squadre
+
+`quadroSquadre()` in `lib/eventi/licei-squadre.ts`, mostrato da
+`QuadroSquadre.tsx` al referente e ai docenti del progetto: per squadra nome,
+"formata il gg/mm", "n su 5", stato (Serve almeno 2 componenti, Progetto in
+bozza, Progetto consegnato, Finalista, Progetto ritirato), titolo del
+progetto; il capitano per primo con il badge Capitano, poi i componenti come
+"Cognome Nome . classe", con "Iscrizione non confermata" dove serve. Sotto,
+"Non ancora in una squadra" per classe, con "Mai entrato" o le lezioni fatte,
+e quanti sono ancora in attesa di conferma. In cima quattro numeri, il filtro
+per classe e "Aggiorna". Sola lettura, nessun export, nessuna email,
+`user_id` o data di accesso dei componenti. Il codice `SQ-` della squadra non
+esce piu dalla rotta. Un componente di un altro istituto (oggi impossibile,
+lo impedisce il trigger) comparirebbe solo come "Studente di altro istituto".
+
+### Riflessioni e domande, da ora in avanti
+
+- **Il flag**: `lesson_submissions.condivisa_referente_at`. Lo scrive il
+  server a ogni salvataggio: l'ora, se il client manda `avviso_referente:
+  true` (cioe il box mostrava l'avviso) e lo studente ha un'iscrizione licei
+  `in_attesa` o `confermata` a percorso aperto; altrimenti null. Tutte le
+  righe salvate prima della migrazione restano null, quindi restano allo
+  staff: un docente ne vede solo il numero ("consegne riservate"). Per
+  renderne visibile una vecchia, lo studente la riapre e la salva con
+  l'avviso davanti.
+- **Che cosa legge il docente**: per gli studenti CONFERMATI del proprio
+  istituto, solo `reflection` e `question` delle righe condivise, piu se e
+  quando lo staff ha risposto (`replied_at`). `comment` e `admin_reply` non
+  si selezionano mai. Si legge su un clic (pannello sotto lo studente,
+  "Leggi per lezione"), senza export e senza notifiche.
+- **L'avviso nel box della lezione**, solo agli iscritti licei: "Quello che
+  scrivi in Riflessione e Domanda lo leggono lo staff della Fondazione e i
+  docenti del tuo istituto che seguono il percorso. Il commento lo legge solo
+  lo staff. ...". Nella consegna gia inviata: "Visibile anche ai docenti del
+  tuo istituto" oppure "Visibile solo allo staff".
+- **L'email una tantum** agli iscritti confermati e in attesa, dal pannello
+  staff, oggetto "Percorso Biotecnologie e IA: chi legge le tue riflessioni".
+  La protegge la chiave `avviso_riflessioni_inviato_at` in `licei_config`
+  (fuori da `CONFIG_CHIAVI`, come le chiavi della chiusura): parte una volta
+  sola, e non parte finche la colonna non esiste. Invio a lotti di 50, con i
+  conteggi salvati in `avviso_riflessioni_esito` e i fallimenti nei log, per
+  id di iscrizione e mai per email.
+
+### Prima della migrazione
+
+Il codice va in produzione prima della SQL, quindi ogni pezzo sa degradare
+(un helper solo, `erroreSchemaMancante`, riconosce tabella o colonna
+mancante):
+
+- senza `licei_docenti` e `licei_accettazioni`: nessuno risulta docente del
+  progetto, le istruzioni risultano accettate (la console si comporta come
+  prima), la card dice "Funzione in attivazione", la rotta `docenti` risponde
+  `{ disponibile: false }` (503 su POST e PATCH), la revoca dello staff 503;
+- senza la colonna: il box della lezione non mostra l'avviso, il salvataggio
+  riprova senza la colonna e riesce, le riflessioni rispondono
+  `{ disponibile: false }`, il bottone dell'avviso nel pannello e spento.
 
 ## Chi risulta iscritto e chi c'e davvero
 
@@ -476,6 +718,21 @@ senza quel controllo basterebbe conoscere un codice meccanografico, che e un
 dato pubblicamente reperibile, per riscrivere l'adesione di un altro istituto.
 Se il referente cambia, il cambio lo fa lo staff.
 
+Il modulo e pubblico e lega l'account che trova per email. Per questo
+un'adesione **nuova** si rifiuta (409, "Non è possibile registrare
+l'adesione con questa email del referente. Scrivi a info@bioergotech.org e
+sistemiamo noi.") quando quell'account, o l'account con cui si e entrati, e
+gia referente di un'altra adesione o docente del progetto non revocato di un
+altro istituto: altrimenti chiunque conosca l'email di un docente potrebbe
+fargli rispondere 409 dalla guardia e togliergli l'accesso alla sua scuola.
+Lo staff non passa da questo controllo; un docente che segue davvero due
+scuole lo sistemiamo a mano.
+
+L'aggiornamento non scrive mai `user_id`: lo completa solo se e vuoto e chi
+scrive non e staff. Prima, quando lo staff correggeva un'adesione dal modulo
+pubblico, l'adesione passava al suo account e il referente vero perdeva
+l'accesso senza accorgersene.
+
 L'aggiornamento non tocca `stato` e `note_staff`: la verifica gia fatta non si
 azzera perche il referente corregge un numero.
 
@@ -498,36 +755,43 @@ la vera difesa contro le adesioni finte.
 - Conteggi: istituti, confermati, studenti previsti, attesi al PalaMazzola.
   Gli ultimi due servono a dimensionare il percorso e i posti dell'evento.
 - Stato e note interne per adesione, export CSV.
+- Nel dettaglio di un'adesione, sotto "Referente", i "Docenti del progetto"
+  con stato, date e il bottone Revoca.
+- La card "Avviso agli studenti sulle riflessioni", con l'anteprima del testo
+  e il bottone che lo invia una volta sola (vedi sopra).
 
 ## Chiusura del percorso
 
-L'informativa promette due cose: l'accesso di referenti e commissari si spegne
-a fine corso, e account, elaborati, progetti e avanzamento si cancellano entro
-un mese dalla conclusione. La scheda **Chiusura** del pannello staff le
-mantiene, con due comandi separati e la parola `CHIUDI` da scrivere per
-ciascuno (il controllo e ripetuto nella rotta, non solo nel browser).
+L'informativa promette due cose: l'accesso di docenti (referenti e docenti del
+progetto) e commissari si spegne a fine corso, e account, elaborati, progetti
+e avanzamento si cancellano entro un mese dalla conclusione. La scheda
+**Chiusura** del pannello staff le mantiene, con due comandi separati e la
+parola `CHIUDI` da scrivere per ciascuno (il controllo e ripetuto nella rotta,
+non solo nel browser).
 
 1. **Disattiva gli accessi.** Scrive `percorso_chiuso_at` in `licei_config`.
-   Da quel momento `requireReferente`, `requireStudente` e
+   Da quel momento `requireDocente`, `requireStudente` e
    `requireCommissario` rispondono 403 con "Il percorso si è concluso e
    l'accesso è stato disattivato.", e i cancelli di adesioni e iscrizioni
    respingono i non staff. Le pagine pubbliche non cambiano. Si annulla con
    "Riattiva gli accessi", ma solo finche i dati ci sono.
 2. **Cancella i dati del percorso.** Abilitata solo dopo il passo 1. In
    quest'ordine: riflessioni delle lezioni (`lesson_submissions`), account,
-   poi schede, commissari e adesioni (la cascata porta via iscrizioni,
-   squadre e progetti). Gli account vanno prima delle righe perche le righe
-   sono l'unico registro di quali account appartengono al percorso: se un
-   account non si cancella, la rotta si ferma con le righe ancora al loro
-   posto e il comando si puo ripetere.
+   poi schede, commissari, accettazioni delle istruzioni, docenti del
+   progetto e adesioni (la cascata porta via iscrizioni, squadre e progetti).
+   Le tabelle che non esistono ancora si saltano. Gli account vanno prima
+   delle righe perche le righe sono l'unico registro di quali account
+   appartengono al percorso: se un account non si cancella, la rotta si ferma
+   con le righe ancora al loro posto e il comando si puo ripetere.
 
 Rotta: `app/api/eventi/licei/admin/chiusura/route.ts` (GET anteprima, POST
 `disattiva`, `riattiva`, `cancella`).
 
 **Quali account si cancellano.** Solo quelli che il database mostra usati
-dal percorso licei e da nient'altro (referenti, studenti, commissari). Un
-account resta se e staff (`partnership_level = admin`), se e membro o
-partner del portale o ha una domanda di adesione, se compare in
+dal percorso licei e da nient'altro (referenti, docenti del progetto,
+revocati compresi, studenti, commissari). Un account resta se e staff
+(`partnership_level = admin`), se e membro o partner del portale o ha una
+domanda di adesione, se compare in
 `applications`, `projects`, `knowledge_documents`, `equipment_proposals`,
 `event_attendees`, `events`, `coin_transactions`, `redemption_requests`, nelle
 tabelle `universita_*`, in `bando_applications` o in `event_registrations`

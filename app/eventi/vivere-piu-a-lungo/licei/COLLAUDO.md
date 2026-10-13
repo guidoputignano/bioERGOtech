@@ -1,10 +1,11 @@
 # Collaudo del percorso, da capo a fondo
 
-Come provare che la catena funziona davvero, nei panni di tutti e quattro:
-staff, istituto, docente referente e studente. Serve circa mezz'ora e va
-fatto **prima** che ci siano dentro trecento ragazzi, perche buona parte di
-quello che puo rompersi si rompe in silenzio: una email che non parte, un
-account senza password, una conferma che nessuno riceve.
+Come provare che la catena funziona davvero, nei panni di tutti: staff,
+istituto, docente referente, docente del progetto e studente. La prima parte
+(passi 0 a 9) richiede circa mezz'ora, la seconda (passi 10 a 20) un'altra
+ora. Va fatto **prima** che ci siano dentro trecento ragazzi, perche buona
+parte di quello che puo rompersi si rompe in silenzio: una email che non
+parte, un account senza password, una conferma che nessuno riceve.
 
 ## La trappola da conoscere prima di cominciare
 
@@ -29,7 +30,17 @@ per due ruoli diversi senza fare logout.
 **Quattro indirizzi email distinti che puo leggere davvero.** Se usa Gmail
 bastano gli alias con il piu: `lei+staff@gmail.com`, `lei+prof@gmail.com`,
 `lei+studente1@gmail.com`, `lei+studente2@gmail.com`. Sono indirizzi diversi
-per il sistema e arrivano tutti nella stessa casella.
+per il sistema e arrivano tutti nella stessa casella. Per la seconda parte
+(docenti del progetto, due istituti) ne servono altri tre: `lei+scuola@`
+(l'indirizzo istituzionale della scuola finta), `lei+prof2@` (un collega) e
+`lei+profb@` (il referente di una seconda scuola finta, meccanografico
+`TATEST002X`).
+
+**La migrazione `20261215000000` applicata**, se vuole collaudare docenti del
+progetto, istruzioni e riflessioni: `supabase/migrations/VERIFICA.sql` deve
+dire `OK` sulla riga `20261215000000_licei_docenti` (vedi il README, "Migrazione
+da applicare a mano"). Senza, la prima parte si collauda lo stesso e la
+seconda si ferma al passo 10.
 
 **Un account staff.** Su Supabase, tabella `profiles`, metta
 `partnership_level = 'admin'` sulla riga del suo account. Senza, il pannello
@@ -68,7 +79,9 @@ chiuse: al passo 4 serve vedere che il cancello funzioni.
 
 `/eventi/vivere-piu-a-lungo/licei`, modulo di adesione in fondo.
 
-Compili con il meccanografico finto e l'indirizzo `lei+prof@`.
+Compili con il meccanografico finto e l'indirizzo `lei+prof@`. Come email
+dell'istituto metta `lei+scuola@`: al passo 11 e li che arriva l'avviso
+quando il referente indica un collega.
 
 **Cosa deve succedere:** la pagina mostra il codice `LIC-…` dell'istituto, e
 all'indirizzo della professoressa arriva l'email di adesione ricevuta, che
@@ -95,7 +108,14 @@ Lo zero e corretto, non e un errore.
 Apra il link della password dalla prima email, imposti una password, poi vada
 su `/eventi/vivere-piu-a-lungo/licei/referente`.
 
-**Cosa deve vedere:** il nome dell'istituto con accanto il badge
+**Prima di tutto, con la migrazione applicata:** la schermata "Prima di
+iniziare" con le istruzioni per i docenti, la casella "Ho letto e accetto le
+istruzioni per i docenti e l'informativa privacy per scuole e docenti
+referenti." e il bottone **Accetto**, e nient'altro: nessun nome di studente,
+nessun contatore. Spunti e accetti. Senza la migrazione la schermata non
+compare, ed e corretto.
+
+**Poi deve vedere:** il nome dell'istituto con accanto il badge
 **Confermata**, il banner giallo "in verifica" **sparito**, il codice
 dell'istituto con il bottone per copiarlo, e l'elenco studenti vuoto.
 
@@ -184,6 +204,228 @@ Torni nella scheda Squadre e progetti e usi **Designa finalisti**, poi
 **Iscrivi all'evento**. Controlli che i due studenti risultino iscritti
 all'evento del 10 dicembre.
 
+## Docenti del progetto, squadre e riflessioni
+
+Questa parte richiede la migrazione `20261215000000`. Usi le stesse finestre
+separate: una per lo staff, una per la professoressa, una per il collega
+(`lei+prof2@`), una per ogni studente. Per i controlli "nella risposta" apra
+gli strumenti per sviluppatori del browser, scheda Rete, e guardi il JSON
+della chiamata indicata.
+
+### Passo 10. Se la migrazione non e ancora applicata
+
+Va provato su un ambiente in cui la SQL non e stata eseguita, oppure prima di
+eseguirla in produzione, perche il codice arriva prima della migrazione.
+
+**Cosa deve succedere:** la console del referente si apre come prima, senza
+schermata delle istruzioni; la card "Docenti del progetto" dice **Funzione in
+attivazione**; nel box di una lezione non compare l'avviso "Chi legge quello
+che scrivi" e la consegna si salva lo stesso; nel pannello staff il bottone
+**Invia avviso sulle riflessioni** e spento e dice che manca la migrazione.
+Poi applichi la migrazione come dice il README e continui.
+
+### Passo 11. Il referente indica un collega (incognito della prof)
+
+Dalla card **Docenti del progetto**: nome, cognome, `lei+prof2@`, classe
+`4A`. Il bottone resta spento finche non spunta la dichiarazione "Dichiaro che
+il docente indicato insegna nel nostro istituto, ...".
+
+**Cosa deve succedere:** la card mostra il collega con il badge **Invitato** e
+"1 su 5", e sopra la conferma "Invito inviato a ... L'istituto riceve un
+avviso al suo indirizzo istituzionale.". A `lei+prof2@` arriva l'invito con il link per impostare la
+password e i link alle istruzioni e all'informativa per le scuole. A
+`lei+scuola@` arriva "Un nuovo docente del progetto", con il nome del
+collega, la dichiarazione e "Se non è corretto scrivete a
+info@bioergotech.org"; una copia arriva a info@bioergotech.org.
+
+**Provi anche i rifiuti**, uno alla volta, e controlli che nessuno crei un
+account in Authentication, Users:
+
+- l'email della professoressa stessa: rifiutata;
+- `lei+studente1@`: rifiutata con "Non è possibile indicare questa email come
+  docente del progetto. ...". E lo stesso messaggio per ogni email che
+  riguarda altri (uno studente, un docente di un'altra scuola): la risposta
+  non deve dire se l'email ha gia un account, ne dove e iscritta;
+- `lei+prof2@` una seconda volta: rifiutata, e gia invitato;
+- **Rimanda invito** subito dopo l'invito: il bottone e spento per 10 minuti.
+
+**Uno studente con l'email del collega.** In una finestra in incognito provi
+a iscriversi come studente, con il codice dell'istituto, usando `lei+prof2@`:
+rifiutata con "Con questa email non è possibile iscriversi come studente.
+...", e in `licei_iscrizioni` non compare nessuna riga nuova.
+
+### Passo 12. Il collega entra (incognito di prof2)
+
+Apra il link della password, imposti la password e vada su
+`/eventi/vivere-piu-a-lungo/licei/referente`.
+
+**Cosa deve vedere:** solo la schermata delle istruzioni. Nella scheda Rete,
+`GET /api/eventi/licei/referente` risponde 403 con `istruzioni_accettate:
+false` e nessuno studente. Accetti.
+
+**Poi:** l'intestazione "Area dei docenti del progetto . Referente: Nome
+Cognome", il filtro su "Le mie classi (4A)" con "Tutte le classi
+dell'istituto" fra le opzioni, i due studenti, i bottoni per confermare e
+rimandare il link. **Non** deve vedere i bottoni per scaricare i CSV, ne la
+card per indicare docenti: al loro posto la riga con i soli nomi dei
+colleghi. Nella risposta di `GET /api/eventi/licei/referente` non ci sono
+`user_id`, ne il codice `SQ-` delle squadre, ne email dei colleghi.
+
+**L'export rifiutato:** apra a mano
+`/api/eventi/licei/referente/export` nella finestra di prof2. Deve rispondere
+403 "Questa funzione è riservata al docente referente.". Nella finestra della
+professoressa la stessa URL scarica il CSV.
+
+Nella card della professoressa il collega e ora **Attivo**, con la data di
+accettazione. In Supabase, `licei_accettazioni` ha due righe (prof e prof2)
+con `versione` uguale alla data di `ISTRUZIONI_DOCENTE.aggiornato` e il testo
+in `testo`.
+
+### Passo 13. Revoca, e nuovo invito
+
+La professoressa preme **Revoca** sul collega. prof2 ricarica la console.
+
+**Cosa deve succedere:** 403 "Nessuna adesione risulta associata a questo
+account.", subito, senza aspettare niente. Poi la professoressa lo indica di
+nuovo con la stessa email. Se dall'ultimo invito sono passati meno di 10
+minuti la risposta e "L'invito a questo docente è appena partito. Si può
+indicare di nuovo dopo 10 minuti, ...": e il limite dei reinvii, che vale
+anche dopo una revoca. Passati i 10 minuti la riga torna **Invitato**, e
+prof2 al prossimo accesso rivede la schermata delle istruzioni prima di
+qualsiasi dato.
+
+Ripeta la revoca dal pannello staff: nel dettaglio dell'adesione, sotto
+"Referente", "Docenti del progetto", **Revoca**. Stesso effetto.
+
+### Passo 14. Due istituti
+
+Con `lei+profb@`, in un'altra finestra in incognito, aderisca con il
+meccanografico `TATEST002X` e ripeta per questa scuola i passi 1 a 3.
+
+- La console di prof B non mostra nessuno studente della prima scuola, e
+  quella della professoressa nessuno della seconda.
+- La professoressa prova a indicare `lei+profb@` come collega: rifiutata, con
+  lo stesso messaggio generico del passo 11.
+- **Adesione con l'email di un docente gia legato.** In incognito, senza
+  accedere, compili il modulo di adesione con un terzo meccanografico finto
+  (`TATEST003X`) e come email del referente `lei+prof@`: rifiutata con "Non
+  è possibile registrare l'adesione con questa email del referente. ...", e
+  nessuna adesione nuova nel pannello. La console della professoressa resta
+  normale. Lo stesso vale per l'email di un docente del progetto non
+  revocato.
+- **Account legato a due istituti.** Non si ottiene dall'interfaccia, si
+  simula a mano nell'SQL editor e poi si toglie:
+
+  ```sql
+  insert into public.licei_docenti (adesione_id, user_id, nome, cognome, email, stato)
+  select a.id, b.user_id, 'Prova', 'B', 'lei+profb@gmail.com', 'attivo'
+    from public.licei_adesioni a, public.licei_adesioni b
+   where a.codice_meccanografico = 'TATEST001X'
+     and b.codice_meccanografico = 'TATEST002X';
+  ```
+
+  prof B ricarica: 409 "Questo account risulta collegato a più istituti.
+  Scrivi a info@bioergotech.org e sistemiamo noi.". Poi
+  `delete from public.licei_docenti where email = 'lei+profb@gmail.com';` e la
+  console di prof B torna normale.
+
+### Passo 15. Il quadro delle squadre
+
+Dopo il passo 8, nella console della professoressa (e in quella di prof2, se
+attivo) c'e "Le squadre del vostro istituto".
+
+**Cosa deve vedere:** la squadra con nome, "formata il gg/mm . 2 su 5", lo
+stato del progetto, il capitano per primo con il badge **Capitano**, l'altro
+componente come "Cognome Nome . 4A". Nessuna email, nessun codice `SQ-`,
+nessuna data di accesso. Sopra, i quattro numeri; sotto, "Non ancora in una
+squadra" e la nota "Il quadro serve al monitoraggio del percorso. Non va
+proiettato in classe né condiviso.". **Aggiorna** cambia l'ora di
+"Aggiornato alle".
+
+Poi chiuda per un momento la formazione delle squadre dal pannello: nella
+console di prof B, che non ha squadre, al posto del quadro deve esserci una
+riga sola, "La formazione delle squadre non è ancora aperta.". Nella console
+della professoressa il quadro resta, perche una squadra c'e. Riapra la fase.
+
+### Passo 16. Riflessioni, prima e dopo l'avviso
+
+**Prima.** La consegna della lezione 1.1 del passo 7 deve contare come
+scritta prima dell'avviso. Se al passo 7 la migrazione c'era gia, la simuli
+nell'SQL editor:
+
+```sql
+update public.lesson_submissions
+   set condivisa_referente_at = null
+ where lesson_slug = 'lesson-1-1'
+   and user_id = (select user_id from public.licei_iscrizioni
+                   where email = 'lei+studente1@gmail.com');
+```
+
+Nella console della professoressa, bottone **Riflessioni** sulla riga dello
+studente 1: compare "1 consegna riservata" e **nessun testo**.
+
+**Dopo.** Lo studente 1 apre `/courses/agentic-ai/lesson/lesson-1-2a`. Sopra
+il modulo deve vedere "Chi legge quello che scrivi" con il nome dell'istituto
+e il testo dell'avviso. Scriva una riflessione, una domanda **e un
+commento**, e consegni. La consegna mostra "Visibile anche ai docenti del tuo
+istituto. Il commento lo legge solo lo staff.". Riapra la lezione 1.1: dice
+"Visibile solo allo staff".
+
+**Cosa deve vedere la professoressa:** nel pannello dello studente 1 la
+riflessione e la domanda della lezione 1.2a, "Lo staff non ha ancora
+risposto" e ancora "1 consegna riservata". Il commento **non** c'e, ne a
+schermo ne nella risposta di `GET /api/eventi/licei/referente/riflessioni`
+(cerchi il testo del commento nel JSON: non deve comparire). Lo stesso da
+**Leggi per lezione**, scegliendo la lezione 1.2a.
+
+**La risposta dello staff:** dal portale dei membri, scheda **Submissions**,
+risponda alla domanda della 1.2a. La professoressa riapre il pannello: "Lo
+staff ha risposto il ...", senza il testo della risposta.
+
+Nella console di prof B non compare niente dello studente 1: le riflessioni
+si leggono solo per gli studenti confermati del proprio istituto.
+
+### Passo 17. L'avviso email agli studenti (staff)
+
+Pannello staff, card "Avviso agli studenti sulle riflessioni", **Invia avviso
+sulle riflessioni**, e confermi.
+
+**Cosa deve succedere:** ai due studenti arriva "Percorso Biotecnologie e IA:
+chi legge le tue riflessioni", con il link all'informativa per gli studenti.
+La card dice **Inviato** con data e conteggi. Un secondo invio e rifiutato.
+
+> **Attenzione:** in produzione si invia una volta sola, e l'invio di prova
+> la consuma. Se lo prova su produzione, per l'invio vero va tolta a mano la
+> riga `avviso_riflessioni_inviato_at` (e `avviso_riflessioni_esito`) da
+> `licei_config`. Meglio provarlo su un ambiente di prova.
+
+### Passo 18. Adesione ritirata
+
+Lo staff porta la prima scuola su **Ritirata**.
+
+**Cosa deve succedere:** la professoressa e prof2 ricaricano e ricevono 403
+"L'adesione del vostro istituto è stata ritirata: l'accesso è disattivato.
+Per chiarimenti scrivi a info@bioergotech.org.". Lo studente 1 invece entra
+ancora in `/eventi/vivere-piu-a-lungo/licei/studente` e nelle lezioni. Poi la
+riporti su **Confermata**.
+
+### Passo 19. Lo staff corregge un'adesione dal modulo pubblico
+
+Nella finestra dello staff, loggato, reinvii il modulo di adesione con il
+meccanografico `TATEST001X` cambiando un numero.
+
+**Cosa deve succedere:** la professoressa continua a entrare nella sua
+console. Prima di questa correzione perdeva l'accesso, perche l'adesione
+passava all'account dello staff.
+
+### Passo 20. Chiusura (solo su un ambiente di prova)
+
+La scheda **Chiusura** cancella i dati di tutto il percorso: non la provi su
+produzione prima della fine. Su un ambiente di prova, l'anteprima conta
+anche i "Docenti del progetto", revocati compresi; dopo **Cancella i dati del
+percorso** l'account di prof2 non c'e piu in Authentication, Users, e
+`licei_docenti` e `licei_accettazioni` sono vuote.
+
 ## Che cosa ha collaudato, e cosa no
 
 Arrivato in fondo ha verificato la catena intera: adesione, conferma, le due
@@ -191,6 +433,17 @@ email che prima non partivano, il cancello delle iscrizioni, l'iscrizione
 degli studenti, la creazione degli account, il badge di chi non e mai entrato,
 il rinvio del link, la conferma del referente, il conteggio del progresso, le
 squadre, la consegna, la valutazione e l'iscrizione d'ufficio all'evento.
+
+Con la seconda parte anche: il comportamento prima della migrazione,
+l'accettazione delle istruzioni prima di qualsiasi dato, l'invito di un
+collega con le due email e i rifiuti (referente, studente, doppione), il
+collega che vede tutto l'istituto senza export, la revoca immediata e il
+nuovo invito, la separazione fra due istituti e l'account legato a due
+istituti, il quadro delle squadre, le riflessioni prima e dopo l'avviso con
+il commento che non esce mai, l'avviso email una tantum, l'adesione ritirata
+che ferma i docenti e non gli studenti, la correzione dello staff che non
+sposta l'adesione e, su un ambiente di prova, la chiusura che cancella anche
+gli account dei docenti del progetto.
 
 **Non** ha collaudato: il comportamento con numeri veri (trecento studenti
 distribuiti su venti istituti), che e l'unica cosa che questo collaudo non
@@ -202,14 +455,15 @@ I dati di prova vanno tolti prima di aprire davvero, altrimenti l'istituto
 finto compare nei conteggi e nell'export.
 
 **Basta una riga.** Tutto quello che appartiene a un istituto e legato alla
-sua adesione con `on delete cascade`: iscrizioni, squadre e progetti se ne
-vanno insieme all'adesione, e le valutazioni se ne vanno insieme ai progetti.
-Non serve cancellare in ordine, e non serve ricordarsi niente.
+sua adesione con `on delete cascade`: iscrizioni, squadre, progetti, docenti
+del progetto e accettazioni delle istruzioni se ne vanno insieme
+all'adesione, e le valutazioni se ne vanno insieme ai progetti. Non serve
+cancellare in ordine, e non serve ricordarsi niente.
 
 ```sql
--- Sostituisca il meccanografico se ne ha usato un altro.
+-- Sostituisca i meccanografici se ne ha usati altri.
 delete from public.licei_adesioni
- where codice_meccanografico = 'TATEST001X';
+ where codice_meccanografico in ('TATEST001X', 'TATEST002X');
 ```
 
 Restano fuori dalla cascata, perche non appartengono all'istituto, e vanno
@@ -217,9 +471,13 @@ tolte a mano solo se vuole ripetere il collaudo con le stesse email:
 
 - le righe di `lesson_submissions` degli account di prova, che appartengono al
   corso e non al bando;
-- gli account di prova in Authentication, Users;
+- gli account di prova in Authentication, Users, compreso quello del collega
+  (`lei+prof2@`);
 - le eventuali iscrizioni all'evento in `event_registrations`;
-- la sua riga in `licei_commissari`, se non deve restare in Commissione.
+- la sua riga in `licei_commissari`, se non deve restare in Commissione;
+- le chiavi `avviso_riflessioni_inviato_at` e `avviso_riflessioni_esito` in
+  `licei_config`, se ha inviato l'avviso su un ambiente che poi deve
+  inviarlo davvero.
 
 L'indice unico su `codice_meccanografico` e quello su
 `(adesione_id, lower(email))` impediscono di rifare il collaudo con gli stessi
@@ -236,3 +494,9 @@ impedisce a due docenti della stessa scuola di creare due adesioni.
 | Il secondo studente non riesce a iscriversi | Sta usando la stessa email del primo, oppure la stessa finestra loggata. |
 | Lo studente vede "iscrizione non confermata" | La professoressa non ha ancora premuto "E mio studente". |
 | Il progresso resta a zero anche dopo una lezione | Ha aperto la lezione ma non ha consegnato la riflessione. E la consegna che conta. |
+| La console mostra solo le istruzioni | E giusto finche il docente non le accetta. Ricompare quando cambia la data di `ISTRUZIONI_DOCENTE.aggiornato`. |
+| "Docenti del progetto" dice Funzione in attivazione | La migrazione `20261215000000` non e applicata: lo dice anche `VERIFICA.sql`. |
+| Il collega vede "Nessuna adesione risulta associata a questo account" | E stato revocato, oppure e entrato con un'email diversa da quella dell'invito. |
+| "Questo account risulta collegato a più istituti" | Lo stesso account e referente o docente in due scuole. Si sistema a mano, lasciando un legame solo. |
+| Le riflessioni di uno studente risultano riservate | Sono state salvate prima dell'avviso nel box della lezione. Diventano visibili solo se lo studente le riapre e le salva di nuovo. |
+| L'avviso sulle riflessioni non si puo inviare | Manca la colonna `condivisa_referente_at` (migrazione non applicata), manca `RESEND_API_KEY`, oppure e gia stato inviato. |

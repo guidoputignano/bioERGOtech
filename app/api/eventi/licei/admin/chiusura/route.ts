@@ -5,6 +5,7 @@ import {
   CHIAVE_DATI_CANCELLATI,
   CHIAVE_ESITO_CANCELLAZIONE,
   CHIAVE_PERCORSO_CHIUSO,
+  erroreSchemaMancante,
   leggiChiusuraPercorso,
   type EsitoCancellazione,
 } from "@/lib/eventi/licei-server";
@@ -12,8 +13,8 @@ import {
 /**
  * Chiusura del percorso licei: il comando che mantiene la promessa
  * dell'informativa. Account, elaborati, progetti e avanzamento si cancellano
- * entro un mese dalla conclusione del corso, e l'accesso di referenti e
- * commissari si spegne a fine corso.
+ * entro un mese dalla conclusione del corso, e l'accesso di docenti
+ * (referenti e docenti del progetto) e commissari si spegne a fine corso.
  *
  * Due passi separati, e non uno solo, perche hanno costi diversi. Spegnere
  * gli accessi e reversibile e va fatto il giorno in cui il corso finisce.
@@ -40,20 +41,18 @@ type Errore = { code?: string; message?: string } | null;
 
 /**
  * La tabella non esiste in questo database. Non e un caso di scuola:
- * `lesson_submissions` non ha migrazione nel repository, e su un ambiente
- * nuovo alcune tabelle del portale possono mancare. Chi non ha la tabella
- * non puo comparirci, quindi conta come "nessuna riga".
+ * `lesson_submissions` non ha migrazione nel repository, su un ambiente
+ * nuovo alcune tabelle del portale possono mancare, e `licei_docenti` e
+ * `licei_accettazioni` arrivano con una migrazione che in produzione si
+ * applica a mano. Chi non ha la tabella non puo comparirci, quindi conta
+ * come "nessuna riga".
  *
  * Il controllo e stretto di proposito: una colonna sbagliata (42703) non e
- * una tabella assente, ed e un errore vero che deve fermare tutto.
+ * una tabella assente, ed e un errore vero che deve fermare tutto. Il
+ * criterio e quello condiviso del modulo, in `licei-server`.
  */
 function tabellaAssente(e: Errore): boolean {
-  if (!e) return false;
-  return (
-    e.code === "42P01" ||
-    e.code === "PGRST205" ||
-    /relation .* does not exist|could not find the table/i.test(e.message ?? "")
-  );
+  return erroreSchemaMancante(e, "tabella");
 }
 
 /** Spezza un elenco in blocchi: i filtri `in` viaggiano nella URL. */
@@ -124,6 +123,17 @@ async function presenti(
     }
   }
   return { trovati, assente: false };
+}
+
+/**
+ * Come `tutteLeRighe`, per una tabella che potrebbe non esserci ancora:
+ * torna null invece di sollevare, e chi chiama la segna fra le assenti.
+ */
+async function tutteLeRigheSeEsiste<T>(client: Db, tabella: string, colonne: string): Promise<T[] | null> {
+  const { error } = await client.from(tabella).select("id", { count: "exact", head: true });
+  if (tabellaAssente(error)) return null;
+  if (error) throw new Error(`${tabella}: ${error.message}`);
+  return tutteLeRighe<T>(client, tabella, colonne);
 }
 
 /** Conteggio esatto di una tabella intera. */
@@ -199,6 +209,7 @@ type Piano = {
     progetti: number;
     valutazioni: number;
     commissari: number;
+    docenti: number;
     riflessioni: number;
   };
   account: {
@@ -224,7 +235,7 @@ type Piano = {
  * una query e andata in errore e sembrava vuota.
  */
 async function calcolaPiano(client: Db): Promise<Piano> {
-  const [adesioni, iscrizioni, commissari] = await Promise.all([
+  const [adesioni, iscrizioni, commissari, docentiOppureNull] = await Promise.all([
     tutteLeRighe<{ user_id: string | null; referente_email: string | null }>(
       client,
       "licei_adesioni",
@@ -240,7 +251,16 @@ async function calcolaPiano(client: Db): Promise<Piano> {
       "licei_commissari",
       "id, user_id, email",
     ),
+    // I docenti del progetto, revocati compresi: l'account di un docente
+    // revocato non entra piu da nessuna parte, ma esiste, e la promessa
+    // "credenziali cancellate entro un mese" vale anche per lui.
+    tutteLeRigheSeEsiste<{ user_id: string | null; email: string | null }>(
+      client,
+      "licei_docenti",
+      "id, user_id, email",
+    ),
   ]);
+  const docenti = docentiOppureNull ?? [];
 
   const persone = new Map<string, Persona>();
   const aggiungi = (id: string | null, email: string | null, studente: boolean) => {
@@ -253,9 +273,20 @@ async function calcolaPiano(client: Db): Promise<Piano> {
   for (const a of adesioni) aggiungi(a.user_id, a.referente_email, false);
   for (const i of iscrizioni) aggiungi(i.user_id, i.email, true);
   for (const c of commissari) aggiungi(c.user_id, c.email, false);
+  for (const d of docenti) aggiungi(d.user_id, d.email, false);
 
   const ids = [...persone.keys()];
   const tabelleAssenti = new Set<string>();
+  if (docentiOppureNull === null) tabelleAssenti.add("licei_docenti");
+
+  // Le accettazioni delle istruzioni non portano account nuovi (sono di
+  // docenti gia contati), ma vanno cancellate anch'esse: basta sapere se la
+  // tabella c'e.
+  {
+    const { error } = await client.from("licei_accettazioni").select("id", { count: "exact", head: true });
+    if (tabellaAssente(error)) tabelleAssenti.add("licei_accettazioni");
+    else if (error) throw new Error(`licei_accettazioni: ${error.message}`);
+  }
 
   // Il profilo dice due cose: il livello (staff, membro, partner) e se la
   // persona ha mai chiesto di entrare nel portale. Si legge con `*` perche
@@ -345,6 +376,7 @@ async function calcolaPiano(client: Db): Promise<Piano> {
       progetti,
       valutazioni,
       commissari: commissari.length,
+      docenti: docenti.length,
       riflessioni,
     },
     account: {
@@ -505,18 +537,23 @@ export async function POST(request: Request) {
     }
 
     // 3. I dati del percorso. Le schede e i commissari prima, poi le
+    //    accettazioni delle istruzioni e i docenti del progetto, poi le
     //    adesioni, che in cascata portano via iscrizioni, squadre, progetti e
     //    le schede rimaste. Le ultime tre cancellazioni a tappeto raccolgono
     //    righe orfane, se mai ce ne fossero: la cascata dovrebbe averle gia
-    //    tolte tutte.
+    //    tolte tutte. Le accettazioni vanno tolte a mano anche perche quelle
+    //    di un account che resta (lo staff, un membro del portale) non
+    //    seguirebbero l'account. Le tabelle assenti si saltano.
     const tabelle = [
       "licei_valutazioni",
       "licei_commissari",
+      "licei_accettazioni",
+      "licei_docenti",
       "licei_adesioni",
       "licei_progetti",
       "licei_squadre",
       "licei_iscrizioni",
-    ];
+    ].filter((t) => !piano.tabelle_assenti.includes(t));
     for (const tabella of tabelle) {
       const { error } = await client.from(tabella).delete().not("id", "is", null);
       if (error) throw new Error(`${tabella}: ${error.message}`);

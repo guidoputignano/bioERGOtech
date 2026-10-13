@@ -114,7 +114,7 @@ const EN: Informativa = {
           "Class and year of study",
           "The institute the student belongs to, and the team they join",
           "Reflections submitted at the end of each lesson, and the project the team submits",
-          "The consent and the declaration about the parental authorisation, recorded with their wording and timestamp",
+          "The declaration of being at least 14 and the acceptance of the privacy notice and of the participation rules, recorded with their wording and timestamp",
         ],
       },
       {
@@ -252,7 +252,7 @@ const EN: Informativa = {
     paragrafi: [
       "Our website and services are not directed at children under the age of 14, and we do not knowingly collect their personal data. If you believe a child under 14 has provided us with personal data, please contact us and we will delete it promptly.",
       "Some of our educational programmes are addressed to secondary school students, who may be minors aged 14 or over. Students aged 14 or over enrol and consent themselves, as Italian law allows for online services (Art. 2-quinquies of the Italian Data Protection Code); their school appoints a referring teacher who confirms the enrolment, and does not collect consents on our behalf. In those cases we process only what the programme needs: the school code, name, surname, class, year of study and contact email. We do not collect dates of birth, tax codes, identity documents or parents' contact details. Before a student appears in photographs or recordings of our events, a separate choice is always requested on a form kept by the school and signed by a parent for students under 18. Full details are in the programme's own privacy notices for students and for schools. Parents and guardians may exercise the rights described above on behalf of their child by writing to the address at the end of this policy.",
-      "Taking part in the programme also means following an online course, which requires an account. Alongside the data listed above we therefore keep the work the student submits during the course: the reflection that closes each lesson, the team they belong to and the project the team submits. The referring teacher sees how far their own students have got, so that the school can follow them. The assessment panel sees the projects without the names of the students who wrote them.",
+      "Taking part in the programme also means following an online course, which requires an account. Alongside the data listed above we therefore keep the work the student submits during the course: the reflection that closes each lesson, the team they belong to and the project the team submits. The teachers of the school who follow the programme see how far their own students have got and read the reflections and questions they submit in the lessons, so that the school can follow them. The assessment panel sees the projects without the names of the students who wrote them.",
     ],
   },
 
@@ -328,7 +328,7 @@ const IT: Informativa = {
           "Classe e anno di corso",
           "L'istituto di appartenenza e la squadra di cui entra a far parte",
           "Le riflessioni consegnate al termine di ogni lezione e il progetto consegnato dalla squadra",
-          "Il consenso e la dichiarazione sull'autorizzazione dei genitori, registrati con il loro testo e la data",
+          "La dichiarazione di avere almeno 14 anni e l'accettazione dell'informativa privacy e del regolamento, registrate con il loro testo e la data",
         ],
       },
       {
@@ -467,7 +467,7 @@ const IT: Informativa = {
     paragrafi: [
       "Il nostro sito e i nostri servizi non si rivolgono a bambini di età inferiore ai 14 anni, e non raccogliamo consapevolmente i loro dati personali. Se ritiene che un minore di 14 anni ci abbia fornito dati personali, ci contatti e li cancelleremo tempestivamente.",
       "Alcuni dei nostri percorsi formativi si rivolgono a studenti delle scuole secondarie di secondo grado, che possono essere minorenni di almeno 14 anni. Gli studenti di almeno 14 anni si iscrivono e acconsentono da sé, come la legge consente per i servizi online (art. 2-quinquies del Codice privacy); la loro scuola nomina un docente referente che conferma l'iscrizione, e non raccoglie consensi per nostro conto. In quei casi trattiamo solo ciò che serve al percorso: codice dell'istituto, nome, cognome, classe, anno di corso ed email di contatto. Non raccogliamo date di nascita, codici fiscali, documenti di identità né contatti dei genitori. Prima che uno studente compaia in fotografie o riprese dei nostri eventi viene sempre richiesta una scelta a parte, su un modulo conservato dalla scuola e firmato da un genitore per gli studenti minorenni. I dettagli sono nelle informative del percorso per gli studenti e per le scuole. I genitori e chi esercita la responsabilità genitoriale possono esercitare i diritti sopra descritti per conto del minore scrivendo all'indirizzo indicato in fondo a questa informativa.",
-      "Partecipare al percorso significa anche seguire un corso online, che richiede un account. Accanto ai dati sopra elencati conserviamo quindi il lavoro che lo studente consegna durante il corso: la riflessione che chiude ogni lezione, la squadra di cui fa parte e il progetto consegnato dalla squadra. Il docente referente vede a che punto sono arrivati i propri studenti, così che la scuola possa seguirli. La commissione di valutazione vede i progetti senza i nomi di chi li ha scritti.",
+      "Partecipare al percorso significa anche seguire un corso online, che richiede un account. Accanto ai dati sopra elencati conserviamo quindi il lavoro che lo studente consegna durante il corso: la riflessione che chiude ogni lezione, la squadra di cui fa parte e il progetto consegnato dalla squadra. I docenti dell'istituto che seguono il percorso vedono a che punto sono arrivati i propri studenti e leggono le riflessioni e le domande che consegnano nelle lezioni, così che la scuola possa seguirli. La commissione di valutazione vede i progetti senza i nomi di chi li ha scritti.",
     ],
   },
 

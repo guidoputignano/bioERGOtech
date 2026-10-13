@@ -1,8 +1,9 @@
 /**
  * I documenti pubblici del percorso licei: informativa per gli studenti,
  * informativa per scuole e docenti referenti, regolamento di partecipazione,
- * e i due documenti che si firmano, l'adesione della scuola (dal dirigente) e
- * le istruzioni per il docente referente (dal docente).
+ * e i due documenti che scuola e docenti sottoscrivono: l'adesione della
+ * scuola, che firma il dirigente, e le istruzioni per i docenti, che ogni
+ * docente accetta sulla piattaforma al primo accesso.
  *
  * Partono dai documenti privacy preparati per il corso, corretti dove
  * descrivevano una piattaforma diversa da quella reale: qui sono elencati i
@@ -100,7 +101,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
   titolo: "Informativa privacy per studenti",
   intro:
     "Percorso online «Biotecnologie e Intelligenza Artificiale». Questa informativa spiega in modo semplice come Fondazione bioERGOtech ETS usa i dati degli studenti che partecipano al corso.",
-  aggiornato: "2026-10-08",
+  aggiornato: "2026-10-13",
   sezioni: [
     {
       h: "Chi usa i dati",
@@ -125,7 +126,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
       ],
       dopo: [
         "La password la scegli tu, con il link che ricevi per email: la Fondazione non la vede.",
-        "Durante il corso registriamo le lezioni completate, le riflessioni e le domande che invii nelle lezioni, la squadra di cui fai parte con il tuo ruolo, il progetto della squadra (titolo, ambito, testi ed eventuale link ai materiali) e alcuni dati tecnici di accesso, come la data dell'ultimo accesso.",
+        "Durante il corso registriamo le lezioni completate, le riflessioni, le domande e i commenti che invii nelle lezioni, la squadra di cui fai parte con il tuo ruolo, il progetto della squadra (titolo, ambito, testi ed eventuale link ai materiali) e alcuni dati tecnici di accesso, come la data dell'ultimo accesso.",
         "Nei testi del progetto e nelle riflessioni non inserire informazioni sulla salute o altri dati personali tuoi o di persone reali: non servono al percorso.",
       ],
     },
@@ -142,7 +143,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
       h: "Chi può vedere i dati",
       ul: [
         "Tu, che vedi i dati e i contenuti del tuo account.",
-        "Il docente referente del tuo istituto, con credenziali personali: vede nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra e il progetto della squadra. Li usa solo per seguire il percorso formativo e non vede gli studenti di altri istituti.",
+        "Il docente referente del tuo istituto e gli altri docenti dell'istituto da lui indicati, ciascuno con credenziali personali: vedono nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra con il tuo ruolo e il progetto della squadra. Vedono anche la riflessione e la domanda che invii nelle lezioni, quando nella lezione te lo segnaliamo. Li usano solo per seguire il percorso formativo e non vedono gli studenti di altri istituti.",
         "I compagni della tua squadra, che vedono nome, cognome e classe. Quando il progetto viene consegnato, un'email di conferma con i nomi dei componenti arriva a tutta la squadra e al docente referente.",
         "La Commissione di valutazione, con account personali: legge i progetti consegnati con il nome della squadra e dell'istituto, senza i nomi degli studenti, ed è tenuta alla riservatezza.",
         "Il personale autorizzato della Fondazione, nei limiti necessari: gestisce iscrizioni, squadre e finalisti, legge e risponde alle riflessioni e alle domande che invii nelle lezioni, dà assistenza e si occupa della sicurezza.",
@@ -160,7 +161,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
     {
       h: "Messaggi e mentor",
       p: [
-        "La piattaforma non ha una chat o messaggi tra utenti. Le domande che invii nelle lezioni le legge e le risponde lo staff della Fondazione.",
+        "La piattaforma non ha una chat o messaggi tra utenti. Le domande che invii nelle lezioni le legge e le risponde lo staff della Fondazione. Riflessione e domanda le possono leggere anche i docenti del tuo istituto che seguono il percorso; il commento lo legge solo lo staff.",
         "Nella tua area trovi l'elenco dei mentor del percorso e, per chi lo ha messo a disposizione, un contatto professionale. Il contatto avviene di tua iniziativa e fuori dalla piattaforma, con un tuo indirizzo e sotto la responsabilità di chi partecipa alla comunicazione.",
         "La Fondazione non comunica ai mentor i tuoi dati e non organizza, non riceve e non registra le comunicazioni tra studente e mentor, comprese email e video call. I mentor accettano linee guida che vietano di chiedere dati non necessari, di usarli per altri scopi e di registrare le conversazioni. Se qualcosa non ti sembra adeguato, interrompi il contatto e scrivi a info@bioergotech.org; se sei minorenne, ti suggeriamo di coinvolgere il docente referente.",
       ],
@@ -183,14 +184,16 @@ export const INFORMATIVA_SCUOLE: Documento = {
   occhiello: "Privacy",
   titolo: "Informativa privacy per scuole e docenti referenti",
   intro: `Percorso online «Biotecnologie e Intelligenza Artificiale». Il titolare del trattamento è ${TITOLARE} Tratta i dati delle scuole e dei docenti referenti per gestire l'adesione al percorso.`,
-  aggiornato: "2026-10-08",
+  aggiornato: "2026-10-13",
   sezioni: [
     {
       h: "Dati trattati",
       ul: [
         "dell'istituto: denominazione, codice meccanografico, comune, provincia, email istituzionale e, se indicati, sito e dirigente;",
         "del docente referente: nome, cognome, email, telefono e, se indicata, materia;",
+        "degli altri docenti dell'istituto indicati dal referente: nome, cognome, email e, se indicate, classi seguite;",
         "il numero di studenti e classi che l'istituto prevede di coinvolgere;",
+        "la registrazione dell'accettazione delle istruzioni per i docenti, con data e versione;",
         "le credenziali di accesso e i dati tecnici connessi al login.",
       ],
     },
@@ -204,14 +207,14 @@ export const INFORMATIVA_SCUOLE: Documento = {
     {
       h: "Accesso alla piattaforma",
       p: [
-        "Il docente referente dispone di credenziali personali e vede soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.",
+        "Il docente referente e gli altri docenti dell'istituto che il referente indica dispongono ciascuno di credenziali personali e vedono soltanto gli studenti del proprio istituto, nei limiti indicati nell'informativa per gli studenti. Quando il referente indica un altro docente, l'istituto ne riceve notizia al proprio indirizzo email istituzionale e può chiederne la revoca in qualsiasi momento. Solo il referente può scaricare l'elenco dei confermati, senza email, e l'elenco minimo per foto e video dell'evento. Le credenziali non possono essere condivise e l'accesso viene disattivato al termine del corso.",
         "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività: l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
       ],
     },
     {
       h: "Chi può vedere i dati",
       p: [
-        "Il personale autorizzato della Fondazione e i fornitori tecnici della piattaforma. Nessuna diffusione.",
+        "Il personale autorizzato della Fondazione e i fornitori tecnici della piattaforma. Il docente referente vede nome, cognome, email e classi seguite dei docenti che ha indicato, e i docenti del progetto vedono nome e cognome dei colleghi. Nessuna diffusione.",
       ],
       ul: FORNITORI,
       dopo: [FORNITORI_NOTA],
@@ -233,7 +236,7 @@ export const REGOLAMENTO: Documento = {
   occhiello: "Regolamento",
   titolo: "Regolamento di partecipazione",
   intro: "Percorso online «Biotecnologie e Intelligenza Artificiale».",
-  aggiornato: "2026-10-08",
+  aggiornato: "2026-10-13",
   sezioni: [
     {
       h: "1. Il percorso",
@@ -264,7 +267,7 @@ export const REGOLAMENTO: Documento = {
     {
       h: "4. Docente referente",
       p: [
-        "Il docente referente del proprio istituto può vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto.",
+        "Il docente referente e gli altri docenti del proprio istituto da lui indicati possono vedere i dati indicati nell'informativa privacy, esclusivamente per seguire il percorso formativo degli studenti del proprio istituto.",
       ],
     },
     {
@@ -289,7 +292,7 @@ export const REGOLAMENTO: Documento = {
   ],
 };
 
-/* ── I due documenti che si firmano ───────────────────────────────────── */
+/* ── I due documenti che si sottoscrivono ─────────────────────────────── */
 
 /**
  * «Adesione della scuola e accesso del docente referente». Lo firma il
@@ -330,26 +333,33 @@ export const ADESIONE_SCUOLA: Documento = {
 };
 
 /**
- * «Istruzioni per il docente referente». Le firma il docente, o le accetta
- * con una email. Gli impegni sono gli stessi che vede nella sua area.
+ * «Istruzioni per il docente referente e i docenti del progetto». Ogni
+ * docente, referente compreso, le accetta sulla piattaforma al primo accesso,
+ * prima di vedere i dati degli studenti; chi preferisce può anche firmarle.
+ * Gli impegni sono gli stessi che vede nella sua area.
+ *
+ * `aggiornato` è anche la versione che si accetta (`licei_accettazioni`):
+ * cambiarlo vuol dire che ogni docente le accetta di nuovo al prossimo
+ * accesso, e finché non lo fa non vede dati. Si cambia quando cambia il
+ * testo, come per gli altri documenti, e solo allora.
  */
 export const ISTRUZIONI_DOCENTE: Documento = {
-  titoloPagina: "Istruzioni per il docente referente | Biotecnologie e Intelligenza Artificiale",
+  titoloPagina: "Istruzioni per il docente referente e i docenti del progetto | Biotecnologie e Intelligenza Artificiale",
   descrizione:
-    "Gli impegni del docente referente che segue sulla piattaforma gli studenti del proprio istituto nel percorso Biotecnologie e Intelligenza Artificiale.",
-  occhiello: "Da firmare",
-  titolo: "Istruzioni per il docente referente",
+    "Gli impegni del docente referente e dei docenti del progetto che seguono sulla piattaforma gli studenti del proprio istituto nel percorso Biotecnologie e Intelligenza Artificiale.",
+  occhiello: "Si accetta online",
+  titolo: "Istruzioni per il docente referente e i docenti del progetto",
   intro:
-    "Percorso online «Biotecnologie e Intelligenza Artificiale». Il docente referente riceve un accesso personale alla piattaforma per seguire gli studenti del proprio istituto.",
+    "Percorso online «Biotecnologie e Intelligenza Artificiale». Il docente referente, e ogni altro docente dell'istituto che il referente indica, riceve un accesso personale alla piattaforma per seguire gli studenti del proprio istituto.",
   aggiornato: "2026-10-13",
   modulo: {
     campiFine: ["Nome e cognome", "Istituto", "Data", "Firma"],
-    nota: "In alternativa alla firma, il docente può inviare a info@bioergotech.org una email in cui dichiara di accettare queste istruzioni.",
+    nota: "Il docente accetta queste istruzioni sulla piattaforma al primo accesso, prima di vedere i dati degli studenti. Chi preferisce può anche firmarle e inviarle a info@bioergotech.org.",
   },
   sezioni: [
     {
       h: "Gli impegni del docente",
-      p: ["Con l'attivazione dell'account il docente si impegna a:"],
+      p: ["Con l'accettazione delle istruzioni al primo accesso il docente si impegna a:"],
       ul: [...ISTRUZIONI_REFERENTE],
       dopo: [
         "Le credenziali sono personali.",
@@ -373,10 +383,13 @@ export type VoceGuida = {
 /**
  * Chi deve fare che cosa con ogni documento. Il primo gruppo è la «Guida
  * operativa per scuole e docenti referenti»: le stesse indicazioni, con un
- * solo cambio, l'ultima frase del punto 3. La guida chiedeva l'accettazione
- * delle istruzioni prima dell'attivazione dell'account, ma l'account del
- * referente nasce con l'invio dell'adesione online: la frase dice quello che
- * succede davvero.
+ * solo cambio, il punto 3. La guida chiedeva l'accettazione delle istruzioni
+ * prima dell'attivazione dell'account. L'account del referente nasce con
+ * l'invio dell'adesione online, e quello di un collega con l'invito del
+ * referente, ma la console non mostra alcun dato degli studenti finché il
+ * docente non accetta le istruzioni al primo accesso (`requireDocente`):
+ * l'accettazione viene prima di qualsiasi dato, e il punto 3 dice proprio
+ * questo.
  */
 export const GUIDA_DOCUMENTI: { gruppo: string; sommario: string; voci: VoceGuida[] }[] = [
   {
@@ -405,14 +418,14 @@ export const GUIDA_DOCUMENTI: { gruppo: string; sommario: string; voci: VoceGuid
         ],
       },
       {
-        titolo: "Istruzioni per il docente referente",
+        titolo: "Istruzioni per il docente referente e i docenti del progetto",
         href: ISTRUZIONI_DOCENTE_PATH,
-        come: "Da firmare",
+        come: "Si accetta online",
         aggiornato: ISTRUZIONI_DOCENTE.aggiornato,
         passi: [
           "Il docente legge le regole su credenziali personali, riservatezza e accesso ai soli studenti del proprio istituto.",
-          "Il docente firma il documento oppure ne invia un'accettazione esplicita via email.",
-          "Inviare il documento firmato o confermare l'accettazione a info@bioergotech.org. Le istruzioni valgono dal primo accesso all'area del docente referente.",
+          "Il docente le accetta sulla piattaforma al primo accesso: finché non lo fa, non vede i dati degli studenti. Lo stesso vale per gli altri docenti indicati dal referente.",
+          "Chi preferisce può anche firmarle e inviarle a info@bioergotech.org.",
         ],
       },
     ],

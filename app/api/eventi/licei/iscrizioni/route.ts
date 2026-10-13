@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { utenteCorrente } from "@/lib/eventi/bando-server";
-import { liceiAdminClient, verificaIscrizioniAperte } from "@/lib/eventi/licei-server";
+import { erroreSchemaMancante, liceiAdminClient, verificaIscrizioniAperte } from "@/lib/eventi/licei-server";
+import { escapeLike } from "@/lib/eventi/licei-docenti";
 import {
   normalizzaCodice,
   validateIscrizione,
@@ -95,6 +96,48 @@ export async function POST(request: Request) {
       );
     }
 
+    // ── Un docente del progetto non si iscrive come studente ──
+    // L'iscrizione lega l'account trovato per email. Con l'email di un
+    // docente del progetto, lo stesso account avrebbe la vista da docente e
+    // quella da studente: e la guardia dei docenti, che lo ferma, gli
+    // toglierebbe l'accesso. Prima della migrazione 20261215000000 la
+    // tabella non c'e e il controllo non serve.
+    const [docentePerEmail, docentePerAccount] = await Promise.all([
+      client
+        .from("licei_docenti")
+        .select("id")
+        .ilike("email", escapeLike(email))
+        .in("stato", ["invitato", "attivo"])
+        .limit(1),
+      utente.id
+        ? client
+            .from("licei_docenti")
+            .select("id")
+            .eq("user_id", utente.id)
+            .in("stato", ["invitato", "attivo"])
+            .limit(1)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const erroreDocenti = [docentePerEmail.error, docentePerAccount.error].find(
+      (e) => e && !erroreSchemaMancante(e, "tabella"),
+    );
+    if (erroreDocenti) {
+      console.error("Licei iscrizione: controllo docenti fallito:", erroreDocenti.message);
+      return NextResponse.json(
+        { error: "Non è stato possibile registrare l'iscrizione. Riprova." },
+        { status: 500 },
+      );
+    }
+    if ((docentePerEmail.data ?? []).length > 0 || (docentePerAccount.data ?? []).length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Con questa email non è possibile iscriversi come studente. Se pensi ci sia un errore, scrivi a info@bioergotech.org.",
+        },
+        { status: 409 },
+      );
+    }
+
     // ── Account dello studente ──
     // Serve per accedere alle lezioni, che sono protette da login.
     let userId: string | null = utente.id;
@@ -172,7 +215,7 @@ export async function POST(request: Request) {
       }
       console.error("Licei iscrizione insert error:", erroreInsert);
       return NextResponse.json(
-        { error: "Non e stato possibile registrare l'iscrizione. Riprova." },
+        { error: "Non è stato possibile registrare l'iscrizione. Riprova." },
         { status: 500 },
       );
     }

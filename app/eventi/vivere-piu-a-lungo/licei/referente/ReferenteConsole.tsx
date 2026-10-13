@@ -1,13 +1,30 @@
 "use client";
 
 /**
- * Area riservata del docente referente.
+ * Area riservata del docente referente, e dei docenti del progetto che lui
+ * indica.
  *
  * Fa tre cose, e sono le tre che il bando gli chiede: gli mostra il codice
  * da diffondere, gli fa scaricare il modulo di autorizzazione da far firmare
  * alle famiglie, e gli fa confermare le iscrizioni arrivate. L'elenco
  * confermato, esportabile in CSV, e esattamente l'elenco che l'art. 4 chiede
  * all'istituto di trasmettere: il referente non lo compila, lo approva.
+ *
+ * Prima di tutto, il cancello delle istruzioni: finche il docente non le
+ * accetta, la rotta non manda dati di studenti e qui si vede solo
+ * `AccettazioneIstruzioni`. Poi due ruoli sullo stesso istituto. Il
+ * referente principale ha in piu la scheda dei docenti del progetto e gli
+ * export; un docente del progetto vede gli stessi studenti, con le sue
+ * classi come filtro di partenza.
+ *
+ * Il filtro per classe vive qui, in `filtroClassi`: ogni sezione che filtra
+ * lo riceve e chiede `corrispondeClasse(filtroClassi, classe)`. Il quadro
+ * delle squadre (`QuadroSquadre`) riceve lo stesso filtro e "Aggiorna", che
+ * rilegge tutto senza svuotare la pagina.
+ *
+ * Le riflessioni (`RiflessioniReferente.tsx`) non arrivano con l'elenco: si
+ * leggono su un clic, dal bottone sulla riga di uno studente confermato o
+ * dalla lettura per lezione, che usa lo stesso filtro per classe.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,8 +35,6 @@ import {
   ANNI_CORSO,
   ISCRIZIONE_PATH,
   SITE_URL,
-  SQUADRA_MAX,
-  SQUADRA_MIN,
   STATI_ISCRIZIONE,
   statoAdesioneColore,
   statoAdesioneLabel,
@@ -34,6 +49,21 @@ import {
   ISTRUZIONI_REFERENTE,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
+import { AccettazioneIstruzioni } from "./AccettazioneIstruzioni";
+import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
+import { FiltroClasse } from "./FiltroClasse";
+import { QuadroSquadre } from "./QuadroSquadre";
+import { RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
+import type { IscrizioneQuadroInput, SquadraQuadroInput } from "@/lib/eventi/licei-squadre";
+import {
+  TUTTE_LE_CLASSI,
+  corrispondeClasse,
+  costruisciFiltro,
+  filtroIniziale,
+  opzioniClassi,
+} from "./filtroPerClasse";
+// Solo il tipo: il modulo e del server.
+import type { DocentiRisposta } from "@/lib/eventi/licei-docenti";
 import {
   INFORMATIVA_IMMAGINI_PATH,
   ISTRUZIONI_SCUOLA,
@@ -44,10 +74,22 @@ type Iscrizione = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Adesione = any;
 
+/** Chi sta guardando: il referente principale o un docente del progetto. */
+type Ruolo = "referente" | "docente";
+type Io = { id: string | null; nome: string; cognome: string; classi: string[] };
+/** Le fasi del percorso, come le legge la rotta: "aperte" o "chiuse". */
+type Fasi = { squadre: string; consegne: string };
+
 export function ReferenteConsole() {
   const [adesione, setAdesione] = useState<Adesione | null>(null);
   const [righe, setRighe] = useState<Iscrizione[]>([]);
-  const [squadre, setSquadre] = useState<Iscrizione[]>([]);
+  const [squadre, setSquadre] = useState<SquadraQuadroInput[]>([]);
+  // Il quadro delle squadre: se la rotta non le ha lette, i componenti di
+  // un altro istituto (oggi sempre nessuno), e quando sono arrivati i dati.
+  const [squadreErrore, setSquadreErrore] = useState(false);
+  const [altriIstituti, setAltriIstituti] = useState<IscrizioneQuadroInput[]>([]);
+  const [aggiornatoAlle, setAggiornatoAlle] = useState<string | null>(null);
+  const [aggiornando, setAggiornando] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
@@ -61,22 +103,69 @@ export function ReferenteConsole() {
   // qui: le lezioni del corso possono cambiare, e un numero copiato a mano
   // diventerebbe falso senza che nessuno se ne accorga.
   const [totaleLezioni, setTotaleLezioni] = useState(0);
+  const [ruolo, setRuolo] = useState<Ruolo>("referente");
+  const [io, setIo] = useState<Io>({ id: null, nome: "", cognome: "", classi: [] });
+  const [docentiProgetto, setDocentiProgetto] = useState<DocentiRisposta | null>(null);
+  const [fasi, setFasi] = useState<Fasi | null>(null);
+  // Vero finche il docente non ha accettato la versione in vigore delle
+  // istruzioni: allora la rotta non manda studenti e si mostra il cancello.
+  const [daAccettare, setDaAccettare] = useState(false);
+  // Il valore della select delle classi. Null finche i dati non arrivano:
+  // il primo caricamento lo fissa sulle classi del docente, i successivi
+  // lasciano la scelta che ha fatto.
+  const [valoreFiltro, setValoreFiltro] = useState<string | null>(null);
+  // Lo studente di cui sono aperte le riflessioni: uno alla volta, e si
+  // leggono solo all'apertura.
+  const [riflessioniDi, setRiflessioniDi] = useState<string | null>(null);
 
-  const carica = useCallback(async () => {
-    setLoading(true);
-    setErrore(null);
+  // Con `silenzioso` (il bottone "Aggiorna" del quadro) la pagina resta
+  // com'e mentre i dati arrivano: niente "Caricamento" al posto di tutto, e
+  // le schede aperte non perdono quello che c'e scritto. Torna il messaggio
+  // d'errore, o null.
+  const carica = useCallback(async (opzioni?: { silenzioso?: boolean }): Promise<string | null> => {
+    const silenzioso = opzioni?.silenzioso === true;
+    if (silenzioso) setAggiornando(true);
+    else {
+      setLoading(true);
+      setErrore(null);
+    }
     try {
       const res = await fetch("/api/eventi/licei/referente", { cache: "no-store" });
       const data = await res.json();
+      // Istruzioni da accettare: arrivano solo istituto e ruolo, quanto
+      // basta per intestare la schermata. Nessuno studente.
+      if (res.status === 403 && data.istruzioni_accettate === false) {
+        setAdesione(data.adesione ?? null);
+        setRuolo(data.ruolo === "docente" ? "docente" : "referente");
+        setRighe([]);
+        setSquadre([]);
+        setAltriIstituti([]);
+        setDaAccettare(true);
+        return null;
+      }
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
+      setDaAccettare(false);
       setAdesione(data.adesione);
+      setRuolo(data.ruolo === "docente" ? "docente" : "referente");
+      const ioNuovo: Io = data.io ?? { id: null, nome: "", cognome: "", classi: data.classi ?? [] };
+      setIo(ioNuovo);
+      setDocentiProgetto(data.docenti_progetto ?? null);
+      setFasi(data.fasi ?? null);
+      setValoreFiltro((v) => v ?? filtroIniziale(ioNuovo.classi));
       setTotaleLezioni(data.totale_lezioni ?? 0);
       setRighe(data.iscrizioni ?? []);
       setSquadre(data.squadre ?? []);
+      setSquadreErrore(data.squadre_errore === true);
+      setAltriIstituti(data.componenti_altri_istituti ?? []);
+      setAggiornatoAlle(new Date().toISOString());
+      return null;
     } catch (err) {
-      setErrore(err instanceof Error ? err.message : "Caricamento non riuscito.");
+      const messaggio = err instanceof Error ? err.message : "Caricamento non riuscito.";
+      if (!silenzioso) setErrore(messaggio);
+      return messaggio;
     } finally {
       setLoading(false);
+      setAggiornando(false);
     }
   }, []);
 
@@ -94,7 +183,9 @@ export function ReferenteConsole() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Salvataggio non riuscito.");
-      setRighe((prev) => prev.map((r) => (r.id === id ? data.iscrizione : r)));
+      // Si fonde con la riga che c'e: la PATCH torna le colonne della tabella,
+      // non account, ultimo accesso e lezioni, che calcola solo la GET.
+      setRighe((prev) => prev.map((r) => (r.id === id ? { ...r, ...data.iscrizione } : r)));
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Salvataggio non riuscito.");
     } finally {
@@ -121,17 +212,31 @@ export function ReferenteConsole() {
     }
   };
 
+  // ── Filtro per classe ──
+  // Le classi presenti, normalizzate, e il filtro scelto. Valgono per i
+  // numeri e per l'elenco qui sotto; le sezioni che si aggiungono (quadro
+  // delle squadre, riflessioni) ricevono lo stesso `filtroClassi`.
+  const opzioni = useMemo(() => opzioniClassi(righe.map((r) => r.classe)), [righe]);
+  const filtroClassi = useMemo(
+    () => costruisciFiltro(valoreFiltro ?? TUTTE_LE_CLASSI, io.classi, opzioni),
+    [valoreFiltro, io.classi, opzioni],
+  );
+  const righeFiltrate = useMemo(
+    () => righe.filter((r) => corrispondeClasse(filtroClassi, r.classe)),
+    [righe, filtroClassi],
+  );
+
   const visibili = useMemo(() => {
     const q = filtro.trim().toLowerCase();
-    if (!q) return righe;
-    return righe.filter((r) =>
+    if (!q) return righeFiltrate;
+    return righeFiltrate.filter((r) =>
       [r.nome, r.cognome, r.classe, r.email].some((v) => String(v ?? "").toLowerCase().includes(q)),
     );
-  }, [righe, filtro]);
+  }, [righeFiltrate, filtro]);
 
   const conteggi = useMemo(() => {
     const c = { attesa: 0, confermate: 0, per_anno: {} as Record<number, number> };
-    for (const r of righe) {
+    for (const r of righeFiltrate) {
       if (r.stato === "in_attesa") c.attesa += 1;
       if (r.stato === "confermata") {
         c.confermate += 1;
@@ -139,7 +244,7 @@ export function ReferenteConsole() {
       }
     }
     return c;
-  }, [righe]);
+  }, [righeFiltrate]);
 
   // Iscritti che non hanno mai fatto accesso. L'iscrizione crea l'account e
   // manda il link per la password una volta sola: chi non lo apre resta
@@ -148,10 +253,10 @@ export function ReferenteConsole() {
   // consegnato niente.
   const maiEntrati = useMemo(
     () =>
-      righe.filter(
+      righeFiltrate.filter(
         (r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !haFattoAccesso(r),
       ).length,
-    [righe],
+    [righeFiltrate],
   );
 
   // Confermati che non hanno completato nemmeno una lezione. Diverso da "mai
@@ -160,22 +265,31 @@ export function ReferenteConsole() {
   // classe, e serve saperlo a settembre invece che a novembre.
   const fermiAZero = useMemo(
     () =>
-      righe.filter(
+      righeFiltrate.filter(
         (r) => r.stato === "confermata" && haFattoAccesso(r) && !r.lezioni_completate,
       ).length,
-    [righe],
-  );
-
-  // Confermati ma senza squadra: e la sola cosa, in questa fase, che nessuno
-  // vedrebbe se non la vedesse il referente.
-  const senzaSquadra = useMemo(
-    () => righe.filter((r) => r.stato === "confermata" && !r.squadra_id).length,
-    [righe],
+    [righeFiltrate],
   );
 
   const linkIscrizione = `${SITE_URL}${ISCRIZIONE_PATH}`;
+  const principale = ruolo === "referente";
+  const nomeReferente = `${adesione?.referente_nome ?? ""} ${adesione?.referente_cognome ?? ""}`.trim();
+  const area = principale
+    ? "Area del docente referente"
+    : `Area dei docenti del progetto . Referente: ${nomeReferente}`;
 
   if (loading) return <p className="text-gray-600">Caricamento…</p>;
+
+  // Il cancello: prima delle istruzioni, nient'altro.
+  if (daAccettare) {
+    return (
+      <AccettazioneIstruzioni
+        istituto={adesione?.istituto_denominazione ?? ""}
+        area={area}
+        onAccettate={carica}
+      />
+    );
+  }
 
   if (errore && !adesione) {
     return (
@@ -210,7 +324,7 @@ export function ReferenteConsole() {
           )}
         </div>
         <p className="text-sm text-gray-600">
-          Area del docente referente . {adesione?.referente_nome} {adesione?.referente_cognome}
+          {principale ? `${area} . ${nomeReferente}` : area}
           {" . "}
           <a href={GUIDA_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
             Chi fa cosa, passo per passo
@@ -233,6 +347,20 @@ export function ReferenteConsole() {
           L&apos;adesione del vostro istituto è in verifica. Finché non la confermiamo, il codice non
           accetta iscrizioni: le conviene aspettare la nostra email prima di diffonderlo.
         </div>
+      )}
+
+      {/* Un docente del progetto: con chi segue il percorso, e le sue
+          classi, che sono il filtro da cui parte. */}
+      {!principale && docentiProgetto?.disponibile && docentiProgetto.ruolo === "docente" && (
+        <ColleghiDocente
+          referente={nomeReferente}
+          colleghi={docentiProgetto.colleghi}
+          io={io}
+          onClassiCambiate={(classi) => {
+            setIo((prima) => ({ ...prima, classi }));
+            setValoreFiltro(filtroIniziale(classi));
+          }}
+        />
       )}
 
       {/* ── I due strumenti del referente ── */}
@@ -328,17 +456,37 @@ export function ReferenteConsole() {
               ))}
             </ol>
             <p className="mt-2">
-              L&apos;elenco minimo si scarica qui sotto, con il pulsante &quot;Elenco per foto e
-              video&quot;: va completato con le scelte A e B e inviato prima dell&apos;evento.
+              {principale
+                ? "L'elenco minimo si scarica qui sotto, con il pulsante \"Elenco per foto e video\": va completato con le scelte A e B e inviato prima dell'evento."
+                : "L'elenco minimo lo scarica il docente referente dalla sua area: va completato con le scelte A e B e inviato prima dell'evento."}
             </p>
           </details>
         </div>
       </div>
 
+      {/* ── Filtro per classe ──
+          Sopra i numeri, perche vale anche per loro. Un filtro e non un
+          confine: "Tutte le classi dell'istituto" c'e sempre. */}
+      {righe.length > 0 && (
+        <div className="card-sm flex flex-wrap gap-3 items-center" style={{ padding: 14 }}>
+          <FiltroClasse
+            valore={valoreFiltro ?? TUTTE_LE_CLASSI}
+            onCambia={setValoreFiltro}
+            opzioni={opzioni}
+            classiDocente={io.classi}
+          />
+          <span style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.6 }}>
+            {filtroClassi.chiavi === null
+              ? "Numeri ed elenco riguardano tutto l'istituto."
+              : `Numeri ed elenco riguardano: ${filtroClassi.etichetta}. ${righeFiltrate.length} di ${righe.length} iscrizioni.`}
+          </span>
+        </div>
+      )}
+
       {/* ── Conteggi ── */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div className="card-sm" style={{ padding: 16 }}>
-          <div className="stat-number" style={{ fontSize: 26 }}>{righe.length}</div>
+          <div className="stat-number" style={{ fontSize: 26 }}>{righeFiltrate.length}</div>
           <div className="stat-label">Iscrizioni ricevute</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
@@ -386,29 +534,35 @@ export function ReferenteConsole() {
           onChange={(e) => setFiltro(e.target.value)}
           style={{ flex: "1 1 240px" }}
         />
-        <a
-          href="/api/eventi/licei/referente/export"
-          className="btn-primary"
-          style={{ fontSize: 13, whiteSpace: "nowrap" }}
-        >
-          <i className="fas fa-file-csv" style={{ marginRight: 8 }} />
-          Elenco confermati
-        </a>
-        <a
-          href="/api/eventi/licei/referente/export?immagini=1"
-          className="btn-outline"
-          style={{ fontSize: 13, whiteSpace: "nowrap" }}
-          title="Studente e classe dei confermati, con le colonne delle scelte A e B da completare"
-        >
-          Elenco per foto e video
-        </a>
-        <a
-          href="/api/eventi/licei/referente/export?tutte=1"
-          className="btn-outline"
-          style={{ fontSize: 13, whiteSpace: "nowrap" }}
-        >
-          Tutte
-        </a>
+        {/* Gli export restano al referente principale: un file in piu con
+            nomi e classi di minorenni e una copia in piu da custodire. */}
+        {principale && (
+          <>
+            <a
+              href="/api/eventi/licei/referente/export"
+              className="btn-primary"
+              style={{ fontSize: 13, whiteSpace: "nowrap" }}
+            >
+              <i className="fas fa-file-csv" style={{ marginRight: 8 }} />
+              Elenco confermati
+            </a>
+            <a
+              href="/api/eventi/licei/referente/export?immagini=1"
+              className="btn-outline"
+              style={{ fontSize: 13, whiteSpace: "nowrap" }}
+              title="Studente e classe dei confermati, con le colonne delle scelte A e B da completare"
+            >
+              Elenco per foto e video
+            </a>
+            <a
+              href="/api/eventi/licei/referente/export?tutte=1"
+              className="btn-outline"
+              style={{ fontSize: 13, whiteSpace: "nowrap" }}
+            >
+              Tutte
+            </a>
+          </>
+        )}
       </div>
 
       {errore && <p style={{ color: "#E74C6F", fontSize: 14 }}>{errore}</p>}
@@ -418,7 +572,7 @@ export function ReferenteConsole() {
           <p className="text-gray-600 m-0">
             {righe.length === 0
               ? "Nessuna iscrizione ancora. Appena diffonde il codice, le trova qui."
-              : "Nessuna iscrizione corrisponde alla ricerca."}
+              : "Nessuna iscrizione corrisponde alla ricerca o alla classe scelta."}
           </p>
         </div>
       ) : (
@@ -516,6 +670,25 @@ export function ReferenteConsole() {
                 </div>
               )}
 
+              {/* Le riflessioni: solo dei confermati, e solo di chi ha
+                  consegnato almeno una lezione. Si leggono al clic. */}
+              {r.stato === "confermata" && (r.lezioni_completate ?? 0) > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setRiflessioniDi(riflessioniDi === r.id ? null : r.id)}
+                  aria-expanded={riflessioniDi === r.id}
+                  style={{ height: 30, fontSize: 12.5, flexShrink: 0 }}
+                >
+                  <i
+                    className={`fas fa-chevron-${riflessioniDi === r.id ? "up" : "down"}`}
+                    style={{ marginRight: 6, fontSize: 11 }}
+                    aria-hidden="true"
+                  />
+                  Riflessioni
+                </Button>
+              )}
+
               {r.stato === "in_attesa" ? (
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <Button
@@ -557,77 +730,66 @@ export function ReferenteConsole() {
                   ))}
                 </select>
               )}
+
+              {riflessioniDi === r.id && r.stato === "confermata" && (
+                <div style={{ flexBasis: "100%", minWidth: 0 }}>
+                  <RiflessioniStudente iscrizioneId={r.id} />
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* ── Squadre dell'istituto ──
-          Compaiono solo quando ce ne sono: prima della fase delle squadre
-          una sezione vuota direbbe al referente che manca qualcosa. */}
-      {squadre.length > 0 && (
-        <div className="card" style={{ padding: 20 }}>
-          <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
-            Le squadre del vostro istituto
-          </h2>
-          <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, marginBottom: 14 }}>
-            {senzaSquadra > 0
-              ? `${senzaSquadra} student${senzaSquadra === 1 ? "e confermato è rimasto" : "i confermati sono rimasti"} senza squadra. Lei è l'unico che può accorgersene in tempo e andare a cercarli.`
-              : "Tutti gli studenti confermati sono in una squadra."}
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {squadre.map((s, i) => {
-              const membri = righe.filter((r) => r.squadra_id === s.id);
-              const progetto = Array.isArray(s.licei_progetti)
-                ? s.licei_progetti[0]
-                : s.licei_progetti;
-              const consegnato = progetto?.stato === "consegnato";
-              return (
-                <div
-                  key={s.id}
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "11px 0",
-                    borderTop: i === 0 ? "none" : "1px solid var(--border-color)",
-                  }}
-                >
-                  <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-                    <div className="font-semibold text-gray-800" style={{ fontSize: 14 }}>
-                      {s.nome}
-                    </div>
-                    <div className="text-gray-600" style={{ fontSize: 12.5, marginTop: 2 }}>
-                      {membri.length} su {SQUADRA_MAX}
-                      {membri.length > 0
-                        ? ` . ${membri.map((m: Iscrizione) => m.cognome).join(", ")}`
-                        : ""}
-                    </div>
-                  </div>
-                  <span
-                    className="badge"
-                    style={{
-                      background: consegnato ? "#0A7A661A" : "#8A61001A",
-                      color: consegnato ? "#0A7A66" : "#8A6100",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {consegnato
-                      ? progetto?.finalista
-                        ? "Finalista"
-                        : "Progetto consegnato"
-                      : membri.length < SQUADRA_MIN
-                        ? `Serve almeno ${SQUADRA_MIN} componenti`
-                        : "Progetto in bozza"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {/* ── Quadro delle squadre ──
+          Lo vedono il referente e i docenti del progetto, con lo stesso
+          filtro per classe dell'elenco. A fase chiusa e senza squadre, una
+          riga sola lo dice. */}
+      {adesione && (
+        <QuadroSquadre
+          iscrizioni={righe}
+          squadre={squadre}
+          componentiAltriIstituti={altriIstituti}
+          adesioneId={adesione.id}
+          filtro={filtroClassi}
+          selettoreClasse={
+            righe.length > 0 ? (
+              <FiltroClasse
+                valore={valoreFiltro ?? TUTTE_LE_CLASSI}
+                onCambia={setValoreFiltro}
+                opzioni={opzioni}
+                classiDocente={io.classi}
+              />
+            ) : null
+          }
+          totaleLezioni={totaleLezioni}
+          fasi={fasi}
+          erroreLettura={squadreErrore}
+          aggiornatoAlle={aggiornatoAlle}
+          aggiornando={aggiornando}
+          onAggiorna={() => carica({ silenzioso: true })}
+        />
       )}
+
+      {/* ── Riflessioni e domande, per lezione ──
+          Solo se c'e almeno un confermato: degli altri non si legge niente.
+          Stesso filtro per classe dell'elenco e del quadro. */}
+      {righe.some((r) => r.stato === "confermata") && (
+        <RiflessioniPerLezione
+          filtro={filtroClassi}
+          selettoreClasse={
+            <FiltroClasse
+              valore={valoreFiltro ?? TUTTE_LE_CLASSI}
+              onCambia={setValoreFiltro}
+              opzioni={opzioni}
+              classiDocente={io.classi}
+            />
+          }
+        />
+      )}
+
+      {/* ── Docenti del progetto: solo il referente principale li indica ── */}
+      {principale && <DocentiProgetto iniziale={docentiProgetto} classiPresenti={opzioni} />}
 
       <details className="card-sm" style={{ padding: 16, fontSize: 13, color: "var(--text-mid)", lineHeight: 1.7 }}>
         <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text-dark)" }}>
@@ -646,9 +808,9 @@ export function ReferenteConsole() {
           <Link href={INFORMATIVA_SCUOLE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
             informativa per scuole e docenti referenti
           </Link>
-          . Le stesse regole, da firmare, sono nelle{" "}
+          . Sono le regole che ogni docente accetta al primo accesso, e le trovi anche, da stampare, nelle{" "}
           <Link href={ISTRUZIONI_DOCENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
-            istruzioni per il docente referente
+            istruzioni per il docente referente e i docenti del progetto
           </Link>
           ; il modulo che firma il dirigente è l&apos;
           <Link href={ADESIONE_SCUOLA_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
@@ -659,10 +821,11 @@ export function ReferenteConsole() {
       </details>
 
       <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.7, margin: 0 }}>
-        L&apos;elenco dei confermati è quello che l&apos;art. 4 chiede all&apos;istituto di
-        trasmettere: lo scarica da qui invece di compilarlo, e contiene solo i dati necessari,
-        senza email. I moduli su foto e video firmati restano in custodia alla scuola, non vanno
-        caricati su questo sito.
+        {principale
+          ? "L'elenco dei confermati è quello che l'art. 4 chiede all'istituto di trasmettere: lo scarica da qui invece di compilarlo, e contiene solo i dati necessari, senza email."
+          : "L'elenco dei confermati, che l'art. 4 chiede all'istituto di trasmettere, lo scarica il docente referente."}{" "}
+        I moduli su foto e video firmati restano in custodia alla scuola, non vanno caricati su
+        questo sito.
       </p>
     </div>
   );

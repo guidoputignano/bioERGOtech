@@ -237,7 +237,7 @@ export const CONTATTI_LICEI = {
   },
   organizzazione: {
     ruolo: "Referente Organizzazione (SafesPro)",
-    email: "info@altaformazioneprofessionisti.it",
+    email: "info@safespro.it",
   },
   telefono: {
     numero: "347 7320692",
@@ -348,11 +348,11 @@ export const CONSENSO_PRIVACY_LICEI_TESTO =
  */
 export const PRESA_ATTO_ADESIONE = [
   "Gli studenti di almeno 14 anni si iscrivono direttamente alla piattaforma della Fondazione; l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
-  "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo.",
+  "La Fondazione crea al docente referente un accesso personale, collegato al solo istituto indicato, da cui vede nome, cognome, email, classe, stato dell'iscrizione, avanzamento nel corso, riflessioni e domande delle lezioni, squadra e progetto della squadra degli studenti dell'istituto, esclusivamente per seguire il percorso formativo. Il referente può indicare sulla piattaforma altri docenti dell'istituto, che ricevono un accesso personale con le stesse regole: l'istituto ne riceve notizia via email e può chiederne la revoca in qualsiasi momento.",
   "Istituto e Fondazione restano titolari autonomi per i trattamenti svolti nell'ambito delle rispettive attività.",
-  "Il docente usa credenziali personali, non le condivide e non comunica o riutilizza i dati visualizzati per finalità estranee al percorso.",
-  "L'istituto informa studenti e famiglie, secondo le proprie procedure, della partecipazione al percorso e della visibilità assegnata al docente referente.",
-  "L'accesso del docente termina al più tardi un mese dopo la conclusione del corso.",
+  "I docenti usano credenziali personali, non le condividono e non comunicano o riutilizzano i dati visualizzati per finalità estranee al percorso.",
+  "L'istituto informa studenti e famiglie, secondo le proprie procedure, della partecipazione al percorso e della visibilità assegnata ai docenti del percorso.",
+  "L'accesso dei docenti termina al più tardi un mese dopo la conclusione del corso.",
 ] as const;
 
 export const CONSENSO_MARKETING_LICEI_TESTO =
@@ -551,20 +551,95 @@ export const DOCUMENTI_PATH = `${LICEI_PATH}/documenti`;
  * al momento dell'iscrizione.
  */
 /**
- * Impegni del docente referente, dal documento «Istruzioni per il docente
- * referente». Mostrati nella sua area, dove valgono dal primo accesso, e
- * nella pagina pubblica del documento (`ISTRUZIONI_DOCENTE` in
- * `documenti.ts`), che il docente firma: un testo solo per i due posti.
+ * Impegni dei docenti, referente e docenti del progetto, dal documento
+ * «Istruzioni per il docente referente e i docenti del progetto». Ogni
+ * docente li accetta nella sua area al primo accesso, prima di vedere i dati
+ * degli studenti, e li ritrova nella pagina pubblica del documento
+ * (`ISTRUZIONI_DOCENTE` in `documenti.ts`): un testo solo per i due posti.
+ * Chi li cambia cambia anche `ISTRUZIONI_DOCENTE.aggiornato`, e da quel
+ * momento ogni docente li accetta di nuovo.
  */
 export const ISTRUZIONI_REFERENTE = [
   "custodire con cura le credenziali e non condividerle;",
   "accedere soltanto agli studenti del proprio istituto;",
-  "usare nome, email, classe, avanzamento, squadra e progetto degli studenti solo per seguire il percorso formativo;",
+  "usare nome, email, classe, avanzamento, riflessioni e domande delle lezioni, squadra e progetto degli studenti solo per seguire il percorso formativo;",
+  "se è il referente, indicare come docenti del progetto solo colleghi dell'istituto che seguono il percorso, e revocarne l'accesso quando non lo seguono più;",
   "non esportare, scaricare, fotografare o inoltrare dati e contenuti, salvo quanto strettamente richiesto dall'attività scolastica e autorizzato dall'istituto;",
   "non usare i dati per contattare gli studenti al di fuori delle normali attività scolastiche;",
   "segnalare subito a info@bioergotech.org accessi anomali, perdita di credenziali, errori o richieste degli studenti;",
-  "interrompere l'uso dell'account alla conclusione del corso o quando l'istituto revoca il ruolo di referente. L'accesso viene disattivato entro un mese dalla conclusione del percorso.",
+  "interrompere l'uso dell'account alla conclusione del corso o quando l'istituto o il referente revoca il ruolo. L'accesso viene disattivato entro un mese dalla conclusione del percorso.",
 ] as const;
+
+/* ── Docenti del progetto e accettazione delle istruzioni ─────────────── */
+
+/**
+ * Quanti altri docenti dell'istituto il referente può indicare, oltre a sé.
+ * Contano quelli non revocati: un tetto basso tiene corto l'elenco di chi
+ * vede i dati dei ragazzi, e cinque bastano a coprire le classi di una scuola.
+ */
+export const DOCENTI_PROGETTO_MAX = 5;
+
+/**
+ * Gli stati di un docente del progetto. `invitato`: ha ricevuto l'accesso,
+ * ma non ha ancora accettato le istruzioni e non vede dati. `attivo`: le ha
+ * accettate. `revocato`: dal referente o dallo staff, con effetto immediato.
+ */
+export const STATI_DOCENTE_PROGETTO = [
+  { value: "invitato", label: "Invitato", colore: "#8A6100" },
+  { value: "attivo", label: "Attivo", colore: "#0A7A66" },
+  { value: "revocato", label: "Revocato", colore: "#8896A6" },
+] as const;
+
+export type StatoDocenteProgetto = (typeof STATI_DOCENTE_PROGETTO)[number]["value"];
+
+export const statoDocenteLabel = (v: string): string =>
+  STATI_DOCENTE_PROGETTO.find((s) => s.value === v)?.label ?? v;
+
+export const statoDocenteColore = (v: string): string =>
+  STATI_DOCENTE_PROGETTO.find((s) => s.value === v)?.colore ?? "#4A5568";
+
+/**
+ * Ogni quanto si può rimandare l'invito allo stesso docente. Ogni invio
+ * genera un link di accesso nuovo: un tetto evita che un doppio clic, o una
+ * mano poco attenta, riempia di link la casella di un collega.
+ */
+export const RIMANDA_INVITO_MINUTI = 10;
+
+/**
+ * La dichiarazione del referente quando indica un collega. Al posto di un
+ * nuovo modulo firmato dal dirigente: si salva con l'invito, testo compreso,
+ * e l'istituto ne riceve notizia al suo indirizzo istituzionale.
+ */
+export const DICHIARAZIONE_INVITO_DOCENTE_TESTO =
+  "Dichiaro che il docente indicato insegna nel nostro istituto, che l'istituto ne è informato e che mi affianca nel seguire gli studenti del percorso.";
+
+/** Il valore di `licei_accettazioni.documento` per le istruzioni dei docenti. */
+export const DOCUMENTO_ISTRUZIONI_DOCENTE = "istruzioni_docente";
+
+/**
+ * La casella che ogni docente, referente compreso, spunta al primo accesso e
+ * a ogni nuova versione delle istruzioni, prima di vedere i dati degli
+ * studenti.
+ */
+export const ACCETTAZIONE_ISTRUZIONI_DOCENTE_TESTO =
+  "Ho letto e accetto le istruzioni per i docenti e l'informativa privacy per scuole e docenti referenti.";
+
+/* ── Riflessioni lette dai docenti: l'avviso agli studenti ────────────── */
+
+/**
+ * L'email una tantum agli iscritti (confermati e in attesa) quando i docenti
+ * dell'istituto cominciano a leggere riflessioni e domande. Qui il testo,
+ * perche lo usano sia l'email sia l'anteprima nel pannello dello staff: chi
+ * preme il bottone legge esattamente quello che parte. Fra i due pezzi va il
+ * link all'informativa per gli studenti.
+ */
+export const AVVISO_RIFLESSIONI_OGGETTO = "Percorso Biotecnologie e IA: chi legge le tue riflessioni";
+export const AVVISO_RIFLESSIONI_TESTO = {
+  apertura:
+    "Da oggi i docenti del tuo istituto che seguono il percorso possono leggere le riflessioni e le domande che invii nelle lezioni. Quelle che hai già inviato restano visibili solo allo staff della Fondazione, e il commento lo legge sempre e solo lo staff.",
+  informativa: "L'informativa aggiornata è qui:",
+  dubbi: "Per qualsiasi dubbio scrivi a info@bioergotech.org.",
+} as const;
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
   "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito: agli organizzatori arriva solo l'elenco minimo degli studenti partecipanti con le scelte A e B.";

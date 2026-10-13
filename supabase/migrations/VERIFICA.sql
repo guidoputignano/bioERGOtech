@@ -114,7 +114,21 @@ with oggetti as (
     -- ── Mentor: contatto per gli studenti e linee guida ───────────────
     ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'contatto_studenti'),
     ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'linee_guida_accettate_at'),
-    ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'linee_guida_testo')
+    ('20261214000000_mentor_contatto',            'colonna',  'universita_mentor',            'linee_guida_testo'),
+
+    -- ── Licei: docenti del progetto, istruzioni, riflessioni, ritiro ──
+    -- La colonna di `lesson_submissions` su un database nuovo non puo
+    -- esserci, perche la tabella stessa non c'e: li l'esito e PARZIALE ed e
+    -- giusto cosi. In produzione la tabella c'e, e la colonna deve esserci.
+    -- Per le tre policy `colonna` porta il nome della policy, e conta come
+    -- presente solo se la policy esclude le adesioni ritirate.
+    ('20261215000000_licei_docenti',              'tabella',  'licei_docenti',                null),
+    ('20261215000000_licei_docenti',              'tabella',  'licei_accettazioni',           null),
+    ('20261215000000_licei_docenti',              'trigger',  'trg_licei_docenti_touch',      null),
+    ('20261215000000_licei_docenti',              'colonna',  'lesson_submissions',           'condivisa_referente_at'),
+    ('20261215000000_licei_docenti',              'policy',   'licei_iscrizioni',             'Referents can view own school iscrizioni'),
+    ('20261215000000_licei_docenti',              'policy',   'licei_squadre',                'Referents can view own school squadre'),
+    ('20261215000000_licei_docenti',              'policy',   'licei_progetti',               'Referents can view own school progetti')
   ) as t(migrazione, tipo, oggetto, colonna)
 ),
 
@@ -139,6 +153,13 @@ esiti as (
       )
       when 'trigger' then exists (
         select 1 from pg_trigger where tgname = o.oggetto and not tgisinternal
+      )
+      -- Le policy dei referenti esistono da prima: qui conta la versione,
+      -- cioe che escludano le adesioni ritirate (20261215000000).
+      when 'policy' then exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = o.oggetto and policyname = o.colonna
+          and qual like '%ritirata%'
       )
       else false
     end as presente
@@ -309,6 +330,46 @@ select 'universita_e_confermato ESEGUIBILE da authenticated',
          when has_function_privilege('authenticated', 'public.universita_e_confermato(uuid)', 'EXECUTE')
            then 'OK'
          else 'NO: e stata revocata per errore, la bacheca non funzionera'
+       end
+
+union all
+
+-- I docenti del progetto: le righe le scrive solo il server. Dal browser
+-- nessuno le scrive, e anon non le legge nemmeno.
+select 'licei docenti: nessuna scrittura dal browser, nessuna lettura da anon',
+       case
+         when to_regclass('public.licei_docenti') is null
+           then 'DA ESEGUIRE: manca licei_docenti (migrazione 20261215000000)'
+         when has_table_privilege('anon', 'public.licei_docenti', 'SELECT')
+           or has_table_privilege('authenticated', 'public.licei_docenti', 'INSERT,UPDATE,DELETE')
+           then 'NO: privilegi troppo larghi, esegua 20261215000000'
+         else 'OK'
+       end
+
+union all
+
+select 'licei accettazioni: nessuna scrittura dal browser, nessuna lettura da anon',
+       case
+         when to_regclass('public.licei_accettazioni') is null
+           then 'DA ESEGUIRE: manca licei_accettazioni (migrazione 20261215000000)'
+         when has_table_privilege('anon', 'public.licei_accettazioni', 'SELECT')
+           or has_table_privilege('authenticated', 'public.licei_accettazioni', 'INSERT,UPDATE,DELETE')
+           then 'NO: privilegi troppo larghi, esegua 20261215000000'
+         else 'OK'
+       end
+
+union all
+
+-- Le riflessioni delle lezioni non si leggono con la chiave anonima del
+-- sito. Tutte le rotte usano la service role, che RLS non la vede.
+select 'lesson_submissions: RLS attiva',
+       case
+         when to_regclass('public.lesson_submissions') is null
+           then 'ASSENTE: la tabella non esiste in questo database'
+         when (select c.relrowsecurity from pg_class c
+               where c.oid = to_regclass('public.lesson_submissions'))
+           then 'OK'
+         else 'NO: le riflessioni sono leggibili con la chiave anonima, esegua 20261215000000'
        end;
 
 
@@ -344,7 +405,7 @@ select 'universita_e_confermato ESEGUIBILE da authenticated',
 -- =========================================================
 -- L'ORDINE DELLE MIGRAZIONI DA ESEGUIRE
 --
--- Sono sei e vanno eseguite in questo ordine, perche ognuna si
+-- Sono sette e vanno eseguite in questo ordine, perche ognuna si
 -- appoggia alla precedente:
 --
 --   1. 20261207000000_create_universita_candidature.sql
@@ -374,6 +435,14 @@ select 'universita_e_confermato ESEGUIBILE da authenticated',
 --      l'accettazione delle linee guida. Va DOPO la 3: si appoggia alla
 --      revoca del SELECT di tabella che quella fa, e senza il contatto
 --      sarebbe leggibile da chiunque.
+--
+--   7. 20261215000000_licei_docenti_accettazioni_riflessioni.sql
+--      Docenti del progetto, accettazione delle istruzioni, colonna
+--      `condivisa_referente_at` sulle riflessioni e policy dei referenti
+--      che escludono le adesioni ritirate. Va DOPO la 5: le policy nuove
+--      usano `public.e_admin()`, e senza si ferma subito con un messaggio.
+--      Il sito regge anche prima che sia eseguita: le funzioni nuove
+--      risultano "in attivazione".
 --
 -- La 4 e la 5 si possono eseguire anche su un database dove le prime
 -- non sono state applicate: saltano da sole cio che non trovano.

@@ -38,6 +38,50 @@ export const TOTALE_LEZIONI = SUBMITTABLE_LESSONS.length;
 export type ProgressoPerUtente = Map<string, number>;
 
 /**
+ * Quante righe si chiedono al piu a PostgREST in una richiesta, e il limite
+ * che si passa alla query: un po' sopra, cosi un blocco pieno non viene
+ * tagliato proprio sull'ultima riga.
+ */
+export const RIGHE_PER_RICHIESTA = 900;
+export const LIMITE_RIGHE = RIGHE_PER_RICHIESTA + 100;
+
+/**
+ * Gli utenti divisi in blocchi, per leggere `lesson_submissions` con una
+ * `in` per blocco invece che con una sola.
+ *
+ * A blocchi, e non in una `in` sola, per due limiti diversi che si
+ * romperebbero tutti e due in silenzio.
+ *
+ * Il primo e la lunghezza della URL: PostgREST riceve i filtri nella query
+ * string, un uuid sono una quarantina di caratteri, e gia con qualche
+ * centinaio di studenti la richiesta viene rifiutata dal proxy.
+ *
+ * Il secondo e piu insidioso: PostgREST tronca le risposte oltre un tetto
+ * di righe, senza dire niente. Uno studente ha al massimo una riga per
+ * lezione, quindi un blocco di N studenti puo produrre N per TOTALE_LEZIONI
+ * righe: con blocchi grandi si supererebbe il tetto e mancherebbero
+ * lezioni, cioe il conteggio sarebbe sbagliato per difetto proprio per le
+ * scuole piu avanti. Il blocco si dimensiona percio sul numero di righe che
+ * ogni utente puo dare (`righePerUtente`: tutte le lezioni, oppure una sola
+ * quando la query e gia filtrata su una lezione), non su un numero tondo
+ * scelto a occhio.
+ *
+ * Gli id vuoti si scartano e i doppioni si contano una volta.
+ */
+export function blocchiPerUtenti(
+  userIds: readonly (string | null | undefined)[],
+  righePerUtente: number = TOTALE_LEZIONI,
+): string[][] {
+  const ids = [
+    ...new Set(userIds.filter((id): id is string => typeof id === "string" && id.length > 0)),
+  ];
+  const BLOCCO = Math.max(10, Math.min(200, Math.floor(RIGHE_PER_RICHIESTA / Math.max(1, righePerUtente))));
+  const blocchi: string[][] = [];
+  for (let i = 0; i < ids.length; i += BLOCCO) blocchi.push(ids.slice(i, i + BLOCCO));
+  return blocchi;
+}
+
+/**
  * Lezioni completate per ciascuno degli utenti indicati.
  *
  * Chi non ha mai consegnato una riflessione non compare nella mappa: chi
@@ -58,29 +102,8 @@ export async function progressoPerUtenti(
 ): Promise<ProgressoPerUtente> {
   const progresso: ProgressoPerUtente = new Map();
 
-  const ids = [
-    ...new Set(userIds.filter((id): id is string => typeof id === "string" && id.length > 0)),
-  ];
-  if (ids.length === 0) return progresso;
-
-  // A blocchi, e non in una `in` sola, per due limiti diversi che si
-  // romperebbero tutti e due in silenzio.
-  //
-  // Il primo e la lunghezza della URL: PostgREST riceve i filtri nella query
-  // string, un uuid sono una quarantina di caratteri, e gia con qualche
-  // centinaio di studenti la richiesta viene rifiutata dal proxy.
-  //
-  // Il secondo e piu insidioso: PostgREST tronca le risposte oltre un tetto
-  // di righe, senza dire niente. Uno studente ha al massimo una riga per
-  // lezione, quindi un blocco di N studenti puo produrre N per TOTALE_LEZIONI
-  // righe: con blocchi grandi si supererebbe il tetto e mancherebbero
-  // lezioni, cioe il conteggio sarebbe sbagliato per difetto proprio per le
-  // scuole piu avanti. Il blocco si dimensiona percio sul numero di lezioni,
-  // non su un numero tondo scelto a occhio.
-  const RIGHE_PER_RICHIESTA = 900;
-  const BLOCCO = Math.max(10, Math.min(200, Math.floor(RIGHE_PER_RICHIESTA / Math.max(1, TOTALE_LEZIONI))));
-  const blocchi: string[][] = [];
-  for (let i = 0; i < ids.length; i += BLOCCO) blocchi.push(ids.slice(i, i + BLOCCO));
+  const blocchi = blocchiPerUtenti(userIds);
+  if (blocchi.length === 0) return progresso;
 
   const risposte = await Promise.all(
     blocchi.map((blocco) =>
@@ -88,7 +111,7 @@ export async function progressoPerUtenti(
         .from("lesson_submissions")
         .select("user_id")
         .in("user_id", blocco)
-        .limit(RIGHE_PER_RICHIESTA + 100),
+        .limit(LIMITE_RIGHE),
     ),
   );
 
