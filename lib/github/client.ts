@@ -214,7 +214,12 @@ export function safeNext(next: string | null | undefined, fallback = "/courses/a
     const base = new URL(siteOrigin());
     const u = new URL(next, base);
     if (u.origin !== base.origin) return fallback;
-    if (u.pathname.startsWith("//") || u.pathname.startsWith("/api/")) return fallback;
+    // Checked decoded as well: the server routes "/api%2Fcourses/..." to the
+    // same handler as "/api/courses/...".
+    const decoded = decodeURIComponent(u.pathname).toLowerCase();
+    for (const p of [u.pathname.toLowerCase(), decoded]) {
+      if (p.startsWith("//") || p.startsWith("/\\") || p === "/api" || p.startsWith("/api/")) return fallback;
+    }
     return `${u.pathname}${u.search}${u.hash}`;
   } catch {
     return fallback;

@@ -149,8 +149,21 @@ async function fileText(
 
 /** The commit a check runs against when the student has not pinned one. */
 export async function headCommit(cfg: GitHubConfig, fullName: string): Promise<string | null> {
+  return (await readHead(cfg, fullName)).sha;
+}
+
+/**
+ * The latest commit, with whether a failure is worth retrying: GitHub down
+ * or rate-limited (transient) is not the same as a repo that is gone,
+ * private to the mentor, or empty (it will not fix itself).
+ */
+export async function readHead(
+  cfg: GitHubConfig,
+  fullName: string,
+): Promise<{ sha: string | null; transient: boolean }> {
   const res = await gh<{ sha: string }[]>(`/repos/${fullName}/commits?per_page=1`, cfg.mentorToken);
-  return res.data?.[0]?.sha ?? null;
+  const sha = res.data?.[0]?.sha ?? null;
+  return { sha, transient: !sha && (res.status >= 500 || res.status === 403 || res.status === 429) };
 }
 
 export async function runProjectChecks(
@@ -293,13 +306,15 @@ export async function runProjectChecks(
     const fromTemplate =
       createdViaTemplate ||
       repo.template_repository?.full_name?.toLowerCase() === cfg.templateRepo.toLowerCase();
-    let templateTree: string | null = null;
+    // Every version the template has had, not only today's: a repo generated
+    // before the template was edited starts with the older tree.
+    let templateTrees: Set<string> | null = null;
     if (fromTemplate) {
-      const tpl = await gh<{ commit: { tree: { sha: string } } }>(
-        `/repos/${cfg.templateRepo}/commits/HEAD`,
+      const tpl = await gh<{ commit: { tree: { sha: string } } }[]>(
+        `/repos/${cfg.templateRepo}/commits?per_page=100`,
         cfg.mentorToken,
       );
-      templateTree = tpl.data?.commit.tree.sha ?? null;
+      templateTrees = tpl.data ? new Set(tpl.data.map((t) => t.commit.tree.sha)) : null;
     }
     // Newest first; two is enough to see past the template's initial commit.
     const commits = await gh<{ parents: unknown[]; commit: { tree: { sha: string } } }[]>(
@@ -309,9 +324,9 @@ export async function runProjectChecks(
     const isTemplateCommit = (c: { parents: unknown[]; commit: { tree: { sha: string } } }) =>
       fromTemplate &&
       (c.parents?.length ?? 0) === 0 &&
-      // Template tree unknown (lookup failed): fall back to treating any
+      // Template history unknown (lookup failed): fall back to treating any
       // root commit of a template repo as the template's.
-      (templateTree === null || c.commit?.tree?.sha === templateTree);
+      (templateTrees === null || templateTrees.has(c.commit?.tree?.sha ?? ""));
     const authored = (commits.data ?? []).some((c) => !isTemplateCommit(c));
     items.push({
       key: "authored",

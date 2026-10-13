@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireMember } from "@/lib/auth/admin";
 import { loadStudentState, recordMentorAccess } from "@/lib/course/data";
 import { githubConfig } from "@/lib/github/client";
-import { headCommit, runProjectChecks } from "@/lib/github/projects";
+import { readHead, runProjectChecks } from "@/lib/github/projects";
 
 /** Each check costs several GitHub calls on the mentor token's hourly budget. */
 const MIN_SECONDS_BETWEEN_CHECKS = 60;
@@ -35,11 +35,14 @@ export async function POST() {
     return NextResponse.json({ error: `Please wait ${wait} seconds before checking again` }, { status: 429 });
   }
 
-  const commit = await headCommit(cfg, state.project.full_name);
-  if (!commit && state.membership.submitted_commit) {
+  const head = await readHead(cfg, state.project.full_name);
+  const commit = head.sha;
+  if (!commit && head.transient && state.membership.submitted_commit) {
     // GitHub unreachable or rate-limited. The earlier submission and its
     // check describe each other: leave both alone rather than replace a
-    // passing result with an error about a different moment.
+    // passing result with an error about a different moment. A repo that is
+    // gone or hidden is not transient: that falls through and is recorded,
+    // so the student sees why and the one-minute throttle applies.
     return NextResponse.json(
       { error: "We could not read your repository right now. Your earlier submission is unchanged; please try again shortly." },
       { status: 502 },
@@ -58,7 +61,9 @@ export async function POST() {
         ran_at: new Date().toISOString(),
         items: [],
         passed: false,
-        error: "The repository has no commits yet, or the mentor account cannot see it.",
+        error: head.transient
+          ? "GitHub could not be reached just now. Please try again in a few minutes."
+          : "We could not read your repository. Check that it still exists, is public and has at least one commit, then link it again from Lesson 4.4 if needed.",
       };
 
   // Without a commit there is nothing to pin, so it is not a submission:

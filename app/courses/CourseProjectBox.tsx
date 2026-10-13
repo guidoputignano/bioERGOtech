@@ -53,6 +53,7 @@ export function githubMessage(code: string, p: URLSearchParams, mentor: string |
     case "mentor_failed": return { ok: false, text: `Your repository is linked, but we could not add ${mentorName} as a collaborator. Press "Use a different repository" below and link the same repository again: that retries it.` };
     case "cancelled": return { ok: false, text: "GitHub sign-in was cancelled. Nothing was changed." };
     case "expired": return { ok: false, text: "That GitHub sign-in took too long or was started in another tab. Please try again." };
+    case "start_from_lesson": return { ok: false, text: "Please create or link your repository with the buttons in this box. If you use a privacy extension that hides the page you came from, allow it for bioergotech.org and try again." };
     case "signed_out": return { ok: false, text: "Your course login changed during GitHub sign-in. Log in again and retry." };
     case "github_in_use": return { ok: false, text: `The GitHub account @${p.get("login") ?? ""} is already connected to a different course account.` };
     case "not_configured": return { ok: false, text: "GitHub project submission is not available yet. Please check back soon." };

@@ -52,23 +52,34 @@ export async function GET(req: NextRequest) {
   // email or chat app also sends. Browsers too old to send the header must
   // show a Referer from the site instead. Connecting only reads the public
   // profile, so a typed URL or bookmark ("none") is fine for it.
+  //
+  // Creating and linking must also start from a course page, where the
+  // project box is. A navigation the site itself makes from anywhere else
+  // (the login form following a crafted returnTo, for instance) is
+  // same-origin too, and must not be able to act for the student.
   const fetchSite = req.headers.get("sec-fetch-site");
   const fromSite = fetchSite === "same-origin" || fetchSite === "same-site";
-  const referer = req.headers.get("referer");
-  const refererFromSite = !!referer && (() => {
+  const referer = (() => {
     try {
-      return new URL(referer).origin === origin;
+      const r = req.headers.get("referer");
+      return r ? new URL(r) : null;
     } catch {
-      return false;
+      return null;
     }
   })();
-  const allowed =
-    intent === "connect"
-      ? !fetchSite || fromSite || fetchSite === "none"
-      : fetchSite
-        ? fromSite
-        : refererFromSite;
-  if (!allowed) return back("expired");
+  // www and the bare domain are the same site: a page on bioergotech.org
+  // reaches here through the canonical-host hop above with its Referer intact.
+  const bare = (host: string) => host.replace(/^www\./, "");
+  const site = new URL(origin);
+  const refererFromSite =
+    !!referer && referer.protocol === site.protocol && bare(referer.host) === bare(site.host);
+  const fromCoursePage = refererFromSite && referer!.pathname.startsWith("/courses/");
+  if (intent === "connect") {
+    if (fetchSite && !fromSite && fetchSite !== "none") return back("expired");
+  } else {
+    if (fetchSite ? !fromSite : !refererFromSite) return back("expired");
+    if (!fromCoursePage) return back("start_from_lesson");
+  }
 
   const supabase = await createClient();
   const {
