@@ -133,7 +133,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
     {
       h: "Perché li usiamo e su quale base",
       p: [
-        "Per creare il tuo account, farti seguire le 12 lezioni, gestire squadre e progetti, far valutare i progetti dalla Commissione e selezionare i finalisti, rispondere alle tue domande, darti assistenza e mantenere sicura la piattaforma.",
+        "Per creare il tuo account, farti seguire le 21 lezioni del corso, gestire squadre e progetti, far valutare i progetti dalla Commissione e selezionare i finalisti, rispondere alle tue domande, darti assistenza e mantenere sicura la piattaforma.",
         "La base giuridica è il consenso che esprimi con l'iscrizione, che a partire dai 14 anni puoi dare da solo per i servizi online (art. 2-quinquies del Codice privacy). Puoi ritirarlo in qualsiasi momento, con la conseguente chiusura dell'account. Per la sicurezza della piattaforma e la gestione degli accessi la base è il legittimo interesse della Fondazione.",
         "Puoi scegliere separatamente di ricevere la newsletter e informazioni su future iniziative: è facoltativo, non è mai preselezionato e non incide sulla partecipazione.",
         "Nessuna decisione che ti riguarda è presa in modo automatico: i progetti sono valutati da persone.",
@@ -241,7 +241,7 @@ export const REGOLAMENTO: Documento = {
     {
       h: "1. Il percorso",
       p: [
-        "Il percorso è gratuito, destinato agli studenti del triennio delle scuole secondarie di secondo grado che hanno almeno 14 anni, e comprende 12 lezioni su biologia e intelligenza artificiale, attività individuali o di gruppo e un progetto finale di squadra.",
+        "Il percorso è gratuito, destinato agli studenti del triennio delle scuole secondarie di secondo grado che hanno almeno 14 anni, e comprende 21 lezioni online in 10 settimane su biologia e intelligenza artificiale, attività individuali o di gruppo e un progetto finale di squadra.",
       ],
     },
     {
