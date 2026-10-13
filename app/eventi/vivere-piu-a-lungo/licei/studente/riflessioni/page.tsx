@@ -7,10 +7,12 @@ import { RiflessioniPassatePagina } from "../RiflessioniPassate";
 import { LICEI_PATH, RIFLESSIONI_STUDENTE_PATH, TITOLO_RIFLESSIONI_PASSATE } from "../../content";
 
 /**
- * Il link diretto alla scelta sulle riflessioni inviate prima dell'avviso:
- * i docenti lo danno agli studenti dalla loro console, e lo studente
- * risponde qui, senza email. Mostra solo la card della scelta, la stessa
- * dell'area. Riservata e fuori dai motori di ricerca, come l'area.
+ * Il link diretto all'avviso sulle riflessioni inviate prima dell'avviso
+ * della lezione: i docenti lo danno agli studenti dalla loro console, e lo
+ * studente lo legge e, se vuole, sceglie qui, senza email. Mostra solo la
+ * card dell'avviso, la stessa dell'area: l'avviso conta come mostrato
+ * quando e davvero a schermo, come nell'area. Riservata e fuori dai motori
+ * di ricerca, come l'area.
  */
 
 export const dynamic = "force-dynamic";

@@ -89,7 +89,8 @@ const dataOra = (iso: string): string =>
 /**
  * L'avviso una tantum agli studenti: da ora i docenti dell'istituto leggono
  * riflessioni e domande delle consegne salvate dopo l'avviso nel box della
- * lezione. Parte una volta sola, e il bottone resta spento finche manca la
+ * lezione, e quelle di prima tre giorni dopo che la piattaforma lo segnala
+ * allo studente, salvo un suo no. Parte una volta sola, e il bottone resta spento finche manca la
  * migrazione: annuncerebbe una funzione che non c'e ancora. Lo staff legge
  * qui il testo esatto prima di premere.
  */
@@ -165,9 +166,11 @@ export function AvvisoRiflessioni({
         )}
       </div>
       <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, marginBottom: 12 }}>
-        I docenti dell&apos;istituto leggono riflessione e domanda delle sole consegne salvate dopo
-        l&apos;avviso nel box della lezione; le precedenti e i commenti restano allo staff. Questa
-        email lo comunica a tutti gli iscritti, confermati e in attesa. Parte una volta sola.
+        I docenti dell&apos;istituto leggono riflessione e domanda delle consegne salvate dopo
+        l&apos;avviso nel box della lezione; le precedenti tre giorni dopo che la piattaforma lo
+        segnala allo studente, a meno che scelga che restino allo staff. I commenti restano sempre
+        allo staff. Questa email lo comunica a tutti gli iscritti, confermati e in attesa. Parte una
+        volta sola.
       </p>
 
       {stato.inviato_at ? (

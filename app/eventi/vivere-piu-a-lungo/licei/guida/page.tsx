@@ -230,7 +230,7 @@ const DOCENTE_BASE: Passo[] = [
   {
     titolo: "Tenga d'occhio due numeri",
     testo:
-      "Nella stessa pagina, accanto a ogni studente, vede a che punto è del corso. Per i confermati, il bottone Riflessioni apre la riflessione e la domanda inviate nelle lezioni dopo che la lezione ha avvisato lo studente che le leggono anche i docenti; le precedenti e i commenti restano allo staff. In cima ci sono due contatori che indicano due problemi diversi.",
+      "Nella stessa pagina, accanto a ogni studente, vede a che punto è del corso. Per i confermati, il bottone Riflessioni apre la riflessione e la domanda inviate nelle lezioni dopo che la lezione ha avvisato lo studente che le leggono anche i docenti; le precedenti diventano visibili tre giorni dopo che lo studente ha visto l'avviso, a meno che scelga che restino allo staff, e i commenti restano sempre allo staff. In cima ci sono due contatori che indicano due problemi diversi.",
     avvisi: [
       {
         grave: true,

@@ -636,36 +636,58 @@ export const ACCETTAZIONE_ISTRUZIONI_DOCENTE_TESTO =
 export const AVVISO_RIFLESSIONI_OGGETTO = "Percorso Biotecnologie e IA: chi legge le tue riflessioni";
 export const AVVISO_RIFLESSIONI_TESTO = {
   apertura:
-    "Da oggi i docenti del tuo istituto che seguono il percorso possono leggere le riflessioni e le domande che invii nelle lezioni. Quelle che hai già inviato restano visibili solo allo staff della Fondazione, a meno che tu non scelga di condividerle dalla tua area. Il commento lo legge sempre e solo lo staff.",
+    "Da oggi i docenti del tuo istituto che seguono il percorso possono leggere le riflessioni e le domande che invii nelle lezioni. Quelle che hai già inviato le potranno leggere tre giorni dopo che la piattaforma te lo segnala, a meno che tu scelga che restino solo allo staff. Il commento lo legge sempre e solo lo staff.",
   informativa: "L'informativa aggiornata è qui:",
   dubbi: "Per qualsiasi dubbio scrivi a info@bioergotech.org.",
 } as const;
 
-/* ── Riflessioni inviate prima dell'avviso: la scelta dello studente ──── */
+/* ── Riflessioni inviate prima dell'avviso: ai docenti, salvo un no ──── */
 
 /**
- * Le consegne salvate prima che lo studente vedesse l'avviso restano allo
- * staff. Ogni studente puo scegliere, da solo e per se, se le possono
- * leggere anche i docenti del suo istituto: mai una scelta di classe o a
- * maggioranza, nessuna risposta gia segnata, revocabile quando vuole. Si
- * risponde sulla piattaforma (nel box della lezione o nella propria area),
- * senza email.
+ * Le consegne salvate prima che lo studente vedesse l'avviso nel box della
+ * lezione (`condivisa_referente_at` null). Decisione della Fondazione: le
+ * leggono anche i docenti del suo istituto, ma non subito. La piattaforma
+ * lo segnala allo studente (nel box della lezione, nella sua area o nella
+ * pagina del link diretto) e, dalla prima volta che glielo mostra
+ * (`avvisato_at`), passano `GIORNI_PREAVVISO_RIFLESSIONI` giorni prima che
+ * i docenti le leggano. Nel frattempo, e anche dopo, lo studente puo dire
+ * «Va bene» (le leggono subito) o «Preferisco di no» (restano allo staff),
+ * e cambiare idea quando vuole. Ognuno per se, mai una scelta di classe;
+ * nessuna risposta gia segnata; nessuna email.
  *
- * La scelta si registra in `licei_accettazioni`, come le istruzioni dei
- * docenti: `documento` e `versione` qui sotto, e in `testo` la domanda e
- * l'etichetta del bottone premuto, congelate. Cambiando la domanda cambia
- * anche la versione, e la scelta si chiede di nuovo.
+ * Si registra in `licei_accettazioni`, una riga per studente: `documento`
+ * e `versione` qui sotto, e in `testo` l'avviso mostrato, quando e stato
+ * mostrato la prima volta, la scelta, quando, e l'etichetta del bottone
+ * premuto, congelati dal server. La versione resta quella della prima
+ * stesura: le scelte gia registrate restano valide con la regola nuova.
  */
 export const DOCUMENTO_RIFLESSIONI_PASSATE = "riflessioni_passate";
 export const VERSIONE_RIFLESSIONI_PASSATE = "2026-10-13";
 
-export const DOMANDA_RIFLESSIONI_PASSATE =
-  "I docenti del tuo istituto che seguono il percorso leggono le riflessioni e le domande che invii nelle lezioni. Vuoi che possano leggere anche quelle che hai inviato prima? Il commento resta comunque solo allo staff.";
+/**
+ * Quanti giorni dopo il primo avviso i docenti leggono le consegne di prima
+ * di chi non ha risposto. Si contano dall'ora esatta in cui l'avviso e stato
+ * mostrato: tre giorni sono 72 ore.
+ */
+export const GIORNI_PREAVVISO_RIFLESSIONI = 3;
+
+const GIORNO_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * L'avviso, prima e dopo la data. `{data}` e `avvisato_at` piu i giorni di
+ * preavviso, come «20 ottobre» (`dataRiflessioniPassate`).
+ */
+export const AVVISO_RIFLESSIONI_PASSATE = {
+  prima:
+    "Dal {data} i docenti del tuo istituto che seguono il percorso potranno leggere anche le riflessioni e le domande che hai inviato prima. Servono a seguire il tuo percorso. Il commento resta comunque solo allo staff.",
+  dopo:
+    "Dal {data} i docenti del tuo istituto che seguono il percorso possono leggere anche le riflessioni e le domande che hai inviato prima. Servono a seguire il tuo percorso. Il commento resta comunque solo allo staff.",
+} as const;
 
 /** I due bottoni. Nessuno dei due e preselezionato. */
 export const ETICHETTE_RIFLESSIONI_PASSATE = {
-  si: "Sì, anche quelle",
-  no: "No, quelle restano allo staff",
+  si: "Va bene",
+  no: "Preferisco di no",
 } as const;
 
 export type SceltaRiflessioniPassate = keyof typeof ETICHETTE_RIFLESSIONI_PASSATE;
@@ -673,17 +695,85 @@ export type SceltaRiflessioniPassate = keyof typeof ETICHETTE_RIFLESSIONI_PASSAT
 export const sceltaRiflessioniPassateValida = (v: unknown): v is SceltaRiflessioniPassate =>
   v === "si" || v === "no";
 
+/** Quello che lo studente legge dopo aver premuto uno dei due bottoni. */
+export const ESITO_RIFLESSIONI_PASSATE = {
+  si: "I docenti del tuo istituto possono leggere anche le riflessioni e le domande che hai inviato prima.",
+  no: "Le riflessioni e le domande che hai inviato prima restano visibili solo allo staff.",
+} as const;
+
 export const TITOLO_RIFLESSIONI_PASSATE = "Le tue riflessioni e i docenti";
 export const NOTA_RIFLESSIONI_PASSATE = "Puoi cambiare idea quando vuoi dalla tua area.";
 
+/** Da quando, senza una scelta, i docenti leggono le consegne di prima. */
+export const visibiliDalRiflessioniPassate = (avvisatoAt: string | Date): Date =>
+  new Date(new Date(avvisatoAt).getTime() + GIORNI_PREAVVISO_RIFLESSIONI * GIORNO_MS);
+
+const FUSO_ITALIA = "Europe/Rome";
+const annoInItalia = (d: Date): string =>
+  new Intl.DateTimeFormat("it-IT", { year: "numeric", timeZone: FUSO_ITALIA }).format(d);
+
 /**
- * La card della console dei docenti con il link diretto alla scelta
+ * Una data dell'avviso come «20 ottobre», con l'anno solo se non e quello
+ * di `adesso`. Ora italiana, sul server come nel browser.
+ */
+export const dataRiflessioniPassate = (data: Date, adesso: Date = new Date()): string =>
+  new Intl.DateTimeFormat("it-IT", {
+    day: "numeric",
+    month: "long",
+    ...(annoInItalia(data) !== annoInItalia(adesso) ? { year: "numeric" as const } : {}),
+    timeZone: FUSO_ITALIA,
+  }).format(data);
+
+/**
+ * Il testo dell'avviso per chi non ha ancora scelto: al futuro prima di
+ * `visibiliDal`, al presente da quel momento. Lo stesso testo lo mostra il
+ * browser e lo congela il server. `passata` dice se la data e gia passata,
+ * quando lo sa il server con la sua ora: il browser lo passa, cosi un
+ * orologio indietro non dice «potranno» quando i docenti leggono gia.
+ */
+export const testoAvvisoRiflessioniPassate = (
+  visibiliDal: Date,
+  adesso: Date = new Date(),
+  passata: boolean = adesso.getTime() >= visibiliDal.getTime(),
+): string =>
+  (passata ? AVVISO_RIFLESSIONI_PASSATE.dopo : AVVISO_RIFLESSIONI_PASSATE.prima).replace(
+    "{data}",
+    dataRiflessioniPassate(visibiliDal, adesso),
+  );
+
+/**
+ * I docenti dell'istituto leggono le consegne di prima di questo studente?
+ * - «Va bene» (`si`): si, subito;
+ * - «Preferisco di no» (`no`), o un valore che non si riconosce: no;
+ * - nessuna scelta: si, ma solo da `GIORNI_PREAVVISO_RIFLESSIONI` giorni
+ *   dopo il primo avviso mostrato; mai se l'avviso non e mai stato mostrato.
+ * La regola dei docenti, calcolata sul server con l'ora del server. Allo
+ * studente arriva gia calcolata (`visibili`, nelle rotte): il box della
+ * lezione la rifa con l'ora del dispositivo solo se quel campo manca.
+ */
+export const riflessioniPassateVisibili = (
+  stato: { scelta: unknown; avvisato_at: string | null },
+  adesso: Date = new Date(),
+): boolean => {
+  if (stato.scelta === "si") return true;
+  if (stato.scelta != null) return false;
+  if (!stato.avvisato_at) return false;
+  const dal = visibiliDalRiflessioniPassate(stato.avvisato_at).getTime();
+  return !Number.isNaN(dal) && adesso.getTime() >= dal;
+};
+
+/**
+ * La card della console dei docenti con il link diretto all'avviso
  * (`RIFLESSIONI_STUDENTE_PATH`, piu sotto): il docente lo copia e lo da agli
  * studenti, senza email.
  */
 export const LINK_RIFLESSIONI_STUDENTI_TITOLO = "Link da dare agli studenti";
 export const LINK_RIFLESSIONI_STUDENTI_TESTO =
-  "Gli studenti lo aprono, accedono e scelgono se i docenti possono leggere anche le riflessioni inviate prima dell'avviso. Si sceglie una volta sola.";
+  "Gli studenti lo aprono, accedono e vedono l'avviso sulle riflessioni inviate prima: dopo tre giorni le vedete anche voi, a meno che scelgano di no. Con «Va bene» le vedete subito.";
+
+/** La nota per i docenti sulle consegne inviate prima dell'avviso. */
+export const NOTA_RIFLESSIONI_PASSATE_DOCENTI =
+  "Le consegne inviate prima dell'avviso diventano visibili tre giorni dopo che lo studente ha visto l'avviso, o subito se ha scelto «Va bene». Restano riservate se ha scelto che restino allo staff.";
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
   "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito: agli organizzatori arriva solo l'elenco minimo degli studenti partecipanti con le scelte A e B.";
@@ -705,9 +795,9 @@ export const STUDENTE_PATH = `${LICEI_PATH}/${STUDENTE_SLUG}`;
 export const COMMISSIONE_PATH = `${LICEI_PATH}/${COMMISSIONE_SLUG}`;
 
 /**
- * La pagina con la sola scelta sulle riflessioni inviate prima dell'avviso:
- * il link diretto che i docenti danno agli studenti. Riservata e noindex,
- * come l'area dello studente.
+ * La pagina con il solo avviso sulle riflessioni inviate prima, e la
+ * scelta: il link diretto che i docenti danno agli studenti. Riservata e
+ * noindex, come l'area dello studente.
  */
 export const RIFLESSIONI_STUDENTE_PATH = `${STUDENTE_PATH}/riflessioni`;
 

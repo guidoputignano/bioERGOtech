@@ -27,11 +27,16 @@ const getAdmin = () =>
  * else, and also while the `condivisa_referente_at` column does not exist
  * yet (the migration is applied by hand, after the deploy).
  *
- * Submissions saved before the notice stay staff only, unless the student
- * chooses, on the platform, to share them too. `riflessioni_passate` tells
- * the box whether to ask: `{ scelta, riservate }` for licei students only,
- * null when the choice is not available (or cannot be read: never an error
- * here, the lesson must stay submittable).
+ * Submissions saved before the notice become readable by those teachers
+ * three days after the platform first shows the student a notice about
+ * them, or at once if the student says "Va bene", and never if the student
+ * says no. `riflessioni_passate` gives the box what that notice needs:
+ * `{ scelta, avvisato_at, visibili_dal, visibili, riservate }` for licei
+ * students only, where `visibili` is the teachers' rule computed now with
+ * the server clock, null when the feature is not available (or cannot be
+ * read: never an error here, the lesson must stay submittable). Loading
+ * the box records nothing: the notice itself records the first view,
+ * through the student route, once it is actually on screen.
  */
 async function avvisoReferente(
   admin: ReturnType<typeof getAdmin>,
@@ -60,10 +65,11 @@ export async function GET(req: NextRequest) {
         .eq("lesson_slug", lessonSlug)
         .eq("user_id", user.id)
         .maybeSingle(),
-      // The choice is read only for licei students: everyone else stops at
-      // the first query of `avvisoReferente`, as before. It counts only
-      // when made for the school of the current enrolment, as for the
-      // teachers. The box gets the school name, never the adhesion id.
+      // Notice and choice are read only for licei students: everyone else
+      // stops at the first query of `avvisoReferente`, as before. They
+      // count only when recorded for the school of the current enrolment,
+      // as for the teachers. The box gets the school name, never the
+      // adhesion id.
       avvisoReferente(admin, user.id).then(async (a) => ({
         avviso: a ? { istituto: a.istituto } : null,
         passate: a ? await riflessioniPassatePerBox(admin, user.id, a.adesioneId) : null,
