@@ -5,6 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { StudenteConsole } from "./StudenteConsole";
 import { ISCRIZIONE_PATH, LICEI_PATH } from "../content";
+import { prossimoTalk, schedaTalk } from "../../talk/content";
+import { TalkAreaCard } from "../../talk/TalkAreaCard";
 
 export const dynamic = "force-dynamic";
 
@@ -50,13 +52,19 @@ export default async function StudentePage() {
     );
   }
 
+  // Il prossimo talk, letto qui e passato gia ripulito del link della
+  // riunione: la console e un componente client.
+  const talk = prossimoTalk();
+
   return (
     <>
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
         <div className="container mx-auto px-6 py-10">
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
-            <StudenteConsole />
+            <StudenteConsole
+              talk={talk ? <TalkAreaCard talk={schedaTalk(talk)} contesto="studente" /> : null}
+            />
           </div>
         </div>
       </div>

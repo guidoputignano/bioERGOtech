@@ -83,6 +83,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
 | Elenco dei mentor nell'area | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx`, rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
+| Talk con gli esperti | `app/eventi/vivere-piu-a-lungo/talk/` (README nella cartella): scheda nell'area dello studente e del docente, riga nella pagina pubblica, scheda nel pannello staff; migrazione `20261216000000_talk_iscrizioni.sql`, da applicare a mano |
 | Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql`, `20261209000000_licei_accesso_coerente.sql`, `20261215000000_licei_docenti_accettazioni_riflessioni.sql` (da applicare a mano, vedi sotto) |
 
 ## Migrazione da applicare a mano: 20261215000000

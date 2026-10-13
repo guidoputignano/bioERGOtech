@@ -28,6 +28,7 @@ import {
 // Solo i tipi: i moduli sono del server.
 import type { DocenteProgettoVista } from "@/lib/eventi/licei-docenti";
 import type { StatoAvvisoRiflessioni } from "@/lib/eventi/licei-server";
+import { TalkStaffCard } from "../../talk/TalkStaffCard";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Adesione = any;
@@ -551,6 +552,9 @@ export function LiceiAdminPanel() {
 
       {/* L'avviso agli studenti sulle riflessioni lette dai docenti. */}
       <AvvisoRiflessioni stato={avvisoRiflessioni} onAggiornato={setAvvisoRiflessioni} />
+
+      {/* I talk con gli esperti: iscritti per talk e per ruolo, ed export. */}
+      <TalkStaffCard />
 
       {/* Conteggi. La prima riga sono gli istituti e le previsioni che hanno
           dichiarato aderendo. La seconda sono gli studenti veri: fino a che

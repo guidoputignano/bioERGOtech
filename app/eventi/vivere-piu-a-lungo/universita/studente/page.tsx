@@ -5,6 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { StudenteUniversitaConsole } from "./StudenteUniversitaConsole";
 import { NOTA_ACCESSO_CORSO_STUDENTE, UNIVERSITA_PATH } from "../content";
+import { prossimoTalk, schedaTalk } from "../../talk/content";
+import { TalkAreaCard } from "../../talk/TalkAreaCard";
 
 /**
  * La pagina autonoma dell'area del partecipante.
@@ -78,13 +80,19 @@ export default async function StudenteUniversitaPage() {
     );
   }
 
+  // Il prossimo talk, gia ripulito del link della riunione: la console e un
+  // componente client.
+  const talk = prossimoTalk();
+
   return (
     <>
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
         <div className="container mx-auto px-6 py-10">
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
-            <StudenteUniversitaConsole />
+            <StudenteUniversitaConsole
+              talk={talk ? <TalkAreaCard talk={schedaTalk(talk)} contesto="studente" /> : null}
+            />
           </div>
         </div>
       </div>

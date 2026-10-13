@@ -9,6 +9,10 @@ import {
   leggiChiusuraPercorso,
   type EsitoCancellazione,
 } from "@/lib/eventi/licei-server";
+import { TABELLA_TALK } from "@/lib/eventi/talk-server";
+
+/** I ruoli dei talk che appartengono al percorso licei. */
+const RUOLI_TALK_LICEI = ["studente_licei", "docente"];
 
 /**
  * Chiusura del percorso licei: il comando che mantiene la promessa
@@ -26,6 +30,14 @@ import {
  * Che cosa NON si tocca: `event_registrations` (i finalisti iscritti
  * all'evento seguono la conservazione dell'evento, non del corso) e
  * `newsletter_subscribers` (un consenso a parte, dato a parte).
+ *
+ * Le iscrizioni ai talk con gli esperti (`talk_iscrizioni`) di studenti e
+ * docenti dei licei si cancellano tutte, per ruolo. Quelle di un account
+ * cancellato andrebbero via comunque, per la chiave esterna con
+ * `on delete cascade` verso `auth.users` (provato nel banco di prova della
+ * migrazione 20261216000000); la cancellazione per ruolo serve per gli
+ * account che restano, perche usati altrove. Le iscrizioni di studenti
+ * universitari e staff non sono del percorso licei e restano.
  */
 
 // Cancellare qualche centinaio di account sono qualche centinaio di
@@ -211,6 +223,8 @@ type Piano = {
     commissari: number;
     docenti: number;
     riflessioni: number;
+    /** Iscrizioni ai talk di studenti e docenti dei licei. */
+    talk: number;
   };
   account: {
     totali: number;
@@ -369,6 +383,20 @@ async function calcolaPiano(client: Db): Promise<Piano> {
     conta(client, "licei_valutazioni"),
   ]);
 
+  // Le iscrizioni ai talk del percorso licei: tutte quelle di studenti e
+  // docenti, che l'account resti o no. Prima della migrazione 20261216000000
+  // la tabella non c'e e conta come vuota.
+  let talk = 0;
+  {
+    const { count, error } = await client
+      .from(TABELLA_TALK)
+      .select("id", { count: "exact", head: true })
+      .in("ruolo", RUOLI_TALK_LICEI);
+    if (tabellaAssente(error)) tabelleAssenti.add(TABELLA_TALK);
+    else if (error) throw new Error(`${TABELLA_TALK}: ${error.message}`);
+    else talk = count ?? 0;
+  }
+
   return {
     conteggi: {
       adesioni: adesioni.length,
@@ -379,6 +407,7 @@ async function calcolaPiano(client: Db): Promise<Piano> {
       commissari: commissari.length,
       docenti: docenti.length,
       riflessioni,
+      talk,
     },
     account: {
       totali: persone.size,
@@ -537,7 +566,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. I dati del percorso. Le schede e i commissari prima, poi le
+    // 3. Le iscrizioni ai talk di studenti e docenti dei licei. Quelle degli
+    //    account appena cancellati sono gia andate in cascata; qui restano
+    //    quelle degli account mantenuti. Il criterio e il ruolo, non
+    //    l'istituto: cancellata l'adesione, `adesione_id` diventa nullo.
+    if (!piano.tabelle_assenti.includes(TABELLA_TALK)) {
+      const { error } = await client.from(TABELLA_TALK).delete().in("ruolo", RUOLI_TALK_LICEI);
+      if (error) throw new Error(`${TABELLA_TALK}: ${error.message}`);
+    }
+
+    // 4. I dati del percorso. Le schede e i commissari prima, poi le
     //    accettazioni delle istruzioni e i docenti del progetto, poi le
     //    adesioni, che in cascata portano via iscrizioni, squadre, progetti e
     //    le schede rimaste. Le ultime tre cancellazioni a tappeto raccolgono
@@ -561,7 +599,7 @@ export async function POST(request: Request) {
       if (error) throw new Error(`${tabella}: ${error.message}`);
     }
 
-    // 4. Il registro: quando, e quanto. Solo numeri, perche `licei_config`
+    // 5. Il registro: quando, e quanto. Solo numeri, perche `licei_config`
     //    e leggibile da chiunque.
     const esito: EsitoCancellazione = {
       ...piano.conteggi,

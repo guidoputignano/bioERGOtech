@@ -126,7 +126,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
       ],
       dopo: [
         "La password la scegli tu, con il link che ricevi per email: la Fondazione non la vede.",
-        "Durante il corso registriamo le lezioni completate, le riflessioni, le domande e i commenti che invii nelle lezioni, la squadra di cui fai parte con il tuo ruolo, il progetto della squadra (titolo, ambito, testi ed eventuale link ai materiali) e alcuni dati tecnici di accesso, come la data dell'ultimo accesso.",
+        "Durante il corso registriamo le lezioni completate, le riflessioni, le domande e i commenti che invii nelle lezioni, la squadra di cui fai parte con il tuo ruolo, il progetto della squadra (titolo, ambito, testi ed eventuale link ai materiali), le tue iscrizioni ai talk con gli esperti e alcuni dati tecnici di accesso, come la data dell'ultimo accesso.",
         "Nei testi del progetto e nelle riflessioni non inserire informazioni sulla salute o altri dati personali tuoi o di persone reali: non servono al percorso.",
       ],
     },
@@ -194,6 +194,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
         "degli altri docenti dell'istituto indicati dal referente: nome, cognome, email e, se indicate, classi seguite;",
         "il numero di studenti e classi che l'istituto prevede di coinvolgere;",
         "la registrazione dell'accettazione delle istruzioni per i docenti, con data e versione;",
+        "le iscrizioni ai talk con gli esperti, se il docente si iscrive;",
         "le credenziali di accesso e i dati tecnici connessi al login.",
       ],
     },

@@ -33,6 +33,8 @@ type Conteggi = {
   /** Assente negli esiti registrati prima dei docenti del progetto. */
   docenti?: number;
   riflessioni: number;
+  /** Assente negli esiti registrati prima dei talk con gli esperti. */
+  talk?: number;
 };
 
 type Piano = {
@@ -63,6 +65,7 @@ const VOCI: { chiave: keyof Conteggi; label: string }[] = [
   { chiave: "commissari", label: "Commissari" },
   { chiave: "docenti", label: "Docenti del progetto" },
   { chiave: "riflessioni", label: "Riflessioni delle lezioni" },
+  { chiave: "talk", label: "Iscrizioni ai talk" },
 ];
 
 function dataOra(iso: string): string {
@@ -239,7 +242,8 @@ export function ChiusuraPanel() {
               <strong>Cancella i dati del percorso.</strong> Si cancellano adesioni, iscrizioni,
               squadre, progetti, schede di valutazione, commissari, docenti del progetto con le
               accettazioni delle istruzioni, le riflessioni delle lezioni degli studenti con le
-              loro scelte di condivisione e gli account creati solo per il percorso. Non si può annullare: prima esporta
+              loro scelte di condivisione, le iscrizioni di studenti e docenti ai talk con gli
+              esperti e gli account creati solo per il percorso. Non si può annullare: prima esporta
               classifica, progetti ed elenchi che servono ancora.
             </li>
           </ol>

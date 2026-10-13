@@ -5,6 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { ReferenteConsole } from "./ReferenteConsole";
 import { LICEI_PATH, REFERENTE_PATH } from "../content";
+import { prossimoTalk, schedaTalk } from "../../talk/content";
+import { TalkAreaCard } from "../../talk/TalkAreaCard";
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +50,18 @@ export default async function ReferentePage() {
     );
   }
 
+  // Il prossimo talk, gia ripulito del link della riunione: la console e un
+  // componente client.
+  const talk = prossimoTalk();
+
   return (
     <>
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
         <div className="container mx-auto px-6 py-10">
-          <ReferenteConsole />
+          <ReferenteConsole
+            talk={talk ? <TalkAreaCard talk={schedaTalk(talk)} contesto="docente" /> : null}
+          />
         </div>
       </div>
       <SiteFooter />

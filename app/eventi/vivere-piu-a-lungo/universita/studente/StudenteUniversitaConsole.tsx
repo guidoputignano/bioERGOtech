@@ -243,6 +243,7 @@ export type SezioneStudenteUniversita = "tutto" | "squadra" | "board" | "progett
 export function StudenteUniversitaConsole({
   sezione = "tutto",
   intestazione = true,
+  talk = null,
 }: {
   /**
    * Una sezione, oppure piu di una.
@@ -257,6 +258,12 @@ export function StudenteUniversitaConsole({
    */
   sezione?: SezioneStudenteUniversita | SezioneStudenteUniversita[];
   intestazione?: boolean;
+  /**
+   * La scheda del prossimo talk con gli esperti, gia costruita dalla pagina
+   * server (`TalkAreaCard`). Solo nell'area completa, accanto ai mentor:
+   * sono le due cose del percorso che non sono una consegna.
+   */
+  talk?: ReactNode;
 } = {}) {
   // Le quattro sezioni diventano tre interruttori qui in cima: "tutto" non
   // e una sezione ma il caso in cui ci sono tutte, e risolverlo una volta
@@ -1753,6 +1760,9 @@ export function StudenteUniversitaConsole({
           sopra: quelli li propone la Fondazione per il progetto, questi sono
           l'elenco di tutto il percorso, con il contatto che ciascuno ha
           messo a disposizione. Solo nell'area completa, non nelle lezioni. */}
+      {/* ══ Talk con gli esperti ══ */}
+      {sezioni.includes("tutto") && talk}
+
       {sezioni.includes("tutto") && <MentorElenco percorso="universita" />}
     </div>
   );

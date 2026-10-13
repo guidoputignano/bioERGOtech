@@ -187,6 +187,15 @@ nuovi, l'elenco esce senza contatti, il pannello dice che manca la
 migrazione. Il riconoscimento della colonna assente sta in
 `colonneLineeGuidaMancanti()` di `lib/eventi/universita-mentor.ts`.
 
+## Talk con gli esperti
+
+I partecipanti con la candidatura `confermata` possono iscriversi ai talk
+con gli esperti, come gli studenti dei licei. L'area del partecipante mostra
+il prossimo talk accanto ai mentor (`TalkAreaCard`, passata dalla pagina
+server). Il modulo vive in `../talk/`, con il suo README; l'informativa che
+vale qui e quella del sito, che nella categoria dei partecipanti al percorso
+universitario nomina le iscrizioni ai talk.
+
 ## Le fasi, e perche partono tutte chiuse
 
 `universita_config`, chiave/valore, modificabile dal pannello staff. Come per

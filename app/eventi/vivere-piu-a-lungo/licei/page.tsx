@@ -9,6 +9,7 @@ import { EVENT } from "../content";
 import { leggiConfigLicei } from "@/lib/eventi/licei-server";
 import { MENTOR_PATH } from "../universita/content";
 import { LINEE_GUIDA_MENTOR_PATH } from "../linee-guida-mentor/content";
+import { luogoTalk, prossimoTalk, talkPath } from "../talk/content";
 import {
   ANNI_CORSO,
   COMMISSIONE_LICEI,
@@ -322,6 +323,10 @@ export default async function LiceiPage() {
     staff = profile?.partnership_level === "admin";
   }
 
+  // La pagina e dinamica, quindi "prossimo" vale per oggi e non per il
+  // giorno del deploy.
+  const talk = prossimoTalk();
+
   const formVisibile = aperte || staff;
   const anteprimaStaff = staff && !aperte;
 
@@ -408,6 +413,37 @@ export default async function LiceiPage() {
                   L&apos;evento del 10 dicembre
                 </Link>
               </div>
+
+              {/* I talk con gli esperti, accanto alla guida: una riga, non una
+                  sezione. Il dettaglio e l'iscrizione stanno nella pagina del talk. */}
+              {talk && (
+                <p
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
+                    margin: "22px 0 0",
+                    maxWidth: 660,
+                    fontSize: 14,
+                    lineHeight: 1.65,
+                    color: "var(--text-mid)",
+                  }}
+                >
+                  <i
+                    className="fas fa-microphone"
+                    aria-hidden="true"
+                    style={{ color: "var(--primary)", marginTop: 4, flexShrink: 0 }}
+                  />
+                  <span>
+                    <strong style={{ color: "var(--text-dark)" }}>Talk con gli esperti.</strong>{" "}
+                    {talk.dataLabel}, {talk.orarioLabel}, {luogoTalk(talk).toLowerCase()}: &laquo;
+                    {talk.titolo}&raquo;, con {talk.relatore.nome}.{" "}
+                    <Link href={talkPath(talk.slug)} style={{ color: "var(--primary-dark)", fontWeight: 700 }}>
+                      Scopri il talk e iscriviti
+                    </Link>
+                  </span>
+                </p>
+              )}
             </div>
           </div>
         </section>
