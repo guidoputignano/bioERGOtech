@@ -636,10 +636,54 @@ export const ACCETTAZIONE_ISTRUZIONI_DOCENTE_TESTO =
 export const AVVISO_RIFLESSIONI_OGGETTO = "Percorso Biotecnologie e IA: chi legge le tue riflessioni";
 export const AVVISO_RIFLESSIONI_TESTO = {
   apertura:
-    "Da oggi i docenti del tuo istituto che seguono il percorso possono leggere le riflessioni e le domande che invii nelle lezioni. Quelle che hai già inviato restano visibili solo allo staff della Fondazione, e il commento lo legge sempre e solo lo staff.",
+    "Da oggi i docenti del tuo istituto che seguono il percorso possono leggere le riflessioni e le domande che invii nelle lezioni. Quelle che hai già inviato restano visibili solo allo staff della Fondazione, a meno che tu non scelga di condividerle dalla tua area. Il commento lo legge sempre e solo lo staff.",
   informativa: "L'informativa aggiornata è qui:",
   dubbi: "Per qualsiasi dubbio scrivi a info@bioergotech.org.",
 } as const;
+
+/* ── Riflessioni inviate prima dell'avviso: la scelta dello studente ──── */
+
+/**
+ * Le consegne salvate prima che lo studente vedesse l'avviso restano allo
+ * staff. Ogni studente puo scegliere, da solo e per se, se le possono
+ * leggere anche i docenti del suo istituto: mai una scelta di classe o a
+ * maggioranza, nessuna risposta gia segnata, revocabile quando vuole. Si
+ * risponde sulla piattaforma (nel box della lezione o nella propria area),
+ * senza email.
+ *
+ * La scelta si registra in `licei_accettazioni`, come le istruzioni dei
+ * docenti: `documento` e `versione` qui sotto, e in `testo` la domanda e
+ * l'etichetta del bottone premuto, congelate. Cambiando la domanda cambia
+ * anche la versione, e la scelta si chiede di nuovo.
+ */
+export const DOCUMENTO_RIFLESSIONI_PASSATE = "riflessioni_passate";
+export const VERSIONE_RIFLESSIONI_PASSATE = "2026-10-13";
+
+export const DOMANDA_RIFLESSIONI_PASSATE =
+  "I docenti del tuo istituto che seguono il percorso leggono le riflessioni e le domande che invii nelle lezioni. Vuoi che possano leggere anche quelle che hai inviato prima? Il commento resta comunque solo allo staff.";
+
+/** I due bottoni. Nessuno dei due e preselezionato. */
+export const ETICHETTE_RIFLESSIONI_PASSATE = {
+  si: "Sì, anche quelle",
+  no: "No, quelle restano allo staff",
+} as const;
+
+export type SceltaRiflessioniPassate = keyof typeof ETICHETTE_RIFLESSIONI_PASSATE;
+
+export const sceltaRiflessioniPassateValida = (v: unknown): v is SceltaRiflessioniPassate =>
+  v === "si" || v === "no";
+
+export const TITOLO_RIFLESSIONI_PASSATE = "Le tue riflessioni e i docenti";
+export const NOTA_RIFLESSIONI_PASSATE = "Puoi cambiare idea quando vuoi dalla tua area.";
+
+/**
+ * La card della console dei docenti con il link diretto alla scelta
+ * (`RIFLESSIONI_STUDENTE_PATH`, piu sotto): il docente lo copia e lo da agli
+ * studenti, senza email.
+ */
+export const LINK_RIFLESSIONI_STUDENTI_TITOLO = "Link da dare agli studenti";
+export const LINK_RIFLESSIONI_STUDENTI_TESTO =
+  "Gli studenti lo aprono, accedono e scelgono se i docenti possono leggere anche le riflessioni inviate prima dell'avviso. Si sceglie una volta sola.";
 
 export const AUTORIZZAZIONE_NOTA_CUSTODIA =
   "Il presente modulo va consegnato firmato al docente referente dell'istituto, che lo conserva agli atti della scuola. Non va inviato a Fondazione bioERGOtech né caricato su alcun sito: agli organizzatori arriva solo l'elenco minimo degli studenti partecipanti con le scelte A e B.";
@@ -659,6 +703,13 @@ export const COMMISSIONE_SLUG = "commissione";
 
 export const STUDENTE_PATH = `${LICEI_PATH}/${STUDENTE_SLUG}`;
 export const COMMISSIONE_PATH = `${LICEI_PATH}/${COMMISSIONE_SLUG}`;
+
+/**
+ * La pagina con la sola scelta sulle riflessioni inviate prima dell'avviso:
+ * il link diretto che i docenti danno agli studenti. Riservata e noindex,
+ * come l'area dello studente.
+ */
+export const RIFLESSIONI_STUDENTE_PATH = `${STUDENTE_PATH}/riflessioni`;
 
 /**
  * Quanti studenti in una squadra.

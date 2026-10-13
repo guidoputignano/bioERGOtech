@@ -238,8 +238,8 @@ export function ChiusuraPanel() {
             <li>
               <strong>Cancella i dati del percorso.</strong> Si cancellano adesioni, iscrizioni,
               squadre, progetti, schede di valutazione, commissari, docenti del progetto con le
-              accettazioni delle istruzioni, le riflessioni delle lezioni degli studenti e gli
-              account creati solo per il percorso. Non si può annullare: prima esporta
+              accettazioni delle istruzioni, le riflessioni delle lezioni degli studenti con le
+              loro scelte di condivisione e gli account creati solo per il percorso. Non si può annullare: prima esporta
               classifica, progetti ed elenchi che servono ancora.
             </li>
           </ol>

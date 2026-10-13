@@ -10,13 +10,19 @@
  * - `RiflessioniPerLezione`: «Leggi per lezione», una lezione per tutti gli
  *   studenti dell'istituto, con lo stesso filtro per classe dell'elenco.
  *
+ * In piu `LinkRiflessioniStudenti`: il link diretto alla pagina in cui lo
+ * studente sceglie se condividere le consegne di prima, da copiare e dare
+ * alla classe. Nessuna email: la scelta resta dello studente.
+ *
  * Sola lettura: niente risposta, niente export, niente notifiche. I testi
  * sono di studenti, spesso minorenni, e si mostrano come testo semplice di
  * React, senza HTML. Che cosa arriva e che cosa no lo decide il server
- * (lib/eventi/licei-riflessioni.ts): solo le consegne salvate dopo l'avviso
- * nel box della lezione, del commento niente, della risposta dello staff
- * solo la data. Qui la nota fissa lo dice al docente, con il numero delle
- * consegne che restano riservate.
+ * (lib/eventi/licei-riflessioni.ts): le consegne salvate dopo l'avviso nel
+ * box della lezione, e anche quelle di prima solo per chi ha scelto di
+ * condividerle, del commento niente, della risposta dello staff solo la
+ * data. Qui la nota fissa lo dice al docente, con il numero delle consegne
+ * che restano riservate. Di chi ha scelto di condividerle non si dice
+ * niente di speciale: le sue consegne di prima compaiono e basta.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -29,6 +35,12 @@ import type {
   StudenteRiflessioni,
 } from "@/lib/eventi/licei-riflessioni";
 import { corrispondeClasse, type FiltroClassi } from "./filtroPerClasse";
+import {
+  LINK_RIFLESSIONI_STUDENTI_TESTO,
+  LINK_RIFLESSIONI_STUDENTI_TITOLO,
+  RIFLESSIONI_STUDENTE_PATH,
+  SITE_URL,
+} from "../content";
 
 const ROTTA = "/api/eventi/licei/referente/riflessioni";
 
@@ -105,8 +117,9 @@ function NotaRiflessioni({ riservate }: { riservate: string | null }) {
     >
       Qui legge la riflessione e la domanda che gli studenti confermati hanno inviato nelle lezioni
       dopo aver letto, nel box della lezione, che le leggono anche i docenti del loro istituto. Le
-      consegne precedenti restano riservate allo staff della Fondazione: erano state scritte quando
-      agli studenti avevamo detto che le leggeva solo lo staff.
+      consegne precedenti erano state scritte quando agli studenti avevamo detto che le leggeva solo
+      lo staff della Fondazione: restano riservate, a meno che lo studente scelga di condividerle
+      dalla sua area.
       {riservate && <strong style={{ color: "var(--text-dark)" }}> {riservate}</strong>} Il commento
       resta sempre allo staff. Alle domande risponde lo staff della Fondazione: qui vede soltanto se
       ha risposto e quando. I testi servono a seguire il percorso e non vanno proiettati in classe né
@@ -235,6 +248,58 @@ export function PannelloStudente({ stato }: { stato: StatoLettura }) {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * «Link da dare agli studenti»: l'indirizzo completo della pagina della
+ * scelta e un bottone per copiarlo. Il docente lo passa alla classe come
+ * preferisce; lo studente lo apre, accede e sceglie da solo.
+ */
+export function LinkRiflessioniStudenti() {
+  const [copiato, setCopiato] = useState(false);
+  const link = `${SITE_URL}${RIFLESSIONI_STUDENTE_PATH}`;
+
+  const copia = () => {
+    // Se il browser non lascia copiare, il link resta a schermo da
+    // selezionare a mano.
+    navigator.clipboard
+      ?.writeText(link)
+      .then(() => {
+        setCopiato(true);
+        setTimeout(() => setCopiato(false), 2500);
+      })
+      .catch(() => {});
+  };
+
+  return (
+    <div className="card" style={{ padding: 20 }}>
+      <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+        {LINK_RIFLESSIONI_STUDENTI_TITOLO}
+      </h2>
+      <p className="text-sm text-gray-600 mb-3" style={{ lineHeight: 1.7 }}>
+        {LINK_RIFLESSIONI_STUDENTI_TESTO}
+      </p>
+      <div className="flex flex-wrap gap-2 items-center">
+        <code
+          style={{
+            flex: "1 1 260px",
+            minWidth: 0,
+            background: "var(--primary-light)",
+            borderRadius: 10,
+            padding: "9px 14px",
+            fontSize: 13,
+            color: "var(--text-dark)",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {link}
+        </code>
+        <Button type="button" variant="outline" onClick={copia}>
+          {copiato ? "Copiato" : "Copia"}
+        </Button>
+      </div>
     </div>
   );
 }

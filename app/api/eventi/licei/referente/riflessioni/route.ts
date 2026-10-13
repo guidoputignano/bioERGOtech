@@ -17,9 +17,10 @@ import {
  * Solo studenti CONFERMATI del proprio istituto: il client ha la service
  * role e RLS non lo ferma, quindi il filtro su `adesione_id` e su `stato` e
  * la vera guardia. Di ogni consegna solo riflessione e domanda, e solo se
- * salvata dopo l'avviso; di quelle di prima solo il numero. Il commento non
- * si legge, della risposta dello staff solo la data
- * (lib/eventi/licei-riflessioni.ts).
+ * salvata dopo l'avviso; di quelle di prima solo il numero, a meno che lo
+ * studente abbia scelto di condividerle (per questo istituto, e finche non
+ * cambia idea). Il commento non si legge, della risposta dello staff solo
+ * la data (lib/eventi/licei-riflessioni.ts).
  *
  * Sola lettura, nessun export: i testi si leggono a schermo.
  */
@@ -78,7 +79,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const risposta = await leggiRiflessioni(client, iscrizioni, { lezione });
+    const risposta = await leggiRiflessioni(client, iscrizioni, { adesioneId: ctx.adesione.id, lezione });
     return NextResponse.json(risposta, { headers: NESSUNA_CACHE });
   } catch (err) {
     console.error("Licei riflessioni: consegne non lette:", err);

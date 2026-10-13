@@ -220,8 +220,10 @@ eseguirla in produzione, perche il codice arriva prima della migrazione.
 **Cosa deve succedere:** la console del referente si apre come prima, senza
 schermata delle istruzioni; la card "Docenti del progetto" dice **Funzione in
 attivazione**; nel box di una lezione non compare l'avviso "Chi legge quello
-che scrivi" e la consegna si salva lo stesso; nel pannello staff il bottone
-**Invia avviso sulle riflessioni** e spento e dice che manca la migrazione.
+che scrivi", ne la domanda "Le tue riflessioni e i docenti", e la consegna si
+salva lo stesso; nell'area dello studente non compare la card "Le tue
+riflessioni e i docenti"; nel pannello staff il bottone **Invia avviso sulle
+riflessioni** e spento e dice che manca la migrazione.
 Poi applichi la migrazione come dice il README e continui.
 
 ### Passo 11. Il referente indica un collega (incognito della prof)
@@ -366,8 +368,11 @@ studente 1: compare "1 consegna riservata" e **nessun testo**.
 
 **Dopo.** Lo studente 1 apre `/courses/agentic-ai/lesson/lesson-1-2a`. Sopra
 il modulo deve vedere "Chi legge quello che scrivi" con il nome dell'istituto
-e il testo dell'avviso. Scriva una riflessione, una domanda **e un
-commento**, e consegni. La consegna mostra "Visibile anche ai docenti del tuo
+e il testo dell'avviso. Sopra l'avviso compare anche la domanda "Le tue
+riflessioni e i docenti", perche la consegna della 1.1 e di prima: per ora
+**non risponda**, la si prova al passo 17. Scriva una riflessione, una
+domanda **e un commento**, e consegni: la consegna si salva anche senza
+rispondere alla domanda. La consegna mostra "Visibile anche ai docenti del tuo
 istituto. Il commento lo legge solo lo staff.". Riapra la lezione 1.1: dice
 "Visibile solo allo staff".
 
@@ -385,13 +390,125 @@ staff ha risposto il ...", senza il testo della risposta.
 Nella console di prof B non compare niente dello studente 1: le riflessioni
 si leggono solo per gli studenti confermati del proprio istituto.
 
-### Passo 17. L'avviso email agli studenti (staff)
+### Passo 17. Le riflessioni di prima: la scelta dello studente
+
+Si continua con lo studente 1 del passo 16: la consegna della 1.1 e di prima
+(riservata), quella della 1.2a e di dopo l'avviso.
+
+**La domanda nel box.** Lo studente 1 apre una lezione che non ha ancora
+consegnato, per esempio `/courses/agentic-ai/lesson/lesson-1-2b`. Sopra
+l'avviso "Chi legge quello che scrivi" deve vedere "Le tue riflessioni e i
+docenti", la domanda "I docenti del tuo istituto che seguono il percorso leggono le riflessioni e le domande che invii nelle lezioni. Vuoi che possano leggere anche quelle che hai inviato prima? Il commento resta comunque solo allo staff.", i due
+bottoni "Sì, anche quelle" e "No, quelle restano allo staff" con lo stesso
+aspetto (nessuno dei due evidenziato) e sotto "Puoi cambiare idea quando vuoi
+dalla tua area.", con il link all'area.
+
+**Sì.** Prema "Sì, anche quelle". Al posto dei bottoni compare "Hai
+scelto: «Sì, anche quelle» il gg/mm/aaaa." con **Cambia scelta**. Riapra
+la lezione 1.1: ora dice "Visibile anche ai docenti del tuo istituto". La
+domanda non compare piu nelle altre lezioni.
+
+**Cosa deve vedere la professoressa:** ricarica il pannello **Riflessioni**
+dello studente 1. Compare anche la riflessione della lezione 1.1, oltre a
+quella della 1.2a, e "nessuna consegna riservata". Nessun segno particolare
+dice che lo studente ha scelto: le consegne di prima compaiono e basta. Il
+commento **non** c'e, ne a schermo ne nel JSON della risposta. Lo stesso da
+**Leggi per lezione**, lezione 1.1.
+
+**No.** Lo studente 1 apre la sua area, `/eventi/vivere-piu-a-lungo/licei/studente`:
+in fondo, prima dei mentor, la card "Le tue riflessioni e i docenti" dice
+"Hai scelto: «Sì, anche quelle» il ...". Prema **Cambia scelta**, poi "No, quelle restano allo staff". La professoressa ricarica il pannello: la 1.1 sparisce
+di nuovo e torna "1 consegna riservata"; la 1.2a resta, perche e stata
+salvata dopo l'avviso. Ripeta si e no un paio di volte: ogni volta il
+pannello della professoressa segue la scelta.
+
+**Cosa registra il database:** una sola riga per lo studente 1, riscritta a
+ogni cambio.
+
+```sql
+select documento, versione, adesione_id, testo->>'scelta' as scelta,
+       testo->>'etichetta' as etichetta, accettato_at
+  from public.licei_accettazioni
+ where documento = 'riflessioni_passate'
+   and user_id = (select user_id from public.licei_iscrizioni
+                   where email = 'lei+studente1@gmail.com');
+```
+
+Deve dire `riflessioni_passate`, `2026-10-13`, l'adesione del suo istituto,
+l'ultima scelta con la sua etichetta e l'ora dell'ultimo cambio. In `testo`
+c'e anche la domanda, per intero.
+
+**Un altro istituto, mai.** Con lo studente 1 su "Sì", nella console di prof B
+non compare niente di lui.
+
+**Il link diretto.** Nella console della professoressa, sotto le riflessioni,
+la card "Link da dare agli studenti" mostra l'indirizzo completo
+`https://www.bioergotech.org/eventi/vivere-piu-a-lungo/licei/studente/riflessioni`,
+la frase "Gli studenti lo aprono, accedono e scelgono se i docenti possono
+leggere anche le riflessioni inviate prima dell'avviso. Si sceglie una volta
+sola." e il bottone **Copia**, che per qualche secondo diventa "Copiato". La
+card c'e anche per prof B e per il collega del progetto. In una finestra in
+incognito apra il link (su un ambiente di prova, lo stesso percorso sul suo
+dominio): compare "Area riservata" con **Accedi**. Acceda come studente 1:
+dopo l'accesso torna sulla stessa pagina, che mostra solo la card "Le tue
+riflessioni e i docenti" con la scelta in vigore e **Cambia scelta**. La
+cambi da qui: il pannello della professoressa segue come sopra. Poi apra lo
+stesso link con un account che segue il corso senza essere iscritto al
+percorso, o con quello della professoressa: una frase ("Nessuna iscrizione al
+percorso risulta associata a questo account.") e **Torna al bando**, nessun
+bottone di scelta. Nel sorgente della pagina c'e `noindex, nofollow`.
+
+**La scuola di oggi.** Una scelta conta solo per l'istituto dell'iscrizione
+attuale, per lo studente come per i docenti. Lo simuli con lo studente 1 su
+"Sì", spostando la sua riga sull'adesione di prof B:
+
+```sql
+update public.licei_accettazioni
+   set adesione_id = (select id from public.licei_adesioni
+                       where codice_meccanografico = 'TATEST002X')
+ where documento = 'riflessioni_passate'
+   and user_id = (select user_id from public.licei_iscrizioni
+                   where email = 'lei+studente1@gmail.com');
+```
+
+La professoressa non legge piu la 1.1 (torna "1 consegna riservata"), e lo
+studente 1 non vede piu "Hai scelto": nella sua area, nel link diretto e nel
+box di una lezione non consegnata compare di nuovo la domanda. Risponda "Sì":
+la riga torna sull'adesione della prima scuola (lo verifica con la query qui
+sopra) e la professoressa rilegge la 1.1.
+
+**Quando la domanda non compare.** A chi segue il corso senza essere iscritto
+al percorso, mai. Prima della migrazione, da nessuna parte (passo 10). E a chi
+non ha consegne di prima e non ha mai scelto: lo simuli per lo studente 1
+nell'SQL editor,
+
+```sql
+update public.lesson_submissions
+   set condivisa_referente_at = now()
+ where condivisa_referente_at is null
+   and user_id = (select user_id from public.licei_iscrizioni
+                   where email = 'lei+studente1@gmail.com');
+delete from public.licei_accettazioni
+ where documento = 'riflessioni_passate'
+   and user_id = (select user_id from public.licei_iscrizioni
+                   where email = 'lei+studente1@gmail.com');
+```
+
+poi ricarichi la sua area (la card non c'e piu) e apra una lezione non ancora
+consegnata (c'e l'avviso, la domanda no). Il link diretto dice "Non hai
+riflessioni inviate prima dell'avviso, quindi non c'è niente da scegliere."
+con **Vai alla tua area**.
+
+### Passo 18. L'avviso email agli studenti (staff)
 
 Pannello staff, card "Avviso agli studenti sulle riflessioni", **Invia avviso
 sulle riflessioni**, e confermi.
 
 **Cosa deve succedere:** ai due studenti arriva "Percorso Biotecnologie e IA:
 chi legge le tue riflessioni", con il link all'informativa per gli studenti.
+Il testo dice che le riflessioni gia inviate restano visibili solo allo staff
+"a meno che tu non scelga di condividerle dalla tua area": non chiede di
+rispondere all'email, la scelta si fa sulla piattaforma (passo 17).
 La card dice **Inviato** con data e conteggi. Un secondo invio e rifiutato.
 
 > **Attenzione:** in produzione si invia una volta sola, e l'invio di prova
@@ -399,7 +516,7 @@ La card dice **Inviato** con data e conteggi. Un secondo invio e rifiutato.
 > riga `avviso_riflessioni_inviato_at` (e `avviso_riflessioni_esito`) da
 > `licei_config`. Meglio provarlo su un ambiente di prova.
 
-### Passo 18. Adesione ritirata
+### Passo 19. Adesione ritirata
 
 Lo staff porta la prima scuola su **Ritirata**.
 
@@ -409,7 +526,7 @@ Per chiarimenti scrivi a info@bioergotech.org.". Lo studente 1 invece entra
 ancora in `/eventi/vivere-piu-a-lungo/licei/studente` e nelle lezioni. Poi la
 riporti su **Confermata**.
 
-### Passo 19. Lo staff corregge un'adesione dal modulo pubblico
+### Passo 20. Lo staff corregge un'adesione dal modulo pubblico
 
 Nella finestra dello staff, loggato, reinvii il modulo di adesione con il
 meccanografico `TATEST001X` cambiando un numero.
@@ -418,7 +535,7 @@ meccanografico `TATEST001X` cambiando un numero.
 console. Prima di questa correzione perdeva l'accesso, perche l'adesione
 passava all'account dello staff.
 
-### Passo 20. Chiusura (solo su un ambiente di prova)
+### Passo 21. Chiusura (solo su un ambiente di prova)
 
 La scheda **Chiusura** cancella i dati di tutto il percorso: non la provi su
 produzione prima della fine. Su un ambiente di prova, l'anteprima conta
@@ -440,7 +557,8 @@ collega con le due email e i rifiuti (referente, studente, doppione), il
 collega che vede tutto l'istituto senza export, la revoca immediata e il
 nuovo invito, la separazione fra due istituti e l'account legato a due
 istituti, il quadro delle squadre, le riflessioni prima e dopo l'avviso con
-il commento che non esce mai, l'avviso email una tantum, l'adesione ritirata
+il commento che non esce mai, la scelta dello studente sulle riflessioni di
+prima (si, no, e di nuovo), l'avviso email una tantum, l'adesione ritirata
 che ferma i docenti e non gli studenti, la correzione dello staff che non
 sposta l'adesione e, su un ambiente di prova, la chiusura che cancella anche
 gli account dei docenti del progetto.
@@ -456,8 +574,8 @@ finto compare nei conteggi e nell'export.
 
 **Basta una riga.** Tutto quello che appartiene a un istituto e legato alla
 sua adesione con `on delete cascade`: iscrizioni, squadre, progetti, docenti
-del progetto e accettazioni delle istruzioni se ne vanno insieme
-all'adesione, e le valutazioni se ne vanno insieme ai progetti. Non serve
+del progetto e accettazioni (istruzioni dei docenti e scelte degli studenti
+sulle riflessioni di prima) se ne vanno insieme all'adesione, e le valutazioni se ne vanno insieme ai progetti. Non serve
 cancellare in ordine, e non serve ricordarsi niente.
 
 ```sql
@@ -498,5 +616,8 @@ impedisce a due docenti della stessa scuola di creare due adesioni.
 | "Docenti del progetto" dice Funzione in attivazione | La migrazione `20261215000000` non e applicata: lo dice anche `VERIFICA.sql`. |
 | Il collega vede "Nessuna adesione risulta associata a questo account" | E stato revocato, oppure e entrato con un'email diversa da quella dell'invito. |
 | "Questo account risulta collegato a più istituti" | Lo stesso account e referente o docente in due scuole. Si sistema a mano, lasciando un legame solo. |
-| Le riflessioni di uno studente risultano riservate | Sono state salvate prima dell'avviso nel box della lezione. Diventano visibili solo se lo studente le riapre e le salva di nuovo. |
+| Le riflessioni di uno studente risultano riservate | Sono state salvate prima dell'avviso nel box della lezione. Diventano visibili se lo studente le riapre e le salva di nuovo, oppure se sceglie di condividerle (box della lezione o sua area). |
+| La domanda "Le tue riflessioni e i docenti" non compare | Lo studente non ha consegne salvate prima dell'avviso, ha gia scelto (la cambia dalla sua area o dal link diretto), non e iscritto al percorso, oppure la migrazione `20261215000000` non e applicata. |
+| Lo studente aveva gia scelto e la domanda ricompare | La scelta era stata registrata da iscritto a un altro istituto (per esempio con il codice sbagliato): vale solo per la scuola di oggi. Risponde di nuovo e la riga passa all'istituto giusto. |
+| Il link diretto dice "Nessuna iscrizione al percorso risulta associata a questo account." | Lo studente e entrato con un'email diversa da quella dell'iscrizione, oppure l'iscrizione e stata rifiutata o ritirata. |
 | L'avviso sulle riflessioni non si puo inviare | Manca la colonna `condivisa_referente_at` (migrazione non applicata), manca `RESEND_API_KEY`, oppure e gia stato inviato. |

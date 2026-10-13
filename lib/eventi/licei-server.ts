@@ -639,11 +639,18 @@ export type StudenteContext = {
  *
  * Torna un client con service role: l'ambito lo impone questa funzione, e
  * ogni query che la usa filtra per l'id dell'iscrizione o della sua squadra.
+ *
+ * `ancheInAttesa` fa passare anche chi e ancora in attesa di conferma, con
+ * la stessa regola di `iscrizioneLiceiPerAvviso`: contano solo le iscrizioni
+ * in attesa o confermate, e fra due vale quella confermata. Serve alle sole
+ * scelte che riguardano i dati dello studente stesso (chi legge le sue
+ * riflessioni), mai a squadre e progetti, che restano dei confermati.
  */
-export async function requireStudente(): Promise<
+export async function requireStudente(opts: { ancheInAttesa?: boolean } = {}): Promise<
   | { error: null; status: 200; client: NonNullable<ReturnType<typeof liceiAdminClient>>; ctx: StudenteContext }
   | { error: string; status: number }
 > {
+  const ancheInAttesa = opts.ancheInAttesa === true;
   const client = liceiAdminClient();
   if (!client) return { error: "Configurazione server mancante.", status: 500 };
 
@@ -665,7 +672,13 @@ export async function requireStudente(): Promise<
     .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 
-  if (!righe || righe.length === 0) {
+  // Con `ancheInAttesa` un'iscrizione rifiutata o ritirata non conta: e
+  // come non averla.
+  const valide = ancheInAttesa
+    ? (righe ?? []).filter((r) => r.stato === "in_attesa" || r.stato === "confermata")
+    : (righe ?? []);
+
+  if (valide.length === 0) {
     return {
       error: "Nessuna iscrizione al percorso risulta associata a questo account.",
       status: 403,
@@ -674,9 +687,9 @@ export async function requireStudente(): Promise<
 
   // Se qualcuno risultasse iscritto a due istituti, vale quella confermata:
   // e l'unica di cui una scuola risponde.
-  const riga = righe.find((r) => r.stato === "confermata") ?? righe[0];
+  const riga = valide.find((r) => r.stato === "confermata") ?? valide[0];
 
-  if (riga.stato !== "confermata") {
+  if (riga.stato !== "confermata" && !ancheInAttesa) {
     return {
       error:
         "La tua iscrizione non è ancora stata confermata dal docente referente del tuo istituto. Appena lo fa, questa area si apre.",
@@ -865,7 +878,9 @@ export async function statoColonnaRiflessioni(
  * Lo studente che salva una consegna e iscritto al percorso licei, in
  * attesa o confermato, a percorso aperto? Allora quello che scrive nella
  * lezione lo leggono anche i docenti del suo istituto, e il box glielo
- * dice prima. Torna il nome dell'istituto, per l'avviso.
+ * dice prima. Torna il nome dell'istituto, per l'avviso, e l'id della sua
+ * adesione, per leggere la scelta sulle riflessioni di prima fatta per
+ * quell'istituto. L'id resta al server: al browser va solo il nome.
  *
  * Anche chi e ancora in attesa: quando il referente lo conferma, i docenti
  * vedono quello che ha scritto dopo aver letto l'avviso, ne prima ne altro.
@@ -879,14 +894,14 @@ export async function iscrizioneLiceiPerAvviso(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: SupabaseClient<any, "public", any>,
   userId: string,
-): Promise<{ istituto: string } | null> {
+): Promise<{ istituto: string; adesioneId: string } | null> {
   try {
     if (!userId) return null;
     // Prima l'iscrizione, poi la chiusura: chi segue il corso senza il
     // bando, cioe quasi tutti, si ferma alla prima lettura.
     const { data, error } = await client
       .from("licei_iscrizioni")
-      .select("stato, licei_adesioni(istituto_denominazione)")
+      .select("stato, adesione_id, licei_adesioni(istituto_denominazione)")
       .eq("user_id", userId)
       .in("stato", ["in_attesa", "confermata"])
       .order("created_at", { ascending: true })
@@ -901,7 +916,7 @@ export async function iscrizioneLiceiPerAvviso(
       | { istituto_denominazione?: string | null }[]
       | null;
     const adesione = Array.isArray(a) ? a[0] : a;
-    return { istituto: adesione?.istituto_denominazione ?? "" };
+    return { istituto: adesione?.istituto_denominazione ?? "", adesioneId: riga.adesione_id ?? "" };
   } catch {
     return null;
   }
