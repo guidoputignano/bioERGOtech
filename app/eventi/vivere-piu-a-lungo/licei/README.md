@@ -142,6 +142,31 @@ modulo firmato: in `licei_iscrizioni` non esiste alcuna colonna per i genitori,
 ed e deliberato. Lo studente dichiara di averlo consegnato; la prova e il
 foglio in segreteria, e chi la verifica e il referente quando conferma.
 
+## Documenti del percorso
+
+Tutti i documenti pubblici del percorso stanno in `documenti.ts` e si leggono
+su pagine del sito, non in file allegati, cosi si aggiornano con un commit e
+nessuno lavora su una copia vecchia:
+
+- `/licei/documenti`: l'indice, con chi legge, chi firma e come. Il primo
+  gruppo e la "Guida operativa per scuole e docenti referenti" (`GUIDA_DOCUMENTI`);
+- `/licei/informativa-studenti`, `/licei/informativa-scuole`, `/licei/regolamento`;
+- `/licei/adesione-scuola` (firma il dirigente) e `/licei/istruzioni-docente`
+  (firma il docente, o accetta via email): i soli due che una scuola firma.
+
+I testi dei due moduli da firmare non sono copie: `ADESIONE_SCUOLA` usa
+`PRESA_ATTO_ADESIONE` e `ISTRUZIONI_DOCENTE` usa `ISTRUZIONI_REFERENTE`, le
+stesse costanti che il referente vede nel modulo online e nella sua area.
+Ogni pagina ha un pulsante per stampare o salvare in PDF; le regole
+`@media print` di `globals.css` tolgono navbar, footer e banner (`no-print`)
+e lasciano le righe da compilare.
+
+Ogni documento ha un campo `aggiornato` (AAAA-MM-GG), mostrato sotto il
+titolo e registrato in `dichiarazioni_testo.versioni` a ogni adesione e
+iscrizione: cosi si sa quale testo ha accettato ciascuno. **Chi cambia un
+testo cambia anche la sua data, nello stesso commit.** Le firme autografe non
+vanno pubblicate sulle pagine: gli originali firmati restano agli atti.
+
 ## Mentor
 
 I mentor sono quelli del percorso universitario (`universita_mentor`), e

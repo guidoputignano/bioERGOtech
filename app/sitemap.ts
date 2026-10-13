@@ -17,6 +17,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/eventi/vivere-piu-a-lungo/bando", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei/iscrizione", priority: 0.7, changeFrequency: "weekly" },
+    // I documenti del percorso: l'indice, le informative, il regolamento e i
+    // due moduli che si firmano. Pubblici, cosi una scuola li ritrova da sola.
+    { path: "/eventi/vivere-piu-a-lungo/licei/documenti", priority: 0.5, changeFrequency: "monthly" },
+    { path: "/eventi/vivere-piu-a-lungo/licei/informativa-studenti", priority: 0.3, changeFrequency: "monthly" },
+    { path: "/eventi/vivere-piu-a-lungo/licei/informativa-scuole", priority: 0.3, changeFrequency: "monthly" },
+    { path: "/eventi/vivere-piu-a-lungo/licei/regolamento", priority: 0.3, changeFrequency: "monthly" },
+    { path: "/eventi/vivere-piu-a-lungo/licei/adesione-scuola", priority: 0.3, changeFrequency: "monthly" },
+    { path: "/eventi/vivere-piu-a-lungo/licei/istruzioni-docente", priority: 0.3, changeFrequency: "monthly" },
     // Il bando universitario e le sue due pagine pubbliche. Mancavano da qui
     // fin da quando il modulo e nato: la pagina esisteva, dichiarava il
     // proprio canonical, e nessuna mappa del sito la nominava.

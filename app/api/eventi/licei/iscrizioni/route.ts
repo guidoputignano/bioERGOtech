@@ -16,6 +16,7 @@ import {
   SITE_URL,
   STATI_ADESIONE_CHE_ACCETTANO,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { INFORMATIVA_STUDENTI, REGOLAMENTO } from "@/app/eventi/vivere-piu-a-lungo/licei/documenti";
 
 export async function POST(request: Request) {
   try {
@@ -153,6 +154,11 @@ export async function POST(request: Request) {
         eta_14: DICHIARAZIONE_ETA_TESTO,
         regolamento: ACCETTAZIONE_REGOLAMENTO_TESTO,
         newsletter: input.consenso_newsletter ? CONSENSO_NEWSLETTER_STUDENTE_TESTO : null,
+        // Quale versione dei documenti era in vigore quando si è iscritto.
+        versioni: {
+          informativa_studenti: INFORMATIVA_STUDENTI.aggiornato,
+          regolamento: REGOLAMENTO.aggiornato,
+        },
         ts: adesso,
       },
     });

@@ -7,6 +7,7 @@ import { GeneratoreCircolare } from "./GeneratoreCircolare";
 import { leggiConfigLicei } from "@/lib/eventi/licei-server";
 import {
   CONTATTI_LICEI,
+  DOCUMENTI_PATH,
   GUIDA_PATH,
   ISCRIZIONE_PATH,
   LICEI,
@@ -544,6 +545,14 @@ export default async function GuidaPage() {
               sommario="È la persona che l'istituto individua. Aderisce a nome della scuola, diffonde il codice e riconosce i propri studenti. Senza di lei il percorso non parte."
             />
             <Passi passi={passiDocente(automatica)} />
+            <p className="lc-nota" style={{ maxWidth: 760, marginTop: 28 }}>
+              I documenti da firmare, cioè l&apos;adesione della scuola per il dirigente e le
+              istruzioni per il docente referente, sono con le informative nella pagina{" "}
+              <Link href={DOCUMENTI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                Documenti del percorso
+              </Link>
+              , insieme a che cosa fare con ognuno.
+            </p>
             <div style={{ maxWidth: 760, marginTop: 32 }}>
               <GeneratoreCircolare />
             </div>

@@ -25,6 +25,7 @@ import {
   PRESA_ATTO_ADESIONE,
   SITE_URL,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { ADESIONE_SCUOLA, INFORMATIVA_SCUOLE } from "@/app/eventi/vivere-piu-a-lungo/licei/documenti";
 
 const str = (v: unknown): string | null => {
   const s = typeof v === "string" ? v.trim() : "";
@@ -169,6 +170,11 @@ export async function POST(request: Request) {
         privacy: CONSENSO_PRIVACY_LICEI_TESTO,
         nota_dati_studenti: NOTA_DATI_STUDENTI,
         presa_atto: PRESA_ATTO_ADESIONE,
+        // Quale versione dei documenti era in vigore quando ha aderito.
+        versioni: {
+          informativa_scuole: INFORMATIVA_SCUOLE.aggiornato,
+          adesione_scuola: ADESIONE_SCUOLA.aggiornato,
+        },
       },
     };
 

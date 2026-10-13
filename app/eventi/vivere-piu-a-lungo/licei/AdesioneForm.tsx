@@ -35,6 +35,7 @@ import {
   LICEI,
   NOTA_DATI_STUDENTI,
   PRESA_ATTO_ADESIONE,
+  ADESIONE_SCUOLA_PATH,
   INFORMATIVA_SCUOLE_PATH,
 } from "./content";
 import { validateAdesione, type AdesioneInput } from "@/lib/eventi/licei";
@@ -692,6 +693,13 @@ export function AdesioneForm({ anteprimaStaff = false }: { anteprimaStaff?: bool
                 <li key={x}>{x}</li>
               ))}
             </ul>
+            <p style={{ margin: "10px 0 0" }}>
+              Dopo l&apos;invio, il dirigente scolastico firma lo stesso testo nel{" "}
+              <Link href={ADESIONE_SCUOLA_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                modulo di adesione
+              </Link>
+              , da inviare a info@bioergotech.org.
+            </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
