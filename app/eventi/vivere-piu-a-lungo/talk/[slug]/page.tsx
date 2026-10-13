@@ -3,12 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
-import { googleCalendarUrl } from "@/lib/eventi/talk";
 import { EVENT } from "../../content";
 import { INFORMATIVA_SCUOLE_PATH, INFORMATIVA_STUDENTI_PATH, LICEI_PATH } from "../../licei/content";
 import { UNIVERSITA_PATH } from "../../universita/content";
 import { IscrizioneTalk } from "../IscrizioneTalk";
-import { VoltoRelatore } from "../Relatore";
+import { RitrattoRelatore, VoltoRelatore } from "../Relatore";
 import { STILE_TALK } from "../stile";
 import {
   SITE_URL,
@@ -29,9 +28,21 @@ import {
  * il riquadro dell'iscrizione alla rotta, e non passa mai dall'HTML.
  *
  * Ai componenti client va solo quello che serve, gia calcolato qui: lo
- * slug, la fine del talk, le URL del calendario. Il link della riunione non
- * esce da questa pagina.
+ * slug, la fine del talk, la URL del file .ics. Il link della riunione non
+ * esce da questa pagina: il calendario con il link lo manda la rotta, e solo
+ * a chi e iscritto.
+ *
+ * Con la foto del relatore (`relatore.foto`) la testata cambia: un ritratto
+ * grande accanto al titolo su desktop e sopra il titolo su telefono, con
+ * nome e ruolo sotto. Senza foto resta il monogramma accanto al nome.
  */
+
+/**
+ * Le larghezze del ritratto grande, le stesse del foglio di stile
+ * (`.tk-ritratto`): tutta la riga fino a 420 px su telefono e tablet, da 340
+ * a 400 px accanto al titolo da 1024 px in su.
+ */
+const SIZES_RITRATTO = "(min-width: 1024px) 400px, (min-width: 468px) 420px, calc(100vw - 48px)";
 
 export const dynamicParams = false;
 
@@ -105,7 +116,12 @@ function TalkJsonLd({ t }: { t: Talk }) {
     image: [`${SITE_URL}${t.immagineOg}`],
     url,
     organizer: { "@type": "Organization", name: EVENT.organizzatore, url: SITE_URL },
-    performer: { "@type": "Person", name: t.relatore.nome, jobTitle: t.relatore.ruolo },
+    performer: {
+      "@type": "Person",
+      name: t.relatore.nome,
+      jobTitle: t.relatore.ruolo,
+      ...(t.relatore.foto ? { image: `${SITE_URL}${t.relatore.foto}` } : {}),
+    },
     superEvent: { "@type": "EventSeries", name: TALK_SERIE.titolo, url: `${SITE_URL}${TALK_PATH}` },
     offers: {
       "@type": "Offer",
@@ -139,8 +155,45 @@ export default async function TalkPage({ params }: { params: Promise<{ slug: str
   if (!t) notFound();
 
   const path = talkPath(t.slug);
-  const url = `${SITE_URL}${path}`;
   const sigla = iniziali(t.relatore.nome);
+  const foto = t.relatore.foto;
+
+  const testata = (
+    <>
+      <div className="tk-kicker">{occhielloTalk(t)}</div>
+      <h1 className="tk-h1">{t.titolo}</h1>
+      <p className="tk-sottotitolo">{t.sottotitolo}</p>
+    </>
+  );
+
+  const fatti = (
+    <div className="tk-fatti">
+      <span className="tk-fatto">
+        <i className="fas fa-calendar-days" aria-hidden="true" /> {t.dataLabel}
+      </span>
+      <span className="tk-fatto">
+        <i className="fas fa-clock" aria-hidden="true" /> {t.orarioLabel}
+      </span>
+      <span className="tk-fatto">
+        <i className={`fas ${t.modalita === "online" ? "fa-laptop" : "fa-location-dot"}`} aria-hidden="true" />{" "}
+        {luogoTalk(t)}
+      </span>
+      <span className="tk-fatto">
+        <i className="fas fa-euro-sign" aria-hidden="true" /> Gratuito
+      </span>
+    </div>
+  );
+
+  const iscrizione = (
+    <IscrizioneTalk
+      slug={t.slug}
+      fine={t.fine}
+      icsUrl={`/api/eventi/talk/${t.slug}/ics`}
+      loginHref={`/auth/login?returnTo=${encodeURIComponent(path)}`}
+      liceiPath={LICEI_PATH}
+      universitaPath={UNIVERSITA_PATH}
+    />
+  );
 
   return (
     <>
@@ -159,49 +212,51 @@ export default async function TalkPage({ params }: { params: Promise<{ slug: str
               </Link>
             </nav>
 
-            <div className="tk-griglia">
-              <div>
-                <div className="tk-kicker">{occhielloTalk(t)}</div>
-                <h1 className="tk-h1">{t.titolo}</h1>
-                <p className="tk-sottotitolo">{t.sottotitolo}</p>
-
-                <div className="tk-relatore">
-                  <VoltoRelatore nome={t.relatore.nome} iniziali={sigla} foto={t.relatore.foto} dimensione={76} />
-                  <div style={{ minWidth: 0 }}>
+            {foto ? (
+              <div className="tk-griglia-foto">
+                <figure className="tk-ritratto">
+                  <RitrattoRelatore
+                    nome={t.relatore.nome}
+                    foto={foto}
+                    sizes={SIZES_RITRATTO}
+                    preload
+                    className="tk-ritratto-foto"
+                  />
+                  <figcaption className="tk-ritratto-didascalia">
                     <div className="tk-relatore-nome">{t.relatore.nome}</div>
                     <div className="tk-relatore-ruolo">{t.relatore.ruolo}</div>
+                  </figcaption>
+                </figure>
+
+                <div style={{ minWidth: 0 }}>
+                  {testata}
+                  {fatti}
+                  <div id="iscrizione" className="tk-iscrizione-colonna" style={{ scrollMarginTop: 96 }}>
+                    {iscrizione}
                   </div>
                 </div>
+              </div>
+            ) : (
+              <div className="tk-griglia">
+                <div>
+                  {testata}
 
-                <div className="tk-fatti">
-                  <span className="tk-fatto">
-                    <i className="fas fa-calendar-days" aria-hidden="true" /> {t.dataLabel}
-                  </span>
-                  <span className="tk-fatto">
-                    <i className="fas fa-clock" aria-hidden="true" /> {t.orarioLabel}
-                  </span>
-                  <span className="tk-fatto">
-                    <i className={`fas ${t.modalita === "online" ? "fa-laptop" : "fa-location-dot"}`} aria-hidden="true" />{" "}
-                    {luogoTalk(t)}
-                  </span>
-                  <span className="tk-fatto">
-                    <i className="fas fa-euro-sign" aria-hidden="true" /> Gratuito
-                  </span>
+                  <div className="tk-relatore">
+                    <VoltoRelatore nome={t.relatore.nome} iniziali={sigla} foto={null} dimensione={76} />
+                    <div style={{ minWidth: 0 }}>
+                      <div className="tk-relatore-nome">{t.relatore.nome}</div>
+                      <div className="tk-relatore-ruolo">{t.relatore.ruolo}</div>
+                    </div>
+                  </div>
+
+                  {fatti}
+                </div>
+
+                <div id="iscrizione" style={{ scrollMarginTop: 96 }}>
+                  {iscrizione}
                 </div>
               </div>
-
-              <div id="iscrizione" style={{ scrollMarginTop: 96 }}>
-                <IscrizioneTalk
-                  slug={t.slug}
-                  fine={t.fine}
-                  googleUrl={googleCalendarUrl(t, url)}
-                  icsUrl={`/api/eventi/talk/${t.slug}/ics`}
-                  loginHref={`/auth/login?returnTo=${encodeURIComponent(path)}`}
-                  liceiPath={LICEI_PATH}
-                  universitaPath={UNIVERSITA_PATH}
-                />
-              </div>
-            </div>
+            )}
           </div>
         </section>
 

@@ -22,7 +22,7 @@ export const TESTI_TALK = {
   conclusoNota: "Grazie a chi ha partecipato. I prossimi incontri compaiono nella pagina dei talk.",
 
   nonDisponibile: "Le iscrizioni aprono a breve.",
-  nonDisponibileNota: "Puoi già aggiungere il talk al calendario.",
+  nonDisponibileNota: "Potrai iscriverti da questa pagina con un clic, usando lo stesso account delle lezioni.",
 
   accedi: "Accedi per iscriverti",
   accediNota: "Usa lo stesso account con cui segui le lezioni.",
@@ -34,9 +34,11 @@ export const TESTI_TALK = {
 
   iscriviti: "Iscriviti al talk",
   iscrivitiNota: "Un clic: registriamo solo la tua iscrizione, collegata al tuo account.",
+  calendarioDopo: "Dopo l'iscrizione puoi aggiungere il talk al tuo calendario.",
 
   iscritto: "Sei iscritto",
   aggiungiCalendario: "Aggiungi al calendario",
+  calendarioConLink: "L'evento nel calendario contiene già il link per collegarti.",
   collegati: "Collegati al talk",
   linkInArrivo: "Il link per collegarti compare qui, agli iscritti, nei giorni prima del talk.",
   annulla: "Annulla iscrizione",

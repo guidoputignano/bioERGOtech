@@ -43,7 +43,11 @@ riga nella pagina dei licei e pannello staff la leggono da li.
 3. **Date**: `inizio` e `fine` in ISO 8601 **con il fuso**, `+01:00` d'inverno
    e `+02:00` con l'ora legale. Sono la fonte del calendario e dei dati
    strutturati; `dataLabel` e `orarioLabel` sono solo le etichette in pagina,
-   e vanno tenute allineate a mano.
+   e vanno tenute allineate a mano. Si scrive sempre l'ora italiana: ogni
+   calendario la converte nel fuso di chi lo apre. Per il talk di Memmola
+   l'orario e dalle 15:00 alle 16:00 ora italiana; il calendario
+   dell'organizzatore mostra dalle 16:00 alle 17:00 solo perche e impostato
+   sul suo fuso, un'ora avanti rispetto all'Italia a novembre.
 4. **Testi**: `titolo`, `sottotitolo`, `intro`, `temi` (titolo, testo e, se
    si vuole, un'icona Font Awesome), `spunti`, `spuntiNota`, `perChi`. Niente
    trattino lungo: punto o virgola.
@@ -58,15 +62,46 @@ riga nella pagina dei licei e pannello staff la leggono da li.
    `public/assets/images/eventi/talk/<slug>-og.jpg`, e il percorso in
    `immagineOg`.
 8. **Foto del relatore**: finche e null compare un monogramma con le
-   iniziali in un cerchio teal. Per la foto: un ritratto quadrato in
-   `public/assets/images/eventi/talk/<slug>.webp` (480x480 basta, come le
-   foto dei relatori dell'evento) e il percorso in `relatore.foto`. Il
-   ritaglio nel cerchio tiene la testa (`object-position: 50% 25%`).
+   iniziali in un cerchio teal. Con la foto la pagina del talk mostra un
+   ritratto grande (quadrato, angoli di 24 px, da 340 a 400 px accanto al
+   titolo su desktop, tutta la riga fino a 420 px sopra il titolo su
+   telefono, con nome e ruolo sotto), la scheda dell'indice un ritratto
+   medio, e le schede nelle aree la foto nel cerchio. L'immagine Open Graph
+   non cambia percorso. Il ritratto deve somigliare a quelli dei relatori
+   dell'evento (`public/assets/images/eventi/vivere-piu-a-lungo/*.webp`):
+   fondo grigio da studio, testa e spalle, testa nel terzo superiore. Si
+   prepara con la procedura delle grafiche del talk (la cartella `grafica/`
+   consegnata con le grafiche social, istruzioni nel suo `LEGGIMI.txt`):
+
+   ```
+   python3 -I prep_foto.py <foto originale> --repo && python3 -I genera.py
+   ```
+
+   `prep_foto.py` riconosce il volto, scontorna la persona, la mette sul
+   fondo grigio e la taglia; con `--repo` scrive anche
+   `public/assets/images/eventi/talk/<slug>.webp` (1000x1000, sotto i 120 KB
+   circa) in questo repository. Senza `--repo` scrive solo la versione per
+   le grafiche e nessun webp: in quel caso si aggiunge `--webp <percorso>.webp`
+   (stessa inquadratura del sito) e quel file si copia in
+   `public/assets/images/eventi/talk/<slug>.webp`. Il PNG delle grafiche
+   non va copiato: ha un altro taglio e un altro formato. `genera.py`
+   rifa post, storia, quadrato e immagine Open Graph con la foto. Poi in
+   `TALKS` si imposta il percorso, ed e l'unica modifica al codice:
+
+   ```ts
+   foto: "/assets/images/eventi/talk/emanuele-memmola.webp",
+   ```
+
+   Si controllano la pagina del talk a 390 e a 1280 px e l'indice, e si
+   rilascia.
 9. **Link della riunione**: `link`, qualche giorno prima del talk, poi un
-   rilascio. Lo vedono **solo gli iscritti**, nel riquadro della pagina dopo
-   l'accesso. Deve iniziare con `https://`, altrimenti non viene mostrato.
-   Finche e null, agli iscritti si legge "Il link per collegarti compare
-   qui, agli iscritti, nei giorni prima del talk."
+   rilascio. Lo vedono **solo gli iscritti ancora idonei**: nel riquadro
+   della pagina dopo l'accesso, nel link per Google Calendar e nel file .ics
+   scaricato con l'accesso (vedi "Calendario"). Deve iniziare con
+   `https://`, altrimenti non viene mostrato. Finche e null, agli iscritti si
+   legge "Il link per collegarti compare qui, agli iscritti, nei giorni
+   prima del talk." Per il talk di Memmola e
+   `https://meet.google.com/qoy-qvkw-ced`.
 
 ### Il link non deve mai finire nel browser di chi non e iscritto
 
@@ -76,14 +111,20 @@ riga nella pagina dei licei e pannello staff la leggono da li.
 - i componenti client **non importano valori da `content.ts`**, solo tipi
   (`import type`). I testi li prendono da `testi.ts`;
 - le pagine server passano ai componenti client solo stringhe gia pronte o
-  `schedaTalk(t)`, che il link lo toglie;
-- il calendario (Google e .ics) e i dati strutturati non lo contengono: la
-  descrizione rimanda alla pagina.
+  `schedaTalk(t)`, che il link lo toglie. La pagina del talk non passa piu
+  nemmeno il link per Google Calendar: lo costruisce la rotta;
+- il calendario pubblico (il .ics senza accesso) e i dati strutturati non lo
+  contengono: la descrizione rimanda alla pagina;
+- il link esce solo dal server, e solo per chi e iscritto e ancora idoneo:
+  `link` e `calendarioGoogle` nella risposta della rotta dell'iscrizione
+  (`statoTalk`), e il file .ics quando la rotta riconosce un iscritto dalla
+  sessione (`linkPerIscritto`, stessi controlli).
 
-Si verifica cosi: si mette un valore riconoscibile in `link`, si fa la build e
-si cerca quel valore in `.next/static` e nei file `.html` e `.rsc` di
-`.next/server/app`. Non deve comparire; nei chunk server (`.next/server/chunks`)
-compare, ed e giusto.
+Si verifica cosi: con il link in `content.ts` (o un valore riconoscibile al suo
+posto) si fa la build e si cerca il link in `.next/static` e nei file `.html`
+e `.rsc` di `.next/server/app`. Non deve comparire; nei chunk server
+(`.next/server/chunks`) compare, ed e giusto. Per il link di Memmola basta
+cercare `qoy-qvkw-ced`.
 
 ## Chi puo iscriversi
 
@@ -131,17 +172,37 @@ pannello comprende invece tutte le righe, quindi puo essere piu alto.
 
 ## Calendario
 
-- **Google Calendar**: link `action=TEMPLATE` costruito dai dati, con le date
-  in UTC nel formato di base (`20261109T140000Z/20261109T150000Z`), una
-  descrizione breve con la URL della pagina e il luogo ("Online"). Non e il
-  link dell'evento sul calendario privato della Fondazione.
+I pulsanti "Aggiungi al calendario" compaiono **solo a chi e iscritto**, nel
+riquadro della pagina. In tutti gli altri stati (accesso da fare, non
+partecipante, iscrivibile, posti esauriti, iscrizioni non ancora attive,
+concluso) non ci sono; a chi puo iscriversi il riquadro dice "Dopo
+l'iscrizione puoi aggiungere il talk al tuo calendario."
+
+- **Google Calendar**: link `action=TEMPLATE` con le date in UTC nel formato
+  di base (`20261109T140000Z/20261109T150000Z`). Lo costruisce il server
+  (`statoTalk`, campo `calendarioGoogle`) e lo manda solo a chi e iscritto e
+  ancora idoneo, insieme a `link`. Con il link della riunione: luogo = il
+  link, descrizione = due righe sul talk, "Link per collegarti: <link>" e la
+  URL della pagina. Finche il link e null: luogo "Online" e la descrizione
+  pubblica, che rimanda alla pagina. E il link "template" di Google, che
+  funziona per chiunque: **non** il link "pubblica evento" del calendario
+  privato dell'organizzatore, che si apre solo se quel calendario e
+  condiviso pubblicamente.
 - **Apple Calendar e Outlook (.ics)**: `/api/eventi/talk/<slug>/ics`, un solo
   evento, UID stabile (`talk-<slug>@bioergotech.org`), date in UTC, testo con
   escaping e righe piegate a 75 ottetti come chiede l'RFC 5545, e un
-  promemoria 30 minuti prima.
+  promemoria 30 minuti prima. Due versioni con lo stesso UID, cosi la
+  seconda aggiorna la prima invece di duplicarla:
+  - con l'accesso, iscritto e ancora idoneo (gli stessi controlli della
+    rotta dell'iscrizione): `LOCATION` = il link, e il link in
+    `DESCRIPTION`. `Cache-Control: no-store, private`;
+  - per tutti gli altri, e se il controllo non riesce: il file pubblico, con
+    `LOCATION:Online` e la descrizione che rimanda alla pagina.
+    `Cache-Control: private, no-cache`, perche dipende dalla sessione e chi
+    lo riscarica dopo l'iscrizione deve trovare la versione nuova.
 
-Tutti e due compaiono nel riquadro della pagina; dopo l'iscrizione sono in
-evidenza, sotto "Aggiungi al calendario".
+  Tutte e due con `Vary: Cookie`. Finche il link e null la rotta non legge
+  la sessione: il file e quello pubblico per tutti.
 
 ## Migrazione da applicare a mano: 20261216000000
 
@@ -170,7 +231,7 @@ service_role.
 ### Prima della migrazione
 
 - la pagina del talk si vede tutta, il riquadro dice "Le iscrizioni aprono a
-  breve." e offre gia il calendario;
+  breve." (senza calendario: compare solo agli iscritti);
 - la rotta risponde `disponibile: false` su GET e 503 su POST e DELETE;
 - le schede nelle aree portano alla pagina del talk;
 - il pannello staff dice che manca la migrazione, l'export risponde 503;
@@ -210,8 +271,17 @@ studenti universitari e staff non sono del percorso licei e restano.
   per ruolo, e `VERIFICA.sql` prima (`DA ESEGUIRE`), dopo (`OK`) e con una
   policy tolta a mano (`PARZIALE`). Senza `e_admin()` o senza le tabelle dei
   licei si ferma con il messaggio giusto.
-- Calendario: date UTC (anche ora legale e cambio d'anno), link Google,
-  escaping e piegatura in byte (accenti ed emoji compresi).
+- Calendario: date UTC (anche ora legale e cambio d'anno), link Google con e
+  senza link della riunione, escaping e piegatura in byte (accenti ed emoji
+  compresi); `calendarioGoogle` solo a chi e iscritto e idoneo; la rotta .ics
+  con e senza link (anonimo, non iscritto, iscritto non piu idoneo, prima
+  della migrazione, errore del database, link non ancora pronto) e le sue
+  intestazioni di cache.
+- Il link nel JavaScript pubblico: build con il link vero, che non compare in
+  `.next/static` ne nei `.html` e `.rsc` prerenderizzati.
+- Ritratto: pagina del talk e indice a 390, 768, 1024 e 1280 px con
+  `foto: null` (monogramma, come prima) e con una foto di prova, senza
+  scorrimento orizzontale.
 - Idoneita, stato e rotta con un client Supabase finto, comprese le tabelle o
   colonne mancanti, gli errori veri (500 senza dettagli), la capienza, il
   talk concluso e il link che esce solo per chi e iscritto.

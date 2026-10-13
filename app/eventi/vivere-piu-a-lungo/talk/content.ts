@@ -64,22 +64,36 @@ export type Talk = {
   relatore: {
     nome: string;
     ruolo: string;
-    /** Percorso della foto in `public/`. Null: al suo posto il monogramma con le iniziali. */
+    /**
+     * Percorso della foto in `public/`: un ritratto quadrato su fondo grigio
+     * da studio, come i relatori dell'evento (README, "Foto del relatore").
+     * Con la foto la pagina del talk mostra un ritratto grande e la scheda
+     * dell'indice uno medio; null: al loro posto il monogramma con le
+     * iniziali.
+     */
     foto: string | null;
   };
   /** La data per esteso, come si legge in pagina. */
   dataLabel: string;
   /** L'orario per esteso, come si legge in pagina. */
   orarioLabel: string;
-  /** Inizio e fine in ISO 8601 con il fuso: sono la fonte di calendario e dati strutturati. */
+  /**
+   * Inizio e fine in ISO 8601 con il fuso: sono la fonte di calendario e
+   * dati strutturati. Sempre l'ora italiana (`+01:00` d'inverno, `+02:00`
+   * con l'ora legale): ogni calendario la converte nell'ora locale di chi lo
+   * apre, quindi chi vive in un altro fuso vede un orario diverso, ed e
+   * giusto.
+   */
   inizio: string;
   fine: string;
   modalita: "online" | "presenza";
   /** Il luogo, solo per un talk in presenza. */
   luogo: string | null;
   /**
-   * Il link della riunione. Lo vedono SOLO gli iscritti, dalla rotta
-   * dell'iscrizione; non compare mai nell'HTML pubblico ne nel calendario.
+   * Il link della riunione. Lo vedono SOLO gli iscritti ancora idonei: dalla
+   * rotta dell'iscrizione, nel riquadro e nel link per Google Calendar, e
+   * nel file .ics scaricato con l'accesso. Non compare mai nell'HTML
+   * pubblico, nel JavaScript del browser ne nel calendario pubblico.
    * Null finche non c'e: al suo posto gli iscritti leggono che arrivera.
    */
   link: string | null;
@@ -105,15 +119,18 @@ export const TALKS: Talk[] = [
     relatore: {
       nome: "Emanuele Memmola",
       ruolo: "Responsabile dell'economia circolare di Eni a Taranto",
-      foto: null,
+      foto: "/assets/images/eventi/talk/emanuele-memmola.webp",
     },
     dataLabel: "Lunedì 9 novembre 2026",
+    // Ora italiana, dalle 15 alle 16. Il calendario dell'organizzatore mostra
+    // dalle 16 alle 17 perche e impostato sul suo fuso, un'ora avanti
+    // rispetto all'Italia a novembre: l'orario giusto e questo.
     orarioLabel: "dalle 15:00 alle 16:00",
     inizio: "2026-11-09T15:00:00+01:00",
     fine: "2026-11-09T16:00:00+01:00",
     modalita: "online",
     luogo: null,
-    link: null,
+    link: "https://meet.google.com/qoy-qvkw-ced",
     capienza: null,
     intro:
       "Uno degli obiettivi del percorso è aiutarvi a trovare idee concrete da sviluppare nei vostri progetti. Per questo vi mettiamo in contatto con esperti del settore, che raccontano le sfide reali che affrontano nel loro lavoro. Il primo incontro è con Emanuele Memmola, che parlerà di metano sintetico e biomasse e delle loro possibili applicazioni in ambito biotech e salute.",

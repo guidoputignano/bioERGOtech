@@ -44,6 +44,20 @@ export const STILE_TALK = `
 .tk-griglia { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 1024px) { .tk-griglia { grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr); gap: 48px; } }
 
+/* Testata con la foto del relatore: ritratto grande accanto al titolo da
+   1024 px in su, sopra il titolo su telefono e tablet (tutta la riga, fino
+   a 420 px). Le larghezze sono quelle di SIZES_RITRATTO nella pagina. */
+.tk-griglia-foto { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1024px) { .tk-griglia-foto { grid-template-columns: clamp(340px, 31vw, 400px) minmax(0, 1fr); gap: 56px; } }
+.tk-ritratto { margin: 0; width: 100%; max-width: 420px; }
+.tk-ritratto-foto { width: 100%; box-shadow: 0 18px 44px rgba(26, 35, 50, .14); }
+.tk-ritratto-didascalia { margin-top: 16px; padding-left: 14px; border-left: 3px solid var(--primary); }
+.tk-iscrizione-colonna { margin-top: 28px; max-width: 480px; }
+
+/* Il ritratto medio della scheda nell'indice. */
+.tk-ritratto-medio { width: 104px; }
+@media (min-width: 480px) { .tk-ritratto-medio { width: 136px; } }
+
 .tk-relatore { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
 .tk-relatore-nome { font-size: 17px; font-weight: 700; color: var(--text-dark); line-height: 1.3; }
 .tk-relatore-ruolo { font-size: 14px; color: var(--text-mid); line-height: 1.5; }
