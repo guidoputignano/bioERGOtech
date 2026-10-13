@@ -6,6 +6,17 @@ import { Lesson, COURSE_LESSONS } from "../../../course-data";
 import CourseSidebar from "../../../CourseSidebar";
 import GateModal from "../../../GateModal";
 import LessonSubmissionBox from "../../../LessonSubmissionBox";
+import CourseProjectBox from "../../../CourseProjectBox";
+import GitHubConnectPrompt from "../../../GitHubConnectPrompt";
+
+/**
+ * The two lessons that carry the GitHub project box: 4.4 asks students to
+ * form their project, the closing lesson asks them to submit it.
+ */
+const PROJECT_BOX: Record<string, "setup" | "submit"> = {
+  "lesson-4-4": "setup",
+  "course-closing": "submit",
+};
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const TEAL = "#00C4B4";
@@ -1272,9 +1283,9 @@ function CourseClosing() {
       <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
       <Section title="What to Submit">
       <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
-        <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
+        <p style={p}>To receive your certificate, put all four deliverables in your GitHub repository and submit it with the project box at the end of this lesson.</p>
         {[
-          ["01", "Working Agent Prototype", "A link to your GitHub repository or a ZIP file containing all project files. The prototype must be runnable — include a README with setup instructions."],
+          ["01", "Working Agent Prototype", "Your GitHub repository, containing all project files. The prototype must be runnable, so include a README with setup instructions."],
           ["02", "Demo Recording", "A 2–5 minute screen recording showing the agent working with real input. Upload to YouTube (unlisted) or Google Drive and include the link."],
           ["03", "Project README", "The six-section README completed during Phases 2 and 3. Minimum 400 words. Include your edge case test results."],
           ["04", "Ethics Review", "The four-dimension ethics review. This is assessed separately from the README — submit it as a standalone section or document."],
@@ -1326,7 +1337,7 @@ function CourseClosing() {
             "Upload your project files using the method for your track above",
             "Make sure README.md and ethics-review.md are in the root of your repository",
             "Copy your repository URL (e.g. github.com/yourname/flu-sentinel-agent)",
-            "Paste the link in your final submission form — that is all that is required",
+            "Link the repository in the project box below (or in Lesson 4.4) and press Submit for certificate",
           ].map((step, i) => (
             <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{i + 1}</div>
@@ -1454,6 +1465,8 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
       {/* Body */}
       <div className="lesson-body" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
         <div className="lesson-content">
+          {isAuthenticated && !PROJECT_BOX[lesson.slug] && <GitHubConnectPrompt />}
+
           {ContentComponent ? (
             <ContentComponent />
           ) : (
@@ -1465,6 +1478,12 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
           )}
 
           {extra}
+
+          {/* GitHub project. Not for licei / universita students: `extra` is
+              their own team and submission console on these two lessons. */}
+          {isAuthenticated && !extra && PROJECT_BOX[lesson.slug] && (
+            <CourseProjectBox mode={PROJECT_BOX[lesson.slug]} />
+          )}
 
           {/* Submission Box */}
           <LessonSubmissionBox

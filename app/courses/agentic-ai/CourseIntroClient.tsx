@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import CourseSidebar from "../CourseSidebar";
 import GateModal from "../GateModal";
+import GitHubConnectPrompt from "../GitHubConnectPrompt";
 
 // ─── Design tokens (matching portal) ─────────────────────────────────────────
 const TEAL = "#00C4B4";
@@ -224,6 +225,9 @@ export default function CourseIntroClient({
         {/* Left content */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {area}
+
+          {/* Course start: ask for GitHub before the project weeks need it */}
+          {isAuthenticated && <GitHubConnectPrompt />}
 
           {/* Introduction */}
           <Block>

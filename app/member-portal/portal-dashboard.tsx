@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { AttendanceModal } from "@/components/AttendanceModal";
+import CourseMonitorPanel from "@/components/CourseMonitorPanel";
 const MemberMap = dynamic(() => import("@/components/member-map"), { ssr: false });
 
 const TEAL = "#2EC4B6";
@@ -2663,7 +2664,7 @@ function ApplicationDrawer({
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; adminUserId?: string; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter" | "submissions">("applications");
+  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter" | "submissions" | "course">("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -2798,6 +2799,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
     { id: "coins" as const, label: "Contributions", icon: "star", badge: null as number | null },
     { id: "redemptions" as const, label: "Redemptions", icon: "award", badge: pendingRedemptions.length > 0 ? pendingRedemptions.length : null as number | null },
           { id: "submissions" as const, label: "Submissions", icon: "book", badge: null },
+    { id: "course" as const, label: "Course Monitor", icon: "award", badge: null },
     { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null },
   ];
 
@@ -3233,6 +3235,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
           </div>
         )}
       </div>
+      {tab === "course" && <CourseMonitorPanel adminUserId={adminUserId} />}
       {tab === "submissions" && (
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
             <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -3302,25 +3305,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                           style={{ padding: "7px 16px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                         >{s.admin_reply ? "Edit Reply" : "Reply"}</button>
 
-                        <button
-                          onClick={async () => {
-                            if (!confirm(`Issue certificate to ${s.profiles?.full_name || s.profiles?.email || "this student"}?`)) return;
-                            const userId = s.user_id || (s as { user_id?: string }).user_id;
-                            if (!userId) { alert("Cannot find user ID for this submission."); return; }
-                            const res = await fetch("/api/admin/approve-certificate", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ user_id: userId }),
-                            });
-                            const data = await res.json();
-                            if (res.ok) {
-                              alert(`✓ Certificate sent to ${data.sentTo}\nCert ID: ${data.certId}`);
-                            } else {
-                              alert(`Error: ${data.error}`);
-                            }
-                          }}
-                          style={{ padding: "7px 16px", borderRadius: 8, border: "1.5px solid #00C896", background: "#E6F9F4", color: "#008F6B", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                        >🎓 Approve & Send Certificate</button>
                       </div>
 
                       )}

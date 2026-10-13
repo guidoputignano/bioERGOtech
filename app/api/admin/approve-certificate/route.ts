@@ -1,96 +1,173 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { Resend } from "resend";
 import { generateCertificatePptx, generateCertId } from "@/lib/certificate/generate";
+import { loadStudentState, studentIdFor } from "@/lib/course/data";
+
+const COURSE_TITLE = "10-Week Agentic AI High School Innovation Program";
 
 /**
  * POST /api/admin/approve-certificate
- * Body: { user_id: string }
- * 
- * 1. Looks up student profile (name, email, student_id)
- * 2. Generates a PPTX certificate
- * 3. Emails it to the student via Resend
- * 4. Stores the cert_id in the profiles table
+ * Body: { user_id: string, resend?: boolean, override_reason?: string }
+ *
+ * 1. Refuses if the student already holds a certificate (unless `resend`,
+ *    which emails the existing one again under the same id).
+ * 2. Checks eligibility on the server, with the same rule the Course
+ *    Monitor and the student's project box show. An admin can issue to a
+ *    student outside the rule only by giving a reason, which is stored.
+ * 3. Records the certificate in course_certificates, the table the public
+ *    /verify page reads. The unique user_id makes a second issue impossible
+ *    even if two admins click at once.
+ * 4. Generates the PPTX and emails it via Resend.
  */
 export async function POST(req: NextRequest) {
   const guard = await requireAdmin();
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
-  const { client } = guard;
-
-  const admin = client;
+  const { client, chiamante } = guard;
 
   try {
-    const { user_id } = await req.json();
-    if (!user_id) {
+    const body = (await req.json().catch(() => ({}))) as {
+      user_id?: string;
+      resend?: boolean;
+      override_reason?: string;
+    };
+    const userId = body.user_id;
+    if (!userId) {
       return NextResponse.json({ error: "user_id is required" }, { status: 400 });
     }
 
-    // 1. Fetch student profile
-    const { data: profile, error: profileError } = await admin
+    const { data: profile, error: profileError } = await client
       .from("profiles")
       .select("id, email, full_name, student_id")
-      .eq("id", user_id)
+      .eq("id", userId)
       .single();
-
     if (profileError || !profile) {
       return NextResponse.json({ error: "Student profile not found" }, { status: 404 });
     }
 
-    const recipientName = profile.full_name || profile.email;
-    const studentId = profile.student_id || `BIO-${new Date().getFullYear()}-${user_id.slice(0, 8).toUpperCase()}`;
-    const certId = generateCertId();
-    const issueDate = new Date().toLocaleDateString("en-GB", {
-      day: "numeric", month: "long", year: "numeric",
-    });
+    const state = await loadStudentState(client, userId);
+    const existing = state.certificate && !state.certificate.revoked_at ? state.certificate : null;
 
-    // 2. Generate certificate PPTX
-    const pptxBuffer = await generateCertificatePptx({
-      recipientName,
-      studentId,
-      certId,
-      issueDate,
-    });
-
-    // 3. Store cert_id in profiles table
-    await admin
-      .from("profiles")
-      .update({ cert_id: certId, cert_issued_at: new Date().toISOString() })
-      .eq("id", user_id);
-
-    // 4. Send email with certificate attached
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error: emailError } = await resend.emails.send({
-      from: "bioERGOtech Foundation <certificates@bioergotech.org>",
-      to: profile.email,
-      subject: "Your bioERGOtech Certificate of Completion 🎓",
-      html: buildEmailHtml(recipientName, certId, issueDate),
-      attachments: [
-        {
-          filename: `bioERGOtech-Certificate-${certId}.pptx`,
-          content: pptxBuffer,
-        },
-      ],
-    });
-
-    if (emailError) {
-      console.error("Resend error:", emailError);
-      return NextResponse.json({ error: "Certificate generated but email failed", emailError }, { status: 500 });
+    // ── Resend an existing certificate ──
+    if (existing) {
+      if (!body.resend) {
+        return NextResponse.json(
+          { error: "A certificate has already been issued to this student", certId: existing.cert_id },
+          { status: 409 },
+        );
+      }
+      const { data: cert } = await client
+        .from("course_certificates")
+        .select("cert_id, recipient_name, student_id, issued_at")
+        .eq("cert_id", existing.cert_id)
+        .single();
+      if (!cert) return NextResponse.json({ error: "Certificate record not found" }, { status: 404 });
+      const sent = await sendCertificate({
+        to: profile.email,
+        recipientName: cert.recipient_name,
+        studentId: cert.student_id ?? studentIdFor(userId),
+        certId: cert.cert_id,
+        issuedAt: cert.issued_at,
+      });
+      if (!sent.ok) return NextResponse.json({ error: "Email failed", detail: sent.error }, { status: 502 });
+      await client.from("course_certificates").update({ emailed_at: new Date().toISOString() }).eq("cert_id", cert.cert_id);
+      return NextResponse.json({ success: true, resent: true, certId: cert.cert_id, sentTo: profile.email });
     }
 
-    return NextResponse.json({
-      success: true,
-      certId,
-      sentTo: profile.email,
-      recipientName,
-    });
+    // ── Issue a new one ──
+    const overrideReason = body.override_reason?.trim() || null;
+    if (!state.eligibility.eligible && !overrideReason) {
+      return NextResponse.json(
+        { error: "Student is not eligible yet", reasons: state.eligibility.reasons },
+        { status: 422 },
+      );
+    }
 
+    // The id the student already sees on every lesson page.
+    const { data: firstSub } = await client
+      .from("lesson_submissions")
+      .select("student_id")
+      .eq("user_id", userId)
+      .not("student_id", "is", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const studentId = profile.student_id || firstSub?.student_id || studentIdFor(userId);
+    const recipientName = profile.full_name || profile.email;
+    const issuedAt = new Date().toISOString();
+
+    let certId = "";
+    for (let attempt = 0; attempt < 3 && !certId; attempt++) {
+      const candidate = generateCertId();
+      const { error } = await client.from("course_certificates").insert({
+        cert_id: candidate,
+        user_id: userId,
+        recipient_name: recipientName,
+        student_id: studentId,
+        course_title: COURSE_TITLE,
+        project_url: state.project?.html_url ?? null,
+        submitted_commit: state.membership?.submitted_commit ?? null,
+        issued_at: issuedAt,
+        issued_by: chiamante.id,
+        override_reason: overrideReason,
+      });
+      if (!error) {
+        certId = candidate;
+      } else if (error.code === "23505" && error.message.includes("user_id")) {
+        return NextResponse.json({ error: "A certificate has already been issued to this student" }, { status: 409 });
+      } else if (error.code !== "23505") {
+        throw new Error(error.message);
+      }
+      // Any other 23505 is a cert_id collision: try a fresh id.
+    }
+    if (!certId) throw new Error("Could not allocate a certificate id");
+
+    const sent = await sendCertificate({ to: profile.email, recipientName, studentId, certId, issuedAt });
+    if (!sent.ok) {
+      console.error("Resend error:", sent.error);
+      // The certificate exists and verifies. Only the email needs retrying.
+      return NextResponse.json(
+        { error: "Certificate issued but the email failed. Use Resend to try again.", certId, emailError: sent.error },
+        { status: 502 },
+      );
+    }
+    await client.from("course_certificates").update({ emailed_at: new Date().toISOString() }).eq("cert_id", certId);
+
+    return NextResponse.json({ success: true, certId, sentTo: profile.email, recipientName });
   } catch (error: unknown) {
     console.error("Certificate generation error:", error);
     return NextResponse.json(
       { error: (error as Error)?.message || "Certificate generation failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
+}
+
+async function sendCertificate(input: {
+  to: string;
+  recipientName: string;
+  studentId: string;
+  certId: string;
+  issuedAt: string;
+}): Promise<{ ok: boolean; error?: unknown }> {
+  const issueDate = new Date(input.issuedAt).toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+  const pptxBuffer = await generateCertificatePptx({
+    recipientName: input.recipientName,
+    studentId: input.studentId,
+    certId: input.certId,
+    issueDate,
+  });
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: "bioERGOtech Foundation <certificates@bioergotech.org>",
+    to: input.to,
+    subject: "Your bioERGOtech Certificate of Completion 🎓",
+    html: buildEmailHtml(input.recipientName, input.certId, issueDate),
+    attachments: [{ filename: `bioERGOtech-Certificate-${input.certId}.pptx`, content: pptxBuffer }],
+  });
+  return error ? { ok: false, error } : { ok: true };
 }
 
 function buildEmailHtml(name: string, certId: string, issueDate: string): string {
@@ -132,8 +209,8 @@ function buildEmailHtml(name: string, certId: string, issueDate: string): string
             </h1>
             <p style="margin:0 0 16px;font-size:15px;color:#4A5568;line-height:1.7;">
               You have successfully completed the
-              <strong style="color:#0A1628;"> 10-Week Agentic AI High School Innovation Program</strong>
-              — a rigorous, hands-on course in agentic AI, machine learning ethics, and real-world agent development.
+              <strong style="color:#0A1628;"> 10-Week Agentic AI High School Innovation Program</strong>,
+              a rigorous, hands-on course in agentic AI, machine learning ethics, and real-world agent development.
             </p>
             <p style="margin:0 0 24px;font-size:15px;color:#4A5568;line-height:1.7;">
               Your certificate is attached to this email as a PowerPoint file. Open it in Microsoft PowerPoint
@@ -167,7 +244,7 @@ function buildEmailHtml(name: string, certId: string, issueDate: string): string
 
             <p style="margin:0;font-size:14px;color:#6B7B8D;line-height:1.7;">
               We are proud of what you have built. The combination of technical capability, domain knowledge,
-              and ethical awareness you have developed is genuinely rare — and genuinely valuable.
+              and ethical awareness you have developed is genuinely rare, and genuinely valuable.
             </p>
           </td>
         </tr>

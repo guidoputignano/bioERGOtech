@@ -280,7 +280,8 @@ export default function LessonSubmissionBox({
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: TEAL, marginBottom: 8 }}>
                 💬 Reply from the bioERGOtech team
               </div>
-              <p style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65, margin: 0 }}>{existing.admin_reply}</p>
+              {/* pre-wrap: a reply of more than one paragraph keeps its breaks */}
+              <p style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.65, margin: 0, whiteSpace: "pre-wrap" }}>{existing.admin_reply}</p>
               {existing.replied_at && (
                 <p style={{ fontSize: 11, color: TEXT_LIGHT, margin: "8px 0 0" }}>
                   {new Date(existing.replied_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
