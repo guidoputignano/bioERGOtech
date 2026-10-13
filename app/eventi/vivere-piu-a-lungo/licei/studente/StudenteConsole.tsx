@@ -17,7 +17,7 @@
  * si mostra anche a chi e ancora in attesa di conferma.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -77,9 +77,17 @@ export type SezioneStudente = "tutto" | "squadra" | "progetto";
 export function StudenteConsole({
   sezione = "tutto",
   intestazione = true,
+  talk = null,
 }: {
   sezione?: SezioneStudente;
   intestazione?: boolean;
+  /**
+   * La scheda del prossimo talk con gli esperti, gia costruita dalla pagina
+   * server (`TalkAreaCard`): i dati del talk non passano da questo modulo.
+   * Solo nell'area completa, e anche a chi aspetta ancora la conferma del
+   * referente, che al talk puo iscriversi.
+   */
+  talk?: ReactNode;
 } = {}) {
   const [dati, setDati] = useState<Qualsiasi>(null);
   const [loading, setLoading] = useState(true);
@@ -226,6 +234,8 @@ export function StudenteConsole({
             Torna al bando
           </Link>
         </div>
+        {/* La scheda si nasconde da sola a chi non puo iscriversi. */}
+        {talk}
         <RiflessioniPassateCard />
       </div>
     );
@@ -262,6 +272,9 @@ export function StudenteConsole({
         </div>
       )}
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
+
+      {/* ══ Talk con gli esperti ══ Solo nell'area completa. */}
+      {sezione === "tutto" && talk}
 
       {/* ══ Senza squadra ══ */}
       {!squadra && mostraSquadra && (

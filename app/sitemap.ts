@@ -4,6 +4,7 @@ import { PEOPLE } from "./people/people";
 import { areasWithPages } from "@/lib/areas";
 import { COURSE_LESSONS } from "./courses/course-data";
 import { PROGRAMMES } from "@/lib/programmes";
+import { TALKS, TALK_PATH, talkPath } from "./eventi/vivere-piu-a-lungo/talk/content";
 
 const BASE = "https://www.bioergotech.org";
 
@@ -45,6 +46,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
       changeFrequency: "monthly",
     },
+    // I talk con gli esperti: la serie qui, ogni talk piu sotto. L'alias
+    // breve /talk resta fuori, perche e un redirect.
+    { path: TALK_PATH, priority: 0.7, changeFrequency: "weekly" },
     { path: "/programmes", priority: 0.9, changeFrequency: "weekly" },
     { path: "/agents", priority: 0.8, changeFrequency: "monthly" },
     { path: "/about-us", priority: 0.9, changeFrequency: "monthly" },
@@ -68,6 +72,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
+  }));
+
+  // One entry per expert talk, from the single list in talk/content.ts.
+  const talkEntries: MetadataRoute.Sitemap = TALKS.map((t) => ({
+    url: `${BASE}${talkPath(t.slug)}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
   }));
 
   // One entry per research programme case study.
@@ -128,6 +140,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticEntries,
+    ...talkEntries,
     ...programmeEntries,
     ...areaEntries,
     ...peopleEntries,

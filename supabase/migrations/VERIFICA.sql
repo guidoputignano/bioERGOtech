@@ -128,7 +128,16 @@ with oggetti as (
     ('20261215000000_licei_docenti',              'colonna',  'lesson_submissions',           'condivisa_referente_at'),
     ('20261215000000_licei_docenti',              'policy',   'licei_iscrizioni',             'Referents can view own school iscrizioni'),
     ('20261215000000_licei_docenti',              'policy',   'licei_squadre',                'Referents can view own school squadre'),
-    ('20261215000000_licei_docenti',              'policy',   'licei_progetti',               'Referents can view own school progetti')
+    ('20261215000000_licei_docenti',              'policy',   'licei_progetti',               'Referents can view own school progetti'),
+
+    -- ── Talk con gli esperti ──────────────────────────────────────────
+    -- `vincolo` e `policy_lettura` portano in `colonna` il nome del vincolo
+    -- e della policy; `indice` porta il nome dell'indice in `oggetto`.
+    ('20261216000000_talk_iscrizioni',            'tabella',  'talk_iscrizioni',              null),
+    ('20261216000000_talk_iscrizioni',            'indice',   'talk_iscrizioni_slug_idx',     null),
+    ('20261216000000_talk_iscrizioni',            'vincolo',  'talk_iscrizioni',              'talk_iscrizioni_una_per_persona'),
+    ('20261216000000_talk_iscrizioni',            'policy_lettura', 'talk_iscrizioni',        'Users can view own talk iscrizioni'),
+    ('20261216000000_talk_iscrizioni',            'policy_lettura', 'talk_iscrizioni',        'Admins can view all talk iscrizioni')
   ) as t(migrazione, tipo, oggetto, colonna)
 ),
 
@@ -160,6 +169,20 @@ esiti as (
         select 1 from pg_policies
         where schemaname = 'public' and tablename = o.oggetto and policyname = o.colonna
           and qual like '%ritirata%'
+      )
+      when 'indice' then exists (
+        select 1 from pg_indexes where schemaname = 'public' and indexname = o.oggetto
+      )
+      -- `to_regclass` torna null se la tabella non c'e, e allora il vincolo
+      -- risulta assente invece di far fallire la query.
+      when 'vincolo' then exists (
+        select 1 from pg_constraint c
+        where c.conrelid = to_regclass('public.' || o.oggetto) and c.conname = o.colonna
+      )
+      when 'policy_lettura' then exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = o.oggetto and policyname = o.colonna
+          and cmd = 'SELECT'
       )
       else false
     end as presente
@@ -370,6 +393,45 @@ select 'lesson_submissions: RLS attiva',
                where c.oid = to_regclass('public.lesson_submissions'))
            then 'OK'
          else 'NO: le riflessioni sono leggibili con la chiave anonima, esegua 20261215000000'
+       end
+
+union all
+
+-- Le iscrizioni ai talk: le scrive solo il server, dopo aver controllato
+-- chi puo iscriversi. Dal browser nessuno le scrive, e anon non le legge.
+select 'talk iscrizioni: nessuna scrittura dal browser, nessuna lettura da anon',
+       case
+         when to_regclass('public.talk_iscrizioni') is null
+           then 'DA ESEGUIRE: manca talk_iscrizioni (migrazione 20261216000000)'
+         when has_table_privilege('anon', 'public.talk_iscrizioni', 'SELECT')
+           or has_table_privilege('authenticated', 'public.talk_iscrizioni', 'INSERT,UPDATE,DELETE')
+           then 'NO: privilegi troppo larghi, esegua 20261216000000'
+         else 'OK'
+       end
+
+union all
+
+select 'talk iscrizioni: RLS attiva',
+       case
+         when to_regclass('public.talk_iscrizioni') is null
+           then 'DA ESEGUIRE: manca talk_iscrizioni (migrazione 20261216000000)'
+         when (select c.relrowsecurity from pg_class c
+               where c.oid = to_regclass('public.talk_iscrizioni'))
+           then 'OK'
+         else 'NO: RLS spenta, ogni utente autenticato leggerebbe tutte le iscrizioni. Esegua 20261216000000'
+       end
+
+union all
+
+-- Il rovescio: la revoca non deve aver tolto la scrittura alle rotte, che
+-- usano la service role. Se qui esce NO, nessuno riesce a iscriversi.
+select 'talk iscrizioni: le rotte (service_role) scrivono',
+       case
+         when to_regclass('public.talk_iscrizioni') is null
+           then 'DA ESEGUIRE: manca talk_iscrizioni (migrazione 20261216000000)'
+         when has_table_privilege('service_role', 'public.talk_iscrizioni', 'SELECT,INSERT,DELETE')
+           then 'OK'
+         else 'NO: service_role non scrive, le iscrizioni ai talk non funzioneranno'
        end;
 
 
@@ -405,7 +467,7 @@ select 'lesson_submissions: RLS attiva',
 -- =========================================================
 -- L'ORDINE DELLE MIGRAZIONI DA ESEGUIRE
 --
--- Sono sette e vanno eseguite in questo ordine, perche ognuna si
+-- Sono otto e vanno eseguite in questo ordine, perche ognuna si
 -- appoggia alla precedente:
 --
 --   1. 20261207000000_create_universita_candidature.sql
@@ -443,6 +505,12 @@ select 'lesson_submissions: RLS attiva',
 --      usano `public.e_admin()`, e senza si ferma subito con un messaggio.
 --      Il sito regge anche prima che sia eseguita: le funzioni nuove
 --      risultano "in attivazione".
+--
+--   8. 20261216000000_talk_iscrizioni.sql
+--      Le iscrizioni ai "Talk con gli esperti". Va DOPO la 5, per
+--      `public.e_admin()`, e ha bisogno di `licei_adesioni` (20261204000000):
+--      senza, si ferma subito con un messaggio. Il sito regge anche prima:
+--      la pagina del talk dice "Le iscrizioni aprono a breve.".
 --
 -- La 4 e la 5 si possono eseguire anche su un database dove le prime
 -- non sono state applicate: saltano da sole cio che non trovano.

@@ -159,6 +159,8 @@ export type EsitoCancellazione = {
   /** Docenti del progetto. Assente negli esiti registrati prima di averli. */
   docenti?: number;
   riflessioni: number;
+  /** Iscrizioni ai talk di studenti e docenti. Assente negli esiti registrati prima dei talk. */
+  talk?: number;
   account_cancellati: number;
   account_mantenuti: number;
   mantenuti_per_motivo: Record<string, number>;

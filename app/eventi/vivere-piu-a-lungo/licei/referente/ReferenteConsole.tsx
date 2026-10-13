@@ -27,7 +27,7 @@
  * dalla lettura per lezione, che usa lo stesso filtro per classe.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,16 @@ type Io = { id: string | null; nome: string; cognome: string; classi: string[] }
 /** Le fasi del percorso, come le legge la rotta: "aperte" o "chiuse". */
 type Fasi = { squadre: string; consegne: string };
 
-export function ReferenteConsole() {
+export function ReferenteConsole({
+  talk = null,
+}: {
+  /**
+   * La scheda del prossimo talk con gli esperti, gia costruita dalla pagina
+   * server (`TalkAreaCard`), con il numero degli studenti dell'istituto che
+   * si sono iscritti. Compare solo dopo le istruzioni, come il resto.
+   */
+  talk?: ReactNode;
+} = {}) {
   const [adesione, setAdesione] = useState<Adesione | null>(null);
   const [righe, setRighe] = useState<Iscrizione[]>([]);
   const [squadre, setSquadre] = useState<SquadraQuadroInput[]>([]);
@@ -463,6 +472,9 @@ export function ReferenteConsole() {
           </details>
         </div>
       </div>
+
+      {/* ── Talk con gli esperti ── */}
+      {talk}
 
       {/* ── Filtro per classe ──
           Sopra i numeri, perche vale anche per loro. Un filtro e non un
