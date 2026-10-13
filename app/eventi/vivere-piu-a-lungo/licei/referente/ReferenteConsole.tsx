@@ -28,7 +28,9 @@ import {
   haFattoAccesso,
   statoIscrizioneColore,
   statoIscrizioneLabel,
+  ADESIONE_SCUOLA_PATH,
   INFORMATIVA_SCUOLE_PATH,
+  ISTRUZIONI_DOCENTE_PATH,
   ISTRUZIONI_REFERENTE,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
@@ -643,6 +645,14 @@ export function ReferenteConsole() {
           Dettagli nell&apos;
           <Link href={INFORMATIVA_SCUOLE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
             informativa per scuole e docenti referenti
+          </Link>
+          . Le stesse regole, da firmare, sono nelle{" "}
+          <Link href={ISTRUZIONI_DOCENTE_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            istruzioni per il docente referente
+          </Link>
+          ; il modulo che firma il dirigente è l&apos;
+          <Link href={ADESIONE_SCUOLA_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            adesione della scuola
           </Link>
           .
         </p>

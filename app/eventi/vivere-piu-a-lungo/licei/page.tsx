@@ -17,6 +17,7 @@ import {
   CRITERI_LICEI,
   CRITERIO_DIRIMENTE_LICEI,
   EVENT_SLUG,
+  DOCUMENTI_PATH,
   FAQ_LICEI,
   IMPEGNI_ISTITUTO,
   ISCRIZIONE_PATH,
@@ -837,6 +838,13 @@ export default async function LiceiPage() {
               operative, termini di scadenza per la presentazione delle candidature e documentazione
               di adesione saranno comunicati dagli organizzatori tramite il referente del consorzio
               degli istituti superiori e i canali ufficiali di Fondazione bioERGOtech e SafesPro. {LICEI.emanato}.
+            </p>
+            <p className="lc-nota" style={{ marginTop: 12 }}>
+              Informative privacy, regolamento e moduli da firmare sono raccolti nella pagina{" "}
+              <Link href={DOCUMENTI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+                Documenti del percorso
+              </Link>
+              .
             </p>
           </div>
         </section>

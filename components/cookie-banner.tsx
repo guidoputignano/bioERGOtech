@@ -230,6 +230,7 @@ export default function CookieBanner() {
 
   return (
     <div
+      className="no-print"
       style={{
         position: "fixed",
         bottom: 24,

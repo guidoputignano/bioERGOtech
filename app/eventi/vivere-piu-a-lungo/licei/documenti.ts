@@ -1,6 +1,8 @@
 /**
- * I tre documenti pubblici del percorso licei: informativa per gli studenti,
- * informativa per scuole e docenti referenti, regolamento di partecipazione.
+ * I documenti pubblici del percorso licei: informativa per gli studenti,
+ * informativa per scuole e docenti referenti, regolamento di partecipazione,
+ * e i due documenti che si firmano, l'adesione della scuola (dal dirigente) e
+ * le istruzioni per il docente referente (dal docente).
  *
  * Partono dai documenti privacy preparati per il corso, corretti dove
  * descrivevano una piattaforma diversa da quella reale: qui sono elencati i
@@ -8,7 +10,27 @@
  * staff e fornitori tecnici compresi. Chi cambia quello che il portale
  * raccoglie o mostra deve aggiornare anche questi testi: un'informativa che
  * descrive un'altra piattaforma non informa nessuno.
+ *
+ * Ogni documento porta la data dell'ultimo aggiornamento, mostrata sotto il
+ * titolo e registrata insieme a ogni accettazione: così si sa sempre quale
+ * testo ha letto chi ha aderito o si è iscritto. Chi cambia un testo cambia
+ * anche la sua data, nello stesso commit.
  */
+
+import {
+  ADESIONE_SCUOLA_PATH,
+  INFORMATIVA_SCUOLE_PATH,
+  INFORMATIVA_STUDENTI_PATH,
+  ISTRUZIONI_DOCENTE_PATH,
+  ISTRUZIONI_REFERENTE,
+  PRESA_ATTO_ADESIONE,
+  REGOLAMENTO_PATH,
+} from "./content";
+import { INFORMATIVA_IMMAGINI_PATH } from "../informativa-immagini/content";
+import {
+  DOCUMENTO_LINEE_GUIDA_MENTOR,
+  LINEE_GUIDA_MENTOR_PATH,
+} from "../linee-guida-mentor/content";
 
 export type SezioneDoc = {
   h: string;
@@ -18,6 +40,18 @@ export type SezioneDoc = {
   dopo?: string[];
 };
 
+/**
+ * Le parti da compilare a mano di un documento che si firma: compaiono come
+ * righe vuote, prima del testo (`campiInizio`) o in fondo (`campiFine`), e
+ * servono soprattutto alla versione stampata.
+ */
+export type ModuloDoc = {
+  campiInizio?: string[];
+  campiFine: string[];
+  /** Avvertenza sotto le righe della firma. */
+  nota?: string;
+};
+
 export type Documento = {
   titoloPagina: string;
   descrizione: string;
@@ -25,6 +59,20 @@ export type Documento = {
   titolo: string;
   intro: string;
   sezioni: SezioneDoc[];
+  /** Data dell'ultimo aggiornamento del testo, AAAA-MM-GG. */
+  aggiornato: string;
+  modulo?: ModuloDoc;
+};
+
+const MESI = [
+  "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+  "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
+];
+
+/** "2026-10-13" diventa "13 ottobre 2026". */
+export const dataDocumento = (iso: string): string => {
+  const [a, m, g] = iso.split("-").map(Number);
+  return `${g} ${MESI[m - 1]} ${a}`;
 };
 
 const TITOLARE =
@@ -52,6 +100,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
   titolo: "Informativa privacy per studenti",
   intro:
     "Percorso online «Biotecnologie e Intelligenza Artificiale». Questa informativa spiega in modo semplice come Fondazione bioERGOtech ETS usa i dati degli studenti che partecipano al corso.",
+  aggiornato: "2026-10-08",
   sezioni: [
     {
       h: "Chi usa i dati",
@@ -134,6 +183,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
   occhiello: "Privacy",
   titolo: "Informativa privacy per scuole e docenti referenti",
   intro: `Percorso online «Biotecnologie e Intelligenza Artificiale». Il titolare del trattamento è ${TITOLARE} Tratta i dati delle scuole e dei docenti referenti per gestire l'adesione al percorso.`,
+  aggiornato: "2026-10-08",
   sezioni: [
     {
       h: "Dati trattati",
@@ -183,6 +233,7 @@ export const REGOLAMENTO: Documento = {
   occhiello: "Regolamento",
   titolo: "Regolamento di partecipazione",
   intro: "Percorso online «Biotecnologie e Intelligenza Artificiale».",
+  aggiornato: "2026-10-08",
   sezioni: [
     {
       h: "1. Il percorso",
@@ -237,3 +288,175 @@ export const REGOLAMENTO: Documento = {
     },
   ],
 };
+
+/* ── I due documenti che si firmano ───────────────────────────────────── */
+
+/**
+ * «Adesione della scuola e accesso del docente referente». Lo firma il
+ * dirigente scolastico. Il testo della presa d'atto è lo stesso che il
+ * referente vede e accetta nel modulo online.
+ */
+export const ADESIONE_SCUOLA: Documento = {
+  titoloPagina: "Adesione della scuola e accesso del docente referente | Biotecnologie e Intelligenza Artificiale",
+  descrizione:
+    "Il modulo con cui l'istituto aderisce al percorso online Biotecnologie e Intelligenza Artificiale e indica il docente referente. Lo firma il dirigente scolastico.",
+  occhiello: "Da firmare",
+  titolo: "Adesione della scuola e accesso del docente referente",
+  intro: "Percorso online «Biotecnologie e Intelligenza Artificiale».",
+  aggiornato: "2026-10-13",
+  modulo: {
+    campiInizio: [
+      "Istituto",
+      "Codice istituto",
+      "Docente referente",
+      "Email istituzionale del docente",
+      "Cellulare del docente",
+    ],
+    campiFine: ["Luogo e data", "Il dirigente scolastico o soggetto autorizzato", "Firma"],
+  },
+  sezioni: [
+    {
+      h: "Adesione",
+      p: [
+        "L'istituto aderisce al percorso gratuito «Biotecnologie e Intelligenza Artificiale» e indica il docente referente sopra riportato.",
+      ],
+    },
+    {
+      h: "L'istituto prende atto che",
+      ul: [...PRESA_ATTO_ADESIONE],
+      dopo: ["L'istituto dichiara di avere letto l'informativa privacy per scuole e docenti referenti."],
+    },
+  ],
+};
+
+/**
+ * «Istruzioni per il docente referente». Le firma il docente, o le accetta
+ * con una email. Gli impegni sono gli stessi che vede nella sua area.
+ */
+export const ISTRUZIONI_DOCENTE: Documento = {
+  titoloPagina: "Istruzioni per il docente referente | Biotecnologie e Intelligenza Artificiale",
+  descrizione:
+    "Gli impegni del docente referente che segue sulla piattaforma gli studenti del proprio istituto nel percorso Biotecnologie e Intelligenza Artificiale.",
+  occhiello: "Da firmare",
+  titolo: "Istruzioni per il docente referente",
+  intro:
+    "Percorso online «Biotecnologie e Intelligenza Artificiale». Il docente referente riceve un accesso personale alla piattaforma per seguire gli studenti del proprio istituto.",
+  aggiornato: "2026-10-13",
+  modulo: {
+    campiFine: ["Nome e cognome", "Istituto", "Data", "Firma"],
+    nota: "In alternativa alla firma, il docente può inviare a info@bioergotech.org una email in cui dichiara di accettare queste istruzioni.",
+  },
+  sezioni: [
+    {
+      h: "Gli impegni del docente",
+      p: ["Con l'attivazione dell'account il docente si impegna a:"],
+      ul: [...ISTRUZIONI_REFERENTE],
+      dopo: [
+        "Le credenziali sono personali.",
+        "Il docente dichiara di avere letto l'informativa privacy per scuole e docenti referenti.",
+      ],
+    },
+  ],
+};
+
+/* ── La pagina che li raccoglie ───────────────────────────────────────── */
+
+export type VoceGuida = {
+  titolo: string;
+  href: string;
+  /** Come si accetta: si legge, si firma su carta, si accetta online. */
+  come: "Da leggere" | "Da firmare" | "Si accetta online";
+  aggiornato?: string;
+  passi: string[];
+};
+
+/**
+ * Chi deve fare che cosa con ogni documento. Il primo gruppo è la «Guida
+ * operativa per scuole e docenti referenti»: le stesse indicazioni, con un
+ * solo cambio, l'ultima frase del punto 3. La guida chiedeva l'accettazione
+ * delle istruzioni prima dell'attivazione dell'account, ma l'account del
+ * referente nasce con l'invio dell'adesione online: la frase dice quello che
+ * succede davvero.
+ */
+export const GUIDA_DOCUMENTI: { gruppo: string; sommario: string; voci: VoceGuida[] }[] = [
+  {
+    gruppo: "Per le scuole e i docenti referenti",
+    sommario: "I documenti che la scuola e il docente referente devono gestire.",
+    voci: [
+      {
+        titolo: "Informativa privacy per scuole e docenti referenti",
+        href: INFORMATIVA_SCUOLE_PATH,
+        come: "Da leggere",
+        aggiornato: INFORMATIVA_SCUOLE.aggiornato,
+        passi: [
+          "Leggerla e conservarne una copia: spiega il trattamento dei dati della scuola e del docente referente.",
+          "Non richiede una firma separata: la presa visione è richiamata nel modulo di adesione.",
+        ],
+      },
+      {
+        titolo: "Adesione della scuola e accesso del docente referente",
+        href: ADESIONE_SCUOLA_PATH,
+        come: "Da firmare",
+        aggiornato: ADESIONE_SCUOLA.aggiornato,
+        passi: [
+          "Compilare i dati dell'istituto e del docente referente: istituto, codice istituto, nominativo, email istituzionale e cellulare.",
+          "Far firmare il modulo al dirigente scolastico o a un soggetto autorizzato dall'istituto.",
+          "Inviare la copia firmata a info@bioergotech.org.",
+        ],
+      },
+      {
+        titolo: "Istruzioni per il docente referente",
+        href: ISTRUZIONI_DOCENTE_PATH,
+        come: "Da firmare",
+        aggiornato: ISTRUZIONI_DOCENTE.aggiornato,
+        passi: [
+          "Il docente legge le regole su credenziali personali, riservatezza e accesso ai soli studenti del proprio istituto.",
+          "Il docente firma il documento oppure ne invia un'accettazione esplicita via email.",
+          "Inviare il documento firmato o confermare l'accettazione a info@bioergotech.org. Le istruzioni valgono dal primo accesso all'area del docente referente.",
+        ],
+      },
+    ],
+  },
+  {
+    gruppo: "Per gli studenti",
+    sommario:
+      "Lo studente li legge e li accetta da sé, nel modulo di iscrizione. Per il corso non serve la firma dei genitori: dai 14 anni lo studente si iscrive da sé.",
+    voci: [
+      {
+        titolo: "Informativa privacy per studenti",
+        href: INFORMATIVA_STUDENTI_PATH,
+        come: "Si accetta online",
+        aggiornato: INFORMATIVA_STUDENTI.aggiornato,
+        passi: ["Lo studente conferma di averla letta quando si iscrive."],
+      },
+      {
+        titolo: "Regolamento di partecipazione",
+        href: REGOLAMENTO_PATH,
+        come: "Si accetta online",
+        aggiornato: REGOLAMENTO.aggiornato,
+        passi: ["Lo studente lo accetta quando si iscrive."],
+      },
+    ],
+  },
+  {
+    gruppo: "Per l'evento e i mentor",
+    sommario: "Valgono per tutto il percorso, licei e università.",
+    voci: [
+      {
+        titolo: "Informativa su foto e video dell'evento",
+        href: INFORMATIVA_IMMAGINI_PATH,
+        come: "Da leggere",
+        passi: [
+          "Il modulo con le scelte su foto e video si scarica dall'area del docente referente. Lo firmano i genitori, o lo studente se maggiorenne, e resta agli atti della scuola: non va inviato alla Fondazione.",
+        ],
+      },
+      {
+        titolo: "Linee guida per i mentor",
+        href: LINEE_GUIDA_MENTOR_PATH,
+        come: "Si accetta online",
+        aggiornato: DOCUMENTO_LINEE_GUIDA_MENTOR.aggiornato,
+        passi: ["I mentor le accettano online, prima che il loro contatto sia mostrato agli studenti."],
+      },
+    ],
+  },
+];

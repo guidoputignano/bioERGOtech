@@ -78,6 +78,7 @@ export default function NewsletterPopup() {
 
   return (
     <div
+      className="no-print"
       style={{
         position: "fixed",
         bottom: 24,

@@ -19,5 +19,6 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <DocumentoPagina doc={DOCUMENTO_LINEE_GUIDA_MENTOR} />;
+  // Valgono anche per l'università: il rimando all'indice dei licei qui non serve.
+  return <DocumentoPagina doc={DOCUMENTO_LINEE_GUIDA_MENTOR} indice={false} />;
 }

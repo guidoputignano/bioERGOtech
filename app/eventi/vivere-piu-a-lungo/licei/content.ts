@@ -342,8 +342,9 @@ export const CONSENSO_PRIVACY_LICEI_TESTO =
 
 /**
  * Di che cosa l'istituto prende atto aderendo: è il documento «Adesione della
- * scuola e accesso del docente referente», mostrato nel modulo e registrato
- * insieme all'adesione.
+ * scuola e accesso del docente referente», mostrato nel modulo, registrato
+ * insieme all'adesione e stampato nella versione che firma il dirigente
+ * (`ADESIONE_SCUOLA` in `documenti.ts`).
  */
 export const PRESA_ATTO_ADESIONE = [
   "Gli studenti di almeno 14 anni si iscrivono direttamente alla piattaforma della Fondazione; l'istituto non raccoglie per conto della Fondazione dati di iscrizione o consensi degli studenti.",
@@ -530,10 +531,14 @@ export const CONSENSO_NEWSLETTER_STUDENTE_TESTO =
 export const NOTA_ISCRIZIONE_STUDENTE =
   "Il percorso è gratuito e riservato agli studenti del triennio che hanno almeno 14 anni. La tua iscrizione arriva al docente referente del tuo istituto, che la conferma. L'account è personale: non condividere password o credenziali con altre persone. Per assistenza o per chiudere l'account scrivi a info@bioergotech.org.";
 
-/* Documenti pubblici del percorso: informative e regolamento. */
+/* Documenti pubblici del percorso: informative, regolamento, i due documenti
+   che scuola e docente firmano e la pagina che li raccoglie tutti. */
 export const INFORMATIVA_STUDENTI_PATH = `${LICEI_PATH}/informativa-studenti`;
 export const INFORMATIVA_SCUOLE_PATH = `${LICEI_PATH}/informativa-scuole`;
 export const REGOLAMENTO_PATH = `${LICEI_PATH}/regolamento`;
+export const ISTRUZIONI_DOCENTE_PATH = `${LICEI_PATH}/istruzioni-docente`;
+export const ADESIONE_SCUOLA_PATH = `${LICEI_PATH}/adesione-scuola`;
+export const DOCUMENTI_PATH = `${LICEI_PATH}/documenti`;
 
 /* ── Modulo di autorizzazione per le famiglie ─────────────────────────── */
 
@@ -547,11 +552,13 @@ export const REGOLAMENTO_PATH = `${LICEI_PATH}/regolamento`;
  */
 /**
  * Impegni del docente referente, dal documento «Istruzioni per il docente
- * referente». Mostrati nella sua area: valgono dal primo accesso.
+ * referente». Mostrati nella sua area, dove valgono dal primo accesso, e
+ * nella pagina pubblica del documento (`ISTRUZIONI_DOCENTE` in
+ * `documenti.ts`), che il docente firma: un testo solo per i due posti.
  */
 export const ISTRUZIONI_REFERENTE = [
   "custodire con cura le credenziali e non condividerle;",
-  "accedere soltanto agli studenti del tuo istituto;",
+  "accedere soltanto agli studenti del proprio istituto;",
   "usare nome, email, classe, avanzamento, squadra e progetto degli studenti solo per seguire il percorso formativo;",
   "non esportare, scaricare, fotografare o inoltrare dati e contenuti, salvo quanto strettamente richiesto dall'attività scolastica e autorizzato dall'istituto;",
   "non usare i dati per contattare gli studenti al di fuori delle normali attività scolastiche;",
