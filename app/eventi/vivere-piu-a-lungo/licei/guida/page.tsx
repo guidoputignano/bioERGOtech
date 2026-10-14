@@ -215,7 +215,7 @@ const DOCENTE_BASE: Passo[] = [
   {
     titolo: "Riconosca i suoi studenti",
     testo:
-      "Al primo accesso alla sua area riservata accetta le istruzioni per i docenti: fino ad allora l'area non mostra i dati degli studenti. Poi compaiono le iscrizioni arrivate, e su ciascuna sceglie È mio studente oppure Non lo riconosco. L'elenco che conferma è esattamente quello che l'art. 4 del bando chiede all'istituto di trasmettere. Se altri colleghi seguono i ragazzi con lei, dalla stessa pagina può indicarne fino a cinque: ognuno riceve un accesso personale, accetta le stesse istruzioni e può confermare le iscrizioni, mentre gli elenchi da scaricare restano a lei.",
+      "Al primo accesso alla sua area riservata accetta le istruzioni per i docenti: fino ad allora l'area non mostra i dati degli studenti. Poi compaiono le iscrizioni arrivate, e su ciascuna sceglie È mio studente oppure Non lo riconosco. L'elenco che conferma è esattamente quello che l'art. 4 del bando chiede all'istituto di trasmettere. Se altri colleghi seguono i ragazzi con lei, dalla stessa pagina può indicarne fino a cinque: ognuno riceve un accesso personale, accetta le stesse istruzioni e può confermare le iscrizioni, mentre gli elenchi da scaricare restano a lei. Nella stessa area trova anche i mentor del percorso, con il contatto di chi lo ha messo a disposizione degli studenti, così può accompagnare chi vuole scrivere a uno di loro.",
     link: {
       etichetta: "Area riservata",
       href: REFERENTE_PATH,

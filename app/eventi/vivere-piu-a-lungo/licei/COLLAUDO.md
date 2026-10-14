@@ -2,7 +2,7 @@
 
 Come provare che la catena funziona davvero, nei panni di tutti: staff,
 istituto, docente referente, docente del progetto e studente. La prima parte
-(passi 0 a 9) richiede circa mezz'ora, la seconda (passi 10 a 20) un'altra
+(passi 0 a 9) richiede circa mezz'ora, la seconda (passi 10 a 21) un'altra
 ora. Va fatto **prima** che ci siano dentro trecento ragazzi, perche buona
 parte di quello che puo rompersi si rompe in silenzio: una email che non
 parte, un account senza password, una conferma che nessuno riceve.
@@ -265,7 +265,10 @@ Apra il link della password, imposti la password e vada su
 
 **Cosa deve vedere:** solo la schermata delle istruzioni. Nella scheda Rete,
 `GET /api/eventi/licei/referente` risponde 403 con `istruzioni_accettate:
-false` e nessuno studente. Accetti.
+false` e nessuno studente. **Prima di accettare** apra a mano, nella stessa
+finestra, `/api/eventi/mentor`: deve rispondere 403 "Prima di vedere i dati
+degli studenti accetta le istruzioni per i docenti." e nessun mentor. Torni
+alla console e accetti.
 
 **Poi:** l'intestazione "Area dei docenti del progetto . Referente: Nome
 Cognome", il filtro su "Le mie classi (4A)" con "Tutte le classi
@@ -290,7 +293,10 @@ in `testo`.
 La professoressa preme **Revoca** sul collega. prof2 ricarica la console.
 
 **Cosa deve succedere:** 403 "Nessuna adesione risulta associata a questo
-account.", subito, senza aspettare niente. Poi la professoressa lo indica di
+account.", subito, senza aspettare niente. `/api/eventi/mentor` aperto a mano
+da prof2 risponde 403 "L'elenco dei mentor con i contatti è riservato a chi
+partecipa al percorso.": per la rotta dei mentor un docente revocato e un
+account qualsiasi. Poi la professoressa lo indica di
 nuovo con la stessa email. Se dall'ultimo invito sono passati meno di 10
 minuti la risposta e "L'invito a questo docente è appena partito. Si può
 indicare di nuovo dopo 10 minuti, ...": e il limite dei reinvii, che vale
@@ -590,17 +596,75 @@ La card dice **Inviato** con data e conteggi. Un secondo invio e rifiutato.
 > riga `avviso_riflessioni_inviato_at` (e `avviso_riflessioni_esito`) da
 > `licei_config`. Meglio provarlo su un ambiente di prova.
 
-### Passo 19. Adesione ritirata
+### Passo 19. I mentor nell'area dei docenti
+
+Serve almeno un mentor approvato e pubblicato, con un contatto e le linee
+guida accettate (pannello staff del percorso universitario, scheda Mentor).
+Senza, la scheda dice "L'elenco dei mentor si sta componendo." e del passo si
+provano solo i rifiuti. Il rifiuto prima delle istruzioni e quello del
+docente revocato sono ai passi 12 e 13, quello dell'adesione ancora in
+verifica qui sotto, quello dell'adesione ritirata al passo 20.
+
+**La professoressa** (istruzioni accettate) ricarica la console. In fondo,
+sopra "Le regole del tuo accesso", c'e la scheda **Mentor del percorso**:
+il testo per i docenti, il riquadro "Come funziona il contatto" con il link
+alle linee guida e il bottone **Mostra i mentor**. **Non** ci sono le regole
+"Prima di scrivere" scritte allo studente. Finche non preme il bottone,
+nella scheda Rete non parte nessuna chiamata a `/api/eventi/mentor`; al clic
+parte la chiamata e compare l'elenco, con il contatto per chi lo ha indicato
+e "Nessun contatto messo a disposizione" per gli altri. **Nascondi i
+mentor** lo richiude, e riaprirlo non rilegge.
+
+**Nella risposta** di `GET /api/eventi/mentor` ogni mentor ha solo `id`,
+`nome`, `cognome`, `ruolo`, `organizzazione`, `aree`, `bio`, `sito`,
+`linkedin`, `foto_url` e `contatto_studenti`: niente email, telefono o
+competenze, esattamente come per uno studente.
+
+**prof2**, attivo e con le istruzioni accettate, vede la stessa scheda e lo
+stesso elenco.
+
+**Adesione ancora in verifica.** Nell'SQL editor riporti su `ricevuta` la
+seconda scuola, quella di prof B (passo 14):
+
+```sql
+update public.licei_adesioni set stato = 'ricevuta'
+ where codice_meccanografico = 'TATEST002X';
+```
+
+prof B ricarica la console: badge **Ricevuta**, banner giallo "in verifica"
+e una scheda **Mentor del percorso** con la sola frase "L'elenco dei mentor
+si apre quando confermiamo l'adesione del vostro istituto.", senza il
+bottone. `/api/eventi/mentor` aperto a mano da prof B risponde 403 con la
+stessa frase e nessun mentor. Poi la riporti su `confermata`, sempre
+dall'SQL editor e non dal pannello, cosi non riparte l'email di conferma:
+
+```sql
+update public.licei_adesioni set stato = 'confermata'
+ where codice_meccanografico = 'TATEST002X';
+```
+
+prof B ricarica e ritrova il bottone **Mostra i mentor**.
+
+**Gli studenti non cambiano.** Lo studente 1 vede nella sua area il riquadro
+**Mentor** come prima, con le regole "Prima di scrivere" e il consiglio per i
+minorenni. Se dispone di un account di prova del percorso universitario con
+la candidatura confermata, la sua area
+(`/eventi/vivere-piu-a-lungo/universita/studente`) mostra il riquadro come
+prima, senza il consiglio per i minorenni.
+
+### Passo 20. Adesione ritirata
 
 Lo staff porta la prima scuola su **Ritirata**.
 
 **Cosa deve succedere:** la professoressa e prof2 ricaricano e ricevono 403
 "L'adesione del vostro istituto è stata ritirata: l'accesso è disattivato.
-Per chiarimenti scrivi a info@bioergotech.org.". Lo studente 1 invece entra
-ancora in `/eventi/vivere-piu-a-lungo/licei/studente` e nelle lezioni. Poi la
-riporti su **Confermata**.
+Per chiarimenti scrivi a info@bioergotech.org.". Lo stesso 403, con lo
+stesso messaggio, per `/api/eventi/mentor` aperto a mano da ciascuno dei
+due. Lo studente 1 invece entra ancora in
+`/eventi/vivere-piu-a-lungo/licei/studente` e nelle lezioni, e vede ancora i
+mentor. Poi la riporti su **Confermata**.
 
-### Passo 20. Lo staff corregge un'adesione dal modulo pubblico
+### Passo 21. Lo staff corregge un'adesione dal modulo pubblico
 
 Nella finestra dello staff, loggato, reinvii il modulo di adesione con il
 meccanografico `TATEST001X` cambiando un numero.
@@ -609,7 +673,7 @@ meccanografico `TATEST001X` cambiando un numero.
 console. Prima di questa correzione perdeva l'accesso, perche l'adesione
 passava all'account dello staff.
 
-### Passo 21. Chiusura (solo su un ambiente di prova)
+### Passo 22. Chiusura (solo su un ambiente di prova)
 
 La scheda **Chiusura** cancella i dati di tutto il percorso: non la provi su
 produzione prima della fine. Su un ambiente di prova, l'anteprima conta
@@ -634,7 +698,10 @@ istituti, il quadro delle squadre, le riflessioni prima e dopo l'avviso con
 il commento che non esce mai, le riflessioni di prima (primo avviso
 registrato una volta, nascoste prima dei tre giorni, visibili dopo senza
 risposta, subito con "Va bene", nascoste con "Preferisco di no" anche dopo i
-tre giorni, e di nuovo), l'avviso email una tantum, l'adesione ritirata
+tre giorni, e di nuovo), l'avviso email una tantum, i mentor nell'area dei
+docenti (solo dopo le istruzioni e con l'adesione confermata, letti su
+richiesta, con le stesse colonne degli studenti, e niente per un docente
+revocato), l'adesione ritirata
 che ferma i docenti e non gli studenti, la correzione dello staff che non
 sposta l'adesione e, su un ambiente di prova, la chiusura che cancella anche
 gli account dei docenti del progetto.
@@ -696,4 +763,6 @@ impedisce a due docenti della stessa scuola di creare due adesioni.
 | L'avviso "Le tue riflessioni e i docenti" non compare nel box | Lo studente non ha consegne salvate prima dell'avviso, ha gia scelto (nel box non ricompare; lo cambia dalla sua area o dal link diretto), non e iscritto al percorso, oppure la migrazione `20261215000000` non e applicata. |
 | Lo studente aveva gia scelto e l'avviso ricompare, con una data nuova | Avviso e scelta erano stati registrati da iscritto a un altro istituto (per esempio con il codice sbagliato): valgono solo per la scuola di oggi. I tre giorni ripartono da adesso; con "Va bene" i docenti leggono subito. |
 | Il link diretto dice "Nessuna iscrizione al percorso risulta associata a questo account." | Lo studente e entrato con un'email diversa da quella dell'iscrizione, oppure l'iscrizione e stata rifiutata o ritirata. |
+| La scheda "Mentor del percorso" dice che l'elenco si sta componendo | Nessun mentor risulta approvato e pubblicato: escono gli stessi della pagina pubblica dei mentor, con il contatto solo per chi ha accettato le linee guida. |
+| La scheda "Mentor del percorso" dice che l'elenco si apre quando confermiamo l'adesione | L'adesione dell'istituto e ancora **Ricevuta**: l'elenco si apre quando lo staff la porta su **Confermata** (o **Attiva sul corso**). |
 | L'avviso sulle riflessioni non si puo inviare | Manca la colonna `condivisa_referente_at` (migrazione non applicata), manca `RESEND_API_KEY`, oppure e gia stato inviato. |

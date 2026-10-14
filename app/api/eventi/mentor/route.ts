@@ -1,6 +1,6 @@
 /**
  * GET dell'elenco dei mentor per chi partecipa al percorso, licei e
- * università.
+ * università, studenti e docenti.
  *
  * La pagina pubblica dei mentor mostra il profilo e basta. Questa rotta
  * aggiunge l'unica cosa che la pagina pubblica non deve avere: il contatto
@@ -10,7 +10,9 @@
  *
  *   1. serve l'accesso, e serve essere partecipanti: staff, studenti dei
  *      licei confermati dal referente, partecipanti confermati del percorso
- *      universitario. Un account qualsiasi del sito non basta;
+ *      universitario, docenti dei licei (referente e docenti del progetto)
+ *      con le istruzioni accettate e l'adesione dell'istituto confermata
+ *      dallo staff. Un account qualsiasi del sito non basta;
  *   2. escono solo i mentor approvati e che hanno acconsentito alla
  *      pubblicazione, cioe gli stessi della pagina pubblica: un mentor che
  *      non vuole comparire in elenco non compare nemmeno qui;
@@ -25,15 +27,25 @@
  * Il contatto lo usa lo studente di sua iniziativa, fuori dalla
  * piattaforma: questa rotta non registra chi lo ha letto e non avvisa il
  * mentor, ed e il punto. La Fondazione non trasmette ai mentor i dati degli
- * studenti.
+ * studenti. I docenti vedono lo stesso elenco, con le stesse colonne, per
+ * accompagnare i loro studenti: le linee guida suggeriscono ai minorenni di
+ * coinvolgere il docente referente prima di scrivere a un mentor.
  */
 
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireMember } from "@/lib/auth/admin";
-import { requireStudente } from "@/lib/eventi/licei-server";
+import {
+  MESSAGGIO_NESSUNA_ADESIONE,
+  requireDocente,
+  requireStudente,
+} from "@/lib/eventi/licei-server";
 import { requireCandidato } from "@/lib/eventi/universita-server";
 import { colonneLineeGuidaMancanti } from "@/lib/eventi/universita-mentor";
+import {
+  MESSAGGIO_MENTOR_ADESIONE_IN_VERIFICA,
+  STATI_ADESIONE_CHE_ACCETTANO,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 const COLONNE_PUBBLICHE =
   "id, nome, cognome, ruolo, organizzazione, aree, bio, sito, linkedin, foto_url";
@@ -73,6 +85,17 @@ const NON_PARTECIPANTE =
  * Si prova prima la guardia dei licei e poi quella dell'universita: una
  * persona puo stare in uno solo dei due, e l'ordine conta solo per quale
  * messaggio d'errore si restituisce.
+ *
+ * Per ultimi i docenti dei licei, referente e docenti del progetto, con
+ * `requireDocente()` e le sue regole di sempre: istruzioni accettate
+ * (`operativo`, il default), adesione non ritirata, un solo istituto,
+ * percorso aperto. In piu l'adesione deve essere confermata dallo staff,
+ * come per le iscrizioni degli studenti: il modulo di adesione e pubblico,
+ * l'account del referente esiste da subito, e la verifica dello staff
+ * arriva solo con la conferma. Finche l'adesione resta "ricevuta", niente
+ * contatti. Ultimi perche studenti e
+ * partecipanti universitari, che sono i piu, passano prima e non pagano
+ * letture in piu.
  */
 async function autorizza(): Promise<
   { ok: true; client: SupabaseClient } | { ok: false; error: string; status: number }
@@ -98,6 +121,17 @@ async function autorizza(): Promise<
   const universita = await requireCandidato();
   if (universita.error === null) return { ok: true, client };
 
+  const docente = await requireDocente();
+  if (docente.error === null && STATI_ADESIONE_CHE_ACCETTANO.has(docente.ctx.adesione.stato)) {
+    return { ok: true, client };
+  }
+  // Un docente a posto con la guardia ma con l'adesione ancora da
+  // confermare ha una ragione vera, e la legge come le altre qui sotto.
+  const erroreDocente =
+    docente.error === null
+      ? { error: MESSAGGIO_MENTOR_ADESIONE_IN_VERIFICA, status: 403 }
+      : docente;
+
   // Il messaggio piu utile e quello del percorso in cui la persona c'e: un
   // liceale non confermato, o a percorso chiuso, deve leggere la ragione
   // vera e non che "non risulta iscritto". I 403 di "nessuna riga" sono i
@@ -109,8 +143,22 @@ async function autorizza(): Promise<
   if (universita.status === 403 && !nessunaRiga(universita.error)) {
     return { ok: false, error: universita.error, status: 403 };
   }
+  // Lo stesso per un docente: istruzioni da accettare, adesione in verifica
+  // o ritirata, account legato a due istituti (409) sono ragioni vere e si
+  // dicono. "Nessuna adesione" e il suo "nessuna riga", e si scarta.
+  if (
+    (erroreDocente.status === 403 || erroreDocente.status === 409) &&
+    erroreDocente.error !== MESSAGGIO_NESSUNA_ADESIONE
+  ) {
+    return { ok: false, error: erroreDocente.error, status: erroreDocente.status };
+  }
   if (licei.status === 500 || universita.status === 500) {
     return { ok: false, error: "Configurazione server mancante.", status: 500 };
+  }
+  // La guardia dei docenti ha un 500 suo, la lettura fallita: si dice
+  // quello, e non che la persona non partecipa.
+  if (erroreDocente.status === 500) {
+    return { ok: false, error: erroreDocente.error, status: 500 };
   }
   return { ok: false, error: NON_PARTECIPANTE, status: 403 };
 }
