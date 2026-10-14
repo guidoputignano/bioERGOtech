@@ -152,6 +152,19 @@ export async function POST(request: Request) {
 
       if (profilo?.id) {
         userId = profilo.id;
+        // L'email ha gia un account sul sito (un tentativo precedente, un
+        // altro modulo). Se non ha mai fatto l'accesso, una password non ce
+        // l'ha: senza link, l'email diceva "imposta la password" e lo
+        // lasciava senza modo di farlo. Il link va solo a quella casella.
+        const { data: esistente } = await client.auth.admin.getUserById(profilo.id);
+        if (esistente?.user && !esistente.user.last_sign_in_at) {
+          const { data: link } = await client.auth.admin.generateLink({
+            type: "recovery",
+            email,
+            options: { redirectTo: `${SITE_URL}/auth/update-password` },
+          });
+          setPasswordUrl = link?.properties?.action_link;
+        }
       } else {
         const { data: creato, error: erroreCreazione } = await client.auth.admin.createUser({
           email,
