@@ -81,7 +81,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
-| Elenco dei mentor nell'area | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx`, rotta `app/api/eventi/mentor/route.ts` |
+| Elenco dei mentor nell'area dello studente e in quella dei docenti | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx` (`percorso="docenti"` nella console dei docenti), rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
 | Talk con gli esperti | `app/eventi/vivere-piu-a-lungo/talk/` (README nella cartella): scheda nell'area dello studente e del docente, riga nella pagina pubblica, scheda nel pannello staff; migrazione `20261216000000_talk_iscrizioni.sql`, da applicare a mano |
 | Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql`, `20261209000000_licei_accesso_coerente.sql`, `20261215000000_licei_docenti_accettazioni_riflessioni.sql` (da applicare a mano, vedi sotto) |
@@ -235,6 +235,30 @@ l'informativa studenti ("Messaggi e mentor") e il regolamento (sezione 5),
 che vanno tenuti allineati a questo. La rotta controlla `requireStudente`,
 quindi a percorso chiuso l'elenco si spegne con il resto dell'area. Il
 dettaglio sta nel README del percorso universitario.
+
+Lo stesso elenco, con gli stessi contatti, lo vedono i docenti: nella
+console del referente e dei docenti del progetto c'e la scheda "Mentor del
+percorso" (`MentorElenco` con `percorso="docenti"`), che si apre e si legge
+su richiesta. Al posto delle regole scritte allo studente ha come funziona
+il contatto, dalla premessa delle linee guida, e a che cosa serve al
+docente: accompagnare gli studenti, in particolare i minorenni, che le linee
+guida invitano a coinvolgere il docente referente prima di scrivere a un
+mentor. La rotta `GET /api/eventi/mentor` prova `requireDocente()` dopo le
+guardie di studenti e partecipanti universitari, con il default
+`operativo`: servono le istruzioni accettate, e un'adesione ritirata, un
+account legato a due istituti o un percorso chiuso respingono come nel
+resto della console, con il loro messaggio. In piu serve l'adesione
+confermata dallo staff (`STATI_ADESIONE_CHE_ACCETTANO`, "confermata" o
+"attiva"), come per le iscrizioni degli studenti: il modulo di adesione e
+pubblico e l'account del referente nasce subito, quindi finche l'adesione e
+"ricevuta" la rotta risponde 403 "L'elenco dei mentor si apre quando
+confermiamo l'adesione del vostro istituto." e la console mostra la scheda
+con la stessa frase, senza il bottone. Chi non e docente di nessun istituto
+riceve il messaggio di sempre, "L'elenco dei mentor con i contatti è
+riservato a chi partecipa al percorso.". Le colonne sono le stesse degli
+studenti, niente di piu. Che i docenti vedano il contatto lo dicono anche i
+testi che il mentor legge prima di indicarlo: le linee guida, l'aiuto del
+campo e il consenso privacy del modulo di candidatura.
 
 ## Perche il referente deve confermare
 

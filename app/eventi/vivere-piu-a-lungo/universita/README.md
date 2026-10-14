@@ -170,8 +170,11 @@ Le regole, che stanno nel codice e non solo nei testi:
   `/eventi/vivere-piu-a-lungo/linee-guida-mentor`;
 - il contatto **non** e concesso ad anon ne ad authenticated: lo legge solo
   `GET /api/eventi/mentor`, con la service role, dopo aver verificato che
-  chi chiama sia staff, studente dei licei confermato (percorso non chiuso)
-  o partecipante universitario confermato. Escono i mentor approvati e
+  chi chiama sia staff, studente dei licei confermato (percorso non chiuso),
+  partecipante universitario confermato o docente dei licei (referente o
+  docente del progetto) con le istruzioni accettate, adesione confermata
+  dallo staff (non solo ricevuta, e non ritirata) e percorso non chiuso.
+  Escono i mentor approvati e
   pubblicati, con i soli campi pubblici, e il contatto solo se le linee
   guida risultano accettate. Mai email, telefono, competenze;
 - lo studente scrive di sua iniziativa, fuori dalla piattaforma. La rotta

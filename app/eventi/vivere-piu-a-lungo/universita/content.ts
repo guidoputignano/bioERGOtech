@@ -1002,7 +1002,7 @@ export const CONSENSO_PUBBLICAZIONE_MENTOR_TESTO =
   "Acconsento alla pubblicazione del mio nome, ruolo, organizzazione, aree di interesse e profilo nella pagina pubblica dei mentor del percorso. Posso chiedere la rimozione in qualsiasi momento scrivendo a info@bioergotech.org.";
 
 export const CONSENSO_PRIVACY_MENTOR_TESTO =
-  "Ho letto l'informativa e acconsento al trattamento dei miei dati personali ai sensi del Regolamento (UE) 2016/679, per le sole finalità connesse alla gestione del percorso, all'abbinamento con i team e, se lo indico, alla messa a disposizione del mio contatto professionale per gli studenti, che è visibile solo ai partecipanti del percorso dopo l'accesso e mai nella pagina pubblica.";
+  "Ho letto l'informativa e acconsento al trattamento dei miei dati personali ai sensi del Regolamento (UE) 2016/679, per le sole finalità connesse alla gestione del percorso, all'abbinamento con i team e, se lo indico, alla messa a disposizione del mio contatto professionale per gli studenti, che è visibile solo ai partecipanti del percorso, studenti e docenti, dopo l'accesso e mai nella pagina pubblica.";
 
 export const MENTOR_NOTA_APPROVAZIONE =
   "La candidatura viene letta dalla direzione scientifica della Fondazione. L'approvazione non è automatica e non è un giudizio sul suo curriculum: dipende anche dalle aree che i team stanno effettivamente affrontando.";
@@ -1016,7 +1016,7 @@ export const MENTOR_NOTA_VUOTO =
  * non lo vede, e che tipo di indirizzo serve.
  */
 export const MENTOR_NOTA_CONTATTO =
-  "Email professionale o pagina di contatto (http:// o https://). È visibile solo a chi partecipa al percorso, licei e università, dopo l'accesso alla propria area, e mai nella pagina pubblica. Usi un contatto professionale, non un recapito personale.";
+  "Email professionale o pagina di contatto (http:// o https://). È visibile solo ai partecipanti del percorso, licei e università, studenti e docenti, dopo l'accesso alla propria area, e mai nella pagina pubblica. Usi un contatto professionale, non un recapito personale.";
 
 export const MENTOR_NOTA_TELEFONO =
   "Il numero serve solo allo staff per organizzare gli incontri. Non compare nella pagina pubblica.";

@@ -323,6 +323,15 @@ export const STATI_ADESIONE_CHE_ACCETTANO: ReadonlySet<string> = new Set([
   "attiva",
 ]);
 
+/**
+ * Per i docenti, l'elenco dei mentor con i contatti si apre con lo stesso
+ * insieme di stati: un'adesione ancora "ricevuta" non e verificata, e il
+ * contatto i mentor lo hanno dato ai partecipanti del percorso. Lo dicono
+ * con le stesse parole la rotta dei mentor e la console dei docenti.
+ */
+export const MESSAGGIO_MENTOR_ADESIONE_IN_VERIFICA =
+  "L'elenco dei mentor si apre quando confermiamo l'adesione del vostro istituto.";
+
 export const statoAdesioneLabel = (v: string): string =>
   STATI_ADESIONE.find((s) => s.value === v)?.label ?? v;
 

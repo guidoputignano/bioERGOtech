@@ -81,13 +81,13 @@ export const DOCUMENTO_LINEE_GUIDA_MENTOR: Documento = {
   titolo: "Linee guida per i mentor",
   intro:
     "Percorso «Biotecnologie e Intelligenza Artificiale», per gli studenti dei licei e per gli studenti universitari. Queste linee guida valgono per tutti i mentor del percorso e vanno accettate prima che il contatto del mentor sia mostrato agli studenti.",
-  aggiornato: "2026-10-08",
+  aggiornato: "2026-10-14",
   sezioni: [
     {
       h: "Come avviene il contatto",
       p: [...LINEE_GUIDA_MENTOR_PREMESSA],
       dopo: [
-        "Il contatto professionale indicato dal mentor è visibile solo a chi partecipa al percorso, dopo l'accesso alla propria area. Non compare nella pagina pubblica dei mentor.",
+        "Il contatto professionale indicato dal mentor è visibile solo agli studenti e ai docenti del percorso, dopo l'accesso alla propria area. Non compare nella pagina pubblica dei mentor.",
       ],
     },
     {

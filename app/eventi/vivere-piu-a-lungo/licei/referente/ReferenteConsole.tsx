@@ -24,7 +24,9 @@
  *
  * Le riflessioni (`RiflessioniReferente.tsx`) non arrivano con l'elenco: si
  * leggono su un clic, dal bottone sulla riga di uno studente confermato o
- * dalla lettura per lezione, che usa lo stesso filtro per classe.
+ * dalla lettura per lezione, che usa lo stesso filtro per classe. Lo stesso
+ * vale per i mentor del percorso (`MentorElenco`, variante "docenti"), che
+ * si leggono quando il docente apre la scheda.
  */
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -47,6 +49,8 @@ import {
   INFORMATIVA_SCUOLE_PATH,
   ISTRUZIONI_DOCENTE_PATH,
   ISTRUZIONI_REFERENTE,
+  MESSAGGIO_MENTOR_ADESIONE_IN_VERIFICA,
+  STATI_ADESIONE_CHE_ACCETTANO,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
 import { AccettazioneIstruzioni } from "./AccettazioneIstruzioni";
@@ -54,6 +58,7 @@ import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
 import { FiltroClasse } from "./FiltroClasse";
 import { QuadroSquadre } from "./QuadroSquadre";
 import { LinkRiflessioniStudenti, RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
+import { MentorElenco } from "../../mentor/MentorElenco";
 import type { IscrizioneQuadroInput, SquadraQuadroInput } from "@/lib/eventi/licei-squadre";
 import {
   TUTTE_LE_CLASSI,
@@ -807,6 +812,24 @@ export function ReferenteConsole({
 
       {/* ── Docenti del progetto: solo il referente principale li indica ── */}
       {principale && <DocentiProgetto iniziale={docentiProgetto} classiPresenti={opzioni} />}
+
+      {/* ── Mentor del percorso ──
+          Lo stesso elenco degli studenti, con i contatti, per referente e
+          docenti del progetto. Come il resto, solo dopo le istruzioni, e in
+          piu solo con l'adesione confermata dallo staff: la rotta dei mentor
+          fa gli stessi controlli. Si legge all'apertura. */}
+      {STATI_ADESIONE_CHE_ACCETTANO.has(adesione?.stato) ? (
+        <MentorElenco percorso="docenti" />
+      ) : (
+        <div className="card" style={{ padding: 20 }}>
+          <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+            Mentor del percorso
+          </h2>
+          <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: 0 }}>
+            {MESSAGGIO_MENTOR_ADESIONE_IN_VERIFICA}
+          </p>
+        </div>
+      )}
 
       <details className="card-sm" style={{ padding: 16, fontSize: 13, color: "var(--text-mid)", lineHeight: 1.7 }}>
         <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--text-dark)" }}>
