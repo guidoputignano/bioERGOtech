@@ -32,7 +32,10 @@ export type LiceiEmailInput = {
   codice: string;
   studentiPrevisti: number;
   aggiornata: boolean;
-  /** Link per impostare la password, se l'account e stato appena creato. */
+  /**
+   * Link per impostare la password: account appena creato, o gia esistente ma
+   * senza alcun accesso. Senza link, l'email spiega come accedere.
+   */
   setPasswordUrl?: string;
   /** Conferma automatica: l'adesione e gia attiva, il codice si puo usare. */
   confermataSubito?: boolean;
@@ -148,7 +151,10 @@ export function liceiEmailHtml(input: LiceiEmailInput): string {
 export type StudenteEmailInput = {
   nome: string;
   istituto: string;
-  /** Link per impostare la password, se l'account e stato appena creato. */
+  /**
+   * Link per impostare la password: account appena creato, o gia esistente ma
+   * senza alcun accesso. Senza link, l'email spiega come accedere.
+   */
   setPasswordUrl?: string;
 };
 
@@ -180,7 +186,7 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
       <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Due cose da fare</p>
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 14px;">
-          <strong style="color:#0A1628;">1. Imposta la password.</strong> Il tuo account è
+          <strong style="color:#0A1628;">1. ${setPasswordUrl ? "Imposta la password." : "Accedi al tuo account."}</strong> Il tuo account è
           personale: non condividere password o credenziali con altre persone. Per assistenza o per
           chiudere l'account scrivi a info@bioergotech.org.
         </p>
@@ -198,7 +204,15 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
                 <a href="${setPasswordUrl}" style="color:#008F6B;font-weight:700;">Imposta la password</a>.
               </p>
             </div>`
-          : ""
+          : `<div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
+              <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0;">
+                Con questa email hai già un account sul sito: accedi con la tua password da
+                <a href="${SITE_URL}/auth/login" style="color:#008F6B;font-weight:700;">questa pagina</a>.
+                Se non hai mai impostato una password, o non la ricordi, usa
+                <a href="${SITE_URL}/auth/forgot-password" style="color:#008F6B;font-weight:700;">Password dimenticata</a>
+                e ti mandiamo un link.
+              </p>
+            </div>`
       }
 
       <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:0 0 24px;">
