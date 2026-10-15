@@ -97,8 +97,17 @@ const fmtDate = (iso: string | null) =>
 
 const daysSince = (iso: string | null) => (iso ? Math.floor((Date.now() - Date.parse(iso)) / 86_400_000) : 0);
 
-export default function CourseMonitorPanel({ adminUserId }: { adminUserId?: string }) {
-  const [view, setView] = useState<"students" | "questions" | "funnel">("students");
+export default function CourseMonitorPanel({
+  adminUserId,
+  initialView = "students",
+  onChanged,
+}: {
+  adminUserId?: string;
+  initialView?: "students" | "questions" | "funnel";
+  /** Called after a reply, check or certificate action, so the host can refresh its counts. */
+  onChanged?: () => void;
+}) {
+  const [view, setView] = useState<"students" | "questions" | "funnel">(initialView);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +135,11 @@ export default function CourseMonitorPanel({ adminUserId }: { adminUserId?: stri
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const changed = () => {
+    load();
+    onChanged?.();
+  };
 
   const t = data?.totals;
 
@@ -162,10 +176,10 @@ export default function CourseMonitorPanel({ adminUserId }: { adminUserId?: stri
       {error && <Banner tone="error">{error}</Banner>}
 
       {view === "students" && data && (
-        <StudentsView data={data} onChanged={load} showToast={showToast} />
+        <StudentsView data={data} onChanged={changed} showToast={showToast} />
       )}
       {view === "questions" && (
-        <QuestionsView adminUserId={adminUserId} showToast={showToast} onAnswered={load} />
+        <QuestionsView adminUserId={adminUserId} showToast={showToast} onAnswered={changed} />
       )}
       {view === "funnel" && data && <FunnelView data={data} />}
 
