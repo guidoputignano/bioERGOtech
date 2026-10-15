@@ -93,7 +93,8 @@ function isScaffolding(path: string): boolean {
     base.startsWith(".") ||
     /\.(md|markdown|txt)$/i.test(base) ||
     VIDEO_FILE.test(base) ||
-    /^(license|licence)(\..*)?$/i.test(base)
+    // README, LICENSE and friends with no extension are documentation too.
+    /^(license|licence|readme|contributing|changelog|authors|notice)(\..*)?$/i.test(base)
   );
 }
 
