@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notifyStaffOfSubmission } from "@/lib/course/notify";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import {
@@ -87,6 +88,19 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/** The id on the student's earliest reflection, if they have one. */
+async function primoStudentId(admin: ReturnType<typeof getAdmin>, userId: string): Promise<string | null> {
+  const { data } = await admin
+    .from("lesson_submissions")
+    .select("student_id")
+    .eq("user_id", userId)
+    .not("student_id", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data?.student_id as string | undefined) ?? null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -118,12 +132,25 @@ export async function POST(req: NextRequest) {
     const condivisa =
       body.avviso_referente === true && (await iscrizioneLiceiPerAvviso(admin, user.id)) !== null;
 
+    // The saved text before this save, so the team is emailed only about a
+    // question or comment that is new or changed.
+    const { data: prima } = await admin
+      .from("lesson_submissions")
+      .select("question, comment, admin_reply, student_id")
+      .eq("lesson_slug", lesson_slug)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
     // Upsert: only columns that exist in the table
     const riga = {
       lesson_slug,
       lesson_title,
       user_id: user.id,
-      student_id: studentId,
+      // The Student ID is the student's proof of ownership in their project
+      // README, so it must not change: keep the one this row already has,
+      // else the one from their first reflection, and only compute a new
+      // one (with this year in it) for a first submission ever.
+      student_id: prima?.student_id ?? (await primoStudentId(admin, user.id)) ?? studentId,
       reflection: reflection.trim(),
       question: question?.trim() || null,
       comment: comment?.trim() || null,
@@ -149,6 +176,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // After the response: the student's save never waits on, or fails
+    // because of, the email.
+    after(() =>
+      notifyStaffOfSubmission(admin, {
+        userId: user.id,
+        lessonSlug: lesson_slug,
+        lessonTitle: lesson_title,
+        reflection: riga.reflection,
+        before: prima ?? null,
+        after: { question: riga.question, comment: riga.comment },
+      }).catch((e) => console.error("Course notification failed:", (e as Error).message)),
+    );
+
     return NextResponse.json({ submission: data });
   } catch (error: unknown) {
     return NextResponse.json({ error: (error as Error)?.message || "Submission failed" }, { status: 500 });

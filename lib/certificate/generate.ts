@@ -42,7 +42,7 @@ export async function generateCertificatePptx(data: CertificateData): Promise<Bu
   const {
     recipientName,
     studentId,
-    courseTitle = "10-Week Agentic AI High School Innovation Program",
+    courseTitle = "Agentic AI Program",
     certId,
     issueDate,
     directorName = "Guido Putignano",

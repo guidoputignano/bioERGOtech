@@ -6,6 +6,16 @@ import { Lesson, COURSE_LESSONS } from "../../../course-data";
 import CourseSidebar from "../../../CourseSidebar";
 import GateModal from "../../../GateModal";
 import LessonSubmissionBox from "../../../LessonSubmissionBox";
+import CourseProjectBox from "../../../CourseProjectBox";
+
+/**
+ * The two lessons that carry the GitHub project box: 4.4 asks students to
+ * form their project, the closing lesson asks them to submit it.
+ */
+const PROJECT_BOX: Record<string, "setup" | "submit"> = {
+  "lesson-4-4": "setup",
+  "course-closing": "submit",
+};
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const TEAL = "#00C4B4";
@@ -839,7 +849,12 @@ agent.print_response('What is Agno?', stream=True)`}</CodeBlock>
 }
 
 // ─── Lesson 4.4 ───────────────────────────────────────────────────────────────
-function Lesson_4_4() {
+/**
+ * separateTrack: licei / universita students, who hand in through their
+ * programme console (shown at the end of this lesson) instead of the course
+ * project box, so the repository-link steps do not apply to them.
+ */
+function Lesson_4_4({ separateTrack }: { separateTrack?: boolean }) {
   return (
     <>
       <Section title="Project Idea Brief Workshop">
@@ -869,6 +884,25 @@ function Lesson_4_4() {
       <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Six Sections" />
       <SlideImage src="/assets/courses/lesson-4-4/slide-3.png" alt="Problem Statement" />
       <SlideImage src="/assets/courses/lesson-4-4/slide-4.png" alt="Brief Template" />
+      {!separateTrack && (
+        <>
+        <Section title="Set Up Your Project on GitHub">
+          <p style={p}>Your project lives in a public GitHub repository in your own account. Your code or workflow, README, ethics review and demo video all go there, and at the end of the course you submit its link for your certificate. Set it up now, so it is ready to build in through Phase 3.</p>
+          {[
+            "Create a free GitHub account at github.com/signup (GitHub requires you to be 13 or older)",
+            "Create a public repository named after your project. In a team, one person creates it and adds the others as collaborators",
+            "Add the README and ethics review templates, and write your Student ID in the Team section of the README",
+            "Add the repository link in the box at the end of this lesson",
+          ].map((step, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{i + 1}</div>
+              <span style={{ color: TEXT_MID, lineHeight: 1.55 }}>{step}</span>
+            </div>
+          ))}
+          <CalloutBox label="Step-by-step guide" variant="tip">New to GitHub? The <Link href="/courses/agentic-ai/github" style={{ color: "#276749", fontWeight: 700 }}>GitHub guide</Link> walks through every step in about 15 minutes, and has the README and ethics review templates to download.</CalloutBox>
+        </Section>
+        </>
+      )}
       <ReflectionPrompt>Before submitting your brief — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
     </>
   );
@@ -1242,13 +1276,13 @@ function Lesson_8_2() {
         <KeyInsight>You do not need a perfect agent. You need an honest one — one whose limitations are named, whose design decisions are justified, and whose outputs are demonstrably real.</KeyInsight>
       </Section>
       <SlideImage src="/assets/courses/lesson-8-2/slide-2.png" alt="Slide 2" />
-      <ReflectionPrompt>Write your final ethics review using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Add it to your README before final submission.</ReflectionPrompt>
+      <ReflectionPrompt>Write your final ethics review using the four dimensions: Identification, Analysis, Design Response, and Honest Limitations. For each dimension, write 2–3 sentences. Write it in ethics-review.md in the root of your repository, and point to it from the Ethics review section of your README.</ReflectionPrompt>
     </>
   );
 }
 
 // ─── Course Closing ───────────────────────────────────────────────────────────
-function CourseClosing() {
+function CourseClosing({ separateTrack }: { separateTrack?: boolean }) {
   return (
     <>
       <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="What You Have Learned" />
@@ -1272,12 +1306,12 @@ function CourseClosing() {
       <SlideImage src="/assets/courses/course-closing/slide-2.png" alt="Phase Summary" />
       <Section title="What to Submit">
       <SlideImage src="/assets/courses/course-closing/slide-1.png" alt="Slide 1" />
-        <p style={p}>To receive your certificate, submit all four deliverables through the portal before the deadline.</p>
+        <p style={p}>To receive your certificate, put all four deliverables in your GitHub repository and submit it in the box at the end of this lesson.</p>
         {[
-          ["01", "Working Agent Prototype", "A link to your GitHub repository or a ZIP file containing all project files. The prototype must be runnable — include a README with setup instructions."],
+          ["01", "Working Agent Prototype", "Your GitHub repository, containing all project files. The prototype must be runnable, so include a README with setup instructions."],
           ["02", "Demo Recording", "A 2–5 minute screen recording showing the agent working with real input. Upload to YouTube (unlisted) or Google Drive and include the link."],
           ["03", "Project README", "The six-section README completed during Phases 2 and 3. Minimum 400 words. Include your edge case test results."],
-          ["04", "Ethics Review", "The four-dimension ethics review. This is assessed separately from the README — submit it as a standalone section or document."],
+          ["04", "Ethics Review", "The four-dimension ethics review. This is assessed separately from the README. Put it in ethics-review.md in the root of your repository."],
         ].map(({ "0": num, "1": title, "2": desc }) => (
           <div key={num} style={{ display: "flex", gap: 16, padding: "14px 0", borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ width: 36, height: 36, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{num}</div>
@@ -1321,12 +1355,16 @@ function CourseClosing() {
         <YouTubeEmbed id="JL4-eOusYBk" title="How to Upload Project to GitHub Using Git 2025" note="Watch: Full Git terminal workflow — Track C recommended method (12 min)" />
         <CalloutBox label="Submission Steps — All Tracks" variant="tip">
           {[
-            "Create a free GitHub account at github.com if you do not have one",
-            "Create a new repository — name it after your project (e.g. flu-sentinel-agent)",
+            "Create a free GitHub account and a public repository if you have not yet (the GitHub guide linked from Lesson 4.4 shows how)",
             "Upload your project files using the method for your track above",
             "Make sure README.md and ethics-review.md are in the root of your repository",
-            "Copy your repository URL (e.g. github.com/yourname/flu-sentinel-agent)",
-            "Paste the link in your final submission form — that is all that is required",
+            // The Student ID is checked by the course project box, which
+            // licei / universita students do not use.
+            ...(separateTrack ? [] : ["Write your Student ID in the Team section of README.md (every team member adds their own)"]),
+            "Add your demo video to the repository, or link it in the README (YouTube unlisted, Google Drive, Loom or Vimeo)",
+            separateTrack
+              ? "Add the repository link to your team's project in the box at the end of this lesson"
+              : "Submit the repository link in the box at the end of this lesson",
           ].map((step, i) => (
             <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{i + 1}</div>
@@ -1347,7 +1385,7 @@ function CourseClosing() {
 }
 
 // ─── Lesson content map ───────────────────────────────────────────────────────
-const LESSON_CONTENT: Record<string, React.FC> = {
+const LESSON_CONTENT: Record<string, React.FC<{ separateTrack?: boolean }>> = {
   "lesson-1-1": Lesson_1_1,
   "lesson-1-2a": Lesson_1_2a,
   "lesson-1-2b": Lesson_1_2b,
@@ -1455,7 +1493,7 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
       <div className="lesson-body" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
         <div className="lesson-content">
           {ContentComponent ? (
-            <ContentComponent />
+            <ContentComponent separateTrack={!!extra} />
           ) : (
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 48, textAlign: "center", boxShadow: SHADOW }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🚧</div>
@@ -1465,6 +1503,14 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
           )}
 
           {extra}
+
+          {/* GitHub project. Not for licei / universita students: `extra` is
+              their own team and submission console on these two lessons. */}
+          {isAuthenticated && !extra && PROJECT_BOX[lesson.slug] && (
+            // Reloads when the closing reflection is saved, so the lesson count
+            // it shows includes the lesson the student just finished.
+            <CourseProjectBox mode={PROJECT_BOX[lesson.slug]} lessonSubmitted={isSubmitted} />
+          )}
 
           {/* Submission Box */}
           <LessonSubmissionBox
