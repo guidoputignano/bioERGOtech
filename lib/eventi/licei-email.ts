@@ -178,9 +178,9 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
     </div>
 
     <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
-      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Ciao ${nome}, ci sei.</h2>
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Ciao ${esc(nome)}, ci sei.</h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
-        Abbiamo ricevuto la tua iscrizione al percorso, tramite <strong>${istituto}</strong>.
+        Abbiamo ricevuto la tua iscrizione al percorso, tramite <strong>${esc(istituto)}</strong>.
       </p>
 
       <p style="color:#718096;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Due cose da fare</p>
@@ -640,10 +640,10 @@ export function accessoEmailHtml(input: AccessoEmailInput): string {
     ${INTESTAZIONE}
     <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
       <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">
-        Ciao ${nome}, ti manca solo la password.
+        Ciao ${esc(nome)}, ti manca solo la password.
       </h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
-        Sei iscritto al percorso con ${istituto}, ma il tuo account non ha ancora una password,
+        Sei iscritto al percorso con ${esc(istituto)}, ma il tuo account non ha ancora una password,
         quindi non puoi entrare nelle lezioni. Si imposta in un minuto, dal pulsante qui sotto.
       </p>
 
@@ -654,8 +654,9 @@ export function accessoEmailHtml(input: AccessoEmailInput): string {
       </div>
 
       <p style="color:#718096;font-size:13px;line-height:1.7;margin:0;">
-        Il link scade dopo un po'. Se lo trovi scaduto, chiedi al tuo docente referente di
-        rimandartelo: gli basta un clic.
+        Il link scade dopo un po', e ogni link nuovo sostituisce il precedente: se hai ricevuto
+        più email come questa, usa l'ultima. Se lo trovi scaduto, chiedi al tuo docente referente
+        di rimandartelo: gli basta un clic.
       </p>
       ${chiusura()}
     </div>
@@ -665,9 +666,14 @@ export function accessoEmailHtml(input: AccessoEmailInput): string {
 /* ── Docenti del progetto ─────────────────────────────────────────────── */
 
 /**
- * Le due email che partono quando il referente indica un collega. Qui i
- * nomi li scrive a mano il referente, e la denominazione dell'istituto
- * arriva dal modulo pubblico: si escapano, a differenza dei testi fissi.
+ * L'escape dei testi scritti a mano, dove lo si usa: le due email che
+ * partono quando il referente indica un collega (nomi scritti dal
+ * referente, denominazione dell'istituto dal modulo pubblico), l'avviso
+ * sulle riflessioni, e le due email allo studente con il link per la
+ * password (`studenteEmailHtml`, `accessoEmailHtml`: il nome che lo
+ * studente scrive iscrivendosi e l'istituto), che partono anche dall'invio
+ * a tutti, senza che nessuno abbia guardato la riga. Gli altri modelli di
+ * questo file inseriscono ancora i loro testi cosi come arrivano.
  */
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

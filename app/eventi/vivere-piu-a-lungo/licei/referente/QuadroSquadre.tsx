@@ -117,6 +117,7 @@ export function QuadroSquadre({
   aggiornatoAlle,
   aggiornando,
   onAggiorna,
+  accessiNonLetti = false,
 }: {
   /** Le iscrizioni dell'istituto, come le manda la rotta del referente. */
   iscrizioni: IscrizioneQuadroInput[];
@@ -138,6 +139,11 @@ export function QuadroSquadre({
   aggiornando: boolean;
   /** Ricarica i dati della console. Torna il messaggio d'errore, o null. */
   onAggiorna: () => Promise<string | null>;
+  /**
+   * Vero se la rotta non ha potuto leggere gli accessi: allora "Mai
+   * entrato" non si sa, e al suo posto si mostrano le lezioni.
+   */
+  accessiNonLetti?: boolean;
 }) {
   const [erroreAggiorna, setErroreAggiorna] = useState<string | null>(null);
 
@@ -381,7 +387,7 @@ export function QuadroSquadre({
                           <span style={{ minWidth: 0, overflowWrap: "anywhere", color: "var(--text-dark)" }}>
                             {st.cognome} {st.nome}
                           </span>
-                          {st.maiEntrato ? (
+                          {st.maiEntrato && !accessiNonLetti ? (
                             <span
                               className="badge"
                               style={{ ...badgePiccolo, background: "#B44A5E1A", color: "#B44A5E" }}

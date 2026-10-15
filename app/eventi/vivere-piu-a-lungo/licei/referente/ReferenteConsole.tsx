@@ -29,7 +29,7 @@
  * si leggono quando il docente apre la scheda.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,9 @@ import {
   ISTRUZIONI_DOCENTE_PATH,
   ISTRUZIONI_REFERENTE,
   MESSAGGIO_MENTOR_ADESIONE_IN_VERIFICA,
+  RIMANDA_TUTTI_MAX,
+  RIMANDA_TUTTI_MINUTI,
+  RIMANDA_TUTTI_RECENTE_MINUTI,
   STATI_ADESIONE_CHE_ACCETTANO,
 } from "../content";
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
@@ -84,6 +87,28 @@ type Ruolo = "referente" | "docente";
 type Io = { id: string | null; nome: string; cognome: string; classi: string[] };
 /** Le fasi del percorso, come le legge la rotta: "aperte" o "chiuse". */
 type Fasi = { squadre: string; consegne: string };
+/** L'esito dell'ultimo rinvio del link a tutti, in soli numeri. */
+type EsitoTutti = {
+  inviati: number;
+  /**
+   * Rimasti fuori: oltre il tetto, o con un link di pochi minuti fa (uno
+   * nuovo lo annullerebbe). Li raggiunge l'invio successivo.
+   */
+  saltati: number;
+  /** Gia raggiunti da un invio precedente dello stesso ciclo: non restano. */
+  giaRaggiunti: number;
+  /** Con un indirizzo non valido: nessun invio li raggiunge, va corretto. */
+  nonValidi: number;
+  errori: number;
+  at: string;
+  prossimo: string | null;
+  nessuno: boolean;
+};
+
+const ora = (iso: string): string =>
+  new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+
+const studenti = (n: number): string => `${n} ${n === 1 ? "studente" : "studenti"}`;
 
 export function ReferenteConsole({
   talk = null,
@@ -113,6 +138,28 @@ export function ReferenteConsole({
   // di fila, e con un id solo la conferma sul primo sparirebbe appena tocca
   // il secondo, facendogli credere di non averlo fatto.
   const [rimandati, setRimandati] = useState<Set<string>>(new Set());
+  // Vero se la rotta non ha potuto leggere gli accessi: allora nessuno si
+  // segna "Mai entrato", perche non lo sappiamo, e la console lo dice.
+  const [accessiNonLetti, setAccessiNonLetti] = useState(false);
+  // Il link a tutti quelli che non sono mai entrati: da quando si puo
+  // ripetere (arriva anche dalla GET, cosi il bottone resta spento dopo un
+  // ricaricamento), l'esito dell'ultimo invio, la conferma aperta.
+  const [prossimoTutti, setProssimoTutti] = useState<string | null>(null);
+  // L'ora dell'ultimo invio a tutti, dalla GET: dopo un ricaricamento, o
+  // per un collega, dice perche il bottone e spento.
+  const [ultimoTutti, setUltimoTutti] = useState<string | null>(null);
+  const [esitoTutti, setEsitoTutti] = useState<EsitoTutti | null>(null);
+  const [erroreTutti, setErroreTutti] = useState<string | null>(null);
+  const [confermaTutti, setConfermaTutti] = useState(false);
+  const [inviandoTutti, setInviandoTutti] = useState(false);
+  // Il fuoco segue la conferma, che prende il posto del bottone principale:
+  // aperta, va su "Conferma"; chiusa (invio finito o "Annulla"), torna sul
+  // bottone principale, o sulla scheda se il bottone e spento, invece di
+  // cadere in cima alla pagina.
+  const [confermaChiusaTutti, setConfermaChiusaTutti] = useState(0);
+  const schedaTuttiRef = useRef<HTMLDivElement>(null);
+  const bottoneTuttiRef = useRef<HTMLButtonElement>(null);
+  const confermaTuttiRef = useRef<HTMLButtonElement>(null);
   // Il denominatore del "9 su 23" arriva dal server invece di essere scritto
   // qui: le lezioni del corso possono cambiare, e un numero copiato a mano
   // diventerebbe falso senza che nessuno se ne accorga.
@@ -168,6 +215,9 @@ export function ReferenteConsole({
       setValoreFiltro((v) => v ?? filtroIniziale(ioNuovo.classi));
       setTotaleLezioni(data.totale_lezioni ?? 0);
       setRighe(data.iscrizioni ?? []);
+      setAccessiNonLetti(data.accessi_non_letti === true);
+      setProssimoTutti(data.rimanda_tutti?.prossimo_invio_at ?? null);
+      setUltimoTutti(data.rimanda_tutti?.ultimo_invio_at ?? null);
       setSquadre(data.squadre ?? []);
       setSquadreErrore(data.squadre_errore === true);
       setAltriIstituti(data.componenti_altri_istituti ?? []);
@@ -186,6 +236,28 @@ export function ReferenteConsole({
   useEffect(() => {
     carica();
   }, [carica]);
+
+  // Finito il tempo d'attesa, il bottone del rinvio a tutti si riaccende da
+  // solo, senza ricaricare la pagina.
+  useEffect(() => {
+    if (!prossimoTutti) return;
+    const t = setTimeout(
+      () => setProssimoTutti(null),
+      Math.max(0, new Date(prossimoTutti).getTime() - Date.now()) + 500,
+    );
+    return () => clearTimeout(t);
+  }, [prossimoTutti]);
+
+  useEffect(() => {
+    if (confermaTutti) confermaTuttiRef.current?.focus();
+  }, [confermaTutti]);
+
+  useEffect(() => {
+    if (confermaChiusaTutti === 0) return;
+    const bottone = bottoneTuttiRef.current;
+    if (bottone && !bottone.disabled) bottone.focus();
+    else schedaTuttiRef.current?.focus();
+  }, [confermaChiusaTutti]);
 
   const aggiorna = async (id: string, patch: Record<string, unknown>) => {
     setSalvando(id);
@@ -223,6 +295,59 @@ export function ReferenteConsole({
       setErrore(err instanceof Error ? err.message : "Invio non riuscito.");
     } finally {
       setSalvando(null);
+    }
+  };
+
+  // Il link a tutti quelli che non sono mai entrati. Chi riceve davvero lo
+  // decide il server, rileggendo iscrizioni e accessi: qui si manda solo
+  // l'azione, e l'esito torna in numeri.
+  const rimandaATutti = async () => {
+    setInviandoTutti(true);
+    setErroreTutti(null);
+    // L'esito di prima non vale piu: accanto a un errore nuovo direbbe
+    // numeri e un'ora ormai vecchi.
+    setEsitoTutti(null);
+    try {
+      const res = await fetch("/api/eventi/licei/referente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ azione: "rimanda_accesso_tutti" }),
+      }).catch(() => null);
+      const data = res ? await res.json().catch(() => null) : null;
+      if (!res || !data) {
+        // La rete e caduta, o la risposta non e quella della rotta (tempo
+        // scaduto, errore della piattaforma): l'invio puo essere partito o
+        // no. Si rilegge lo stato, cosi il bottone si spegne se l'invio e
+        // stato avviato.
+        setErroreTutti(
+          "Non sappiamo se l'invio è partito. Ricarichi la pagina fra qualche minuto prima di riprovare.",
+        );
+        await carica({ silenzioso: true });
+        return;
+      }
+      if (data.prossimo_invio_at !== undefined) setProssimoTutti(data.prossimo_invio_at ?? null);
+      // L'ora della GET ormai e vecchia: quella nuova, se c'e, la dice l'esito.
+      setUltimoTutti(null);
+      if (!res.ok) throw new Error(data.error || "Invio non riuscito.");
+      setEsitoTutti({
+        inviati: data.inviati ?? 0,
+        saltati: data.saltati ?? 0,
+        giaRaggiunti: data.gia_raggiunti ?? 0,
+        nonValidi: data.non_validi ?? 0,
+        errori: data.errori ?? 0,
+        at: data.inviato_at ?? new Date().toISOString(),
+        prossimo: data.prossimo_invio_at ?? null,
+        nessuno: data.nessuno === true,
+      });
+      // Il server non ha trovato nessuno a cui mandarlo: i numeri a schermo
+      // sono vecchi.
+      if (data.nessuno === true) carica({ silenzioso: true });
+    } catch (err) {
+      setErroreTutti(err instanceof Error ? err.message : "Invio non riuscito.");
+    } finally {
+      setInviandoTutti(false);
+      setConfermaTutti(false);
+      setConfermaChiusaTutti((n) => n + 1);
     }
   };
 
@@ -271,6 +396,26 @@ export function ReferenteConsole({
         (r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !haFattoAccesso(r),
       ).length,
     [righeFiltrate],
+  );
+
+  // A chi il bottone sopra l'elenco rimanda il link: tutto l'istituto, non
+  // la classe scelta, perche l'invio riguarda tutto l'istituto. In attesa o
+  // confermati, con un account, mai entrati. Senza gli accessi, `ultimo_accesso`
+  // e nullo per tutti e la regola si ferma alle lezioni: chi e entrato lo
+  // scarta il server, account per account, prima di mandare qualcosa.
+  const daRimandare = useMemo(
+    () =>
+      righe.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato) && r.ha_account && !haFattoAccesso(r))
+        .length,
+    [righe],
+  );
+  // Mai entrati senza un account: il contatore "Mai entrati nel corso" li
+  // conta, il bottone no, e una nota sotto il bottone lo dice.
+  const maiEntratiSenzaAccount = useMemo(
+    () =>
+      righe.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !r.ha_account && !haFattoAccesso(r))
+        .length,
+    [righe],
   );
 
   // Confermati che non hanno completato nemmeno una lezione. Diverso da "mai
@@ -500,6 +645,27 @@ export function ReferenteConsole({
         </div>
       )}
 
+      {/* Gli accessi non si sono potuti leggere: lo si dice, invece di
+          segnare tutta la scuola come "Mai entrato". */}
+      {accessiNonLetti && righe.length > 0 && (
+        <div
+          role="status"
+          style={{
+            background: "#FFF8E6",
+            border: "1px solid #F0D89B",
+            borderRadius: 10,
+            padding: "12px 16px",
+            fontSize: 13.5,
+            color: "#75570F",
+            lineHeight: 1.6,
+          }}
+        >
+          Non riusciamo a leggere gli accessi in questo momento, quindi per ora non indichiamo chi non
+          è mai entrato nel corso. Il link si può rimandare lo stesso: prima dell&apos;invio a tutti
+          controlliamo noi chi è già entrato.
+        </div>
+      )}
+
       {/* ── Conteggi ── */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div className="card-sm" style={{ padding: 16 }}>
@@ -517,18 +683,20 @@ export function ReferenteConsole({
         <div className="card-sm" style={{ padding: 16 }}>
           <div
             className="stat-number"
-            style={{ fontSize: 26, color: maiEntrati > 0 ? "#B44A5E" : undefined }}
+            style={{ fontSize: 26, color: !accessiNonLetti && maiEntrati > 0 ? "#B44A5E" : undefined }}
+            title={accessiNonLetti ? "Gli accessi non si sono potuti leggere in questo momento." : undefined}
           >
-            {maiEntrati}
+            {accessiNonLetti ? "n.d." : maiEntrati}
           </div>
           <div className="stat-label">Mai entrati nel corso</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div
             className="stat-number"
-            style={{ fontSize: 26, color: fermiAZero > 0 ? "#8A6100" : undefined }}
+            style={{ fontSize: 26, color: !accessiNonLetti && fermiAZero > 0 ? "#8A6100" : undefined }}
+            title={accessiNonLetti ? "Gli accessi non si sono potuti leggere in questo momento." : undefined}
           >
-            {fermiAZero}
+            {accessiNonLetti ? "n.d." : fermiAZero}
           </div>
           <div className="stat-label">Entrati ma fermi a zero lezioni</div>
         </div>
@@ -581,6 +749,148 @@ export function ReferenteConsole({
           </>
         )}
       </div>
+
+      {/* ── Il link a tutti quelli che non sono mai entrati ──
+          Per quando il primo link non e arrivato a nessuno, per esempio
+          perche la posta della scuola bloccava le email esterne. Un clic,
+          una conferma piccola, poi il bottone resta spento per il tempo
+          d'attesa. Resta visibile dopo l'invio, con l'esito. */}
+      {(daRimandare > 0 || esitoTutti || erroreTutti) && (
+        <div
+          ref={schedaTuttiRef}
+          tabIndex={-1}
+          role="group"
+          aria-label="Rimanda il link a chi non è mai entrato"
+          className="card-sm focus:outline-none"
+          style={{ padding: 16 }}
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            {confermaTutti ? (
+              <div role="group" aria-label="Conferma dell'invio" className="flex flex-wrap items-center gap-2">
+                <span style={{ fontSize: 13.5, color: "var(--text-dark)", lineHeight: 1.6 }}>
+                  {accessiNonLetti
+                    ? "Parte un link nuovo a chi, in tutto l'istituto, non è mai entrato."
+                    : `Parte un link nuovo a ${studenti(daRimandare)} di tutto l'istituto.`}
+                  {daRimandare > RIMANDA_TUTTI_MAX &&
+                    ` Al massimo ${RIMANDA_TUTTI_MAX} per volta: gli altri con l'invio successivo.`}
+                </span>
+                <Button
+                  ref={confermaTuttiRef}
+                  type="button"
+                  size="sm"
+                  onClick={rimandaATutti}
+                  disabled={inviandoTutti}
+                >
+                  {inviandoTutti ? "Invio in corso…" : "Conferma"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setConfermaTutti(false);
+                    setConfermaChiusaTutti((n) => n + 1);
+                  }}
+                  disabled={inviandoTutti}
+                >
+                  Annulla
+                </Button>
+              </div>
+            ) : (
+              <Button
+                ref={bottoneTuttiRef}
+                type="button"
+                onClick={() => {
+                  setErroreTutti(null);
+                  setConfermaTutti(true);
+                }}
+                disabled={daRimandare === 0 || prossimoTutti !== null}
+                style={{ whiteSpace: "normal", height: "auto", minHeight: 36, textAlign: "left" }}
+              >
+                <i className="fas fa-paper-plane" aria-hidden="true" />
+                {accessiNonLetti
+                  ? "Rimanda il link a chi non è mai entrato"
+                  : `Rimanda il link a chi non è mai entrato (${daRimandare})`}
+              </Button>
+            )}
+            {/* Con un errore no: il messaggio qui sotto dice gia da quando
+                riprovare, e due volte la stessa frase confonde. */}
+            {prossimoTutti && !confermaTutti && !erroreTutti && (
+              <span style={{ fontSize: 12.5, color: "var(--text-light)" }}>
+                {/* Dopo un ricaricamento, o per un collega, l'ora dell'ultimo
+                    invio dice perche il bottone e spento. "Avviato" e non
+                    "inviato": la prenotazione resta anche se nessuna email
+                    e partita. */}
+                {!esitoTutti && ultimoTutti && `Ultimo invio a tutti avviato alle ${ora(ultimoTutti)}. `}
+                Si può ripetere dalle {ora(prossimoTutti)}.
+              </span>
+            )}
+          </div>
+
+          {/* Il numero sul bottone riguarda tutto l'istituto e solo chi ha un
+              account; quello di "Mai entrati nel corso" segue il filtro e
+              conta anche chi l'account non ce l'ha. Quando differiscono, lo
+              si dice qui. */}
+          {!accessiNonLetti &&
+            daRimandare > 0 &&
+            (filtroClassi.chiavi !== null || maiEntratiSenzaAccount > 0) && (
+              <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.6, margin: "10px 0 0" }}>
+                {filtroClassi.chiavi !== null &&
+                  "Il numero sul bottone riguarda tutto l'istituto, non solo le classi scelte. "}
+                {maiEntratiSenzaAccount > 0 &&
+                  (maiEntratiSenzaAccount === 1
+                    ? "Uno studente mai entrato non ha un account e il link non lo raggiunge: ce lo segnali e lo sistemiamo noi."
+                    : `${maiEntratiSenzaAccount} studenti mai entrati non hanno un account e il link non li raggiunge: ce lo segnali e lo sistemiamo noi.`)}
+              </p>
+            )}
+
+          {/* Sempre montato: un'area di stato che c'e gia prima dell'esito
+              viene letta dai lettori di schermo quando il testo cambia. */}
+          <div role="status">
+            {esitoTutti && (
+              <p style={{ fontSize: 13.5, color: "var(--text-dark)", lineHeight: 1.6, margin: "10px 0 0" }}>
+                {esitoTutti.nessuno ? (
+                  esitoTutti.saltati > 0 ? (
+                    `Nessun link è partito: a ${studenti(esitoTutti.saltati)} un link è stato mandato pochi minuti fa, e uno nuovo lo annullerebbe. Se non arriva, può ripetere l'invio fra ${RIMANDA_TUTTI_RECENTE_MINUTI} minuti.${esitoTutti.nonValidi > 0 ? ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: ce lo segnali e lo sistemiamo noi.` : ""}`
+                  ) : esitoTutti.giaRaggiunti > 0 ? (
+                    `Nessun link è partito: con gli invii precedenti è già stato mandato a tutti quelli che non sono ancora entrati. Se uno studente le dice che non gli è arrivato, usi il bottone sulla sua riga.${esitoTutti.nonValidi > 0 ? ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: ce lo segnali e lo sistemiamo noi.` : ""}`
+                  ) : esitoTutti.nonValidi > 0 ? (
+                    `Nessun link è partito: per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido. Ce lo segnali e lo sistemiamo noi.`
+                  ) : (
+                    "Non c'è nessuno a cui rimandarlo: risultano tutti entrati nel corso."
+                  )
+                ) : (
+                  <>
+                    <i className="fas fa-check" style={{ marginRight: 6, color: "var(--primary-dark)" }} aria-hidden="true" />
+                    Link inviato a {studenti(esitoTutti.inviati)} alle {ora(esitoTutti.at)}.
+                    {esitoTutti.giaRaggiunti > 0 &&
+                      ` A ${studenti(esitoTutti.giaRaggiunti)} era già stato mandato con un invio precedente.`}
+                    {esitoTutti.saltati > 0 &&
+                      ` ${esitoTutti.saltati === 1 ? "Resta" : "Restano"} da raggiungere ${studenti(esitoTutti.saltati)}: può ripetere l'invio ${esitoTutti.prossimo ? `dalle ${ora(esitoTutti.prossimo)}` : `fra ${RIMANDA_TUTTI_MINUTI} minuti`}.`}
+                    {esitoTutti.nonValidi > 0 &&
+                      ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: ce lo segnali e lo sistemiamo noi.`}
+                    {/* Non "riprovi con il bottone sulla riga": la risposta ha
+                        solo numeri, e cliccare righe a caso annullerebbe i
+                        link appena arrivati. Il bottone serve per chi dice
+                        che l'email non gli e arrivata. */}
+                    {esitoTutti.errori > 0 &&
+                      ` Per ${studenti(esitoTutti.errori)} l'invio non è riuscito: se uno studente le dice che l'email non gli è arrivata, usi il bottone sulla sua riga.`}
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+          {erroreTutti && (
+            <p role="alert" style={{ color: "#E74C6F", fontSize: 13.5, lineHeight: 1.6, margin: "10px 0 0" }}>
+              {erroreTutti}
+            </p>
+          )}
+
+          <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.6, margin: "10px 0 0" }}>
+            Se uno studente non trova l&apos;email, controlli Spam. Non serve rifare l&apos;iscrizione.
+          </p>
+        </div>
+      )}
 
       {errore && <p style={{ color: "#E74C6F", fontSize: 14 }}>{errore}</p>}
 
@@ -659,20 +969,25 @@ export function ReferenteConsole({
               </span>
 
               {/* Iscritto ma senza password: risulta a posto ovunque e nel
-                  corso non entra. Il badge lo dice, il bottone lo rimedia. */}
+                  corso non entra. Il badge lo dice, il bottone lo rimedia, in
+                  attesa o confermato che sia. Senza gli accessi il badge non
+                  si mostra, perche non lo sappiamo, tranne a chi l'account
+                  non ce l'ha proprio; il bottone resta. */}
               {STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !haFattoAccesso(r) && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                  <span
-                    className="badge"
-                    style={{ background: "#B44A5E1A", color: "#B44A5E" }}
-                    title={
-                      r.ha_account
-                        ? "Ha un account ma non ha mai impostato la password, quindi non può aprire le lezioni. Il bottone qui accanto gli rimanda il link."
-                        : "Questa iscrizione non ha un account collegato, quindi lo studente non può entrare nel corso. Ce lo segnali e lo sistemiamo noi."
-                    }
-                  >
-                    Mai entrato
-                  </span>
+                  {(!accessiNonLetti || !r.ha_account) && (
+                    <span
+                      className="badge"
+                      style={{ background: "#B44A5E1A", color: "#B44A5E" }}
+                      title={
+                        r.ha_account
+                          ? "Ha un account ma non ha mai impostato la password, quindi non può aprire le lezioni. Il bottone qui accanto gli rimanda il link."
+                          : "Questa iscrizione non ha un account collegato, quindi lo studente non può entrare nel corso. Ce lo segnali e lo sistemiamo noi."
+                      }
+                    >
+                      Mai entrato
+                    </span>
+                  )}
                   {r.ha_account && (
                     <Button
                       type="button"
@@ -785,6 +1100,7 @@ export function ReferenteConsole({
           aggiornatoAlle={aggiornatoAlle}
           aggiornando={aggiornando}
           onAggiorna={() => carica({ silenzioso: true })}
+          accessiNonLetti={accessiNonLetti}
         />
       )}
 

@@ -615,6 +615,25 @@ export const statoDocenteColore = (v: string): string =>
 export const RIMANDA_INVITO_MINUTI = 10;
 
 /**
+ * Il link della password, rimandato in una volta a tutti gli studenti
+ * dell'istituto che non sono mai entrati. Serve quando la posta della
+ * scuola ha bloccato le email esterne e nessuno ha ricevuto il primo link:
+ * l'iscrizione c'e, non va rifatta, manca solo il link. Una volta ogni
+ * dieci minuti per istituto, e al massimo cento studenti per volta: chi
+ * resta fuori dal giro lo raggiunge l'invio successivo.
+ */
+export const RIMANDA_TUTTI_MINUTI = 10;
+export const RIMANDA_TUTTI_MAX = 100;
+/**
+ * Chi ha ricevuto un link da meno di cosi, alla registrazione o dal bottone
+ * sulla riga, resta fuori dall'invio a tutti: un link nuovo annulla il
+ * precedente, e lo studente che apre l'email appena arrivata lo troverebbe
+ * scaduto. Piu corto del tempo d'attesa, cosi l'invio successivo lo
+ * raggiunge sempre, anche con qualche secondo di differenza fra gli orologi.
+ */
+export const RIMANDA_TUTTI_RECENTE_MINUTI = 5;
+
+/**
  * La dichiarazione del referente quando indica un collega. Al posto di un
  * nuovo modulo firmato dal dirigente: si salva con l'invito, testo compreso,
  * e l'istituto ne riceve notizia al suo indirizzo istituzionale.

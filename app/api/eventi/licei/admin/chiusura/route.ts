@@ -10,6 +10,7 @@ import {
   type EsitoCancellazione,
 } from "@/lib/eventi/licei-server";
 import { TABELLA_TALK } from "@/lib/eventi/talk-server";
+import { PREFISSO_RIMANDA_TUTTI } from "@/lib/eventi/licei-rimanda-accesso";
 
 /** I ruoli dei talk che appartengono al percorso licei. */
 const RUOLI_TALK_LICEI = ["studente_licei", "docente"];
@@ -597,6 +598,12 @@ export async function POST(request: Request) {
     for (const tabella of tabelle) {
       const { error } = await client.from(tabella).delete().not("id", "is", null);
       if (error) throw new Error(`${tabella}: ${error.message}`);
+    }
+    // Le ore dell'ultimo rinvio del link a tutti, una per istituto: portano
+    // l'impronta di un'adesione che non c'e piu, e non servono a niente.
+    {
+      const { error } = await client.from("licei_config").delete().like("chiave", `${PREFISSO_RIMANDA_TUTTI}%`);
+      if (error) throw new Error(`licei_config: ${error.message}`);
     }
 
     // 5. Il registro: quando, e quanto. Solo numeri, perche `licei_config`
