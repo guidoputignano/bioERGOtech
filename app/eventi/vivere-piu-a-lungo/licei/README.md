@@ -346,8 +346,8 @@ con la riga che ha gia.
 
 | Rotta | Chi | Che cosa |
 | --- | --- | --- |
-| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`. A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
-| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione, rinvio del link di accesso. |
+| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ha_account` (dall'iscrizione), `ultimo_accesso`, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`, `accessi_non_letti` (la funzione degli accessi non ha risposto), `rimanda_tutti` (`ultimo_invio_at`, `prossimo_invio_at`). A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
+| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione. Rinvio del link di accesso: `{ azione: 'rimanda_accesso', id }` a uno studente (409 se l'iscrizione non e attiva), `{ azione: 'rimanda_accesso_tutti' }` a tutti i mai entrati dell'istituto, che risponde `{ inviati, saltati, gia_raggiunti, non_validi, errori, inviato_at, prossimo_invio_at }` oppure 429 con `prossimo_invio_at`. `saltati` sono i rimasti fuori dal tetto o con un link di meno di 5 minuti fa, `gia_raggiunti` quelli a cui il link e gia stato mandato nel ciclo di invii in corso, `non_validi` gli indirizzi da correggere. |
 | `GET .../referente/export` | solo referente | I due CSV (confermati senza email, elenco minimo per foto e video). |
 | `GET`, `POST .../referente/istruzioni` | docenti, anche prima di accettare | Versione, testo, se e quando accettate; `POST { accetto: true }` registra l'accettazione e porta il docente del progetto a `attivo`. |
 | `GET .../referente/docenti` | docenti | Al referente l'elenco completo; a un docente del progetto solo nome e cognome dei colleghi. |
@@ -666,6 +666,43 @@ riga e un bottone che rimanda il link; nel suo CSV una colonna "Entrato nel
 corso", perche su un foglio stampato una data di login non serve. Il link si
 genera al momento dell'invio e non si conserva: un link di recupero salvato a
 database vale quanto una password in chiaro.
+
+**Il link a tutti in una volta** (`lib/eventi/licei-rimanda-accesso.ts`). Se
+la posta della scuola blocca le email esterne, il primo link non arriva a
+nessuno della classe. Gli studenti **non devono rifare l'iscrizione**: il
+bottone "Rimanda il link a chi non e mai entrato (n)", sopra l'elenco, manda
+un link nuovo (lo stesso `accessoEmailHtml`) a ogni iscrizione dell'istituto in
+attesa o confermata, con un account e mai entrata. Chi riceve lo decide il
+server, rileggendo iscrizioni, accessi e lezioni, e poi ogni candidato con
+`auth.admin.getUserById` (che da solo dice chi e entrato, se la funzione degli
+accessi non risponde). Chi ha ricevuto un link negli ultimi
+`RIMANDA_TUTTI_RECENTE_MINUTI` (5) minuti, alla registrazione o dal bottone
+sulla riga, resta fuori e si conta fra i `saltati`: Supabase tiene un solo
+link di recupero per account, e uno nuovo annullerebbe quello che lo studente
+sta forse per aprire. Se Resend rifiuta tutto dopo che i link sono stati
+generati, la prenotazione resta per lo stesso motivo. Al massimo
+`RIMANDA_TUTTI_MAX` (100) per volta, a blocchi di 50 con l'API batch di
+Resend, e una volta ogni `RIMANDA_TUTTI_MINUTI` (10) per istituto: l'ora sta in
+`licei_config`, chiave `rimanda_tutti:<impronta sha256 dell'adesione>`, fuori da
+`CONFIG_CHIAVI`, solo l'ora, senza id e senza `aggiornato_by` perche la tabella
+e pubblica. Oltre il tetto va prima chi l'ultimo link l'ha ricevuto da piu
+tempo (`recovery_sent_at`, letto per tutti i candidati), cosi l'invio dopo
+raggiunge chi era rimasto fuori. Quando qualcuno resta fuori per il tetto,
+gli invii che seguono sono un ciclo, con l'ora d'inizio in
+`rimanda_tutti:<impronta>:ciclo`: a chi e stato mandato un link dall'inizio
+del ciclo non se ne manda un altro, e si conta in `gia_raggiunti`, non fra i
+`saltati`, cosi "Restano da raggiungere" scende a zero e i link appena
+mandati non si annullano. Il ciclo si chiude quando nessuno resta fuori per
+il tetto, quando un'email non parte dopo che il suo link e stato generato (lo
+studente risulterebbe raggiunto senza esserlo), o dopo un'ora, la durata
+predefinita di un link di Supabase; l'invio dopo riparte da tutti quelli che
+non sono entrati. Sotto il tetto il ciclo non c'e: ogni invio va a tutti
+quelli che non sono entrati, tranne chi ha un link di meno di 5 minuti fa. Un
+account che non si legge non riceve niente e si conta fra gli errori. Gli indirizzi non validi si contano
+a parte: ripetere l'invio non li raggiunge, vanno corretti. La cancellazione dei dati
+alla chiusura toglie anche queste chiavi. `ha_account` si legge da `user_id`
+dell'iscrizione, non dalla funzione: se quella non risponde, la console dice
+che gli accessi non si leggono invece di segnare tutti "Mai entrato".
 
 Entrambe le funzioni leggono `auth.users`, che PostgREST non espone, quindi
 sono `security definer` e revocate ad `anon` e `authenticated`. Le chiama solo

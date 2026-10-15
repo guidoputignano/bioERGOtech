@@ -236,7 +236,7 @@ const DOCENTE_BASE: Passo[] = [
         grave: true,
         forte: "Mai entrati nel corso.",
         testo:
-          "Hanno un account ma non hanno mai impostato la password, quindi non possono aprire una lezione. Il bottone accanto al nome rimanda loro il link.",
+          "Hanno un account ma non hanno mai impostato la password, quindi non possono aprire una lezione. Il bottone accanto al nome rimanda loro il link, e quello sopra l'elenco lo rimanda in una volta a tutti quelli che non sono mai entrati. L'iscrizione resta valida: non va rifatta.",
       },
       {
         forte: "Entrati ma fermi a zero lezioni.",
@@ -276,7 +276,7 @@ const STUDENTE: Passo[] = [
         grave: true,
         forte: "È qui che si perde più gente.",
         testo:
-          "Chi rimanda risulta iscritto ovunque e non apre una lezione. Se il messaggio non arriva, guarda nello spam e poi chiedi al tuo professore di rimandartelo: gli basta un clic.",
+          "Chi rimanda risulta iscritto ovunque e non apre una lezione. Se il messaggio non arriva, guarda nello spam e poi chiedi al tuo professore di rimandartelo: gli basta un clic. Non rifare l'iscrizione.",
       },
     ],
   },
@@ -400,6 +400,10 @@ const GUASTI = [
   {
     d: "Uno studente dice che non riesce a entrare nelle lezioni",
     r: "Non ha mai impostato la password. Il docente referente lo vede segnalato nella sua area e gli rimanda il link con un clic.",
+  },
+  {
+    d: "A nessuno studente con l'email della scuola è arrivato il link",
+    r: 'Spesso la posta istituzionale blocca i messaggi esterni. Chieda alla scuola di accettare quelli di bioergotech.org, poi dalla sua area usi "Rimanda il link a chi non è mai entrato": parte un link nuovo a tutti in una volta. Le iscrizioni restano valide, gli studenti non devono rifarle.',
   },
   {
     d: "Uno studente si è iscritto ma il professore non lo vede",

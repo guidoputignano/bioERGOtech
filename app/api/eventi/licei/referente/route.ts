@@ -8,10 +8,25 @@ import {
   confermaEmailHtml,
   confermaEmailSubject,
 } from "@/lib/eventi/licei-email";
-import { SITE_URL, STATI_ISCRIZIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { STATI_ISCRIZIONE, STATI_ISCRIZIONE_ATTIVI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
+import {
+  leggiAccessiIstituto,
+  linkImpostaPassword,
+  rimandaAccessoATutti,
+  statoRimandaTutti,
+} from "@/lib/eventi/licei-rimanda-accesso";
 
 const STATI_VALIDI = new Set<string>(STATI_ISCRIZIONE.map((s) => s.value));
+
+// Il rinvio del link a tutti gli studenti mai entrati genera fino a cento
+// link e li spedisce a blocchi, con una pausa fra l'uno e l'altro: il tempo
+// di default potrebbe non bastare.
+export const maxDuration = 60;
+
+/** L'ora come la legge un docente in Italia. */
+const oraRoma = (iso: string) =>
+  new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Rome" });
 
 /** Le colonne di un'iscrizione che un docente vede. Mai `user_id`. */
 const COLONNE_ISCRIZIONE_DOCENTE =
@@ -53,12 +68,15 @@ export async function GET() {
   // per una funzione, gia filtrata per istituto. Serve al referente per
   // vedere chi risulta iscritto ma non e mai entrato nel corso, che e il
   // solo fallimento di questo percorso a non lasciare traccia da nessuna
-  // altra parte.
+  // altra parte. Se la funzione non risponde, la console lo dice invece di
+  // segnare tutta la scuola come "Mai entrato" (`accessi_non_letti`).
+  // Con gli accessi, l'ora dell'ultimo rinvio del link a tutti: il bottone
+  // resta spento per il tempo d'attesa anche dopo un ricaricamento.
   // In parallelo anche i docenti del progetto e le fasi del percorso. I
   // docenti non devono far cadere l'elenco degli studenti: se la lettura
   // fallisce, la console li chiede da sola alla loro rotta, che l'errore lo
   // dice per esteso.
-  const [{ data, error }, { data: squadre, error: erroreSquadre }, { data: accessi }, docenti, config] = await Promise.all([
+  const [{ data, error }, { data: squadre, error: erroreSquadre }, accessi, rimandaTutti, docenti, config] = await Promise.all([
     client
       .from("licei_iscrizioni")
       .select(`${COLONNE_ISCRIZIONE_DOCENTE}, user_id`)
@@ -71,7 +89,8 @@ export async function GET() {
       .select("id, nome, created_at, licei_progetti(stato, titolo, consegnato_at, finalista)")
       .eq("adesione_id", ctx.adesione.id)
       .order("created_at", { ascending: true }),
-    client.rpc("licei_accessi_istituto", { p_adesione_id: ctx.adesione.id }),
+    leggiAccessiIstituto(client, ctx.adesione.id),
+    statoRimandaTutti(client, ctx.adesione.id),
     rispostaDocenti(client, ctx).catch((err): DocentiRisposta | null => {
       console.error("Licei referente: docenti del progetto non letti:", err);
       return null;
@@ -83,11 +102,6 @@ export async function GET() {
   // Le squadre non fanno cadere l'elenco, ma il quadro deve saperlo: senza
   // questo segnale direbbe "nessuna squadra" a un istituto che ne ha.
   if (erroreSquadre) console.error("Licei referente: squadre non lette:", erroreSquadre);
-
-  const perIscrizione = new Map<string, { ha_account: boolean; ultimo_accesso: string | null }>(
-    ((accessi ?? []) as { iscrizione_id: string; ha_account: boolean; ultimo_accesso: string | null }[])
-      .map((a) => [a.iscrizione_id, { ha_account: a.ha_account, ultimo_accesso: a.ultimo_accesso }]),
-  );
 
   // Rete di sicurezza per il quadro delle squadre: un componente di un altro
   // istituto in una squadra di questo. Oggi non puo succedere, lo impedisce
@@ -153,12 +167,20 @@ export async function GET() {
     // risposta: e l'identificativo dell'account di un minorenne e la console
     // non ne fa niente. Al suo posto viaggiano `ha_account`, che e la sola
     // cosa che il referente deve sapere, e il conteggio.
+    // `ha_account` si legge dall'iscrizione stessa e non dalla funzione degli
+    // accessi: prima, se quella non rispondeva, tutti risultavano senza
+    // account e il bottone "Rimanda il link" spariva per l'intera scuola.
     iscrizioni: (data ?? []).map(({ user_id, ...r }) => ({
       ...r,
-      ha_account: perIscrizione.get(r.id)?.ha_account ?? false,
-      ultimo_accesso: perIscrizione.get(r.id)?.ultimo_accesso ?? null,
+      ha_account: !!user_id,
+      ultimo_accesso: accessi.ultimoAccesso.get(r.id) ?? null,
       lezioni_completate: user_id ? (progresso.get(user_id) ?? 0) : 0,
     })),
+    // Vero se gli accessi non si sono potuti leggere: allora `ultimo_accesso`
+    // e nullo per tutti e non vuol dire "mai entrato".
+    accessi_non_letti: !accessi.letti,
+    // L'ultimo rinvio del link a tutti e da quando si puo ripetere.
+    rimanda_tutti: rimandaTutti,
     // Per il quadro delle squadre: le squadre senza codice, i componenti si
     // ricavano da `squadra_id` e `squadra_ruolo` delle iscrizioni.
     squadre: squadre ?? [],
@@ -266,13 +288,19 @@ export async function PATCH(request: Request) {
 }
 
 /**
- * Rimanda a uno studente il link per impostare la password.
+ * Rimanda il link per impostare la password.
  *
- * L'iscrizione gli crea l'account e gli manda quel link una volta sola,
- * dentro l'email di benvenuto. Se non lo apre, l'account resta senza
- * password: risulta iscritto e confermato ovunque, ma nel corso non entra.
- * Finora l'unico rimedio era scrivere a noi. Adesso il referente, che e
- * l'unico a vedere la classe, se lo risolve da solo.
+ * - `{ azione: "rimanda_accesso", id }`: a uno studente.
+ * - `{ azione: "rimanda_accesso_tutti" }`: a tutti gli studenti
+ *   dell'istituto, in attesa o confermati, che hanno un account e non sono
+ *   mai entrati. Chi sono lo decide il server: il corpo non porta elenchi.
+ *
+ * L'iscrizione crea l'account e manda quel link una volta sola, dentro
+ * l'email di benvenuto. Se non lo apre, o se la posta della scuola blocca
+ * le email esterne, l'account resta senza password: lo studente risulta
+ * iscritto e confermato ovunque, ma nel corso non entra. L'iscrizione non va
+ * rifatta: serve solo un link nuovo, e il referente o un docente del
+ * progetto, che vedono la classe, se lo risolvono da soli.
  *
  * Il link si genera qui e non si conserva: un link di recupero salvato a
  * database vale quanto una password in chiaro.
@@ -282,7 +310,9 @@ export async function POST(request: Request) {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, ctx } = guard;
 
-  const body = (await request.json()) as { id?: string; azione?: string };
+  const body = (await request.json().catch(() => ({}))) as { id?: string; azione?: string };
+
+  if (body.azione === "rimanda_accesso_tutti") return rimandaATutti(client, ctx);
 
   if (body.azione !== "rimanda_accesso") {
     return NextResponse.json({ error: "Azione non riconosciuta." }, { status: 400 });
@@ -306,6 +336,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // Come l'invio a tutti: solo a un'iscrizione attiva. Il bottone sulla
+  // riga c'e solo per quelle, ma una console aperta da prima che un collega
+  // segnasse lo studente come non riconosciuto lo mostra ancora.
+  if (!STATI_ISCRIZIONE_ATTIVI.has(iscrizione.stato)) {
+    return NextResponse.json(
+      { error: "Questa iscrizione non è attiva: il link non si rimanda." },
+      { status: 409 },
+    );
+  }
+
   if (!iscrizione.user_id) {
     return NextResponse.json(
       {
@@ -323,24 +363,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const url = await linkImpostaPassword(client, iscrizione.id, iscrizione.email);
+  if (!url) {
+    return NextResponse.json(
+      { error: "Non è stato possibile generare il link. Riprovi fra poco." },
+      { status: 500 },
+    );
+  }
+
   try {
-    const { data: link, error: erroreLink } = await client.auth.admin.generateLink({
-      type: "recovery",
-      email: iscrizione.email,
-      options: { redirectTo: `${SITE_URL}/auth/update-password` },
-    });
-
-    const url = link?.properties?.action_link;
-    if (erroreLink || !url) {
-      console.error("Licei rimanda accesso: generateLink failed:", erroreLink);
-      return NextResponse.json(
-        { error: "Non è stato possibile generare il link. Riprovi fra poco." },
-        { status: 500 },
-      );
-    }
-
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    // Resend non solleva un'eccezione quando rifiuta un'email: lo dice nella
+    // risposta. Senza questo controllo un rifiuto passava per un invio.
+    const { error: erroreInvio } = await resend.emails.send({
       from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
       to: iscrizione.email,
       subject: accessoEmailSubject(),
@@ -350,11 +385,12 @@ export async function POST(request: Request) {
         setPasswordUrl: url,
       }),
     });
+    if (erroreInvio) throw new Error(erroreInvio.message);
   } catch (err) {
     // Qui l'errore va detto: a differenza della conferma, l'invio e tutto
     // quello che questa chiamata doveva fare. Un successo silenzioso
     // lascerebbe il referente convinto di aver rimediato.
-    console.error("Licei rimanda accesso email failed:", err);
+    console.error(`Licei rimanda accesso: iscrizione ${iscrizione.id}: email non partita:`, err);
     return NextResponse.json(
       { error: "L'email non è partita. Riprovi fra poco." },
       { status: 502 },
@@ -362,4 +398,95 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true });
+}
+
+/**
+ * Il link a tutti quelli che non sono mai entrati. La scelta, il tempo
+ * d'attesa e l'invio a blocchi stanno in `lib/eventi/licei-rimanda-accesso.ts`;
+ * qui solo la traduzione in risposte. Messaggi generici e soli numeri:
+ * nessuna email esce da questa rotta.
+ */
+async function rimandaATutti(
+  client: Parameters<typeof rimandaAccessoATutti>[0]["client"],
+  ctx: { adesione: { id: string; istituto_denominazione: string }; userId: string },
+) {
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json(
+      { error: "L'invio delle email non è configurato. Ce lo segnali." },
+      { status: 503 },
+    );
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const esito = await rimandaAccessoATutti({
+    client,
+    adesioneId: ctx.adesione.id,
+    istituto: ctx.adesione.istituto_denominazione,
+    autore: ctx.userId,
+    contaLezioni: (userIds) => progressoPerUtenti(client, userIds),
+    inviaBlocco: (messaggi, idempotencyKey) =>
+      resend.batch.send(messaggi, { batchValidation: "permissive", idempotencyKey }),
+  });
+
+  switch (esito.esito) {
+    case "inviato":
+      return NextResponse.json({
+        success: true,
+        inviati: esito.inviati,
+        saltati: esito.saltati,
+        gia_raggiunti: esito.gia_raggiunti,
+        non_validi: esito.non_validi,
+        errori: esito.errori,
+        inviato_at: esito.inviato_at,
+        prossimo_invio_at: esito.prossimo_invio_at,
+      });
+    case "nessuno":
+      return NextResponse.json({
+        success: true,
+        nessuno: true,
+        inviati: 0,
+        saltati: esito.saltati,
+        gia_raggiunti: esito.gia_raggiunti,
+        non_validi: esito.non_validi,
+        errori: 0,
+        prossimo_invio_at: null,
+      });
+    case "attesa":
+      return NextResponse.json(
+        {
+          // Neutro: la prenotazione resta anche quando i link sono stati
+          // generati ma nessuna email e partita, e dire "rimandato a tutti"
+          // sarebbe falso.
+          error: esito.prossimo_invio_at
+            ? `Un invio a tutti è stato avviato da poco. Si può ripetere dalle ${oraRoma(esito.prossimo_invio_at)}.`
+            : "Un invio a tutti è stato avviato da poco. Riprovi fra qualche minuto.",
+          prossimo_invio_at: esito.prossimo_invio_at,
+        },
+        { status: 429 },
+      );
+    case "non_partito":
+      return NextResponse.json(
+        {
+          error: esito.prossimo_invio_at
+            ? `Nessuna email è partita. Si può riprovare dalle ${oraRoma(esito.prossimo_invio_at)}.`
+            : "Nessuna email è partita. Riprovi fra qualche minuto.",
+          inviati: 0,
+          saltati: esito.saltati,
+          non_validi: esito.non_validi,
+          errori: esito.errori,
+          prossimo_invio_at: esito.prossimo_invio_at,
+        },
+        { status: 502 },
+      );
+    case "accessi_non_verificabili":
+      return NextResponse.json(
+        { error: "Non riusciamo a leggere gli accessi in questo momento. Riprovi fra qualche minuto." },
+        { status: 503 },
+      );
+    default:
+      return NextResponse.json(
+        { error: "Non è stato possibile completare l'invio. Riprovi fra poco." },
+        { status: 500 },
+      );
+  }
 }

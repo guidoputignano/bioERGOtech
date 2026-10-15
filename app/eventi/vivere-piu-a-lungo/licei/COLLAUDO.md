@@ -158,6 +158,16 @@ Confermi entrambi con **E mio studente**.
 una nuova email con il link della password, e il bottone deve diventare "Link
 inviato".
 
+**Poi il bottone sopra l'elenco**, "Rimanda il link a chi non e mai entrato
+(1)", con la sua conferma. Subito dopo il bottone sulla riga non deve partire
+niente: la console dice "Nessun link e partito: a 1 studente un link e stato
+mandato pochi minuti fa", perche un link nuovo annullerebbe quello appena
+inviato. Lo riprovi dopo 5 minuti: il link deve arrivare allo studente 2 e a
+nessun altro, la console deve dire "Link inviato a 1 studente alle HH:MM" e il
+bottone deve restare spento per 10 minuti, anche ricaricando la pagina. E il
+rimedio per una scuola che bloccava le email esterne: lo studente non rifa
+l'iscrizione, che resta valida.
+
 ### Passo 7. Lo studente segue il corso (incognito dello studente 1)
 
 Vada su `/courses/agentic-ai/lesson/lesson-1-1`, legga, e **consegni la
