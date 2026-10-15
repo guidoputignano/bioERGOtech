@@ -382,3 +382,66 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
     lessonsTotal: SUBMITTABLE_LESSONS.length,
   };
 }
+
+/**
+ * The Course Monitor's "Ready to certify" count, for the Admin Panel badge,
+ * without loading the whole course: only students who submitted a project
+ * are read, then their certificates and lessons, and the same eligibility()
+ * rule decides.
+ */
+export async function countReadyToCertify(client: Client): Promise<number> {
+  const submitted = await readAll<Pick<MembershipRow, "user_id" | "submitted_at" | "check_result">>((from, to) =>
+    client
+      .from("course_project_members")
+      .select("user_id, submitted_at, check_result")
+      .not("submitted_at", "is", null)
+      .order("user_id")
+      .range(from, to),
+  );
+  if (!submitted.length) return 0;
+  const ids = submitted.map((m) => m.user_id);
+
+  const certified = await readByIds<{ user_id: string | null }>(ids, (chunk) =>
+    client.from("course_certificates").select("user_id").is("revoked_at", null).in("user_id", chunk),
+  );
+  const done = new Set(certified.map((c) => c.user_id));
+  const open = submitted.filter((m) => !done.has(m.user_id));
+  if (!open.length) return 0;
+
+  // A student has a row per lesson, so each chunk of ids is paged as well.
+  const CHUNK = 150;
+  const chunks: string[][] = [];
+  for (let i = 0; i < open.length; i += CHUNK) chunks.push(open.slice(i, i + CHUNK).map((m) => m.user_id));
+  const subs = (
+    await Promise.all(
+      chunks.map((chunk) =>
+        readAll<{ user_id: string; lesson_slug: string }>((from, to) =>
+          client
+            .from("lesson_submissions")
+            .select("user_id, lesson_slug")
+            .in("user_id", chunk)
+            .order("id", { ascending: true })
+            .range(from, to),
+        ),
+      ),
+    )
+  ).flat();
+  const slugsBy = new Map<string, string[]>();
+  for (const s of subs) {
+    const list = slugsBy.get(s.user_id) ?? [];
+    list.push(s.lesson_slug);
+    slugsBy.set(s.user_id, list);
+  }
+
+  // Membership rows reference course_projects, so a member always has a project.
+  return open.filter(
+    (m) =>
+      eligibility({
+        lessons: lessonProgress(slugsBy.get(m.user_id) ?? []),
+        hasProject: true,
+        submittedAt: m.submitted_at,
+        check: m.check_result,
+        certificateId: null,
+      }).eligible,
+  ).length;
+}

@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { AttendanceModal } from "@/components/AttendanceModal";
 import CourseMonitorPanel from "@/components/CourseMonitorPanel";
+import { AdminOverview, AdminSectionBar, AdminJumpTo, type AdminGroup, type AdminSection, type AttentionItem } from "@/components/admin/AdminNav";
 const MemberMap = dynamic(() => import("@/components/member-map"), { ssr: false });
 
 const TEAL = "#2EC4B6";
@@ -2662,9 +2663,55 @@ function ApplicationDrawer({
 
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 
-// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
-function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; adminUserId?: string; }) {
-  const [tab, setTab] = useState<"applications" | "users" | "events" | "projects" | "equipment" | "knowledge" | "pending_docs" | "coins" | "redemptions" | "newsletter" | "submissions" | "course">("applications");
+const ADMIN_SECTION_IDS = ["applications", "users", "newsletter", "events", "projects", "equipment", "knowledge", "pending_docs", "coins", "redemptions", "course"] as const;
+type AdminSectionId = (typeof ADMIN_SECTION_IDS)[number];
+type AdminTab = "overview" | AdminSectionId;
+type AdminSummary = { applications: number | null; equipment: number | null; docProposals: number | null; redemptions: number | null; openQuestions: number | null; readyToCertify: number | null };
+
+const ADMIN_GROUPS: AdminGroup[] = [
+  { id: "community", label: "Community", color: "#4A7DFF", tint: "#EEF3FF" },
+  { id: "programmes", label: "Programmes", color: TEAL_DARK, tint: TEAL_LIGHT },
+  { id: "knowledge", label: "Knowledge", color: "#8E5BD9", tint: "#F3EDFC" },
+  { id: "recognition", label: "Recognition", color: "#C48700", tint: "#FFF7E0" },
+  { id: "learning", label: "Learning", color: "#E74C6F", tint: "#FDECF1" },
+];
+
+const ADMIN_SECTIONS: { id: AdminSectionId; label: string; description: string; group: string; icon: string; keywords?: string }[] = [
+  { id: "applications", label: "Applications", description: "Review membership applications", group: "community", icon: "inbox", keywords: "membership join partners requests" },
+  { id: "users", label: "Users", description: "Partnership levels and organisations", group: "community", icon: "users", keywords: "members people roles permissions" },
+  { id: "newsletter", label: "Newsletter", description: "Subscribers and CSV export", group: "community", icon: "mail", keywords: "email subscribers export" },
+  { id: "events", label: "Events", description: "Create events and take attendance", group: "programmes", icon: "calendar", keywords: "meetings calendar attendance" },
+  { id: "projects", label: "Projects", description: "Create and edit foundation projects", group: "programmes", icon: "layers", keywords: "research programmes" },
+  { id: "equipment", label: "Equipment", description: "Approve proposed lab equipment", group: "programmes", icon: "cpu", keywords: "lab instruments facilities proposals" },
+  { id: "knowledge", label: "Knowledge library", description: "Documents in the public library", group: "knowledge", icon: "book", keywords: "documents links resources" },
+  { id: "pending_docs", label: "Doc Proposals", description: "Documents members have proposed", group: "knowledge", icon: "fileText", keywords: "documents approve pending" },
+  { id: "coins", label: "Contributions", description: "Member balances and top-ups", group: "recognition", icon: "star", keywords: "coins points balance rewards" },
+  { id: "redemptions", label: "Redemptions", description: "Reward requests from members", group: "recognition", icon: "tag", keywords: "rewards coins" },
+  { id: "course", label: "Course Monitor", description: "Agentic AI course: questions, projects and certificates", group: "learning", icon: "graduationcap", keywords: "students questions replies certificates github lessons agentic" },
+];
+
+// The open section lives in the address bar (?admin=course), so refresh, links and Back all work.
+function readAdminParam(): AdminTab {
+  if (typeof window === "undefined") return "overview";
+  const v = new URLSearchParams(window.location.search).get("admin");
+  return v && (ADMIN_SECTION_IDS as readonly string[]).includes(v) ? (v as AdminSectionId) : "overview";
+}
+
+function writeAdminParam(tab: AdminTab | null, mode: "push" | "replace") {
+  const url = new URL(window.location.href);
+  if (tab === null) url.searchParams.delete("admin");
+  else url.searchParams.set("admin", tab);
+  if (url.href === window.location.href) return;
+  if (mode === "push") window.history.pushState(null, "", url);
+  else window.history.replaceState(null, "", url);
+}
+
+function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId, adminName }: { onEventsChanged?: () => void; onProjectsChanged?: () => void; adminUserId?: string; adminName?: string; }) {
+  const [tab, setTab] = useState<AdminTab>(readAdminParam);
+  const [courseView, setCourseView] = useState<"students" | "questions">("students");
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const [summary, setSummary] = useState<AdminSummary | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState(true);
   const [applications, setApplications] = useState<Application[]>([]);
   const [appFilter, setAppFilter] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [loadingApps, setLoadingApps] = useState(true);
@@ -2698,9 +2745,6 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
   const [attendanceEvent, setAttendanceEvent] = useState<{ id: string; title: string; created_by?: string; event_date?: string } | null>(null);
   const [pendingRedemptions, setPendingRedemptions] = useState<{ id: string; user_email: string; user_name?: string; item_id: string; item_label: string; coins_spent: number; status: string; admin_notes?: string; created_at: string; actioned_at?: string }[]>([]);
   const [loadingRedemptions, setLoadingRedemptions] = useState(true);
-  const [submissions, setSubmissions] = useState<{ id: string; lesson_slug: string; lesson_title: string; student_id: string; reflection: string | null; question: string | null; comment: string | null; admin_reply: string | null; replied_at: string | null; created_at: string; user_id?: string; profiles?: { full_name?: string | null; email: string; student_id?: string | null; } | null; }[]>([]);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
-  const [submissionReply, setSubmissionReply] = useState<{ id: string; text: string } | null>(null);
   const [allCoinBalances, setAllCoinBalances] = useState<(CoinBalance & { profiles: { email: string; full_name?: string; partnership_level: string } })[]>([]);
   const [loadingCoins, setLoadingCoins] = useState(true);
   const [coinTopUp, setCoinTopUp] = useState<{ userId: string; amount: string; reason: string } | null>(null);
@@ -2722,17 +2766,64 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
     if (tab === "projects") { setLoadingProjects(true); fetch("/api/admin/projects").then(r => r.json()).then(d => { setAdminProjects(d.projects || []); setLoadingProjects(false); }).catch(() => setLoadingProjects(false)); }
     if (tab === "equipment") { setLoadingProposals(true); fetch("/api/admin/equipment").then(r => r.json()).then(d => { setProposals(d.proposals || []); setLoadingProposals(false); }).catch(() => setLoadingProposals(false)); }
     if (tab === "knowledge") { setLoadingKnowledge(true); fetch("/api/admin/knowledge").then(r => r.json()).then(d => { setKnowledgeDocs(d.documents || []); setLoadingKnowledge(false); }).catch(() => setLoadingKnowledge(false)); }
-    if (tab === "submissions") { setLoadingSubmissions(true); fetch("/api/admin/submissions").then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setLoadingSubmissions(false); }); }
     if (tab === "redemptions") { setLoadingRedemptions(true); fetch("/api/redemptions").then(r => r.json()).then(d => { setPendingRedemptions(d.requests || []); setLoadingRedemptions(false); }).catch(() => setLoadingRedemptions(false)); }
     if (tab === "coins") { setLoadingCoins(true); fetch("/api/coins?all=true").then(r => r.json()).then(d => { setAllCoinBalances(d.balances || []); setLoadingCoins(false); }).catch(() => setLoadingCoins(false)); }
     if (tab === "pending_docs") { setLoadingPendingDocs(true); fetch("/api/admin/knowledge?pending=true").then(r => r.json()).then(d => { setPendingDocs(d.documents || []); setLoadingPendingDocs(false); }).catch(() => setLoadingPendingDocs(false)); }
   }, [tab]);
 
+  // Counts for the overview cards and menu badges, refreshed on every section change and after each action.
+  const loadSummary = useCallback(() => {
+    fetch("/api/admin/summary", { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setSummary(d); })
+      .catch(() => {})
+      .finally(() => setLoadingSummary(false));
+  }, []);
+  useEffect(() => { loadSummary(); }, [tab, loadSummary]);
+
+  // Accepts a section id, "overview", or "course:questions" to land on the questions list.
+  const openSection = useCallback((target: string) => {
+    const [id, view] = target.split(":");
+    const next: AdminTab = (ADMIN_SECTION_IDS as readonly string[]).includes(id) ? (id as AdminSectionId) : "overview";
+    if (next === "course") setCourseView(view === "questions" ? "questions" : "students");
+    setTab(next);
+    writeAdminParam(next, "push");
+  }, []);
+
+  // Keep the address bar in step with the panel, follow Back and Forward, and tidy the URL when the panel closes.
+  const tabRef = useRef(tab);
+  useEffect(() => { tabRef.current = tab; }, [tab]);
+  useEffect(() => {
+    writeAdminParam(tabRef.current, "replace");
+    const onPop = () => setTab(readAdminParam());
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      writeAdminParam(null, "replace");
+    };
+  }, []);
+
+  // Ctrl+K (Cmd+K on a Mac) opens "Jump to", unless a drawer or form is open over the panel.
+  const overlayOpen = !!(selectedApp || eventModal.open || projectModal.open || coinTopUp || attendanceEvent);
+  const overlayRef = useRef(overlayOpen);
+  useEffect(() => { overlayRef.current = overlayOpen; }, [overlayOpen]);
+  useEffect(() => {
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+    const onKey = (e: KeyboardEvent) => {
+      if ((mac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === "k" && !overlayRef.current) {
+        e.preventDefault();
+        setJumpOpen(o => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const handleAction = async (id: string, action: "approve" | "decline", notes: string, level: PartnershipLevel) => {
     try {
       const res = await fetch("/api/admin/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ applicantId: id, action, adminNotes: notes, partnershipLevel: level }) });
       const data = await res.json();
-      if (res.ok) { setApplications(prev => prev.map(a => a.id === id ? { ...a, application_status: action === "approve" ? "approved" : "declined", reviewed_at: new Date().toISOString() } : a)); setSelectedApp(null); setActionMessage({ type: "success", text: `Application ${action === "approve" ? "approved" : "declined"} successfully.` }); }
+      if (res.ok) { setApplications(prev => prev.map(a => a.id === id ? { ...a, application_status: action === "approve" ? "approved" : "declined", reviewed_at: new Date().toISOString() } : a)); setSelectedApp(null); loadSummary(); setActionMessage({ type: "success", text: `Application ${action === "approve" ? "approved" : "declined"} successfully.` }); }
       else { setActionMessage({ type: "error", text: data.error || "Failed." }); }
     } catch { setActionMessage({ type: "error", text: "Network error." }); }
   };
@@ -2751,8 +2842,8 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
   const handleDeleteEvent = async (id: string) => { const res = await fetch("/api/admin/events", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminEvents(prev => prev.filter(e => e.id !== id)); onEventsChanged?.(); } };
   const handleSaveProject = async (project: Partial<Project>) => { const isEdit = !!project.id; const res = await fetch("/api/admin/projects", { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(project) }); const data = await res.json(); if (!res.ok) throw new Error(data.error || "Failed to save"); if (isEdit) setAdminProjects(prev => prev.map(p => p.id === project.id ? data.project : p)); else setAdminProjects(prev => [data.project, ...prev]); onProjectsChanged?.(); };
   const handleDeleteProject = async (id: string) => { const res = await fetch("/api/admin/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setAdminProjects(prev => prev.filter(p => p.id !== id)); onProjectsChanged?.(); } };
-  const handleReviewProposal = async (id: string, status: "approved" | "rejected") => { setReviewingProposal(id); try { const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: "" }) }); const data = await res.json(); if (res.ok) setProposals(prev => prev.map(p => p.id === id ? data.proposal : p)); } finally { setReviewingProposal(null); } };
-  const handleDeleteProposal = async (id: string) => { const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) setProposals(prev => prev.filter(p => p.id !== id)); };
+  const handleReviewProposal = async (id: string, status: "approved" | "rejected") => { setReviewingProposal(id); try { const res = await fetch("/api/admin/equipment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status, admin_notes: "" }) }); const data = await res.json(); if (res.ok) { setProposals(prev => prev.map(p => p.id === id ? data.proposal : p)); loadSummary(); } } finally { setReviewingProposal(null); } };
+  const handleDeleteProposal = async (id: string) => { const res = await fetch("/api/admin/equipment", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }); if (res.ok) { setProposals(prev => prev.filter(p => p.id !== id)); loadSummary(); } };
 
   const handleAddKnowledgeDoc = async () => {
     if (!newKnowledgeDoc.title.trim()) return;
@@ -2772,35 +2863,40 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
 
   const handleApproveDoc = async (id: string) => {
     const res = await fetch("/api/admin/knowledge", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, is_approved: true }) });
-    if (res.ok) { setPendingDocs(prev => prev.filter(d => d.id !== id)); }
+    if (res.ok) { setPendingDocs(prev => prev.filter(d => d.id !== id)); loadSummary(); }
   };
 
   const handleRejectDoc = async (id: string) => {
     if (!confirm("Reject and delete this proposal?")) return;
     const res = await fetch("/api/admin/knowledge", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    if (res.ok) setPendingDocs(prev => prev.filter(d => d.id !== id));
+    if (res.ok) { setPendingDocs(prev => prev.filter(d => d.id !== id)); loadSummary(); }
   };
 
   const exportCSV = () => { const csv = ["Name,Email,Source,Date"].concat(subscribers.map(s => `"${s.full_name || ""}","${s.email}","${s.source}","${new Date(s.subscribed_at).toLocaleDateString("en-GB")}"`)).join("\n"); const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `bioergotech-newsletter-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url); };
 
-  const pendingCount = applications.filter(a => a.application_status === "pending").length;
   const pendingProposals = proposals.filter(p => p.status === "pending").length;
   const filteredKnowledgeDocs = knowledgeFilter === "All" ? knowledgeDocs : knowledgeDocs.filter(d => d.category === knowledgeFilter);
   const btnBase: React.CSSProperties = { border: "none", borderRadius: 7, padding: "6px 8px", cursor: "pointer" };
 
-  const tabs = [
-    { id: "applications" as const, label: "Applications", icon: "inbox", badge: (pendingCount > 0 && appFilter === "pending") ? pendingCount : null as number | null },
-    { id: "users" as const, label: "Users", icon: "users", badge: null as number | null },
-    { id: "events" as const, label: "Events", icon: "calendar", badge: null as number | null },
-    { id: "projects" as const, label: "Projects", icon: "layers", badge: null as number | null },
-    { id: "equipment" as const, label: "Equipment", icon: "cpu", badge: pendingProposals > 0 ? pendingProposals : null as number | null },
-    { id: "knowledge" as const, label: "Knowledge", icon: "book", badge: null as number | null },
-    { id: "pending_docs" as const, label: "Doc Proposals", icon: "fileText", badge: pendingDocs.length > 0 ? pendingDocs.length : null as number | null },
-    { id: "coins" as const, label: "Contributions", icon: "star", badge: null as number | null },
-    { id: "redemptions" as const, label: "Redemptions", icon: "award", badge: pendingRedemptions.length > 0 ? pendingRedemptions.length : null as number | null },
-          { id: "submissions" as const, label: "Submissions", icon: "book", badge: null },
-    { id: "course" as const, label: "Course Monitor", icon: "award", badge: null },
-    { id: "newsletter" as const, label: "Newsletter", icon: "mail", badge: null },
+  const badgeFor = (id: AdminSectionId): number | null => {
+    if (!summary) return null;
+    switch (id) {
+      case "applications": return summary.applications;
+      case "equipment": return summary.equipment;
+      case "pending_docs": return summary.docProposals;
+      case "redemptions": return summary.redemptions;
+      case "course": return (summary.openQuestions ?? 0) + (summary.readyToCertify ?? 0) || null;
+      default: return null;
+    }
+  };
+  const sections: AdminSection[] = ADMIN_SECTIONS.map(s => ({ ...s, icon: <Icon name={s.icon} size={16} />, badge: badgeFor(s.id) }));
+  const attention: AttentionItem[] = [
+    { section: "applications", label: "Membership applications", count: summary?.applications ?? null, icon: <Icon name="inbox" size={17} />, color: "#C48700", tint: "#FFF7E0" },
+    { section: "course:questions", label: "Student questions to answer", count: summary?.openQuestions ?? null, icon: <Icon name="mail" size={17} />, color: "#4A7DFF", tint: "#EEF3FF" },
+    { section: "course", label: "Students ready to certify", count: summary?.readyToCertify ?? null, icon: <Icon name="award" size={17} />, color: "#E74C6F", tint: "#FDECF1" },
+    { section: "pending_docs", label: "Document proposals", count: summary?.docProposals ?? null, icon: <Icon name="fileText" size={17} />, color: "#8E5BD9", tint: "#F3EDFC" },
+    { section: "equipment", label: "Equipment requests", count: summary?.equipment ?? null, icon: <Icon name="cpu" size={17} />, color: TEAL_DARK, tint: TEAL_LIGHT },
+    { section: "redemptions", label: "Reward redemptions", count: summary?.redemptions ?? null, icon: <Icon name="tag" size={17} />, color: "#D9822B", tint: "#FFF1E6" },
   ];
 
   return (
@@ -2808,24 +2904,19 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
       {selectedApp && <ApplicationDrawer app={selectedApp} onClose={() => setSelectedApp(null)} onAction={handleAction} />}
       {eventModal.open && <EventModal event={eventModal.event} onClose={() => setEventModal({ open: false, event: null })} onSave={handleSaveEvent} />}
       {projectModal.open && <ProjectModal project={projectModal.project} onClose={() => setProjectModal({ open: false, project: null })} onSave={handleSaveProject} />}
+      <AdminJumpTo open={jumpOpen} onClose={() => setJumpOpen(false)} groups={ADMIN_GROUPS} sections={sections} onOpen={openSection} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ background: "#FDECF1", border: "1px solid #F9C3CE", borderRadius: 14, padding: "16px 22px", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ color: "#E74C6F" }}><Icon name="shield" size={20} /></div>
-          <div><div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Admin Panel</div><div style={{ fontSize: 12, color: TEXT_MID }}>Manage applications, users, events, projects, equipment, knowledge base and newsletter.</div></div>
-        </div>
+        {tab !== "overview" && (
+          // scrollPadding matches the top padding of the portal's scrolling content area (26px).
+          <AdminSectionBar groups={ADMIN_GROUPS} sections={sections} current={tab} onOpen={openSection} onOverview={() => openSection("overview")} onJump={() => setJumpOpen(true)} scrollPadding={26} pageBackground={BG} />
+        )}
 
         {actionMessage && <div style={{ padding: "12px 18px", borderRadius: 10, background: actionMessage.type === "success" ? "#E6F9F5" : "#FDECF1", border: `1px solid ${actionMessage.type === "success" ? "#A3E4D7" : "#F9C3CE"}`, color: actionMessage.type === "success" ? "#0D9373" : "#D63563", fontSize: 13, fontWeight: 500 }}>{actionMessage.text}</div>}
 
-        {/* Tab bar */}
-        <div style={{ display: "flex", gap: 4, background: "#F3F5F8", borderRadius: 12, padding: 4, flexWrap: "wrap" as const }}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id as typeof tab)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 9, border: "none", background: tab === t.id ? CARD : "transparent", color: tab === t.id ? TEXT : TEXT_LIGHT, fontSize: 13, fontWeight: tab === t.id ? 700 : 500, cursor: "pointer", boxShadow: tab === t.id ? SHADOW : "none", transition: "all 0.15s ease" }}>
-              <Icon name={t.icon} size={15} />{t.label}
-              {t.badge != null && <span style={{ background: "#E74C6F", color: "#fff", borderRadius: 20, fontSize: 10, fontWeight: 700, padding: "1px 7px" }}>{t.badge}</span>}
-            </button>
-          ))}
-        </div>
+        {tab === "overview" && (
+          <AdminOverview name={adminName} groups={ADMIN_GROUPS} sections={sections} attention={attention} loading={loadingSummary} onOpen={openSection} onJump={() => setJumpOpen(true)} />
+        )}
 
         {/* ── Applications ── */}
         {tab === "applications" && (
@@ -3187,14 +3278,14 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
                               <button
                                 onClick={async () => {
                                   const res = await fetch("/api/redemptions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: req.id, status: "actioned" }) });
-                                  if (res.ok) setPendingRedemptions(prev => prev.map(r => r.id === req.id ? { ...r, status: "actioned" } : r));
+                                  if (res.ok) { setPendingRedemptions(prev => prev.map(r => r.id === req.id ? { ...r, status: "actioned" } : r)); loadSummary(); }
                                 }}
                                 style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#E6F9F5", color: "#00B894", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                               >✓ Mark Actioned</button>
                               <button
                                 onClick={async () => {
                                   const res = await fetch("/api/redemptions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: req.id, status: "declined" }) });
-                                  if (res.ok) setPendingRedemptions(prev => prev.map(r => r.id === req.id ? { ...r, status: "declined" } : r));
+                                  if (res.ok) { setPendingRedemptions(prev => prev.map(r => r.id === req.id ? { ...r, status: "declined" } : r)); loadSummary(); }
                                 }}
                                 style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#FDECF1", color: "#E74C6F", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                               >✕ Decline</button>
@@ -3234,87 +3325,8 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId }: { onEve
               </div>)}
           </div>
         )}
+        {tab === "course" && <CourseMonitorPanel adminUserId={adminUserId} initialView={courseView} onChanged={loadSummary} />}
       </div>
-      {tab === "course" && <CourseMonitorPanel adminUserId={adminUserId} />}
-      {tab === "submissions" && (
-          <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden", boxShadow: SHADOW }}>
-            <div style={{ padding: "16px 24px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif" }}>Course Submissions</h3>
-              <div style={{ display: "flex", gap: 12, fontSize: 12 }}>
-                <span style={{ color: "#E67E22", fontWeight: 600 }}>⏳ {submissions.filter(s => !s.admin_reply).length} pending</span>
-                <span style={{ color: TEAL, fontWeight: 600 }}>✓ {submissions.filter(s => s.admin_reply).length} replied</span>
-                <span style={{ color: TEXT_LIGHT }}>{submissions.length} total</span>
-              </div>
-            </div>
-            {loadingSubmissions ? (
-              <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>Loading…</div>
-            ) : submissions.length === 0 ? (
-              <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>No submissions yet.</div>
-            ) : (
-              <div>
-                {submissions.map((s, i) => (
-                  <div key={s.id} style={{ padding: "20px 24px", borderBottom: i < submissions.length - 1 ? `1px solid ${BORDER}` : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                      <div>
-                        <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, fontWeight: 700, color: TEXT }}>{s.profiles?.full_name || s.profiles?.email || "Unknown"}</div>
-                        <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2 }}>{s.student_id} · {s.lesson_title} · {new Date(s.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
-                      </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: s.admin_reply ? TEAL_LIGHT : "#FFF8E6", color: s.admin_reply ? TEAL : "#E67E22" }}>
-                        {s.admin_reply ? "Replied" : "Pending"}
-                      </span>
-                    </div>
-                    {s.reflection && <div style={{ marginBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: TEAL, textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Reflection</span><p style={{ fontSize: 14, color: TEXT_MID, margin: "4px 0 0", lineHeight: 1.65 }}>{s.reflection}</p></div>}
-                    {s.question && <div style={{ marginBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: "#4A7DFF", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Question</span><p style={{ fontSize: 14, color: TEXT_MID, margin: "4px 0 0", lineHeight: 1.65 }}>{s.question}</p></div>}
-                    {s.comment && <div style={{ marginBottom: 8 }}><span style={{ fontSize: 11, fontWeight: 700, color: "#9B59B6", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>Comment</span><p style={{ fontSize: 14, color: TEXT_MID, margin: "4px 0 0", lineHeight: 1.65 }}>{s.comment}</p></div>}
-                    {s.admin_reply && (
-                      <div style={{ marginTop: 12, padding: "12px 16px", background: TEAL_LIGHT, borderRadius: 8, borderLeft: `3px solid ${TEAL}` }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: TEAL, marginBottom: 4 }}>YOUR REPLY</div>
-                        <p style={{ fontSize: 14, color: TEXT_MID, margin: 0 }}>{s.admin_reply}</p>
-                      </div>
-                    )}
-                    <div style={{ marginTop: 14 }}>
-                      {submissionReply?.id === s.id ? (
-                        <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
-                          <textarea
-                            value={submissionReply.text}
-                            onChange={e => setSubmissionReply({ id: s.id, text: e.target.value })}
-                            placeholder="Write your reply to this student..."
-                            rows={3}
-                            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${TEAL}`, fontSize: 14, color: TEXT, resize: "vertical", outline: "none", fontFamily: "inherit", boxSizing: "border-box" as const }}
-                          />
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <button
-                              onClick={async () => {
-                                if (!submissionReply.text.trim()) return;
-                                const res = await fetch("/api/admin/submissions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: s.id, admin_reply: submissionReply.text, replied_by: adminUserId }) });
-                                if (res.ok) {
-                                  const data = await res.json();
-                                  setSubmissions(prev => prev.map(sub => sub.id === s.id ? { ...sub, admin_reply: data.submission.admin_reply, replied_at: data.submission.replied_at } : sub));
-                                  setSubmissionReply(null);
-                                }
-                              }}
-                              style={{ padding: "8px 18px", borderRadius: 8, border: "none", background: TEAL, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-                            >Send Reply</button>
-                            <button onClick={() => setSubmissionReply(null)} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${BORDER}`, background: "transparent", color: TEXT_MID, fontSize: 13, cursor: "pointer" }}>Cancel</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
-                         <button
-                          onClick={() => setSubmissionReply({ id: s.id, text: s.admin_reply || "" })}
-                          style={{ padding: "7px 16px", borderRadius: 8, border: `1.5px solid ${TEAL}`, background: TEAL_LIGHT, color: TEAL, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                        >{s.admin_reply ? "Edit Reply" : "Reply"}</button>
-
-                      </div>
-
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       {/* Attendance Modal */}
       {attendanceEvent && adminUserId && (
         <AttendanceModal
@@ -4755,6 +4767,19 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
 
   const partnershipLevel = user.partnership_level;
   const isAdmin = partnershipLevel === "admin";
+
+  // A link like /member-portal?admin=course opens the Admin Panel on that section, and Back
+  // and Forward open or close the panel to match the address they land on.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const sync = () => {
+      const inAdmin = new URLSearchParams(window.location.search).has("admin");
+      setActiveNav(n => (inAdmin ? "admin" : n === "admin" ? "dashboard" : n));
+    };
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, [isAdmin]);
   const canCreateProjects = partnershipLevel === "partner" || partnershipLevel === "admin";
   const canManageAllProjects = partnershipLevel === "admin";
   const accessibleSections = PARTNERSHIP_ACCESS[partnershipLevel] || PARTNERSHIP_ACCESS.viewer;
@@ -4921,7 +4946,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
         );
 
       case "admin":
-        return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} adminUserId={user.sub} /> : null;
+        return isAdmin ? <AdminPanel onEventsChanged={fetchEvents} onProjectsChanged={fetchProjects} adminUserId={user.sub} adminName={user.full_name || user.display_name} /> : null;
 
       default:
         return (
