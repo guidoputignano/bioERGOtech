@@ -82,6 +82,40 @@ const CERT_COLUMNS = "cert_id, user_id, issued_at, revoked_at, legacy, confirmed
 export const certificateVerified = (c: Pick<CertificateRow, "revoked_at" | "legacy" | "confirmed_at">) =>
   !c.revoked_at && (!c.legacy || !!c.confirmed_at);
 
+/**
+ * Per-student allowance of GitHub requests (see course_claim_github in the
+ * migration). Claimed before GitHub is called, whether or not the call then
+ * succeeds, so failed attempts count too.
+ */
+export const GITHUB_ALLOWANCE = {
+  link: { minSeconds: 15, perHour: 10 },
+  check: { minSeconds: 60, perHour: 10 },
+} as const;
+
+/** null: go ahead. A number: seconds to wait. */
+export async function claimGithub(client: Client, userId: string, kind: keyof typeof GITHUB_ALLOWANCE): Promise<number | null> {
+  const a = GITHUB_ALLOWANCE[kind];
+  const { data, error } = await client.rpc("course_claim_github", {
+    p_user: userId,
+    p_kind: kind,
+    p_min_seconds: a.minSeconds,
+    p_per_hour: a.perHour,
+  });
+  if (error) {
+    // Fail closed: without the allowance, one student could use up GitHub's
+    // shared hourly limit for everyone.
+    console.error("course_claim_github:", error.message);
+    return 60;
+  }
+  return typeof data === "number" && data > 0 ? data : null;
+}
+
+export function waitMessage(seconds: number): string {
+  return seconds > 90
+    ? `You have tried this a lot in the last hour. Please try again in about ${Math.ceil(seconds / 60)} minutes.`
+    : `Please wait ${seconds} seconds before trying again.`;
+}
+
 // ── One student ─────────────────────────────────────────────────────────
 
 export interface StudentState {

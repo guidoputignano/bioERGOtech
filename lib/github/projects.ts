@@ -1,4 +1,4 @@
-import { gh, rawFile } from "./client";
+import { definitive, gh, MAX_DOC_BYTES, rawFile } from "./client";
 import {
   ETHICS_MIN_WORDS,
   README_MIN_WORDS,
@@ -17,47 +17,73 @@ export interface GhRepo {
   owner: { login: string };
 }
 
+export const BUSY_MESSAGE = "GitHub is busy right now. Please try again in a few minutes.";
+
 // ── Linking ─────────────────────────────────────────────────────────────
 
 export type LookupResult =
   | { ok: true; repo: GhRepo }
-  | { ok: false; reason: "not_found" | "busy" | "error" };
+  | { ok: false; reason: "not_found" | "busy" };
 
 /**
  * A repository as GitHub shows it to anyone. A private repository answers
  * 404 exactly like a missing one, which is why the message to the student
- * covers both.
+ * covers both. Anything that is not a clear answer about the repository is
+ * "busy": the student tries again, nothing is recorded.
  */
 export async function lookupRepo(fullName: string): Promise<LookupResult> {
   const res = await gh<GhRepo>(`/repos/${fullName}`);
   if (res.data) return { ok: true, repo: res.data };
-  if (res.status === 404) return { ok: false, reason: "not_found" };
-  if (res.rateLimited || res.status === 0 || res.status >= 500) return { ok: false, reason: "busy" };
-  console.error("GitHub repo lookup failed:", res.status, res.message);
-  return { ok: false, reason: "error" };
+  if (definitive(res)) return { ok: false, reason: "not_found" };
+  if (!res.rateLimited) console.error("GitHub repo lookup failed:", res.status, res.message);
+  return { ok: false, reason: "busy" };
 }
 
-// ── Checks ──────────────────────────────────────────────────────────────
+// ── Text ────────────────────────────────────────────────────────────────
+// Everything below runs on text a student controls, so it must stay linear:
+// lazy regexes over an unclosed "<!--" or "```" rescan to the end from every
+// opener, and a crafted README could hold a function for minutes.
+
+/** Removes `open ... close` spans; an unclosed one runs to the end. */
+function stripBetween(text: string, open: string, close: string): string {
+  let out = "";
+  let i = 0;
+  for (;;) {
+    const start = text.indexOf(open, i);
+    if (start === -1) return out + text.slice(i);
+    out += text.slice(i, start) + " ";
+    const end = text.indexOf(close, start + open.length);
+    if (end === -1) return out;
+    i = end + close.length;
+  }
+}
+
+/** Text with HTML comments removed: template guidance must not count. */
+export const visible = (markdown: string) => stripBetween(markdown, "<!--", "-->");
 
 /** Words a reader would see: comments, code, link targets and markup removed. */
 export function countWords(markdown: string): number {
-  const text = markdown
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`[^`]*`/g, " ")
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+  const text = stripBetween(visible(markdown), "```", "```")
+    .replace(/`[^`\n]{0,500}`/g, " ")
+    .replace(/!?\[([^\]\n]{0,500})\]\([^)\s]{0,2000}\)/g, "$1")
     .replace(/https?:\/\/\S+/g, " ")
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<[^>\n]{1,500}>/g, " ")
     .replace(/[#>*_|~-]/g, " ");
   return (text.match(/[\p{L}\p{N}][\p{L}\p{N}'’]*/gu) ?? []).length;
 }
 
-/** Text with HTML comments removed: template guidance must not count. */
-const visible = (markdown: string) => markdown.replace(/<!--[\s\S]*?-->/g, " ");
-
 const DEMO_LINK =
   /(https?:\/\/)?(www\.)?(youtube\.com\/(watch|shorts|live)|youtu\.be\/|drive\.google\.com\/|loom\.com\/share\/|vimeo\.com\/\d|github\.com\/user-attachments\/assets\/)/i;
 const VIDEO_FILE = /\.(mp4|mov|m4v|webm|avi|mkv)$/i;
+
+/**
+ * Images removed before looking for a demo link. A video dragged into a
+ * README on GitHub becomes a bare github.com/user-attachments link; an image
+ * becomes the same kind of link inside ![...](...) or <img>, and a
+ * screenshot is not a demo.
+ */
+const withoutImages = (markdown: string) =>
+  markdown.replace(/!\[[^\]\n]{0,500}\]\([^)\n]{0,2000}\)/g, " ").replace(/<img\b[^>\n]{0,2000}>/gi, " ");
 
 /** Files that are not the prototype itself (a demo video is not the prototype either). */
 function isScaffolding(path: string): boolean {
@@ -71,10 +97,12 @@ function isScaffolding(path: string): boolean {
   );
 }
 
+// ── Checks ──────────────────────────────────────────────────────────────
+
 export interface HeadResult {
   sha: string | null;
   treeSha: string | null;
-  /** GitHub down or rate-limited: worth trying again, nothing is wrong with the repo. */
+  /** Not a clear answer about the repository: try again, record nothing. */
   transient: boolean;
 }
 
@@ -83,21 +111,26 @@ export async function readCommit(fullName: string, ref = "HEAD"): Promise<HeadRe
   const res = await gh<{ sha: string; commit: { tree: { sha: string } } }>(
     `/repos/${fullName}/commits/${encodeURIComponent(ref)}`,
   );
+  if (!res.data && !definitive(res) && !res.rateLimited) {
+    console.error("GitHub commit lookup failed:", res.status, res.message);
+  }
   return {
     sha: res.data?.sha ?? null,
     treeSha: res.data?.commit?.tree?.sha ?? null,
-    transient: !res.data && (res.rateLimited || res.status === 0 || res.status >= 500),
+    transient: !res.data && !definitive(res),
   };
 }
-
-export const BUSY_MESSAGE = "GitHub is busy right now. Please try again in a few minutes.";
 
 /**
  * Runs the automated checks on a public repository at one commit.
  *
- * Costs two GitHub API requests (the commit and its tree), more only for
- * very large repositories. README and ethics review are read from
- * raw.githubusercontent.com, which does not count against the API limit.
+ * Costs two GitHub API requests (the commit and its tree; one when the
+ * caller already read the commit), more only for very large repositories.
+ * README and ethics review come from raw.githubusercontent.com, which does
+ * not count against the API limit.
+ *
+ * Only clear answers about the repository become failed items. When GitHub
+ * itself fails, the result carries BUSY_MESSAGE and callers store nothing.
  */
 export async function runProjectChecks(input: {
   fullName: string;
@@ -106,6 +139,8 @@ export async function runProjectChecks(input: {
   /** The submitted commit; null checks the latest one. */
   pinnedRef: string | null;
   fork: { isFork: boolean; parent: string | null };
+  /** The commit, when the caller has just read it. */
+  head?: HeadResult;
 }): Promise<ProjectCheckResult> {
   const ranAt = new Date().toISOString();
   const fail = (error: string, ref: string | null = input.pinnedRef): ProjectCheckResult => ({
@@ -116,7 +151,7 @@ export async function runProjectChecks(input: {
     error,
   });
 
-  const head = await readCommit(input.fullName, input.pinnedRef ?? "HEAD");
+  const head = input.head?.sha && input.head.treeSha ? input.head : await readCommit(input.fullName, input.pinnedRef ?? "HEAD");
   if (!head.sha || !head.treeSha) {
     return fail(
       head.transient
@@ -131,7 +166,7 @@ export async function runProjectChecks(input: {
     `/repos/${input.fullName}/git/trees/${head.treeSha}?recursive=1`,
   );
   if (!treeRes.data) {
-    return fail(treeRes.rateLimited ? BUSY_MESSAGE : `Could not read commit ${ref.slice(0, 7)}.`, ref);
+    return fail(definitive(treeRes) ? `Could not read commit ${ref.slice(0, 7)}.` : BUSY_MESSAGE, ref);
   }
   const files = treeRes.data.tree.filter((e) => e.type === "blob").map((e) => e.path);
 
@@ -141,16 +176,36 @@ export async function runProjectChecks(input: {
   // README or ethics review as missing.
   if (treeRes.data.truncated) {
     const root = await gh<{ tree: TreeEntry[] }>(`/repos/${input.fullName}/git/trees/${head.treeSha}`);
-    for (const e of root.data?.tree ?? []) if (e.type === "blob" && !files.includes(e.path)) files.push(e.path);
-    const docsDir = root.data?.tree.find((e) => e.type === "tree" && e.path.toLowerCase() === "docs");
+    if (!root.data) return fail(definitive(root) ? `Could not read commit ${ref.slice(0, 7)}.` : BUSY_MESSAGE, ref);
+    for (const e of root.data.tree) if (e.type === "blob" && !files.includes(e.path)) files.push(e.path);
+    const docsDir = root.data.tree.find((e) => e.type === "tree" && e.path.toLowerCase() === "docs");
     if (docsDir) {
       const docs = await gh<{ tree: TreeEntry[] }>(`/repos/${input.fullName}/git/trees/${docsDir.sha}`);
-      for (const e of docs.data?.tree ?? []) {
+      if (!docs.data) return fail(definitive(docs) ? `Could not read commit ${ref.slice(0, 7)}.` : BUSY_MESSAGE, ref);
+      for (const e of docs.data.tree) {
         const p = `${docsDir.path}/${e.path}`;
         if (e.type === "blob" && !files.includes(p)) files.push(p);
       }
     }
   }
+
+  const readmePath = files.find((p) => /^readme\.(md|markdown)$/i.test(p));
+  const ethicsPath =
+    files.find((p) => /^(ethics[-_ ]?review|ethics)\.md$/i.test(p)) ??
+    files.find((p) => /^docs\/(ethics[-_ ]?review|ethics)\.md$/i.test(p));
+  const [readmeRaw, ethicsRaw] = await Promise.all([
+    readmePath ? rawFile(input.fullName, ref, readmePath) : null,
+    ethicsPath ? rawFile(input.fullName, ref, ethicsPath) : null,
+  ]);
+  // The tree just listed these files at this exact commit, so a failed or
+  // missing download is GitHub's problem, not the student's.
+  for (const r of [readmeRaw, ethicsRaw]) {
+    if (r && ("failed" in r || "missing" in r)) return fail(BUSY_MESSAGE, ref);
+  }
+  const tooLarge = `is over ${Math.round(MAX_DOC_BYTES / 1000)} KB, too large to check. A README of a few pages is plenty.`;
+  const readme = readmeRaw && "text" in readmeRaw ? readmeRaw.text : null;
+  const ethics = ethicsRaw && "text" in ethicsRaw ? ethicsRaw.text : null;
+  const readmeShown = readme === null ? null : visible(readme);
 
   const items: CheckItem[] = [];
 
@@ -166,18 +221,20 @@ export async function runProjectChecks(input: {
         : "Only documentation was found. Upload your code, workflow export or configuration files.",
   });
 
-  const readmePath = files.find((p) => /^readme\.(md|markdown)$/i.test(p));
-  const readme = readmePath ? await rawFile(input.fullName, ref, readmePath) : null;
   const readmeWords = readme ? countWords(readme) : 0;
   items.push({
     key: "readme",
     label: `README of at least ${README_MIN_WORDS} words`,
     ok: readmeWords >= README_MIN_WORDS,
     required: true,
-    detail: readme ? `README.md has ${readmeWords} words.` : "No README.md in the root of the repository.",
+    detail: readme
+      ? `README.md has ${readmeWords} words.`
+      : readmeRaw && "tooLarge" in readmeRaw
+        ? `README.md ${tooLarge}`
+        : "No README.md in the root of the repository.",
   });
 
-  const idFound = !!readme && visible(readme).toUpperCase().includes(input.studentId.toUpperCase());
+  const idFound = !!readmeShown && readmeShown.toUpperCase().includes(input.studentId.toUpperCase());
   items.push({
     key: "student_id",
     label: "Your Student ID is in the README",
@@ -188,7 +245,7 @@ export async function runProjectChecks(input: {
       : `Add ${input.studentId} to the Team section of README.md. In a team, every member adds their own.`,
   });
 
-  const headings = readme ? (visible(readme).match(/^#{1,3}\s+\S/gm) ?? []).length : 0;
+  const headings = readmeShown ? (readmeShown.match(/^#{1,3}[ \t]+\S/gm) ?? []).length : 0;
   items.push({
     key: "sections",
     label: "README covers the six sections",
@@ -198,7 +255,7 @@ export async function runProjectChecks(input: {
   });
 
   const videoFiles = files.filter((p) => VIDEO_FILE.test(p));
-  const demoLinked = !!readme && DEMO_LINK.test(visible(readme));
+  const demoLinked = !!readmeShown && DEMO_LINK.test(withoutImages(readmeShown));
   items.push({
     key: "demo",
     label: "Demo recording in the repository or linked in the README",
@@ -211,17 +268,17 @@ export async function runProjectChecks(input: {
         : "Upload your 2 to 5 minute demo video to the repository, or link it in the README (YouTube unlisted, Google Drive, Loom or Vimeo).",
   });
 
-  const ethicsPath =
-    files.find((p) => /^(ethics[-_ ]?review|ethics)\.md$/i.test(p)) ??
-    files.find((p) => /^docs\/(ethics[-_ ]?review|ethics)\.md$/i.test(p));
-  const ethics = ethicsPath ? await rawFile(input.fullName, ref, ethicsPath) : null;
   const ethicsWords = ethics ? countWords(ethics) : 0;
   items.push({
     key: "ethics",
     label: `Ethics review of at least ${ETHICS_MIN_WORDS} words`,
     ok: ethicsWords >= ETHICS_MIN_WORDS,
     required: true,
-    detail: ethics ? `${ethicsPath} has ${ethicsWords} words.` : "No ethics-review.md in the root of the repository.",
+    detail: ethics
+      ? `${ethicsPath} has ${ethicsWords} words.`
+      : ethicsRaw && "tooLarge" in ethicsRaw
+        ? `${ethicsPath} ${tooLarge}`
+        : "No ethics-review.md in the root of the repository.",
   });
 
   items.push({

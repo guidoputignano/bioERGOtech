@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireMember } from "@/lib/auth/admin";
-import { loadStudentState } from "@/lib/course/data";
+import { claimGithub, loadStudentState, waitMessage } from "@/lib/course/data";
 import { parseRepoRef } from "@/lib/github/client";
-import { lookupRepo } from "@/lib/github/projects";
+import { BUSY_MESSAGE, lookupRepo } from "@/lib/github/projects";
 import { studenteLiceiConfermato } from "@/lib/eventi/licei-server";
 import { candidatoUniversitaConfermato } from "@/lib/eventi/universita-server";
-
-/** Each link costs a GitHub request against a shared hourly allowance. */
-const MIN_SECONDS_BETWEEN_LINKS = 15;
 
 /**
  * GET /api/courses/project
@@ -60,27 +57,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Your certificate has been issued, so your project can no longer be changed." }, { status: 409 });
   }
 
+  // Claimed before GitHub is called, so failed lookups count too.
+  const wait = await claimGithub(client, chiamante.id, "link");
+  if (wait !== null) return NextResponse.json({ error: waitMessage(wait) }, { status: 429 });
+
   const { data: current } = await client
     .from("course_project_members")
-    .select("project_id, joined_at")
+    .select("project_id")
     .eq("user_id", chiamante.id)
     .maybeSingle();
-  if (current?.joined_at) {
-    const wait = Math.ceil(MIN_SECONDS_BETWEEN_LINKS - (Date.now() - Date.parse(current.joined_at)) / 1000);
-    if (wait > 0) {
-      return NextResponse.json({ error: `Please wait ${wait} seconds before changing the repository again` }, { status: 429 });
-    }
-  }
 
   const found = await lookupRepo(ref);
   if (!found.ok) {
-    const messages = {
-      not_found:
-        "We could not find that repository. Check the link, and make sure the repository is public (on GitHub: Settings, then Danger Zone, then Change visibility).",
-      busy: "GitHub is busy right now. Please try again in a few minutes.",
-      error: "Something went wrong talking to GitHub. Please try again in a moment.",
-    } as const;
-    return NextResponse.json({ error: messages[found.reason] }, { status: found.reason === "not_found" ? 404 : 502 });
+    return found.reason === "not_found"
+      ? NextResponse.json(
+          { error: "We could not find that repository. Check the link, and make sure the repository is public (on GitHub: Settings, then Danger Zone, then Change visibility)." },
+          { status: 404 },
+        )
+      : NextResponse.json({ error: BUSY_MESSAGE }, { status: 502 });
   }
   const repo = found.repo;
   if (repo.private) {

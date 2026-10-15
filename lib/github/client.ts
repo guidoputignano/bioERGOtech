@@ -5,11 +5,11 @@
  * its link. The site never signs in to GitHub on their behalf: it only reads
  * public repositories, which needs no account at all.
  *
- * GitHub allows 60 anonymous API requests an hour per server address. That
- * covers normal use. GITHUB_TOKEN, optional, raises it to 5,000: a
- * fine-grained token from any existing staff GitHub account, with read-only
- * access to public repositories and no other permission. File contents are
- * read from raw.githubusercontent.com, which does not count against it.
+ * GitHub allows 60 anonymous API requests an hour per server address.
+ * GITHUB_TOKEN, optional, raises it to 5,000: a fine-grained token from any
+ * existing staff GitHub account, with read-only access to public
+ * repositories and no other permission. File contents are read from
+ * raw.githubusercontent.com, which does not count against the API limit.
  */
 
 const API = "https://api.github.com";
@@ -24,8 +24,7 @@ export interface GhResponse<T> {
   rateLimited: boolean;
 }
 
-export async function gh<T = unknown>(path: string): Promise<GhResponse<T>> {
-  const token = process.env.GITHUB_TOKEN;
+async function request<T>(path: string, token: string | undefined): Promise<GhResponse<T>> {
   let res: Response;
   try {
     res = await fetch(`${API}${path}`, {
@@ -36,6 +35,7 @@ export async function gh<T = unknown>(path: string): Promise<GhResponse<T>> {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     });
   } catch (e) {
     return { status: 0, data: null, message: (e as Error).message, rateLimited: false };
@@ -57,16 +57,47 @@ export async function gh<T = unknown>(path: string): Promise<GhResponse<T>> {
   return { status: res.status, data: json as T, message: null, rateLimited: false };
 }
 
-/** A file of a public repository at a commit, or null if it is not there. */
-export async function rawFile(fullName: string, ref: string, path: string): Promise<string | null> {
+export async function gh<T = unknown>(path: string): Promise<GhResponse<T>> {
+  const token = process.env.GITHUB_TOKEN;
+  const res = await request<T>(path, token);
+  if (token && res.status === 401) {
+    // An expired or revoked token must not turn every student's repository
+    // into "not found": say so in the logs and carry on anonymously.
+    console.error("GITHUB_TOKEN was rejected (expired or revoked). Falling back to anonymous GitHub access.");
+    return request<T>(path, undefined);
+  }
+  return res;
+}
+
+/**
+ * Whether a failed answer says something about the repository itself, as
+ * opposed to GitHub, the network or our own credentials. Only the former
+ * may be recorded against a student.
+ */
+export function definitive(res: { status: number; rateLimited: boolean }): boolean {
+  return !res.rateLimited && [404, 409, 422].includes(res.status);
+}
+
+/** Longest README or ethics review the checks will read. A real one is a few KB. */
+export const MAX_DOC_BYTES = 100_000;
+
+export type RawResult = { text: string } | { missing: true } | { tooLarge: true } | { failed: true };
+
+/** A file of a public repository at a commit. */
+export async function rawFile(fullName: string, ref: string, path: string): Promise<RawResult> {
   try {
     const res = await fetch(
       `${RAW}/${fullName}/${ref}/${path.split("/").map(encodeURIComponent).join("/")}`,
-      { cache: "no-store", headers: { "User-Agent": "bioERGOtech-course" } },
+      { cache: "no-store", headers: { "User-Agent": "bioERGOtech-course" }, signal: AbortSignal.timeout(10_000) },
     );
-    return res.ok ? await res.text() : null;
+    if (res.status === 404) return { missing: true };
+    if (!res.ok) return { failed: true };
+    const length = Number(res.headers.get("content-length") ?? 0);
+    if (length > MAX_DOC_BYTES) return { tooLarge: true };
+    const text = await res.text();
+    return text.length > MAX_DOC_BYTES ? { tooLarge: true } : { text };
   } catch {
-    return null;
+    return { failed: true };
   }
 }
 
@@ -79,7 +110,9 @@ export function validRepoName(name: string): boolean {
 
 /** Accepts owner/name or any github.com URL to a repository. */
 export function parseRepoRef(input: string): string | null {
-  const trimmed = input.trim().replace(/\.git$/, "").replace(/\/+$/, "");
+  // Query and fragment first: a link copied from the browser often ends in
+  // "?tab=readme-ov-file" or "#readme".
+  const trimmed = input.trim().replace(/[?#].*$/, "").replace(/\/+$/, "").replace(/\.git$/, "");
   const m =
     trimmed.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100})(?:\/.*)?$/) ??
     trimmed.match(/^([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100})$/);

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireMember } from "@/lib/auth/admin";
-import { loadStudentState } from "@/lib/course/data";
+import { claimGithub, loadStudentState, waitMessage } from "@/lib/course/data";
 import { BUSY_MESSAGE, readCommit, runProjectChecks } from "@/lib/github/projects";
-
-/** Each check spends GitHub requests from a shared hourly allowance. */
-const MIN_SECONDS_BETWEEN_CHECKS = 60;
 
 /**
  * POST /api/courses/project/submit
@@ -25,12 +22,12 @@ export async function POST() {
   if (!state.project || !state.membership) {
     return NextResponse.json({ error: "Add your project repository first (Lesson 4.4)" }, { status: 400 });
   }
-  const last = state.membership.checked_at ? Date.parse(state.membership.checked_at) : 0;
-  const wait = Math.ceil(MIN_SECONDS_BETWEEN_CHECKS - (Date.now() - last) / 1000);
-  if (wait > 0) {
-    return NextResponse.json({ error: `Please wait ${wait} seconds before checking again` }, { status: 429 });
-  }
+  // Each check spends GitHub requests from an hourly allowance shared by
+  // every student. Claimed before calling GitHub, failed attempts included.
+  const wait = await claimGithub(client, chiamante.id, "check");
+  if (wait !== null) return NextResponse.json({ error: waitMessage(wait) }, { status: 429 });
 
+  const checkedProject = state.membership.project_id;
   const head = await readCommit(state.project.full_name);
   const commit = head.sha;
   const result = commit
@@ -39,6 +36,7 @@ export async function POST() {
         studentId: state.student_id,
         pinnedRef: commit,
         fork: { isFork: state.project.is_fork, parent: state.project.fork_parent },
+        head,
       })
     : {
         ref: null,
@@ -54,7 +52,7 @@ export async function POST() {
     // nothing about the repository is known, so record nothing. An earlier
     // submission and its check describe each other and stay as they are.
     // A repo that is gone or private is not this case: that is recorded
-    // below, so the student sees why and the one-minute throttle applies.
+    // below, so the student sees why.
     return NextResponse.json(
       { error: `${BUSY_MESSAGE}${state.membership.submitted_commit ? " Your earlier submission is unchanged." : ""}` },
       { status: 502 },
@@ -63,19 +61,25 @@ export async function POST() {
 
   // Without a commit there is nothing to pin, so it is not a submission:
   // record the failed check only, and the student submits again once the
-  // repository can be read. Otherwise a later check would assess whatever
-  // the latest commit happens to be at that moment.
-  const { error } = await client
+  // repository can be read. The write only lands if the student is still
+  // on the project that was checked: relinking during the check must not
+  // put this result on another repository.
+  const { data: updated, error } = await client
     .from("course_project_members")
     .update(
       commit
         ? { submitted_at: new Date().toISOString(), submitted_commit: commit, check_result: result, checked_at: result.ran_at }
         : { check_result: result, checked_at: result.ran_at },
     )
-    .eq("user_id", chiamante.id);
+    .eq("user_id", chiamante.id)
+    .eq("project_id", checkedProject)
+    .select("user_id");
   if (error) {
     console.error("course submit:", error.message);
     return NextResponse.json({ error: "Could not save your submission" }, { status: 500 });
+  }
+  if (!updated?.length) {
+    return NextResponse.json({ error: "Your repository changed while it was being checked. Please submit again." }, { status: 409 });
   }
 
   return NextResponse.json({ state: await loadStudentState(client, chiamante.id) });

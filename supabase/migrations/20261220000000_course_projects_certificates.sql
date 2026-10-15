@@ -10,6 +10,7 @@
 --                            result of the latest automated check
 --   course_certificates      issued certificates, the only source the
 --                            public /verify page reads
+--   course_rate_limits       per-student allowance of GitHub requests
 --   course_backfill_runs     records that the one-time copy of old
 --                            certificates has run
 --
@@ -205,9 +206,65 @@ begin
 end;
 $$;
 
+-- ── 6b. GitHub request allowance per student ──────────────────────────
+-- The checks read public repositories through GitHub's API, which allows
+-- 60 anonymous requests an hour per server address (5,000 with a token),
+-- shared by every student. Each student gets a minimum gap and an hourly
+-- cap per kind of request ('link', 'check'), so one person, by accident or
+-- with a script, cannot use up everyone's allowance. Claimed atomically:
+-- parallel requests from one student queue on the row lock.
+create table if not exists public.course_rate_limits (
+  user_id       uuid        not null references auth.users on delete cascade,
+  kind          text        not null,
+  window_start  timestamptz not null default now(),
+  used          integer     not null default 0,
+  last_at       timestamptz,
+  primary key (user_id, kind)
+);
+alter table public.course_rate_limits enable row level security;
+revoke all on public.course_rate_limits from anon, authenticated;
+
+-- Returns 0 when the slot is taken, otherwise the seconds to wait.
+create or replace function public.course_claim_github(
+  p_user uuid, p_kind text, p_min_seconds integer, p_per_hour integer
+) returns integer
+language plpgsql
+set search_path = public, pg_temp
+as $$
+declare
+  r public.course_rate_limits%rowtype;
+begin
+  insert into public.course_rate_limits (user_id, kind) values (p_user, p_kind)
+  on conflict (user_id, kind) do nothing;
+  select * into r from public.course_rate_limits
+  where user_id = p_user and kind = p_kind
+  for update;
+
+  if r.last_at is not null and r.last_at > now() - make_interval(secs => p_min_seconds) then
+    return greatest(1, ceil(extract(epoch from (r.last_at + make_interval(secs => p_min_seconds) - now())))::integer);
+  end if;
+  if r.window_start < now() - interval '1 hour' then
+    update public.course_rate_limits set window_start = now(), used = 1, last_at = now()
+    where user_id = p_user and kind = p_kind;
+    return 0;
+  end if;
+  if r.used >= p_per_hour then
+    return greatest(1, ceil(extract(epoch from (r.window_start + interval '1 hour' - now())))::integer);
+  end if;
+  update public.course_rate_limits set used = r.used + 1, last_at = now()
+  where user_id = p_user and kind = p_kind;
+  return 0;
+end;
+$$;
+
+-- Only the server calls it. Revoked from PUBLIC, not just from the two
+-- roles: they inherit EXECUTE from PUBLIC (see 20261212000000).
+revoke all on function public.course_claim_github(uuid, text, integer, integer) from public;
+grant execute on function public.course_claim_github(uuid, text, integer, integer) to service_role;
+
 -- ── 7. Verify ─────────────────────────────────────────────────────────
--- Must return 4 rows (backfill_runs, certificates, project_members,
--- projects), all with rowsecurity = true:
+-- Must return 5 rows (backfill_runs, certificates, project_members,
+-- projects, rate_limits), all with rowsecurity = true:
 --
 --   select tablename, rowsecurity from pg_tables
 --   where schemaname = 'public' and tablename like 'course\_%';

@@ -99,18 +99,22 @@ Monitor says so instead of issuing one with an email address on it.
 
 `RESEND_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are already in use.
 
-### About `GITHUB_TOKEN` (optional)
+### About `GITHUB_TOKEN` (optional, recommended near deadlines)
 
 The checks read public repositories without signing in to GitHub. GitHub
-allows 60 such requests an hour per server address; a check uses two and
-adding a repository one. That covers normal use. If many students submit in
-the same hour, some see "GitHub is busy, please try again in a few minutes"
-and their earlier result is kept.
+allows 60 such requests an hour per server address, shared by everyone; a
+check uses two and adding a repository one. Each student may add a
+repository or run a check at most 10 times an hour each. Outside busy
+periods that is enough. When many students submit in the same hour, some
+see "GitHub is busy, please try again in a few minutes"; nothing is lost and
+their earlier result is kept.
 
 To raise the limit to 5,000 an hour, create a token on any GitHub account
 the team already has (no new account): GitHub, Settings, Developer settings,
 Fine-grained tokens, Generate new token, Repository access "Public
 repositories (read-only)", no other permissions. Put it in `GITHUB_TOKEN`.
+Tokens expire (30 days unless you choose longer): set a reminder. An expired
+token is logged and the site carries on with the anonymous limit.
 
 ## Notes
 

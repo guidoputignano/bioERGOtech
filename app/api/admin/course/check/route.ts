@@ -39,11 +39,17 @@ export async function POST(req: NextRequest) {
   // Only a submission carries a pinned commit. A preview check of an
   // unsubmitted project must not look like a passed submission, so it
   // updates the result but never submitted_at.
-  const { error } = await client
+  // Only if the student is still on the project that was checked.
+  const { data: updated, error } = await client
     .from("course_project_members")
     .update({ check_result: result, checked_at: result.ran_at })
-    .eq("user_id", user_id);
+    .eq("user_id", user_id)
+    .eq("project_id", state.membership.project_id)
+    .select("user_id");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!updated?.length) {
+    return NextResponse.json({ error: "The student changed repository during the check. Run it again." }, { status: 409 });
+  }
 
   return NextResponse.json({ result, state: await loadStudentState(client, user_id) });
 }

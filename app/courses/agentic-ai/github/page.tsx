@@ -186,6 +186,10 @@ export default function GitHubGuidePage() {
         </Section>
 
         <p style={{ ...p, textAlign: "center", fontSize: 14 }}>
+          Following the course through a school or university programme? Your team hands in its project through the
+          programme console at the end of Lesson 4.4 and Course Closing, as your teachers explain.
+        </p>
+        <p style={{ ...p, textAlign: "center", fontSize: 14 }}>
           Stuck? Ask in the question box at the end of any lesson. The bioERGOtech team will reply.
         </p>
       </main>
