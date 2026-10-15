@@ -98,6 +98,8 @@ export function AdminOverview({
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const waiting = attention.reduce((n, a) => n + (a.count ?? 0), 0);
+  // null means the count could not be loaded: never report that as "nothing waiting".
+  const unknown = attention.filter((a) => a.count === null).length;
   const firstName = name && !name.includes("@") ? name.trim().split(/\s+/)[0] : null;
 
   return (
@@ -122,9 +124,13 @@ export function AdminOverview({
             <p style={{ margin: "8px 0 0", fontSize: 14, color: "rgba(255,255,255,0.75)", maxWidth: 520, lineHeight: 1.6 }}>
               {loading
                 ? "Checking what needs your attention…"
-                : waiting > 0
-                  ? `${waiting} item${waiting === 1 ? "" : "s"} waiting for you across the foundation.`
-                  : "Everything is up to date. Nothing is waiting for you."}
+                : unknown === attention.length
+                  ? "The counts could not be loaded just now. Open a section to check, or refresh the page."
+                  : waiting > 0
+                    ? `${waiting} item${waiting === 1 ? "" : "s"} waiting for you across the foundation.${unknown ? " Some counts could not be loaded." : ""}`
+                    : unknown
+                      ? "Nothing waiting in the counts that loaded. Some could not be loaded."
+                      : "Everything is up to date. Nothing is waiting for you."}
             </p>
           </div>
           <button
@@ -146,20 +152,24 @@ export function AdminOverview({
         <h3 style={sectionTitle}>Needs your attention</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 }}>
           {attention.map((a) => {
-            const clear = !loading && !a.count;
+            const clear = !loading && a.count === 0;
+            const unavailable = !loading && a.count === null;
+            const quiet = clear || unavailable;
             return (
-              <HoverCard key={a.section + a.label} onClick={() => onOpen(a.section)} label={`${a.label}: ${a.count ?? "unknown"}`}>
+              <HoverCard key={a.section + a.label} onClick={() => onOpen(a.section)} label={`${a.label}: ${a.count ?? "not loaded"}`}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <span style={{ width: 36, height: 36, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: clear ? "#F3F5F8" : a.tint, color: clear ? TEXT_LIGHT : a.color }}>
+                  <span style={{ width: 36, height: 36, borderRadius: 11, display: "inline-flex", alignItems: "center", justifyContent: "center", background: quiet ? "#F3F5F8" : a.tint, color: quiet ? TEXT_LIGHT : a.color }}>
                     {a.icon}
                   </span>
                   {clear ? (
                     <span style={{ fontSize: 11, fontWeight: 700, color: TEAL_DARK, background: TEAL_LIGHT, padding: "3px 8px", borderRadius: 20 }}>All clear</span>
+                  ) : unavailable ? (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: TEXT_MID, background: "#F3F5F8", padding: "3px 8px", borderRadius: 20 }}>Not loaded</span>
                   ) : (
                     <span style={{ fontSize: 12, fontWeight: 600, color: a.color }}>Review →</span>
                   )}
                 </div>
-                <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 28, fontWeight: 800, color: clear ? TEXT_LIGHT : TEXT, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 28, fontWeight: 800, color: quiet ? TEXT_LIGHT : TEXT, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                   {loading ? "–" : a.count ?? "–"}
                 </div>
                 <div style={{ fontSize: 13, color: TEXT_MID, marginTop: 6 }}>{a.label}</div>
@@ -394,6 +404,7 @@ export function AdminJumpTo({
   const [q, setQ] = useState("");
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
 
   const results = useMemo(() => {
     const items = [{ id: "overview", label: "Overview", description: "Everything waiting for you, and all sections", group: "", icon: <span aria-hidden>⌂</span> } as AdminSection, ...sections];
@@ -433,6 +444,15 @@ export function AdminJumpTo({
   }, [open]);
   useEffect(() => setIndex(0), [q]);
 
+  // Keep the highlighted row visible when the arrow keys move past the edge of the list.
+  useEffect(() => {
+    const list = listRef.current;
+    const row = list?.children[index] as HTMLElement | undefined;
+    if (!list || !row) return;
+    if (row.offsetTop < list.scrollTop) list.scrollTop = row.offsetTop;
+    else if (row.offsetTop + row.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = row.offsetTop + row.offsetHeight - list.clientHeight;
+  }, [index, open]);
+
   if (!open) return null;
 
   const choose = (id: string) => {
@@ -463,16 +483,20 @@ export function AdminJumpTo({
             }}
             placeholder="Jump to… applications, questions, events"
             aria-label="Search sections"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="admin-jump-list"
+            aria-activedescendant={results[index] ? `admin-jump-${results[index].id}` : undefined}
             style={{ flex: 1, border: "none", outline: "none", fontSize: 15, color: TEXT, background: "transparent" }}
           />
           <kbd className="admin-kbd" style={kbd(false)}>Esc</kbd>
         </div>
-        <ul role="listbox" style={{ listStyle: "none", margin: 0, padding: 6, maxHeight: "50vh", overflowY: "auto" }}>
+        <ul ref={listRef} id="admin-jump-list" role="listbox" style={{ position: "relative", listStyle: "none", margin: 0, padding: 6, maxHeight: "50vh", overflowY: "auto" }}>
           {results.length === 0 && <li style={{ padding: 18, color: TEXT_LIGHT, fontSize: 14, textAlign: "center" }}>No section matches “{q}”.</li>}
           {results.map((s, i) => {
             const g = groups.find((x) => x.id === s.group);
             return (
-              <li key={s.id} role="option" aria-selected={i === index}>
+              <li key={s.id} id={`admin-jump-${s.id}`} role="option" aria-selected={i === index}>
                 <button
                   onClick={() => choose(s.id)}
                   onMouseEnter={() => setIndex(i)}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
+import { countReadyToCertify } from "@/lib/course/data";
 
 /**
  * GET /api/admin/summary
@@ -41,18 +42,13 @@ export async function GET() {
     ),
   ]);
 
-  // Submitted course projects whose checks passed and that have no certificate yet.
-  // Submissions that failed a check wait on the student, not on staff, so they are left out.
-  let awaitingCertificate: number | null = null;
-  const [submitted, certified] = await Promise.all([
-    client.from("course_project_members").select("user_id, passed:check_result->passed").not("submitted_at", "is", null).limit(5000),
-    client.from("course_certificates").select("user_id").is("revoked_at", null).limit(5000),
-  ]);
-  if (!submitted.error && !certified.error) {
-    const done = new Set((certified.data ?? []).map((r) => r.user_id));
-    awaitingCertificate = (submitted.data ?? []).filter((r) => r.passed === true && !done.has(r.user_id)).length;
-  } else {
-    console.error("admin summary course:", submitted.error?.message ?? certified.error?.message);
+  // Students the Course Monitor lists as "Ready to certify". Submissions that
+  // still miss a lesson or a check wait on the student, not on staff.
+  let readyToCertify: number | null = null;
+  try {
+    readyToCertify = await countReadyToCertify(client);
+  } catch (e) {
+    console.error("admin summary course:", (e as Error).message);
   }
 
   return NextResponse.json({
@@ -61,6 +57,6 @@ export async function GET() {
     docProposals,
     redemptions,
     openQuestions,
-    awaitingCertificate,
+    readyToCertify,
   });
 }

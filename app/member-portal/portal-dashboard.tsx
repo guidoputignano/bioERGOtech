@@ -2666,7 +2666,7 @@ function ApplicationDrawer({
 const ADMIN_SECTION_IDS = ["applications", "users", "newsletter", "events", "projects", "equipment", "knowledge", "pending_docs", "coins", "redemptions", "course"] as const;
 type AdminSectionId = (typeof ADMIN_SECTION_IDS)[number];
 type AdminTab = "overview" | AdminSectionId;
-type AdminSummary = { applications: number | null; equipment: number | null; docProposals: number | null; redemptions: number | null; openQuestions: number | null; awaitingCertificate: number | null };
+type AdminSummary = { applications: number | null; equipment: number | null; docProposals: number | null; redemptions: number | null; openQuestions: number | null; readyToCertify: number | null };
 
 const ADMIN_GROUPS: AdminGroup[] = [
   { id: "community", label: "Community", color: "#4A7DFF", tint: "#EEF3FF" },
@@ -2803,10 +2803,14 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId, adminName
     };
   }, []);
 
-  // Ctrl+K / Cmd+K opens "Jump to".
+  // Ctrl+K (Cmd+K on a Mac) opens "Jump to", unless a drawer or form is open over the panel.
+  const overlayOpen = !!(selectedApp || eventModal.open || projectModal.open || coinTopUp || attendanceEvent);
+  const overlayRef = useRef(overlayOpen);
+  useEffect(() => { overlayRef.current = overlayOpen; }, [overlayOpen]);
   useEffect(() => {
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform);
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      if ((mac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === "k" && !overlayRef.current) {
         e.preventDefault();
         setJumpOpen(o => !o);
       }
@@ -2881,7 +2885,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId, adminName
       case "equipment": return summary.equipment;
       case "pending_docs": return summary.docProposals;
       case "redemptions": return summary.redemptions;
-      case "course": return (summary.openQuestions ?? 0) + (summary.awaitingCertificate ?? 0) || null;
+      case "course": return (summary.openQuestions ?? 0) + (summary.readyToCertify ?? 0) || null;
       default: return null;
     }
   };
@@ -2889,7 +2893,7 @@ function AdminPanel({ onEventsChanged, onProjectsChanged, adminUserId, adminName
   const attention: AttentionItem[] = [
     { section: "applications", label: "Membership applications", count: summary?.applications ?? null, icon: <Icon name="inbox" size={17} />, color: "#C48700", tint: "#FFF7E0" },
     { section: "course:questions", label: "Student questions to answer", count: summary?.openQuestions ?? null, icon: <Icon name="mail" size={17} />, color: "#4A7DFF", tint: "#EEF3FF" },
-    { section: "course", label: "Passed projects to certify", count: summary?.awaitingCertificate ?? null, icon: <Icon name="award" size={17} />, color: "#E74C6F", tint: "#FDECF1" },
+    { section: "course", label: "Students ready to certify", count: summary?.readyToCertify ?? null, icon: <Icon name="award" size={17} />, color: "#E74C6F", tint: "#FDECF1" },
     { section: "pending_docs", label: "Document proposals", count: summary?.docProposals ?? null, icon: <Icon name="fileText" size={17} />, color: "#8E5BD9", tint: "#F3EDFC" },
     { section: "equipment", label: "Equipment requests", count: summary?.equipment ?? null, icon: <Icon name="cpu" size={17} />, color: TEAL_DARK, tint: TEAL_LIGHT },
     { section: "redemptions", label: "Reward redemptions", count: summary?.redemptions ?? null, icon: <Icon name="tag" size={17} />, color: "#D9822B", tint: "#FFF1E6" },
@@ -4764,9 +4768,17 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
   const partnershipLevel = user.partnership_level;
   const isAdmin = partnershipLevel === "admin";
 
-  // A link like /member-portal?admin=course opens the Admin Panel on that section.
+  // A link like /member-portal?admin=course opens the Admin Panel on that section, and Back
+  // and Forward open or close the panel to match the address they land on.
   useEffect(() => {
-    if (isAdmin && new URLSearchParams(window.location.search).has("admin")) setActiveNav("admin");
+    if (!isAdmin) return;
+    const sync = () => {
+      const inAdmin = new URLSearchParams(window.location.search).has("admin");
+      setActiveNav(n => (inAdmin ? "admin" : n === "admin" ? "dashboard" : n));
+    };
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
   }, [isAdmin]);
   const canCreateProjects = partnershipLevel === "partner" || partnershipLevel === "admin";
   const canManageAllProjects = partnershipLevel === "admin";
