@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
  * Course Monitor: the admin view of the Agentic AI course.
  *
  * Three views over the same data:
- * - Students: progress, GitHub project, check result, certificate. This is
+ * - Students: progress, project repository, check result, certificate. This is
  *   where certificates are issued, one at a time or in bulk, and only to
  *   students the server agrees are eligible.
  * - Questions: open student questions, oldest first, with a Claude draft
@@ -40,10 +40,9 @@ interface StudentRow {
   lessons_complete: boolean;
   last_activity: string | null;
   open_questions: number;
-  github_login: string | null;
   project_full_name: string | null;
   project_url: string | null;
-  mentor_access: boolean;
+  project_fork: boolean;
   submitted_at: string | null;
   checked_at: string | null;
   check_passed: boolean | null;
@@ -79,7 +78,7 @@ interface Question {
   profiles: { full_name: string | null; email: string | null } | null;
 }
 
-type Filter = "all" | "eligible" | "review" | "progress" | "certified" | "cert_action" | "no_github";
+type Filter = "all" | "eligible" | "review" | "progress" | "certified" | "cert_action" | "no_project";
 
 const FILTERS: { id: Filter; label: string; test: (s: StudentRow) => boolean }[] = [
   { id: "all", label: "All", test: () => true },
@@ -88,7 +87,7 @@ const FILTERS: { id: Filter; label: string; test: (s: StudentRow) => boolean }[]
   { id: "progress", label: "In progress", test: (s) => !s.submitted_at && !s.cert_id },
   { id: "certified", label: "Certified", test: (s) => !!s.cert_id },
   { id: "cert_action", label: "Certificate needs action", test: (s) => !!s.cert_id && (!s.cert_verified || !s.cert_emailed) },
-  { id: "no_github", label: "No GitHub yet", test: (s) => !s.github_login && !s.cert_id },
+  { id: "no_project", label: "No project yet", test: (s) => !s.project_url && !s.cert_id },
 ];
 
 const PAGE = 50;
@@ -137,7 +136,7 @@ export default function CourseMonitorPanel({ adminUserId }: { adminUserId?: stri
         <Tile label="Students" value={t?.students} />
         <Tile label="Active, last 7 days" value={t?.active7d} />
         <Tile label="All lessons done" value={t?.lessonsComplete} />
-        <Tile label="GitHub connected" value={t?.githubConnected} />
+        <Tile label="Projects linked" value={t?.projects} />
         <Tile label="Projects submitted" value={t?.submitted} />
         <Tile label="Ready to certify" value={t?.eligible} accent={!!t?.eligible} />
         <Tile label="Certified" value={t?.certified} />
@@ -202,7 +201,7 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
       (s) =>
         test(s) &&
         (!q ||
-          [s.name, s.email, s.github_login, s.student_id, s.project_full_name].some((v) => v?.toLowerCase().includes(q))),
+          [s.name, s.email, s.student_id, s.project_full_name].some((v) => v?.toLowerCase().includes(q))),
     );
   }, [data.students, filter, query]);
 
@@ -336,9 +335,9 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
   };
 
   const exportCsv = () => {
-    const header = ["name", "email", "student_id", "lessons_done", "missing_core", "github", "project", "submitted_at", "checks", "eligible", "cert_id", "missing"];
+    const header = ["name", "email", "student_id", "lessons_done", "missing_core", "project", "submitted_at", "checks", "eligible", "cert_id", "missing"];
     const lines = rows.map((s) =>
-      [s.name, s.email, s.student_id, s.lessons_done, s.missing_core, s.github_login, s.project_url, s.submitted_at, s.check_passed === null ? "" : s.check_passed ? "pass" : "fail", s.eligible, s.cert_id, s.reasons.join("; ")]
+      [s.name, s.email, s.student_id, s.lessons_done, s.missing_core, s.project_url, s.submitted_at, s.check_passed === null ? "" : s.check_passed ? "pass" : "fail", s.eligible, s.cert_id, s.reasons.join("; ")]
         .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)
         .join(","),
     );
@@ -390,7 +389,7 @@ function StudentsView({ data, onChanged, showToast }: { data: Overview; onChange
               </th>
               <th style={th}>Student</th>
               <th style={th}>Lessons</th>
-              <th style={th}>GitHub project</th>
+              <th style={th}>Project repository</th>
               <th style={th}>Submission</th>
               <th style={th}>Certificate</th>
               <th style={{ ...th, textAlign: "right" }}>Actions</th>
@@ -461,16 +460,13 @@ function StudentTableRow({
           {s.open_questions > 0 && <div style={{ color: AMBER, fontSize: 11, fontWeight: 600, marginTop: 3 }}>{s.open_questions} open question{s.open_questions === 1 ? "" : "s"}</div>}
         </td>
         <td style={td}>
-          {s.github_login ? (
-            <a href={`https://github.com/${s.github_login}`} target="_blank" rel="noopener noreferrer" style={{ color: TEXT_MID }}>@{s.github_login}</a>
-          ) : (
-            <span style={{ color: TEXT_LIGHT }}>Not connected</span>
-          )}
-          {s.project_url && (
-            <div style={{ marginTop: 3 }}>
+          {s.project_url ? (
+            <>
               <a href={s.project_url} target="_blank" rel="noopener noreferrer" style={{ color: TEAL_DARK, fontWeight: 600, overflowWrap: "anywhere" }}>{s.project_full_name}</a>
-              {!s.mentor_access && <div style={{ color: AMBER, fontSize: 11 }}>⚠ Mentor has no access</div>}
-            </div>
+              {s.project_fork && <div style={{ color: AMBER, fontSize: 11 }}>⚠ Fork: compare with the original</div>}
+            </>
+          ) : (
+            <span style={{ color: TEXT_LIGHT }}>No repository yet</span>
           )}
         </td>
         <td style={td}>

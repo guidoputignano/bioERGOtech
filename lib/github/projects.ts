@@ -1,4 +1,4 @@
-import { gh, type GitHubConfig } from "./client";
+import { gh, rawFile } from "./client";
 import {
   ETHICS_MIN_WORDS,
   README_MIN_WORDS,
@@ -11,100 +11,33 @@ export interface GhRepo {
   full_name: string;
   html_url: string;
   private: boolean;
+  fork: boolean;
+  parent?: { full_name: string } | null;
   default_branch: string;
   owner: { login: string };
-  permissions?: { admin?: boolean; push?: boolean; pull?: boolean };
-  /** Set by GitHub when the repo was generated from a template repository. */
-  template_repository?: { full_name: string } | null;
 }
 
-// ── Repository setup (student token) ────────────────────────────────────
+// ── Linking ─────────────────────────────────────────────────────────────
 
-export async function createFromTemplate(
-  cfg: GitHubConfig,
-  studentToken: string,
-  owner: string,
-  name: string,
-): Promise<{ repo: GhRepo | null; error: string | null }> {
-  const res = await gh<GhRepo>(`/repos/${cfg.templateRepo}/generate`, studentToken, {
-    method: "POST",
-    body: {
-      owner,
-      name,
-      description: "Agentic AI prototype built in the bioERGOtech Agentic AI course",
-      private: false,
-      include_all_branches: false,
-    },
-  });
-  if (res.data) return { repo: res.data, error: null };
-  if (res.status === 422) return { repo: null, error: "repo_exists" };
-  if (res.status === 404) return { repo: null, error: "template_missing" };
-  console.error("GitHub generate failed:", res.status, res.message);
-  return { repo: null, error: "github_error" };
-}
+export type LookupResult =
+  | { ok: true; repo: GhRepo }
+  | { ok: false; reason: "not_found" | "busy" | "error" };
 
 /**
- * Makes the mentor account a collaborator and accepts the invitation.
- *
- * On a personal repository only users can be collaborators, never an
- * organization, which is why bioERGOtech needs a mentor user account.
- * The invite is accepted at once with the mentor's own token, so nobody
- * has to click through an email per student.
+ * A repository as GitHub shows it to anyone. A private repository answers
+ * 404 exactly like a missing one, which is why the message to the student
+ * covers both.
  */
-export async function addMentor(
-  cfg: GitHubConfig,
-  studentToken: string,
-  fullName: string,
-): Promise<boolean> {
-  // No `permission` field: it is only valid on organization repositories,
-  // and the default on a personal one is already push.
-  const invite = await gh<{ id: number }>(
-    `/repos/${fullName}/collaborators/${cfg.mentorLogin}`,
-    studentToken,
-    { method: "PUT" },
-  );
-  // 204: already a collaborator.
-  if (invite.status === 204) return true;
-  if (!invite.data) {
-    console.error("GitHub add collaborator failed:", invite.status, invite.message);
-    return false;
-  }
-  const accept = await gh(`/user/repository_invitations/${invite.data.id}`, cfg.mentorToken, {
-    method: "PATCH",
-  });
-  if (accept.status !== 204) {
-    console.error("GitHub accept invitation failed:", accept.status, accept.message);
-    return false;
-  }
-  return true;
+export async function lookupRepo(fullName: string): Promise<LookupResult> {
+  const res = await gh<GhRepo>(`/repos/${fullName}`);
+  if (res.data) return { ok: true, repo: res.data };
+  if (res.status === 404) return { ok: false, reason: "not_found" };
+  if (res.rateLimited || res.status === 0 || res.status >= 500) return { ok: false, reason: "busy" };
+  console.error("GitHub repo lookup failed:", res.status, res.message);
+  return { ok: false, reason: "error" };
 }
 
-/** Whether the mentor can already push, for teammates linking a repo. */
-export async function mentorHasAccess(cfg: GitHubConfig, fullName: string): Promise<boolean> {
-  const res = await gh<GhRepo>(`/repos/${fullName}`, cfg.mentorToken);
-  if (res.data?.permissions?.push) return true;
-  return acceptPendingInvite(cfg, fullName);
-}
-
-/**
- * Accepts a collaborator invitation the mentor has not accepted yet.
- *
- * Covers a student who added the mentor by hand, and an automatic accept
- * that failed (rate limit, network). Without it the invitation would sit
- * pending, the access check would fail, and nobody would know why.
- */
-export async function acceptPendingInvite(cfg: GitHubConfig, fullName: string): Promise<boolean> {
-  const list = await gh<{ id: number; repository: { full_name: string } }[]>(
-    "/user/repository_invitations?per_page=100",
-    cfg.mentorToken,
-  );
-  const invite = list.data?.find((i) => i.repository.full_name.toLowerCase() === fullName.toLowerCase());
-  if (!invite) return false;
-  const accept = await gh(`/user/repository_invitations/${invite.id}`, cfg.mentorToken, { method: "PATCH" });
-  return accept.status === 204;
-}
-
-// ── Checks (mentor token) ───────────────────────────────────────────────
+// ── Checks ──────────────────────────────────────────────────────────────
 
 /** Words a reader would see: comments, code, link targets and markup removed. */
 export function countWords(markdown: string): number {
@@ -119,92 +52,87 @@ export function countWords(markdown: string): number {
   return (text.match(/[\p{L}\p{N}][\p{L}\p{N}'’]*/gu) ?? []).length;
 }
 
-const DEMO_LINK =
-  /(https?:\/\/)?(www\.)?(youtube\.com\/(watch|shorts|live)|youtu\.be\/|drive\.google\.com\/|loom\.com\/share\/|vimeo\.com\/\d)/i;
+/** Text with HTML comments removed: template guidance must not count. */
+const visible = (markdown: string) => markdown.replace(/<!--[\s\S]*?-->/g, " ");
 
-/** Files that are not the prototype itself. */
+const DEMO_LINK =
+  /(https?:\/\/)?(www\.)?(youtube\.com\/(watch|shorts|live)|youtu\.be\/|drive\.google\.com\/|loom\.com\/share\/|vimeo\.com\/\d|github\.com\/user-attachments\/assets\/)/i;
+const VIDEO_FILE = /\.(mp4|mov|m4v|webm|avi|mkv)$/i;
+
+/** Files that are not the prototype itself (a demo video is not the prototype either). */
 function isScaffolding(path: string): boolean {
   const base = path.split("/").pop() ?? path;
   return (
     path.startsWith(".github/") ||
     base.startsWith(".") ||
     /\.(md|markdown|txt)$/i.test(base) ||
+    VIDEO_FILE.test(base) ||
     /^(license|licence)(\..*)?$/i.test(base)
   );
 }
 
-async function fileText(
-  token: string,
-  fullName: string,
-  path: string,
-  ref: string,
-): Promise<string | null> {
-  const res = await gh<{ content?: string; encoding?: string }>(
-    `/repos/${fullName}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${ref}`,
-    token,
-  );
-  if (!res.data?.content || res.data.encoding !== "base64") return null;
-  return Buffer.from(res.data.content, "base64").toString("utf8");
+export interface HeadResult {
+  sha: string | null;
+  treeSha: string | null;
+  /** GitHub down or rate-limited: worth trying again, nothing is wrong with the repo. */
+  transient: boolean;
 }
 
-/** The commit a check runs against when the student has not pinned one. */
-export async function headCommit(cfg: GitHubConfig, fullName: string): Promise<string | null> {
-  return (await readHead(cfg, fullName)).sha;
+/** A commit of the repository (its latest when `ref` is HEAD) and its file tree. */
+export async function readCommit(fullName: string, ref = "HEAD"): Promise<HeadResult> {
+  const res = await gh<{ sha: string; commit: { tree: { sha: string } } }>(
+    `/repos/${fullName}/commits/${encodeURIComponent(ref)}`,
+  );
+  return {
+    sha: res.data?.sha ?? null,
+    treeSha: res.data?.commit?.tree?.sha ?? null,
+    transient: !res.data && (res.rateLimited || res.status === 0 || res.status >= 500),
+  };
 }
+
+export const BUSY_MESSAGE = "GitHub is busy right now. Please try again in a few minutes.";
 
 /**
- * The latest commit, with whether a failure is worth retrying: GitHub down
- * or rate-limited (transient) is not the same as a repo that is gone,
- * private to the mentor, or empty (it will not fix itself).
+ * Runs the automated checks on a public repository at one commit.
+ *
+ * Costs two GitHub API requests (the commit and its tree), more only for
+ * very large repositories. README and ethics review are read from
+ * raw.githubusercontent.com, which does not count against the API limit.
  */
-export async function readHead(
-  cfg: GitHubConfig,
-  fullName: string,
-): Promise<{ sha: string | null; transient: boolean }> {
-  const res = await gh<{ sha: string }[]>(`/repos/${fullName}/commits?per_page=1`, cfg.mentorToken);
-  const sha = res.data?.[0]?.sha ?? null;
-  return { sha, transient: !sha && (res.status >= 500 || res.status === 403 || res.status === 429) };
-}
-
-export async function runProjectChecks(
-  cfg: GitHubConfig,
-  fullName: string,
-  studentLogin: string | null,
-  pinnedRef: string | null,
-  /** Created through the course from the template (also detected from GitHub's own record). */
-  createdViaTemplate = false,
-): Promise<ProjectCheckResult> {
+export async function runProjectChecks(input: {
+  fullName: string;
+  /** The student's own id, shown on their lesson pages, e.g. BIO-2026-1A2B3C4D. */
+  studentId: string;
+  /** The submitted commit; null checks the latest one. */
+  pinnedRef: string | null;
+  fork: { isFork: boolean; parent: string | null };
+}): Promise<ProjectCheckResult> {
   const ranAt = new Date().toISOString();
-  const fail = (error: string): ProjectCheckResult => ({
-    ref: pinnedRef,
+  const fail = (error: string, ref: string | null = input.pinnedRef): ProjectCheckResult => ({
+    ref,
     ran_at: ranAt,
     items: [],
     passed: false,
     error,
   });
 
-  const repoRes = await gh<GhRepo>(`/repos/${fullName}`, cfg.mentorToken);
-  if (!repoRes.data) {
+  const head = await readCommit(input.fullName, input.pinnedRef ?? "HEAD");
+  if (!head.sha || !head.treeSha) {
     return fail(
-      repoRes.status === 404
-        ? "Repository not found. It may have been deleted, renamed or made private without mentor access."
-        : `GitHub returned ${repoRes.status}`,
+      head.transient
+        ? BUSY_MESSAGE
+        : "We could not read the repository. Check that it still exists, is public and has at least one commit.",
     );
   }
-  let repo = repoRes.data;
-  if (!repo.permissions?.push && (await acceptPendingInvite(cfg, fullName))) {
-    repo = (await gh<GhRepo>(`/repos/${fullName}`, cfg.mentorToken)).data ?? repo;
-  }
-
-  const ref = pinnedRef ?? (await headCommit(cfg, fullName));
-  if (!ref) return fail("The repository has no commits yet.");
+  const ref = head.sha;
 
   type TreeEntry = { path: string; type: string; sha: string };
   const treeRes = await gh<{ tree: TreeEntry[]; truncated: boolean }>(
-    `/repos/${fullName}/git/trees/${ref}?recursive=1`,
-    cfg.mentorToken,
+    `/repos/${input.fullName}/git/trees/${head.treeSha}?recursive=1`,
   );
-  if (!treeRes.data) return fail(`Could not read commit ${ref.slice(0, 7)}`);
+  if (!treeRes.data) {
+    return fail(treeRes.rateLimited ? BUSY_MESSAGE : `Could not read commit ${ref.slice(0, 7)}.`, ref);
+  }
   const files = treeRes.data.tree.filter((e) => e.type === "blob").map((e) => e.path);
 
   // GitHub cuts a recursive listing off on very large repos (a committed
@@ -212,11 +140,11 @@ export async function runProjectChecks(
   // or in docs/, so read those two levels directly rather than report
   // README or ethics review as missing.
   if (treeRes.data.truncated) {
-    const root = await gh<{ tree: TreeEntry[] }>(`/repos/${fullName}/git/trees/${ref}`, cfg.mentorToken);
+    const root = await gh<{ tree: TreeEntry[] }>(`/repos/${input.fullName}/git/trees/${head.treeSha}`);
     for (const e of root.data?.tree ?? []) if (e.type === "blob" && !files.includes(e.path)) files.push(e.path);
     const docsDir = root.data?.tree.find((e) => e.type === "tree" && e.path.toLowerCase() === "docs");
     if (docsDir) {
-      const docs = await gh<{ tree: TreeEntry[] }>(`/repos/${fullName}/git/trees/${docsDir.sha}`, cfg.mentorToken);
+      const docs = await gh<{ tree: TreeEntry[] }>(`/repos/${input.fullName}/git/trees/${docsDir.sha}`);
       for (const e of docs.data?.tree ?? []) {
         const p = `${docsDir.path}/${e.path}`;
         if (e.type === "blob" && !files.includes(p)) files.push(p);
@@ -225,16 +153,6 @@ export async function runProjectChecks(
   }
 
   const items: CheckItem[] = [];
-
-  items.push({
-    key: "mentor_access",
-    label: "bioERGOtech mentor has access",
-    ok: !!repo.permissions?.push,
-    required: true,
-    detail: repo.permissions?.push
-      ? `@${cfg.mentorLogin} is a collaborator.`
-      : `Link the repository again from Lesson 4.4 so we can add @${cfg.mentorLogin}.`,
-  });
 
   const prototypeFiles = files.filter((p) => !isScaffolding(p));
   items.push({
@@ -249,19 +167,28 @@ export async function runProjectChecks(
   });
 
   const readmePath = files.find((p) => /^readme\.(md|markdown)$/i.test(p));
-  const readme = readmePath ? await fileText(cfg.mentorToken, fullName, readmePath, ref) : null;
+  const readme = readmePath ? await rawFile(input.fullName, ref, readmePath) : null;
   const readmeWords = readme ? countWords(readme) : 0;
   items.push({
     key: "readme",
     label: `README of at least ${README_MIN_WORDS} words`,
     ok: readmeWords >= README_MIN_WORDS,
     required: true,
-    detail: readme
-      ? `README.md has ${readmeWords} words.`
-      : "No README.md in the root of the repository.",
+    detail: readme ? `README.md has ${readmeWords} words.` : "No README.md in the root of the repository.",
   });
 
-  const headings = readme ? (readme.match(/^#{1,3}\s+\S/gm) ?? []).length : 0;
+  const idFound = !!readme && visible(readme).toUpperCase().includes(input.studentId.toUpperCase());
+  items.push({
+    key: "student_id",
+    label: "Your Student ID is in the README",
+    ok: idFound,
+    required: true,
+    detail: idFound
+      ? `${input.studentId} found.`
+      : `Add ${input.studentId} to the Team section of README.md. In a team, every member adds their own.`,
+  });
+
+  const headings = readme ? (visible(readme).match(/^#{1,3}\s+\S/gm) ?? []).length : 0;
   items.push({
     key: "sections",
     label: "README covers the six sections",
@@ -270,74 +197,42 @@ export async function runProjectChecks(
     detail: `${headings} heading${headings === 1 ? "" : "s"} found. Lesson 6.2 lists the six sections a reviewer looks for.`,
   });
 
+  const videoFiles = files.filter((p) => VIDEO_FILE.test(p));
+  const demoLinked = !!readme && DEMO_LINK.test(visible(readme));
   items.push({
     key: "demo",
-    label: "Demo recording linked in the README",
-    ok: !!readme && DEMO_LINK.test(readme),
+    label: "Demo recording in the repository or linked in the README",
+    ok: demoLinked || videoFiles.length > 0,
     required: true,
-    detail:
-      readme && DEMO_LINK.test(readme)
-        ? "Demo link found."
-        : "Add a YouTube (unlisted), Google Drive, Loom or Vimeo link to your 2 to 5 minute demo.",
+    detail: demoLinked
+      ? "Demo link found in the README."
+      : videoFiles.length > 0
+        ? `Video found: ${videoFiles[0]}.`
+        : "Upload your 2 to 5 minute demo video to the repository, or link it in the README (YouTube unlisted, Google Drive, Loom or Vimeo).",
   });
 
   const ethicsPath =
     files.find((p) => /^(ethics[-_ ]?review|ethics)\.md$/i.test(p)) ??
     files.find((p) => /^docs\/(ethics[-_ ]?review|ethics)\.md$/i.test(p));
-  const ethics = ethicsPath ? await fileText(cfg.mentorToken, fullName, ethicsPath, ref) : null;
+  const ethics = ethicsPath ? await rawFile(input.fullName, ref, ethicsPath) : null;
   const ethicsWords = ethics ? countWords(ethics) : 0;
   items.push({
     key: "ethics",
     label: `Ethics review of at least ${ETHICS_MIN_WORDS} words`,
     ok: ethicsWords >= ETHICS_MIN_WORDS,
     required: true,
-    detail: ethics
-      ? `${ethicsPath} has ${ethicsWords} words.`
-      : "No ethics-review.md in the root of the repository.",
+    detail: ethics ? `${ethicsPath} has ${ethicsWords} words.` : "No ethics-review.md in the root of the repository.",
   });
 
-  if (studentLogin) {
-    // A repo generated from the template starts with a parentless "Initial
-    // commit" credited to whoever generated it: that is the template, not
-    // their work. It is recognised by its content (the template's own tree),
-    // not by being parentless: a student who force-pushes their project as
-    // one root commit has done real work. Covers repos generated here and
-    // repos generated on github.com with "Use this template", then linked.
-    const fromTemplate =
-      createdViaTemplate ||
-      repo.template_repository?.full_name?.toLowerCase() === cfg.templateRepo.toLowerCase();
-    // Every version the template has had, not only today's: a repo generated
-    // before the template was edited starts with the older tree.
-    let templateTrees: Set<string> | null = null;
-    if (fromTemplate) {
-      const tpl = await gh<{ commit: { tree: { sha: string } } }[]>(
-        `/repos/${cfg.templateRepo}/commits?per_page=100`,
-        cfg.mentorToken,
-      );
-      templateTrees = tpl.data ? new Set(tpl.data.map((t) => t.commit.tree.sha)) : null;
-    }
-    // Newest first; two is enough to see past the template's initial commit.
-    const commits = await gh<{ parents: unknown[]; commit: { tree: { sha: string } } }[]>(
-      `/repos/${fullName}/commits?sha=${ref}&author=${encodeURIComponent(studentLogin)}&per_page=2`,
-      cfg.mentorToken,
-    );
-    const isTemplateCommit = (c: { parents: unknown[]; commit: { tree: { sha: string } } }) =>
-      fromTemplate &&
-      (c.parents?.length ?? 0) === 0 &&
-      // Template history unknown (lookup failed): fall back to treating any
-      // root commit of a template repo as the template's.
-      (templateTrees === null || templateTrees.has(c.commit?.tree?.sha ?? ""));
-    const authored = (commits.data ?? []).some((c) => !isTemplateCommit(c));
-    items.push({
-      key: "authored",
-      label: "You have commits in this repository",
-      ok: authored,
-      required: true,
-      detail: authored
-        ? `Commits by @${studentLogin} found.`
-        : `No commits by @${studentLogin}. In a team, each member should commit their own part.`,
-    });
-  }
+  items.push({
+    key: "original",
+    label: "Original repository, not a fork",
+    ok: !input.fork.isFork,
+    required: false,
+    detail: input.fork.isFork
+      ? `This repository is a fork${input.fork.parent ? ` of ${input.fork.parent}` : ""}. Reviewers will compare it with the original.`
+      : "Not a fork.",
+  });
 
   return {
     ref,

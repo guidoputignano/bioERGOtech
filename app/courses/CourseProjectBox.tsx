@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 const TEAL = "#00C4B4";
 const TEAL_DARK = "#009688";
@@ -17,6 +16,8 @@ const AMBER_BG = "#FFF8E6";
 const AMBER_TEXT = "#7D5A00";
 const RED = "#C0392B";
 
+export const GITHUB_GUIDE_PATH = "/courses/agentic-ai/github";
+
 export interface CheckItem {
   key: string;
   label: string;
@@ -27,8 +28,8 @@ export interface CheckItem {
 
 export interface CourseState {
   lessons: { done: number; total: number; missingCore: { slug: string; number: string; title: string }[]; trackDone: boolean; complete: boolean };
-  github: { login: string; avatar_url: string | null } | null;
-  project: { full_name: string; html_url: string; mentor_access: boolean; created_via: string } | null;
+  student_id: string;
+  project: { full_name: string; html_url: string; is_fork: boolean; fork_parent: string | null } | null;
   membership: {
     submitted_at: string | null;
     submitted_commit: string | null;
@@ -38,42 +39,6 @@ export interface CourseState {
   certificate: { cert_id: string; issued_at: string; revoked_at: string | null } | null;
   eligibility: { eligible: boolean; reasons: string[] };
   separate_track: boolean;
-  github_enabled: boolean;
-  mentor_login: string | null;
-  template_repo: string | null;
-}
-
-/** What came back from the GitHub round trip, in words a student can act on. */
-export function githubMessage(code: string, p: URLSearchParams, mentor: string | null): { ok: boolean; text: string } | null {
-  const mentorName = mentor ? `@${mentor}` : "the bioERGOtech mentor account";
-  switch (code) {
-    case "connected": return { ok: true, text: `GitHub connected as @${p.get("login") ?? ""}.` };
-    case "created": return { ok: true, text: `Your project repository ${p.get("repo") ?? ""} is ready, and the bioERGOtech mentors have access.` };
-    case "linked": return { ok: true, text: `Linked ${p.get("repo") ?? "your repository"}. The bioERGOtech mentors have access.` };
-    case "mentor_failed": return { ok: false, text: `Your repository is linked, but we could not add ${mentorName} as a collaborator. Press "Use a different repository" below and link the same repository again: that retries it.` };
-    case "cancelled": return { ok: false, text: "GitHub sign-in was cancelled. Nothing was changed." };
-    case "expired": return { ok: false, text: "That GitHub sign-in took too long or was started in another tab. Please try again." };
-    case "start_from_lesson": return { ok: false, text: "Please create or link your repository with the buttons in this box. If you use a privacy extension that hides the page you came from, allow it for bioergotech.org and try again." };
-    case "signed_out": return { ok: false, text: "Your course login changed during GitHub sign-in. Log in again and retry." };
-    case "github_in_use": return { ok: false, text: `The GitHub account @${p.get("login") ?? ""} is already connected to a different course account.` };
-    case "not_configured": return { ok: false, text: "GitHub project submission is not available yet. Please check back soon." };
-    case "bad_name": return { ok: false, text: "Repository names can only use letters, numbers, dots, dashes and underscores." };
-    case "bad_repo": return { ok: false, text: "That does not look like a GitHub repository link. It should look like github.com/your-name/your-project." };
-    case "repo_exists": return { ok: false, text: "You already have a repository with that name. Choose another name, or link the existing one instead." };
-    case "template_missing": return { ok: false, text: "The project template is unavailable right now. Please ask a question in your lesson submission and the team will help." };
-    case "repo_not_found": return { ok: false, text: "We could not find that repository. Check the link. If it is private, make it public first (Settings, then Danger Zone, then Change visibility): the course asks for public projects." };
-    case "not_your_repo": return { ok: false, text: "You need write access to a repository to link it. Ask its owner to add you as a collaborator first." };
-    case "repo_private": return { ok: false, text: "That repository is private. Make it public first (Settings, then Danger Zone, then Change visibility): the course asks for public projects." };
-    case "owner_must_link": return { ok: false, text: `Ask @${p.get("owner") ?? "the owner"}, who owns the repository, to link it first. You can then link the same repository to join.` };
-    case "locked": return { ok: false, text: "Your certificate has been issued, so your project can no longer be changed." };
-    default: return { ok: false, text: "Something went wrong talking to GitHub. Please try again in a moment." };
-  }
-}
-
-function connectHref(intent: "connect" | "create" | "link", next: string, repo?: string) {
-  const q = new URLSearchParams({ intent, next });
-  if (repo) q.set("repo", repo);
-  return `/api/courses/github/connect?${q.toString()}`;
 }
 
 export function useCourseState() {
@@ -94,55 +59,67 @@ export function useCourseState() {
 }
 
 interface Props {
-  /** setup: Lesson 4.4, create or link the repo. submit: course closing. */
+  /** setup: Lesson 4.4, add the repository. submit: course closing. */
   mode: "setup" | "submit";
   /** Whether this lesson's reflection is saved: when it flips, the progress shown is stale. */
   lessonSubmitted?: boolean;
 }
 
 export default function CourseProjectBox({ mode, lessonSubmitted }: Props) {
-  const pathname = usePathname();
   const { state, setState, loading, reload } = useCourseState();
 
-  // Reload when this lesson's reflection gets saved. Not on the first render
-  // (the hook already loads), and not by remounting, which would lose the
-  // GitHub result message read from the URL.
+  // Reload when this lesson's reflection gets saved, so the lesson count
+  // includes it. Not on the first render: the hook already loads.
   const lastSubmitted = useRef(lessonSubmitted);
   useEffect(() => {
     if (lastSubmitted.current === lessonSubmitted) return;
     lastSubmitted.current = lessonSubmitted;
     if (lessonSubmitted) reload();
   }, [lessonSubmitted, reload]);
-  // The raw result of the GitHub round trip. The message is built at render
-  // time, so it can name the mentor account once the state has loaded.
-  const [ghResult, setGhResult] = useState<{ code: string; params: URLSearchParams } | null>(null);
-  const [repoName, setRepoName] = useState("");
+
   const [repoUrl, setRepoUrl] = useState("");
   const [changing, setChanging] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [linkMessage, setLinkMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Read the result of the GitHub round trip once, then tidy the URL.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("github");
-    if (!code) return;
-    setGhResult({ code, params: new URLSearchParams(params) });
-    for (const k of ["github", "login", "repo", "owner"]) params.delete(k);
-    const qs = params.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}#project`);
-    document.getElementById("project")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-  const flash = ghResult ? githubMessage(ghResult.code, ghResult.params, state?.mentor_login ?? null) : null;
+  const merge = (next: Partial<CourseState>) => setState((prev) => (prev ? { ...prev, ...next } : (next as CourseState)));
+
+  const linkRepo = async () => {
+    setLinking(true);
+    setLinkMessage(null);
+    try {
+      const res = await fetch("/api/courses/project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo: repoUrl }),
+      });
+      const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      if (!res.ok) {
+        setLinkMessage({ ok: false, text: data.error ?? "Could not save your repository" });
+      } else {
+        merge(data.state);
+        setChanging(false);
+        setRepoUrl("");
+        setLinkMessage({ ok: true, text: `Saved: github.com/${data.state.project?.full_name ?? ""}` });
+      }
+    } catch {
+      setLinkMessage({ ok: false, text: "Network error. Please try again." });
+    } finally {
+      setLinking(false);
+    }
+  };
 
   const submit = async () => {
     setSubmitting(true);
     setSubmitError(null);
     try {
       const res = await fetch("/api/courses/project/submit", { method: "POST" });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
       if (!res.ok) setSubmitError(data.error ?? "Submission failed");
-      else setState((prev) => (prev ? { ...prev, ...data.state } : data.state));
+      else merge(data.state);
     } catch {
       setSubmitError("Network error. Please try again.");
     } finally {
@@ -150,7 +127,17 @@ export default function CourseProjectBox({ mode, lessonSubmitted }: Props) {
     }
   };
 
-  const next = pathname || "/courses/agentic-ai";
+  const copyId = async () => {
+    if (!state) return;
+    try {
+      await navigator.clipboard.writeText(state.student_id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard blocked: the id is on screen to copy by hand.
+    }
+  };
+
   const certified = !!state?.certificate && !state.certificate.revoked_at;
   const check = state?.membership?.check_result ?? null;
 
@@ -158,122 +145,95 @@ export default function CourseProjectBox({ mode, lessonSubmitted }: Props) {
     <div id="project" style={{ background: CARD, border: `1px solid ${BORDER}`, borderTop: `3px solid ${TEAL}`, borderRadius: 14, padding: "28px clamp(18px, 4vw, 36px)", marginTop: 32, boxShadow: SHADOW, scrollMarginTop: 90 }}>
       <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: `2px solid ${TEAL_LIGHT}` }}>
         <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 700, color: TEXT, margin: "0 0 4px" }}>
-          {mode === "setup" ? "🗂️ Set Up Your Project Repository" : "🎓 Submit Your Project for the Certificate"}
+          {mode === "setup" ? "🗂️ Your Project Repository" : "🎓 Submit Your Project for the Certificate"}
         </h2>
         <p style={{ fontSize: 13, color: TEXT_LIGHT, margin: 0, lineHeight: 1.6 }}>
           {mode === "setup"
-            ? "Your project lives in a GitHub repository that you own. bioERGOtech mentors are added as collaborators so they can review your work and give feedback."
-            : "When your prototype, demo, README and ethics review are in your repository, submit it here. We check it automatically, then the bioERGOtech team reviews it and issues your certificate."}
+            ? "Your project lives in a public GitHub repository in your own account. Add its link here now, and keep building in it until the end of the course."
+            : "When your prototype, demo video, README and ethics review are in your repository, submit it here. We check it automatically, then the bioERGOtech team reviews it and issues your certificate."}
         </p>
       </div>
-
-      {flash && (
-        <div role="status" style={{ marginBottom: 18, padding: "12px 16px", borderRadius: 8, fontSize: 13.5, lineHeight: 1.55, background: flash.ok ? TEAL_LIGHT : AMBER_BG, color: flash.ok ? TEAL_DARK : AMBER_TEXT }}>
-          {flash.ok ? "✓ " : "⚠ "}{flash.text}
-        </div>
-      )}
 
       {loading ? (
         <p style={{ fontSize: 14, color: TEXT_LIGHT }}>Loading your project…</p>
       ) : !state ? (
         <p style={{ fontSize: 14, color: TEXT_LIGHT }}>We could not load your project status. Refresh the page to try again.</p>
-      ) : !state.github_enabled ? (
-        <p style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.6 }}>
-          GitHub project submission is being switched on. Until then, keep building and save your work in your own GitHub repository as the lesson describes.
-        </p>
       ) : (
         <>
-          {/* Step 1: GitHub account */}
-          <Step n={1} title="Connect your GitHub account" done={!!state.github}>
-            {state.github ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                {state.github.avatar_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={state.github.avatar_url} alt="" width={28} height={28} style={{ borderRadius: "50%" }} />
-                )}
-                <span style={{ fontSize: 14, color: TEXT }}>
-                  Connected as <a href={`https://github.com/${state.github.login}`} target="_blank" rel="noopener noreferrer" style={{ color: TEAL_DARK, fontWeight: 700 }}>@{state.github.login}</a>
-                </span>
-                {!certified && (
-                  <a href={connectHref("connect", next)} style={{ fontSize: 12, color: TEXT_LIGHT }}>Use a different account</a>
-                )}
+          {/* Step 1: GitHub account, repository and Student ID */}
+          <Step n={1} title="Create your GitHub repository" done={!!state.project}>
+            <p style={{ ...hint, margin: "0 0 12px" }}>
+              New to GitHub? The{" "}
+              <Link href={GITHUB_GUIDE_PATH} style={{ color: TEAL_DARK, fontWeight: 700 }}>GitHub guide</Link>{" "}
+              shows how to create a free account and a public repository, with the README and ethics review templates.
+            </p>
+            <div style={{ border: `1px dashed ${TEAL}`, background: TEAL_LIGHT, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 12, color: TEAL_DARK, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                Your Student ID
               </div>
-            ) : (
-              <>
-                <p style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.6, margin: "0 0 12px" }}>
-                  We only read your public profile. No GitHub account yet? You can create a free one on the next screen (GitHub requires you to be 13 or older).
-                </p>
-                <a href={connectHref("connect", next)} style={btn(true)}>Connect GitHub</a>
-              </>
-            )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <code style={{ fontSize: 16, fontWeight: 700, color: TEXT, background: CARD, padding: "4px 10px", borderRadius: 6, border: `1px solid ${BORDER}` }}>
+                  {state.student_id}
+                </code>
+                <button onClick={copyId} style={{ ...linkBtn, textDecoration: "none", color: TEAL_DARK, fontWeight: 700 }}>
+                  {copied ? "✓ Copied" : "Copy"}
+                </button>
+              </div>
+              <p style={{ fontSize: 12.5, color: TEXT_MID, margin: "8px 0 0", lineHeight: 1.55 }}>
+                Add it to the Team section of your README. It shows the repository is yours. In a team, every member adds their own.
+              </p>
+            </div>
           </Step>
 
-          {/* Step 2: Repository */}
-          <Step n={2} title="Your project repository" done={!!state.project} disabled={!state.github}>
+          {/* Step 2: Repository link */}
+          <Step n={2} title="Add your repository link" done={!!state.project} last={mode === "setup"}>
             {state.project && !changing ? (
               <div style={{ fontSize: 14, color: TEXT_MID, lineHeight: 1.7 }}>
                 <a href={state.project.html_url} target="_blank" rel="noopener noreferrer" style={{ color: TEAL_DARK, fontWeight: 700, overflowWrap: "anywhere" }}>
                   github.com/{state.project.full_name}
                 </a>
-                <div style={{ fontSize: 13, color: state.project.mentor_access ? TEAL_DARK : AMBER_TEXT }}>
-                  {state.project.mentor_access
-                    ? `✓ bioERGOtech mentors (@${state.mentor_login}) have access`
-                    : `⚠ The mentors do not have access yet. Press "Use a different repository" and link this same repository again.`}
-                </div>
-                {!certified && (
-                  <button onClick={() => setChanging(true)} style={{ ...linkBtn, marginTop: 6 }}>Use a different repository</button>
+                {state.project.is_fork && (
+                  <div style={{ fontSize: 13, color: AMBER_TEXT }}>
+                    ⚠ This is a fork{state.project.fork_parent ? ` of ${state.project.fork_parent}` : ""}. Reviewers will compare it with the original.
+                  </div>
                 )}
-              </div>
-            ) : state.github ? (
-              <div style={{ display: "grid", gap: 14 }}>
-                <Option title="Create a new repository from the bioERGOtech template">
-                  <p style={hint}>
-                    Created in your account (@{state.github.login}), so you own it. It starts with README and ethics review templates matching Lessons 6.2 and 8.2. GitHub will ask permission to create repositories for you.
-                  </p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <input
-                      value={repoName}
-                      onChange={(e) => setRepoName(e.target.value.replace(/\s+/g, "-"))}
-                      placeholder="flu-sentinel-agent"
-                      aria-label="New repository name"
-                      style={input}
-                    />
-                    <a
-                      href={repoName ? connectHref("create", next, repoName) : undefined}
-                      aria-disabled={!repoName}
-                      style={{ ...btn(true), opacity: repoName ? 1 : 0.5, pointerEvents: repoName ? "auto" : "none" }}
-                    >
-                      Create on GitHub
-                    </a>
+                {!certified && (
+                  <div>
+                    <button onClick={() => { setChanging(true); setLinkMessage(null); }} style={{ ...linkBtn, marginTop: 6 }}>Use a different repository</button>
                   </div>
-                </Option>
-                <Option title="Link a repository you already have">
-                  <p style={hint}>
-                    It must be public, and you need write access. Working in a team? The owner links it first, then each teammate links the same repository.
-                  </p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <input
-                      value={repoUrl}
-                      onChange={(e) => setRepoUrl(e.target.value)}
-                      placeholder="github.com/your-name/your-project"
-                      aria-label="Existing repository link"
-                      style={input}
-                    />
-                    <a
-                      href={repoUrl ? connectHref("link", next, repoUrl) : undefined}
-                      aria-disabled={!repoUrl}
-                      style={{ ...btn(false), opacity: repoUrl ? 1 : 0.5, pointerEvents: repoUrl ? "auto" : "none" }}
-                    >
-                      Link repository
-                    </a>
-                  </div>
-                </Option>
-                {changing && (
-                  <button onClick={() => setChanging(false)} style={linkBtn}>Keep my current repository</button>
                 )}
               </div>
             ) : (
-              <p style={hint}>Connect GitHub first.</p>
+              <>
+                <p style={hint}>
+                  The repository must be public. Working in a team? Everyone adds the same repository link.
+                </p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <input
+                    value={repoUrl}
+                    onChange={(e) => setRepoUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && repoUrl.trim() && !linking) linkRepo(); }}
+                    placeholder="github.com/your-name/your-project"
+                    aria-label="Repository link"
+                    style={input}
+                  />
+                  <button
+                    onClick={linkRepo}
+                    disabled={!repoUrl.trim() || linking}
+                    style={{ ...btn(true), border: "none", cursor: linking ? "wait" : "pointer", opacity: repoUrl.trim() && !linking ? 1 : 0.5 }}
+                  >
+                    {linking ? "Checking…" : "Save repository"}
+                  </button>
+                </div>
+                {changing && (
+                  <button onClick={() => { setChanging(false); setLinkMessage(null); }} style={{ ...linkBtn, marginTop: 8 }}>Keep my current repository</button>
+                )}
+              </>
+            )}
+            {linkMessage && (
+              <div role="status" style={{ marginTop: 10, padding: "10px 14px", borderRadius: 8, fontSize: 13.5, lineHeight: 1.55, background: linkMessage.ok ? TEAL_LIGHT : AMBER_BG, color: linkMessage.ok ? TEAL_DARK : AMBER_TEXT }}>
+                {linkMessage.ok ? "✓ " : "⚠ "}{linkMessage.text}
+              </div>
             )}
           </Step>
 
@@ -333,7 +293,7 @@ export default function CourseProjectBox({ mode, lessonSubmitted }: Props) {
                   )}
 
                   <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-                    <button onClick={submit} disabled={submitting || !state.project} style={{ ...btn(true), border: "none", cursor: submitting ? "wait" : "pointer", opacity: submitting ? 0.7 : 1 }}>
+                    <button onClick={submit} disabled={submitting || !state.project} style={{ ...btn(true), border: "none", cursor: submitting ? "wait" : "pointer", opacity: submitting || !state.project ? 0.6 : 1 }}>
                       {submitting ? "Checking your repository…" : state.membership?.submitted_at ? "Resubmit and check again" : "Submit for certificate"}
                     </button>
                     <span style={{ fontSize: 12, color: TEXT_LIGHT }}>We check the latest commit. You can fix things and resubmit until your certificate is issued.</span>
@@ -386,15 +346,6 @@ function Step({ n, title, done, disabled, last, children }: { n: number; title: 
         <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 8, paddingTop: 3 }}>{title}</div>
         {children}
       </div>
-    </div>
-  );
-}
-
-function Option({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, background: "#FAFBFC" }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{title}</div>
-      {children}
     </div>
   );
 }

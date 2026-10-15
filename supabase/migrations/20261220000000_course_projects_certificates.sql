@@ -1,21 +1,23 @@
 -- =========================================================
--- Migration: Agentic AI course. GitHub projects, final submission
+-- Migration: Agentic AI course. Project repositories, final submission
 -- and certificates.
 --
 -- What it adds
---   course_github_accounts   the GitHub account a student connected
---   course_projects          one row per project repository
+--   course_projects          one row per public GitHub repository that
+--                            students linked as their project
 --   course_project_members   which project each student belongs to,
 --                            plus their final submission and the
 --                            result of the latest automated check
 --   course_certificates      issued certificates, the only source the
 --                            public /verify page reads
+--   course_backfill_runs     records that the one-time copy of old
+--                            certificates has run
 --
 -- Who writes
 --   Only the server, through the service role key. None of these tables
---   has an insert, update or delete policy, so a student cannot link a
---   GitHub account they do not own, mark their own project as checked,
---   or mint a certificate from the browser with the anon key.
+--   has an insert, update or delete policy, so a student cannot mark their
+--   own project as checked or mint a certificate from the browser with the
+--   anon key.
 --
 -- Why certificates get their own table
 --   approve-certificate used to write cert_id and cert_issued_at onto
@@ -28,32 +30,34 @@
 -- Safe to re-run: every statement is idempotent.
 -- =========================================================
 
--- ── 1. GitHub accounts ────────────────────────────────────────────────
-create table if not exists public.course_github_accounts (
-  user_id       uuid        primary key references auth.users on delete cascade,
-  -- GitHub's numeric id is stable across username changes, so it is the
-  -- one that is unique. The login is kept for display and API paths.
-  github_id     bigint      not null unique,
-  github_login  text        not null,
-  avatar_url    text,
-  connected_at  timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
-);
+-- ── 1. Earlier drafts of this file ────────────────────────────────────
+-- A draft connected students' GitHub accounts and added a bioERGOtech
+-- mentor collaborator. Students now just share a public repository link,
+-- so that table and those columns are gone. Nothing on a fresh database.
+drop table if exists public.course_github_accounts;
 
 -- ── 2. Projects ───────────────────────────────────────────────────────
+-- Students create the repository in their own GitHub account and paste its
+-- link. It must be public: the checks read it without any GitHub login.
 create table if not exists public.course_projects (
   id              uuid        primary key default gen_random_uuid(),
+  -- GitHub's numeric id survives a rename, so it identifies the repo.
   github_repo_id  bigint      not null unique,
-  full_name       text        not null,          -- owner/name
+  full_name       text        not null,          -- owner/name, refreshed on each link
   html_url        text        not null,
   owner_login     text        not null,
   default_branch  text,
-  -- True once the bioERGOtech mentor account is a collaborator.
-  mentor_access   boolean     not null default false,
-  created_via     text        not null check (created_via in ('template', 'linked')),
+  -- A fork is shown to reviewers: the work may not be the student's own.
+  is_fork         boolean     not null default false,
+  fork_parent     text,
   created_by      uuid        references auth.users on delete set null,
   created_at      timestamptz not null default now()
 );
+
+alter table public.course_projects drop column if exists mentor_access;
+alter table public.course_projects drop column if exists created_via;
+alter table public.course_projects add column if not exists is_fork boolean not null default false;
+alter table public.course_projects add column if not exists fork_parent text;
 
 -- ── 3. Membership and final submission ────────────────────────────────
 -- One project per student, several students per project (teams).
@@ -114,20 +118,13 @@ create unique index if not exists course_certificates_active_user_id_idx
 -- ── 5. Row level security ─────────────────────────────────────────────
 -- The API routes use the service role and bypass RLS. These policies are
 -- the fallback layer, and they only ever allow reading.
-alter table public.course_github_accounts  enable row level security;
 alter table public.course_projects         enable row level security;
 alter table public.course_project_members  enable row level security;
 alter table public.course_certificates     enable row level security;
 
-revoke insert, update, delete on public.course_github_accounts  from anon, authenticated;
 revoke insert, update, delete on public.course_projects         from anon, authenticated;
 revoke insert, update, delete on public.course_project_members  from anon, authenticated;
 revoke insert, update, delete on public.course_certificates     from anon, authenticated;
-
-drop policy if exists "Read own GitHub account" on public.course_github_accounts;
-create policy "Read own GitHub account"
-  on public.course_github_accounts for select
-  using (auth.uid() = user_id or public.e_admin());
 
 drop policy if exists "Read own project membership" on public.course_project_members;
 create policy "Read own project membership"
@@ -209,7 +206,8 @@ end;
 $$;
 
 -- ── 7. Verify ─────────────────────────────────────────────────────────
--- Must return 5 rows, all with rowsecurity = true:
+-- Must return 4 rows (backfill_runs, certificates, project_members,
+-- projects), all with rowsecurity = true:
 --
 --   select tablename, rowsecurity from pg_tables
 --   where schemaname = 'public' and tablename like 'course\_%';

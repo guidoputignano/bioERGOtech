@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireMember } from "@/lib/auth/admin";
 import { loadStudentState } from "@/lib/course/data";
-import { githubConfig } from "@/lib/github/client";
+import { parseRepoRef } from "@/lib/github/client";
+import { lookupRepo } from "@/lib/github/projects";
 import { studenteLiceiConfermato } from "@/lib/eventi/licei-server";
 import { candidatoUniversitaConfermato } from "@/lib/eventi/universita-server";
+
+/** Each link costs a GitHub request against a shared hourly allowance. */
+const MIN_SECONDS_BETWEEN_LINKS = 15;
 
 /**
  * GET /api/courses/project
  *
- * The signed-in student's course state: lesson progress, GitHub account,
+ * The signed-in student's course state: lesson progress, Student ID,
  * project, last check result and certificate. Only ever their own.
  */
 export async function GET() {
@@ -16,28 +20,122 @@ export async function GET() {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, chiamante } = guard;
 
-  // Every lesson page asks this for signed-in students. Until GitHub is set
-  // up, answer without touching the course tables, which may not exist yet
-  // (the migration is run by hand): the prompt and project box then stay
-  // hidden instead of 500s on every lesson view.
-  const cfg = githubConfig();
-  if (!cfg) return NextResponse.json({ github_enabled: false });
-
   try {
     const state = await loadStudentState(client, chiamante.id);
     // Licei and universita students hand in their team project through their
-    // own console, assessed by a Commissione. Asking them for a GitHub repo
-    // as well would give them two competing submission routes.
+    // own console, assessed by a Commissione. Asking them for a repository
+    // here as well would give them two competing submission routes.
     const separateTrack = (await studenteLiceiConfermato()) || (await candidatoUniversitaConfermato());
-    return NextResponse.json({
-      ...state,
-      separate_track: separateTrack,
-      github_enabled: true,
-      mentor_login: cfg.mentorLogin,
-      template_repo: cfg.templateRepo,
-    });
+    return NextResponse.json({ ...state, separate_track: separateTrack });
   } catch (error) {
     console.error("course project state:", (error as Error).message);
     return NextResponse.json({ error: "Could not load your course progress" }, { status: 500 });
   }
+}
+
+/**
+ * POST /api/courses/project
+ * Body: { repo } a github.com link or owner/name
+ *
+ * Links the student to a public repository they created in their own
+ * GitHub account. Teammates link the same repository. Nothing is created
+ * or changed on GitHub: the site only reads public repositories.
+ */
+export async function POST(req: NextRequest) {
+  const guard = await requireMember();
+  if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  const { client, chiamante } = guard;
+
+  const { repo: input } = (await req.json().catch(() => ({}))) as { repo?: string };
+  const ref = parseRepoRef(input ?? "");
+  if (!ref) {
+    return NextResponse.json(
+      { error: "That does not look like a GitHub repository link. It should look like github.com/your-name/your-project." },
+      { status: 400 },
+    );
+  }
+
+  const state = await loadStudentState(client, chiamante.id);
+  if (state.certificate) {
+    return NextResponse.json({ error: "Your certificate has been issued, so your project can no longer be changed." }, { status: 409 });
+  }
+
+  const { data: current } = await client
+    .from("course_project_members")
+    .select("project_id, joined_at")
+    .eq("user_id", chiamante.id)
+    .maybeSingle();
+  if (current?.joined_at) {
+    const wait = Math.ceil(MIN_SECONDS_BETWEEN_LINKS - (Date.now() - Date.parse(current.joined_at)) / 1000);
+    if (wait > 0) {
+      return NextResponse.json({ error: `Please wait ${wait} seconds before changing the repository again` }, { status: 429 });
+    }
+  }
+
+  const found = await lookupRepo(ref);
+  if (!found.ok) {
+    const messages = {
+      not_found:
+        "We could not find that repository. Check the link, and make sure the repository is public (on GitHub: Settings, then Danger Zone, then Change visibility).",
+      busy: "GitHub is busy right now. Please try again in a few minutes.",
+      error: "Something went wrong talking to GitHub. Please try again in a moment.",
+    } as const;
+    return NextResponse.json({ error: messages[found.reason] }, { status: found.reason === "not_found" ? 404 : 502 });
+  }
+  const repo = found.repo;
+  if (repo.private) {
+    return NextResponse.json({ error: "That repository is private. Make it public first: the course asks for public projects." }, { status: 400 });
+  }
+
+  // A teammate linking a repo that is already registered refreshes its name
+  // and fork status; the first student stays recorded as created_by.
+  const fields = {
+    full_name: repo.full_name,
+    html_url: repo.html_url,
+    owner_login: repo.owner.login,
+    default_branch: repo.default_branch,
+    is_fork: repo.fork,
+    fork_parent: repo.fork ? (repo.parent?.full_name ?? null) : null,
+  };
+  const { data: existing } = await client
+    .from("course_projects")
+    .select("id")
+    .eq("github_repo_id", repo.id)
+    .maybeSingle();
+  const saved = existing
+    ? await client.from("course_projects").update(fields).eq("id", existing.id).select("id").single()
+    : await client
+        .from("course_projects")
+        .insert({ ...fields, github_repo_id: repo.id, created_by: chiamante.id })
+        .select("id")
+        .single();
+  if (saved.error || !saved.data) {
+    console.error("course_projects save:", saved.error?.message);
+    return NextResponse.json({ error: "Could not save your repository" }, { status: 500 });
+  }
+  const projectId = saved.data.id as string;
+
+  // Moving to a different repository clears the earlier submission, which
+  // was about another repository. Relinking the same one keeps it.
+  const now = new Date().toISOString();
+  const { error: memberError } = await client.from("course_project_members").upsert(
+    current?.project_id === projectId
+      ? { user_id: chiamante.id, project_id: projectId, joined_at: now }
+      : {
+          user_id: chiamante.id,
+          project_id: projectId,
+          joined_at: now,
+          submitted_at: null,
+          submitted_commit: null,
+          check_result: null,
+          checked_at: null,
+        },
+    { onConflict: "user_id" },
+  );
+  if (memberError) {
+    console.error("course_project_members upsert:", memberError.message);
+    return NextResponse.json({ error: "Could not save your repository" }, { status: 500 });
+  }
+
+  return NextResponse.json({ state: await loadStudentState(client, chiamante.id) });
 }

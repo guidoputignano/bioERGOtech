@@ -7,7 +7,6 @@ import CourseSidebar from "../../../CourseSidebar";
 import GateModal from "../../../GateModal";
 import LessonSubmissionBox from "../../../LessonSubmissionBox";
 import CourseProjectBox from "../../../CourseProjectBox";
-import GitHubConnectPrompt from "../../../GitHubConnectPrompt";
 
 /**
  * The two lessons that carry the GitHub project box: 4.4 asks students to
@@ -880,6 +879,21 @@ function Lesson_4_4() {
       <SlideImage src="/assets/courses/lesson-4-4/slide-2.png" alt="Six Sections" />
       <SlideImage src="/assets/courses/lesson-4-4/slide-3.png" alt="Problem Statement" />
       <SlideImage src="/assets/courses/lesson-4-4/slide-4.png" alt="Brief Template" />
+      <Section title="Set Up Your Project on GitHub">
+        <p style={p}>Your project lives in a public GitHub repository in your own account. Your code or workflow, README, ethics review and demo video all go there, and at the end of the course you submit its link for your certificate. Set it up now, so it is ready to build in through Phase 3.</p>
+        {[
+          "Create a free GitHub account at github.com/signup (GitHub requires you to be 13 or older)",
+          "Create a public repository named after your project. In a team, one person creates it and adds the others as collaborators",
+          "Add the README and ethics review templates, and write your Student ID in the Team section of the README",
+          "Add the repository link in the box at the end of this lesson",
+        ].map((step, i) => (
+          <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
+            <div style={{ width: 22, height: 22, borderRadius: "50%", background: TEAL, color: "#fff", fontWeight: 800, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontFamily: "'Sora', sans-serif" }}>{i + 1}</div>
+            <span style={{ color: TEXT_MID, lineHeight: 1.55 }}>{step}</span>
+          </div>
+        ))}
+        <CalloutBox label="Step-by-step guide" variant="tip">New to GitHub? The <Link href="/courses/agentic-ai/github" style={{ color: "#276749", fontWeight: 700 }}>GitHub guide</Link> walks through every step in about 15 minutes, and has the README and ethics review templates to download.</CalloutBox>
+      </Section>
       <ReflectionPrompt>Before submitting your brief — answer this honestly: Is the problem you are solving specific enough that you could describe the exact person who has it and how often they encounter it? If not, your problem statement needs sharpening before submission.</ReflectionPrompt>
     </>
   );
@@ -1332,11 +1346,11 @@ function CourseClosing() {
         <YouTubeEmbed id="JL4-eOusYBk" title="How to Upload Project to GitHub Using Git 2025" note="Watch: Full Git terminal workflow — Track C recommended method (12 min)" />
         <CalloutBox label="Submission Steps — All Tracks" variant="tip">
           {[
-            "Create a free GitHub account at github.com if you do not have one",
-            "Create a new repository — name it after your project (e.g. flu-sentinel-agent)",
+            "Create a free GitHub account and a public repository if you have not yet (the GitHub guide linked from Lesson 4.4 shows how)",
             "Upload your project files using the method for your track above",
             "Make sure README.md and ethics-review.md are in the root of your repository",
-            "Copy your repository URL (e.g. github.com/yourname/flu-sentinel-agent)",
+            "Write your Student ID in the Team section of README.md (every team member adds their own)",
+            "Add your demo video to the repository, or link it in the README (YouTube unlisted, Google Drive, Loom or Vimeo)",
             "Submit the repository link in the box at the end of this lesson",
           ].map((step, i) => (
             <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", fontSize: 14 }}>
@@ -1465,8 +1479,6 @@ export default function LessonPageClient({ lesson, isAuthenticated, gateOpen = f
       {/* Body */}
       <div className="lesson-body" style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px" }}>
         <div className="lesson-content">
-          {isAuthenticated && !PROJECT_BOX[lesson.slug] && <GitHubConnectPrompt />}
-
           {ContentComponent ? (
             <ContentComponent />
           ) : (

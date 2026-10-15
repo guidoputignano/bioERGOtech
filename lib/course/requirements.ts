@@ -52,13 +52,15 @@ export function lessonProgress(submittedSlugs: Iterable<string>): LessonProgress
 // ── Project checks ──────────────────────────────────────────────────────
 
 export type CheckKey =
-  | "mentor_access"
   | "prototype"
   | "readme"
   | "ethics"
   | "demo"
-  | "authored"
-  | "sections";
+  /** The student's own Student ID in the README: shows they can edit the repo. */
+  | "student_id"
+  | "sections"
+  /** Informational: a fork is flagged for reviewers, it does not block. */
+  | "original";
 
 export interface CheckItem {
   key: CheckKey;

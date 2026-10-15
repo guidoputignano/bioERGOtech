@@ -51,9 +51,11 @@ export interface ProjectRow {
   full_name: string;
   html_url: string;
   owner_login: string;
-  mentor_access: boolean;
-  created_via: "template" | "linked";
+  is_fork: boolean;
+  fork_parent: string | null;
 }
+
+const PROJECT_COLUMNS = "id, full_name, html_url, owner_login, is_fork, fork_parent";
 
 export interface MembershipRow {
   user_id: string;
@@ -80,28 +82,12 @@ const CERT_COLUMNS = "cert_id, user_id, issued_at, revoked_at, legacy, confirmed
 export const certificateVerified = (c: Pick<CertificateRow, "revoked_at" | "legacy" | "confirmed_at">) =>
   !c.revoked_at && (!c.legacy || !!c.confirmed_at);
 
-/**
- * A check can find the mentor has access when the project row says it does
- * not (an invitation accepted during the check, or added by hand). Write it
- * back, or the project box and the Course Monitor keep saying "no access"
- * next to a passing access check.
- */
-export async function recordMentorAccess(
-  client: Client,
-  project: Pick<ProjectRow, "id" | "mentor_access">,
-  result: ProjectCheckResult,
-): Promise<void> {
-  if (project.mentor_access) return;
-  if (!result.items.some((i) => i.key === "mentor_access" && i.ok)) return;
-  const { error } = await client.from("course_projects").update({ mentor_access: true }).eq("id", project.id);
-  if (error) console.error("course_projects mentor_access:", error.message);
-}
-
 // ── One student ─────────────────────────────────────────────────────────
 
 export interface StudentState {
   lessons: LessonProgress;
-  github: { login: string; avatar_url: string | null } | null;
+  /** The id on the student's lesson pages. The README must contain it. */
+  student_id: string;
   project: ProjectRow | null;
   membership: MembershipRow | null;
   certificate: CertificateRow | null;
@@ -109,9 +95,13 @@ export interface StudentState {
 }
 
 export async function loadStudentState(client: Client, userId: string): Promise<StudentState> {
-  const [subs, account, membership, certificate] = await Promise.all([
-    client.from("lesson_submissions").select("lesson_slug").eq("user_id", userId).limit(PAGE),
-    client.from("course_github_accounts").select("github_login, avatar_url").eq("user_id", userId).maybeSingle(),
+  const [subs, membership, certificate] = await Promise.all([
+    client
+      .from("lesson_submissions")
+      .select("lesson_slug, student_id, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(PAGE),
     client
       .from("course_project_members")
       .select("user_id, project_id, submitted_at, submitted_commit, check_result, checked_at")
@@ -125,7 +115,7 @@ export async function loadStudentState(client: Client, userId: string): Promise<
       .is("revoked_at", null)
       .maybeSingle(),
   ]);
-  for (const r of [subs, account, membership, certificate]) {
+  for (const r of [subs, membership, certificate]) {
     if (r.error) throw new Error(r.error.message);
   }
 
@@ -134,20 +124,21 @@ export async function loadStudentState(client: Client, userId: string): Promise<
   if (m) {
     const p = await client
       .from("course_projects")
-      .select("id, full_name, html_url, owner_login, mentor_access, created_via")
+      .select(PROJECT_COLUMNS)
       .eq("id", m.project_id)
       .maybeSingle();
     if (p.error) throw new Error(p.error.message);
     project = (p.data as ProjectRow | null) ?? null;
   }
 
-  const lessons = lessonProgress(((subs.data ?? []) as { lesson_slug: string }[]).map((r) => r.lesson_slug));
+  const rows = (subs.data ?? []) as { lesson_slug: string; student_id: string | null }[];
+  const lessons = lessonProgress(rows.map((r) => r.lesson_slug));
   const cert = (certificate.data as CertificateRow | null) ?? null;
-  const acc = account.data as { github_login: string; avatar_url: string | null } | null;
 
   return {
     lessons,
-    github: acc ? { login: acc.github_login, avatar_url: acc.avatar_url } : null,
+    // Oldest first: the id the student has seen since their first reflection.
+    student_id: rows.find((r) => r.student_id)?.student_id ?? studentIdFor(userId),
     project,
     membership: m,
     certificate: cert,
@@ -174,10 +165,9 @@ export interface StudentRow {
   lessons_complete: boolean;
   last_activity: string | null;
   open_questions: number;
-  github_login: string | null;
   project_full_name: string | null;
   project_url: string | null;
-  mentor_access: boolean;
+  project_fork: boolean;
   submitted_at: string | null;
   checked_at: string | null;
   check_passed: boolean | null;
@@ -201,7 +191,6 @@ export interface CourseOverview {
     students: number;
     active7d: number;
     lessonsComplete: number;
-    githubConnected: number;
     projects: number;
     submitted: number;
     eligible: number;
@@ -228,7 +217,7 @@ export function studentIdFor(userId: string, year = new Date().getFullYear()): s
 }
 
 export async function loadCourseOverview(client: Client): Promise<CourseOverview> {
-  const [subs, accounts, members, projects, certs] = await Promise.all([
+  const [subs, members, projects, certs] = await Promise.all([
     readAll<SubmissionLite>((from, to) =>
       client
         .from("lesson_submissions")
@@ -236,9 +225,6 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
         .order("created_at", { ascending: true })
         .order("id", { ascending: true })
         .range(from, to),
-    ),
-    readAll<{ user_id: string; github_login: string }>((from, to) =>
-      client.from("course_github_accounts").select("user_id, github_login").order("user_id").range(from, to),
     ),
     readAll<MembershipRow>((from, to) =>
       client
@@ -250,7 +236,7 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
     readAll<ProjectRow>((from, to) =>
       client
         .from("course_projects")
-        .select("id, full_name, html_url, owner_login, mentor_access, created_via")
+        .select(PROJECT_COLUMNS)
         .order("id")
         .range(from, to),
     ),
@@ -271,14 +257,13 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
     list.push(s);
     byUser.set(s.user_id, list);
   }
-  const accountBy = new Map(accounts.map((a) => [a.user_id, a.github_login]));
   const memberBy = new Map(members.map((m) => [m.user_id, m]));
   const projectBy = new Map(projects.map((p) => [p.id, p]));
   const certBy = new Map(certs.filter((c) => c.user_id && !c.revoked_at).map((c) => [c.user_id as string, c]));
 
   // Certificate holders too: an imported legacy certificate can belong to
   // someone with no lessons, and staff must be able to confirm or revoke it.
-  const userIds = [...new Set([...byUser.keys(), ...accountBy.keys(), ...memberBy.keys(), ...certBy.keys()])];
+  const userIds = [...new Set([...byUser.keys(), ...memberBy.keys(), ...certBy.keys()])];
   const profiles = await readByIds<{ id: string; full_name: string | null; email: string | null }>(
     userIds,
     (chunk) => client.from("profiles").select("id, full_name, email").in("id", chunk),
@@ -322,10 +307,9 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
       lessons_complete: lessons.complete,
       last_activity: last,
       open_questions: list.filter((s) => s.question?.trim() && !s.admin_reply).length,
-      github_login: accountBy.get(uid) ?? null,
       project_full_name: project?.full_name ?? null,
       project_url: project?.html_url ?? null,
-      mentor_access: project?.mentor_access ?? false,
+      project_fork: project?.is_fork ?? false,
       submitted_at: m?.submitted_at ?? null,
       checked_at: m?.checked_at ?? null,
       check_passed: m?.check_result ? m.check_result.passed && !m.check_result.error : null,
@@ -355,7 +339,6 @@ export async function loadCourseOverview(client: Client): Promise<CourseOverview
       students: students.length,
       active7d: students.filter((s) => s.last_activity && Date.parse(s.last_activity) >= weekAgo).length,
       lessonsComplete: students.filter((s) => s.lessons_complete).length,
-      githubConnected: students.filter((s) => s.github_login).length,
       projects: projects.length,
       submitted: students.filter((s) => s.submitted_at).length,
       eligible: students.filter((s) => s.eligible).length,

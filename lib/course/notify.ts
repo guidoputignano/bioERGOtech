@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { COURSE_LESSONS } from "@/app/courses/course-data";
-import { siteOrigin } from "@/lib/github/client";
+import { siteOrigin } from "./site";
 import { escapeHtml } from "./html";
 
 /**

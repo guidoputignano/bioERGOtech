@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
-import { loadStudentState, recordMentorAccess } from "@/lib/course/data";
-import { githubConfig } from "@/lib/github/client";
-import { runProjectChecks } from "@/lib/github/projects";
+import { loadStudentState } from "@/lib/course/data";
+import { BUSY_MESSAGE, runProjectChecks } from "@/lib/github/projects";
 
 /**
  * POST /api/admin/course/check
@@ -18,9 +17,6 @@ export async function POST(req: NextRequest) {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client } = guard;
 
-  const cfg = githubConfig();
-  if (!cfg) return NextResponse.json({ error: "GitHub integration is not configured" }, { status: 503 });
-
   const { user_id } = (await req.json().catch(() => ({}))) as { user_id?: string };
   if (!user_id) return NextResponse.json({ error: "user_id is required" }, { status: 400 });
 
@@ -29,13 +25,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This student has no linked project" }, { status: 404 });
   }
 
-  const result = await runProjectChecks(
-    cfg,
-    state.project.full_name,
-    state.github?.login ?? null,
-    state.membership.submitted_commit,
-    state.project.created_via === "template",
-  );
+  const result = await runProjectChecks({
+    fullName: state.project.full_name,
+    studentId: state.student_id,
+    pinnedRef: state.membership.submitted_commit,
+    fork: { isFork: state.project.is_fork, parent: state.project.fork_parent },
+  });
+  if (result.error === BUSY_MESSAGE) {
+    // GitHub's limit, not the student's repo: keep the stored result.
+    return NextResponse.json({ error: result.error }, { status: 502 });
+  }
 
   // Only a submission carries a pinned commit. A preview check of an
   // unsubmitted project must not look like a passed submission, so it
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
     .update({ check_result: result, checked_at: result.ran_at })
     .eq("user_id", user_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await recordMentorAccess(client, state.project, result);
 
   return NextResponse.json({ result, state: await loadStudentState(client, user_id) });
 }

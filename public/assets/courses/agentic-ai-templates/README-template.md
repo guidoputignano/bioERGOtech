@@ -19,8 +19,10 @@ session.
 ## Demo
 
 <!--
-Paste the link to your 2 to 5 minute demo recording here: YouTube (unlisted),
-Google Drive, Loom or Vimeo. Show the agent working with real input.
+Your 2 to 5 minute demo recording, showing the agent working with real input.
+Either paste a link here (YouTube unlisted, Google Drive shared with "anyone
+with the link", Loom or Vimeo), or upload the video file to this repository
+and write its file name here.
 -->
 
 Demo video: 
@@ -88,7 +90,16 @@ never the values) and the expected output.
 
 ## Team
 
-<!-- Names and GitHub usernames of everyone who built this. -->
+<!--
+One line per person: name, GitHub username and bioERGOtech Student ID.
+Your Student ID is shown in the project box in Lesson 4.4 (for example
+BIO-2026-1A2B3C4D). The certificate check looks for it here, outside these
+comment markers, so write it on a normal line like the example below.
+-->
+
+| Name | GitHub username | Student ID |
+| ---- | --------------- | ---------- |
+|      |                 |            |
 
 ---
 

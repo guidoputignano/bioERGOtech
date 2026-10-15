@@ -1,76 +1,45 @@
-import { createHmac, randomBytes, timingSafeEqual } from "crypto";
-
 /**
- * GitHub access for the Agentic AI course.
+ * Read-only GitHub access for the Agentic AI course.
  *
- * Two kinds of token pass through here, and neither is ever stored:
+ * Students create a public repository in their own GitHub account and paste
+ * its link. The site never signs in to GitHub on their behalf: it only reads
+ * public repositories, which needs no account at all.
  *
- * - The student's OAuth token. It lives for one request, inside the OAuth
- *   callback, and is used to read who they are and, when they ask for it,
- *   to create or link their project repository. The database keeps their
- *   GitHub id and login, never the token.
- * - The mentor token. A personal access token for the bioERGOtech mentor
- *   account, read from the environment. It accepts collaborator invitations
- *   and runs the project checks, so the checks also work on repositories a
- *   student later makes private.
+ * GitHub allows 60 anonymous API requests an hour per server address. That
+ * covers normal use. GITHUB_TOKEN, optional, raises it to 5,000: a
+ * fine-grained token from any existing staff GitHub account, with read-only
+ * access to public repositories and no other permission. File contents are
+ * read from raw.githubusercontent.com, which does not count against it.
  */
 
 const API = "https://api.github.com";
-
-export interface GitHubConfig {
-  clientId: string;
-  clientSecret: string;
-  mentorLogin: string;
-  mentorToken: string;
-  /** owner/name of the public template repository. */
-  templateRepo: string;
-}
-
-/** Null when the integration is not configured; callers degrade, not crash. */
-export function githubConfig(): GitHubConfig | null {
-  const clientId = process.env.GITHUB_OAUTH_CLIENT_ID;
-  const clientSecret = process.env.GITHUB_OAUTH_CLIENT_SECRET;
-  const mentorLogin = process.env.GITHUB_MENTOR_LOGIN;
-  const mentorToken = process.env.GITHUB_MENTOR_TOKEN;
-  const templateRepo = process.env.GITHUB_TEMPLATE_REPO;
-  if (!clientId || !clientSecret || !mentorLogin || !mentorToken || !templateRepo) return null;
-  return { clientId, clientSecret, mentorLogin, mentorToken, templateRepo };
-}
-
-export function siteOrigin(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "https://www.bioergotech.org").replace(/\/+$/, "");
-}
-
-export const CALLBACK_PATH = "/api/courses/github/callback";
-
-// ── REST ────────────────────────────────────────────────────────────────
+const RAW = "https://raw.githubusercontent.com";
 
 export interface GhResponse<T> {
   status: number;
   data: T | null;
   /** GitHub's message on failure, for logs and error mapping. */
   message: string | null;
+  /** Rate limit used up: try again later, nothing is wrong with the repo. */
+  rateLimited: boolean;
 }
 
-export async function gh<T = unknown>(
-  path: string,
-  token: string,
-  init: { method?: string; body?: unknown } = {},
-): Promise<GhResponse<T>> {
-  const res = await fetch(`${API}${path}`, {
-    method: init.method ?? "GET",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "bioERGOtech-course",
-      ...(init.body !== undefined ? { "Content-Type": "application/json" } : {}),
-    },
-    body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
-    cache: "no-store",
-  });
-
-  if (res.status === 204) return { status: 204, data: null, message: null };
+export async function gh<T = unknown>(path: string): Promise<GhResponse<T>> {
+  const token = process.env.GITHUB_TOKEN;
+  let res: Response;
+  try {
+    res = await fetch(`${API}${path}`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "bioERGOtech-course",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      cache: "no-store",
+    });
+  } catch (e) {
+    return { status: 0, data: null, message: (e as Error).message, rateLimited: false };
+  }
 
   let json: unknown = null;
   try {
@@ -80,105 +49,25 @@ export async function gh<T = unknown>(
   }
   if (!res.ok) {
     const message = (json as { message?: string } | null)?.message ?? res.statusText;
-    return { status: res.status, data: null, message };
+    const rateLimited =
+      res.status === 429 ||
+      (res.status === 403 && (res.headers.get("x-ratelimit-remaining") === "0" || /rate limit/i.test(message)));
+    return { status: res.status, data: null, message, rateLimited };
   }
-  return { status: res.status, data: json as T, message: null };
+  return { status: res.status, data: json as T, message: null, rateLimited: false };
 }
 
-// ── OAuth ───────────────────────────────────────────────────────────────
-
-export type Intent = "connect" | "create" | "link";
-
-/** What the student asked for, carried through GitHub in a signed cookie. */
-export interface OAuthState {
-  nonce: string;
-  userId: string;
-  intent: Intent;
-  /** create: the new repository name. link: owner/name. */
-  repo?: string;
-  next: string;
-  issuedAt: number;
-}
-
-export const STATE_COOKIE = "bt_gh_oauth";
-const STATE_MAX_AGE_S = 10 * 60;
-
-function sign(payload: string, secret: string): string {
-  return createHmac("sha256", secret).update(payload).digest("base64url");
-}
-
-export function newState(input: Omit<OAuthState, "nonce" | "issuedAt">): OAuthState {
-  return { ...input, nonce: randomBytes(16).toString("base64url"), issuedAt: Date.now() };
-}
-
-export function encodeState(state: OAuthState, secret: string): string {
-  const payload = Buffer.from(JSON.stringify(state)).toString("base64url");
-  return `${payload}.${sign(payload, secret)}`;
-}
-
-export function decodeState(cookie: string | undefined, secret: string): OAuthState | null {
-  if (!cookie) return null;
-  const [payload, sig] = cookie.split(".");
-  if (!payload || !sig) return null;
-  const expected = Buffer.from(sign(payload, secret));
-  const given = Buffer.from(sig);
-  if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
+/** A file of a public repository at a commit, or null if it is not there. */
+export async function rawFile(fullName: string, ref: string, path: string): Promise<string | null> {
   try {
-    const state = JSON.parse(Buffer.from(payload, "base64url").toString()) as OAuthState;
-    if (Date.now() - state.issuedAt > STATE_MAX_AGE_S * 1000) return null;
-    return state;
+    const res = await fetch(
+      `${RAW}/${fullName}/${ref}/${path.split("/").map(encodeURIComponent).join("/")}`,
+      { cache: "no-store", headers: { "User-Agent": "bioERGOtech-course" } },
+    );
+    return res.ok ? await res.text() : null;
   } catch {
     return null;
   }
-}
-
-export const stateCookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  // Lax, not Strict: the callback is a top-level navigation from
-  // github.com, and Strict would drop the cookie on exactly that request.
-  sameSite: "lax" as const,
-  path: "/api/courses/github",
-  maxAge: STATE_MAX_AGE_S,
-};
-
-/**
- * Scopes per intent. Connecting asks for nothing beyond the public profile.
- * Only creating or linking a repository asks for public_repo, and only at
- * the moment the student presses the button.
- */
-export function scopesFor(intent: Intent): string {
-  return intent === "connect" ? "read:user" : "read:user public_repo";
-}
-
-export function authorizeUrl(cfg: GitHubConfig, state: OAuthState): string {
-  const u = new URL("https://github.com/login/oauth/authorize");
-  u.searchParams.set("client_id", cfg.clientId);
-  u.searchParams.set("redirect_uri", `${siteOrigin()}${CALLBACK_PATH}`);
-  u.searchParams.set("scope", scopesFor(state.intent));
-  u.searchParams.set("state", state.nonce);
-  u.searchParams.set("allow_signup", "true");
-  // Connecting is also how a student switches account: without the picker,
-  // GitHub silently re-approves whoever is signed in on github.com.
-  if (state.intent === "connect") u.searchParams.set("prompt", "select_account");
-  return u.toString();
-}
-
-export async function exchangeCode(cfg: GitHubConfig, code: string): Promise<string | null> {
-  const res = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: cfg.clientId,
-      client_secret: cfg.clientSecret,
-      code,
-      redirect_uri: `${siteOrigin()}${CALLBACK_PATH}`,
-    }),
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { access_token?: string };
-  return json.access_token ?? null;
 }
 
 // ── Validation ──────────────────────────────────────────────────────────
@@ -196,43 +85,4 @@ export function parseRepoRef(input: string): string | null {
     trimmed.match(/^([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100})$/);
   // The name ends up in an API path: "." and ".." would walk out of it.
   return m && validRepoName(m[2]) ? `${m[1]}/${m[2]}` : null;
-}
-
-/**
- * Only same-site paths, so the callback cannot be an open redirect.
- *
- * Resolved and compared by origin rather than pattern-matched: URL parsing
- * drops tabs and newlines and treats "\" as "/", so a string check passes
- * "/\t/evil.com" which then resolves to //evil.com. The resolved path is
- * checked too: dot segments ("/.//evil.com") normalise to "//evil.com",
- * which is same-origin now but off-site the next time it is resolved.
- * API paths are refused: a return address only ever names a page.
- */
-export function safeNext(next: string | null | undefined, fallback = "/courses/agentic-ai"): string {
-  if (!next || !next.startsWith("/")) return fallback;
-  try {
-    const base = new URL(siteOrigin());
-    const u = new URL(next, base);
-    if (u.origin !== base.origin) return fallback;
-    // Checked decoded as well: the server routes "/api%2Fcourses/..." to the
-    // same handler as "/api/courses/...".
-    const decoded = decodeURIComponent(u.pathname).toLowerCase();
-    for (const p of [u.pathname.toLowerCase(), decoded]) {
-      if (p.startsWith("//") || p.startsWith("/\\") || p === "/api" || p.startsWith("/api/")) return fallback;
-    }
-    return `${u.pathname}${u.search}${u.hash}`;
-  } catch {
-    return fallback;
-  }
-}
-
-/** An absolute URL on the site for a path from safeNext, built without re-resolving it. */
-export function siteUrl(path: string): URL {
-  const u = new URL(siteOrigin());
-  const [beforeHash, hash = ""] = path.split("#", 2);
-  const [pathname, search = ""] = beforeHash.split("?", 2);
-  u.pathname = pathname;
-  u.search = search;
-  u.hash = hash;
-  return u;
 }
