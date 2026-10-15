@@ -64,13 +64,15 @@ const systemPrompt = () => (cachedSystem ??= buildSystemPrompt());
 
 /**
  * Anthropic's explanation of a failed request, such as "Your credit balance is
- * too low to access the Anthropic API". The SDK keeps the response body in
- * `error`, and its own message is that body as JSON.
+ * too low to access the Anthropic API". The SDK keeps the parsed response body
+ * in `error`. Anything else (a gateway's HTML error page, an empty body) is not
+ * shown: the SDK's own message would carry that raw text.
  */
 export function claudeErrorMessage(err: InstanceType<typeof Anthropic.APIError>): string {
-  const body = err.error as { error?: { message?: unknown } } | undefined;
+  const body = err.error as { error?: { message?: unknown } } | null | undefined;
   const msg = body?.error?.message;
-  return typeof msg === "string" && msg.trim() ? msg.trim() : err.message;
+  if (typeof msg === "string" && msg.trim()) return msg.trim().slice(0, 300);
+  return err.status ? "no details from Anthropic" : "could not reach Anthropic";
 }
 
 export interface DraftInput {

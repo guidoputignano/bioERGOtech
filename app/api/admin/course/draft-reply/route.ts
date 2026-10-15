@@ -50,11 +50,15 @@ export async function POST(req: NextRequest) {
     if (err instanceof Anthropic.RateLimitError) {
       return NextResponse.json({ error: "Claude is rate limited. Try again in a minute." }, { status: 429 });
     }
+    if (err instanceof Anthropic.APIConnectionError) {
+      console.error("draft-reply: could not reach Claude:", err.message);
+      return NextResponse.json({ error: "Could not reach Claude. Try again in a moment." }, { status: 502 });
+    }
     if (err instanceof Anthropic.APIError) {
       // Anthropic's own explanation (for example a billing or model access problem)
       // tells the admin what to fix; this route is admin only.
       const reason = claudeErrorMessage(err);
-      console.error("draft-reply Claude error:", err.status, reason, "request id:", err.requestID);
+      console.error("draft-reply Claude error:", err.status, reason, "request id:", err.requestID, err.message.slice(0, 500));
       return NextResponse.json({ error: `Claude API error (${err.status}): ${reason}` }, { status: 502 });
     }
     console.error("draft-reply:", (err as Error).message);
