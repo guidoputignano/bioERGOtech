@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAdmin } from "@/lib/auth/admin";
-import { draftReply } from "@/lib/course/draft-reply";
+import { claudeErrorMessage, draftReply } from "@/lib/course/draft-reply";
 
 // A draft usually takes 10 to 30 seconds. 60 is within every Vercel plan's
 // limit, so this setting can never be what fails a deploy.
@@ -50,9 +50,16 @@ export async function POST(req: NextRequest) {
     if (err instanceof Anthropic.RateLimitError) {
       return NextResponse.json({ error: "Claude is rate limited. Try again in a minute." }, { status: 429 });
     }
+    if (err instanceof Anthropic.APIConnectionError) {
+      console.error("draft-reply: could not reach Claude:", err.message);
+      return NextResponse.json({ error: "Could not reach Claude. Try again in a moment." }, { status: 502 });
+    }
     if (err instanceof Anthropic.APIError) {
-      console.error("draft-reply Claude error:", err.status, err.message);
-      return NextResponse.json({ error: `Claude API error (${err.status})` }, { status: 502 });
+      // Anthropic's own explanation (for example a billing or model access problem)
+      // tells the admin what to fix; this route is admin only.
+      const reason = claudeErrorMessage(err);
+      console.error("draft-reply Claude error:", err.status, reason, "request id:", err.requestID, err.message.slice(0, 500));
+      return NextResponse.json({ error: `Claude API error (${err.status}): ${reason}` }, { status: 502 });
     }
     console.error("draft-reply:", (err as Error).message);
     return NextResponse.json({ error: (err as Error).message || "Could not draft a reply" }, { status: 500 });

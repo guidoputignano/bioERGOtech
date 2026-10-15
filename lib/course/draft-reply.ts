@@ -12,6 +12,15 @@ import lessonNotes from "./lesson-notes.json";
 
 const MODEL = "claude-opus-5-5";
 
+const TIME_BUDGET_MS = 50_000;
+
+/**
+ * Server-side fallback is a beta, and an account without access to it gets a
+ * 400 for the whole request. Once a plain request has worked after such a 400,
+ * this server instance stops asking for the beta.
+ */
+let fallbackUnavailable = false;
+
 /**
  * The whole course goes in the system prompt, unchanged between requests,
  * so it is cached once and every later draft in the hour reads it from the
@@ -53,6 +62,19 @@ ${lessons}
 let cachedSystem: string | null = null;
 const systemPrompt = () => (cachedSystem ??= buildSystemPrompt());
 
+/**
+ * Anthropic's explanation of a failed request, such as "Your credit balance is
+ * too low to access the Anthropic API". The SDK keeps the parsed response body
+ * in `error`. Anything else (a gateway's HTML error page, an empty body) is not
+ * shown: the SDK's own message would carry that raw text.
+ */
+export function claudeErrorMessage(err: InstanceType<typeof Anthropic.APIError>): string {
+  const body = err.error as { error?: { message?: unknown } } | null | undefined;
+  const msg = body?.error?.message;
+  if (typeof msg === "string" && msg.trim()) return msg.trim().slice(0, 300);
+  return err.status ? "no details from Anthropic" : "could not reach Anthropic";
+}
+
 export interface DraftInput {
   lessonSlug: string;
   lessonTitle: string;
@@ -73,16 +95,11 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
     .filter(Boolean)
     .join("\n\n");
 
-  const response = await client.beta.messages.create({
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
     model: MODEL,
     // A reply is 80 to 200 words. This leaves room for the model's thinking;
     // the request timeout below is what keeps the call inside the route limit.
     max_tokens: 4000,
-    // On a safety decline, the API retries on a suitable fallback model
-    // inside the same call instead of returning nothing.
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    output_config: { effort: "medium" },
     system: [{ type: "text", text: systemPrompt(), cache_control: { type: "ephemeral", ttl: "1h" } }],
     messages: [
       {
@@ -90,13 +107,39 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
         content: `<student_submission>\n${submission}\n</student_submission>\n\nDraft the reply to this student's question.`,
       },
     ],
-  }, {
-    // The route may run 60 seconds. Stop at 50 with no automatic retry, so
-    // a slow draft ends in a readable "took too long" rather than the
-    // platform killing the function mid-call.
-    timeout: 50_000,
-    maxRetries: 0,
-  });
+  };
+  // The route may run 60 seconds. Both attempts together stop at 50, with no
+  // automatic retry, so a slow draft ends in a readable "took too long"
+  // rather than the platform killing the function mid-call.
+  const started = Date.now();
+  const options = () => ({ timeout: Math.max(5_000, TIME_BUDGET_MS - (Date.now() - started)), maxRetries: 0 });
+
+  let response: Anthropic.Message | Anthropic.Beta.BetaMessage;
+  if (fallbackUnavailable) {
+    response = await client.messages.create(request, options());
+  } else {
+    try {
+      response = await client.beta.messages.create(
+        {
+          ...request,
+          // On a safety decline, the API retries on a suitable fallback model
+          // inside the same call instead of returning nothing.
+          betas: ["server-side-fallback-2026-07-01"],
+          fallbacks: "default",
+          output_config: { effort: "medium" },
+        },
+        options(),
+      );
+    } catch (err) {
+      // A 400 here is most often the beta not being enabled for this account.
+      // Ask once more with the plain request: if the account itself is the
+      // problem (a spend limit, say), that fails too and the caller shows why.
+      if (!(err instanceof Anthropic.BadRequestError)) throw err;
+      console.warn("draft-reply: retrying without server-side fallback after:", claudeErrorMessage(err), "request id:", err.requestID);
+      response = await client.messages.create(request, options());
+      fallbackUnavailable = true;
+    }
+  }
 
   if (response.stop_reason === "refusal") {
     return { draft: "FLAG FOR STAFF: the drafting model declined this submission. Please read it and reply by hand.", flagged: true };
@@ -106,9 +149,10 @@ export async function draftReply(input: DraftInput): Promise<{ draft: string; fl
     throw new Error("The draft was cut off before it finished. Try again, or write this one by hand.");
   }
 
-  const draft = response.content
-    .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
-    .map((b) => b.text)
+  const blocks: ReadonlyArray<{ type: string; text?: string }> = response.content;
+  const draft = blocks
+    .filter((b) => b.type === "text")
+    .map((b) => b.text ?? "")
     .join("")
     .trim();
 
