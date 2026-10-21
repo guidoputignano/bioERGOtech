@@ -67,7 +67,7 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 
 ## Team in the plan
 
-Guido Putignano, Mimma (Domenica) Leone, Margherita Basile, Olufemi Olusola, Federico Arangath Joseph and Saria Miccoli, as Guido chose in October 2026. Roles and lines follow `lib/team.ts` where it has them; Olufemi Olusola and Federico Arangath Joseph are shown as software developers. Federico has no photo yet (initials tile). Mario Tagarelli is not in the plan's team. Advisors unchanged.
+Guido Putignano, Mimma (Domenica) Leone, Margherita Basile, Olufemi Olusola, Federico Arangath Joseph and Saria Miccoli, as Guido chose in October 2026. Roles and lines follow `lib/team.ts` where it has them; Olufemi Olusola and Federico Arangath Joseph are shown as software developers. Federico's photo is the one Guido sent (cropped to match the others). Mario Tagarelli is not in the plan's team. Advisors unchanged; the Foundation's board line was removed at Guido's request. The Foundation is named only at the start of the plan (cover, summary, chapter 01).
 
 ## Contacts (public roles, October 2026)
 
@@ -119,5 +119,4 @@ add its value to AULSS 9's.
 7. VIS beta tests at ASL Caserta and ASL Salerno: a written confirmation (scope, data, start date) to cite.
 8. Who signs today: the plan says the counterparty is the Fondazione bioERGOtech ETS until the company exists.
 9. Regulatory reading of Frankura modules A, B and D (not a medical device) to be confirmed formally.
-10. A photo of Federico Arangath Joseph for the team page.
-11. The logo: the first two proposals were not retained; a new round of directions is in `brand/explore`.
+10. The logo: the first two proposals were not retained; a new round of directions is in `brand/explore`.
