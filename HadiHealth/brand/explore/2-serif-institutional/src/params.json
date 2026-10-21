@@ -1,0 +1,40 @@
+{
+  "colors": {
+    "green": "#1A3825",
+    "gold": "#DAA13C",
+    "light": "#F2EEE3",
+    "ink": "#1C2620"
+  },
+  "wordmark": {
+    "opsz": 40,
+    "wght": 570,
+    "bar_center": 280,
+    "space": -40,
+    "kern": {},
+    "star_north": 128,
+    "star_ratio": 0.6,
+    "star_waist": 0.28,
+    "star_y": 0.5,
+    "tracking": 10
+  },
+  "stacked": {
+    "caps_opsz": 20,
+    "caps_wght": 600,
+    "caps_scale": 0.335,
+    "caps_gap": 140
+  },
+  "mark": {
+    "size": 512,
+    "radius": 56,
+    "opsz": 24,
+    "wght": 660,
+    "bar_center": 280,
+    "cap": 320,
+    "star_north": 150,
+    "star_ratio": 0.6,
+    "star_waist": 0.3,
+    "star_y": 0.5,
+    "optical_dy": 0
+  },
+  "svg_scale": 0.16
+}
