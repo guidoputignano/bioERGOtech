@@ -15,11 +15,13 @@ plan/model.py      the numbers: measured cases, public data, the scaling method,
 plan/theme.css     A4 layout; data-brand="A" or "B" switches the palette
 plan/build.py      fills the figures, draws the map, inlines fonts, logos and photos, prints the PDF
 plan/assets/       Mulish (OFL), map of Italy (ISTAT via openpolis, CC BY 4.0), team photos
-brand/A, brand/B   the two logo proposals: SVG set, palette, preview sheet, generator in src/
+brand/A, brand/B   first round of logo proposals, not retained (kept for reference)
+brand/explore      second round: new logo directions and a comparison PDF
 notes/             facts-and-sources.md: where every number comes from, and what is still open
 sources/           source documents
 ```
 
-Output: `plan/business-plan-A.pdf` and `plan/business-plan-B.pdf`. The build checks for em
+Output: `plan/business-plan-A.pdf` (Hadi green and gold) and `plan/business-plan-B.pdf`
+(bioERGOtech teal and navy). Until a logo is chosen the cover sets the name in Mulish. The build checks for em
 dashes and for anything wider than the A4 text block, because a single overflowing element
 makes Chromium shrink every page.

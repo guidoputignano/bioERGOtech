@@ -43,14 +43,14 @@ The cover photo is `public/assets/images/Taranto/Main/third.webp` from the websi
 | Claim | Status | Source |
 |---|---|---|
 | Started in April 2025 | Doc | INTRO p.3: "established on April 12, 2025" |
-| Frankura: pilot running with ASL VCO | Guido | HADI §1.6 (June 2026) says "il primo pilot dimostrativo è in corso con l'ASL VCO". Guido confirmed a signed pilot agreement. **The website contradicts this; see the end of this file.** |
+| Frankura: pilot with ASL VCO awaiting regional approval | Guido, Site | Guido, October 2026: there is no written agreement with ASL VCO; the pilot is waiting on regional approval. `lib/programmes.ts` says the same. HADI §1.6 ("pilot in corso") is out of date. |
 | VIS tested on data from Regione Abruzzo | Doc, Guido | VIS §8 names "four health authorities" in one region and keeps the region anonymous. Guido confirmed it is Abruzzo and that the region can be named. There is no contract. |
 | Bonnie designed with CReI | Doc, Guido | PROSSIMA is a proposal to CReI's board. Guido said CReI has agreed informally. |
 | Skippy with the University of Maryland, Baltimore | Doc, Guido, Web | SKIPPY names EMBRACE. Guido confirmed EMBRACE has agreed. EMBRACE is a UMB initiative under the Office of the Provost: https://www.umaryland.edu/embrace/ |
 | Removed: "this year we are profitable" | | Not in any document. HADI §7.2 shows only a *projected* year-1 result. Guido chose to drop it. |
 | 3 countries: Italy, Switzerland, the US | Derived | Taranto, Zurich, and Skippy in Baltimore |
 | 4 products | Derived | Frankura, VIS, Bonnie, Skippy |
-| Status badges | Guido, Doc | Frankura "Pilot running" (Guido). VIS "Prototype" (VIS cover). Bonnie and Skippy "Interface prototype" (PROSSIMA and SKIPPY covers). |
+| Status badges | Guido, Doc | Frankura "Pilot awaiting approval" (Guido, October 2026). VIS "Prototype" (VIS cover). Bonnie and Skippy "Interface prototype" (PROSSIMA and SKIPPY covers). |
 
 ### 3. Team
 
@@ -88,7 +88,7 @@ Photos: the website's headshots in `public/assets/images/About-us/`, resized. Do
 | Third function: "a one-page summary of each case for the board, with the options suggested by the AIOM and ESMO guidelines. The board confirms, changes or rejects them." | Doc, Site | VCO module C: the pre-analysis follows "linee guida nazionali e internazionali", suggesting an orientation "che il team può confermare, modificare o rigettare". `lib/programmes.ts`: the agent "searches published AIOM and ESMO guidance and returns one page the panel can read in the room". |
 | 406 h, 600 h, 386 h placed on the first three functions | Doc | VCO: module A = 406 h, module B = 600 h, module C (the board pre-analysis) = 386 h |
 | Runs on top of existing software | Doc | HADI §1.3 |
-| Pilot agreement with ASL VCO, pilot running | Guido | See slide 2 |
+| Built with ASL VCO; pilot waiting on regional approval | Guido | See slide 2 |
 
 ### 6. Market
 
@@ -165,7 +165,7 @@ The step chart of 20, 500, 2,000 and later shows the order of the phases. Its he
 | Pilot agreement with ASL VCO | Guido | |
 | VIS on four Abruzzo health authorities | Doc, Guido | VIS §8 |
 | Four in talks | Doc | HADI §5.2 |
-| €25,000 signed, about €120,000 advanced pipeline, as of June 2026 | Doc | HADI §1.6. Update this if there are newer figures. |
+| 15 contacts | Guido | Guido's network list, October 2026 (the Hadi Health plan, chapter 06). Replaces "€25,000 signed, €120,000 pipeline": those June 2026 figures slipped and there is no revenue today. |
 | Replaced: "SAR 400,000 contracted in 2026, about $107,000" | | Not in any document. Guido chose the documented figures. |
 | Map | Web | ISTAT boundaries via openpolis/geojson-italy, CC BY 4.0. Pins are placed at the city (Verbania, Caserta, Salerno, Acquaviva delle Fonti, Taranto). The Abruzzo pin sits mid-region. |
 
@@ -240,7 +240,7 @@ A summary of slides 2, 5 and 16. Nothing new. The photo is `public/assets/images
 
 These do not change the slides, but a reviewer who opens bioergotech.org will see them.
 
-1. **Tumour board pilot.** `lib/programmes.ts` (published 11 Sept 2026) says "There is no written agreement yet", "the pilot is waiting on regional approval" and "the agent is not in use in care". The deck now says the pilot agreement with ASL VCO is signed and running. One of the two needs updating.
+1. **Tumour board pilot.** Resolved in October 2026: Guido confirmed there is no written agreement and the pilot is waiting on regional approval, as `lib/programmes.ts` says. The deck now says the same.
 2. **Medical device status.** The same page treats the case-summary function as within EU MDR Rule 11 (class IIa or higher, not CE marked). Slide 5 lists that function as part of Frankura. Expect the question for Saudi Arabia (SFDA).
 3. **Rheumatology.** `lib/programmes.ts` says "no clinical site agreement". That fits an informal agreement with CReI, but check the wording.
 4. **VIS figures.** `lib/programmes.ts` deliberately publishes no VIS figures ("marked confidential"). The deck now shows rounded figures and names Abruzzo, at Guido's request.

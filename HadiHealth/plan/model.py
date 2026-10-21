@@ -74,9 +74,6 @@ VCO_VALUE = VCO_HOURS * VCO_HOURLY                   # 66,816
 # Frankura price (HADI §4.3): licence per hospital plus a yearly fee.
 FRK_LICENCE_LOW, FRK_LICENCE_HIGH = 50_000, 150_000
 
-# Traction (HADI §1.6, June 2026).
-SIGNED = 25_000
-PIPELINE = 120_000
 
 # ---------------------------------------------------------------- public data
 
@@ -117,9 +114,9 @@ VIS, FRK, BOTH = "VIS Pharma Compass", "Frankura", "Entrambi"
 NETWORK = [
     dict(n=1, name="ASL VCO", kind="asl", region="Piemonte", pop=163_337, city="Verbania", lat=45.92, lon=8.55,
          who="Mario Franchini", role="Direttore SOC Oncologia", product=FRK, status=BETA,
-         note="Accordo firmato per un progetto pilota"),
+         note="Progetto pilota in attesa dell'approvazione regionale"),
     dict(n=2, name="ASL Caserta", kind="asl", region="Campania", pop=908_451, city="Caserta", lat=41.07, lon=14.33,
-         who="Claudia Pagliaro", role="", product=VIS, status=BETA),
+         who="Claudia Pagliaro", role="Farmacista ospedaliera", product=VIS, status=BETA),
     dict(n=3, name="ASL Salerno", kind="asl", region="Campania", pop=1_055_372, city="Salerno", lat=40.68, lon=14.77,
          who="Gennaro Sosto", role="Direttore Generale", product=VIS, status=BETA),
     dict(n=4, name="Regione Campania", kind="region", region="Campania", city="", lat=41.15, lon=15.15,
@@ -144,7 +141,7 @@ NETWORK = [
     dict(n=13, name="AULSS 9 Scaligera", kind="asl", region="Veneto", pop=928_622, city="Verona", lat=45.44, lon=10.99,
          who="Marina Tommasi", role="Direttrice Farmacia Ospedaliera di Legnago e Dipartimento dei Servizi", product=VIS, status=DIRECT),
     dict(n=14, name="Ospedale Pederzoli", kind="hospital", region="Veneto", city="Peschiera del Garda", lat=45.44, lon=10.69,
-         who="", role="", product=VIS, status=DIRECT, note="Presidio ospedaliero dell'AULSS 9, oncologia accreditata ESMO"),
+         who="Marco Gambera", role="Farmacista ospedaliero", product=VIS, status=DIRECT, note="Presidio ospedaliero dell'AULSS 9, oncologia accreditata ESMO"),
     dict(n=15, name="AUSL Modena", kind="asl", region="Emilia-Romagna", pop=708_340, city="Modena", lat=44.65, lon=10.93,
          who="Mattia Altini", role="Direttore Generale", product=BOTH, status=DIRECT),
 ]
@@ -511,7 +508,6 @@ def compute():
         frk_per_1000=est(1000 * FRK_PER_PATIENT), frk_hours_per_1000=num(round(1000 * FRK_HOURS_PER_PATIENT)),
         frk_low=eur(FRK_LICENCE_LOW), frk_high=eur(FRK_LICENCE_HIGH), frk_mid=eur(FRK_LICENCE_MID),
         frk_fee_share=pct(100 * FRK_FEE_SHARE, 0),
-        signed=eur(SIGNED), pipeline=eur(PIPELINE),
     )
     for name, value, what in VIS_STAGES:
         key = name.lower().split()[0]

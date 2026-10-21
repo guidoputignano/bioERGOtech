@@ -31,11 +31,11 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 | Quote "Il valore non sta nel produrre..." | VIS-D |
 | ASL VCO: 1,100 CAS, 525 visits, 1,547 GIC a year; EUR 48/h | VCO pp. 3 to 10 |
 | Modules A 406 h, B 600 h, C 386 h; total 1,392 h, EUR 66,816 (expected benefits). A and B alone: 1,006 h, EUR 48,288. The plan no longer converts hours to months, because the proposal's "7 months" implies about 200 h a month | VCO p. 10; HADI §4.5 |
-| Five modules A to E, FSE 2.0 / HL7 FHIR / PDF/A, "Non sostituisce il giudizio clinico: lo prepara e lo struttura" | VCO; HADI §4.5 |
-| Pilot agreement signed with ASL VCO | Guido; HADI §1.6. **The website (`lib/programmes.ts`) still says there is no written agreement; align it.** |
+| Four modules A to D, FSE 2.0 / HL7 FHIR / PDF/A, "Non sostituisce il giudizio clinico: lo prepara e lo struttura". The proposal's module E (institutional communication) is left out of the plan at Guido's request | VCO; HADI §4.5 |
+| ASL VCO: prototype built with the SOC Oncologia; the pilot is waiting on regional approval; no written agreement; Frankura not in use in care | Guido, October 2026; `lib/programmes.ts` (website) says the same. HADI §1.6 ("pilot in corso") is out of date |
 | Network of 15 entities with product and status: in prova (pilot or beta test) ASL VCO for Frankura, ASL Caserta and ASL Salerno for VIS; 12 direct contacts | Guido's network list, October 2026 (his message: "Asl Caserta (Claudia Pagliaro - VIS Pharma, beta tester)", and so on). HADI §5.2 lists Salerno and Caserta only as relationships under way |
 | Frankura price 50,000 to 150,000 per hospital plus a yearly fee | HADI §4.3 |
-| About 25,000 signed, about 120,000 advanced pipeline, June 2026 | HADI §1.6. **Update if there are newer figures.** |
+| No revenue today: the June 2026 figures (about 25,000 signed, 120,000 pipeline, HADI §1.6) slipped and are not in the plan | Guido, October 2026 |
 
 ## Public data
 
@@ -65,19 +65,23 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 | Tandem Health USD 100M (2026) | HLTH, Sep 2026 |
 | Corti integrated in Dedalus ORBIS | corti.ai, April 2026 |
 
+## Team in the plan
+
+Guido Putignano, Mimma (Domenica) Leone, Margherita Basile, Olufemi Olusola, Federico Arangath Joseph and Saria Miccoli, as Guido chose in October 2026. Roles and lines follow `lib/team.ts` where it has them; Olufemi Olusola and Federico Arangath Joseph are shown as software developers. Federico has no photo yet (initials tile). Mario Tagarelli is not in the plan's team. Advisors unchanged.
+
 ## Contacts (public roles, October 2026)
 
 | Entity | Contact | Role in the plan | Source and confidence |
 |---|---|---|---|
 | ASL VCO | Mario Franchini | Direttore SOC Oncologia | aslvco.it, high |
-| ASL Caserta | Claudia Pagliaro | name only; title not shown | Linked to ASL Caserta (Ministero della Cultura, Dec 2025); title from a staff page of about 2022, **low** |
+| ASL Caserta | Claudia Pagliaro | Farmacista ospedaliera | Guido, October 2026 |
 | ASL Salerno | Gennaro Sosto | Direttore Generale | Quotidiano Sanità, June 2025, high |
 | Regione Campania | Ugo Trama | Dirigente, Settore Accreditamento, HTA e Rapporti con il Mercato | BURC, high |
 | Regione Piemonte | Federico Riboldi | shown as "Assessorato alla Sanità": for political offices the plan names the office, not the person | regione.piemonte.it, high |
 | Regione Abruzzo | Alberto Costantini | Dirigente, Servizio Assistenza Farmaceutica | trasparenza.regione.abruzzo.it, high |
 | Regione Liguria | Barbara Rebesco | Coordinatrice, DIAR Farmaceutico | liguriasalute.atsliguria.it, high |
 | AULSS 9 Scaligera | Marina Tommasi | Direttrice Farmacia Ospedaliera Legnago and Dipartimento dei Servizi | L'Arena, May 2025, medium |
-| Ospedale Pederzoli | Marco Gabrera | shown as "su richiesta" until spelling and role are confirmed | **Not found.** A "Marco Gambera" at Gruppo Pederzoli exists on LinkedIn; please confirm |
+| Ospedale Pederzoli | Marco Gambera | Farmacista ospedaliero | Guido, October 2026 (the earlier "Gabrera" was a typo) |
 | AUSL Modena | Mattia Altini | Direttore Generale | DPGR 16/2025, high |
 | Puglia, Miulli, ASL Taranto, ASL Gallura, Humanitas | not given | "su richiesta" | |
 
@@ -105,16 +109,15 @@ add its value to AULSS 9's.
 
 ## To settle
 
-1. Marco Gabrera (Pederzoli): spelling and role.
-2. Which Humanitas hospital, and who the contact is.
-3. Claudia Pagliaro's current title at ASL Caserta.
-4. Names for Regione Puglia, Miulli, ASL Taranto, ASL Gallura and Humanitas, if they can be shown.
-5. The ScaleX deck used 153,000 for ASL VCO (the province); the ASL territory is 163,337.
-6. Signed contracts and pipeline: the June 2026 figures (25,000 and 120,000) need updating.
-7. Frankura's yearly fee: a real figure would replace the 20% assumption.
-8. Domenico Putignano is CMO in the June plan but is not in this team (as in the deck).
-9. Abruzzo: confirm how the four ASL data were made available and that the Region and Dr Costantini
+1. Which Humanitas hospital, and who the contact is.
+2. Names for Regione Puglia, Miulli, ASL Taranto, ASL Gallura and Humanitas, if they can be shown.
+3. The ScaleX deck used 153,000 for ASL VCO (the province); the ASL territory is 163,337.
+4. Frankura's yearly fee: a real figure would replace the 20% assumption.
+5. Domenico Putignano is CMO in the June plan but is not in this team (as in the deck).
+6. Abruzzo: confirm how the four ASL data were made available and that the Region and Dr Costantini
     agree to be named (the VIS documents anonymise the region). The plan names Abruzzo, as Guido agreed for the deck.
-10. VIS beta tests at ASL Caserta and ASL Salerno: a written confirmation (scope, data, start date) to cite.
-11. Who signs today: the plan says the counterparty is the Fondazione bioERGOtech ETS until the company exists.
-12. Regulatory reading of Frankura modules A, B and D (not a medical device) to be confirmed formally.
+7. VIS beta tests at ASL Caserta and ASL Salerno: a written confirmation (scope, data, start date) to cite.
+8. Who signs today: the plan says the counterparty is the Fondazione bioERGOtech ETS until the company exists.
+9. Regulatory reading of Frankura modules A, B and D (not a medical device) to be confirmed formally.
+10. A photo of Federico Arangath Joseph for the team page.
+11. The logo: the first two proposals were not retained; a new round of directions is in `brand/explore`.

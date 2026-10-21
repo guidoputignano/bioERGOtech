@@ -2,7 +2,7 @@
 
 <!-- ─────────────── Copertina ─────────────── -->
 <section class="cover">
-  <svg-inline src="brand/logo-endorsed-reversed.svg" class="logo"></svg-inline>
+  <div class="logo-type">Hadi Health<span>un'iniziativa della Fondazione bioERGOtech</span></div>
   <div class="map" data-map="italy" data-on="{{map_regions}}">{{cover_pins}}</div><!--/map-->
   <div class="words">
     <div class="kicker">Piano industriale · Ottobre 2026</div>
@@ -27,7 +27,7 @@
   <div class="grid four">
     <div class="stat"><div class="big">{{vco_hours}}<small> ore</small></div><p>di lavoro medico che i moduli A, B e C di Frankura possono liberare ogni anno all'ASL VCO, pari a {{vco_value}}. Stima della proposta di progetto, da misurare nel progetto pilota.</p></div>
     <div class="stat"><div class="big">{{vis_prudent}}</div><p>di valore annuo, scenario prudenziale ({{vis_minimum}} nel minimo), stimato da VIS sui dati reali delle quattro ASL abruzzesi.</p></div>
-    <div class="stat"><div class="big">{{net_entities}}<small> enti</small></div><p>nella nostra rete, in {{net_regions_touched}} regioni: {{net_beta}} provano già i prodotti, {{net_direct}} sono contatti diretti. I loro territori contano {{net_pop}} di residenti.</p></div>
+    <div class="stat"><div class="big">{{net_entities}}<small> enti</small></div><p>nella nostra rete, in {{net_regions_touched}} regioni: {{net_beta}} lavorano con noi sui prototipi, {{net_direct}} sono contatti diretti. I loro territori contano {{net_pop}} di residenti.</p></div>
     <div class="stat accent"><div class="big">{{net_total_hi}}</div><p>valore annuo potenziale per gli enti di quei territori, in tempo medico e in spesa farmaceutica, scenario prudenziale ({{net_total_lo}} nel minimo). Non è un ricavo di Hadi Health.</p></div>
   </div>
 
@@ -35,9 +35,8 @@
     <div class="card tint">
       <div class="label">Dove siamo</div>
       <ul class="small">
-        <li><strong>Frankura:</strong> accordo firmato con l'ASL VCO per un progetto pilota sul percorso oncologico, dalla visita al gruppo multidisciplinare.</li>
+        <li><strong>Frankura:</strong> prototipo sviluppato con la SOC Oncologia dell'ASL VCO, sul percorso dalla visita al gruppo multidisciplinare. Il progetto pilota è in attesa dell'approvazione regionale e non c'è ancora un accordo scritto.</li>
         <li><strong>VIS Pharma Compass:</strong> prototipo funzionante su {{vis_records}} record di erogazione delle quattro ASL abruzzesi; prova in corso con l'ASL Caserta e l'ASL Salerno.</li>
-        <li>A giugno 2026: circa {{signed}} di contratti firmati e trattative in fase avanzata per circa {{pipeline}}.</li>
         <li>Hadi Health è oggi un progetto della Fondazione, non ancora una società.</li>
       </ul>
     </div>
@@ -58,7 +57,7 @@
 <section class="chapter">
   <div class="kicker">01 · La storia</div>
   <h1>Dal team ai progetti che accettiamo</h1>
-  <p>La Fondazione bioERGOtech è nata a Taranto nell'aprile 2025 e lavora tra Taranto e Zurigo. Il team riunisce competenze di ingegneria biomedica, biostatistica, diritto, economia e design, con consulenti in reumatologia, market access e investimenti in sanità; le competenze cliniche di ogni progetto vengono dai medici e dai farmacisti degli enti con cui lavoriamo. Non partiamo da una tecnologia: partiamo da una persona che ha un problema, ne risponde e non riesce a risolverlo con il tempo e i dati che ha davanti.</p>
+  <p>La Fondazione bioERGOtech è nata a Taranto nell'aprile 2025 e lavora tra Taranto e Zurigo. Il team riunisce competenze di ingegneria biomedica, biostatistica, sviluppo software, diritto e design, con consulenti in reumatologia, market access e investimenti in sanità; le competenze cliniche di ogni progetto vengono dai medici e dai farmacisti degli enti con cui lavoriamo. Non partiamo da una tecnologia: partiamo da una persona che ha un problema, ne risponde e non riesce a risolverlo con il tempo e i dati che ha davanti.</p>
   <p>Il filo comune dei progetti che abbiamo accettato non è la pianificazione delle terapie, di cui si occupano già in molti. È il tempo. Ospedali e regioni possiedono già gran parte dei dati che servono per decidere, ma li leggono tardi. Un oncologo ricopia la storia clinica dalla scheda di accoglienza a quella del gruppo multidisciplinare. Una nota di credito dei registri AIFA scade prima di essere richiesta. Un biosimilare è disponibile da mesi, ma la spesa resta sul farmaco originatore. In ciascun caso il dato esiste; manca il tempo per trasformarlo in una decisione.</p>
 
   <h2>La frase che unisce Fondazione e Hadi Health</h2>
@@ -140,14 +139,13 @@
     <div><div class="t">Modulo B</div><h3>Dal CAS al GIC</h3><p>Trasferisce la storia clinica nella scheda GIC, senza ricopiature e senza dati mancanti.</p></div>
     <div><div class="t">Modulo C</div><h3>La sintesi del caso</h3><p>Una pagina con le opzioni indicate dalle linee guida AIOM ed ESMO. Il gruppo la conferma, la modifica o la respinge.</p></div>
     <div><div class="t">Modulo D</div><h3>Il referto</h3><p>Referti standardizzati e interoperabili (FSE 2.0, HL7 FHIR, PDF/A), leggibili dal medico di medicina generale.</p></div>
-    <div><div class="t">Modulo E</div><h3>Le pubblicazioni</h3><p>Un servizio, non un software: articoli e casi di studio sul progetto, scritti con i clinici della struttura e pubblicati con la Fondazione.</p></div>
   </div>
 
   <h2>Il caso dell'ASL VCO</h2>
   <div class="grid side">
     <div>
-      <p>L'ASL VCO gestisce ogni anno {{vco_cas}} schede CAS, {{vco_visits}} visite oncologiche e {{vco_gic}} casi discussi nei GIC. Secondo la stima della proposta di progetto (per esempio 15 minuti risparmiati per visita), i moduli A, B e C possono liberare le ore indicate nella tabella, valutate al costo orario del personale medico di {{vco_hourly}}. Ogni modulo si può attivare indipendentemente dagli altri. I moduli D ed E portano benefici di qualità e di reputazione che non abbiamo quantificato.</p>
-      <p>Con l'ASL VCO abbiamo firmato un accordo per un progetto pilota; il referente è il dott. Mario Franchini, Direttore della SOC Oncologia. Nel progetto pilota misuriamo queste grandezze prima e dopo l'installazione.</p>
+      <p>L'ASL VCO gestisce ogni anno {{vco_cas}} schede CAS, {{vco_visits}} visite oncologiche e {{vco_gic}} casi discussi nei GIC. Secondo la stima della proposta di progetto (per esempio 15 minuti risparmiati per visita), i moduli A, B e C possono liberare le ore indicate nella tabella, valutate al costo orario del personale medico di {{vco_hourly}}. Ogni modulo si può attivare indipendentemente dagli altri. Il modulo D porta benefici di qualità che non abbiamo quantificato.</p>
+      <p>Frankura è stato sviluppato con la SOC Oncologia dell'ASL VCO, diretta dal dott. Mario Franchini. Il progetto pilota è in attesa dell'approvazione regionale e non c'è ancora un accordo scritto: oggi Frankura non è in uso nella cura. Nel progetto pilota misureremo queste grandezze prima e dopo l'installazione.</p>
     </div>
     <table class="data modules">
       <thead><tr><th>Modulo</th><th>Ore/anno</th><th>Valore/anno</th></tr></thead>
@@ -213,7 +211,7 @@
       <tr><td><strong>Effetto da misurare</strong></td><td>Ore di lavoro medico liberabili per paziente</td><td>Euro di spesa e giorni di reazione, per opportunità</td></tr>
       <tr><td><strong>Qualificazione</strong></td><td>Modulo C da trattare come dispositivo medico; per i moduli A, B e D la lettura come non dispositivi va confermata con una valutazione regolatoria</td><td>Non è un dispositivo medico</td></tr>
       <tr><td><strong>Prezzo</strong></td><td>Licenza da {{frk_low}} a {{frk_high}} per ospedale, più canone</td><td>Da {{vis_asl_m12}} a {{vis_asl_full}} l'anno per azienda; regione da {{vis_reg_base}}</td></tr>
-      <tr><td><strong>Stato</strong></td><td>Accordo firmato con l'ASL VCO per un progetto pilota</td><td>Prototipo sui dati delle quattro ASL abruzzesi; prova in corso a Caserta e Salerno</td></tr>
+      <tr><td><strong>Stato</strong></td><td>Prototipo sviluppato con l'ASL VCO; progetto pilota in attesa dell'approvazione regionale</td><td>Prototipo sui dati delle quattro ASL abruzzesi; prova in corso a Caserta e Salerno</td></tr>
     </tbody>
   </table>
 
@@ -237,18 +235,18 @@
 <section class="chapter">
   <div class="kicker">06 · La rete</div>
   <h1>Chi conosciamo, e dove</h1>
-  <p class="lede">In {{net_regions_touched}} regioni abbiamo {{net_entities}} interlocutori che possiamo raggiungere senza intermediari: {{net_beta}} provano già i prodotti, {{net_direct}} sono contatti diretti. Si tratta di {{net_regions}} amministrazioni regionali, {{net_asl}} aziende sanitarie e {{net_hospitals}} ospedali.</p>
+  <p class="lede">In {{net_regions_touched}} regioni abbiamo {{net_entities}} interlocutori che possiamo raggiungere senza intermediari: {{net_beta}} lavorano con noi sui prototipi, {{net_direct}} sono contatti diretti. Si tratta di {{net_regions}} amministrazioni regionali, {{net_asl}} aziende sanitarie e {{net_hospitals}} ospedali.</p>
   <div class="grid" style="grid-template-columns: 104mm 1fr; align-items:start; gap:7mm">
     <div class="map" data-map="italy" data-on="{{map_regions}}">{{map_pins}}</div><!--/map-->
     <div>
       <div class="map-legend">
-        <div><i class="pin beta" style="position:static;margin:0">1</i> Prova in corso (progetto pilota o beta test)</div>
+        <div><i class="pin beta" style="position:static;margin:0">1</i> Lavora con noi su un prototipo</div>
         <div><i class="pin" style="position:static;margin:0">4</i> Contatto diretto</div>
         <div><span class="sw"></span> Regione con un referente nell'amministrazione regionale</div>
       </div>
       <div class="stat" style="margin-top:8mm"><div class="big">{{net_pop}}</div><p>residenti nei territori della rete, il {{net_pop_share}} della popolazione italiana.</p></div>
       <div class="stat" style="margin-top:6mm"><div class="big">{{net_spend}}</div><p>di spesa farmaceutica annua nei territori della rete (AIFA 2025, lordo).</p></div>
-      <div class="stat" style="margin-top:6mm"><div class="big">3 + 12</div><p>tre enti provano già i prodotti; gli altri dodici li conosciamo e li possiamo coinvolgere da subito.</p></div>
+      <div class="stat" style="margin-top:6mm"><div class="big">3 + 12</div><p>tre enti lavorano già con noi sui prototipi; gli altri dodici li conosciamo e li possiamo coinvolgere da subito.</p></div>
       <p class="map-credit" style="margin-top:8mm">Confini: ISTAT, via openpolis (CC BY 4.0). I punti delle regioni sono posti all'interno del territorio regionale; quelli di ASL e ospedali sulla città.</p>
     </div>
   </div>
@@ -257,7 +255,7 @@
 <section class="chapter">
   <div class="kicker">06 · La rete</div>
   <h1>Gli enti, uno per uno</h1>
-  <p style="margin-bottom:4mm"><strong>In prova</strong>: ente che prova già uno dei prodotti con noi, prima di un contratto di fornitura. <strong>Contatto diretto</strong>: ente che conosciamo e possiamo raggiungere senza intermediari. Riportiamo nomi e ruoli solo se verificati su fonti pubbliche (siti e atti degli enti, stampa) a ottobre 2026; per le cariche politiche indichiamo l'ufficio. Gli altri nomi sono disponibili su richiesta. Dove l'ente non ha ancora indicato un prodotto, proponiamo entrambi.</p>
+  <p style="margin-bottom:4mm"><strong>In prova</strong>: ente che lavora con noi sul prototipo di uno dei prodotti, prima di qualunque contratto. <strong>Contatto diretto</strong>: ente che conosciamo e possiamo raggiungere senza intermediari. Riportiamo nomi e ruoli solo se verificati su fonti pubbliche (siti e atti degli enti, stampa) a ottobre 2026; per le cariche politiche indichiamo l'ufficio. Gli altri nomi sono disponibili su richiesta. Dove l'ente non ha ancora indicato un prodotto, proponiamo entrambi.</p>
   {{table_network}}
 </section>
 
@@ -328,7 +326,7 @@
 <section class="chapter">
   <div class="kicker">08 · Modello di ricavo</div>
   <h1>Uno scenario per i primi tre anni</h1>
-  <p>Lo scenario è illustrativo: il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i tre enti che provano già i prodotti diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. Per Frankura assumiamo una licenza di {{frk_low}} all'ASL VCO e di {{frk_mid}} negli altri centri, entrambe nella fascia di prezzo. Il canone annuo di gestione non è ancora quantificato: lo ipotizziamo pari al {{frk_fee_share}} della licenza, dall'anno successivo all'installazione. Fino alla marcatura CE del modulo C le licenze comprendono gli altri moduli: all'ASL VCO i moduli A e B liberano da soli, secondo la stima, {{vco_hours_ab}}&nbsp;ore l'anno, pari a {{vco_value_ab}}.</p>
+  <p>Lo scenario è illustrativo: il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i tre enti che lavorano con noi sui prototipi diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. Per Frankura assumiamo una licenza di {{frk_low}} all'ASL VCO e di {{frk_mid}} negli altri centri, entrambe nella fascia di prezzo. Il canone annuo, non ancora quantificato, è ipotizzato al {{frk_fee_share}} della licenza dall'anno successivo all'installazione. Fino alla marcatura CE del modulo C le licenze comprendono gli altri moduli: all'ASL VCO i moduli A e B liberano da soli, secondo la stima, {{vco_hours_ab}}&nbsp;ore l'anno, pari a {{vco_value_ab}}.</p>
   <div style="margin-top:6mm">{{bars_revenue}}
     <div class="key"><span><i class="lo"></i>VIS Pharma Compass</span><span><i class="acc"></i>Frankura</span></div>
   </div>
@@ -375,7 +373,7 @@
   <h1>Come un ente acquista i nostri prodotti</h1>
   <p class="lede">Ogni contratto parte da una prova sui dati dell'ente, rispetta le soglie del Codice dei contratti pubblici e cresce dall'azienda alla regione.</p>
   <div class="steps">
-    <div><div class="t">Passo 1</div><h3>La prova</h3><p>VIS: analisi diagnostica di tre settimane, {{vis_diagnostic}}, senza installazione. Frankura: progetto pilota con misure prima e dopo, come all'ASL VCO.</p></div>
+    <div><div class="t">Passo 1</div><h3>La prova</h3><p>VIS: analisi diagnostica di tre settimane, {{vis_diagnostic}}, senza installazione. Frankura: progetto pilota con misure prima e dopo, come quello proposto all'ASL VCO.</p></div>
     <div><div class="t">Passo 2</div><h3>L'azienda</h3><p>Affidamento diretto se il valore stimato dell'appalto per l'intera durata, IVA esclusa, è inferiore a {{direct_award}} (D.Lgs. 36/2023, art. 50): per esempio tre anni di VIS M1+M2+M3 ({{vis_asl_m123_3y}}) o una licenza Frankura da {{frk_low}}. Oltre, procedura negoziata.</p></div>
     <div><div class="t">Passo 3</div><h3>La verifica</h3><p>Attivazione in novanta giorni. Al sesto mese si controllano gli indicatori concordati; se non sono raggiunti, l'ente può recedere senza oneri.</p></div>
     <div><div class="t">Passo 4</div><h3>La regione</h3><p>Quando il perimetro cresce: procedura negoziata sotto la soglia europea, gara europea o accordo quadro regionale oltre. Una configurazione a quattro ASL vale {{vis_reg_4_3y}} in tre anni.</p></div>
@@ -384,7 +382,7 @@
 
   <h2>L'ordine in cui procediamo</h2>
   <div class="grid three">
-    <div class="card"><div class="label">2027</div><h3>Dalla prova ai contratti</h3><p>L'ASL Caserta e l'ASL Salerno passano dalla prova al contratto VIS; l'ASL VCO dal progetto pilota alla licenza di Frankura. Analisi diagnostiche con l'AULSS 9, l'AUSL Modena e l'ASL Taranto.</p></div>
+    <div class="card"><div class="label">2027</div><h3>Dalla prova ai contratti</h3><p>L'ASL Caserta e l'ASL Salerno passano dalla prova al contratto VIS; l'ASL VCO, ottenuta l'approvazione regionale, dal progetto pilota alla licenza di Frankura. Analisi diagnostiche con l'AULSS 9, l'AUSL Modena e l'ASL Taranto.</p></div>
     <div class="card"><div class="label">2028</div><h3>La prima regione</h3><p>Con due ASL campane attive e i dati abruzzesi già analizzati, proponiamo la configurazione regionale in Abruzzo o in Campania. Frankura si estende nella Rete Oncologica del Piemonte e della Valle d'Aosta.</p></div>
     <div class="card"><div class="label">2029</div><h3>La seconda regione</h3><p>Proponiamo la configurazione regionale in Liguria o in Puglia, dove abbiamo un referente regionale o più enti nella rete. Offriamo inoltre i prodotti direttamente agli ospedali privati accreditati della rete.</p></div>
   </div>
@@ -403,10 +401,11 @@
   <h1>Chi siamo</h1>
   <div class="people">
     <div class="person"><img src="assets/photos/guido-putignano.jpg" alt="Guido Putignano"><h3>Guido Putignano</h3><div class="role">Fondatore e Presidente</div><p>Ingegnere biomedico, con esperienze all'ETH di Zurigo, a Harvard e al MIT.</p></div>
-    <div class="person"><img src="assets/photos/domenica-leone.jpg" alt="Domenica Leone"><h3>Domenica Leone</h3><div class="role">Direttrice operativa</div><p>Avvocata. Segue organizzazione, aspetti legali e conformità.</p></div>
-    <div class="person"><img src="assets/photos/olufemi-olusola.jpg" alt="Olufemi Olusola"><h3>Olufemi Olusola</h3><div class="role">Responsabile tecnico</div><p>Biostatistico con dieci anni di esperienza.</p></div>
+    <div class="person"><img src="assets/photos/domenica-leone.jpg" alt="Mimma Leone"><h3>Mimma Leone</h3><div class="role">Direttrice operativa</div><p>Avvocata e imprenditrice. Segue organizzazione e operazioni.</p></div>
+    <div class="person"><img src="assets/photos/margherita-basile.jpg" alt="Margherita Basile"><h3>Margherita Basile</h3><div class="role">Legale</div><p>Avvocata. Segue governance, contratti e conformità normativa.</p></div>
+    <div class="person"><img src="assets/photos/olufemi-olusola.jpg" alt="Olufemi Olusola"><h3>Olufemi Olusola</h3><div class="role">Sviluppo software</div><p>Biostatistico, con dieci anni di esperienza; lavora su agenti di IA e dati clinici.</p></div>
+    <div class="person"><div class="initials" role="img" aria-label="Federico Arangath Joseph">FA</div><h3>Federico Arangath Joseph</h3><div class="role">Sviluppo software</div><p>Sviluppa il software dei prodotti.</p></div>
     <div class="person"><img src="assets/photos/saria-miccoli.jpg" alt="Saria Miccoli"><h3>Saria Miccoli</h3><div class="role">Comunicazione</div><p>Designer. Cura l'identità visiva e la comunicazione.</p></div>
-    <div class="person"><img src="assets/photos/mario-tagarelli.jpg" alt="Mario Tagarelli"><h3>Mario Tagarelli</h3><div class="role">Area economico-finanziaria</div><p>Segue finanza, bandi e rendicontazione.</p></div>
   </div>
   <h2>Consulenti</h2>
   <div class="advisors">
@@ -414,7 +413,7 @@
     <div class="advisor"><img src="assets/photos/pasquale-persico.jpg" alt="Pasquale Persico"><div><h3>Pasquale Persico</h3><p>Market access, Gilead Sciences</p></div></div>
     <div class="advisor"><img src="assets/photos/roberto-de-ponti.jpg" alt="Roberto De Ponti"><div><h3>Roberto De Ponti</h3><p>Managing Director, 3B Future Health Fund</p></div></div>
   </div>
-  <p class="note">Consiglio della Fondazione: Guido Putignano, Domenica Leone e Carmine Pisano.</p>
+  <p class="note">Consiglio della Fondazione: Guido Putignano, Mimma Leone e Carmine Pisano.</p>
 
   <h2>Le competenze che aggiungiamo</h2>
   <div class="grid four">
@@ -465,7 +464,7 @@
     <ul class="small">
       <li>Costituire la società con i partner e firmare l'accordo con la Fondazione.</li>
       <li>Portare l'ASL Caserta e l'ASL Salerno dalla prova al contratto VIS.</li>
-      <li>Concludere il progetto pilota all'ASL VCO, misurando prima e dopo, e passare alla licenza.</li>
+      <li>Ottenere l'approvazione regionale e l'accordo scritto per il progetto pilota all'ASL VCO; misurare prima e dopo e passare alla licenza.</li>
     </ul>
     <ul class="small">
       <li>Svolgere almeno quattro analisi diagnostiche VIS in altri enti della rete.</li>
@@ -474,36 +473,6 @@
     </ul>
   </div>
   <div class="callout" style="margin-top:8mm"><strong>Come iniziare.</strong> Per un ente, il primo passo è l'analisi diagnostica: tre settimane e {{vis_diagnostic}} per vedere, sui propri dati, quanto vale VIS. A un partner proponiamo un primo incontro dedicato a uno dei {{net_entities}} enti della rete.</div>
-</section>
-
-<!-- ─────────────── 14 Identità di marca ─────────────── -->
-<section class="chapter">
-  <div class="kicker">14 · Identità di marca</div>
-  <h1>Due proposte per Hadi Health</h1>
-  <p>Le due proposte condividono l'elemento della Fondazione: la linea lunga di bioERGOtech che termina con una mezza freccia, usata nella versione per i documenti con la dicitura «un'iniziativa della Fondazione bioERGOtech». La stessa linea chiude i titoli di questo piano. La proposta A dà a Hadi Health un'identità propria, con il verde e l'oro della bozza attuale; la proposta B la avvicina alla Fondazione, con il suo verde acqua e il suo blu.</p>
-
-  <div class="brand" style="margin-top:6mm">
-    <h2 style="margin-top:0">Proposta A: la H e la stella</h2>
-    <div class="stage light"><svg-inline src="brand-A/logo-endorsed.svg" class="endorsed"></svg-inline></div>
-    <div class="row">
-      <div class="stage dark-A"><svg-inline src="brand-A/logo-reversed.svg"></svg-inline></div>
-      <div class="stage tint-A"><svg-inline src="brand-A/logo-mark.svg" class="mark"></svg-inline></div>
-      <div class="stage light"><svg-inline src="brand-A/logo-mark-tile.svg" class="tile"></svg-inline></div>
-    </div>
-    <p class="small" style="margin-top:3mm">La H ha la traversa che diventa una freccia, con la stessa costruzione della t di bioERGOtech; la stella d'oro sopra è la guida. Il nome è composto in Mulish, il carattere dei documenti della Fondazione. Si distingue chiaramente da bioERGOtech e resta leggibile anche nelle dimensioni più ridotte.</p>
-  </div>
-
-  <div class="brand" style="margin-top:7mm">
-    <h2 style="margin-top:0">Proposta B: la h con la bandiera</h2>
-    <div class="stage light"><svg-inline src="brand-B/logo-endorsed.svg" class="endorsed"></svg-inline></div>
-    <div class="row">
-      <div class="stage dark-B"><svg-inline src="brand-B/logo-reversed.svg"></svg-inline></div>
-      <div class="stage tint-B"><svg-inline src="brand-B/logo-mark.svg" class="mark"></svg-inline></div>
-      <div class="stage light"><svg-inline src="brand-B/logo-mark-tile.svg" class="tile"></svg-inline></div>
-    </div>
-    <p class="small" style="margin-top:3mm">Il nome è in minuscolo, con lettere disegnate come quelle di bioERGOtech; «hadi» è nel verde acqua della Fondazione e «health» nel suo blu. La h porta in cima la mezza freccia, come una bandiera da guida; la stella d'oro sta sulla i. Si legge subito come parte della famiglia bioERGOtech.</p>
-  </div>
-  <p class="note">I file vettoriali completi di entrambe le proposte (versioni orizzontale e verticale, in negativo, monocromatica, solo marchio e per i documenti) sono disponibili su richiesta.</p>
 </section>
 
 <!-- ─────────────── Appendice ─────────────── -->
