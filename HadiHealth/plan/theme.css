@@ -173,7 +173,7 @@ h1 + * { margin-top: 6mm; }
 
 .quote {
   font-size: 11.5pt; line-height: 1.45; font-weight: 700; color: var(--ink);
-  padding: 3mm 0 3mm 6mm; margin: 5mm 0; position: relative; break-inside: avoid;
+  padding: 2.6mm 0 2.6mm 6mm; margin: 4mm 0; position: relative; break-inside: avoid;
 }
 .quote::before { content: ""; position: absolute; left: 0; top: 3mm; bottom: 3mm; width: var(--stroke); background: var(--accent); border-radius: var(--stroke); }
 .quote .src { display: block; font-size: 8pt; font-weight: 600; color: var(--ink-light); margin-top: 2.4mm; }
@@ -288,14 +288,14 @@ table.data .who { max-width: 52mm; }
 /* ─── Brand pages ─── */
 
 .brand { break-inside: avoid; }
-.brand .stage { border-radius: 2.4mm; padding: 9mm 8mm; display: flex; align-items: center; justify-content: center; }
+.brand .stage { border-radius: 2.4mm; padding: 7mm 8mm; display: flex; align-items: center; justify-content: center; }
 .brand .stage.light { background: #fff; border: 0.3mm solid var(--border); }
 .brand .stage.dark-A { background: #1A3825; }
 .brand .stage.dark-B { background: #1A2332; }
 .brand .stage.tint-A { background: #F2EEE3; }
 .brand .stage.tint-B { background: #F7F9FC; }
 .brand .stage svg { height: 15mm; width: auto; max-width: 100%; }
-.brand .stage svg.endorsed { height: 25mm; }
+.brand .stage svg.endorsed { height: 22mm; }
 .brand .stage svg.mark { height: 17mm; }
 .brand .stage svg.tile { height: 17mm; }
 .brand .row { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 3mm; margin-top: 3mm; }
@@ -317,3 +317,5 @@ table.data.value td span { margin-top: 0; }
 .grid.method { margin-top: 3.5mm; }
 .grid.method .card { padding: 3mm 3.6mm; }
 .grid.method .card p { font-size: 7.9pt; line-height: 1.42; }
+table.data.network td { padding-top: 1.35mm; padding-bottom: 1.35mm; }
+table.data.network td span { margin-top: 0; }

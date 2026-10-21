@@ -113,6 +113,12 @@ def render_map(match):
     return f'<div class="{classes}"{attrs}>{svg}{inner}</div>'
 
 
+def typographic(source):
+    """Straight apostrophes in the visible text become typographic (’), as in the logos.
+    Tags and attributes stay as written (italy.svg has data-region="Valle d'Aosta")."""
+    return re.sub(r">[^<]+", lambda m: re.sub(r"(?<=\w)'(?=\w)", "’", m.group(0)), source)
+
+
 def fill(source, values):
     def put(m):
         key = m.group(1)
@@ -125,7 +131,7 @@ def fill(source, values):
 def build(brand):
     values = model.compute()
     source = (PLAN / "plan.html").read_text()
-    source = fill(source, values)
+    source = typographic(fill(source, values))
     source = re.sub(r'<div class="(map\b[^"]*)"([^>]*)>(.*?)</div><!--/map-->', render_map, source, flags=re.S)
     source = inline_svgs(source, brand)
     source = inline_assets(source, brand)

@@ -11,16 +11,18 @@ Tags used below:
 - **HADI**: *Hadi Health S.r.l.* draft business plan, June 2026 (`ScaleX/sources/Hadi_Health_Updated (1).pdf`).
 - **Guido**: confirmed by Guido Putignano in conversation.
 
-## Measured cases (the two anchors of the model)
+## Anchor cases (the two estimates the model starts from)
+
+Neither is a before-and-after measurement yet. The VCO figures are the expected benefits in the project proposal (for example 15 minutes saved per visit); the Abruzzo figures are an estimate of VIS on real spending data, with conventional parameters.
 
 | Figure | Source |
 |---|---|
 | VIS tested on four Abruzzo ASL, 261,153 dispensing records, EUR 452.7M yearly spend | VIS-D cover and §8 |
 | VIS value by stage: programming 205,000; purchasing 384,000 (240,000 patent expiries + 144,000 biosimilars); reporting 60,000; benchmark 159,000 | VIS-D §9.2, VIS-P |
 | VIS total EUR 808,000 prudent, EUR 404,000 minimum | VIS-D §9.2 |
-| 71 pharmacist days, 497 h a year, "poco più di tre mesi" of a dirigente farmacista | VIS-P (time section) |
-| Break-even at 13.0% of the prudent case | VIS-D §9.6 |
-| Not a medical device; read-only | VIS-D cover and §3.1 |
+| 71 pharmacist days, 497 h a year, "poco più di tre mesi" of a dirigente farmacista; declared hypotheses for a medium-sized structure | VIS-P (time section) |
+| Break-even: 13.0% of the prudent case for the regional M1+M2+M3+M8 configuration (105,000); 19.7% for the full configuration (159,000), computed | VIS-D §9.6 |
+| Not a medical device; read-only. Module status: M1, M2, M6 in esercizio; M3, M4, M5, M8 in rilascio; M7 in sviluppo | VIS-D cover, §3.1, §5 |
 | Price list (M1 to M8, 72,000 full single ASL, 135,000 + 6,000 per azienda regional, activation 6,000 or 15,000 + 2,000, diagnostic 9,000) | VIS-D §9.3, §9.4 |
 | 140,000 direct-award threshold on the total value; no artificial splitting | VIS-D §9.5 (D.Lgs. 36/2023 art. 50) |
 | Value/fee 2.5x to 5.1x for Abruzzo, all modules, fee 159,000 | VIS-D §9.6 |
@@ -28,9 +30,10 @@ Tags used below:
 | Art. 28 GDPR, EU hosting, access log, reversibility; 90-day activation | VIS-D §10 |
 | Quote "Il valore non sta nel produrre..." | VIS-D |
 | ASL VCO: 1,100 CAS, 525 visits, 1,547 GIC a year; EUR 48/h | VCO pp. 3 to 10 |
-| Modules A 406 h, B 600 h, C 386 h; total 1,392 h, EUR 66,816; about 7 months of a doctor | VCO p. 10; HADI §4.5 |
+| Modules A 406 h, B 600 h, C 386 h; total 1,392 h, EUR 66,816 (expected benefits). A and B alone: 1,006 h, EUR 48,288. The plan no longer converts hours to months, because the proposal's "7 months" implies about 200 h a month | VCO p. 10; HADI §4.5 |
 | Five modules A to E, FSE 2.0 / HL7 FHIR / PDF/A, "Non sostituisce il giudizio clinico: lo prepara e lo struttura" | VCO; HADI §4.5 |
-| Pilot agreement signed with ASL VCO | Guido; HADI §1.6 |
+| Pilot agreement signed with ASL VCO | Guido; HADI §1.6. **The website (`lib/programmes.ts`) still says there is no written agreement; align it.** |
+| Network of 15 entities with product and status: in prova (pilot or beta test) ASL VCO for Frankura, ASL Caserta and ASL Salerno for VIS; 12 direct contacts | Guido's network list, October 2026 (his message: "Asl Caserta (Claudia Pagliaro - VIS Pharma, beta tester)", and so on). HADI §5.2 lists Salerno and Caserta only as relationships under way |
 | Frankura price 50,000 to 150,000 per hospital plus a yearly fee | HADI §4.3 |
 | About 25,000 signed, about 120,000 advanced pipeline, June 2026 | HADI §1.6. **Update if there are newer figures.** |
 
@@ -45,6 +48,7 @@ Tags used below:
 | Population at 1 Jan 2025 (regions; ASL Caserta 908,451; ASL Salerno 1,055,372; ASL Taranto 550,436; AULSS 9 928,622; AUSL Modena 708,340; ASL Gallura 159,222; Italy 58,943,464) | ISTAT POSAS 2025, https://demo.istat.it |
 | ASL VCO territory 163,337 residents in 81 comuni (province alone 153,283) | Ministero della Salute, corrispondenze ASL-comuni 2024, https://www.dati.salute.gov.it |
 | ASL per region (Piemonte 12, Lombardia 8 ATS, Veneto 9, Emilia-Romagna 8, Abruzzo 4, Campania 7, Puglia 6, Sardegna 8; Liguria single ATS with 5 areas from 1 Jan 2026) | Ministero della Salute ASL list (23.04.2026); regional sites; L.R. Liguria 18/2025 |
+| All public aziende used for the regional VIS fee: Abruzzo 4, Campania 17 (7 ASL, AO/AORN, AOU, IRCCS Pascale), Piemonte 18 (12 ASL, 2 AO, 4 AOU), Puglia 10 (6 ASL, 2 AOU, 2 IRCCS), Liguria 8 (5 areas of ATS Liguria, San Martino, Gaslini, Galliera) | Ministero della Salute list of AO, AOU and public IRCCS (2022), corrected with regional sources (Piemonte list of 31 Aug 2026, ATS Liguria). Piemonte would be 19 counting OIRM; the status of Gaslini and Galliera after the Liguria reform is only partly verified |
 | New cancer cases by region (Piemonte 30,000; Lombardia 60,000; Veneto 32,000; Liguria 11,900; Emilia-Romagna 29,500; Abruzzo 8,300; Campania 32,500; Puglia 21,500; Sardegna 10,200) | AIRTUM, *I numeri del cancro in Italia 2019*, Tab. 25. The latest regional table; later editions give national totals only. https://www.epicentro.iss.it/tumori/pdf/NC2019-operatori-web.pdf |
 | About 390,000 new diagnoses a year | AIOM/AIRTUM, *I numeri del cancro* 2024 and 2025 |
 | 323 medical oncology units (2022); public oncology beds 5,262 (2012) to 4,159 (2022) | AIOM census reported by Milano Finanza (Oct 2022); LaPresse, 8 Nov 2024 |
@@ -52,11 +56,12 @@ Tags used below:
 | Digital health spend EUR 2.7bn in 2025 (+9%); 2024: structures EUR 1.79bn, Regions EUR 580M; 61% of specialists use generative AI; 33% of public structures fear post-PNRR cuts; 50% cite limited resources | Osservatorio Sanità Digitale, Politecnico di Milano, editions 2025 and 2026 |
 | PNRR Mission 6: EUR 15.63bn | Camera dei deputati, https://temi.camera.it/leg19/post/OCD15_14428/pnrr-risorse-missione-salute-m6.html |
 | Legge 132/2025 in force 10 Oct 2025, art. 7 | https://www.normattiva.it/eli/id/2025/09/25/25G00143/CONSOLIDATED |
-| ETS commercial activity only secondary and instrumental | D.Lgs. 117/2017, art. 6 |
-| AI Act obligations for high-risk AI in Annex I products from 2 Aug 2027 | Regulation (EU) 2024/1689, art. 113 |
-| MDR rule 11 (decision-support software, class IIa or higher) | Regulation (EU) 2017/745, Annex VIII |
+| AI Act obligations for high-risk AI in Annex I products (MDR devices included) from 2 Aug 2028; Annex III from 2 Dec 2027 | Regulation (EU) 2024/1689, art. 113, as amended by Regulation (EU) 2026/1744 (Digital Omnibus on AI, OJ 24 Jul 2026, in force 27 Jul 2026) |
+| MDR rule 11: decision-support software class IIa, IIb where decisions can cause serious deterioration (likely for oncology treatment options), III for death or irreversible deterioration | Regulation (EU) 2017/745, Annex VIII; MDCG 2019-11 |
+| ETS: "attività diverse" only if the statute allows them and they stay secondary and instrumental | D.Lgs. 117/2017, art. 6; D.M. 107/2021 |
+| Direct award below 140,000 on the estimated value of the whole contract; no artificial splitting; rotation principle | D.Lgs. 36/2023, art. 50, art. 14, art. 49 |
 | IQVIA Farma360 free of charge for Regione Calabria | Regione Calabria, decreto 14885 of 20 Oct 2025 |
-| BI Health acquired by Maps for EUR 3.7M | Teleborsa, 15 Sep 2026 |
+| Maps Healthcare signed a binding agreement to buy BI Health for EUR 3.7M, closing expected by 30 Nov 2026 | Teleborsa, 15 Sep 2026 |
 | Tandem Health USD 100M (2026) | HLTH, Sep 2026 |
 | Corti integrated in Dedalus ORBIS | corti.ai, April 2026 |
 
@@ -65,14 +70,14 @@ Tags used below:
 | Entity | Contact | Role in the plan | Source and confidence |
 |---|---|---|---|
 | ASL VCO | Mario Franchini | Direttore SOC Oncologia | aslvco.it, high |
-| ASL Caserta | Claudia Pagliaro | Farmacista | ASL Caserta staff page (about 2022, search index), **low** |
+| ASL Caserta | Claudia Pagliaro | name only; title not shown | Linked to ASL Caserta (Ministero della Cultura, Dec 2025); title from a staff page of about 2022, **low** |
 | ASL Salerno | Gennaro Sosto | Direttore Generale | Quotidiano Sanità, June 2025, high |
 | Regione Campania | Ugo Trama | Dirigente, Settore Accreditamento, HTA e Rapporti con il Mercato | BURC, high |
-| Regione Piemonte | Federico Riboldi | Assessore alla Sanità | regione.piemonte.it, high |
+| Regione Piemonte | Federico Riboldi | shown as "Assessorato alla Sanità": for political offices the plan names the office, not the person | regione.piemonte.it, high |
 | Regione Abruzzo | Alberto Costantini | Dirigente, Servizio Assistenza Farmaceutica | trasparenza.regione.abruzzo.it, high |
 | Regione Liguria | Barbara Rebesco | Coordinatrice, DIAR Farmaceutico | liguriasalute.atsliguria.it, high |
 | AULSS 9 Scaligera | Marina Tommasi | Direttrice Farmacia Ospedaliera Legnago and Dipartimento dei Servizi | L'Arena, May 2025, medium |
-| Ospedale Pederzoli | Marco Gabrera | none shown | **Not found.** A "Marco Gambera" at Gruppo Pederzoli exists on LinkedIn; please confirm the spelling |
+| Ospedale Pederzoli | Marco Gabrera | shown as "su richiesta" until spelling and role are confirmed | **Not found.** A "Marco Gambera" at Gruppo Pederzoli exists on LinkedIn; please confirm |
 | AUSL Modena | Mattia Altini | Direttore Generale | DPGR 16/2025, high |
 | Puglia, Miulli, ASL Taranto, ASL Gallura, Humanitas | not given | "su richiesta" | |
 
@@ -91,8 +96,9 @@ add its value to AULSS 9's.
   hospital trusts in that territory, so it is the value for the territory, not for the ASL's own budget.
 - **No double counting**: totals use regions in the network plus ASL whose region is not in the
   network; hospitals are not added.
-- **VIS fee per client**: regional full configuration over the region's ASL (Liguria: 5 areas);
-  single ASL full configuration, or M1+M2 below 300,000 residents.
+- **VIS fee per client**: regional full configuration over all the region's public aziende, the same
+  perimeter as the AIFA spending the value is computed on; single ASL full configuration, or M1+M2 below
+  300,000 residents. With M1+M2 only programming and purchasing count (589,000 of 808,000, 73%).
 - **Revenue scenario** (illustrative, not a forecast): client counts are assumptions; Frankura
   licence 50,000 at VCO and 100,000 elsewhere; Frankura yearly fee 20% of the licence from the year
   after installation (**an assumption**, HADI gives no figure).
@@ -107,4 +113,8 @@ add its value to AULSS 9's.
 6. Signed contracts and pipeline: the June 2026 figures (25,000 and 120,000) need updating.
 7. Frankura's yearly fee: a real figure would replace the 20% assumption.
 8. Domenico Putignano is CMO in the June plan but is not in this team (as in the deck).
-9. Regulatory reading of Frankura modules A, B and D (not a medical device) to be confirmed formally.
+9. Abruzzo: confirm how the four ASL data were made available and that the Region and Dr Costantini
+    agree to be named (the VIS documents anonymise the region). The plan names Abruzzo, as Guido agreed for the deck.
+10. VIS beta tests at ASL Caserta and ASL Salerno: a written confirmation (scope, data, start date) to cite.
+11. Who signs today: the plan says the counterparty is the Fondazione bioERGOtech ETS until the company exists.
+12. Regulatory reading of Frankura modules A, B and D (not a medical device) to be confirmed formally.

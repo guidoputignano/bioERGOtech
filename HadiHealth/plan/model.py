@@ -15,16 +15,16 @@ point to it:
             the latest regional table published.
 
 Method, in one paragraph. VIS value scales with the pharmaceutical spending
-it governs: we take the value per euro of spend measured in Abruzzo and apply
+it governs: we take the value per euro of spend estimated for Abruzzo and apply
 it to AIFA 2025 spending. Frankura value scales with the number of new cancer
-patients: we take the value per patient measured at ASL VCO and apply it to
+patients: we take the value per patient estimated for ASL VCO and apply it to
 AIRTUM new cases. A local health authority gets its region's figure in
 proportion to its residents. These are orders of magnitude, not offers; the
 diagnostic analysis and the before and after measurement replace them with
 the client's own numbers.
 """
 
-# ---------------------------------------------------------------- measured
+# ---------------------------------------------------------------- anchor estimates
 
 # VIS, Abruzzo (VIS §9). Perimeter: four ASL, yearly spend.
 VIS_PERIMETER = 452_700_000
@@ -34,12 +34,11 @@ VIS_STAGES = [                 # (stage, value per year, what it is)
     ("Programmazione", 205_000, "governo del prontuario e della crescita della spesa"),
     ("Acquisto", 384_000, "scadenze brevettuali (240.000 €) e biosimilari disponibili (144.000 €)"),
     ("Rendicontazione", 60_000, "note di credito dei registri AIFA richieste in tempo"),
-    ("Benchmark fra Aziende", 159_000, "confronto per attività fra le ASL della stessa regione"),
+    ("Benchmark fra aziende", 159_000, "confronto per attività fra le ASL della stessa regione"),
 ]
 VIS_DAYS_FREED = 71            # pharmacist days a year (Percorso)
 VIS_HOURS_FREED = 497
 VIS_RECORDS = 261_153
-VIS_BREAKEVEN = 0.130          # share of the prudent case that pays the regional fee with benchmark
 
 # VIS price list (VIS §9.3 to §9.5), euro, VAT excluded.
 VIS_DIAGNOSTIC = 9_000
@@ -52,6 +51,12 @@ VIS_REG_PER_AZIENDA = 6_000
 VIS_REG_ACT_BASE = 15_000
 VIS_REG_ACT_PER_AZIENDA = 2_000
 VIS_DIRECT_AWARD = 140_000      # D.Lgs. 36/2023 art. 50, on the total value of the award
+VIS_REG_ABRUZZO_FULL = VIS_REG_BASE + 4 * VIS_REG_PER_AZIENDA   # 159,000: four ASL, all modules (VIS §9.6)
+VIS_REG_M1238 = 105_000         # four ASL, M1+M2+M3 and the benchmark per attività M8 (VIS §9.6)
+VIS_BREAKEVEN = VIS_REG_ABRUZZO_FULL / VIS_PRUDENT         # 19.7% of the prudent case pays the full configuration
+VIS_BREAKEVEN_M1238 = VIS_REG_M1238 / VIS_PRUDENT          # 13.0%, the figure quoted in VIS §9.6
+# M1+M2 act on programming and purchasing only; registries need M3, the benchmark M8 (VIS §9.3, §9.6)
+VIS_M12_SHARE = (205_000 + 384_000) / VIS_PRUDENT
 
 # Frankura, ASL VCO (VCO pp. 3 to 10).
 VCO_CAS = 1_100                 # intake forms a year: one per new oncology patient
@@ -89,16 +94,17 @@ DIGITAL_REGIONS_2024 = 0.58e9
 PNRR_M6 = 15.63e9
 
 # region: residents, AIFA gross A+H+C, AIFA net, overrun, share of fund (%),
-# AIRTUM new cases (2019), local health authorities in the regional perimeter
+# AIRTUM new cases (2019), local health authorities, and all public aziende (ASL, AO, AOU, public
+# IRCCS; Liguria: the five areas of ATS Liguria and three hospital bodies) for the regional VIS fee
 REGIONS = {
-    "Piemonte":       dict(pop=4_251_868, gross=1_287_449_936, net=1_130_640_079, overrun=309_984_195, share=11.44, cases=30_000, asl=12),
+    "Piemonte":       dict(pop=4_251_868, gross=1_287_449_936, net=1_130_640_079, overrun=309_984_195, share=11.44, cases=30_000, asl=12, aziende=18),
     "Lombardia":      dict(pop=10_033_918, gross=2_648_140_584, net=2_293_417_057, overrun=398_494_112, share=10.05, cases=60_000, asl=8),
     "Veneto":         dict(pop=4_853_472, gross=1_390_677_804, net=1_212_340_327, overrun=288_194_889, share=10.89, cases=32_000, asl=9),
-    "Liguria":        dict(pop=1_510_143, gross=523_897_951, net=461_207_494, overrun=156_327_398, share=12.56, cases=11_900, asl=5),
+    "Liguria":        dict(pop=1_510_143, gross=523_897_951, net=461_207_494, overrun=156_327_398, share=12.56, cases=11_900, asl=5, aziende=8),
     "Emilia-Romagna": dict(pop=4_461_998, gross=1_501_605_526, net=1_329_665_571, overrun=477_921_059, share=12.96, cases=29_500, asl=8),
-    "Abruzzo":        dict(pop=1_269_118, gross=426_873_171, net=376_863_878, overrun=132_719_590, share=12.81, cases=8_300, asl=4),
-    "Campania":       dict(pop=5_582_337, gross=1_919_583_965, net=1_726_801_651, overrun=677_669_792, share=13.66, cases=32_500, asl=7),
-    "Puglia":         dict(pop=3_877_395, gross=1_249_691_052, net=1_103_021_937, overrun=361_559_634, share=12.35, cases=21_500, asl=6),
+    "Abruzzo":        dict(pop=1_269_118, gross=426_873_171, net=376_863_878, overrun=132_719_590, share=12.81, cases=8_300, asl=4, aziende=4),
+    "Campania":       dict(pop=5_582_337, gross=1_919_583_965, net=1_726_801_651, overrun=677_669_792, share=13.66, cases=32_500, asl=7, aziende=17),
+    "Puglia":         dict(pop=3_877_395, gross=1_249_691_052, net=1_103_021_937, overrun=361_559_634, share=12.35, cases=21_500, asl=6, aziende=10),
     "Sardegna":       dict(pop=1_562_381, gross=571_097_767, net=535_188_513, overrun=236_423_815, share=14.87, cases=10_200, asl=8),
 }
 
@@ -111,15 +117,15 @@ VIS, FRK, BOTH = "VIS Pharma Compass", "Frankura", "Entrambi"
 NETWORK = [
     dict(n=1, name="ASL VCO", kind="asl", region="Piemonte", pop=163_337, city="Verbania", lat=45.92, lon=8.55,
          who="Mario Franchini", role="Direttore SOC Oncologia", product=FRK, status=BETA,
-         note="Accordo di pilot firmato"),
+         note="Accordo firmato per un progetto pilota"),
     dict(n=2, name="ASL Caserta", kind="asl", region="Campania", pop=908_451, city="Caserta", lat=41.07, lon=14.33,
-         who="Claudia Pagliaro", role="Farmacista", product=VIS, status=BETA, note="Beta tester"),
+         who="Claudia Pagliaro", role="", product=VIS, status=BETA),
     dict(n=3, name="ASL Salerno", kind="asl", region="Campania", pop=1_055_372, city="Salerno", lat=40.68, lon=14.77,
-         who="Gennaro Sosto", role="Direttore Generale", product=VIS, status=BETA, note="Beta tester"),
+         who="Gennaro Sosto", role="Direttore Generale", product=VIS, status=BETA),
     dict(n=4, name="Regione Campania", kind="region", region="Campania", city="", lat=41.15, lon=15.15,
          who="Ugo Trama", role="Dirigente, Settore Accreditamento, HTA e Rapporti con il Mercato", product=VIS, status=DIRECT),
     dict(n=5, name="Regione Piemonte", kind="region", region="Piemonte", city="", lat=44.85, lon=7.95,
-         who="Federico Riboldi", role="Assessore alla Sanità", product=FRK, status=DIRECT),
+         who="Assessorato alla Sanità", role="", product=FRK, status=DIRECT),
     dict(n=6, name="Regione Abruzzo", kind="region", region="Abruzzo", city="", lat=42.25, lon=13.85,
          who="Alberto Costantini", role="Dirigente, Servizio Assistenza Farmaceutica", product=VIS, status=DIRECT,
          note="VIS provato sui dati delle quattro ASL"),
@@ -138,7 +144,7 @@ NETWORK = [
     dict(n=13, name="AULSS 9 Scaligera", kind="asl", region="Veneto", pop=928_622, city="Verona", lat=45.44, lon=10.99,
          who="Marina Tommasi", role="Direttrice Farmacia Ospedaliera di Legnago e Dipartimento dei Servizi", product=VIS, status=DIRECT),
     dict(n=14, name="Ospedale Pederzoli", kind="hospital", region="Veneto", city="Peschiera del Garda", lat=45.44, lon=10.69,
-         who="Marco Gabrera", role="", product=VIS, status=DIRECT, note="Presidio ospedaliero dell'AULSS 9, oncologia accreditata ESMO"),
+         who="", role="", product=VIS, status=DIRECT, note="Presidio ospedaliero dell'AULSS 9, oncologia accreditata ESMO"),
     dict(n=15, name="AUSL Modena", kind="asl", region="Emilia-Romagna", pop=708_340, city="Modena", lat=44.65, lon=10.93,
          who="Mattia Altini", role="Direttore Generale", product=BOTH, status=DIRECT),
 ]
@@ -200,14 +206,24 @@ def vis_fee(e):
     """Yearly VIS fee at list price for the configuration that fits the client."""
     if e["kind"] == "region":
         if e["name"] == "Regione Abruzzo":
-            return 159_000, "Regione, 4 ASL, tutti i moduli"
-        n = REGIONS[e["region"]]["asl"]
-        return VIS_REG_BASE + VIS_REG_PER_AZIENDA * n, f"Regione, {n} {'aree' if e['region'] == 'Liguria' else 'ASL'}, tutti i moduli"
+            return VIS_REG_ABRUZZO_FULL, "Regione, 4 ASL, tutti i moduli"
+        n = REGIONS[e["region"]]["aziende"]
+        what = "5 aree e 3 enti ospedalieri" if e["region"] == "Liguria" else f"{n} aziende"
+        return VIS_REG_BASE + VIS_REG_PER_AZIENDA * n, f"Regione, {what}, tutti i moduli"
     if e["kind"] == "asl":
         if e["pop"] < 300_000:
             return VIS_ASL_M12, "Azienda singola, M1+M2"
         return VIS_ASL_FULL, "Azienda singola, tutti i moduli"
     return None, ""
+
+
+def vis_fee_value(e):
+    """(minimum, prudent) value of what the fee buys: M1+M2 cover programming and purchasing only."""
+    v, fee = vis_value(e), vis_fee(e)[0]
+    if not v or not fee:
+        return None
+    k = VIS_M12_SHARE if fee == VIS_ASL_M12 else 1
+    return v[0] * k, v[1] * k
 
 
 def top_level(e):
@@ -227,33 +243,37 @@ def num(x, d=0):
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+NB = "\u00a0"   # non-breaking space, so a unit never starts a line on its own
+
+
 def eur(x):
-    return f"{num(round(x))} €"
+    return f"{num(round(x))}{NB}€"
 
 
 def est(x):
     """An estimate, rounded so it does not look more precise than it is."""
     if x >= 1e6:
-        return f"{num(x / 1e6, 1)} mln €"
+        return f"{num(x / 1e6, 1)}{NB}mln{NB}€"
     if x >= 100_000:
-        return f"{num(round(x, -4))} €"
-    return f"{num(round(x, -3))} €"
+        return f"{num(round(x, -4))}{NB}€"
+    return f"{num(round(x, -3))}{NB}€"
 
 
 def bn(x, d=1):
-    return f"{num(x / 1e9, d)} mld €"
+    return f"{num(x / 1e9, d)}{NB}mld{NB}€"
 
 
 def mln(x, d=1):
-    return f"{num(x / 1e6, d)} mln €"
+    return f"{num(x / 1e6, d)}{NB}mln{NB}€"
 
 
 def pct(x, d=1):
-    return f"{num(x, d)}%"
+    s = num(x, d)
+    return (s[:-2] if d == 1 and s.endswith(",0") else s) + "%"
 
 
 def hours(x, exact=False):
-    return f"{num(round(x) if exact or x < 1000 else round(x, -1))} h"
+    return f"{num(round(x) if exact or x < 1000 else round(x, -1))}{NB}h"
 
 
 def vis_fmt(e, x):
@@ -265,25 +285,34 @@ def mult(x):
     return f"{num(x, 1)}×"
 
 
+def span(a, b):
+    """A range in Italian, «da 470.000 a 940.000 €»: the unit is written once when both ends share it."""
+    na, _, ua = a.partition(NB)
+    ub = b.partition(NB)[2]
+    if not ua and a.endswith("×") and b.endswith("×"):
+        return f"da {a[:-1]} a {b}"
+    return f"da {na} a {b}" if ua and ua == ub else f"da {a} a {b}"
+
+
 # ---------------------------------------------------------------- tables
 
 def place(e):
-    return "Ente regionale" if e["kind"] == "region" else f'{e["city"]}, {e["region"]}'
+    return "Amministrazione regionale" if e["kind"] == "region" else f'{e["city"]}, {e["region"]}'
 
 
 def table_network():
     rows = []
     for e in NETWORK:
         who = e["who"] + (f'<span>{e["role"]}</span>' if e["role"] else "")
-        status = '<b class="tag beta">Beta tester</b>' if e["status"] == BETA else '<b class="tag direct">Contatto diretto</b>'
-        note = f'<span>{e["note"]}</span>' if e.get("note") and e["status"] != BETA or e.get("note") == "Accordo di pilot firmato" else ""
+        status = '<b class="tag beta">In prova</b>' if e["status"] == BETA else '<b class="tag direct">Contatto diretto</b>'
+        note = f'<span>{e["note"]}</span>' if e.get("note") else ""
         rows.append(
             f'<tr><td class="n"><i class="dot {e["status"]}">{e["n"]}</i></td>'
             f'<td><strong>{e["name"]}</strong><span>{place(e)}</span></td>'
             f'<td class="who">{who or "<em>su richiesta</em>"}</td>'
             f'<td>{e["product"]}{note}</td><td>{status}</td></tr>')
     return ('<table class="data network"><thead><tr><th></th><th>Ente</th><th>Referente</th>'
-            '<th>Prodotto in discussione</th><th>Stato</th></tr></thead><tbody>'
+            '<th>Prodotto proposto</th><th>Stato</th></tr></thead><tbody>'
             + "".join(rows) + "</tbody></table>")
 
 
@@ -293,7 +322,7 @@ def table_value():
         v, f = vis_value(e), frk_value(e)
         pop = population(e)
         vco = e["name"] == "ASL VCO"
-        vis_cell = f"{vis_fmt(e, v[0])} a {vis_fmt(e, v[1])}" if v else '<em>sui volumi della struttura</em>'
+        vis_cell = span(vis_fmt(e, v[0]), vis_fmt(e, v[1])) if v else '<em>sui volumi della struttura</em>'
         frk_cell = (f"{eur(f[0]) if vco else est(f[0])}<span>{hours(f[1], vco)}</span>"
                     if f else '<em>sui volumi della struttura</em>')
         mark_v = ' class="focus"' if e["product"] in (VIS, BOTH) and v else ""
@@ -305,19 +334,19 @@ def table_value():
             f'<td{mark_v}>{vis_cell}</td><td{mark_f}>{frk_cell}</td></tr>')
     return ('<table class="data value"><thead><tr><th></th><th>Ente e territorio</th>'
             '<th>VIS Pharma Compass<span>valore annuo, scenario minimo e prudenziale</span></th>'
-            '<th>Frankura<span>valore annuo e ore di medico liberate</span></th></tr></thead><tbody>'
+            '<th>Frankura<span>valore annuo e ore di medico liberabili</span></th></tr></thead><tbody>'
             + "".join(rows) + "</tbody></table>")
 
 
 def table_fees():
     rows = []
     for e in NETWORK:
-        v = vis_value(e)
+        v = vis_fee_value(e)
         fee, label = vis_fee(e)
-        if not v or not fee:
+        if not v:
             continue
         rows.append(f'<tr><td><strong>{e["name"]}</strong></td><td>{label}</td><td>{eur(fee)}</td>'
-                    f'<td>{mult(v[0] / fee)} a {mult(v[1] / fee)}</td></tr>')
+                    f'<td>{span(mult(v[0] / fee), mult(v[1] / fee))}</td></tr>')
     return ('<table class="data fees"><thead><tr><th>Ente</th><th>Configurazione VIS</th><th>Canone annuo</th>'
             '<th>Valore su canone</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table>")
 
@@ -333,7 +362,7 @@ def bars_vis():
             f'<div class="hbar"><span class="lbl">{e["name"]}</span>'
             f'<span class="track"><b class="lo" style="width:{100 * lo / top:.1f}%"></b>'
             f'<b class="hi" style="width:{100 * (hi - lo) / top:.1f}%"></b></span>'
-            f'<span class="val">{vis_fmt(e, lo)} a {vis_fmt(e, hi)}</span></div>')
+            f'<span class="val">{span(vis_fmt(e, lo), vis_fmt(e, hi))}</span></div>')
     return '<div class="hbars">' + "".join(out) + "</div>"
 
 
@@ -384,9 +413,10 @@ def scenario():
     """An illustrative path, not a forecast: client counts are assumptions,
     prices come from the list prices above."""
     y = {}
-    abruzzo_fee, abruzzo_act = 159_000, VIS_REG_ACT_BASE + 4 * VIS_REG_ACT_PER_AZIENDA
-    liguria_fee = VIS_REG_BASE + 5 * VIS_REG_PER_AZIENDA
-    liguria_act = VIS_REG_ACT_BASE + 5 * VIS_REG_ACT_PER_AZIENDA
+    abruzzo_fee, abruzzo_act = VIS_REG_ABRUZZO_FULL, VIS_REG_ACT_BASE + 4 * VIS_REG_ACT_PER_AZIENDA
+    n_lig = REGIONS["Liguria"]["aziende"]
+    liguria_fee = VIS_REG_BASE + n_lig * VIS_REG_PER_AZIENDA
+    liguria_act = VIS_REG_ACT_BASE + n_lig * VIS_REG_ACT_PER_AZIENDA
     asl_y1 = VIS_ASL_M123 + VIS_ASL_ACTIVATION
 
     # 2027: two beta testers sign, four diagnostics, VCO converts, one more oncology centre
@@ -461,7 +491,13 @@ def compute():
     v.update(
         vis_perimeter=mln(VIS_PERIMETER), vis_prudent=eur(VIS_PRUDENT), vis_minimum=eur(VIS_MINIMUM),
         vis_days=num(VIS_DAYS_FREED), vis_hours=num(VIS_HOURS_FREED), vis_records=num(VIS_RECORDS),
-        vis_breakeven=pct(100 * VIS_BREAKEVEN), vis_rate_prudent=pct(100 * VIS_RATE_PRUDENT, 2),
+        vis_breakeven=pct(100 * VIS_BREAKEVEN), vis_breakeven_m1238=pct(100 * VIS_BREAKEVEN_M1238),
+        vis_fee_abruzzo=eur(VIS_REG_ABRUZZO_FULL), vis_reg_m1238=eur(VIS_REG_M1238),
+        vis_m12_share=pct(100 * VIS_M12_SHARE, 0), vis_m12_value=eur(205_000 + 384_000),
+        vis_reg_4_3y=eur(3 * VIS_REG_ABRUZZO_FULL + VIS_REG_ACT_BASE + 4 * VIS_REG_ACT_PER_AZIENDA),
+        vis_asl_full_2y=eur(2 * VIS_ASL_FULL + VIS_ASL_ACTIVATION), vis_asl_full_1y=eur(VIS_ASL_FULL + VIS_ASL_ACTIVATION),
+        vis_asl_m123_3y=eur(3 * VIS_ASL_M123 + VIS_ASL_ACTIVATION),
+        vis_rate_prudent=pct(100 * VIS_RATE_PRUDENT, 2),
         vis_rate_minimum=pct(100 * VIS_RATE_MINIMUM, 2),
         vis_per_million_prudent=eur(1e6 * VIS_RATE_PRUDENT), vis_per_million_minimum=eur(1e6 * VIS_RATE_MINIMUM),
         vis_diagnostic=eur(VIS_DIAGNOSTIC), vis_asl_full=eur(VIS_ASL_FULL), vis_asl_m12=eur(VIS_ASL_M12),
@@ -471,7 +507,7 @@ def compute():
         direct_award=eur(VIS_DIRECT_AWARD),
         vco_cas=num(VCO_CAS), vco_visits=num(VCO_VISITS), vco_gic=num(VCO_GIC), vco_hourly=eur(VCO_HOURLY),
         vco_hours=num(VCO_HOURS), vco_value=eur(VCO_VALUE),
-        frk_per_patient=f"{num(FRK_PER_PATIENT, 2)} €", frk_hours_per_patient=num(FRK_HOURS_PER_PATIENT, 2),
+        frk_per_patient=f"{num(FRK_PER_PATIENT, 2)}{NB}€", frk_hours_per_patient=num(FRK_HOURS_PER_PATIENT, 2),
         frk_per_1000=est(1000 * FRK_PER_PATIENT), frk_hours_per_1000=num(round(1000 * FRK_HOURS_PER_PATIENT)),
         frk_low=eur(FRK_LICENCE_LOW), frk_high=eur(FRK_LICENCE_HIGH), frk_mid=eur(FRK_LICENCE_MID),
         frk_fee_share=pct(100 * FRK_FEE_SHARE, 0),
@@ -481,7 +517,9 @@ def compute():
         key = name.lower().split()[0]
         v[f"vis_stage_{key}"] = eur(value)
     v["vis_stages"] = "".join(f"<tr><td><strong>{n}</strong><span>{w}</span></td><td>{eur(x)}</td></tr>" for n, x, w in VIS_STAGES)
-    v["vco_modules"] = "".join(f"<tr><td>{m}</td><td>{num(h)} h</td><td>{eur(h * VCO_HOURLY)}</td></tr>" for m, h in VCO_MODULES)
+    v["vco_modules"] = "".join(f"<tr><td>{m}</td><td>{num(h)}{NB}h</td><td>{eur(h * VCO_HOURLY)}</td></tr>" for m, h in VCO_MODULES)
+    vco_ab = sum(h for m, h in VCO_MODULES if not m.startswith("C"))   # modules A and B only, before CE marking of C
+    v["vco_hours_ab"], v["vco_value_ab"] = num(vco_ab), eur(vco_ab * VCO_HOURLY)
 
     # VCO cross-check: CAS per 1,000 residents against Piemonte's incidence
     vco = NETWORK[0]
@@ -495,7 +533,7 @@ def compute():
         italy_share=pct(ITALY_SHARE, 2), italy_cases=num(ITALY_CASES), italy_units=num(ITALY_ONCOLOGY_UNITS),
         osmed_public=bn(OSMED_PUBLIC), digital_2025=bn(DIGITAL_2025), digital_structures=bn(DIGITAL_STRUCTURES_2024, 2),
         digital_regions=mln(DIGITAL_REGIONS_2024, 0), pnrr_m6=bn(PNRR_M6, 2),
-        italy_vis_min=mln(ITALY_GROSS * VIS_RATE_MINIMUM, 0), italy_vis_prudent=mln(ITALY_GROSS * VIS_RATE_PRUDENT, 0),
+        italy_vis=span(mln(ITALY_GROSS * VIS_RATE_MINIMUM, 0), mln(ITALY_GROSS * VIS_RATE_PRUDENT, 0)),
         italy_frk=mln(ITALY_CASES * FRK_PER_PATIENT, 0), italy_frk_hours=num(round(ITALY_CASES * FRK_HOURS_PER_PATIENT, -3)),
     )
     camp = REGIONS["Campania"]
@@ -517,7 +555,7 @@ def compute():
         net_asl=num(sum(e["kind"] == "asl" for e in NETWORK)),
         net_hospitals=num(sum(e["kind"] == "hospital" for e in NETWORK)),
         net_regions_touched=num(len({e["region"] for e in NETWORK})),
-        net_pop=mln(pop).replace(" €", "").replace("mln", "milioni"),
+        net_pop=f"{num(pop / 1e6, 1)}{NB}milioni",
         net_pop_share=pct(100 * pop / ITALY_POP, 0),
         net_spend=bn(spend_tot, 1),
         net_vis_lo=mln(vis_lo), net_vis_hi=mln(vis_hi),
@@ -534,9 +572,9 @@ def compute():
         if ff:
             exact = e["name"] == "ASL VCO"
             v[f"{key}_frk"], v[f"{key}_frk_h"] = (eur if exact else est)(ff[0]), hours(ff[1], exact)
-        fee, _ = vis_fee(e)
-        if vv and fee:
-            v[f"{key}_mult_lo"], v[f"{key}_mult_hi"] = mult(vv[0] / fee), mult(vv[1] / fee)
+        fee, fv = vis_fee(e)[0], vis_fee_value(e)
+        if fv:
+            v[f"{key}_mult_lo"], v[f"{key}_mult_hi"] = mult(fv[0] / fee), mult(fv[1] / fee)
             v[f"{key}_fee"] = eur(fee)
 
     # map pins; a few are nudged apart where two places are a few km from each other
@@ -554,12 +592,12 @@ def compute():
     v["table_network"] = table_network()
     v["table_value"] = table_value()
     v["table_fees"] = table_fees()
-    pairs = [(e, vis_value(e), vis_fee(e)[0]) for e in NETWORK]
-    pairs = [(e, val[0] / fee, val[1] / fee) for e, val, fee in pairs if val and fee]
+    pairs = [(e, vis_fee_value(e), vis_fee(e)[0]) for e in NETWORK]
+    pairs = [(e, val[0] / fee, val[1] / fee) for e, val, fee in pairs if val]
     lo = min(pairs, key=lambda t: t[1])
     hi = max(pairs, key=lambda t: t[1])
-    v["mult_min"], v["mult_min_name"] = mult(lo[1]), lo[0]["name"]
-    v["mult_max"], v["mult_max_name"] = mult(hi[1]), hi[0]["name"]
+    v["mult_min"], v["mult_min_name"] = num(lo[1], 1), lo[0]["name"]
+    v["mult_max"], v["mult_max_name"] = num(hi[1], 1), hi[0]["name"]
     v["bars_vis"] = bars_vis()
     v["bars_frk"] = bars_frk()
 
@@ -573,7 +611,8 @@ def compute():
     sv, sf = vis_value(sal), frk_value(sal)
     first = VIS_ASL_FULL + VIS_ASL_ACTIVATION + FRK_LICENCE_MID
     after = VIS_ASL_FULL + FRK_FEE_SHARE * FRK_LICENCE_MID
-    v.update(sal_value_lo=est(sv[0] + sf[0]), sal_value_hi=est(sv[1] + sf[0]),
+    lo_t, hi_t = round(sv[0], -4) + round(sf[0], -4), round(sv[1], -4) + round(sf[0], -4)
+    v.update(sal_value=span(mln(lo_t), mln(hi_t)), sal_frk_hours=num(round(sf[1], -1)),
              sal_cost_first=eur(first), sal_cost_after=eur(after),
              sal_pop=num(sal["pop"]), sal_patients=num(round(patients(sal), -1)),
              sal_spend=mln(spend(sal), 0))
