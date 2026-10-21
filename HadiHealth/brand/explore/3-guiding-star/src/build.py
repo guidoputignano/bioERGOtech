@@ -4,8 +4,9 @@ Run from the repository root:
     python3 HadiHealth/brand/explore/3-guiding-star/src/build.py
 
 Writes a/ and b/ (logo.svg, logo-reversed.svg, mark.svg) next to this
-folder, then renders preview.png (add --no-preview to skip it). All
-settings live in src/params.json.
+folder, plus a/mark-small.svg (the small master of a, for 16 to 24 px),
+then renders preview.png (add --no-preview to skip it). All settings live
+in src/params.json.
 """
 import json
 import sys
@@ -17,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from geom import face, fit_box, move, svg  # noqa: E402
-from marks import mark_a, mark_b  # noqa: E402
+from marks import mark_a, mark_a_small, mark_b  # noqa: E402
 
 OUT = HERE.parent
 P = json.loads((HERE / "params.json").read_text())
@@ -94,6 +95,10 @@ def write_option(key, lock_fn, mark_fn, mark_params):
 
 def main():
     va = write_option("a", lockup_a, mark_a, P["a"]["star"])
+    # a only: a small master for 16 to 24 px (solid star, larger gold point)
+    sm, svb = normalise(mark_a_small(P["a"]["star"]), P["a"]["mark_pad"], square=True)
+    (OUT / "a" / "mark-small.svg").write_text(
+        svg("Hadi Health, mark, small master for 16 to 24 px", svb, colours(sm, False)))
     vb = write_option("b", lockup_b, mark_b, P["b"]["tile"])
     print("a: logo", va[0][2:], "mark", va[1][2:])
     print("b: logo", vb[0][2:], "mark", vb[1][2:])

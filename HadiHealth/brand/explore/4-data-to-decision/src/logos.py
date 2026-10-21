@@ -34,7 +34,11 @@ A = {
     "health_wght": 560,     # a touch heavier: the capitals are smaller
     "health_cap": 0.62,     # cap height of HEALTH / cap height of Hadi
     "health_track": 0.20,   # tracking of HEALTH, in em
-    "word_gap": 0.30,       # Hadi to HEALTH, in cap heights
+    "word_gap": 0.33,       # Hadi to HEALTH, in cap heights
+    "health_pairs": {3: -0.05},  # hand kerning after glyph 3 (L to T), in em
+    "mark_shift": 0.03,     # mark.svg only: the figure sits this much of the square
+                            # right of the box centre, because the column of three
+                            # points is heavier than the single gold point (optical centre)
 }
 
 
@@ -76,7 +80,7 @@ def a_lockup(cap=100.0):
     hl = face(JOST, A["health_wght"])
     hcap = cap * A["health_cap"]
     g2, w2 = hl.text("HEALTH", hcap * hl.upm / hl.cap, tracking=A["health_track"],
-                     x=x + w1 + cap * A["word_gap"], y=cap)
+                     adjust=A["health_pairs"], x=x + w1 + cap * A["word_gap"], y=cap)
     word = union(g1 + g2)
     return union([green, word]), gold
 
@@ -87,9 +91,10 @@ B = {
     "wght": 600,            # wordmark weight
     "dots": 5,              # points in the left stem of the H in the wordmark
     "dot_scale": 1.0,       # dot diameter / stem width
-    "mark_wght": 760,       # the mark is drawn from a heavier H, for small sizes
-    "mark_dots": 3,
+    "mark_wght": 600,       # the mark is the H of the wordmark, unchanged
+    "mark_dots": 5,
     "mark_dot_scale": 1.0,
+    "overshoot": 0.012,     # round points pass the cap height and baseline by this much of the cap
     "space": None,          # word space in em (None: the font's own)
 }
 
@@ -115,10 +120,16 @@ def dotted_h(fnt, n, dot_scale, cap, x=0.0, base=None, width_adjust=0.0):
     w = L1 - L0
     r = w / 2 * dot_scale
     cx = (L0 + L1) / 2
-    top, bot = fnt.cap - w / 2, w / 2
+    ov = B["overshoot"] * fnt.cap
+    top, bot = fnt.cap - r + ov, r - ov
     ys = [bot + k * (top - bot) / (n - 1) for k in range(n)]
     parts = [circle(cx, y, r) for y in ys]
-    parts.append(rect(cx, B0, R0 - cx + 0.5, B1 - B0))
+    # The crossbar keeps the font's thickness but is centred on the middle
+    # point, so that the point passes the bar by the same amount above and
+    # below (the font's bar sits 0.6% of the cap higher, invisible in the word).
+    t = B1 - B0
+    mid = ys[n // 2]
+    parts.append(rect(cx, mid - t / 2, R0 - cx + 0.5, t))
     parts.append(rect(R0, 0, R1 - R0, fnt.cap))
     s = cap / fnt.cap
     return xform(union(parts), s, 0, 0, -s, x - L0 * s, base)

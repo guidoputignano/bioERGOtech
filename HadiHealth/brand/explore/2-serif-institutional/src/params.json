@@ -13,7 +13,9 @@
       "bar_center": 280,
       "space": -40,
       "tracking": 10,
-      "kern": {},
+      "kern": {
+        "th": -12
+      },
       "star_north": 128,
       "star_ratio": 0.6,
       "star_waist": 0.28,
@@ -26,7 +28,7 @@
       "wght": 660,
       "bar_center": 280,
       "cap": 320,
-      "star_north": 150,
+      "star_north": 122,
       "star_ratio": 0.6,
       "star_waist": 0.3,
       "star_y": 0.5
@@ -53,7 +55,7 @@
       "disc": 1.0,
       "ring_out": 0.84,
       "ring_w": 0.06,
-      "star_h": 1.46
+      "star_h": 1.40
     }
   }
 }

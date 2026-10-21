@@ -10,11 +10,12 @@ Add --no-preview to write the SVG files only.
 import os
 import sys
 
+sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import logos as L  # noqa: E402
-from geom import bounds, svg  # noqa: E402
+from geom import bounds, move, svg  # noqa: E402
 
 ROOT = os.path.dirname(HERE)
 
@@ -32,11 +33,20 @@ def tight(layers):
     return (x0, y0, x1 - x0, y1 - y0)
 
 
-def square(layers):
+def square(layers, shift=0.0):
+    """Square viewBox around the layers, centred, with the figure moved right
+    by `shift` of the side for optical centring (never past the edge)."""
     x0, y0, x1, y1 = box(layers)
     w, h = x1 - x0, y1 - y0
     m = max(w, h)
-    return (x0 - (m - w) / 2, y0 - (m - h) / 2, m, m)
+    dx = min(shift * m, (m - w) / 2)
+    return (x0 - (m - w) / 2 - dx, y0 - (m - h) / 2, m, m)
+
+
+def at_origin(layers, vb):
+    """Move the layers so that the viewBox starts at 0 0."""
+    x, y, w, h = vb
+    return [(c, move(p, -x, -y)) for c, p in layers], (0, 0, w, h)
 
 
 def swap(layers, light=True):
@@ -59,6 +69,7 @@ def option_b():
 
 
 OPTIONS = {"a": option_a, "b": option_b}
+MARK_SHIFT = {"a": L.A["mark_shift"], "b": 0.0}
 
 
 def files():
@@ -66,9 +77,11 @@ def files():
     out = {}
     for key, fn in OPTIONS.items():
         logo, mark = fn()
-        out[f"{key}/logo.svg"] = svg(logo, tight(logo), "Hadi Health")
-        out[f"{key}/logo-reversed.svg"] = svg(swap(logo), tight(logo), "Hadi Health")
-        out[f"{key}/mark.svg"] = svg(mark, square(mark), "Hadi Health mark")
+        logo, lvb = at_origin(logo, tight(logo))
+        mark, mvb = at_origin(mark, square(mark, MARK_SHIFT[key]))
+        out[f"{key}/logo.svg"] = svg(logo, lvb, "Hadi Health")
+        out[f"{key}/logo-reversed.svg"] = svg(swap(logo), lvb, "Hadi Health")
+        out[f"{key}/mark.svg"] = svg(mark, mvb, "Hadi Health mark")
     return out
 
 

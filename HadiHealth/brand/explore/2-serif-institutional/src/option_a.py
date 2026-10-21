@@ -54,7 +54,10 @@ def mark(M):
     s = M["cap"] / f.cap
     hb = H.bounds
     dx = (size - (hb[2] - hb[0]) * s) / 2 - hb[0] * s
-    dy = (size - M["cap"]) / 2  # centred on the cap height, not on overshoots
+    # Centred on the H's own outline (flat serifs, no overshoot). The font's
+    # cap height (670) is taller than this H (660), so centring on it sat the
+    # letter low in the tile.
+    dy = (size - (hb[3] - hb[1]) * s) / 2 - hb[1] * s
     Hm = translate(H, dx, dy, s)
     st = star_in_h(dx, info, M, s, dy)
     return rect(0, 0, size, size, M["radius"]), Hm, st, size

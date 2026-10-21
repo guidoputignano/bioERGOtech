@@ -14,7 +14,7 @@ rays that all lead to one gold point at the centre. Data arrives by
 different paths and meets in one place, where the decision is taken by the
 people accountable for it.
 
-Italiano: quattro percorsi e un solo punto, i dati arrivano da strade
+Italiano: quattro percorsi, un solo punto: i dati arrivano da strade
 diverse e si incontrano dove si decide.
 
 Font: Manrope (Mikhail Sharanda, The Manrope Project Authors), SIL Open
@@ -25,7 +25,13 @@ Construction: tips at 104 (up, down) and 82 (left, right) units from the
 centre, inner corners at 41 on the diagonals; the two cuts and the ring
 around the gold point share one width (6 units), and the point has a
 radius of 11.5. In the lockup the star is twice the cap height and is
-centred on the capitals.
+centred on the capitals, so its side rays point at the crossbar of the H.
+
+Small master: below about 32 px the cuts and the ring close up and the
+gold point blurs into one pale pixel. `a/mark-small.svg` is the version
+for 16 to 24 px (favicon, browser tab): the same outline drawn solid, with
+a larger gold point (radius 19) set directly on the green, which keeps it
+visible at 16 px.
 
 ## b. The Open Star
 
@@ -34,8 +40,8 @@ of the space the four solid blocks leave open. The blocks stand for the
 work the software does, gathering and ordering the data, and the open
 centre is the decision, which stays with the people who answer for it.
 
-Italiano: la stella è lo spazio lasciato aperto, il software prepara e
-struttura i dati, la decisione resta a chi ne risponde.
+Italiano: la stella è lo spazio lasciato aperto: il software prepara e
+ordina i dati, la decisione resta a chi ne risponde.
 
 Font: Plus Jakarta Sans (Gumpita Rahayu, Tokotype), SIL Open Font License
 1.1. HADI at weight 800 and HEALTH at weight 500, both in capitals tracked
@@ -45,8 +51,10 @@ in `fonts/plusjakartasans/`.
 Construction: a 200 unit square with corners of radius 30; the star's
 inner corners sit at 50 units from the centre on the diagonals and its
 tips at 120, past the edge, so each tip opens a channel through the side.
-In the lockup the tile is 1.8 times the cap height. On deep green the tile
-turns gold and the letters warm light.
+In the lockup the tile is 1.8 times the cap height, and the gap between
+the tile and HADI is about the same as the space between HADI and
+HEALTH, so the tile does not pull the first word away from the second. On
+deep green the tile turns gold and the letters warm light.
 
 ## Shared
 
@@ -67,15 +75,17 @@ turns gold and the letters warm light.
 
 - `a/logo.svg`, `a/logo-reversed.svg`, `a/mark.svg`: option a. The reversed
   logo has no background and is drawn for use on #1A3825.
+- `a/mark-small.svg`: the small master of a, for 16 to 24 px.
 - `b/logo.svg`, `b/logo-reversed.svg`, `b/mark.svg`: option b, the same set.
 - `preview.png`: both options side by side, large on white and on deep
-  green, each mark large and at 64 and 16 px, each logo at 24 px tall (with
-  true pixel enlargements), and a family check next to the bioERGOtech logo.
+  green, each mark large and at 64 and 16 px, the small master of a at 24
+  and 16 px, each logo at 24 px tall (with true pixel enlargements), and a
+  family check next to the bioERGOtech logo.
 - `src/`: the generator. From the repository root:
 
       python3 HadiHealth/brand/explore/3-guiding-star/src/build.py
 
-  writes the six SVG files and `preview.png` (add `--no-preview` to skip
+  writes the seven SVG files and `preview.png` (add `--no-preview` to skip
   the render). Every measure above lives in `src/params.json`; `marks.py`
   draws the two symbols, `geom.py` holds the shape, type and SVG helpers,
   `preview.py` renders the sheet with Playwright and Chromium.

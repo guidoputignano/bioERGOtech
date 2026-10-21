@@ -41,6 +41,15 @@ def mark_a(p):
     return [(rays, "ink"), (circle(0, 0, dot), "accent")]
 
 
+def mark_a_small(p):
+    """Small master of a, for 16 to 24 px. Below about 32 px the 6 unit cuts
+    and ring close up and the gold point blurs into one pale pixel, so here
+    the star is solid (same outline) and the gold point is larger
+    (p["small_dot"]), sitting directly on the green."""
+    s = star(p["rv"], p["rh"], p["waist"])
+    return [(s, "ink"), (circle(0, 0, p["small_dot"]), "accent")]
+
+
 def mark_b(p):
     """p: size, radius, waist, reach. The star's tips sit at `reach` from the
     centre, past the edge of the tile (size / 2), so they cut through it."""

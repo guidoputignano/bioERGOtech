@@ -19,7 +19,8 @@ decisione resta a chi ne risponde.
 
 Font: Source Serif 4 (Frank Grießhammer for Adobe), SIL Open Font License 1.1.
 Instanced at optical size 40, weight 570 for the wordmark and optical size 24,
-weight 660 for the mark. File and licence in `fonts/SourceSerif4/`.
+weight 660 for the mark. HarfBuzz kerning, tracking 10 units, one hand pair
+(t to h, minus 12 units). File and licence in `fonts/SourceSerif4/`.
 
 ## b. Star Between the Words
 
@@ -64,6 +65,21 @@ on each side, one hand pair (L to T, minus 70 units). File and licence in
 
 Option a is the first version of this direction, kept and moved into `a/`.
 Its earlier stacked variant is not part of this round.
+
+## Final craft check
+
+- Mark a: the star was taller than the upper counter of the H, so its lower
+  point overlapped the crossbar. It is now smaller (122 units instead of 150
+  from centre to tip) and sits with even space above and below, like the
+  star in the wordmark.
+- Mark a: the H was centred on the font's cap height (670), which is taller
+  than this H (660), so it sat slightly low in the tile. It is now centred on
+  its own outline.
+- Mark b: the points of the star came within 2.5% of the ring. The star's
+  height is now 1.40 times the disc radius instead of 1.46, which leaves a
+  gap wider than the ring itself.
+- Logo a: t to h was a little open next to l to t. One hand pair (minus 12
+  units) now places the t evenly between its neighbours.
 
 ## Known limits
 

@@ -12,7 +12,8 @@
       "rh": 82,
       "waist": 41,
       "gap": 6,
-      "dot": 11.5
+      "dot": 11.5,
+      "small_dot": 19
     },
     "font": "manrope",
     "wght": 700,
@@ -39,10 +40,10 @@
       "HEALTH"
     ],
     "track": 60,
-    "word_space": 0.32,
+    "word_space": 0.26,
     "cap": 100,
     "tile_height": 1.8,
-    "space": 0.42,
+    "space": 0.48,
     "reversed_tile": "gold",
     "mark_pad": 0,
     "pairs": [

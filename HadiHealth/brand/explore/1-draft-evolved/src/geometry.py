@@ -1,4 +1,5 @@
-"""Symbol geometry for Hadi Health, direction 1 ("the draft, refined").
+"""Symbol geometry for Hadi Health, direction 1 ("the draft, refined"):
+the pass symbol of option a, and the four-point star both options share.
 
 Units: a 100 x 100 box, y pointing down, the ground at y = 100.
 """
@@ -18,13 +19,6 @@ def P():
 def unit(v):
     n = math.hypot(*v) or 1.0
     return (v[0] / n, v[1] / n)
-
-
-def isect(p, d, q, e):
-    """Intersection of the lines p + t d and q + s e."""
-    det = d[0] * (-e[1]) - d[1] * (-e[0])
-    t = ((q[0] - p[0]) * (-e[1]) - (q[1] - p[1]) * (-e[0])) / det
-    return (p[0] + t * d[0], p[1] + t * d[1])
 
 
 def cubic_pt(c, t):
@@ -116,55 +110,77 @@ GROUND = poly([(-60, -60), (160, -60), (160, 100), (-60, 100)])
 # ---------------------------------------------------------- option a: the pass
 
 PASS = dict(
-    B=(65.0, 4.0),            # apex of the big peak
-    BF=(41.0, 100.0),         # its left flank meets the ground here
-    BR=(100.0, 100.0),        # its right foot
-    S=(26.0, 37.0),           # apex of the small peak
+    B=(66.0, 4.0),            # apex of the big peak
+    BF=(43.0, 100.0),         # its left flank meets the ground here
+    BR=(101.0, 100.0),        # its right foot
+    S=(23.0, 38.0),           # apex of the small peak
     SL=(0.0, 100.0),          # its left foot
-    s_run=0.78,               # run per unit drop of the small peak's right flank
+    s_run=0.8,                # run per unit drop of the small peak's right flank
     margin=2.7,               # white margin between the road and the peaks
     pass_y=46.0,              # where the road ends
-    w_top=1.7, w_bottom=14.5, # road width (square to the big flank) at the pass and at the ground
-    star=(13.0, 8.6, 0.2),    # half height, half width, waist; placed on the road's axis
+    w_top=1.7,                # road width at the pass, square to the big flank
+    w_bottom=22.0,            # road width at the ground line, measured level
+    hold=0.45,                # how long the road's left edge stays parallel before it opens out
+    star=(13.0, 8.6, 0.17),   # half height, half width, waist; placed on the road's axis
 )
-
-
-def _xline(p, q, y):
-    return p[0] + (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1])
 
 
 def pass_symbol(o=PASS):
     """Two peaks and the road between them, with the star over the pass.
 
-    Straight lines only. The road's right edge runs parallel to the big
-    peak's left flank; its left edge opens out towards the ground, so the
-    road narrows as it climbs, the way a road seen in perspective does. A
-    white margin of constant width separates the road from both peaks."""
+    The big peak is a plain triangle. The road's right edge runs parallel to
+    its left flank, one margin away. The road's left edge starts parallel
+    too and then opens out towards the ground in one curve, so the road
+    reads as a road coming towards the viewer: narrow at the pass, wide at
+    our feet. The small peak keeps the same margin from that curve. The
+    star stands on the road's axis, its right ray one margin from the big
+    flank."""
     B, BF, BR, S, SL = o["B"], o["BF"], o["BR"], o["S"], o["SL"]
     m, yp = o["margin"], o["pass_y"]
     k = (BF[0] - B[0]) / (BF[1] - B[1])          # dx per dy of the big flank
-    sec = math.sqrt(1 + k * k)                   # horizontal width of a band of unit thickness
+    sec = math.sqrt(1 + k * k)
+    down = unit((k, 1.0))                        # walking down the flank
 
     def flank(y):
         return B[0] + k * (y - B[1])
 
-    # road edges as lines (two points each, at the pass and at the ground)
-    rr = [(flank(y) - m * sec, y) for y in (yp, 100.0)]
-    rl = [(rr[0][0] - o["w_top"] * sec, yp), (rr[1][0] - o["w_bottom"] * sec, 100.0)]
-    kl = (rl[1][0] - rl[0][0]) / (100.0 - yp)
-    secl = math.sqrt(1 + kl * kl)
-    cl = [(x - m * secl, y) for x, y in rl]
-    road = poly([rr[0], rr[1], rl[1], rl[0]])
+    # road: right edge straight, left edge a quadratic that opens out
+    rr_top, rr_bot = (flank(yp) - m * sec, yp), (flank(100.0) - m * sec, 100.0)
+    rl_top = (rr_top[0] - o["w_top"] * sec, yp)
+    rl_bot = (rr_bot[0] - o["w_bottom"], 100.0)
+    span = 100.0 - yp
+    ctrl = (rl_top[0] + k * span * o["hold"], rl_top[1] + span * o["hold"])
+    road = P()
+    road.moveTo(*rr_top)
+    road.lineTo(*rr_bot)
+    road.lineTo(*rl_bot)
+    road.quadTo(*ctrl, *rl_top)
+    road.close()
+    # the same curve as a cubic, offset by the margin, gives the edge that
+    # cuts the small peak
+    q = (rl_bot, ctrl, rl_top)
+    cub = (q[0], (q[0][0] + 2 / 3 * (q[1][0] - q[0][0]), q[0][1] + 2 / 3 * (q[1][1] - q[0][1])),
+           (q[2][0] + 2 / 3 * (q[1][0] - q[2][0]), q[2][1] + 2 / 3 * (q[1][1] - q[2][1])), q[2])
+    cut_edge = offset_edge(cub, lambda y: m, -1)    # left of travel, walking up
+    if cut_edge[0][0] > cub[0][0]:
+        cut_edge = offset_edge(cub, lambda y: m, +1)
+    # continue the cut below the ground along its own tangent, so the small
+    # peak's foot ends cleanly on the ground line
+    t0 = unit((cut_edge[1][0] - cut_edge[0][0], cut_edge[1][1] - cut_edge[0][1]))
+    cut = P()
+    cut.moveTo(cut_edge[0][0] - t0[0] * 30, cut_edge[0][1] - t0[1] * 30)
+    cut.lineTo(*cut_edge[0])
+    edge_path(cut, cut_edge)
+    top = cut_edge[3]
+    cut.lineTo(top[0] - down[0] * 80, top[1] - down[1] * 80)
+    cut.lineTo(160.0, -60.0)
+    cut.lineTo(160.0, 140.0)
+    cut.close()
+
     big = poly([B, BR, BF])
-    # small peak: right flank from the apex until it meets the channel's left edge
-    sk = o["s_run"]
-    # S + t*(sk, 1) meets the line cl: x = cl0.x + kl*(y - yp)
-    y_meet = (cl[0][0] - kl * yp - S[0] + sk * S[1]) / (sk - kl)
-    K = (S[0] + sk * (y_meet - S[1]), y_meet)
-    small = poly([SL, S, K, (_xline(cl[0], cl[1], 100.0), 100.0)])
-    # the star: centred on the road's axis at the pass, and as high as it
-    # must be for its right ray to stop one margin short of the big flank
+    small = diff(poly([SL, S, (S[0] + o["s_run"] * (100 - S[1]), 100.0)]), cut)
     sh, sw, swaist = o["star"]
-    sx = (rr[0][0] + rl[0][0]) / 2
+    sx = (rr_top[0] + rl_top[0]) / 2
     sy = B[1] + (sx + sw + m * sec - B[0]) / k
-    return dict(ink=union(big, small), road=road, star=star(sx, sy, sh, sw, swaist), apex=B)
+    return dict(ink=inter(union(big, small), GROUND), road=road,
+                star=star(sx, sy, sh, sw, swaist), apex=B)

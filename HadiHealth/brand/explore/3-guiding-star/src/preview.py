@@ -2,7 +2,8 @@
 
 Each option: the logo large on white and on deep green, the mark large and
 at 64 and 16 px, the logo at 24 px tall, with true-pixel enlargements of
-the small sizes, and a family check next to the bioERGOtech logo.
+the small sizes, the small master of a (mark-small.svg), and a family
+check next to the bioERGOtech logo.
 Called by build.py; can also be run on its own after a build.
 """
 import asyncio
@@ -57,6 +58,7 @@ async def _true_pixels(browser, tmp):
         r = _ratio(k, "logo.svg")
         jobs.append((f"{k}-logo-24", _svg(k, "logo.svg"), round(24 * r), 24, "#FFFFFF"))
         jobs.append((f"{k}-rev-24", _svg(k, "logo-reversed.svg"), round(24 * r), 24, PAL["green"]))
+    jobs.append(("a-small-16", _svg("a", "mark-small.svg"), 16, 16, "#FFFFFF"))
     for name, s, w, h, bg in jobs:
         s = s.replace("<svg ", f'<svg width="{w}" height="{h}" ', 1)
         html = (f"<html><body style='margin:0;background:{bg}'>"
@@ -85,6 +87,20 @@ def _sized(s, w=None, h=None):
     return s.replace("<svg ", f"<svg {attrs}style=\"display:block\" ", 1)
 
 
+def _small_master(key, shots):
+    """Option a only: the small master for 16 to 24 px (mark-small.svg)."""
+    if key != "a":
+        return ""
+    sm = _svg("a", "mark-small.svg")
+    return f"""
+      <div class="lab sm">mark-small.svg, for 16 to 24 px</div>
+      <div class="small">
+        <div class="tp">{_sized(sm, 24, 24)}<span>24</span></div>
+        <div class="tp">{_sized(sm, 16, 16)}<span>16</span></div>
+        <div class="tp">{_pix(shots, 'a-small-16', 4)}<span>16, true pixels, x4</span></div>
+      </div>"""
+
+
 def _column(key, shots):
     p = P[key]
     logo, rev, mark = _svg(key, "logo.svg"), _svg(key, "logo-reversed.svg"), _svg(key, "mark.svg")
@@ -104,7 +120,7 @@ def _column(key, shots):
         <div class="tp">{_sized(mark, 64, 64)}<span>64</span></div>
         <div class="tp">{_sized(mark, 16, 16)}<span>16</span></div>
         <div class="tp">{_pix(shots, f'{key}-mark-16', 4)}<span>16, true pixels, x4</span></div>
-      </div></div>
+      </div>{_small_master(key, shots)}</div>
   </div>
   <div class="card white"><div class="lab">logo at 24 px tall</div>
     <div class="s24">{_sized(logo, h24w, 24)}{_pix(shots, f'{key}-logo-24', 2)}<span>true pixels, x2</span></div></div>
@@ -151,10 +167,11 @@ h2 {{ font-size: 19px; font-weight: 800; margin: 0 0 4px; color: {PAL['green']};
 .green .lab, .green span {{ color: #9FB2A5; }}
 .big {{ display: flex; justify-content: center; padding: 34px 0 30px; }}
 .row {{ display: flex; gap: 12px; }}
-.sq {{ flex: none; width: 200px; }}
+.sq {{ flex: none; width: 200px; display: flex; flex-direction: column; }}
 .grow {{ flex: 1; }}
-.mk {{ display: flex; justify-content: center; padding: 6px 0 2px; }}
+.mk {{ flex: 1; display: flex; justify-content: center; align-items: center; padding: 6px 0 2px; }}
 .small {{ display: flex; align-items: flex-end; gap: 26px; padding-top: 14px; }}
+.lab.sm {{ margin: 18px 0 0; padding-top: 14px; border-top: 1px solid #ECE9E1; }}
 .tp {{ display: flex; flex-direction: column; align-items: center; gap: 8px; }}
 span {{ font-size: 10.5px; color: #6B736D; }}
 .s24 {{ display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }}

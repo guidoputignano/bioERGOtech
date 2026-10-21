@@ -11,7 +11,7 @@ from io import BytesIO
 from pathlib import Path
 
 import pathops
-from fontTools.pens.recordingPen import RecordingPen
+from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
@@ -23,7 +23,6 @@ FONTS = ROOT / "fonts"
 
 FILES = {
     "literata": FONTS / "literata" / "Literata[opsz,wght].ttf",
-    "publicsans": FONTS / "publicsans" / "PublicSans[wght].ttf",
     "librefranklin": FONTS / "librefranklin" / "LibreFranklin[wght].ttf",
 }
 
@@ -65,11 +64,11 @@ class Face:
     def glyph(self, name, dx=0.0, dy=0.0, sx=1.0, sy=None):
         sy = sx if sy is None else sy
         p = pathops.Path()
-        self.glyphs[name].draw(TransformPen(p.getPen(), (sx, 0, 0, sy, dx, dy)))
+        self.glyphs[name].draw(TransformPen(p.getPen(glyphSet=self.glyphs), (sx, 0, 0, sy, dx, dy)))
         return clean(p)
 
     def contours(self, name):
-        rec = RecordingPen()
+        rec = DecomposingRecordingPen(self.glyphs)
         self.glyphs[name].draw(rec)
         out, cur = [], []
         for op, args in rec.value:
@@ -167,18 +166,6 @@ def rect(x0, y0, x1, y1, r=0.0):
     return p
 
 
-def squircle(cx, cy, half, n=4.0, steps=256):
-    """A superellipse |x|^n + |y|^n = half^n, as a polygon fine enough to be
-    smooth at any size the mark is used."""
-    pts = []
-    for i in range(steps):
-        t = 2 * math.pi * i / steps
-        c, s = math.cos(t), math.sin(t)
-        x = half * math.copysign(abs(c) ** (2 / n), c)
-        y = half * math.copysign(abs(s) ** (2 / n), s)
-        pts.append((cx + x, cy + y))
-    return poly(pts)
-
 
 def circle(cx, cy, r):
     k = 0.5522847 * r
@@ -237,20 +224,6 @@ def star(cx, cy, north, east, waist, south=None, west=None, bow=0.0):
     pen.closePath()
     return p
 
-
-def offset_poly(p, d, steps=72):
-    """A cheap outward offset (Minkowski sum with a disc of radius d) of a
-    path, used to keep a clear margin around the star."""
-    out = p
-    pts = []
-    for i in range(steps):
-        a = 2 * math.pi * i / steps
-        pts.append((d * math.cos(a), d * math.sin(a)))
-    # sweep the outline: union of the path moved around a circle, plus fill
-    parts = [p]
-    for dx, dy in pts:
-        parts.append(move(p, dx, dy))
-    return union(parts)
 
 
 def bounds(paths):

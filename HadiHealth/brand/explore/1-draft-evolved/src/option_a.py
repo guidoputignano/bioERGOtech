@@ -15,8 +15,8 @@ from geometry import pass_symbol
 
 FONT = "Newsreader[opsz,wght].ttf"
 
-HEALTH_SIZE = 205.0      # px per em for HEALTH
-HEALTH_BASE = 1330.0     # its baseline
+HEALTH_SIZE = 270.0      # px per em for HEALTH
+HEALTH_BASE = 1350.0     # its baseline
 SYMBOL_GAP = 0.16        # space between symbol and name, as a share of the symbol's height
 
 

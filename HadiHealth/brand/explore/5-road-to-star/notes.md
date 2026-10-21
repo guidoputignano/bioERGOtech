@@ -26,6 +26,11 @@ horizon) sits at 56 to 62.5; below it the road opens from 14 units wide at the h
 to 50 at the baseline. The star rises from the horizon, its lower point 3 units above
 the crossbar, so the symbol never reads as a triangle with a star on top.
 
+Lockup: the capitals are 42 units tall, centred on the symbol. The gap between symbol
+and wordmark is 38 units, clearly wider than the word space (about 31 units between
+HADI and HEALTH), which is in turn about twice the space between letters, so the
+symbol never reads as a third word.
+
 ## b. Two Lines, One Star
 
 A deep green disc holds two tapered lines, the edges of a road seen in perspective,
@@ -44,6 +49,11 @@ indicata, l'ultimo passo resta a chi decide.
   keyline (gold on warm light alone is only 2:1).
 - `b/mark.svg`: the disc on a warm light tile, 512 by 512, for app icons, favicons and
   avatars.
+
+Lockup: the capitals are 43 units tall on a disc of 100, centred on it. The gap from
+the disc to the wordmark is 30 units, wider than the word space (about 22 units). It
+does not need more, because the curved edge of the disc already leaves extra space
+above and below the point where it comes closest to the H.
 
 ## Palette
 

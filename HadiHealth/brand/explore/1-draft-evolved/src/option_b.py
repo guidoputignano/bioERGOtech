@@ -58,13 +58,21 @@ def summit_a(face, size=1000.0, baseline=1000.0):
     return poly(pts[0:6] + [notch] + pts[8:14] + [apex]), apex
 
 
+# HEALTH is tracked out to the width of HADI. HADI is wide, so HEALTH is set
+# a little larger than in option a (300 rather than 270 px per em): the
+# tracking stays near 0.9 em instead of 1.1 em, and HEALTH stays legible in
+# a smaller lockup. HEALTH_GAP is the space between HADI's baseline and the top of
+# HEALTH's capitals.
+HEALTH_SIZE = 300.0
+HEALTH_GAP = 162.0
+
 B = dict(
-    star_size=(145.0, 95.0, 0.2),   # half height, half width, waist
+    star_size=(145.0, 95.0, 0.17),  # half height, half width, waist
     star_gap=66.0,                  # between the summit and the star's lower ray
     star_dx=0.0,
 )
 # the mark alone is used small: a bigger star, a little closer to the summit
-MARK = dict(star_size=(170.0, 112.0, 0.2), star_gap=56.0, star_dx=0.0)
+MARK = dict(star_size=(170.0, 112.0, 0.18), star_gap=56.0, star_dx=0.0)
 
 
 def wordmark(f, o=B):
@@ -87,13 +95,14 @@ def wordmark(f, o=B):
     sh, sw, sk = o["star_size"]
     st = star(apex[0] + o["star_dx"], apex[1] - o["star_gap"] - sh, sh, sw, sk)
     cap = f["caps"]
-    size = 215.0
+    size = HEALTH_SIZE
     plain, _, _ = cap.text("HEALTH", size)
     b = plain.bounds
     tr = ((x1 - x0) - (b[2] - b[0])) / (5 * size)
     health, _, _ = cap.text("HEALTH", size, tracking=tr)
     hb = health.bounds
-    health = moved(health, x0 - hb[0], 1000 + 340)
+    cap_h = -cap.glyph("H", size).bounds[1]
+    health = moved(health, x0 - hb[0], 1000 + HEALTH_GAP + cap_h)
     return dict(ink=[ink, health], accent=[st], apex=apex)
 
 

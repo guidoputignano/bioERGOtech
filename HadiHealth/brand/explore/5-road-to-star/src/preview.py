@@ -93,7 +93,7 @@ def sheet(px):
     <div class="stage"><img src="{svg(o, 'logo-reversed.svg')}" style="height:84px"></div></div>
   {small('', 'logo.svg', f'{o}_light')}
   {small('dark', 'logo-reversed.svg', f'{o}_dark')}
-  <div class="panel"><div class="lab">Next to the Foundation, same height</div>
+  <div class="panel"><div class="lab">Next to the bioERGOtech logo</div>
     <div class="stage fam"><img src="{uri(BIO / 'logo.png', 'image/png')}" style="height:26px">
       <div class="vr"></div><img src="{svg(o, 'logo.svg')}" style="height:40px"></div></div>
 </div>"""

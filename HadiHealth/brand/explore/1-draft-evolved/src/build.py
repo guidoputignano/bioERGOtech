@@ -2,6 +2,12 @@
 
 Run from the repository root:
     python3 HadiHealth/brand/explore/1-draft-evolved/src/build.py
+then, for the preview sheet:
+    python3 HadiHealth/brand/explore/1-draft-evolved/src/preview.py
+
+Needs fontTools, skia-pathops and uharfbuzz. The font is
+fonts/Newsreader[opsz,wght].ttf (SIL Open Font License 1.1, fonts/OFL.txt);
+static instances are cut from it at run time with fontTools.varLib.instancer.
 
 Writes a/ and b/ (logo.svg, logo-reversed.svg, mark.svg) next to src/.
 All lettering is converted to outlines; each file holds a <title> and plain
@@ -12,6 +18,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.dont_write_bytecode = True
 
 from outline import to_d, union  # noqa: E402
 import option_a  # noqa: E402

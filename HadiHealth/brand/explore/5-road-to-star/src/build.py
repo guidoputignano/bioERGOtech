@@ -21,12 +21,14 @@ OUT = HERE.parent
 
 # ------------------------------------------------------------ wordmarks
 # cap_ratio: cap height of the wordmark / height of the symbol
-# gap_ratio: space between symbol and wordmark / height of the symbol
+# gap_ratio: space between symbol and wordmark / height of the symbol. It is kept
+#            clearly larger than the word space, so the symbol does not read as
+#            a third word and "Hadi" does not group with the symbol.
 
 WA = dict(font="jost/Jost[wght].ttf", axes=(("wght", 540),), text="HADI HEALTH",
-          tracking=0.12, space=0.28, cap_ratio=0.42, gap_ratio=0.30)
+          tracking=0.12, space=0.13, cap_ratio=0.42, gap_ratio=0.38)
 WB = dict(font="spectral/Spectral-SemiBold.ttf", axes=None, text="Hadi Health",
-          tracking=0.004, space=0.235, cap_ratio=0.43, gap_ratio=0.26)
+          tracking=0.004, space=0.235, cap_ratio=0.43, gap_ratio=0.30)
 
 
 def wordmark(spec, cap_height):

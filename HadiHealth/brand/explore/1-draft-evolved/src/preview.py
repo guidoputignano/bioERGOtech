@@ -79,7 +79,7 @@ h2{font-weight:700;font-size:19px;color:#1A3825}
 .dark .cap{color:#8FA595}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .px{image-rendering:pixelated}
-.small{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.small{display:flex;align-items:center;gap:16px}
 """
 
 
@@ -157,7 +157,7 @@ def main():
         cols = "".join(column(k, t, i, smalls) for k, t, i in OPTIONS)
         html = f"""<!doctype html><html><head><meta charset="utf-8"><style>{fonts}{CSS}</style></head><body>
 <h1>Hadi Health, direction 1: the draft, refined</h1>
-<div class="sub">Deep green #1A3825, gold #DAA13C for the star and the road only, warm light #F2EEE3 on dark. Newsreader, all lettering converted to outlines. Small sizes shown at true pixels, then enlarged.</div>
+<div class="sub">Deep green #1A3825, gold #DAA13C only for the star and (in a) the road, warm light #F2EEE3 on dark. Newsreader, all lettering converted to outlines. Small sizes shown at true pixels, then enlarged.</div>
 <div class="cols">{cols}</div>
 </body></html>"""
         page.set_content(html)
