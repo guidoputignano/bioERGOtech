@@ -1,5 +1,6 @@
 """Preview sheet for proposal B: every file, the small sizes and the pairing
-with the bioERGOtech logo. The HTML is written to a temporary folder."""
+with the bioERGOtech logo. The HTML and the zoom shots are written to a
+temporary folder that is removed when the sheet is done."""
 import base64
 import json
 import re
@@ -10,6 +11,7 @@ from pathlib import Path
 from render import shot
 
 FONT = "Mulish, Arial, sans-serif"
+PRM = json.loads((Path(__file__).resolve().parent / "params.json").read_text())
 
 
 def _lum(hx):
@@ -24,7 +26,11 @@ def contrast(a, b):
 
 
 def make_sheet(out, repo):
-    out, repo = Path(out), Path(repo)
+    with tempfile.TemporaryDirectory(prefix="hadi-sheet-") as td:
+        return _make_sheet(Path(out), Path(repo), Path(td))
+
+
+def _make_sheet(out, repo, tmp):
     pal = json.loads((out / "palette.json").read_text())
     TEAL, TEAL_D, NAVY, GOLD, LIGHT = pal["primary"], pal["primary_dark"], pal["ink"], pal["accent"], pal["light"]
     fonts = repo / "HadiHealth" / "plan" / "assets" / "fonts"
@@ -84,58 +90,68 @@ def make_sheet(out, repo):
     blocks.append(grid(2, panel("logo-mono.svg, one colour", svg("logo-mono.svg", 72)),
                        panel("logo-mono-white.svg, one colour", svg("logo-mono-white.svg", 72), bg=TEAL_D, fg="#D6F3EC")))
     # 5. marks
-    blocks.append(grid(4, panel("logo-mark.svg", svg("logo-mark.svg", 170)),
+    blocks.append(grid(3, panel("logo-mark.svg, 40 px and larger", svg("logo-mark.svg", 170)),
                        panel("logo-mark-reversed.svg", svg("logo-mark-reversed.svg", 170), bg=NAVY, **D),
-                       panel("logo-mark-tile.svg", svg("logo-mark-tile.svg", 170), bg=LIGHT),
-                       panel("logo-mark-small.svg, master for 32 px and below, on its 16 px grid", svg("logo-mark-small.svg", 170,
-                             css="background-image:linear-gradient(#E3E7EC 1px,transparent 1px),linear-gradient(90deg,#E3E7EC 1px,transparent 1px);background-size:10.625px 10.625px"))))
+                       panel("logo-mark-tile.svg, app tile and avatar, 32 px and larger", svg("logo-mark-tile.svg", 170), bg=LIGHT)))
 
-    # 6. small sizes, at true pixels, then enlarged
-    sizes = (32, 24, 16)
+    def on_grid(name, size=176, cells=16, line="rgba(128,142,162,.38)"):
+        step = size / cells
+        return (f'<div style="position:relative;width:{size}px;height:{size}px">{svg(name, size)}'
+                f'<div style="position:absolute;inset:0;background-image:linear-gradient({line} 1px,transparent 1px),'
+                f'linear-gradient(90deg,{line} 1px,transparent 1px);background-size:{step}px {step}px;'
+                f'box-shadow:inset -1px -1px 0 {line}"></div></div>')
 
+    blocks.append(grid(3, panel("logo-mark-small.svg, master for 32 px and below, on its 16 px grid", on_grid("logo-mark-small.svg")),
+                       panel("logo-mark-small-reversed.svg, the same on dark", on_grid("logo-mark-small-reversed.svg"), bg=NAVY, **D),
+                       panel("logo-mark-small-tile.svg, favicon tile, 16 px grid", on_grid("logo-mark-small-tile.svg"), bg=LIGHT)))
+
+    # 6. small sizes, at true pixels, then enlarged. Every cell is a delivered file
+    # except the 16 px wordmark on white, where hadi takes the dark teal as the README says.
     def strip(kind, bg):
         dark = bg != "#FFFFFF"
         fg = "#9FB0C2" if dark else "#5B6675"
         cells = []
         if kind == "words":
-            for s in sizes:
+            title = "logo-reversed.svg" if dark else "logo-primary.svg"
+            for px in (32, 24, 16):
                 if dark:
-                    w = svg("logo-reversed.svg", s)
-                elif s >= 24:
-                    w = svg("logo-primary.svg", s)
+                    w = svg("logo-reversed.svg", px)
+                elif px >= 24:
+                    w = svg("logo-primary.svg", px)
                 else:
-                    w = svg("logo-primary.svg", s, recolour={TEAL: TEAL_D})
-                cells.append(col(w, cap(f"{s} px", fg)))
+                    w = svg("logo-primary.svg", px, recolour={TEAL: TEAL_D})
+                cells.append(col(w, cap(f"{px} px", fg)))
         else:
-            for s in sizes:
-                m = svg("logo-mark-small.svg", s, recolour={TEAL_D: TEAL}) if dark else svg("logo-mark-small.svg", s)
-                cells.append(col(m, cap(f"{s}", fg)))
-            for s in (64, 48, 32):
-                cells.append(col(svg("logo-mark-tile.svg", s), cap(f"tile {s}", fg)))
-        return (f'<div class="strip" style="background:{bg};padding:16px 18px;display:inline-flex;gap:24px;'
-                f'align-items:flex-end;border-radius:6px">{"".join(cells)}</div>')
-
-    tmp = Path(tempfile.mkdtemp(prefix="hadi-sheet-"))
+            title = kind
+            for px in ((64, 48, 32) if kind == "logo-mark-tile.svg" else (32, 24, 16)):
+                cells.append(col(svg(kind, px), cap(f"{px}", fg)))
+        return (f'<div class="strip" style="background:{bg};padding:12px 16px 14px;display:inline-flex;flex-direction:column;'
+                f'gap:10px;border-radius:6px"><div style="font:600 10px/1.2 {FONT};color:{fg}">{title}</div>'
+                f'<div style="display:flex;gap:20px;align-items:flex-end">{"".join(cells)}</div></div>')
 
     def zoom(kind, bg, factor):
-        hp = tmp / f"{kind}-{bg[1:]}.html"
+        tag = re.sub(r"[^a-z0-9]+", "-", kind)
+        hp = tmp / f"{tag}-{bg[1:]}.html"
         hp.write_text(f'<!doctype html><html><head><meta charset="utf-8"><style>{font_css}</style></head>'
                       f'<body style="margin:0;background:#F2F4F7;font-family:{FONT}">{strip(kind, bg)}</body></html>', encoding="utf-8")
-        pp = tmp / f"{kind}-{bg[1:]}.png"
+        pp = tmp / f"{tag}-{bg[1:]}.png"
         shot(hp, pp, width=1200, scale=1, selector=".strip")
         w = struct.unpack(">I", pp.read_bytes()[16:20])[0]
         data = base64.b64encode(pp.read_bytes()).decode()
         return (f'<img src="data:image/png;base64,{data}" style="display:block;image-rendering:pixelated;'
                 f'width:{w * factor}px;height:auto;border-radius:6px">')
 
+    W_, SM, SMR, SMT, TL = "#FFFFFF", "logo-mark-small.svg", "logo-mark-small-reversed.svg", "logo-mark-small-tile.svg", "logo-mark-tile.svg"
     blocks.append(panel("Small sizes, true pixels. Wordmark 32, 24 and 16 px tall: below 24 px hadi uses the dark teal "
-                        "(on the dark background it keeps the bright teal). Then logo-mark-small.svg and "
-                        "the app tile at 64, 48 and 32 px",
-                        col(row(strip("words", "#FFFFFF"), strip("marks", "#FFFFFF"), gap=16),
-                            row(strip("words", NAVY), strip("marks", NAVY), gap=16), gap=12)))
-    blocks.append(panel("The same, enlarged: wordmarks two times, marks three times, pixels as rendered",
-                        col(row(zoom("words", "#FFFFFF", 2), zoom("words", NAVY, 2), gap=16),
-                            zoom("marks", "#FFFFFF", 3), zoom("marks", NAVY, 3), gap=16)))
+                        "(on the dark background it keeps the bright teal). logo-mark-small.svg on light, "
+                        "logo-mark-small-reversed.svg on dark and logo-mark-small-tile.svg at 32, 24 and 16 px; "
+                        "logo-mark-tile.svg at 64, 48 and 32 px",
+                        col(row(strip("words", W_), strip(SM, W_), strip(SMT, W_), strip(TL, W_), gap=16),
+                            row(strip("words", NAVY), strip(SMR, NAVY), strip(TL, NAVY), gap=16), gap=12)))
+    blocks.append(panel("The same, enlarged: wordmarks and the app tile two times, the small marks three times, pixels as rendered",
+                        col(row(zoom("words", W_, 2), zoom("words", NAVY, 2), gap=16),
+                            row(zoom(SM, W_, 3), zoom(SMR, NAVY, 3), zoom(SMT, W_, 3), gap=16),
+                            row(zoom(TL, W_, 2), zoom(TL, NAVY, 2), gap=16), gap=16)))
 
     # 7. family pairing, x-heights matched
     v = vb("logo-primary.svg")
@@ -161,7 +177,9 @@ def make_sheet(out, repo):
     blocks.append(panel("palette.json", f'<div style="display:flex;gap:12px;width:100%;flex-wrap:wrap">{"".join(sw)}</div>'))
 
     # 9. construction
-    blocks.append(panel("Construction: one ascender height for h, d, l and the pennant (apex overshoots by 8 units for the point)",
+    asc, apex = PRM["hadi"]["ASC"], PRM["pennant"]["apex"]
+    blocks.append(panel(f"Construction: one ascender height for h, d, l and the pennant (the apex overshoots it by "
+                        f"{apex - asc:g} units for the point, on an x-height of {PRM['hadi']['XH']})",
                         f'<div style="position:relative;padding-right:150px">{svg("logo-primary.svg", 250)}{guides(v, 250)}</div>'))
 
     html = (f'<!doctype html><html><head><meta charset="utf-8"><style>{font_css}</style></head>'
@@ -180,7 +198,8 @@ def guides(v, h):
     """Thin lines at the ascender, the x-height and the baseline, over a logo drawn h px tall."""
     s = h / v[3]
     lines = []
-    for y, label in ((-136, "ascender 136"), (-100, "x-height 100"), (0, "baseline")):
+    asc, xh = PRM["hadi"]["ASC"], PRM["hadi"]["XH"]
+    for y, label in ((-asc, f"ascender {asc}"), (-xh, f"x-height {xh}"), (0, "baseline")):
         top = (y - v[1]) * s
         lines.append(f'<div style="position:absolute;left:0;right:110px;top:{top:.1f}px;border-top:1px dashed #E0484888"></div>'
                      f'<div style="position:absolute;right:0;width:104px;top:{top - 7:.1f}px;font:600 11px {FONT};color:#C04040">{label}</div>')

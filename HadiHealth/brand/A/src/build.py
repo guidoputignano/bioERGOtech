@@ -9,6 +9,7 @@ params.json. Units: the H of the mark is 100 units tall. Every SVG is plain
 paths and rects with fill attributes, so several can be inlined in one page.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -93,10 +94,10 @@ def tight(art, title, pad=None):
     return svg((x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad), art.paths(), title)
 
 
-def add_text(art, s, x, base, cap, weight, fill, track=0, kern_map=None):
+def add_text(art, s, x, base, cap, weight, fill, track=0, kern_map=None, font_kern=False):
     size = cap_to_size(cap)
-    d, end = text_path(s, x, base, size, weight, track, kern_map)
-    bx0, bx1, by0, by1 = text_bounds(s, size, weight, track, kern_map)
+    d, end = text_path(s, x, base, size, weight, track, kern_map, font_kern)
+    bx0, bx1, by0, by1 = text_bounds(s, size, weight, track, kern_map, font_kern)
     art.add(fill, d, (x + bx0, base - by1, x + bx1, base - by0))
     return end
 
@@ -122,9 +123,9 @@ def wordmark(art, x, base, cap, c):
     return left, right
 
 
-def optical_dx(m, share=None):
+def optical_dx(m, share):
     """The arrow tip passes the lower stem; move the mark left by a share of that."""
-    return -overshoot(m) * (P["optical_share"] if share is None else share)
+    return -overshoot(m) * share
 
 
 # ---------------------------------------------------------------- lockups
@@ -156,9 +157,10 @@ def endorsed(mode, lang):
     art.add(c["line"], d, lb)
     text = ENDORSE[lang]
     size = cap_to_size(e["cap"])
-    ink0 = text_bounds(text, size, e["weight"], e.get("track", 0))[0]
+    fk = e.get("font_kern", True)          # Mulish's own GPOS pair kerning
+    ink0 = text_bounds(text, size, e["weight"], e.get("track", 0), font_kern=fk)[0]
     add_text(art, text, left - ink0, yb + e["gap"] + e["cap"], e["cap"], e["weight"], c["endorse"],
-             e.get("track", 0))
+             e.get("track", 0), font_kern=fk)
     return tight(art, f"{TITLE}, {text}")
 
 
@@ -184,14 +186,23 @@ def stacked(mode):
 
 
 def square(m, c, pad):
-    """Mark in a square, centred optically: shifted left by a share of the overshoot."""
+    """Mark in a square, centred optically.
+
+    The H's mass already sits left of its outline centre (the arrowhead is a
+    light triangle), so the mark is moved left by only a small share of the
+    overshoot (params: mark_optical_share). The shift is capped so the left
+    margin is never smaller than the top and bottom margins, and the side is
+    set by the taller of the mark and its shifted width.
+    """
     hd, sd, b = mark(0, 0, m)
     w, h = b[2] - b[0], b[3] - b[1]
-    dx = optical_dx(m)
+    dx = optical_dx(m, P["mark_optical_share"])
+    dx = -min(abs(dx), max(0.0, (h - w) / 2))
     inner = max(w + 2 * abs(dx), h)
     side = inner + 2 * pad
-    ox = (side - w) / 2 - b[0] + dx
     oy = (side - h) / 2 - b[1]
+    # to 0.05 units so every edge is exact, never left of the top margin
+    ox = max(round(((side - w) / 2 - b[0] + dx) * 20), math.ceil((oy + b[1] - b[0]) * 20)) / 20
     art = Art()
     add_mark(art, ox, oy, m, c)
     return svg((0, 0, side, side), art.paths(), f"{TITLE} mark")
@@ -201,7 +212,7 @@ def mark_file(mode):
     return square(P["mark"], scheme(mode), P["mark_pad"])
 
 
-def grid_square(m, c, tile=False):
+def grid_square(m, c, tile=False, title_extra=""):
     """A master drawn on a pixel grid (m["grid"] units = 32 px), placed at m["x"], m["y"].
 
     Stems, bar and margins are whole pixels at 32 px and its multiples, so the
@@ -215,11 +226,11 @@ def grid_square(m, c, tile=False):
         body = (f'<rect width="{num(side)}" height="{num(side)}" rx="{num(side * m["radius"])}" '
                 f'fill="{C["green"]}"/>' + body)
         return svg((0, 0, side, side), body, f"{TITLE} app tile")
-    return svg((0, 0, side, side), body, f"{TITLE} mark, small sizes")
+    return svg((0, 0, side, side), body, f"{TITLE} mark, small sizes{title_extra}")
 
 
 def mark_small(mode):
-    return grid_square(P["mark_small"], scheme(mode))
+    return grid_square(P["mark_small"], scheme(mode), title_extra=", reversed" if mode == "dark" else "")
 
 
 def tile():
@@ -246,6 +257,8 @@ def files():
         "logo-endorsed.svg": endorsed("light", "it"),
         "logo-endorsed-reversed.svg": endorsed("dark", "it"),
         "logo-endorsed-en.svg": endorsed("light", "en"),
+        # extra, outside the business plan contract: the small master for dark backgrounds
+        "logo-mark-small-reversed.svg": mark_small("dark"),
     }
 
 

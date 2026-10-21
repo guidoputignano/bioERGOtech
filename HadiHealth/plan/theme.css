@@ -95,6 +95,7 @@ svg { display: block; }
   break-after: page;
 }
 .cover .logo { position: absolute; left: 20mm; top: 22mm; width: 96mm; height: auto; }
+[data-brand="B"] .cover .logo { width: 82mm; }
 .cover .map { position: absolute; right: 8mm; top: 54mm; width: 112mm; }
 .cover .map > svg path { fill: var(--dark-2); stroke: var(--dark); stroke-width: 1.4; }
 .cover .map > svg path.on { fill: var(--dark-2); stroke: var(--line); stroke-width: 2.2; }
@@ -294,7 +295,7 @@ table.data .who { max-width: 52mm; }
 .brand .stage.tint-A { background: #F2EEE3; }
 .brand .stage.tint-B { background: #F7F9FC; }
 .brand .stage svg { height: 15mm; width: auto; max-width: 100%; }
-.brand .stage svg.endorsed { height: 21mm; }
+.brand .stage svg.endorsed { height: 25mm; }
 .brand .stage svg.mark { height: 17mm; }
 .brand .stage svg.tile { height: 17mm; }
 .brand .row { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 3mm; margin-top: 3mm; }

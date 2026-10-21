@@ -1,5 +1,5 @@
 {
-  "_units": "The H of the mark is 100 units tall in 'mark' and in the lockups. 'mark_small' and 'tile' are drawn on a pixel grid: 32 units are 32 px. Kerning is in font units (1000 per em), keyed by the index of the letter it moves.",
+  "_units": "The H of the mark is 100 units tall in 'mark' and in the lockups. 'mark_small' and 'tile' are drawn on a pixel grid: 32 units are 32 px. Hand kerning is in font units (1000 per em), keyed by the index of the letter it moves; it is used for the wordmark. The endorsement uses Mulish's own GPOS pair kerning (endorsed.font_kern). mark_optical_share moves the square mark files left by that share of the arrow overshoot; the tile has its own 1 px shift in its grid values.",
   "colours": {
     "green": "#1A3825",
     "gold": "#DAA13C",
@@ -35,7 +35,7 @@
     "star_w": 1.1
   },
   "arrow_ratio": 2.78,
-  "optical_share": 0.3333,
+  "mark_optical_share": 0.15,
   "pad": 8,
   "mark_pad": 8,
   "tile": {
@@ -74,7 +74,8 @@
     "edge_gap": 10,
     "gap": 16,
     "cap": 14,
-    "weight": 600
+    "weight": 600,
+    "font_kern": true
   },
   "stacked": {
     "cap": 36,

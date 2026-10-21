@@ -68,9 +68,9 @@ def card(label, art, cls="", fn="", width=None, height=None):
 
 
 LIGHT_SMALL = [("logo-primary.svg", (16, 24, 32)), ("logo-mark-small.svg", (16, 24, 32)),
-               ("logo-mark-tile.svg", (16, 24, 32))]
-DARK_SMALL = [("logo-reversed.svg", (16, 24, 32)), ("logo-mark-tile.svg", (16, 24, 32)),
-              ("logo-mark-reversed.svg", (32,))]
+               ("logo-mark-tile.svg", (16, 24, 32, 64)), ("logo-mark.svg", (64,))]
+DARK_SMALL = [("logo-reversed.svg", (16, 24, 32)), ("logo-mark-small-reversed.svg", (16, 24, 32)),
+              ("logo-mark-tile.svg", (16, 24, 32, 64)), ("logo-mark-reversed.svg", (64,))]
 
 
 def small_strip(names, dark=False, sid=""):
@@ -90,7 +90,7 @@ PIXEL_STRIPS = [
     ([("logo-primary.svg", (16, 24, 32))], False),
     ([("logo-mark-small.svg", (16, 24, 32)), ("logo-mark-tile.svg", (16, 24, 32))], False),
     ([("logo-reversed.svg", (16, 24, 32))], True),
-    ([("logo-mark-tile.svg", (16, 24, 32)), ("logo-mark-reversed.svg", (32,))], True),
+    ([("logo-mark-small-reversed.svg", (16, 24, 32)), ("logo-mark-tile.svg", (16, 24, 32))], True),
 ]
 
 
@@ -141,19 +141,21 @@ def page(px_pngs):
                     "logo-stacked-reversed.svg", 301, 260)
              + "</div>")
     r.append('<div class="row">'
-             + card("Mark", svg("logo-mark.svg", 150), fn="logo-mark.svg", width=301, height=240)
+             + card("Mark", svg("logo-mark.svg", 150), fn="logo-mark.svg", width=237, height=240)
              + card("Mark, reversed", svg("logo-mark-reversed.svg", 150), "dark", "logo-mark-reversed.svg",
-                    301, 240)
-             + card("App tile", svg("logo-mark-tile.svg", 150), "light", "logo-mark-tile.svg", 301, 240)
-             + card("Small-size master, 32 px and below", svg("logo-mark-small.svg", 150),
-                    fn="logo-mark-small.svg", width=301, height=240)
+                    237, 240)
+             + card("App tile", svg("logo-mark-tile.svg", 150), "light", "logo-mark-tile.svg", 237, 240)
+             + card("Small master", svg("logo-mark-small.svg", 150),
+                    fn="logo-mark-small.svg", width=237, height=240)
+             + card("Small master, reversed", svg("logo-mark-small-reversed.svg", 150), "dark",
+                    "logo-mark-small-reversed.svg", 237, 240)
              + "</div>")
     r.append('<div class="row">'
              + card("One colour, dark", svg("logo-mono.svg", 70), fn="logo-mono.svg", width=620, height=180)
              + card("One colour, white", svg("logo-mono-white.svg", 70), "grey", "logo-mono-white.svg", 620, 180)
              + "</div>")
     r.append('<div class="row">'
-             + card("Small sizes: 16, 24 and 32 px tall",
+             + card("Small sizes: 16, 24 and 32 px tall; the tile and the mark also at 64 px",
                     '<div style="display:flex;gap:14px;flex-wrap:wrap;width:100%">'
                     + small_strip(LIGHT_SMALL) + small_strip(DARK_SMALL, True) + "</div>",
                     width=1258)

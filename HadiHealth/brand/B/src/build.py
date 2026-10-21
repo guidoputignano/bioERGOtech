@@ -128,12 +128,15 @@ def mark_paths():
     return h, star
 
 
-def mark_small_paths():
+def mark_small_paths(key="mark_small"):
     """The small-size master. Planned on a 16 px grid (values in params.json are
     pixels at 16 px) and drawn at `unit` units per pixel, so straight edges fall
     on whole pixels at 16 px and at 32 px. Heavier stems, a larger head and a
-    fuller star than the main mark; the line stub is kept at two pixels."""
-    S = PRM["mark_small"]
+    fuller star than the main mark. The piece of line is left out (stub 0): at
+    16 to 32 px it turns the head into a cross, while the bare head reads as an
+    arrow. key="mark_small_tile" gives the smaller drawing that sits inside the
+    rounded square of the small tile, on the same grid."""
+    S = PRM[key]
     u = S["unit"]
     x0, x1 = S["stem"]
     W = (x1 - x0) * u
@@ -177,6 +180,13 @@ def build():
     sh, ss = mark_small_paths()
     G = PRM["mark_small"]["grid"]
     files["logo-mark-small.svg"] = svg_doc([(sh, TEAL_D), (ss, GOLD)], 0, T, box=(0, 0, G, G))
+    # on dark: the same 32-unit drawing in the bright teal (8.5:1 on navy)
+    files["logo-mark-small-reversed.svg"] = svg_doc([(sh, TEAL), (ss, GOLD)], 0, T, box=(0, 0, G, G))
+    # favicon tile: a smaller drawing on a navy rounded square, still on the 16 px grid
+    th, ts = mark_small_paths("mark_small_tile")
+    TS = PRM["mark_small_tile"]
+    files["logo-mark-small-tile.svg"] = svg_doc([(th, TEAL), (ts, GOLD)], 0, T, box=(0, 0, TS["grid"], TS["grid"]),
+                                                tile=(NAVY, TS["radius"] * TS["unit"]))
 
     # stacked: hadi over HEALTH in the ERGO construction
     HEALTH, hw, CH = word_HEALTH(w1)
@@ -206,7 +216,7 @@ def build():
         "primary": TEAL, "accent": GOLD, "ink": NAVY, "dark": NAVY, "light": LIGHT,
         "primary_dark": TEAL_D,
         "notes": ("primary is the teal sampled from the bioERGOtech logo, used for hadi, the mark and the line. "
-                  "primary_dark replaces it for the wordmark below about 24 px and in small headers "
+                  "primary_dark replaces it for the wordmark below about 24 px, in logo-mark-small.svg and in small headers "
                   "(4.6:1 on white). Gold is used only for the star. ink is the navy of health and of text; "
                   "dark is the same navy used as the reversed background."),
     }
