@@ -11,11 +11,12 @@ from lib import (GOLD, GREEN, LIGHT, circle, diff, face, inter, move, rect,
 
 P = dict(
     R=500,            # outer radius of the ring
-    t=54,             # ring weight
+    t=60,             # ring weight (heavy enough to stay a line at 16 px)
     cap=400,          # cap height of the H in the seal
-    h_opsz=72, h_wght=700,
+    h_opsz=48, h_wght=700,  # the same optical size as the name, one weight up
     spread=70,        # extra width given to the H (font units of the glyph)
-    h_bar=82,         # crossbar weight of the H, glyph units (Literata's own is lighter)
+    h_bar=66,         # crossbar weight of the H, glyph units (Literata's own is 53): a
+                      # little heavier for small sizes, close to the name at large sizes
     h_dy=-6,          # the H sits a hair below centre: the star adds weight on top
     star_n=170,       # star: north and south rays
     star_e=0.62,      # east and west rays, as a fraction of star_n
@@ -74,7 +75,8 @@ def wordmark(p=P):
     s = p["w_cap"] / f.cap
     w = f.setline("Hadi Health", scale=s)
     x0 = w.bounds[0]
-    return move(w, p["R"] + p["gap"] - x0, -p["w_cap"] / 2)
+    # the H of the name shares the cap height and the baseline of the H in the seal
+    return move(w, p["R"] + p["gap"] - x0, -p["w_cap"] / 2 + p["h_dy"])
 
 
 def layers(kind, dark=False, p=P):

@@ -10,18 +10,19 @@ alternative.
 A serif capital H sits inside a fine ring that opens at twelve o'clock for a
 small gold four-point star, the way the north mark sits on the bezel of a
 compass. The star shows the direction while the H, the people who decide,
-stays at the centre, and the H of the seal and the name share one cap height,
-so the seal can also stand alone on documents and slides.
+stays at the centre, and the H of the seal and the name share one cap height
+and one baseline, so the seal can also stand alone on documents and slides.
 
 Italiano: una H con grazie dentro un anello sottile, aperto in alto per una
 stella d'oro come il nord di una bussola: la stella indica la direzione, la
 decisione resta al centro.
 
 Font: Literata (TypeTogether for Google, "The Literata Project Authors"), SIL
-Open Font License 1.1. The H of the seal is optical size 72, weight 700,
-widened by 70 units and with its crossbar redrawn at 82 units (the typeface's
-own is 17) so that it holds at small sizes. The name is optical size 48,
-weight 600. File and licence in `fonts/literata/`.
+Open Font License 1.1. The name is optical size 48, weight 600. The H of the
+seal is the same optical size, one step heavier (weight 700), widened by 70
+units and with its crossbar redrawn at 66 units (the typeface's own is 53) so
+that it holds at small sizes and still matches the H of the name. File and
+licence in `fonts/literata/`.
 
 ## b. The Open Square
 
@@ -66,10 +67,17 @@ licence in `fonts/librefranklin/`.
 
 ## Known limits
 
-1. At 16 px the ring of a becomes a soft line and the star a gold dot; the H
-   still reads. A favicon cut would use a heavier ring, or the H alone.
+1. At 16 px the ring of a is a thin line and the star only a gold dot; the H
+   still reads. On the 24 px logo the star is a speck. A favicon cut would use
+   a heavier ring, or the H alone.
 2. An H in a circle can recall a helipad sign. The serif letter, the fine ring
    and the star keep a away from it, but the risk is worth naming.
 3. Option b has no star and no gold. It is the more sober of the two and may
-   feel too plain to the founder; rounded block H shapes are common, so a
-   trademark search would be needed before adopting it.
+   feel too plain to the founder, who turned down an earlier geometric H. Its
+   H can also be read as brackets around a dash, and rounded block H shapes
+   are common, so a trademark search would be needed before adopting it.
+4. The H of the seal is slightly heavier than the H of the name (weight 700
+   against 600, with a firmer crossbar). This is on purpose, so the monogram
+   holds alone at small sizes; at large sizes it reads as one family.
+5. Other directions in the set also use a round seal or a tile with a star. a
+   keeps its own by using an open ring with the star on the rim, not inside.

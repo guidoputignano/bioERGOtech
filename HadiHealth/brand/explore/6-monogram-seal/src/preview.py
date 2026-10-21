@@ -22,7 +22,7 @@ TEXT = {
     "a": ("The North Seal",
           "A serif H inside a fine ring. The ring opens at twelve o'clock for a gold "
           "four-point star, like the north mark of a compass: the star points the way, "
-          "the H stays at the centre. Literata, the H of the seal and the name share one cap height."),
+          "the H stays at the centre. Literata: the H of the seal and the name share one cap height and one baseline."),
     "b": ("The Open Square",
           "A rounded square, the shape of a document stamp, opened at the top and the "
           "bottom: its two halves become the stems of an H and one bar holds them "
