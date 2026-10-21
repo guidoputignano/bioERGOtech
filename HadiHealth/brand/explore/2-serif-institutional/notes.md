@@ -1,72 +1,78 @@
-# Direction 2: Institutional serif, "the star in the H"
+# Hadi Health, direction 2: Institutional serif
 
-## The idea
+Two options for a calm, institutional wordmark in serif type, each with one
+small four-point star in gold. Both keep the founder's palette and his guiding
+star; neither draws the name as a picture, so it reads first at every size.
 
-Hadi Health is set as a plain, carefully spaced wordmark in Source Serif 4, a sober
-book face, in deep green. The only change to the type is the capital H: its crossbar
-sits a little lower (42% of the cap height instead of the font's 51%), and the room
-this opens above it holds a small four-point star in gold, with straight sides and a
-longer vertical axis, closer to a navigator's star than to a sparkle. Hadi means
-guide: the star gives a fixed point of reference and sits inside the name, while the
-letters around it, like the decisions, stay with the people accountable for them.
+## a. Star Inside the H
 
-The founder's draft is the starting point: the deep green and gold, the serif, the
-guiding star and the spaced capitals of HEALTH (kept in the stacked version). What
-changes is that the name is no longer drawn as a picture, so it reads first at every
-size, and the star appears once, inside the H, which also makes it the icon.
+"Hadi Health" is set in Source Serif 4, a sober book face, with one change:
+the crossbar of the capital H sits a little lower (42% of the cap height
+instead of 51%) and a small four-point star in gold takes the room this opens
+above it. Hadi means guide, so the star is a point of reference held inside
+the name, and the mark for app icons and favicons is that same H and star on
+a deep green tile.
 
-## Italian line for the business plan
+Italiano: il nome in un carattere editoriale sobrio, con una piccola stella a
+quattro punte dentro la H, un punto di riferimento che orienta mentre la
+decisione resta a chi ne risponde.
 
-Il marchio è il nome stesso, in un carattere editoriale sobrio, con una piccola stella
-a quattro punte nella H: un punto di riferimento che orienta, mentre la decisione resta
-a chi ne risponde.
+Font: Source Serif 4 (Frank Grießhammer for Adobe), SIL Open Font License 1.1.
+Instanced at optical size 40, weight 570 for the wordmark and optical size 24,
+weight 660 for the mark. File and licence in `fonts/SourceSerif4/`.
+
+## b. Star Between the Words
+
+HADI HEALTH is set in widely spaced capitals of EB Garamond, a classical face
+drawn after the types of the Renaissance printers, as on an inscription or the
+title page of a long-established medical press. Between the two words, where
+Roman inscriptions placed a small dividing mark, stands a four-point star the
+height of the letters: a guide on the same line as the name rather than above
+it, and the mark is that star in a fine ring on a deep green disc, like a seal.
+
+Italiano: il nome in maiuscole spaziate, come in un'iscrizione, con una stella
+a quattro punte al posto del segno che separava le parole: una guida sulla
+stessa riga del nome, non sopra.
+
+Font: EB Garamond (Georg Duffner and Octavio Pardo), SIL Open Font License 1.1.
+Instanced at weight 600, tracking 105 units, word gap with the star 260 units
+on each side, one hand pair (L to T, minus 70 units). File and licence in
+`fonts/EBGaramond/`.
+
+## Shared
+
+- Palette unchanged from the brief: deep green #1A3825 (letters, tiles),
+  gold #DAA13C (the star only, never text), warm light #F2EEE3 (letters on
+  green, the ring of mark b), ink #1C2620.
+- Mulish (SIL Open Font License 1.1) is used only for the labels on
+  `preview.png`, not in any logo.
+- All lettering is converted to outlines. Each SVG holds only a `<title>` and
+  `<path fill="...">` elements, with a viewBox on the root.
 
 ## Files
 
-- `logo.svg`: primary, one line, for light backgrounds (green #1A3825, star #DAA13C).
-- `logo-reversed.svg`: the same for use on #1A3825 (letters #F2EEE3, star #DAA13C).
-- `logo-stacked.svg`, `logo-stacked-reversed.svg`: secondary, "Hadi" over spaced
-  capitals "HEALTH", after the layout of the founder's draft.
-- `mark.svg`: the H and star on a deep green tile with slightly rounded corners,
-  512 by 512, for app icons, favicons and avatars.
-- `preview.png`: check sheet (large on white and green, mark at 64, 32 and 16 px,
-  logo at 24 px tall with true-pixel enlargements, next to the bioERGOtech logo,
-  construction of the H, stacked form, palette).
-- `src/`: the generator. Run from the repository root:
+- `a/logo.svg`, `a/logo-reversed.svg`, `a/mark.svg`: option a. The reversed
+  logo has no background and is drawn for use on #1A3825.
+- `b/logo.svg`, `b/logo-reversed.svg`, `b/mark.svg`: option b, the same set.
+- `preview.png`: both options side by side, large on white and on deep green,
+  each mark large and at 64 and 16 px, each logo at 24 px tall (with true
+  pixel enlargements), and a family check next to the bioERGOtech logo.
+- `src/`: the generator. From the repository root:
   `python3 HadiHealth/brand/explore/2-serif-institutional/src/build.py`
-  (add `--no-preview` to skip the sheet). Settings are in `src/params.json`.
+  (add `--no-preview` to skip the sheet). Settings are in `src/params.json`;
+  `option_a.py` and `option_b.py` draw the two options.
 
-All lettering is converted to outlines. The SVGs contain only `<title>` and
-`<path fill="...">`, with a viewBox on the root and nothing else.
+Option a is the first version of this direction, kept and moved into `a/`.
+Its earlier stacked variant is not part of this round.
 
-## Palette
+## Known limits
 
-Unchanged from the brief: deep green #1A3825, gold #DAA13C (the star only, never
-text), warm light #F2EEE3, ink #1C2620.
-
-## Fonts and licence
-
-- Source Serif 4 (Frank Griesshammer for Adobe), variable font from google/fonts,
-  SIL Open Font License 1.1. File and licence in `fonts/`. Instanced with
-  fontTools.varLib.instancer: optical size 40, weight 570 for the wordmark; optical
-  size 24, weight 660 for the mark (sturdier at icon sizes); optical size 20, weight
-  600 for "HEALTH" in the stacked version.
-- Mulish (SIL Open Font License 1.1) is used only for the labels on the preview
-  sheet, not in the logo.
-
-## What I would refine next
-
-1. A pixel-fitted 16 px favicon. At 16 px the star becomes a gold tint in the
-   counter; a hand-drawn version with a heavier H and a 2 by 3 pixel star would
-   keep it legible.
-2. Check the spacing at print size. Spacing is HarfBuzz kerning plus 10 units of
-   tracking and a slightly tighter word space; "Ha" and "lt" deserve a printed check
-   before any manual pair corrections.
-3. An endorsed version with "un'iniziativa della Fondazione bioERGOtech" set in
-   Mulish under the wordmark. The serif and the Foundation's geometric sans are
-   deliberately different, and that line would tie the two together.
-4. Test a slightly deeper gold (around #C99232) for the star on white only. The
-   default gold has a low contrast on white (2.2:1), which is acceptable for a
-   graphic but makes the star faint below about 32 px. I have not changed it.
-5. One-colour versions (all green, all white) for stamps, embossing and forms, with
-   the star in the same colour as the letters.
+1. At 16 px the star of mark a becomes a gold tint in the counter of the H,
+   and the ring of mark b becomes a soft grey edge. A pixel-fitted favicon
+   (heavier H and a 2 by 3 pixel star for a; the star alone, without the ring,
+   for b) would fix both.
+2. The star of logo a is small at 24 px tall; logo b keeps its star readable
+   at that size because it is the full height of the letters.
+3. Logo b is long (about 11.7 to 1). It suits headers, signage and the cover
+   of documents; a stacked form (HADI over HEALTH) would be needed for square
+   spaces.

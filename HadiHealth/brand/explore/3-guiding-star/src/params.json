@@ -1,0 +1,57 @@
+{
+  "palette": {
+    "green": "#1A3825",
+    "gold": "#DAA13C",
+    "light": "#F2EEE3",
+    "ink": "#1C2620"
+  },
+  "a": {
+    "name": "Four Paths, One Point",
+    "star": {
+      "rv": 104,
+      "rh": 82,
+      "waist": 41,
+      "gap": 6,
+      "dot": 11.5
+    },
+    "font": "manrope",
+    "wght": 700,
+    "text": "Hadi Health",
+    "cap": 100,
+    "star_height": 2.0,
+    "space": 0.32,
+    "mark_pad": 4,
+    "track": -8
+  },
+  "b": {
+    "name": "The Open Star",
+    "tile": {
+      "size": 200,
+      "radius": 30,
+      "waist": 50,
+      "reach": 120
+    },
+    "font": "jakarta",
+    "wght_first": 800,
+    "wght_second": 500,
+    "words": [
+      "HADI",
+      "HEALTH"
+    ],
+    "track": 60,
+    "word_space": 0.32,
+    "cap": 100,
+    "tile_height": 1.8,
+    "space": 0.42,
+    "reversed_tile": "gold",
+    "mark_pad": 0,
+    "pairs": [
+      [
+        "L",
+        "T",
+        -30
+      ]
+    ]
+  },
+  "logo_pad": 2
+}

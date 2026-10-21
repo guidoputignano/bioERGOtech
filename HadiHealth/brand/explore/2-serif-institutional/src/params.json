@@ -5,36 +5,55 @@
     "light": "#F2EEE3",
     "ink": "#1C2620"
   },
-  "wordmark": {
-    "opsz": 40,
-    "wght": 570,
-    "bar_center": 280,
-    "space": -40,
-    "kern": {},
-    "star_north": 128,
-    "star_ratio": 0.6,
-    "star_waist": 0.28,
-    "star_y": 0.5,
-    "tracking": 10
+  "a": {
+    "svg_scale": 0.16,
+    "wordmark": {
+      "opsz": 40,
+      "wght": 570,
+      "bar_center": 280,
+      "space": -40,
+      "tracking": 10,
+      "kern": {},
+      "star_north": 128,
+      "star_ratio": 0.6,
+      "star_waist": 0.28,
+      "star_y": 0.5
+    },
+    "mark": {
+      "size": 512,
+      "radius": 56,
+      "opsz": 24,
+      "wght": 660,
+      "bar_center": 280,
+      "cap": 320,
+      "star_north": 150,
+      "star_ratio": 0.6,
+      "star_waist": 0.3,
+      "star_y": 0.5
+    }
   },
-  "stacked": {
-    "caps_opsz": 20,
-    "caps_wght": 600,
-    "caps_scale": 0.335,
-    "caps_gap": 140
-  },
-  "mark": {
-    "size": 512,
-    "radius": 56,
-    "opsz": 24,
-    "wght": 660,
-    "bar_center": 280,
-    "cap": 320,
-    "star_north": 150,
-    "star_ratio": 0.6,
-    "star_waist": 0.3,
-    "star_y": 0.5,
-    "optical_dy": 0
-  },
-  "svg_scale": 0.16
+  "b": {
+    "svg_scale": 0.16,
+    "wordmark": {
+      "wght": 600,
+      "tracking": 105,
+      "star_gap": 260,
+      "kern": {
+        "LT": -70
+      }
+    },
+    "star": {
+      "height": 1.0,
+      "center": 0.5,
+      "ratio": 0.58,
+      "waist": 0.27
+    },
+    "mark": {
+      "size": 512,
+      "disc": 1.0,
+      "ring_out": 0.84,
+      "ring_w": 0.06,
+      "star_h": 1.46
+    }
+  }
 }
