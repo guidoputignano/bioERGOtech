@@ -46,9 +46,12 @@ def font_faces():
 
 
 def resolve(name, brand):
-    """assets/x is shared; brand/x is the file of the chosen proposal, HadiHealth/brand/<A|B>/x."""
+    """assets/x is shared; brand/x is the file of the chosen proposal, HadiHealth/brand/<A|B>/x;
+    brand-A/x and brand-B/x name one proposal explicitly (the brand chapter shows both)."""
     if name.startswith("brand/"):
         return ROOT / "brand" / brand / name[len("brand/"):]
+    if name.startswith(("brand-A/", "brand-B/")):
+        return ROOT / "brand" / name[6] / name[len("brand-A/"):]
     if name.startswith("assets/"):
         return ASSETS / name[len("assets/"):]
     raise ValueError(name)
@@ -64,13 +67,17 @@ def inline_assets(source, brand):
             cache[key] = data_uri(resolve(key, brand))
         return m.group(1) + cache[key]
 
-    return re.sub(r'(src="|url\()((?:assets|brand)/[^")]+)', swap, source)
+    return re.sub(r'(src="|url\()((?:assets|brand|brand-A|brand-B)/[^")]+)', swap, source)
 
 
 def inline_svgs(source, brand):
     """<svg-inline src="brand/logo-primary.svg"> becomes the SVG itself, so it stays vector."""
     def put(m):
-        svg = resolve(m.group(1), brand).read_text()
+        path = resolve(m.group(1), brand)
+        if not path.exists():
+            print(f"  missing {path.relative_to(ROOT)}")
+            return f'<div class="missing">{m.group(1)}</div>'
+        svg = path.read_text()
         svg = re.sub(r"<\?xml[^>]*>", "", svg)
         cls = m.group(2) or ""
         return svg.replace("<svg", f'<svg class="{cls}"', 1) if cls else svg
@@ -145,13 +152,15 @@ def build(brand):
     return out
 
 
+# Run with the viewport as wide as the A4 text block (210 - 2 x 16 mm = 178 mm = 673 px):
+# anything wider makes Chromium shrink every page of the PDF to fit.
 CHECK_JS = r"""() => {
   const out = [];
   const text = document.body.innerText;
   if (/—/.test(text)) out.push('contains an em dash');
-  const W = document.documentElement.clientWidth;
-  document.querySelectorAll('body *').forEach(el => {
-    if (el.closest('svg') || el.closest('.crop')) return;
+  const W = 673;
+  document.querySelectorAll('.doc *').forEach(el => {
+    if (el.closest('svg') && el.tagName !== 'svg') return;
     const r = el.getBoundingClientRect();
     if (r.width && r.right > W + 1) out.push(`wider than the page: "${(el.innerText || el.tagName).trim().slice(0, 60)}"`);
   });
@@ -167,7 +176,7 @@ def render(html, pdf):
             browser = p.chromium.launch(**opts)
         except Exception:
             browser = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")
-        page = browser.new_page()
+        page = browser.new_page(viewport={"width": 673, "height": 1000})
         page.goto(html.as_uri())
         page.evaluate("document.fonts.ready")
         page.emulate_media(media="print")

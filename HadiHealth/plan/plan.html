@@ -1,0 +1,540 @@
+<!-- Hadi Health, piano industriale. Text here, look in theme.css, numbers in model.py, referred to by name in double braces. -->
+
+<!-- ─────────────── Copertina ─────────────── -->
+<section class="cover">
+  <svg-inline src="brand/logo-endorsed-reversed.svg" class="logo"></svg-inline>
+  <div class="map" data-map="italy" data-on="{{map_regions}}">{{cover_pins}}</div><!--/map-->
+  <div class="words">
+    <div class="kicker">Piano industriale · Ottobre 2026</div>
+    <h1>Meno tempo tra il dato e la decisione.</h1>
+    <p class="sub">Software per le aziende sanitarie e le regioni italiane: Frankura per il percorso oncologico, VIS Pharma Compass per la spesa farmaceutica.</p>
+    <div class="rule"></div>
+    <p class="meta"><strong>Documento riservato, per investitori e partner.</strong><br>
+      Fondazione bioERGOtech ETS · Taranto e Zurigo · info@bioergotech.org</p>
+  </div>
+</section>
+
+<div class="doc">
+
+<!-- ─────────────── Sintesi ─────────────── -->
+<section class="chapter" style="break-before:auto">
+  <div class="kicker">Sintesi</div>
+  <h1>Hadi Health in una pagina</h1>
+  <p class="lede">Hadi Health è l'iniziativa con cui la Fondazione bioERGOtech porta il proprio software nelle aziende sanitarie e nelle regioni. Vende e gestisce due prodotti che hanno lo stesso acquirente: <strong>Frankura</strong>, che prepara i casi oncologici per i gruppi multidisciplinari, e <strong>VIS Pharma Compass</strong>, che mostra dove la spesa farmaceutica può reagire prima.</p>
+
+  <div class="quote">Lavoriamo sul tempo che passa tra i dati che un ospedale o una regione hanno già e la decisione che ne segue. La Fondazione bioERGOtech individua dove quel tempo si perde; Hadi Health porta il software che lo accorcia. La decisione resta a chi ne risponde, e l'effetto si misura prima e dopo, in ore e in euro.</div>
+
+  <div class="grid four">
+    <div class="stat"><div class="big">{{vco_hours}}<small> ore</small></div><p>di lavoro medico liberate ogni anno all'ASL VCO dai moduli A, B e C di Frankura, pari a {{vco_value}}.</p></div>
+    <div class="stat"><div class="big">{{vis_prudent}}</div><p>di valore annuo, scenario prudenziale ({{vis_minimum}} nel minimo), stimato da VIS sui dati reali delle quattro ASL abruzzesi.</p></div>
+    <div class="stat"><div class="big">{{net_entities}}<small> enti</small></div><p>nella nostra rete: {{net_beta}} beta tester e {{net_direct}} contatti diretti in {{net_regions_touched}} regioni, territori con {{net_pop}} di residenti.</p></div>
+    <div class="stat accent"><div class="big">{{net_total_hi}}</div><p>valore annuo potenziale dei due prodotti in quei territori, scenario prudenziale ({{net_total_lo}} nel minimo).</p></div>
+  </div>
+
+  <div class="grid two" style="margin-top:7mm">
+    <div class="card tint">
+      <div class="label">Dove siamo</div>
+      <ul class="small">
+        <li><strong>Frankura:</strong> accordo di pilot firmato con l'ASL VCO sul percorso oncologico, dalla visita al gruppo interdisciplinare.</li>
+        <li><strong>VIS Pharma Compass:</strong> prototipo funzionante su {{vis_records}} record di erogazione delle quattro ASL abruzzesi; beta test con ASL Caserta e ASL Salerno.</li>
+        <li>A giugno 2026: circa {{signed}} di contratti firmati e circa {{pipeline}} di pipeline in fase avanzata.</li>
+        <li>Hadi Health è oggi un progetto della Fondazione, non ancora una società.</li>
+      </ul>
+    </div>
+    <div class="card dark">
+      <div class="label">Cosa cerchiamo</div>
+      <ul class="small">
+        <li><strong>Enti</strong> che adottino i prodotti partendo da un'analisi diagnostica o da un pilot misurato.</li>
+        <li><strong>Partner industriali e tecnologici</strong> per l'integrazione con i sistemi ospedalieri e la distribuzione.</li>
+        <li><strong>Partner clinici e scientifici</strong> per la validazione e il percorso di marcatura CE di Frankura.</li>
+        <li><strong>Partner finanziari</strong> con cui costituire la società e sostenerne i primi tre anni.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">I valori economici sono stime costruite su misure fatte con due enti e su dati pubblici. Metodo e ipotesi sono nel capitolo 7 e in appendice.</p>
+</section>
+
+<!-- ─────────────── 01 La storia ─────────────── -->
+<section class="chapter">
+  <div class="kicker">01 · La storia</div>
+  <h1>Dal team ai progetti che accettiamo</h1>
+  <p>La Fondazione bioERGOtech è nata a Taranto nell'aprile 2025 e lavora tra Taranto e Zurigo. Il team riunisce ingegneri biomedici, biostatistici, clinici, giuristi ed economisti. Non partiamo da una tecnologia: partiamo da una persona che ha un problema, ne risponde e non riesce a risolverlo con il tempo e i dati che ha davanti.</p>
+  <p>Guardando i progetti che abbiamo accettato, il filo comune non è la pianificazione delle terapie, che molti dichiarano di fare. È il tempo. Ospedali e regioni possiedono già gran parte dei dati che servono per decidere, ma li leggono tardi. Un oncologo ricopia la storia clinica dalla scheda di accoglienza a quella del gruppo multidisciplinare. Una nota di credito dei registri AIFA scade prima di essere richiesta. Un biosimilare è disponibile da mesi, ma la spesa resta sul farmaco originatore. In ciascun caso il dato esiste; manca il tempo per trasformarlo in una decisione.</p>
+
+  <h2>La frase che unisce Fondazione e Hadi Health</h2>
+  <div class="quote" style="margin-top:3mm">Lavoriamo sul tempo che passa tra i dati che un ospedale o una regione hanno già e la decisione che ne segue. La Fondazione bioERGOtech individua dove quel tempo si perde; Hadi Health porta il software che lo accorcia, con Frankura nei gruppi oncologici multidisciplinari e con VIS Pharma Compass nella spesa farmaceutica. La decisione resta a chi ne risponde, e l'effetto si misura prima e dopo, in ore e in euro.
+    <span class="src">In breve: <strong>Meno tempo tra il dato e la decisione.</strong> In inglese: <strong>Less time between data and decision.</strong></span></div>
+
+  <h2>Tre criteri per accettare un progetto</h2>
+  <div class="crit">
+    <div><h3>Il problema ha un responsabile</h3><p>Un clinico, un farmacista o un dirigente lo vive ogni giorno, ce lo porta e resta titolare della decisione. Il software la prepara, non la sostituisce.</p></div>
+    <div><h3>I dati esistono già</h3><p>Lavoriamo sui flussi e sui sistemi che l'ente usa oggi. Non chiediamo di produrre dati nuovi: rendiamo leggibili in tempo quelli che oggi arrivano tardi.</p></div>
+    <div><h3>Il ritardo si misura</h3><p>Prima e dopo l'intervento, in ore di lavoro e in euro, con numeri che il committente può verificare. Se l'effetto non si può misurare, non lo proponiamo.</p></div>
+  </div>
+
+  <h2>Due ruoli distinti</h2>
+  <div class="grid two">
+    <div class="card">
+      <div class="label">Fondazione bioERGOtech ETS</div>
+      <ul class="small">
+        <li>Individua i bisogni con chi li vive: medici, farmacisti, direzioni.</li>
+        <li>Fa ricerca e validazione scientifica, pubblica i risultati.</li>
+        <li>Cura la rete clinica, la formazione e i progetti finanziati.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="label">Hadi Health</div>
+      <ul class="small">
+        <li>Porta i prodotti fino all'uso quotidiano negli enti.</li>
+        <li>Firma i contratti con aziende sanitarie e regioni e ne risponde.</li>
+        <li>Gestisce conformità (GDPR, MDR, AI Act), assistenza e misura dell'effetto.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small" style="margin-top:4mm">Una fondazione del Terzo settore può svolgere attività commerciali solo in via secondaria e strumentale (D.Lgs. 117/2017, art. 6). Vendere e gestire software clinico per enti pubblici richiede una struttura d'impresa, con responsabilità contrattuali, assicurative e di certificazione proprie. Hadi Health è quella struttura: oggi un progetto della Fondazione, domani una società. <strong>Hadi</strong>, in arabo, significa guida. Una guida conosce la strada e accorcia il cammino; la meta la sceglie chi viaggia.</p>
+</section>
+
+<!-- ─────────────── 02 Il problema ─────────────── -->
+<section class="chapter">
+  <div class="kicker">02 · Il problema</div>
+  <h1>Lo stesso acquirente, due ritardi</h1>
+  <p class="lede">Le aziende sanitarie e le regioni pagano sia il tempo dei clinici sia i farmaci. In entrambi i casi hanno già i dati, ma li usano in ritardo.</p>
+
+  <div class="grid two">
+    <div>
+      <h2 style="margin-top:0">La spesa farmaceutica supera il tetto in ogni regione</h2>
+      <p>Nel 2025 la spesa per acquisti diretti delle strutture pubbliche (farmaci di classe A e H, al netto dei payback) è stata di <strong>{{italy_net}}</strong>, pari al {{italy_share}} del fondo sanitario nazionale contro un tetto dell'8,30%. Lo sforamento è di <strong>{{italy_overrun}}</strong> e nessuna regione rientra nel tetto. La Campania ha lo sforamento maggiore in euro, {{campania_overrun}}.</p>
+      <p>Molte opportunità di risparmio sono già nei dati che l'azienda produce: le scadenze brevettuali, i biosimilari disponibili, le note di credito dei registri AIFA. Il problema è il ritardo con cui l'organizzazione le vede e reagisce.</p>
+    </div>
+    <div>
+      <h2 style="margin-top:0">Il tempo dei medici finisce nella documentazione</h2>
+      <p>In Italia si stimano circa <strong>{{italy_cases}}</strong> nuove diagnosi di tumore all'anno, seguite da {{italy_units}} unità di oncologia medica. Tra il 2012 e il 2022 i posti letto pubblici di oncologia medica sono scesi da 5.262 a 4.159.</p>
+      <p>Ogni nuovo paziente passa dal Centro Accoglienza e Servizi (CAS) al Gruppo Interdisciplinare di Cure (GIC), e ogni passaggio richiede di ricopiare e riassumere dati che esistono già. All'ASL VCO questo lavoro vale <strong>{{vco_hours}} ore</strong> di medico all'anno che si possono liberare: circa sette mesi di un medico a tempo pieno.</p>
+    </div>
+  </div>
+
+  <h2>Le regioni della rete: spesa in percentuale del fondo sanitario, 2025</h2>
+  <div class="grid side" style="align-items:center">
+    <div>{{bars_share}}
+      <div class="key"><span><i class="hi"></i>Entro il tetto dell'8,30%</span><span><i class="lo"></i>Oltre il tetto</span></div>
+    </div>
+    <p class="small">Acquisti diretti di farmaci di classe A e H al netto dei payback, sul fondo sanitario di ciascuna regione (AIFA, consuntivo 2025). Accanto a ogni barra lo sforamento in euro. Tutte le {{regions_above}} regioni in cui abbiamo un interlocutore superano il tetto, da Lombardia a Sardegna.</p>
+  </div>
+
+  <h2>Perché adesso</h2>
+  <div class="grid three">
+    <div class="card"><h3>Le regole sono chiare</h3><p>La legge 132/2025 sull'intelligenza artificiale, in vigore dal 10 ottobre 2025, stabilisce all'art. 7 che in sanità l'IA è di supporto e la decisione resta al medico. È il principio su cui sono costruiti entrambi i prodotti.</p></div>
+    <div class="card"><h3>I medici la usano già</h3><p>Secondo l'Osservatorio Sanità Digitale del Politecnico di Milano il 61% degli specialisti usa l'IA generativa, quasi sempre su piattaforme generaliste. Gli enti hanno bisogno di strumenti conformi, dentro i loro sistemi.</p></div>
+    <div class="card"><h3>Il PNRR finisce</h3><p>Un terzo delle strutture pubbliche teme di ridimensionare i progetti digitali dopo il PNRR, e la metà indica le risorse limitate come primo ostacolo. Servono strumenti che si ripaghino nel bilancio corrente.</p></div>
+  </div>
+</section>
+
+<!-- ─────────────── 03 Frankura ─────────────── -->
+<section class="chapter">
+  <div class="kicker">03 · Frankura</div>
+  <h1>Frankura: il percorso oncologico, preparato</h1>
+  <p class="lede">Frankura lavora sopra il software che l'ospedale usa già e segue il paziente dalla prima visita al referto del gruppo multidisciplinare. Non sostituisce il giudizio clinico: lo prepara e lo struttura.</p>
+
+  <div class="steps">
+    <div><div class="t">Modulo A</div><h3>La visita</h3><p>Registra la visita CAS e ambulatoriale e compila la scheda nella cartella oncologica.</p></div>
+    <div><div class="t">Modulo B</div><h3>Dal CAS al GIC</h3><p>Trasferisce la storia clinica nella scheda GIC, senza ricopiature e senza dati mancanti.</p></div>
+    <div><div class="t">Modulo C</div><h3>La sintesi del caso</h3><p>Una pagina con le opzioni indicate dalle linee guida AIOM ed ESMO. Il gruppo la conferma, la modifica o la respinge.</p></div>
+    <div><div class="t">Modulo D</div><h3>Il referto</h3><p>Referti standard e interoperabili (FSE 2.0, HL7 FHIR, PDF/A) per il medico di famiglia.</p></div>
+    <div><div class="t">Modulo E</div><h3>La comunicazione</h3><p>Rende visibile il lavoro della struttura a medici di famiglia, reti e bandi.</p></div>
+  </div>
+
+  <h2>Il caso dell'ASL VCO</h2>
+  <div class="grid side">
+    <div>
+      <p>L'ASL VCO gestisce ogni anno {{vco_cas}} schede CAS, {{vco_visits}} visite oncologiche e {{vco_gic}} casi discussi nei GIC. Con un costo orario del personale medico di {{vco_hourly}}, i moduli A, B e C liberano le ore indicate nella tabella. Ogni modulo si attiva da solo. I moduli D ed E portano benefici di qualità e di reputazione che non abbiamo quantificato.</p>
+      <p>Con l'ASL VCO abbiamo firmato un accordo di pilot; il referente è il dott. Mario Franchini, Direttore della SOC Oncologia. Nel pilot misuriamo queste grandezze prima e dopo l'installazione.</p>
+    </div>
+    <table class="data modules">
+      <thead><tr><th>Modulo</th><th>Ore/anno</th><th>Valore/anno</th></tr></thead>
+      <tbody>{{vco_modules}}</tbody>
+      <tfoot><tr><td>Totale</td><td>{{vco_hours}} h</td><td>{{vco_value}}</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="grid three" style="margin-top:6mm">
+    <div class="card tint"><div class="label">Per chi</div><p>Direzione sanitaria, oncologia e rete oncologica regionale. La Rete Oncologica del Piemonte e della Valle d'Aosta conta 36 CAS e 283 GIC: una sola rete offre decine di punti di installazione con lo stesso percorso.</p></div>
+    <div class="card tint"><div class="label">Prezzo</div><p>Licenza per ospedale da {{frk_low}} a {{frk_high}}, in base ai moduli attivati, alla dimensione della struttura e alle risorse necessarie, più un canone annuo di gestione.</p></div>
+    <div class="card tint"><div class="label">Dove si distingue</div><p>Le soluzioni più diffuse trascrivono la visita. Frankura prepara il lavoro del gruppo interdisciplinare, che è la parte più lunga del percorso e la più difficile da sostituire.</p></div>
+  </div>
+</section>
+
+<!-- ─────────────── 04 VIS ─────────────── -->
+<section class="chapter">
+  <div class="kicker">04 · VIS Pharma Compass</div>
+  <h1>VIS Pharma Compass: dove la spesa può reagire prima</h1>
+  <p class="lede">VIS Pharma Compass è uno strumento di analisi in sola lettura per la direzione di farmacia, la direzione sanitaria e il servizio farmaceutico regionale. Riconcilia acquisti ed erogazioni con il bilancio, segnala scadenze brevettuali e biosimilari non usati, confronta le aziende della stessa regione e recupera le note di credito dei registri AIFA non richieste in tempo.</p>
+
+  <div class="quote">Il valore non sta nel produrre un'informazione che non esiste, ma nel ridurre il ritardo con cui l'organizzazione reagisce a un'opportunità che esiste già.<span class="src">VIS Pharma Compass, Descrizione del prodotto</span></div>
+
+  <h2>Il caso dell'Abruzzo</h2>
+  <div class="grid side">
+    <div>
+      <p>Il prototipo funziona su dati reali delle quattro Aziende Sanitarie abruzzesi: {{vis_records}} record di erogazione, {{vis_perimeter}} di spesa annua. Non c'è un contratto: è una verifica fatta sui loro dati. Il referente regionale è il dott. Alberto Costantini, Dirigente del Servizio Assistenza Farmaceutica.</p>
+      <p>La tabella riporta il valore annuo per fase, nello scenario prudenziale. Lo scenario minimo è la metà, {{vis_minimum}}. In più, VIS restituisce all'attività di governo {{vis_days}} giornate di lavoro dei farmacisti all'anno ({{vis_hours}} ore): poco più di tre mesi di un dirigente farmacista a tempo pieno.</p>
+      <p>VIS non è un dispositivo medico: non interviene su decisioni relative al singolo paziente e non sostituisce il gestionale di farmacia né la cartella clinica.</p>
+    </div>
+    <table class="data stages">
+      <thead><tr><th>Fase</th><th>Valore/anno</th></tr></thead>
+      <tbody>{{vis_stages}}</tbody>
+      <tfoot><tr><td>Totale prudenziale</td><td>{{vis_prudent}}</td></tr></tfoot>
+    </table>
+  </div>
+
+  <h2>Listino</h2>
+  <table class="data prices">
+    <thead><tr><th>Voce</th><th>Azienda singola</th><th>Configurazione regionale</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Analisi diagnostica</strong><span>Tre settimane sui dati dell'ente: quadratura, lista delle opportunità in euro, relazione di metodo</span></td><td>{{vis_diagnostic}}</td><td>{{vis_diagnostic}}</td></tr>
+      <tr><td><strong>Cruscotto e radar scadenze (M1+M2)</strong></td><td>{{vis_asl_m12}}/anno</td><td></td></tr>
+      <tr><td><strong>Con registri, File F e flussi (M1+M2+M3)</strong></td><td>{{vis_asl_m123}}/anno</td><td></td></tr>
+      <tr><td><strong>Configurazione completa</strong><span>In regione comprende il confronto fra Aziende (M6)</span></td><td>{{vis_asl_full}}/anno</td><td>{{vis_reg_base}}/anno più {{vis_reg_per}} per azienda</td></tr>
+      <tr><td><strong>Attivazione, una tantum</strong></td><td>{{vis_asl_activation}}</td><td>{{vis_reg_act}} più {{vis_reg_act_per}} per azienda</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Il prezzo è per modulo e per perimetro, non per utente. Il canone è fisso, fatturato a trimestre posticipato. Al sesto mese si verificano gli indicatori concordati: se non sono raggiunti, l'ente recede senza oneri. Il rischio per l'ente è limitato al canone di un semestre.</p>
+</section>
+
+<!-- ─────────────── 05 Un cliente, due prodotti ─────────────── -->
+<section class="chapter">
+  <div class="kicker">05 · Un cliente, due prodotti</div>
+  <h1>Perché Frankura e VIS stanno nella stessa impresa</h1>
+  <p class="lede">I due prodotti risolvono problemi diversi, ma per lo stesso ente, con lo stesso metodo e con le stesse regole sui dati. Ogni contratto apre la porta all'altro prodotto.</p>
+  <table class="data">
+    <thead><tr><th style="width:30mm"></th><th>Frankura</th><th>VIS Pharma Compass</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Chi compra</strong></td><td>Direzione generale e sanitaria dell'ASL o dell'ospedale; rete oncologica regionale</td><td>Direzione generale dell'ASL; servizio farmaceutico regionale</td></tr>
+      <tr><td><strong>Chi lo usa</strong></td><td>Oncologi, componenti dei GIC, personale del CAS</td><td>Farmacisti, controllo di gestione, direzione sanitaria</td></tr>
+      <tr><td><strong>Dati di partenza</strong></td><td>Cartella oncologica, schede CAS e GIC, referti</td><td>Flussi di acquisto ed erogazione, registri AIFA, bilancio</td></tr>
+      <tr><td><strong>Effetto misurato</strong></td><td>Ore di lavoro medico liberate per paziente</td><td>Euro di spesa e giorni di reazione, per opportunità</td></tr>
+      <tr><td><strong>Qualificazione</strong></td><td>Moduli A, B e D gestionali; modulo C da trattare come dispositivo medico</td><td>Non è un dispositivo medico</td></tr>
+      <tr><td><strong>Prezzo</strong></td><td>Licenza da {{frk_low}} a {{frk_high}} per ospedale, più canone</td><td>Da {{vis_asl_m12}} a {{vis_asl_full}} l'anno per azienda; regione da {{vis_reg_base}}</td></tr>
+      <tr><td><strong>Stato</strong></td><td>Accordo di pilot firmato con l'ASL VCO</td><td>Prototipo sui dati delle quattro ASL abruzzesi; beta test a Caserta e Salerno</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid three" style="margin-top:7mm">
+    <div class="card"><h3>Un solo quadro sui dati</h3><p>L'ente resta titolare del trattamento e Hadi Health agisce come responsabile (GDPR, art. 28). Elaborazione nell'Unione Europea o nel data center dell'ente, registro degli accessi, restituzione dei dati a fine contratto senza costi di uscita.</p></div>
+    <div class="card"><h3>Un solo percorso d'acquisto</h3><p>Lo stesso ufficio acquisti, la stessa valutazione d'impatto, le stesse soglie del codice dei contratti. Il secondo prodotto costa all'ente molto meno tempo amministrativo del primo.</p></div>
+    <div class="card"><h3>Un ponte naturale</h3><p>Il modulo M5 di VIS misura gli sprechi di allestimento dei farmaci oncologici. Oncologia e farmacia guardano gli stessi pazienti da due lati: la farmacia che adotta VIS conosce già l'oncologia che adotterà Frankura, e viceversa.</p></div>
+  </div>
+
+  <h2>Un esempio: l'ASL Salerno con entrambi i prodotti</h2>
+  <div class="grid four">
+    <div class="stat"><div class="big">{{sal_pop}}</div><p>residenti; circa {{sal_patients}} nuovi pazienti oncologici e {{sal_spend}} di spesa farmaceutica all'anno, stimati.</p></div>
+    <div class="stat"><div class="big">{{asl_salerno_vis_hi}}</div><p>valore annuo di VIS nello scenario prudenziale, {{asl_salerno_vis_lo}} nel minimo.</p></div>
+    <div class="stat"><div class="big">{{asl_salerno_frk}}</div><p>valore annuo di Frankura, pari a {{asl_salerno_frk_h}} di lavoro medico.</p></div>
+    <div class="stat accent"><div class="big">{{sal_cost_first}}</div><p>il costo per l'ASL nel primo anno, {{sal_cost_after}} dal secondo, a fronte di un valore da {{sal_value_lo}} a {{sal_value_hi}} l'anno.</p></div>
+  </div>
+  <p class="note">VIS in configurazione completa per azienda singola ({{vis_asl_full}} l'anno più {{vis_asl_activation}} di attivazione); Frankura con una licenza da {{frk_mid}} e un canone del {{frk_fee_share}} dal secondo anno. Stime con il metodo del capitolo 7.</p>
+</section>
+
+<!-- ─────────────── 06 La rete ─────────────── -->
+<section class="chapter">
+  <div class="kicker">06 · La rete</div>
+  <h1>Chi conosciamo, e dove</h1>
+  <p class="lede">Abbiamo {{net_entities}} interlocutori in {{net_regions_touched}} regioni, che possiamo raggiungere senza intermediari: {{net_beta}} beta tester e {{net_direct}} contatti diretti. Sono {{net_regions}} regioni, {{net_asl}} aziende sanitarie e {{net_hospitals}} ospedali.</p>
+  <div class="grid" style="grid-template-columns: 104mm 1fr; align-items:start; gap:7mm">
+    <div class="map" data-map="italy" data-on="{{map_regions}}">{{map_pins}}</div><!--/map-->
+    <div>
+      <div class="map-legend">
+        <div><i class="pin beta" style="position:static;margin:0">1</i> Beta tester</div>
+        <div><i class="pin" style="position:static;margin:0">4</i> Contatto diretto</div>
+        <div><span class="sw"></span> Regione con un referente regionale</div>
+      </div>
+      <div class="stat" style="margin-top:8mm"><div class="big">{{net_pop}}</div><p>residenti nei territori della rete, il {{net_pop_share}} della popolazione italiana.</p></div>
+      <div class="stat" style="margin-top:6mm"><div class="big">{{net_spend}}</div><p>di spesa farmaceutica annua nei territori della rete (AIFA 2025, lordo).</p></div>
+      <div class="stat" style="margin-top:6mm"><div class="big">3 + 12</div><p>tre enti provano i prodotti oggi; gli altri dodici li conosciamo e li possiamo coinvolgere da subito.</p></div>
+      <p class="map-credit" style="margin-top:8mm">Confini: ISTAT, via openpolis (CC BY 4.0). I punti delle regioni sono posti all'interno del territorio regionale; quelli di ASL e ospedali sulla città.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="kicker">06 · La rete</div>
+  <h1>Gli enti, uno per uno</h1>
+  <p style="margin-bottom:4mm">I ruoli dei referenti sono quelli pubblicati dagli enti a ottobre 2026. Dove l'ente non ha ancora indicato un prodotto, proponiamo entrambi.</p>
+  {{table_network}}
+</section>
+
+<!-- ─────────────── 07 Quanto vale ─────────────── -->
+<section class="chapter">
+  <div class="kicker">07 · Quanto vale</div>
+  <h1>Quanto possono risparmiare i nostri clienti</h1>
+  <p>Partiamo da due misure fatte sul campo, una per prodotto, e le portiamo sugli altri territori con un dato pubblico che ne spiega la scala.</p>
+  <div class="grid two method">
+    <div class="card">
+      <div class="label">VIS Pharma Compass: la spesa</div>
+      <p>In Abruzzo il valore prudenziale è di {{vis_prudent}} su {{vis_perimeter}} di spesa: <strong>{{vis_per_million_prudent}} per ogni milione di euro di spesa</strong> ({{vis_per_million_minimum}} nel minimo). Applichiamo questo rapporto alla spesa farmaceutica 2025 di ciascuna regione (AIFA, classi A, H e C, al lordo dei payback). Per un'azienda sanitaria usiamo la quota della regione in proporzione ai residenti.</p>
+    </div>
+    <div class="card">
+      <div class="label">Frankura: i pazienti</div>
+      <p>All'ASL VCO il valore è di {{vco_value}} su {{vco_cas}} nuovi pazienti oncologici: <strong>{{frk_per_patient}} e {{frk_hours_per_patient}} ore di medico per paziente</strong>. Applichiamo questi valori ai nuovi casi di tumore di ciascuna regione (AIRTUM). Verifica: l'ASL VCO registra {{vco_cas_rate}} schede CAS ogni 1.000 residenti, il Piemonte {{piemonte_rate}} nuovi casi ogni 1.000.</p>
+    </div>
+  </div>
+  <h2>Valore annuo per ente</h2>
+  {{table_value}}
+  <p class="note">In evidenza il prodotto in discussione con ciascun ente. ASL VCO (Frankura) e Regione Abruzzo (VIS) sono le misure di partenza; gli altri valori sono stime arrotondate.</p>
+</section>
+
+<section class="chapter">
+  <div class="kicker">07 · Quanto vale</div>
+  <h1>Il valore della rete e dell'Italia</h1>
+  <p>Nei grafici ogni territorio compare una sola volta: le ASL di una regione che è già nella rete sono comprese nel valore della regione, e gli ospedali non sono sommati. Così i totali non contano due volte lo stesso euro. Per un ospedale il valore dipende dai suoi volumi: Frankura vale circa {{frk_per_1000}} e {{frk_hours_per_1000}} ore di medico l'anno ogni 1.000 nuovi pazienti oncologici.</p>
+  <div class="grid two" style="margin-top:5mm">
+    <div>
+      <h3>VIS Pharma Compass, valore annuo</h3>
+      {{bars_vis}}
+      <div class="key"><span><i class="lo"></i>Scenario minimo</span><span><i class="hi"></i>Fino allo scenario prudenziale</span></div>
+    </div>
+    <div>
+      <h3>Frankura, valore annuo e ore di medico</h3>
+      {{bars_frk}}
+    </div>
+  </div>
+
+  <div class="grid three" style="margin-top:9mm">
+    <div class="card tint stat"><div class="label">VIS nella rete</div><div class="big">{{net_vis_hi}}</div><p>all'anno nello scenario prudenziale, {{net_vis_lo}} nel minimo.</p></div>
+    <div class="card tint stat"><div class="label">Frankura nella rete</div><div class="big">{{net_frk}}</div><p>all'anno, pari a circa {{net_frk_hours}} ore di lavoro medico restituite alla clinica.</p></div>
+    <div class="card dark stat"><div class="label">Insieme</div><div class="big">{{net_total_hi}}</div><p>il valore annuo potenziale dei due prodotti nei territori della rete, scenario prudenziale; {{net_total_lo}} nel minimo.</p></div>
+  </div>
+
+  <h2>Su scala nazionale</h2>
+  <div class="grid two">
+    <div class="stat"><div class="big">{{italy_vis_min}} a {{italy_vis_prudent}}</div><p>all'anno: il valore di VIS sulla spesa farmaceutica italiana per acquisti diretti ({{italy_gross}} lordi nel 2025).</p></div>
+    <div class="stat"><div class="big">{{italy_frk}}</div><p>all'anno: il valore di Frankura su circa {{italy_cases}} nuove diagnosi, pari a {{italy_frk_hours}} ore di lavoro medico.</p></div>
+  </div>
+
+  <div class="callout" style="margin-top:7mm"><strong>Come leggere questi numeri.</strong> Sono ordini di grandezza, non offerte. La spesa di un'ASL calcolata sui residenti comprende anche quella delle aziende ospedaliere del suo territorio. I nuovi casi per regione sono le stime AIRTUM del 2019, le ultime pubblicate per regione; da allora il totale nazionale è cresciuto di circa il 5%, quindi la stima di Frankura è prudente. Il rapporto di VIS viene da una sola regione e quello di Frankura dai soli moduli A, B e C. Per ogni ente l'analisi diagnostica o il pilot sostituiscono la stima con i suoi numeri, prima di qualunque contratto.</div>
+</section>
+
+<!-- ─────────────── 08 Ricavi ─────────────── -->
+<section class="chapter">
+  <div class="kicker">08 · Modello di ricavo</div>
+  <h1>Come guadagniamo</h1>
+  <p class="lede">Canoni fissi e licenze, non quote del risparmio. Il valore per l'ente è un argomento a sostegno della decisione, non una parte del prezzo.</p>
+  <p>Proporre a un ente pubblico di pagare una quota del risparmio non ha oggi una base contabile né un precedente nella sanità italiana: il risparmio di un'azienda confluisce in gran parte nella posizione regionale, il bilancio non ha una voce per remunerarlo e servirebbe un certificatore indipendente. Per questo VIS ha un canone fisso con recesso al sesto mese, e Frankura una licenza per ospedale con un canone di gestione.</p>
+
+  <h2>Valore e canone, ente per ente</h2>
+  {{table_fees}}
+  <p class="note">Canoni VIS da listino, IVA esclusa. Per le ASL sotto 300.000 residenti la configurazione più adatta è M1+M2. Nello scenario minimo il valore supera il canone in ogni ente, da {{mult_min}} ({{mult_min_name}}) a {{mult_max}} ({{mult_max_name}}). In Abruzzo basta realizzare il {{vis_breakeven}} dello scenario prudenziale perché il servizio si ripaghi.</p>
+
+</section>
+
+<section class="chapter">
+  <div class="kicker">08 · Modello di ricavo</div>
+  <h1>Uno scenario per i primi tre anni</h1>
+  <p>Lo scenario è illustrativo: il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i beta tester diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. La licenza di Frankura vale {{frk_low}} all'ASL VCO e {{frk_mid}} negli altri centri; il canone annuo di gestione è il {{frk_fee_share}} della licenza, dall'anno successivo all'installazione.</p>
+  <div style="margin-top:6mm">{{bars_revenue}}
+    <div class="key"><span><i class="lo"></i>VIS Pharma Compass</span><span><i class="acc"></i>Frankura</span></div>
+  </div>
+  <div style="margin-top:7mm">{{table_scenario}}</div>
+  <p class="note">A fine 2029 i ricavi ricorrenti valgono circa {{rec_total}} l'anno ({{rec_vis}} da VIS, {{rec_frk}} dai canoni di Frankura). Il conto economico completo, con i costi di personale, infrastruttura e certificazione, sarà costruito con i partner al momento della costituzione della società.</p>
+</section>
+
+<!-- ─────────────── 09 Mercato ─────────────── -->
+<section class="chapter">
+  <div class="kicker">09 · Mercato e concorrenza</div>
+  <h1>Il mercato e chi c'è già</h1>
+  <div class="grid four">
+    <div class="stat"><div class="big">{{digital_2025}}</div><p>spesa italiana in sanità digitale nel 2025, +9% sul 2024 (Politecnico di Milano).</p></div>
+    <div class="stat"><div class="big">{{digital_structures}}</div><p>la parte spesa dalle strutture sanitarie nel 2024; {{digital_regions}} dalle regioni.</p></div>
+    <div class="stat"><div class="big">{{osmed_public}}</div><p>spesa farmaceutica delle strutture pubbliche nel 2025 (OsMed).</p></div>
+    <div class="stat"><div class="big">{{pnrr_m6}}</div><p>la Missione Salute del PNRR, che ha finanziato la digitalizzazione di cui i nostri prodotti si servono.</p></div>
+  </div>
+
+  <h2>VIS Pharma Compass</h2>
+  <table class="data">
+    <thead><tr><th style="width:42mm">Chi</th><th>Cosa fa</th><th style="width:60mm">Differenza</th></tr></thead>
+    <tbody>
+      <tr><td><strong>IQVIA Italia</strong><span>Farma360</span></td><td>Raccoglie i consumi di tutte le aziende della Regione Calabria e fornisce cruscotti di spesa, senza costi per la Regione (decreto 14885/2025).</td><td>Un concorrente a prezzo zero. VIS risponde con opportunità quantificate in euro per l'azienda e con un recesso al sesto mese.</td></tr>
+      <tr><td><strong>Maps Healthcare</strong><span>BI Health</span></td><td>Business intelligence per aziende sanitarie e regioni, forte nel Lazio. BI Health è stata acquisita da Maps nel 2026 per 3,7 milioni di euro.</td><td>Conferma che il segmento ha valore. VIS è costruito sul percorso farmaceutico, non su una piattaforma generale.</td></tr>
+      <tr><td><strong>Cineca ARNO, CliCon</strong></td><td>Banche dati di popolazione e analisi retrospettive per ASL e regioni, soprattutto a fini di studio.</td><td>VIS lavora nell'anno in corso, con allerte e proiezioni, per chi deve decidere.</td></tr>
+      <tr><td><strong>Strumenti pubblici</strong><span>AIFA OsMed, società regionali</span></td><td>Dati aggregati gratuiti e sistemi interni come LAZIOcrea.</td><td>Utili per il confronto nazionale, non per agire sulla singola azienda.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Frankura</h2>
+  <table class="data">
+    <thead><tr><th style="width:42mm">Chi</th><th>Cosa fa</th><th style="width:60mm">Differenza</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Trascrizione della visita</strong><span>Tandem Health, Microsoft Dragon Copilot, Nabla, Heidi, Corti con Dedalus, MioDottore</span></td><td>Ascoltano la visita e scrivono la nota. Tandem ha raccolto 100 milioni di dollari nel 2026; Corti è integrato nel software di Dedalus, tra i principali fornitori di cartelle cliniche ospedaliere in Italia.</td><td>Coprono il modulo A, che diventerà una funzione standard. Frankura punta sui moduli B e C, il lavoro per il GIC.</td></tr>
+      <tr><td><strong>Software per tumor board</strong><span>Roche navify, Siemens AI-Pathway Companion, GE CareIntellect, Microsoft con Oxford</span></td><td>Aggregano i dati del paziente per la discussione multidisciplinare; alcuni propongono passi successivi.</td><td>Costruiti su altri sistemi sanitari. Frankura segue il percorso CAS e GIC delle reti oncologiche italiane e le linee guida AIOM.</td></tr>
+      <tr><td><strong>Startup italiane</strong><span>ReportAId, Alfadocs</span></td><td>Strutturano referti o note, soprattutto in ambito privato e ambulatoriale.</td><td>Non coprono il percorso oncologico dall'accoglienza al referto del GIC.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ─────────────── 10 Come si compra ─────────────── -->
+<section class="chapter">
+  <div class="kicker">10 · Go-to-market</div>
+  <h1>Come un ente ci compra</h1>
+  <p class="lede">Ogni contratto parte da una prova sui dati dell'ente, rispetta le soglie del codice dei contratti e cresce dall'azienda alla regione.</p>
+  <div class="steps">
+    <div><div class="t">Passo 1</div><h3>La prova</h3><p>VIS: analisi diagnostica di tre settimane, {{vis_diagnostic}}, senza installazione. Frankura: pilot misurato prima e dopo, come all'ASL VCO.</p></div>
+    <div><div class="t">Passo 2</div><h3>L'azienda</h3><p>Contratto con la singola azienda per affidamento diretto, sotto la soglia di {{direct_award}} (D.Lgs. 36/2023, art. 50) calcolata sul valore complessivo.</p></div>
+    <div><div class="t">Passo 3</div><h3>La verifica</h3><p>Attivazione in novanta giorni. Al sesto mese si controllano gli indicatori concordati; se non sono raggiunti, l'ente recede senza oneri.</p></div>
+    <div><div class="t">Passo 4</div><h3>La regione</h3><p>Quando il perimetro cresce: procedura negoziata o accordo quadro regionale, con il confronto fra aziende come funzione centrale.</p></div>
+  </div>
+  <p class="note">Il ricorso ripetuto all'affidamento diretto verso lo stesso fornitore per restare sotto soglia è vietato. Presentiamo fin dall'offerta il percorso amministrativo corretto.</p>
+
+  <h2>L'ordine in cui procediamo</h2>
+  <div class="grid three">
+    <div class="card"><div class="label">2027</div><h3>Dai beta tester ai contratti</h3><p>ASL Caserta e ASL Salerno passano da beta test a contratto VIS; l'ASL VCO dal pilot alla licenza di Frankura. Analisi diagnostiche con AULSS 9, AUSL Modena e ASL Taranto.</p></div>
+    <div class="card"><div class="label">2028</div><h3>La prima regione</h3><p>Con due ASL campane attive e i dati abruzzesi già analizzati, proponiamo la configurazione regionale in Abruzzo o in Campania. Frankura si estende nella Rete Oncologica piemontese.</p></div>
+    <div class="card"><div class="label">2029</div><h3>La seconda regione</h3><p>Liguria e Puglia, dove abbiamo già un referente regionale o più enti nella rete. Gli ospedali privati accreditati della rete come clienti diretti.</p></div>
+  </div>
+
+  <h2>Come troviamo i clienti</h2>
+  <ul>
+    <li><strong>Contatti diretti</strong> con direttori generali, farmacisti e oncologi: sono i {{net_entities}} enti di questo piano.</li>
+    <li><strong>La rete della Fondazione</strong>: i consulenti, le società scientifiche, i progetti di ricerca con ospedali e università.</li>
+    <li><strong>Congressi di settore</strong> per farmacisti ospedalieri e oncologi, dove la misura fatta in un ente è l'argomento più forte per il successivo.</li>
+  </ul>
+</section>
+
+<!-- ─────────────── 11 Squadra ─────────────── -->
+<section class="chapter">
+  <div class="kicker">11 · Squadra e governance</div>
+  <h1>Chi siamo</h1>
+  <div class="people">
+    <div class="person"><img src="assets/photos/guido-putignano.jpg" alt="Guido Putignano"><h3>Guido Putignano</h3><div class="role">Fondatore e Presidente</div><p>Ingegnere biomedico, esperienze a ETH Zurigo, Harvard e MIT.</p></div>
+    <div class="person"><img src="assets/photos/domenica-leone.jpg" alt="Domenica Leone"><h3>Domenica Leone</h3><div class="role">COO</div><p>Avvocata. Segue organizzazione, aspetti legali e conformità.</p></div>
+    <div class="person"><img src="assets/photos/olufemi-olusola.jpg" alt="Olufemi Olusola"><h3>Olufemi Olusola</h3><div class="role">Technical lead</div><p>Biostatistico con dieci anni di esperienza.</p></div>
+    <div class="person"><img src="assets/photos/saria-miccoli.jpg" alt="Saria Miccoli"><h3>Saria Miccoli</h3><div class="role">Comunicazione</div><p>Designer. Cura l'identità visiva e la comunicazione.</p></div>
+    <div class="person"><img src="assets/photos/mario-tagarelli.jpg" alt="Mario Tagarelli"><h3>Mario Tagarelli</h3><div class="role">Economic manager</div><p>Segue finanza, bandi e rendicontazione.</p></div>
+  </div>
+  <h2>Consulenti</h2>
+  <div class="advisors">
+    <div class="advisor"><img src="assets/photos/daniela-marotto.jpg" alt="Daniela Marotto"><div><h3>Daniela Marotto</h3><p>Reumatologa, Collegio Reumatologi Italiani (CReI)</p></div></div>
+    <div class="advisor"><img src="assets/photos/pasquale-persico.jpg" alt="Pasquale Persico"><div><h3>Pasquale Persico</h3><p>Market access, Gilead Sciences</p></div></div>
+    <div class="advisor"><img src="assets/photos/roberto-de-ponti.jpg" alt="Roberto De Ponti"><div><h3>Roberto De Ponti</h3><p>Managing Director, 3B Future Health Fund</p></div></div>
+  </div>
+  <p class="note">Consiglio della Fondazione: Guido Putignano, Domenica Leone e Carmine Pisano.</p>
+
+  <h2>Le competenze che aggiungiamo</h2>
+  <div class="grid four">
+    <div class="card tint"><h3>Qualità e regolatorio</h3><p>Sistema qualità ISO 13485 e marcatura CE del modulo C di Frankura.</p></div>
+    <div class="card tint"><h3>Vendite alla PA</h3><p>Gare, accordi quadro e rapporti con le centrali d'acquisto regionali.</p></div>
+    <div class="card tint"><h3>Integrazione</h3><p>HL7 FHIR e connettori verso cartelle cliniche e gestionali di farmacia.</p></div>
+    <div class="card tint"><h3>Farmacia ospedaliera</h3><p>Un farmacista senior che accompagni le direzioni nell'uso di VIS.</p></div>
+  </div>
+
+  <h2>Governance</h2>
+  <div class="grid two">
+    <div><p>Oggi Hadi Health è un progetto della Fondazione bioERGOtech ETS, senza personalità giuridica propria. Il passo successivo è costituire una società che firmi i contratti, ne risponda e regga il percorso di certificazione di Frankura.</p></div>
+    <div><p>Il rapporto tra Fondazione e società sarà regolato da un accordo su proprietà intellettuale, uso dei dati e del nome. La Fondazione resta il luogo della ricerca e della validazione; la società quello dei prodotti e dei contratti. Struttura societaria e ingresso dei partner si definiscono insieme a loro.</p></div>
+  </div>
+</section>
+
+<!-- ─────────────── 12 Rischi ─────────────── -->
+<section class="chapter">
+  <div class="kicker">12 · Rischi</div>
+  <h1>Cosa può andare storto, e cosa facciamo</h1>
+  <table class="data">
+    <thead><tr><th style="width:52mm">Rischio</th><th>Come lo gestiamo</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Frankura come dispositivo medico</strong></td><td>Il modulo C propone le opzioni delle linee guida e rientra con ogni probabilità nella regola 11 del Regolamento (UE) 2017/745: lo trattiamo come dispositivo di classe IIa, con sistema qualità ISO 13485, valutazione clinica e organismo notificato. Come sistema di IA ad alto rischio, segue anche il Regolamento (UE) 2024/1689, con obblighi dal 2 agosto 2027. I moduli A, B e D organizzano dati e documenti e si possono adottare prima; una valutazione regolatoria formale confermerà questa lettura.</td></tr>
+      <tr><td><strong>Tempi degli acquisti pubblici</strong></td><td>Analisi diagnostica e affidamento diretto sotto soglia per partire; procedura negoziata o accordo quadro solo quando il perimetro cresce. Il recesso al sesto mese abbassa la soglia della decisione.</td></tr>
+      <tr><td><strong>Chi risparmia non è chi paga</strong></td><td>Il risparmio farmaceutico di un'azienda confluisce in buona parte nella posizione regionale. Per questo puntiamo alla configurazione regionale, dove chi paga e chi beneficia coincidono.</td></tr>
+      <tr><td><strong>Concorrenti grandi o gratuiti</strong></td><td>La trascrizione della visita diventerà una funzione standard dei software clinici, e in Calabria IQVIA offre il monitoraggio della spesa senza costi. Puntiamo dove la concorrenza è debole: la preparazione del GIC e le opportunità quantificate in euro per la singola azienda.</td></tr>
+      <tr><td><strong>Dati sanitari</strong></td><td>L'ente resta titolare; VIS lavora su dati aggregati, e dove serve il dettaglio la pseudonimizzazione è fatta all'origine. Elaborazione nell'Unione Europea o presso l'ente, registro degli accessi, documentazione per la valutazione d'impatto.</td></tr>
+      <tr><td><strong>Stime da confermare</strong></td><td>I valori di questo piano vengono da due misure e da dati pubblici. Ogni contratto parte da una prova sui dati dell'ente e da indicatori misurati prima e dopo.</td></tr>
+      <tr><td><strong>Persone chiave e società da costituire</strong></td><td>È il motivo per cui cerchiamo partner: per costituire la società, aggiungere competenze regolatorie e commerciali e distribuire le responsabilità su più persone.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ─────────────── 13 Partnership ─────────────── -->
+<section class="chapter">
+  <div class="kicker">13 · Partnership</div>
+  <h1>Le partnership che cerchiamo</h1>
+  <p class="lede">Non chiediamo un importo. Cerchiamo partner che portino ciò che ci manca per passare da due misure a decine di clienti.</p>
+  <div class="grid two">
+    <div class="card"><div class="label">Aziende sanitarie e regioni</div><h3>Adottare e misurare</h3><p>Un'analisi diagnostica o un pilot sui propri dati, con indicatori concordati prima di iniziare. In cambio, condizioni da primo cliente e un ruolo nella definizione dei prodotti.</p></div>
+    <div class="card"><div class="label">Partner industriali e tecnologici</div><h3>Integrare e distribuire</h3><p>Fornitori di cartella clinica, gestionali di farmacia e integratori di sistema: l'accesso ai dati in modo standard e un canale verso i loro clienti. In cambio, una funzione che i loro sistemi non hanno.</p></div>
+    <div class="card"><div class="label">Partner clinici e scientifici</div><h3>Validare</h3><p>IRCCS, reti oncologiche, università e società scientifiche per la valutazione clinica di Frankura e le pubblicazioni. È il lavoro naturale della Fondazione.</p></div>
+    <div class="card dark"><div class="label">Partner finanziari</div><h3>Costituire la società</h3><p>Fondi specializzati in salute e investitori industriali con cui costituire Hadi Health, sostenere i primi tre anni e il percorso di certificazione. Struttura e condizioni si definiscono insieme.</p></div>
+  </div>
+  <h2>Obiettivi per il 2027</h2>
+  <div class="grid two">
+    <ul class="small">
+      <li>Costituire la società con i partner e firmare l'accordo con la Fondazione.</li>
+      <li>Portare ASL Caserta e ASL Salerno dal beta test al contratto VIS.</li>
+      <li>Chiudere il pilot dell'ASL VCO con la misura prima e dopo e passare alla licenza.</li>
+    </ul>
+    <ul class="small">
+      <li>Svolgere almeno quattro analisi diagnostiche VIS in altri enti della rete.</li>
+      <li>Avviare il sistema qualità e la valutazione clinica del modulo C di Frankura.</li>
+      <li>Pubblicare i risultati dei pilot con la Fondazione.</li>
+    </ul>
+  </div>
+  <div class="callout" style="margin-top:8mm"><strong>Il primo passo è breve.</strong> Per un ente bastano tre settimane e {{vis_diagnostic}} per vedere, sui propri dati, quanto vale VIS. Per un partner basta un incontro su uno dei {{net_entities}} enti della rete.</div>
+</section>
+
+<!-- ─────────────── 14 Identità di marca ─────────────── -->
+<section class="chapter">
+  <div class="kicker">14 · Identità di marca</div>
+  <h1>Due proposte per Hadi Health</h1>
+  <p>Le due proposte condividono l'elemento della Fondazione: la linea lunga di bioERGOtech che termina con una mezza freccia, usata nella versione per i documenti con la dicitura «un'iniziativa della Fondazione bioERGOtech». La stessa linea chiude i titoli di questo piano. La proposta A dà a Hadi Health un'identità propria, con il verde e l'oro della bozza attuale; la proposta B la avvicina alla Fondazione, con il suo verde acqua e il suo blu.</p>
+
+  <div class="brand" style="margin-top:6mm">
+    <h2 style="margin-top:0">Proposta A: la H e la stella</h2>
+    <div class="stage light"><svg-inline src="brand-A/logo-endorsed.svg" class="endorsed"></svg-inline></div>
+    <div class="row">
+      <div class="stage dark-A"><svg-inline src="brand-A/logo-reversed.svg"></svg-inline></div>
+      <div class="stage tint-A"><svg-inline src="brand-A/logo-mark.svg" class="mark"></svg-inline></div>
+      <div class="stage light"><svg-inline src="brand-A/logo-mark-tile.svg" class="tile"></svg-inline></div>
+    </div>
+    <p class="small" style="margin-top:3mm">La H ha la traversa che diventa una freccia, con la stessa costruzione della t di bioERGOtech; la stella d'oro sopra è la guida. Scritta in Mulish, il carattere della Fondazione. Si distingue chiaramente da bioERGOtech e resta leggibile anche nelle dimensioni più ridotte.</p>
+  </div>
+
+  <div class="brand" style="margin-top:7mm">
+    <h2 style="margin-top:0">Proposta B: la h con la bandiera</h2>
+    <div class="stage light"><svg-inline src="brand-B/logo-endorsed.svg" class="endorsed"></svg-inline></div>
+    <div class="row">
+      <div class="stage dark-B"><svg-inline src="brand-B/logo-reversed.svg"></svg-inline></div>
+      <div class="stage tint-B"><svg-inline src="brand-B/logo-mark.svg" class="mark"></svg-inline></div>
+      <div class="stage light"><svg-inline src="brand-B/logo-mark-tile.svg" class="tile"></svg-inline></div>
+    </div>
+    <p class="small" style="margin-top:3mm">Minuscole come bioERGOtech, «hadi» nel verde acqua della Fondazione e «health» nel suo blu. La h porta in cima la mezza freccia, come una bandiera da guida; la stella d'oro sta sulla i. Si legge subito come parte della famiglia bioERGOtech.</p>
+  </div>
+  <p class="note">I file vettoriali completi (orizzontale, invertito, monocromatico, marchio, versione impilata e per documenti) sono in HadiHealth/brand/A e HadiHealth/brand/B.</p>
+</section>
+
+<!-- ─────────────── Appendice ─────────────── -->
+<section class="chapter">
+  <div class="kicker">Appendice</div>
+  <h1>Ipotesi e fonti</h1>
+  <h2 style="margin-top:6mm">Ipotesi</h2>
+  <ul class="small">
+    <li>Valore di VIS proporzionale alla spesa farmaceutica: {{vis_rate_prudent}} della spesa nello scenario prudenziale, {{vis_rate_minimum}} nel minimo, come in Abruzzo. Spesa regionale: AIFA 2025, acquisti diretti di classe A, H e C al lordo dei payback (Tab. 8.1).</li>
+    <li>Spesa e nuovi casi di un'ASL pari a quelli della regione in proporzione ai residenti (ISTAT, 1° gennaio 2025). Il territorio dell'ASL VCO comprende 81 comuni e {{vco_pop}} residenti.</li>
+    <li>Valore di Frankura proporzionale ai nuovi pazienti oncologici: {{frk_per_patient}} e {{frk_hours_per_patient}} ore per paziente, come all'ASL VCO (moduli A, B e C, {{vco_hourly}} l'ora).</li>
+    <li>Nuovi casi per regione: stime AIRTUM 2019, le più recenti pubblicate per regione. Totale nazionale: circa {{italy_cases}} (AIOM e AIRTUM, 2024 e 2025).</li>
+    <li>Configurazione regionale di VIS: tutte le ASL della regione; in Liguria le cinque aree dell'ATS. Le aziende ospedaliere non sono incluse.</li>
+    <li>Scenario di ricavo: numeri di clienti ipotizzati; licenza media di Frankura {{frk_mid}}; canone annuo di Frankura pari al {{frk_fee_share}} della licenza, ipotesi da validare.</li>
+  </ul>
+  <h2>Fonti</h2>
+  <ul class="sources">
+    <li>VIS Pharma Compass, Descrizione del prodotto e Percorso Euro Farmaceutico (documenti interni).</li>
+    <li>Proposta di progetto all'ASL VCO, versione 6, 1° giugno 2026 (documento interno).</li>
+    <li>Hadi Health, bozza di piano industriale, giugno 2026 (documento interno).</li>
+    <li>AIFA, Monitoraggio della spesa farmaceutica nazionale e regionale, gennaio a dicembre 2025, consuntivo. <span class="url">aifa.gov.it/documents/20142/3073807/Monitoraggio_Spesa_gennaio-dicembre-2025_consuntivo.pdf</span></li>
+    <li>AIFA, Rapporto OsMed 2025. <span class="url">aifa.gov.it/-/aifa-pubblica-rapporto-osmed-2025</span></li>
+    <li>ISTAT, popolazione residente al 1° gennaio 2025. <span class="url">demo.istat.it</span>; Ministero della Salute, corrispondenze ASL e comuni 2024. <span class="url">dati.salute.gov.it</span></li>
+    <li>AIRTUM e AIOM, I numeri del cancro in Italia, edizioni 2019, 2024 e 2025. <span class="url">aiom.it</span>; <span class="url">epicentro.iss.it/tumori/pdf/NC2019-operatori-web.pdf</span></li>
+    <li>Rete Oncologica Piemonte e Valle d'Aosta, elenchi CAS e GIC. <span class="url">reteoncologica.it</span></li>
+    <li>Osservatorio Sanità Digitale, Politecnico di Milano, edizioni 2025 e 2026.</li>
+    <li>Camera dei deputati, Risorse della Missione Salute del PNRR. <span class="url">temi.camera.it</span></li>
+    <li>Legge 23 settembre 2025, n. 132; D.Lgs. 36/2023; D.Lgs. 117/2017; Regolamenti (UE) 2017/745, 2024/1689 e 2025/327.</li>
+    <li>Ruoli dei referenti: siti istituzionali degli enti e atti pubblicati, consultati a ottobre 2026.</li>
+  </ul>
+  <p class="note">Il dettaglio di ogni numero, con la fonte e la data, è in HadiHealth/notes/facts-and-sources.md.</p>
+</section>
+
+</div>
