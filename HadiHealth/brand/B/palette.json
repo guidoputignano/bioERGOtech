@@ -1,0 +1,9 @@
+{
+ "primary": "#13D6B0",
+ "accent": "#DAA13C",
+ "ink": "#1A2332",
+ "dark": "#1A2332",
+ "light": "#E9F8F4",
+ "primary_dark": "#0C856E",
+ "notes": "primary is the teal sampled from the bioERGOtech logo, used for hadi, the mark and the line. primary_dark replaces it for the wordmark below about 24 px and in small headers (4.6:1 on white). Gold is used only for the star. ink is the navy of health and of text; dark is the same navy used as the reversed background."
+}

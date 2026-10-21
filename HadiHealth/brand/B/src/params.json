@@ -1,0 +1,124 @@
+{
+ "colours": {
+  "teal": "#13D6B0",
+  "teal_dark": "#0C856E",
+  "navy": "#1A2332",
+  "gold": "#DAA13C",
+  "light": "#E9F8F4",
+  "white": "#FFFFFF"
+ },
+ "hadi": {
+  "XH": 100,
+  "ASC": 136,
+  "W": 19,
+  "H": 17,
+  "R": 38,
+  "r": 17,
+  "BW": 92,
+  "NW": 86
+ },
+ "health": {
+  "W": 16,
+  "H": 14.5,
+  "r": 21
+ },
+ "pennant": {
+  "apex": 144,
+  "head": 34,
+  "line": 13,
+  "stub": 16
+ },
+ "kern": {
+  "ha": 12,
+  "ad": 11,
+  "di": 18,
+  "he": 13,
+  "ea": 10,
+  "al": 17,
+  "lt": 13,
+  "th": 13
+ },
+ "t_bar": [
+  9,
+  22
+ ],
+ "word_gap": 50,
+ "star": {
+  "r": 18,
+  "ry": 24,
+  "waist": 0.32,
+  "clear": 7,
+  "shift": 0
+ },
+ "margin": 12,
+ "endorsed": {
+  "gap": 16,
+  "text_size": 38,
+  "text_weight": 600,
+  "text_gap": 22,
+  "tracking": 0.2
+ },
+ "stacked": {
+  "gap": 36,
+  "SV": 8.4,
+  "SH": 7.6,
+  "RO_ratio": 0.33,
+  "track_ratio": 0.17,
+  "widths": {
+   "H": 0.74,
+   "E": 0.7,
+   "A": 0.8,
+   "L": 0.6,
+   "T": 0.72
+  },
+  "kern": {
+   "LT": -0.1,
+   "TH": -0.03,
+   "AL": -0.02
+  }
+ },
+ "mark": {
+  "W": 25,
+  "H": 22,
+  "R": 44,
+  "r": 19,
+  "NW": 96,
+  "apex": 160,
+  "head": 46,
+  "line": 17,
+  "stub": 19,
+  "star_r": 23,
+  "star_ry": 29,
+  "star_waist": 0.34,
+  "margin": 22,
+  "star_c": [
+   92,
+   -142
+  ]
+ },
+ "mark_small": {
+  "grid": 32,
+  "unit": 2,
+  "stem": [
+   3,
+   6
+  ],
+  "baseline": 15,
+  "x_height": 7,
+  "arch_right": 12,
+  "arch_stroke": 2.5,
+  "arch_R": 3.5,
+  "arch_r": 1.5,
+  "apex": 14,
+  "head": 5,
+  "line": 2,
+  "stub": 2,
+  "star_c": [
+   12.25,
+   4.1
+  ],
+  "star_r": 2.9,
+  "star_ry": 3.2,
+  "star_waist": 0.4
+ }
+}

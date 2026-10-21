@@ -1,0 +1,84 @@
+{
+  "_units": "The H of the mark is 100 units tall in 'mark' and in the lockups. 'mark_small' and 'tile' are drawn on a pixel grid: 32 units are 32 px. Kerning is in font units (1000 per em), keyed by the index of the letter it moves.",
+  "colours": {
+    "green": "#1A3825",
+    "gold": "#DAA13C",
+    "light": "#F2EEE3",
+    "light_ink": "#F2EEE3",
+    "white": "#FFFFFF",
+    "ink": "#1C2620",
+    "teal": "#2EC4B6"
+  },
+  "palette_notes": "Deep green for the mark and the words; gold only for the star and the bioERGOtech line; warm light for tinted pages and for the reversed artwork, which sits on the deep green. Ink is for running text.",
+  "mark": {
+    "stem": 19,
+    "bar": 16,
+    "bar_top": 28.5,
+    "counter": 46,
+    "star_cy": 0,
+    "star_rv": 21,
+    "star_rh": 13.5,
+    "star_w": 3.6
+  },
+  "mark_small": {
+    "grid": 32,
+    "x": 2,
+    "y": 10,
+    "height": 20,
+    "stem": 4,
+    "bar": 4,
+    "bar_top": 6,
+    "counter": 10,
+    "star_cy": -3,
+    "star_rv": 5,
+    "star_rh": 3.2,
+    "star_w": 1.1
+  },
+  "arrow_ratio": 2.78,
+  "optical_share": 0.3333,
+  "pad": 8,
+  "mark_pad": 8,
+  "tile": {
+    "grid": 32,
+    "radius": 0.2,
+    "x": 5,
+    "y": 11,
+    "height": 16,
+    "stem": 3,
+    "bar": 3,
+    "bar_top": 5,
+    "counter": 9,
+    "star_cy": -2.5,
+    "star_rv": 4,
+    "star_rh": 2.6,
+    "star_w": 0.9
+  },
+  "cap": 54,
+  "text_dy": 0,
+  "gap": 14,
+  "w_hadi": 800,
+  "w_health": 700,
+  "track": 0,
+  "wordspace": 230,
+  "kern_hadi": {
+    "3": -18
+  },
+  "kern_health": {
+    "4": 8
+  },
+  "line_colour": "gold",
+  "line_colour_dark": "gold",
+  "endorsed": {
+    "line": 8.5,
+    "line_dy": 0,
+    "edge_gap": 10,
+    "gap": 16,
+    "cap": 14,
+    "weight": 600
+  },
+  "stacked": {
+    "cap": 36,
+    "gap": 28,
+    "optical_share": 0
+  }
+}
