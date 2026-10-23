@@ -216,7 +216,7 @@ table.data td:first-child, table.data th:first-child { padding-left: 0; }
 table.data td.n { width: 8mm; }
 table.data .num, table.data.scenario td:not(:first-child), table.data.scenario th:not(:first-child),
 table.data.fees td:nth-child(n+3), table.data.fees th:nth-child(n+3), table.data.prices td:nth-child(n+2), table.data.prices th:nth-child(n+2),
-table.data.stages td:last-child, table.data.modules td:nth-child(n+2), table.data.modules th:nth-child(n+2) { text-align: right; white-space: nowrap; }
+table.data.stages td:last-child, table.data.market td:nth-child(n+2), table.data.market th:nth-child(n+2), table.data.modules td:nth-child(n+2), table.data.modules th:nth-child(n+2) { text-align: right; white-space: nowrap; }
 table.data td.focus { background: var(--tint-2); font-weight: 800; }
 table.data tr.group td { padding-top: 3.6mm; font-size: 7pt; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--primary-text); border-bottom: 0; }
 table.data tr.sub td { font-weight: 800; border-bottom: 0.4mm solid var(--ink-light); }

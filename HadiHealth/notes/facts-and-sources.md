@@ -52,7 +52,7 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 | All public aziende used for the regional VIS fee: Abruzzo 4, Campania 17 (7 ASL, AO/AORN, AOU, IRCCS Pascale), Piemonte 18 (12 ASL, 2 AO, 4 AOU), Puglia 10 (6 ASL, 2 AOU, 2 IRCCS), Liguria 8 (5 areas of ATS Liguria, San Martino, Gaslini, Galliera) | Ministero della Salute list of AO, AOU and public IRCCS (2022), corrected with regional sources (Piemonte list of 31 Aug 2026, ATS Liguria). Piemonte would be 19 counting OIRM; the status of Gaslini and Galliera after the Liguria reform is only partly verified |
 | New cancer cases by region (Piemonte 30,000; Lombardia 60,000; Veneto 32,000; Liguria 11,900; Emilia-Romagna 29,500; Abruzzo 8,300; Campania 32,500; Puglia 21,500; Sardegna 10,200) | AIRTUM, *I numeri del cancro in Italia 2019*, Tab. 25. The latest regional table; later editions give national totals only. https://www.epicentro.iss.it/tumori/pdf/NC2019-operatori-web.pdf |
 | About 390,000 new diagnoses a year | AIOM/AIRTUM, *I numeri del cancro* 2024 and 2025 |
-| 323 medical oncology units (2022); public oncology beds 5,262 (2012) to 4,159 (2022) | AIOM census reported by Milano Finanza (Oct 2022); LaPresse, 8 Nov 2024 |
+| Public oncology beds 5,262 (2012) to 4,159 (2022) | LaPresse, 8 Nov 2024 |
 | Rete Oncologica Piemonte e Valle d'Aosta: 36 CAS, 283 GIC | https://reteoncologica.it (retrieved Oct 2026) |
 | Digital health spend EUR 2.7bn in 2025 (+9%); 2024: structures EUR 1.79bn, Regions EUR 580M; 61% of specialists use generative AI; 33% of public structures fear post-PNRR cuts; 50% cite limited resources | Osservatorio Sanità Digitale, Politecnico di Milano, editions 2025 and 2026 |
 | PNRR Mission 6: EUR 15.63bn | Camera dei deputati, https://temi.camera.it/leg19/post/OCD15_14428/pnrr-risorse-missione-salute-m6.html |
@@ -67,6 +67,14 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 ## Team in the plan
 
 Guido Putignano, Mimma (Domenica) Leone, Margherita Basile, Olufemi Olusola, Federico Arangath Joseph and Saria Miccoli, as Guido chose in October 2026. Roles and lines follow `lib/team.ts` where it has them; Olufemi Olusola and Federico Arangath Joseph are shown as software developers. Federico's photo is the one Guido sent (cropped to match the others). Mario Tagarelli is not in the plan's team. Advisors unchanged; the Foundation's board line was removed at Guido's request. The Foundation is named only at the start of the plan (cover, summary, chapter 01).
+
+## The whole Italian market (chapter 08)
+
+| Figure | Source |
+|---|---|
+| 202 public aziende in Italy, October 2026: 106 ASL (Lombardy's 8 ATS included), 26 ASST, 70 AO, AOU and public IRCCS; per region in `model.py`, `AZIENDE_IT` | Ministry of Health, ASL dataset (`ASL_2010-2026.csv`, 23 Apr 2026) and AO/AOU/IRCCS dataset (entities at 1 Jan 2022), updated for later changes: Piemonte OIRM and AOU Alessandria (2024), Lombardy San Gerardo (2023), Marche AST (2023), Calabria Dulbecco (2023), Liguria L.R. 18/2025. Cross-check: CERGAS Bocconi, OASI 2025 (198 aziende, 206 with the ATS, before the Liguria reform). Not counted: regional agencies (Azienda Zero, ESTAR, ARES and similar) and Ospedale Galliera |
+| 347 medical oncology units, 301 public (2023) | AIOM, Libro bianco 2023 (units that answered the census; 323 in 2022, 278 public). The 2026 Annuario gives no unit count |
+| Full market at list prices: VIS in all 21 regional systems (single-azienda systems at the single-azienda price), Frankura in all 347 units at 100,000 licence and 20% yearly fee: 39.1 mln first year, 10.7 mln a year after | Computed in `model.py`, `full_market()`; Frankura licence and fee are the scenario assumptions |
 
 ## Contacts (public roles, October 2026)
 

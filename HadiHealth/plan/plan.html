@@ -107,7 +107,7 @@
     </div>
     <div>
       <h2 style="margin-top:0">Il tempo dei medici finisce nella documentazione</h2>
-      <p>In Italia si stimano circa <strong>{{italy_cases}}</strong> nuove diagnosi di tumore all'anno; nel 2022 le unità di oncologia medica attive erano {{italy_units}}. Tra il 2012 e il 2022 i posti letto pubblici di oncologia medica sono scesi da 5.262 a 4.159.</p>
+      <p>In Italia si stimano circa <strong>{{italy_cases}}</strong> nuove diagnosi di tumore all'anno; nel 2023 l'AIOM ha censito {{italy_units}} unità di oncologia medica, {{it_units_public}} delle quali pubbliche. Tra il 2012 e il 2022 i posti letto pubblici di oncologia medica sono scesi da 5.262 a 4.159.</p>
       <p>Nella Rete Oncologica del Piemonte e della Valle d'Aosta ogni nuovo paziente passa dal Centro Accoglienza e Servizi (CAS) al Gruppo Interdisciplinare Cure (GIC); le altre reti regionali hanno percorsi analoghi, spesso con nomi diversi. Ogni passaggio richiede di ricopiare e riassumere dati che esistono già. All'ASL VCO la proposta di progetto stima in <strong>{{vco_hours}}&nbsp;ore</strong> l'anno il lavoro medico che si può liberare.</p>
     </div>
   </div>
@@ -325,8 +325,25 @@
 
 <section class="chapter">
   <div class="kicker">08 · Modello di ricavo</div>
-  <h1>Uno scenario per i primi tre anni</h1>
-  <p>Lo scenario è illustrativo: il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i tre enti che lavorano con noi sui prototipi diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. Per Frankura assumiamo una licenza di {{frk_low}} all'ASL VCO e di {{frk_mid}} negli altri centri, entrambe nella fascia di prezzo. Il canone annuo, non ancora quantificato, è ipotizzato al {{frk_fee_share}} della licenza dall'anno successivo all'installazione.</p>
+  <h1>L'obiettivo: tutto il mercato italiano</h1>
+  <p class="lede">Nel 2027 vogliamo VIS in tutti i {{it_regions}} sistemi sanitari regionali e Frankura in tutte le oncologie italiane. Chi decide in nove regioni ci conosce già. A prezzi di listino, il mercato completo vale così.</p>
+  <div class="grid three" style="margin-top:6mm">
+    <div class="stat"><div class="big">{{it_regions}}</div><p>regioni e province autonome, ciascuna con la sua configurazione regionale di VIS.</p></div>
+    <div class="stat"><div class="big">{{it_aziende}}</div><p>aziende sanitarie pubbliche: ASL, ASST, aziende ospedaliere e universitarie, IRCCS pubblici.</p></div>
+    <div class="stat"><div class="big">{{it_units}}</div><p>unità di oncologia medica censite dall'AIOM, {{it_units_public}} delle quali pubbliche: i centri per Frankura.</p></div>
+  </div>
+  <div style="margin-top:7mm">{{table_market}}</div>
+  <div class="grid two" style="margin-top:7mm">
+    <div class="card dark stat"><div class="label">A regime</div><div class="big">{{it_recurring}}</div><p>di canoni ricorrenti ogni anno, dopo un primo anno da {{it_first}} tra canoni, attivazioni e licenze.</p></div>
+    <div class="card tint stat"><div class="label">Per il sistema sanitario</div><div class="big">{{it_value}}</div><p>il valore annuo dei due prodotti in Italia (capitolo 7): i canoni ne sono {{it_fee_share}}.</p></div>
+  </div>
+  <p class="note">Canoni VIS da listino: in ogni regione la configurazione completa su tutte le sue aziende pubbliche; Valle d'Aosta, Bolzano, Trento e Molise, con un'azienda sola, nella configurazione per azienda singola. Frankura con una licenza di {{frk_mid}} per oncologia e un canone del {{frk_fee_share}}, le stesse ipotesi dello scenario. Aziende al 2026 (Ministero della Salute, aggiornato con le riforme regionali successive); oncologie: AIOM, Libro bianco 2023, unità che hanno risposto al censimento.</p>
+</section>
+
+<section class="chapter">
+  <div class="kicker">08 · Modello di ricavo</div>
+  <h1>Il minimo: lo scenario prudente</h1>
+  <p>Accanto all'obiettivo teniamo uno scenario prudente, che il piano regge anche se l'adozione segue i tempi più lenti degli acquisti pubblici. Il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i tre enti che lavorano con noi sui prototipi diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. Per Frankura assumiamo una licenza di {{frk_low}} all'ASL VCO e di {{frk_mid}} negli altri centri, entrambe nella fascia di prezzo. Il canone annuo, non ancora quantificato, è ipotizzato al {{frk_fee_share}} della licenza dall'anno successivo all'installazione.</p>
   <div style="margin-top:6mm">{{bars_revenue}}
     <div class="key"><span><i class="lo"></i>VIS Pharma Compass</span><span><i class="acc"></i>Frankura</span></div>
   </div>
@@ -384,7 +401,7 @@
   <div class="grid three">
     <div class="card"><div class="label">Primo trimestre</div><h3>La società e i primi contratti</h3><p>Costituiamo Hadi Health. L'ASL Caserta e l'ASL Salerno passano dalla prova al contratto VIS; l'ASL VCO, con l'approvazione regionale, avvia Frankura. Analisi diagnostiche in tutti gli enti della rete.</p></div>
     <div class="card"><div class="label">Secondo trimestre</div><h3>Le regioni della rete</h3><p>Configurazione regionale di VIS nelle cinque regioni in cui abbiamo un referente: Campania, Piemonte, Abruzzo, Puglia e Liguria. Frankura nella Rete Oncologica del Piemonte e della Valle d'Aosta.</p></div>
-    <div class="card dark"><div class="label">Secondo semestre</div><h3>Tutte le regioni</h3><p>Una proposta, con analisi diagnostica, a ciascuna delle {{it_regions}} regioni e province autonome. Frankura nelle reti oncologiche regionali e negli ospedali privati accreditati.</p></div>
+    <div class="card dark"><div class="label">Secondo semestre</div><h3>Tutte le regioni</h3><p>VIS in ciascuna delle {{it_regions}} regioni e province autonome, partendo da un'analisi diagnostica. Frankura nelle reti oncologiche regionali e negli ospedali privati accreditati.</p></div>
   </div>
   <p class="note">Nel 2028 e nel 2029 completiamo le installazioni avviate e attiviamo in ogni ente i moduli che non ha ancora.</p>
 
@@ -467,7 +484,7 @@
     </ul>
     <ul class="small">
       <li>Frankura nella Rete Oncologica del Piemonte e della Valle d'Aosta e nelle reti oncologiche delle altre regioni della rete.</li>
-      <li>Entro la fine dell'anno, una proposta a ciascuna delle {{it_regions}} regioni e province autonome.</li>
+      <li>Entro la fine dell'anno, VIS in tutte le {{it_regions}} regioni e province autonome e Frankura nelle loro reti oncologiche.</li>
       <li>Una squadra commerciale e tecnica in grado di servire tutte le regioni.</li>
     </ul>
   </div>
@@ -484,7 +501,7 @@
     <li>Spesa e nuovi casi di un'ASL pari a quelli della regione in proporzione ai residenti (ISTAT, 1° gennaio 2025). Il territorio dell'ASL VCO comprende 81 comuni e {{vco_pop}} residenti.</li>
     <li>Valore di Frankura proporzionale ai nuovi pazienti oncologici: {{frk_per_patient}} e {{frk_hours_per_patient}} ore per paziente, come all'ASL VCO (moduli A, B e C, {{vco_hourly}} l'ora).</li>
     <li>Nuovi casi per regione: stime AIRTUM 2019, le più recenti pubblicate per regione. Totale nazionale: circa {{italy_cases}} (AIOM e AIRTUM, 2024 e 2025).</li>
-    <li>Configurazione regionale di VIS: tutte le aziende sanitarie pubbliche della regione (ASL, aziende ospedaliere, AOU e IRCCS pubblici), perché la loro spesa rientra nel dato AIFA su cui si calcola il valore: 4 in Abruzzo, 17 in Campania, 18 in Piemonte, 10 in Puglia; in Liguria le cinque aree sociosanitarie di ATS Liguria, l'azienda sanitaria unica regionale dal 1° gennaio 2026, e tre enti ospedalieri.</li>
+    <li>Configurazione regionale di VIS: tutte le aziende sanitarie pubbliche della regione (ASL, aziende ospedaliere, AOU e IRCCS pubblici), perché la loro spesa rientra nel dato AIFA su cui si calcola il valore: 4 in Abruzzo, 17 in Campania, 19 in Piemonte, 10 in Puglia, 3 in Liguria (ATS Liguria, l'azienda sanitaria unica dal 1° gennaio 2026, e due IRCCS); {{it_aziende}} in Italia.</li>
     <li>Scenario di ricavo: numeri di clienti ipotizzati; licenza di Frankura {{frk_mid}} per centro ({{frk_low}} all'ASL VCO); canone annuo di Frankura pari al {{frk_fee_share}} della licenza, ipotesi da validare.</li>
   </ul>
   <h2>Fonti</h2>

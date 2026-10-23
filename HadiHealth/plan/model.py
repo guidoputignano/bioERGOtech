@@ -79,12 +79,22 @@ FRK_LICENCE_LOW, FRK_LICENCE_HIGH = 50_000, 150_000
 
 ITALY_POP = 58_943_464
 IT_REGIONS = 21                        # 19 regions and 2 autonomous provinces
+
+# Public aziende per region and autonomous province, October 2026: ASL (Lombardy: ATS), ASST,
+# AO, AOU and public IRCCS, counted as legal entities. Ministry of Health ASL list (23 Apr 2026)
+# and AO/AOU/IRCCS list (1 Jan 2022), updated for later changes; total 202.
+AZIENDE_IT = {
+    "Piemonte": 19, "Valle d'Aosta": 1, "Lombardia": 39, "PA Bolzano": 1, "PA Trento": 1,
+    "Veneto": 12, "Friuli Venezia Giulia": 5, "Liguria": 3, "Emilia-Romagna": 13, "Toscana": 7,
+    "Umbria": 4, "Marche": 7, "Lazio": 17, "Abruzzo": 4, "Molise": 1, "Campania": 17,
+    "Puglia": 10, "Basilicata": 4, "Calabria": 8, "Sicilia": 18, "Sardegna": 11,
+}
 ITALY_GROSS = 18_172_057_828           # AIFA Tab. 8.1, A+H+C
 ITALY_NET = 16_002_381_144             # AIFA Tab. 10.2 col. F
 ITALY_OVERRUN = 4_767_097_229
 ITALY_SHARE = 11.82                    # % of the national health fund, ceiling 8.30
 ITALY_CASES = 390_000                  # AIOM/AIRTUM, 2024 and 2025 estimate
-ITALY_ONCOLOGY_UNITS = 323             # AIOM census 2022
+ITALY_ONCOLOGY_UNITS = 347             # AIOM Libro bianco 2023: units surveyed, 301 of them public
 OSMED_PUBLIC = 18.9e9                  # OsMed 2025, spending by public structures
 DIGITAL_2025 = 2.7e9                   # Osservatorio Sanità Digitale, Politecnico di Milano
 DIGITAL_STRUCTURES_2024 = 1.79e9
@@ -93,12 +103,12 @@ PNRR_M6 = 15.63e9
 
 # region: residents, AIFA gross A+H+C, AIFA net, overrun, share of fund (%),
 # AIRTUM new cases (2019), local health authorities, and all public aziende (ASL, AO, AOU, public
-# IRCCS; Liguria: the five areas of ATS Liguria and three hospital bodies) for the regional VIS fee
+# IRCCS, as in AZIENDE_IT) for the regional VIS fee
 REGIONS = {
-    "Piemonte":       dict(pop=4_251_868, gross=1_287_449_936, net=1_130_640_079, overrun=309_984_195, share=11.44, cases=30_000, asl=12, aziende=18),
+    "Piemonte":       dict(pop=4_251_868, gross=1_287_449_936, net=1_130_640_079, overrun=309_984_195, share=11.44, cases=30_000, asl=12, aziende=19),
     "Lombardia":      dict(pop=10_033_918, gross=2_648_140_584, net=2_293_417_057, overrun=398_494_112, share=10.05, cases=60_000, asl=8),
     "Veneto":         dict(pop=4_853_472, gross=1_390_677_804, net=1_212_340_327, overrun=288_194_889, share=10.89, cases=32_000, asl=9),
-    "Liguria":        dict(pop=1_510_143, gross=523_897_951, net=461_207_494, overrun=156_327_398, share=12.56, cases=11_900, asl=5, aziende=8),
+    "Liguria":        dict(pop=1_510_143, gross=523_897_951, net=461_207_494, overrun=156_327_398, share=12.56, cases=11_900, asl=5, aziende=3),
     "Emilia-Romagna": dict(pop=4_461_998, gross=1_501_605_526, net=1_329_665_571, overrun=477_921_059, share=12.96, cases=29_500, asl=8),
     "Abruzzo":        dict(pop=1_269_118, gross=426_873_171, net=376_863_878, overrun=132_719_590, share=12.81, cases=8_300, asl=4, aziende=4),
     "Campania":       dict(pop=5_582_337, gross=1_919_583_965, net=1_726_801_651, overrun=677_669_792, share=13.66, cases=32_500, asl=7, aziende=17),
@@ -206,7 +216,7 @@ def vis_fee(e):
         if e["name"] == "Regione Abruzzo":
             return VIS_REG_ABRUZZO_FULL, "Regione, 4 ASL, tutti i moduli"
         n = REGIONS[e["region"]]["aziende"]
-        what = "5 aree e 3 enti ospedalieri" if e["region"] == "Liguria" else f"{n} aziende"
+        what = f"{n} aziende"
         return VIS_REG_BASE + VIS_REG_PER_AZIENDA * n, f"Regione, {what}, tutti i moduli"
     if e["kind"] == "asl":
         if e["pop"] < 300_000:
@@ -403,6 +413,37 @@ def bars_revenue(y):
             f'<b class="acc" style="width:{100 * v["frk"] / top:.1f}%"></b></span>'
             f'<span class="val">{eur(v["total"])}</span></div>')
     return '<div class="hbars revenue">' + "".join(out) + "</div>"
+
+
+def full_market():
+    """The whole Italian market at list prices: VIS in every regional health system, over all its
+    public aziende (a single-azienda system takes the single-azienda configuration), and Frankura
+    in every oncology unit at the scenario's licence and fee."""
+    fee = act = 0
+    for n in AZIENDE_IT.values():
+        if n > 1:
+            fee += VIS_REG_BASE + n * VIS_REG_PER_AZIENDA
+            act += VIS_REG_ACT_BASE + n * VIS_REG_ACT_PER_AZIENDA
+        else:
+            fee += VIS_ASL_FULL
+            act += VIS_ASL_ACTIVATION
+    lic = ITALY_ONCOLOGY_UNITS * FRK_LICENCE_MID
+    frk_fee = FRK_FEE_SHARE * lic
+    return dict(vis_fee=fee, vis_act=act, frk_lic=lic, frk_fee=frk_fee,
+                first=fee + act + lic, recurring=fee + frk_fee, aziende=sum(AZIENDE_IT.values()))
+
+
+def table_market(m):
+    rows = [
+        (f"VIS Pharma Compass<span>{num(IT_REGIONS)} configurazioni regionali, {num(m['aziende'])} aziende sanitarie pubbliche</span>",
+         m["vis_fee"] + m["vis_act"], m["vis_fee"]),
+        (f"Frankura<span>{num(ITALY_ONCOLOGY_UNITS)} unità di oncologia medica, licenza e canone annuo</span>",
+         m["frk_lic"], m["frk_fee"]),
+    ]
+    body = "".join(f"<tr><td><strong>{a.split('<span>')[0]}</strong><span>{a.split('<span>')[1]}</td><td>{mln(b)}</td><td>{mln(c)}</td></tr>" for a, b, c in rows)
+    return ('<table class="data market"><thead><tr><th>Prodotto</th><th>Primo anno<span>canoni, attivazioni e licenze</span></th>'
+            '<th>Ogni anno dopo<span>canoni ricorrenti</span></th></tr></thead><tbody>' + body +
+            f'</tbody><tfoot><tr><td>Totale</td><td>{mln(m["first"])}</td><td>{mln(m["recurring"])}</td></tr></tfoot></table>')
 
 
 # ---------------------------------------------------------------- scenario
@@ -615,6 +656,15 @@ def compute():
              sal_pop=num(sal["pop"]), sal_patients=num(round(patients(sal), -1)),
              sal_spend=mln(spend(sal), 0))
     v["table_scenario"] = table_scenario(y)
+    m = full_market()
+    v["table_market"] = table_market(m)
+    v.update(it_aziende=num(m["aziende"]), it_first=mln(m["first"]), it_recurring=mln(m["recurring"]),
+             it_vis_fee=mln(m["vis_fee"]), it_frk_lic=mln(m["frk_lic"]), it_units=num(ITALY_ONCOLOGY_UNITS),
+             it_units_public=num(301))
+    value_lo = ITALY_GROSS * VIS_RATE_MINIMUM + ITALY_CASES * FRK_PER_PATIENT
+    value_hi = ITALY_GROSS * VIS_RATE_PRUDENT + ITALY_CASES * FRK_PER_PATIENT
+    v["it_value"] = span(mln(value_lo, 0), mln(value_hi, 0))
+    v["it_fee_share"] = span(pct(100 * m["recurring"] / value_hi, 0), pct(100 * m["recurring"] / value_lo, 0))
     for k in y:
         v[f"rev_{k}"] = eur(y[k]["total"])
     v["rec_vis"], v["rec_frk"], v["rec_total"] = eur(rec_vis), eur(rec_frk), eur(rec_vis + rec_frk)
