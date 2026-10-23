@@ -24,6 +24,7 @@
   --dark-2: #234A31;
   --on-dark-mid: #C9D6CC;
   --accent: #DAA13C;
+  --series-2: #DAA13C;     /* second chart series, validated against the green line */
   --map-fill: #EEF0EA;
   --map-on: #DCE8DF;
 }
@@ -38,7 +39,8 @@
   --dark: #1A2332;
   --dark-2: #243049;
   --on-dark-mid: #C9D2DD;
-  --accent: #DAA13C;
+  --accent: #13D6B0;       /* the teal of the bioERGOtech logo */
+  --series-2: #3F63A8;     /* second chart series: a blue that passes the colour-blind checks with the teal */
   --map-fill: #F1F4F8;
   --map-on: #DDF3EE;
 }
@@ -94,10 +96,9 @@ svg { display: block; }
   overflow: hidden;
   break-after: page;
 }
-.cover .logo { position: absolute; left: 20mm; top: 22mm; width: 96mm; height: auto; }
-.cover .logo-type { position: absolute; left: 20mm; top: 22mm; font-size: 30pt; font-weight: 800; letter-spacing: -0.01em; line-height: 1; color: #fff; }
-.cover .logo-type span { display: block; margin-top: 3mm; font-size: 9pt; font-weight: 600; letter-spacing: 0; color: var(--on-dark-mid); }
-[data-brand="B"] .cover .logo { width: 82mm; }
+.cover .cover-logo { position: absolute; left: 20mm; top: 22mm; }
+.cover .cover-logo svg { display: block; width: 84mm; height: auto; }
+.cover .cover-logo span { display: block; margin-top: 4mm; font-size: 9pt; font-weight: 600; color: var(--on-dark-mid); }
 .cover .map { position: absolute; right: 8mm; top: 54mm; width: 112mm; }
 .cover .map > svg path { fill: var(--dark-2); stroke: var(--dark); stroke-width: 1.4; }
 .cover .map > svg path.on { fill: var(--dark-2); stroke: var(--line); stroke-width: 2.2; }
@@ -244,11 +245,11 @@ table.data .who { max-width: 52mm; }
 .hbar .track b:last-child { border-radius: 0 1mm 1mm 0; }
 .hbar .track .lo, .hbar .track .one { background: var(--line); }
 .hbar .track .hi { background: var(--line-soft); }
-.hbar .track .acc { background: var(--accent); }
+.hbar .track .acc { background: var(--series-2); }
 .hbars.share .hbar { grid-template-columns: 30mm 1fr 34mm; }
 .hbars.revenue .hbar { grid-template-columns: 12mm 1fr 26mm; font-size: 9pt; }
 .hbars.revenue .track { height: 7mm; }
-.key .acc { background: var(--accent); }
+.key .acc { background: var(--series-2); }
 .hbar .track .one { border-radius: 0.6mm 1mm 1mm 0.6mm; }
 .hbar .val { color: var(--ink); font-weight: 800; white-space: nowrap; text-align: right; }
 .hbar .val small { font-weight: 600; color: var(--ink-light); margin-left: 1.6mm; font-size: 7.6pt; }

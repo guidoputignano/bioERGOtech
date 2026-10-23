@@ -9,8 +9,8 @@ plan.html refers to model values as {{name}}; build.py fills them from
 model.compute(), so a figure is written once and stays the same everywhere.
 
 Output, next to this file:
-    business-plan-A.html / .pdf   proposal A (Hadi palette)
-    business-plan-B.html / .pdf   proposal B (bioERGOtech palette)
+    business-plan-A.html / .pdf   Hadi green and gold, logo 11 in its original colours
+    business-plan-B.html / .pdf   bioERGOtech teal and navy, logo 11 variant 11.3
 
 --pdf needs Playwright. It uses the Chromium Playwright installed, or the one
 named in $CHROMIUM.
@@ -29,6 +29,10 @@ ROOT = PLAN.parent
 ASSETS = PLAN / "assets"
 sys.path.insert(0, str(PLAN))
 import model  # noqa: E402
+
+# The logo of each version: logo 11 ("the North Seal") in the version's colours.
+# The variants and their comparison sheet are built by HadiHealth/brand/seal/src/variants.py.
+LOGO = {"A": "10-verde-oro", "B": "3-come-bioergotech"}
 
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
         ".webp": "image/webp", ".svg": "image/svg+xml", ".ttf": "font/ttf"}
@@ -49,7 +53,7 @@ def resolve(name, brand):
     """assets/x is shared; brand/x is the file of the chosen proposal, HadiHealth/brand/<A|B>/x;
     brand-A/x and brand-B/x name one proposal explicitly (the brand chapter shows both)."""
     if name.startswith("brand/"):
-        return ROOT / "brand" / brand / name[len("brand/"):]
+        return ROOT / "brand" / "seal" / "variants" / LOGO[brand] / name[len("brand/"):]
     if name.startswith(("brand-A/", "brand-B/")):
         return ROOT / "brand" / name[6] / name[len("brand-A/"):]
     if name.startswith("assets/"):

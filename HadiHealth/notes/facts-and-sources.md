@@ -22,7 +22,8 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 | VIS total EUR 808,000 prudent, EUR 404,000 minimum | VIS-D §9.2 |
 | 71 pharmacist days, 497 h a year, "poco più di tre mesi" of a dirigente farmacista; declared hypotheses for a medium-sized structure | VIS-P (time section) |
 | Break-even: 13.0% of the prudent case for the regional M1+M2+M3+M8 configuration (105,000); 19.7% for the full configuration (159,000), computed | VIS-D §9.6 |
-| Not a medical device; read-only. Module status: M1, M2, M6 in esercizio; M3, M4, M5, M8 in rilascio; M7 in sviluppo | VIS-D cover, §3.1, §5 |
+| VIS: not a medical device; read-only. Module status: M1, M2, M6 in esercizio; M3, M4, M5, M8 in rilascio; M7 in sviluppo | VIS-D cover, §3.1, §5 |
+| Frankura: not a medical device; it prepares and organises information, the tumour board decides. The plan has no MDR or CE marking section | Guido, 23 October 2026 |
 | Price list (M1 to M8, 72,000 full single ASL, 135,000 + 6,000 per azienda regional, activation 6,000 or 15,000 + 2,000, diagnostic 9,000) | VIS-D §9.3, §9.4 |
 | 140,000 direct-award threshold on the total value; no artificial splitting | VIS-D §9.5 (D.Lgs. 36/2023 art. 50) |
 | Value/fee 2.5x to 5.1x for Abruzzo, all modules, fee 159,000 | VIS-D §9.6 |
@@ -56,8 +57,6 @@ Neither is a before-and-after measurement yet. The VCO figures are the expected 
 | Digital health spend EUR 2.7bn in 2025 (+9%); 2024: structures EUR 1.79bn, Regions EUR 580M; 61% of specialists use generative AI; 33% of public structures fear post-PNRR cuts; 50% cite limited resources | Osservatorio Sanità Digitale, Politecnico di Milano, editions 2025 and 2026 |
 | PNRR Mission 6: EUR 15.63bn | Camera dei deputati, https://temi.camera.it/leg19/post/OCD15_14428/pnrr-risorse-missione-salute-m6.html |
 | Legge 132/2025 in force 10 Oct 2025, art. 7 | https://www.normattiva.it/eli/id/2025/09/25/25G00143/CONSOLIDATED |
-| AI Act obligations for high-risk AI in Annex I products (MDR devices included) from 2 Aug 2028; Annex III from 2 Dec 2027 | Regulation (EU) 2024/1689, art. 113, as amended by Regulation (EU) 2026/1744 (Digital Omnibus on AI, OJ 24 Jul 2026, in force 27 Jul 2026) |
-| MDR rule 11: decision-support software class IIa, IIb where decisions can cause serious deterioration (likely for oncology treatment options), III for death or irreversible deterioration | Regulation (EU) 2017/745, Annex VIII; MDCG 2019-11 |
 | ETS: "attività diverse" only if the statute allows them and they stay secondary and instrumental | D.Lgs. 117/2017, art. 6; D.M. 107/2021 |
 | Direct award below 140,000 on the estimated value of the whole contract; no artificial splitting; rotation principle | D.Lgs. 36/2023, art. 50, art. 14, art. 49 |
 | IQVIA Farma360 free of charge for Regione Calabria | Regione Calabria, decreto 14885 of 20 Oct 2025 |
@@ -118,5 +117,5 @@ add its value to AULSS 9's.
     agree to be named (the VIS documents anonymise the region). The plan names Abruzzo, as Guido agreed for the deck.
 7. VIS beta tests at ASL Caserta and ASL Salerno: a written confirmation (scope, data, start date) to cite.
 8. Who signs today: the plan says the counterparty is the Fondazione bioERGOtech ETS until the company exists.
-9. Regulatory reading of Frankura modules A, B and D (not a medical device) to be confirmed formally.
-10. The logo: the first two proposals were not retained; a new round of directions is in `brand/explore`.
+9. Frankura and the medical-device question: the plan follows Guido (not a medical device), while the website (`lib/programmes.ts`, Frankura entry) says the case-summary function falls under MDR Rule 11. Align the two before the plan circulates.
+10. Logo: number 11 ("the North Seal") is chosen. The colour is still open: plan A uses variant 11.10 (green and gold), plan B variant 11.3 ("Hadi" teal, "Health" navy); the ten variants are in `brand/seal`.

@@ -2,7 +2,7 @@
 
 <!-- ─────────────── Copertina ─────────────── -->
 <section class="cover">
-  <div class="logo-type">Hadi Health<span>un'iniziativa della Fondazione bioERGOtech</span></div>
+  <div class="cover-logo"><svg-inline src="brand/logo-reversed.svg" class="logo"></svg-inline><span>un'iniziativa della Fondazione bioERGOtech</span></div>
   <div class="map" data-map="italy" data-on="{{map_regions}}">{{cover_pins}}</div><!--/map-->
   <div class="words">
     <div class="kicker">Piano industriale · Ottobre 2026</div>
@@ -20,7 +20,7 @@
 <section class="chapter" style="break-before:auto">
   <div class="kicker">Sintesi</div>
   <h1>Hadi Health in una pagina</h1>
-  <p class="lede">Hadi Health è l'iniziativa con cui la Fondazione bioERGOtech porta il proprio software nelle aziende sanitarie e nelle regioni. Vende e gestisce due prodotti che hanno lo stesso acquirente: <strong>Frankura</strong>, che prepara i casi oncologici per i gruppi multidisciplinari, e <strong>VIS Pharma Compass</strong>, che mostra dove si può intervenire prima sulla spesa farmaceutica.</p>
+  <p class="lede">Hadi Health è l'iniziativa con cui la Fondazione bioERGOtech porta il proprio software nelle aziende sanitarie e nelle regioni. Vende e gestisce due prodotti che hanno lo stesso acquirente: <strong>Frankura</strong>, che prepara i casi oncologici per i gruppi multidisciplinari, e <strong>VIS Pharma Compass</strong>, che mostra dove si può intervenire prima sulla spesa farmaceutica. Il nostro obiettivo è portarli in tutte le regioni italiane nel 2027.</p>
 
   <div class="quote">Lavoriamo sul tempo che passa tra i dati che un ospedale o una regione hanno già e la decisione che ne segue.</div>
 
@@ -43,10 +43,10 @@
     <div class="card dark">
       <div class="label">Cosa cerchiamo</div>
       <ul class="small">
+        <li><strong>Prima di tutto, partner che ci aiutino a costituire l'entità legale</strong> di Hadi Health: capitale iniziale, struttura societaria e governance.</li>
         <li><strong>Enti</strong> che adottino i prodotti partendo da un'analisi diagnostica o da un progetto pilota con misure prima e dopo.</li>
         <li><strong>Partner industriali e tecnologici</strong> per l'integrazione con i sistemi ospedalieri e la distribuzione.</li>
-        <li><strong>Partner clinici e scientifici</strong> per la validazione e il percorso di marcatura CE di Frankura.</li>
-        <li><strong>Partner finanziari</strong> con cui costituire la società e sostenerne i primi tre anni.</li>
+        <li><strong>Partner clinici e scientifici</strong> per misurare l'effetto di Frankura sul campo e pubblicarne i risultati.</li>
       </ul>
     </div>
   </div>
@@ -86,11 +86,11 @@
       <ul class="small">
         <li>Porta i prodotti fino all'uso quotidiano negli enti.</li>
         <li>Una volta costituita la società, firmerà i contratti con aziende sanitarie e regioni e ne risponderà.</li>
-        <li>Gestisce conformità (GDPR, MDR, AI Act), assistenza e misura dell'effetto.</li>
+        <li>Gestisce protezione dei dati, sicurezza, assistenza e misura dell'effetto.</li>
       </ul>
     </div>
   </div>
-  <p class="small" style="margin-top:4mm">Un ente del Terzo settore può svolgere attività diverse da quelle di interesse generale solo se lo statuto lo consente e se restano secondarie e strumentali (D.Lgs. 117/2017, art. 6). Vendere e gestire software clinico per enti pubblici richiede una struttura d'impresa, con responsabilità contrattuali, assicurative e di certificazione proprie. Hadi Health è quella struttura: oggi un progetto della Fondazione, domani una società. Fino ad allora la controparte di contratti, analisi diagnostiche e progetti pilota è la Fondazione bioERGOtech ETS. <strong>Hadi</strong>, in arabo, significa guida. Una guida conosce la strada e accorcia il cammino; la meta la sceglie chi viaggia.</p>
+  <p class="small" style="margin-top:4mm">Un ente del Terzo settore può svolgere attività diverse da quelle di interesse generale solo se lo statuto lo consente e se restano secondarie e strumentali (D.Lgs. 117/2017, art. 6). Vendere e gestire software clinico per enti pubblici richiede una struttura d'impresa, con responsabilità contrattuali, assicurative e di sicurezza proprie. Hadi Health è quella struttura: oggi un progetto della Fondazione, domani una società. Fino ad allora la controparte di contratti, analisi diagnostiche e progetti pilota è la Fondazione bioERGOtech ETS. <strong>Hadi</strong>, in arabo, significa guida. Una guida conosce la strada e accorcia il cammino; la meta la sceglie chi viaggia.</p>
 </section>
 
 <!-- ─────────────── 02 Il problema ─────────────── -->
@@ -209,7 +209,7 @@
       <tr><td><strong>Chi lo usa</strong></td><td>Oncologi, componenti dei GIC, personale del CAS</td><td>Farmacisti, controllo di gestione, direzione sanitaria</td></tr>
       <tr><td><strong>Dati di partenza</strong></td><td>Cartella oncologica, schede CAS e GIC, referti</td><td>Flussi di acquisto ed erogazione, registri AIFA, bilancio</td></tr>
       <tr><td><strong>Effetto da misurare</strong></td><td>Ore di lavoro medico liberabili per paziente</td><td>Euro di spesa e giorni di reazione, per opportunità</td></tr>
-      <tr><td><strong>Qualificazione</strong></td><td>Modulo C da trattare come dispositivo medico; per i moduli A, B e D la lettura come non dispositivi va confermata con una valutazione regolatoria</td><td>Non è un dispositivo medico</td></tr>
+      <tr><td><strong>Qualificazione</strong></td><td>Non è un dispositivo medico: prepara e organizza le informazioni, la decisione resta al gruppo multidisciplinare</td><td>Non è un dispositivo medico</td></tr>
       <tr><td><strong>Prezzo</strong></td><td>Licenza da {{frk_low}} a {{frk_high}} per ospedale, più canone</td><td>Da {{vis_asl_m12}} a {{vis_asl_full}} l'anno per azienda; regione da {{vis_reg_base}}</td></tr>
       <tr><td><strong>Stato</strong></td><td>Prototipo sviluppato con l'ASL VCO; progetto pilota in attesa dell'approvazione regionale</td><td>Prototipo sui dati delle quattro ASL abruzzesi; prova in corso a Caserta e Salerno</td></tr>
     </tbody>
@@ -326,12 +326,12 @@
 <section class="chapter">
   <div class="kicker">08 · Modello di ricavo</div>
   <h1>Uno scenario per i primi tre anni</h1>
-  <p>Lo scenario è illustrativo: il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i tre enti che lavorano con noi sui prototipi diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. Per Frankura assumiamo una licenza di {{frk_low}} all'ASL VCO e di {{frk_mid}} negli altri centri, entrambe nella fascia di prezzo. Il canone annuo, non ancora quantificato, è ipotizzato al {{frk_fee_share}} della licenza dall'anno successivo all'installazione. Fino alla marcatura CE del modulo C le licenze comprendono gli altri moduli: all'ASL VCO i moduli A e B liberano da soli, secondo la stima, {{vco_hours_ab}}&nbsp;ore l'anno, pari a {{vco_value_ab}}.</p>
+  <p>Lo scenario è illustrativo: il numero di clienti è un'ipotesi, i prezzi sono quelli di listino. Ipotizziamo che i tre enti che lavorano con noi sui prototipi diventino clienti nel 2027, che una regione adotti VIS nel 2028 e una seconda nel 2029, e che Frankura arrivi a {{scenario_centres}} centri oncologici in tre anni. Per Frankura assumiamo una licenza di {{frk_low}} all'ASL VCO e di {{frk_mid}} negli altri centri, entrambe nella fascia di prezzo. Il canone annuo, non ancora quantificato, è ipotizzato al {{frk_fee_share}} della licenza dall'anno successivo all'installazione.</p>
   <div style="margin-top:6mm">{{bars_revenue}}
     <div class="key"><span><i class="lo"></i>VIS Pharma Compass</span><span><i class="acc"></i>Frankura</span></div>
   </div>
   <div style="margin-top:7mm">{{table_scenario}}</div>
-  <p class="note">A fine 2029 i ricavi ricorrenti ammontano a circa {{rec_total}} l'anno ({{rec_vis}} da VIS, {{rec_frk}} dai canoni di Frankura). Il conto economico completo, con i costi di personale, infrastruttura e certificazione, sarà costruito con i partner al momento della costituzione della società.</p>
+  <p class="note">A fine 2029 i ricavi ricorrenti ammontano a circa {{rec_total}} l'anno ({{rec_vis}} da VIS, {{rec_frk}} dai canoni di Frankura). Il conto economico completo, con i costi di personale, infrastruttura e sicurezza, sarà costruito con i partner al momento della costituzione della società.</p>
 </section>
 
 <!-- ─────────────── 09 Mercato ─────────────── -->
@@ -380,12 +380,13 @@
   </div>
   <p class="note">Il frazionamento artificioso dell'appalto per restare sotto soglia è vietato (D.Lgs. 36/2023, art. 14) e il principio di rotazione (art. 49) limita gli affidamenti diretti ripetuti allo stesso operatore economico: se analisi diagnostica e contratto vanno allo stesso operatore, il secondo affidamento richiede una motivazione specifica, che prepariamo con l'ente. Presentiamo fin dall'offerta il percorso amministrativo corretto.</p>
 
-  <h2>L'ordine in cui procediamo</h2>
+  <h2>Il 2027: tutta l'Italia</h2>
   <div class="grid three">
-    <div class="card"><div class="label">2027</div><h3>Dalla prova ai contratti</h3><p>L'ASL Caserta e l'ASL Salerno passano dalla prova al contratto VIS; l'ASL VCO, ottenuta l'approvazione regionale, dal progetto pilota alla licenza di Frankura. Analisi diagnostiche con l'AULSS 9, l'AUSL Modena e l'ASL Taranto.</p></div>
-    <div class="card"><div class="label">2028</div><h3>La prima regione</h3><p>Con due ASL campane attive e i dati abruzzesi già analizzati, proponiamo la configurazione regionale in Abruzzo o in Campania. Frankura si estende nella Rete Oncologica del Piemonte e della Valle d'Aosta.</p></div>
-    <div class="card"><div class="label">2029</div><h3>La seconda regione</h3><p>Proponiamo la configurazione regionale in Liguria o in Puglia, dove abbiamo un referente regionale o più enti nella rete. Offriamo inoltre i prodotti direttamente agli ospedali privati accreditati della rete.</p></div>
+    <div class="card"><div class="label">Primo trimestre</div><h3>La società e i primi contratti</h3><p>Costituiamo Hadi Health. L'ASL Caserta e l'ASL Salerno passano dalla prova al contratto VIS; l'ASL VCO, con l'approvazione regionale, avvia Frankura. Analisi diagnostiche in tutti gli enti della rete.</p></div>
+    <div class="card"><div class="label">Secondo trimestre</div><h3>Le regioni della rete</h3><p>Configurazione regionale di VIS nelle cinque regioni in cui abbiamo un referente: Campania, Piemonte, Abruzzo, Puglia e Liguria. Frankura nella Rete Oncologica del Piemonte e della Valle d'Aosta.</p></div>
+    <div class="card dark"><div class="label">Secondo semestre</div><h3>Tutte le regioni</h3><p>Una proposta, con analisi diagnostica, a ciascuna delle {{it_regions}} regioni e province autonome. Frankura nelle reti oncologiche regionali e negli ospedali privati accreditati.</p></div>
   </div>
+  <p class="note">Nel 2028 e nel 2029 completiamo le installazioni avviate e attiviamo in ogni ente i moduli che non ha ancora.</p>
 
   <h2>Come troviamo i clienti</h2>
   <ul>
@@ -416,7 +417,7 @@
 
   <h2>Le competenze che aggiungiamo</h2>
   <div class="grid four">
-    <div class="card tint"><h3>Qualità e regolatorio</h3><p>Sistema qualità ISO 13485 e marcatura CE del modulo C di Frankura.</p></div>
+    <div class="card tint"><h3>Sicurezza e dati</h3><p>Valutazioni d'impatto, sicurezza informatica e qualificazione dei servizi cloud per la PA presso l'ACN.</p></div>
     <div class="card tint"><h3>Vendite alla PA</h3><p>Gare, accordi quadro e rapporti con le centrali di committenza regionali.</p></div>
     <div class="card tint"><h3>Integrazione</h3><p>HL7 FHIR e connettori verso cartelle cliniche e gestionali di farmacia.</p></div>
     <div class="card tint"><h3>Farmacia ospedaliera</h3><p>Un farmacista senior che accompagni le direzioni nell'uso di VIS.</p></div>
@@ -424,7 +425,7 @@
 
   <h2>Governance</h2>
   <div class="grid two">
-    <div><p>Oggi Hadi Health è un progetto senza personalità giuridica propria. Il passo successivo è costituire una società che firmi i contratti, ne risponda e regga il percorso di certificazione di Frankura.</p></div>
+    <div><p>Oggi Hadi Health è un progetto senza personalità giuridica propria. Il passo successivo è costituire una società che firmi i contratti, ne risponda e porti i prodotti in tutta Italia.</p></div>
     <div><p>La società sarà il luogo dei prodotti e dei contratti, con responsabilità chiare verso gli enti. Struttura societaria, ingresso dei partner e accordi su proprietà intellettuale e uso dei dati si definiscono insieme a loro.</p></div>
   </div>
 </section>
@@ -436,7 +437,6 @@
   <table class="data">
     <thead><tr><th style="width:52mm">Rischio</th><th>Come lo gestiamo</th></tr></thead>
     <tbody>
-      <tr><td><strong>Frankura come dispositivo medico</strong></td><td>Il modulo C propone le opzioni delle linee guida e rientra con ogni probabilità nella regola 11 del Regolamento (UE) 2017/745, almeno in classe IIa e, poiché orienta scelte terapeutiche in oncologia, verosimilmente in classe IIb: servono sistema qualità ISO 13485, valutazione clinica e organismo notificato. Come sistema di IA ad alto rischio è soggetto anche al Regolamento (UE) 2024/1689, con obblighi applicabili dal 2 agosto 2028 dopo la modifica del Regolamento (UE) 2026/1744. I moduli A, B e D organizzano dati e documenti e si possono adottare prima; una valutazione regolatoria formale dovrà confermare questa lettura. Fino alla marcatura CE, anche nei progetti pilota il modulo C orienta decisioni sui pazienti solo nell'ambito di un'indagine clinica.</td></tr>
       <tr><td><strong>Tempi degli acquisti pubblici</strong></td><td>Analisi diagnostica e affidamento diretto sotto soglia per partire; procedura negoziata, gara europea o accordo quadro quando il perimetro cresce. Il recesso al sesto mese riduce il rischio per l'ente e rende più semplice la decisione di partire.</td></tr>
       <tr><td><strong>Chi risparmia non è chi paga</strong></td><td>Il risparmio farmaceutico di un'azienda confluisce in buona parte nella posizione regionale. Per questo puntiamo alla configurazione regionale, dove chi paga e chi beneficia coincidono.</td></tr>
       <tr><td><strong>Concorrenti grandi o gratuiti</strong></td><td>La trascrizione della visita diventerà una funzione standard dei software clinici, e in Calabria IQVIA offre il monitoraggio della spesa senza costi. Puntiamo dove la concorrenza è debole: la preparazione del GIC e le opportunità quantificate in euro per la singola azienda.</td></tr>
@@ -451,27 +451,27 @@
 <section class="chapter">
   <div class="kicker">13 · Partnership</div>
   <h1>Le partnership che cerchiamo</h1>
-  <p class="lede">Non chiediamo un importo. Cerchiamo partner che portino ciò che ci manca per passare dai primi enti a decine di clienti.</p>
-  <div class="grid two">
-    <div class="card"><div class="label">Aziende sanitarie e regioni</div><h3>Adottare e misurare</h3><p>Un'analisi diagnostica o un progetto pilota sui propri dati, con indicatori concordati prima di iniziare. In cambio, risultati misurati sul proprio perimetro e la possibilità di pubblicarli insieme, con l'ente fra gli autori.</p></div>
-    <div class="card"><div class="label">Partner industriali e tecnologici</div><h3>Integrare e distribuire</h3><p>Fornitori di cartella clinica, gestionali di farmacia e integratori di sistema: l'accesso ai dati in modo standard e un canale verso i loro clienti. In cambio, una funzione che i loro sistemi non hanno.</p></div>
-    <div class="card"><div class="label">Partner clinici e scientifici</div><h3>Validare</h3><p>IRCCS, reti oncologiche, università e società scientifiche per la valutazione clinica di Frankura e le pubblicazioni.</p></div>
-    <div class="card dark"><div class="label">Partner finanziari</div><h3>Costituire la società</h3><p>Fondi specializzati in salute e investitori industriali con cui costituire Hadi Health, sostenere i primi tre anni e il percorso di certificazione. Struttura e condizioni si definiscono insieme.</p></div>
+  <p class="lede">Non chiediamo un importo. Il nostro obiettivo è l'intero mercato italiano nel 2027, e chi decide in nove regioni ci conosce già. Per arrivarci ci serve prima di tutto una cosa: l'entità legale.</p>
+  <div class="card dark" style="margin-top:5mm"><div class="label">La priorità: partner per l'entità legale</div><h3>Costituire Hadi Health</h3><p>Cerchiamo soprattutto chi ci aiuta a creare la società: soci e investitori per il capitale iniziale, ed esperienza per impostare struttura societaria, governance e contratti con gli enti pubblici. Fondi specializzati in salute, investitori industriali e imprenditori del settore. Struttura e condizioni si definiscono insieme.</p></div>
+  <div class="grid three" style="margin-top:4.5mm">
+    <div class="card"><div class="label">Aziende sanitarie e regioni</div><h3>Adottare e misurare</h3><p>Un'analisi diagnostica o un progetto pilota sui propri dati, con indicatori concordati prima di iniziare. In cambio, risultati misurati sul proprio perimetro e la possibilità di pubblicarli insieme.</p></div>
+    <div class="card"><div class="label">Partner industriali e tecnologici</div><h3>Integrare e distribuire</h3><p>Fornitori di cartella clinica, gestionali di farmacia e integratori di sistema: l'accesso ai dati in modo standard e un canale verso i loro clienti in tutta Italia.</p></div>
+    <div class="card"><div class="label">Partner clinici e scientifici</div><h3>Misurare</h3><p>IRCCS, reti oncologiche, università e società scientifiche per misurare l'effetto dei prodotti sul campo e pubblicarne i risultati.</p></div>
   </div>
-  <h2>Obiettivi per il 2027</h2>
+  <h2>Obiettivi per il 2027: l'Italia intera</h2>
   <div class="grid two">
     <ul class="small">
-      <li>Costituire la società con i partner.</li>
-      <li>Portare l'ASL Caserta e l'ASL Salerno dalla prova al contratto VIS.</li>
-      <li>Ottenere l'approvazione regionale e l'accordo scritto per il progetto pilota all'ASL VCO; misurare prima e dopo e passare alla licenza.</li>
+      <li>Costituire Hadi Health con i partner nel primo trimestre.</li>
+      <li>Contratti con tutti i {{net_entities}} enti della rete: VIS, Frankura o entrambi.</li>
+      <li>Configurazione regionale di VIS in Campania, Piemonte, Abruzzo, Puglia e Liguria.</li>
     </ul>
     <ul class="small">
-      <li>Svolgere almeno quattro analisi diagnostiche VIS in altri enti della rete.</li>
-      <li>Avviare il sistema qualità e la valutazione clinica del modulo C di Frankura.</li>
-      <li>Pubblicare i risultati dei progetti pilota insieme agli enti.</li>
+      <li>Frankura nella Rete Oncologica del Piemonte e della Valle d'Aosta e nelle reti oncologiche delle altre regioni della rete.</li>
+      <li>Entro la fine dell'anno, una proposta a ciascuna delle {{it_regions}} regioni e province autonome.</li>
+      <li>Una squadra commerciale e tecnica in grado di servire tutte le regioni.</li>
     </ul>
   </div>
-  <div class="callout" style="margin-top:8mm"><strong>Come iniziare.</strong> Per un ente, il primo passo è l'analisi diagnostica: tre settimane e {{vis_diagnostic}} per vedere, sui propri dati, quanto vale VIS. A un partner proponiamo un primo incontro dedicato a uno dei {{net_entities}} enti della rete.</div>
+  <div class="callout" style="margin-top:7mm"><strong>Come iniziare.</strong> A un partner proponiamo di costituire insieme la società. Per un ente, il primo passo è l'analisi diagnostica: tre settimane e {{vis_diagnostic}} per vedere, sui propri dati, quanto vale VIS.</div>
 </section>
 
 <!-- ─────────────── Appendice ─────────────── -->
@@ -499,7 +499,7 @@
     <li>Rete Oncologica del Piemonte e della Valle d'Aosta, elenchi CAS e GIC. <span class="url">reteoncologica.it</span></li>
     <li>Osservatorio Sanità Digitale, Politecnico di Milano, edizioni 2025 e 2026.</li>
     <li>Camera dei deputati, Risorse della Missione Salute del PNRR. <span class="url">temi.camera.it</span></li>
-    <li>Legge 23 settembre 2025, n. 132; D.Lgs. 36/2023; D.Lgs. 117/2017; Regolamenti (UE) 2017/745, 2024/1689, 2025/327 e 2026/1744.</li>
+    <li>Legge 23 settembre 2025, n. 132; D.Lgs. 36/2023; D.Lgs. 117/2017.</li>
     <li>Ruoli dei referenti: siti degli enti, atti pubblicati e stampa, consultati a ottobre 2026.</li>
   </ul>
   <p class="note">Il dettaglio di ogni numero, con la fonte e la data, è disponibile su richiesta.</p>

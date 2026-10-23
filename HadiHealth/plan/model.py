@@ -78,6 +78,7 @@ FRK_LICENCE_LOW, FRK_LICENCE_HIGH = 50_000, 150_000
 # ---------------------------------------------------------------- public data
 
 ITALY_POP = 58_943_464
+IT_REGIONS = 21                        # 19 regions and 2 autonomous provinces
 ITALY_GROSS = 18_172_057_828           # AIFA Tab. 8.1, A+H+C
 ITALY_NET = 16_002_381_144             # AIFA Tab. 10.2 col. F
 ITALY_OVERRUN = 4_767_097_229
@@ -524,6 +525,7 @@ def compute():
     v["piemonte_rate"] = num(1000 * REGIONS["Piemonte"]["cases"] / REGIONS["Piemonte"]["pop"], 1)
 
     # Italy
+    v["it_regions"] = num(IT_REGIONS)
     v.update(
         italy_net=bn(ITALY_NET), italy_gross=bn(ITALY_GROSS), italy_overrun=bn(ITALY_OVERRUN, 2),
         italy_share=pct(ITALY_SHARE, 2), italy_cases=num(ITALY_CASES), italy_units=num(ITALY_ONCOLOGY_UNITS),
