@@ -10,6 +10,10 @@
  * Parte gia con l'indirizzo suggerito quando quello salvato ha un refuso
  * evidente ("gmail.cpm"), e chiede una conferma quando quello nuovo
  * somiglia a un refuso ("gmial.com").
+ *
+ * Per un'iscrizione legata all'account di un altro (`accountAltrui`) la
+ * stessa correzione, anche con l'indirizzo di sempre, collega lo studente
+ * a un account suo: l'altro account non si tocca.
  */
 
 import { useState } from "react";
@@ -19,10 +23,13 @@ import { refusoEmail } from "@/lib/eventi/email-refusi";
 
 export function CorreggiEmail({
   iscrizione,
+  accountAltrui = null,
   onCorretta,
   onChiudi,
 }: {
   iscrizione: { id: string; email: string; stato: string };
+  /** L'iscrizione e legata all'account di un altro: di chi guarda, di un docente, o con un'altra email. */
+  accountAltrui?: "mio" | "docente" | "altro" | null;
   /** A correzione fatta, con la frase da mostrare sulla riga. */
   onCorretta: (messaggio: string) => void;
   onChiudi: () => void;
@@ -52,13 +59,13 @@ export function CorreggiEmail({
       }
       const nuova = String(data.iscrizione?.email ?? email.trim());
       onCorretta(
-        data.account === "collegato" && data.gia_entrato
+        data.gia_entrato
           ? `Fatto: l'iscrizione ora è collegata all'account ${nuova}, con cui lo studente entra già. Le lezioni che ha fatto si contano. Non serve altro.`
           : data.email_inviata === true
-            ? `Fatto: indirizzo corretto in ${nuova}. Gli abbiamo mandato il link per impostare la password.`
+            ? `Fatto: l'iscrizione ora usa ${nuova}, con un account dello studente. Gli abbiamo mandato il link per impostare la password.`
             : data.email_inviata === false
-              ? `Indirizzo corretto in ${nuova}, ma l'email con il link non è partita: usi «Rimanda il link» fra qualche minuto.`
-              : `Indirizzo corretto in ${nuova}. Se lo studente è suo, porti l'iscrizione su «Confermata»: riceverà la conferma a questo indirizzo, e con «Rimanda il link» il link per entrare.`,
+              ? `Fatto: l'iscrizione ora usa ${nuova}, ma l'email con il link non è partita: usi «Rimanda il link» fra qualche minuto.`
+              : `Fatto: l'iscrizione ora usa ${nuova}. Se lo studente è suo, porti l'iscrizione su «Confermata»: riceverà la conferma a questo indirizzo, e con «Rimanda il link» il link per entrare.`,
       );
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Correzione non riuscita.");
@@ -121,9 +128,13 @@ export function CorreggiEmail({
         </p>
       )}
       <p style={{ fontSize: 12, color: "var(--text-light)", lineHeight: 1.6, margin: 0 }}>
-        Si corregge solo finché lo studente non è mai entrato. Al nuovo indirizzo mandiamo il link per
-        impostare la password. Se con questo indirizzo lo studente ha già un account, colleghiamo
-        l&apos;iscrizione a quello.
+        {accountAltrui
+          ? `Salvando, colleghiamo l'iscrizione a un account dello studente con questo indirizzo: se non c'è lo creiamo e gli mandiamo il link per impostare la password. ${
+              accountAltrui === "altro"
+                ? "Se lo studente entra già con un suo account, scriva l'indirizzo di quello. "
+                : ""
+            }L'account a cui è collegata ora non viene toccato.`
+          : "Si corregge solo finché lo studente non è mai entrato. Al nuovo indirizzo mandiamo il link per impostare la password. Se con questo indirizzo lo studente ha già un account, colleghiamo l'iscrizione a quello."}
       </p>
       {errore && (
         <p role="alert" style={{ color: "#E74C6F", fontSize: 13, lineHeight: 1.6, margin: 0 }}>

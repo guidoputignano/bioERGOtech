@@ -92,6 +92,10 @@ export function IscrizioneForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ istituto: string } | null>(null);
+  // L'account collegato su questo dispositivo, se c'e. Su un computer della
+  // scuola puo essere quello del docente: lo si dice, con il modo di uscire.
+  const [collegato, setCollegato] = useState<{ email: string; nome: string } | null>(null);
+  const [uscendo, setUscendo] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -99,9 +103,23 @@ export function IscrizioneForm({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (user?.email) setEmail((v) => v || user.email!);
+      if (user?.email) {
+        setCollegato({ email: user.email, nome: String(user.user_metadata?.full_name ?? "").trim() });
+        setEmail((v) => v || user.email!);
+      }
     })();
   }, []);
+
+  const esci = async () => {
+    setUscendo(true);
+    try {
+      await createClient().auth.signOut();
+      setEmail((v) => (collegato && v.trim().toLowerCase() === collegato.email.toLowerCase() ? "" : v));
+      setCollegato(null);
+    } finally {
+      setUscendo(false);
+    }
+  };
 
   const refuso = useMemo(() => refusoEmail(email), [email]);
   const confermata = emailConfermata !== null && emailConfermata === email.trim();
@@ -209,6 +227,35 @@ export function IscrizioneForm({
         >
           <strong>Anteprima staff.</strong> Le iscrizioni risultano chiuse. Quello che invii da qui
           finisce davvero nel database.
+        </div>
+      )}
+
+      {/* Su un computer condiviso puo essere collegato un altro account,
+          spesso quello del docente: l'iscrizione la legherebbe a lui solo
+          con la sua email (la rotta lo controlla), ma l'email qui sotto e
+          precompilata con la sua. Prima di tutto, si dice chi e collegato. */}
+      {collegato && (
+        <div
+          role="status"
+          style={{
+            background: "#FFF8E6",
+            border: "1px solid #F0D89B",
+            borderRadius: 10,
+            padding: "12px 14px",
+            fontSize: 13.5,
+            color: "#75570F",
+            lineHeight: 1.6,
+          }}
+        >
+          Su questo dispositivo è collegato l&apos;account di{" "}
+          <strong>{collegato.nome || collegato.email}</strong>
+          {collegato.nome ? ` (${collegato.email})` : ""}. Se non sei tu, per esempio su un computer
+          della scuola o del tuo docente, esci prima di iscriverti e usa la tua email.
+          <div style={{ marginTop: 8 }}>
+            <Button type="button" size="sm" variant="outline" onClick={esci} disabled={uscendo}>
+              {uscendo ? "Uscita…" : "Non sono io, esci"}
+            </Button>
+          </div>
         </div>
       )}
 

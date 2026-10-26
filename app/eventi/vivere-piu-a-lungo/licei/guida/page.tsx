@@ -265,7 +265,7 @@ const STUDENTE: Passo[] = [
     poi: {
       titolo: "Usa l'email che leggi davvero",
       testo:
-        "Tutto il resto passa da lì, e se sbagli indirizzo non te ne accorgi subito. Se te ne accorgi dopo, non rifare l'iscrizione e non creare un altro account: chiedi al tuo professore di correggerla.",
+        "Tutto il resto passa da lì, e se sbagli indirizzo non te ne accorgi subito. Se te ne accorgi dopo, non rifare l'iscrizione e non creare un altro account: chiedi al tuo professore di correggerla. Meglio iscriversi dal proprio telefono: se il modulo dice che sul dispositivo è collegato qualcun altro, per esempio il professore, premi «Non sono io, esci» prima di iscriverti.",
     },
   },
   {
@@ -413,6 +413,14 @@ const GUASTI = [
   {
     d: "Uno studente si è iscritto ma il professore non lo vede",
     r: 'Ha usato il codice di un\'altra scuola, oppure si è iscritto mentre era già collegato con un altro account. Oppure, non riuscendo a entrare, si è creato un account dal sito invece di iscriversi con il codice della scuola: segue le lezioni, ma fuori dal percorso. In questo caso, se nell\'elenco c\'è la sua prima iscrizione, usi "Correggi email" su quella riga con l\'indirizzo che usa ora: la colleghiamo al suo account, con le lezioni già fatte. Altrimenti lo studente entri con quell\'account e si iscriva dal link della scuola. Negli altri casi ce lo segnali e lo sistemiamo.',
+  },
+  {
+    d: "Gli studenti si ritrovano con il nome del docente",
+    r: 'Si sono iscritti da un computer su cui era collegato il docente, e l\'iscrizione finiva sul suo account. Ora il modulo dice chi è collegato, con "Non sono io, esci", e non lega più l\'iscrizione a un account con un\'altra email. Le iscrizioni di prima sono segnate "Account da ricollegare" nel suo elenco: su ognuna usi "Correggi email" lasciando l\'indirizzo dello studente, e gli mandiamo il link per la password. Sui computer della scuola, a fine lezione, esca dal suo account.',
+  },
+  {
+    d: "Dopo l'accesso uno studente legge \"Viewer\" o \"Spettatore\"",
+    r: "Arrivava nella pagina generale del sito, che segna così gli account senza un ruolo nella Fondazione. Non riguarda l'iscrizione. Ora, dopo aver scelto la password e a ogni accesso, ogni studente arriva nella sua area del percorso, e il docente nella sua.",
   },
   {
     d: "Come vedo chi si è iscritto a un talk con gli esperti",

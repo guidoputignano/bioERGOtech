@@ -5,15 +5,25 @@ import { requireAdmin, requireMember } from "@/lib/auth/admin";
 // Anche i membri normali passano di qui: MembersView del portale usa questo
 // elenco per la rubrica dei membri. Serve pero un utente autenticato: prima
 // questa rotta rispondeva a chiunque con tutte le email del sito.
+//
+// A chi non e staff arrivano solo i membri della Fondazione (member,
+// partner, staff): la rubrica e loro. Prima arrivavano tutti i profili, cioe
+// nome ed email di ogni account del sito, compresi gli studenti minorenni
+// del percorso licei, a chiunque si fosse registrato. Lo staff (pannello
+// utenti, presenze agli eventi) continua a ricevere l'elenco completo.
+const LIVELLI_RUBRICA = ["member", "partner", "admin"];
+
 export async function GET() {
   const guard = await requireMember();
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
-  const { client } = guard;
+  const { client, chiamante } = guard;
 
-  const { data, error } = await client
+  let query = client
     .from("profiles")
     .select("id, email, full_name, partnership_level, organisation_id, organisation_name")
     .order("email");
+  if (!chiamante.isAdmin) query = query.in("partnership_level", LIVELLI_RUBRICA);
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

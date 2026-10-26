@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Research leads, because it is the thing a first-time visitor came to see and
 // the only item here that names what the Foundation does rather than who the
@@ -27,6 +27,25 @@ const joinCta = { href: "/join-us", label: "Work with us" };
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Students of the programmes do not use the portal: they see "Student
+  // area", pointing to their area. Asked only when a Supabase session cookie
+  // is there, so visitors make no request; the server decides from the
+  // session (/api/account/area).
+  const [portale, setPortale] = useState(memberPortal);
+
+  useEffect(() => {
+    if (!document.cookie.includes("-auth-token")) return;
+    let attivo = true;
+    fetch("/api/account/area", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { area?: { href: string; etichetta: string } | null } | null) => {
+        if (attivo && d?.area?.href?.startsWith("/")) setPortale({ href: d.area.href, label: d.area.etichetta });
+      })
+      .catch(() => {});
+    return () => {
+      attivo = false;
+    };
+  }, []);
 
   return (
     <>
@@ -89,8 +108,8 @@ export function Navbar() {
 
             {/* Research Portal, a quiet link for people already inside */}
             <Link
-              key={memberPortal.href}
-              href={memberPortal.href}
+              key={portale.href}
+              href={portale.href}
               style={{
                 padding: "8px 14px",
                 borderRadius: "6px",
@@ -104,7 +123,7 @@ export function Navbar() {
               onMouseOver={(e) => (e.currentTarget.style.background = "rgba(19,214,176,0.08)")}
               onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              {memberPortal.label}
+              {portale.label}
             </Link>
 
             {/* Primary CTA — for everyone who isn't a member yet */}
@@ -169,7 +188,7 @@ export function Navbar() {
             ))}
 
             <Link
-              href={memberPortal.href}
+              href={portale.href}
               onClick={() => setMobileOpen(false)}
               style={{
                 display: "block",
@@ -181,7 +200,7 @@ export function Navbar() {
                 borderBottom: "1px solid rgba(0,0,0,0.05)",
               }}
             >
-              {memberPortal.label}
+              {portale.label}
             </Link>
 
             <Link

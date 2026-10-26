@@ -81,6 +81,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email sbagliate | `lib/eventi/email-refusi.ts` (refusi nel dominio, per il modulo e le rotte), `lib/eventi/licei-correggi-email.ts` (la correzione dalla console), `app/courses/AvvisoStudentiLicei.tsx` (l'avviso nel cancello del corso e nella registrazione dal sito) |
+| Dove si arriva dopo l'accesso, e il portale vietato agli studenti | `lib/eventi/area-account.ts` (la regola), `app/auth/dopo-accesso/page.tsx`, `app/member-portal/page.tsx`, `app/api/account/area/route.ts` e `components/navbar.tsx` ("Student area") |
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
 | Elenco dei mentor nell'area dello studente e in quella dei docenti | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx` (`percorso="docenti"` nella console dei docenti), rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
@@ -347,8 +348,8 @@ con la riga che ha gia.
 
 | Rotta | Chi | Che cosa |
 | --- | --- | --- |
-| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ha_account` (dall'iscrizione), `ultimo_accesso`, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`, `accessi_non_letti` (la funzione degli accessi non ha risposto), `rimanda_tutti` (`ultimo_invio_at`, `prossimo_invio_at`), per ogni iscrizione `talk` (gli slug dei talk con gli esperti a cui si e iscritto), `talk_elenco` (`slug`, `etichetta`: "Talk del 9 novembre"), `talk_non_letti` (le iscrizioni ai talk non si sono lette). A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
-| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione. Rinvio del link di accesso: `{ azione: 'rimanda_accesso', id }` a uno studente (409 se l'iscrizione non e attiva), `{ azione: 'rimanda_accesso_tutti' }` a tutti i mai entrati dell'istituto, che risponde `{ inviati, saltati, gia_raggiunti, non_validi, errori, inviato_at, prossimo_invio_at }` oppure 429 con `prossimo_invio_at`. `saltati` sono i rimasti fuori dal tetto o con un link di meno di 5 minuti fa, `gia_raggiunti` quelli a cui il link e gia stato mandato nel ciclo di invii in corso, `non_validi` gli indirizzi da correggere. Correzione dell'email: `{ azione: 'correggi_email', id, email, conferma? }`, solo per un account mai entrato; risponde `{ success, iscrizione, account: 'aggiornato' \| 'creato' \| 'collegato', gia_entrato, email_inviata }` (`email_inviata` null se il link non andava mandato), oppure un errore, con `richiede_conferma` e `suggerimento` quando l'indirizzo somiglia a un refuso (vedi "L'email sbagliata"). |
+| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ha_account` (dall'iscrizione), `ultimo_accesso`, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`, `accessi_non_letti` (la funzione degli accessi non ha risposto), `rimanda_tutti` (`ultimo_invio_at`, `prossimo_invio_at`), per ogni iscrizione `talk` (gli slug dei talk con gli esperti a cui si e iscritto) e `account_altrui` (`'mio'`, `'docente'`, `'altro'` o null: l'iscrizione e legata all'account di chi guarda, di un altro docente o con un'altra email; allora accessi, lezioni e talk sono vuoti), `talk_elenco` (`slug`, `etichetta`: "Talk del 9 novembre"), `talk_non_letti` (le iscrizioni ai talk non si sono lette). A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
+| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione. Rinvio del link di accesso: `{ azione: 'rimanda_accesso', id }` a uno studente (409 se l'iscrizione non e attiva), `{ azione: 'rimanda_accesso_tutti' }` a tutti i mai entrati dell'istituto, che risponde `{ inviati, saltati, gia_raggiunti, non_validi, errori, inviato_at, prossimo_invio_at }` oppure 429 con `prossimo_invio_at`. `saltati` sono i rimasti fuori dal tetto o con un link di meno di 5 minuti fa, `gia_raggiunti` quelli a cui il link e gia stato mandato nel ciclo di invii in corso, `non_validi` gli indirizzi da correggere. Correzione dell'email: `{ azione: 'correggi_email', id, email, conferma? }`, solo per un account mai entrato, o per un'iscrizione legata all'account di un altro (anche con lo stesso indirizzo); risponde `{ success, iscrizione, account: 'aggiornato' \| 'creato' \| 'collegato', gia_entrato, email_inviata }` (`email_inviata` null se il link non andava mandato), oppure un errore, con `richiede_conferma` e `suggerimento` quando l'indirizzo somiglia a un refuso (vedi "L'email sbagliata"). |
 | `GET .../referente/export` | solo referente | I due CSV (confermati senza email, elenco minimo per foto e video). |
 | `GET`, `POST .../referente/istruzioni` | docenti, anche prima di accettare | Versione, testo, se e quando accettate; `POST { accetto: true }` registra l'accettazione e porta il docente del progetto a `attivo`. |
 | `GET .../referente/docenti` | docenti | Al referente l'elenco completo; a un docente del progetto solo nome e cognome dei colleghi. |
@@ -790,6 +791,87 @@ tutti i rifiuti (account gia entrato, iscrizione ritirata o di un altro
 istituto, indirizzo di un docente, del referente, dello staff, di un'altra
 iscrizione dello stesso istituto o di un account iscritto altrove, refuso
 impossibile, refuso sospetto senza e con conferma, "_" nell'indirizzo).
+
+## Computer condivisi, e dove si arriva dopo l'accesso
+
+Seconda segnalazione, da un'altra scuola: gli studenti, entrando con il
+link della circolare, "si ritrovano con il nome del docente", e alcuni "si
+vedono spettatori, non alunni". Due cause diverse.
+
+**Il nome del docente.** In classe o in laboratorio gli studenti si
+iscrivevano da un computer su cui era collegato il docente. Il modulo
+precompilava la sua email, e la rotta legava l'iscrizione all'account della
+sessione qualunque email fosse scritta: ogni iscrizione finiva sull'account
+del docente, lo studente non riceveva mai il link della password, e nella
+console risultava "entrato" con gli accessi e le lezioni del docente. Il
+controllo "un docente non si iscrive come studente" guardava solo i docenti
+del progetto, non il referente. Ora:
+
+- la rotta lega la sessione solo se ha la stessa email scritta nel modulo;
+  altrimenti vale l'account con quell'email, o se ne crea uno, come senza
+  sessione. Lo staff in anteprima che scrive l'email di prova crea quindi un
+  account di prova, invece di iscrivere il proprio;
+- l'email o l'account di un referente (`licei_adesioni`) si rifiutano come
+  quelli di un docente del progetto, con un messaggio che, se c'e una
+  sessione d'altri, dice di uscire e scrivere la propria email;
+- il modulo dice chi e collegato ("Su questo dispositivo è collegato
+  l'account di ..."), con "Non sono io, esci";
+- le iscrizioni di prima legate all'account di un altro si vedono nella
+  console: `accountAltrui` (in `licei-correggi-email.ts`) le segna se
+  l'account e di chi guarda, di un altro docente dell'istituto (anche
+  revocato), o ha un'email diversa da quella dell'iscrizione (dal profilo).
+  Per quelle la GET non manda accessi, lezioni e talk dell'altro account, la
+  riga dice "Account da ricollegare", "Rimanda il link" non c'e (andrebbe
+  all'account sbagliato) e "Correggi email" c'e anche con l'indirizzo di
+  sempre: collega lo studente a un account suo, trovato o creato con
+  quell'indirizzo, e gli manda il link. L'altro account non si tocca mai.
+  Se la riga ha un'email diversa da quella di un account che lo studente usa
+  davvero, il docente puo scrivere quella: allora la riga si allinea
+  all'account e le lezioni si contano.
+
+**"Spettatori".** Dopo aver scelto la password (`update-password-form.tsx`)
+e dopo un accesso senza `returnTo` (`login-form.tsx`) si arrivava sempre a
+`/member-portal`, in inglese, che segna gli account senza un ruolo nella
+Fondazione come "Viewer": tradotto dal browser, "Spettatore". Ora si passa
+da `/auth/dopo-accesso`, che manda lo staff al portale, i docenti dei licei
+(referente o docente del progetto non revocato, adesione non ritirata) alla
+loro console, gli studenti dei licei in attesa o confermati alla loro area,
+i partecipanti dell'universita alla loro, e tutti gli altri al portale come
+prima. Una lettura che non riesce porta al portale. La pagina della password
+non dice piu "application approved" e "member portal".
+
+**Il portale non e degli studenti.** Dopo la segnalazione, la scelta: gli
+studenti dei percorsi non usano il portale della ricerca. La regola sta in
+`lib/eventi/area-account.ts`: e studente chi ha un'iscrizione ai licei in
+attesa o confermata, o una candidatura all'universita, e non e docente dei
+licei, staff, membro o partner della Fondazione. Per loro `/member-portal`
+rimanda alla loro area, anche da un link o da un segnalibro, e la navbar
+mostra "Student area" al posto di "Research Portal" (la chiede a
+`/api/account/area`, solo se c'e il cookie della sessione: chi visita il sito
+non fa richieste). Staff, membri, partner e docenti tengono il portale; un
+membro che e anche studente arriva nella sua area dopo l'accesso, ma il
+portale lo apre. Una lettura che non riesce lascia tutto com'era.
+
+**La rubrica del portale.** La scheda "People" del portale legge
+`GET /api/admin/users`, che rispondeva a qualunque account con nome ed
+email di tutti i profili del sito, compresi gli studenti minorenni di ogni
+scuola: bastava registrarsi dal sito. Ora a chi non e staff arrivano solo i
+profili member, partner e admin; lo staff (pannello utenti, presenze)
+riceve ancora l'elenco completo. Resta aperto, ed e un'altra decisione:
+la rubrica mostra l'email dei membri anche a chi non ha attivato
+`show_email` nel profilo.
+
+Provato con lo stesso client finto: iscrizioni legate al referente
+ricollegate con lo stesso indirizzo o con uno nuovo (account del referente
+intatto), indirizzo del referente rifiutato, una riga legata a un account
+dello studente con un'altra email allineata a quella (niente link) o
+ricollegata a un account nuovo, e `accountAltrui` visto dal referente e da
+un docente del progetto. `area-account.ts` con un database finto: studente
+dei licei e dell'universita (area, portale bloccato), staff con
+un'iscrizione di prova (portale), membro che e anche studente (area dopo
+l'accesso, portale libero), referente (console), iscrizione ritirata o
+docente revocato (portale), tabella dei docenti assente, profilo non letto
+(portale, nessun blocco).
 
 ## Il progresso sul corso c'era gia, e non lo guardava nessuno
 

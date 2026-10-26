@@ -98,31 +98,51 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── Un docente del progetto non si iscrive come studente ──
-    // L'iscrizione lega l'account trovato per email. Con l'email di un
-    // docente del progetto, lo stesso account avrebbe la vista da docente e
-    // quella da studente: e la guardia dei docenti, che lo ferma, gli
-    // toglierebbe l'accesso. Prima della migrazione 20261215000000 la
-    // tabella non c'e e il controllo non serve.
-    const [docentePerEmail, docentePerAccount] = await Promise.all([
+    // ── Quale account lega l'iscrizione ──
+    // La sessione aperta conta solo se e quella dello studente, cioe se ha
+    // la stessa email che ha scritto. Su un computer della scuola, o su
+    // quello del docente, puo essere collegato il docente: prima
+    // l'iscrizione di ogni studente finiva sull'account del docente, gli
+    // studenti "entravano con il suo nome" e non ricevevano mai il link
+    // della password. Altrimenti vale l'account che ha quell'email, se c'e.
+    const sessioneSua = !!utente.id && (utente.email ?? "").trim().toLowerCase() === email;
+    const { data: profilo } = sessioneSua
+      ? { data: null }
+      : await client.from("profiles").select("id").eq("email", email).maybeSingle();
+    const accountDaLegare: string | null = sessioneSua ? utente.id : (profilo?.id ?? null);
+
+    // ── Un docente non si iscrive come studente ──
+    // Con l'email o l'account di un docente del progetto o di un referente,
+    // lo stesso account avrebbe la vista da docente e quella da studente; la
+    // guardia ferma il docente del progetto e gli toglierebbe l'accesso, e un
+    // referente si ritroverebbe iscritto come studente della sua scuola.
+    // Prima della migrazione 20261215000000 la tabella dei docenti non c'e e
+    // quel controllo non serve.
+    const nessuno = Promise.resolve({ data: [], error: null });
+    const [docentePerEmail, docentePerAccount, referentePerEmail, referentePerAccount] = await Promise.all([
       client
         .from("licei_docenti")
         .select("id")
         .ilike("email", escapeLike(email))
         .in("stato", ["invitato", "attivo"])
         .limit(1),
-      utente.id
+      accountDaLegare
         ? client
             .from("licei_docenti")
             .select("id")
-            .eq("user_id", utente.id)
+            .eq("user_id", accountDaLegare)
             .in("stato", ["invitato", "attivo"])
             .limit(1)
-        : Promise.resolve({ data: [], error: null }),
+        : nessuno,
+      client.from("licei_adesioni").select("id").ilike("referente_email", escapeLike(email)).limit(1),
+      accountDaLegare ? client.from("licei_adesioni").select("id").eq("user_id", accountDaLegare).limit(1) : nessuno,
     ]);
-    const erroreDocenti = [docentePerEmail.error, docentePerAccount.error].find(
-      (e) => e && !erroreSchemaMancante(e, "tabella"),
-    );
+    const erroreDocenti = [
+      docentePerEmail.error,
+      docentePerAccount.error,
+      referentePerEmail.error,
+      referentePerAccount.error,
+    ].find((e) => e && !erroreSchemaMancante(e, "tabella"));
     if (erroreDocenti) {
       console.error("Licei iscrizione: controllo docenti fallito:", erroreDocenti.message);
       return NextResponse.json(
@@ -130,11 +150,16 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
-    if ((docentePerEmail.data ?? []).length > 0 || (docentePerAccount.data ?? []).length > 0) {
+    if (
+      [docentePerEmail, docentePerAccount, referentePerEmail, referentePerAccount].some(
+        (r) => (r.data ?? []).length > 0,
+      )
+    ) {
       return NextResponse.json(
         {
-          error:
-            "Con questa email non è possibile iscriversi come studente. Se pensi ci sia un errore, scrivi a info@bioergotech.org.",
+          error: utente.id && !sessioneSua
+            ? "Con questa email non è possibile iscriversi come studente. Se stai usando un computer su cui è collegato il tuo docente, esci e scrivi la tua email."
+            : "Con questa email non è possibile iscriversi come studente. Se pensi ci sia un errore, scrivi a info@bioergotech.org.",
         },
         { status: 409 },
       );
@@ -142,16 +167,10 @@ export async function POST(request: Request) {
 
     // ── Account dello studente ──
     // Serve per accedere alle lezioni, che sono protette da login.
-    let userId: string | null = utente.id;
+    let userId: string | null = sessioneSua ? utente.id : null;
     let setPasswordUrl: string | undefined;
 
     if (!userId) {
-      const { data: profilo } = await client
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
       if (profilo?.id) {
         userId = profilo.id;
         // L'email ha gia un account sul sito (un tentativo precedente, un
