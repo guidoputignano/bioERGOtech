@@ -16,7 +16,7 @@ import {
   rimandaAccessoATutti,
   statoRimandaTutti,
 } from "@/lib/eventi/licei-rimanda-accesso";
-import { correggiEmailIscrizione } from "@/lib/eventi/licei-correggi-email";
+import { accountAltrui, correggiEmailIscrizione } from "@/lib/eventi/licei-correggi-email";
 import { talkPerStudentiIstituto } from "@/lib/eventi/talk-server";
 import { TALKS, etichettaTalk } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 
@@ -137,12 +137,24 @@ export async function GET() {
   // Quanto lontano e arrivato ognuno nel corso. Si legge dopo, e non in
   // parallelo con l'elenco, perche serve la lista degli user_id che arriva
   // dalla query qui sopra; insieme, il controllo appena descritto.
-  const [progresso, altriIstituti] = await Promise.all([
+  // Con, in parallelo, le iscrizioni legate all'account di un altro: di
+  // chi guarda, di un altro docente, o con un'altra email. Succedeva a chi
+  // si iscriveva da un computer su cui era collegato il docente.
+  const [progresso, altriIstituti, altrui] = await Promise.all([
     progressoPerUtenti(
       client,
       (data ?? []).map((r) => r.user_id).filter((id): id is string => !!id),
     ),
     componentiAltriIstituti(),
+    accountAltrui(
+      client,
+      ctx.adesione.id,
+      (data ?? []) as { id: string; email: string; user_id: string | null }[],
+      ctx.userId,
+    ).catch((err) => {
+      console.error("Licei referente: account delle iscrizioni non verificati:", err);
+      return new Map<string, "mio" | "docente" | "altro">();
+    }),
   ]);
 
   // Chi sta guardando, con il nome: per il referente quello dell'adesione,
@@ -176,15 +188,23 @@ export async function GET() {
     // `ha_account` si legge dall'iscrizione stessa e non dalla funzione degli
     // accessi: prima, se quella non rispondeva, tutti risultavano senza
     // account e il bottone "Rimanda il link" spariva per l'intera scuola.
-    iscrizioni: (data ?? []).map(({ user_id, ...r }) => ({
-      ...r,
-      ha_account: !!user_id,
-      ultimo_accesso: accessi.ultimoAccesso.get(r.id) ?? null,
-      lezioni_completate: user_id ? (progresso.get(user_id) ?? 0) : 0,
-      // Gli slug dei talk a cui si e iscritto. Vuoto anche se i talk non si
-      // sono potuti leggere: per quello c'e `talk_non_letti`.
-      talk: user_id ? (talk.perUtente.get(user_id) ?? []) : [],
-    })),
+    // Un'iscrizione legata all'account di un altro (`account_altrui`) non
+    // porta accessi, lezioni e talk di quell'account: non sono dello
+    // studente, e il docente lo vedrebbe "entrato" quando non lo e.
+    iscrizioni: (data ?? []).map(({ user_id, ...r }) => {
+      const altro = altrui.get(r.id) ?? null;
+      const suo = user_id && !altro ? user_id : null;
+      return {
+        ...r,
+        ha_account: !!user_id,
+        account_altrui: altro,
+        ultimo_accesso: altro ? null : (accessi.ultimoAccesso.get(r.id) ?? null),
+        lezioni_completate: suo ? (progresso.get(suo) ?? 0) : 0,
+        // Gli slug dei talk a cui si e iscritto. Vuoto anche se i talk non si
+        // sono potuti leggere: per quello c'e `talk_non_letti`.
+        talk: suo ? (talk.perUtente.get(suo) ?? []) : [],
+      };
+    }),
     // I talk della serie, dal primo, con il nome breve dei badge.
     talk_elenco: [...TALKS]
       .sort((a, b) => new Date(a.inizio).getTime() - new Date(b.inizio).getTime())

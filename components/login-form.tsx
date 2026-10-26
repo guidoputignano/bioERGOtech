@@ -18,10 +18,13 @@ import { useState, Suspense } from "react";
 /**
  * Where to go after signing in. Only a page on this site: anything else in
  * returnTo (another host, "//host", a path that normalises to one, or an
- * API route that acts on the student's behalf) falls back to the portal.
+ * API route that acts on the student's behalf) falls back to the account's
+ * own area.
  */
 function safeReturnTo(returnTo: string | null): string {
-  const fallback = "/member-portal";
+  // Without a returnTo, each account goes to its own area: the programme
+  // areas for students and teachers, the portal for everyone else.
+  const fallback = "/auth/dopo-accesso";
   if (!returnTo || !returnTo.startsWith("/")) return fallback;
   try {
     const u = new URL(returnTo, window.location.origin);

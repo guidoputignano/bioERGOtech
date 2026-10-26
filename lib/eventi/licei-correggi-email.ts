@@ -30,6 +30,14 @@
  * - **l'account dell'iscrizione ha gia l'indirizzo nuovo** (una correzione
  *   rimasta a meta): si allinea la riga e basta.
  *
+ * **Un'iscrizione legata all'account di un altro.** Prima della correzione
+ * della rotta dell'iscrizione, uno studente che si iscriveva da un computer
+ * su cui era collegato il docente finiva sull'account del docente. Quella
+ * riga non e dello studente: l'account non si tocca mai (ne email ne
+ * altro), e la correzione, anche con lo stesso indirizzo, collega lo
+ * studente a un account suo, trovato o creato con l'indirizzo dell'iscrizione.
+ * La console le segnala con `accountAltrui` qui sotto.
+ *
  * L'email con il link la manda la rotta, dopo, e solo a un'iscrizione in
  * attesa o confermata con un account mai entrato.
  */
@@ -124,23 +132,39 @@ export async function correggiEmailIscrizione(input: {
   if (!STATI_CORREGGIBILI.has(iscrizione.stato)) {
     return rifiuto(409, "Lo studente ha ritirato l'iscrizione: l'indirizzo non si corregge.");
   }
-  if (String(iscrizione.email).trim().toLowerCase() === nuova) {
-    return rifiuto(400, "È già questo l'indirizzo dell'iscrizione.");
-  }
 
-  // ── L'account dell'iscrizione non deve essere mai stato usato ──
+  // ── L'account dell'iscrizione: dello studente, e mai usato ──
+  // Se non e dello studente (un'altra email, o l'account di un docente),
+  // non si tocca: lo studente avra un account suo.
+  let nonSuo = false;
+  let diDocente = false;
+  let attualeEntrato = false;
   if (iscrizione.user_id) {
-    const { data: attuale, error } = await client.auth.admin.getUserById(iscrizione.user_id);
-    if (error || !attuale?.user) {
+    const [{ data: attuale, error }, docenti] = await Promise.all([
+      client.auth.admin.getUserById(iscrizione.user_id),
+      accountDocenti(client, adesioneId),
+    ]);
+    if (error || !attuale?.user || docenti === null) {
       console.error(`Licei correggi email: iscrizione ${iscrizioneId}: account non letto:`, error?.message);
       return rifiuto(500, "Non è stato possibile verificare l'account dello studente. Riprovi fra poco.");
     }
-    if (attuale.user.last_sign_in_at) {
+    diDocente = docenti.has(iscrizione.user_id);
+    attualeEntrato = Boolean(attuale.user.last_sign_in_at);
+    nonSuo =
+      diDocente ||
+      String(attuale.user.email ?? "").trim().toLowerCase() !== String(iscrizione.email).trim().toLowerCase();
+    if (!nonSuo && attuale.user.last_sign_in_at) {
       return rifiuto(
         409,
         `Lo studente è già entrato nel corso con questo account, quindi l'indirizzo non si cambia da qui. ${SCRIVA_ALLO_STAFF}`,
       );
     }
+  }
+
+  // Lo stesso indirizzo ha senso solo per ricollegare una riga legata
+  // all'account di un altro.
+  if (!nonSuo && String(iscrizione.email).trim().toLowerCase() === nuova) {
+    return rifiuto(400, "È già questo l'indirizzo dell'iscrizione.");
   }
 
   // ── L'indirizzo nuovo non deve essere gia di qualcun altro nel percorso ──
@@ -185,8 +209,16 @@ export async function correggiEmailIscrizione(input: {
   let giaEntrato = false;
 
   if (esistente && esistente.id === iscrizione.user_id) {
-    // L'account ha gia l'indirizzo nuovo: una correzione rimasta a meta.
+    // L'account ha gia l'indirizzo nuovo: una correzione rimasta a meta, o
+    // lo studente che si era iscritto collegato con un suo account e un'altra
+    // email, e ora si scrive quella dell'account. Si allinea la riga. Mai
+    // l'account di un docente: a quel punto l'hanno gia rifiutato i
+    // controlli sull'email, e se il profilo e disallineato lo si ferma qui.
+    if (diDocente) {
+      return rifiuto(409, "Questo indirizzo è di un docente del percorso e non può essere usato per uno studente.");
+    }
     account = "aggiornato";
+    giaEntrato = attualeEntrato;
   } else if (esistente) {
     // ── Un account con l'indirizzo giusto c'e gia: l'iscrizione passa li ──
     if (esistente.partnership_level === "admin") {
@@ -224,7 +256,7 @@ export async function correggiEmailIscrizione(input: {
     userId = esistente.id;
     account = "collegato";
     giaEntrato = Boolean(utente.data.user.last_sign_in_at);
-  } else if (iscrizione.user_id) {
+  } else if (iscrizione.user_id && !nonSuo) {
     // ── Nessun account con l'indirizzo nuovo: si corregge quello mai usato ──
     const { error } = await client.auth.admin.updateUserById(iscrizione.user_id, {
       email: nuova,
@@ -242,7 +274,7 @@ export async function correggiEmailIscrizione(input: {
     }
     account = "aggiornato";
   } else {
-    // ── L'iscrizione non aveva un account: lo si crea, come il modulo ──
+    // ── L'iscrizione non aveva un account suo: lo si crea, come il modulo ──
     const { data: creato, error } = await client.auth.admin.createUser({
       email: nuova,
       email_confirm: true,
@@ -288,4 +320,83 @@ export async function correggiEmailIscrizione(input: {
         ? { iscrizioneId, nome: iscrizione.nome, email: nuova }
         : null,
   };
+}
+
+/* ── Iscrizioni legate all'account di un altro ─────────────────────────── */
+
+/**
+ * Gli account dei docenti di un istituto: il referente e i docenti del
+ * progetto, anche revocati. Un'iscrizione legata a uno di questi non e
+ * dello studente. Null se la lettura non riesce; senza la tabella dei
+ * docenti, solo il referente.
+ */
+export async function accountDocenti(client: Db, adesioneId: string): Promise<Set<string> | null> {
+  const [referente, docenti] = await Promise.all([
+    client.from("licei_adesioni").select("user_id").eq("id", adesioneId).maybeSingle(),
+    client.from("licei_docenti").select("user_id").eq("adesione_id", adesioneId),
+  ]);
+  if (referente.error || (docenti.error && !erroreSchemaMancante(docenti.error, "tabella"))) {
+    console.error("Licei account dei docenti non letti:", (referente.error ?? docenti.error)?.message);
+    return null;
+  }
+  const ids = new Set<string>();
+  if (referente.data?.user_id) ids.add(referente.data.user_id);
+  for (const d of (docenti.error ? [] : (docenti.data ?? [])) as { user_id: string | null }[]) {
+    if (d.user_id) ids.add(d.user_id);
+  }
+  return ids;
+}
+
+/** Quanti id per richiesta: PostgREST li riceve nella query string. */
+const BLOCCO_ID = 80;
+
+/**
+ * Le email degli account, dal profilo. Una mappa vuota se la lettura non
+ * riesce: allora nessuna riga si segna per l'email, solo per i docenti.
+ */
+async function emailDegliAccount(client: Db, ids: string[]): Promise<Map<string, string>> {
+  const email = new Map<string, string>();
+  for (let i = 0; i < ids.length; i += BLOCCO_ID) {
+    const { data, error } = await client
+      .from("profiles")
+      .select("id, email")
+      .in("id", ids.slice(i, i + BLOCCO_ID));
+    if (error) {
+      console.error("Licei email degli account non lette:", error.message);
+      return new Map();
+    }
+    for (const p of (data ?? []) as { id: string; email: string | null }[]) {
+      if (p.email) email.set(p.id, p.email.trim().toLowerCase());
+    }
+  }
+  return email;
+}
+
+/**
+ * Di chi e l'account di ogni iscrizione legata a qualcun altro: "mio"
+ * (di chi guarda la console), "docente" (di un altro docente
+ * dell'istituto), "altro" (un account con un'altra email). Le iscrizioni
+ * a posto non compaiono. Alla console non arriva l'email dell'altro account.
+ */
+export async function accountAltrui(
+  client: Db,
+  adesioneId: string,
+  righe: { id: string; email: string; user_id: string | null }[],
+  chiGuarda: string,
+): Promise<Map<string, "mio" | "docente" | "altro">> {
+  const legate = righe.filter((r): r is { id: string; email: string; user_id: string } => !!r.user_id);
+  const [docenti, email] = await Promise.all([
+    accountDocenti(client, adesioneId),
+    emailDegliAccount(client, [...new Set(legate.map((r) => r.user_id))]),
+  ]);
+  const esito = new Map<string, "mio" | "docente" | "altro">();
+  for (const r of legate) {
+    if (r.user_id === chiGuarda) esito.set(r.id, "mio");
+    else if (docenti?.has(r.user_id)) esito.set(r.id, "docente");
+    else {
+      const suaEmail = email.get(r.user_id);
+      if (suaEmail && suaEmail !== String(r.email).trim().toLowerCase()) esito.set(r.id, "altro");
+    }
+  }
+  return esito;
 }

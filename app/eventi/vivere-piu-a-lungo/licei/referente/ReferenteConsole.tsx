@@ -447,7 +447,10 @@ export function ReferenteConsole({
   // scarta il server, account per account, prima di mandare qualcosa.
   const daRimandare = useMemo(
     () =>
-      righe.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato) && r.ha_account && !haFattoAccesso(r))
+      righe.filter(
+        (r) =>
+          STATI_ISCRIZIONE_ATTIVI.has(r.stato) && r.ha_account && !r.account_altrui && !haFattoAccesso(r),
+      )
         .length,
     [righe],
   );
@@ -1014,6 +1017,20 @@ export function ReferenteConsole({
                     </span>
                   )}
                 </div>
+                {/* Legata all'account di un altro: si e iscritto da un
+                    dispositivo su cui era collegato qualcun altro, spesso il
+                    docente. "Correggi email" gli da un account suo. */}
+                {r.account_altrui && (
+                  <div style={{ fontSize: 12.5, color: "#B44A5E", lineHeight: 1.6, marginTop: 4 }}>
+                    <strong>Account da ricollegare.</strong>{" "}
+                    {r.account_altrui === "mio"
+                      ? "Questa iscrizione è collegata al Suo account, non a quello dello studente: si è iscritto da un dispositivo su cui era collegato Lei."
+                      : r.account_altrui === "docente"
+                        ? "Questa iscrizione è collegata all'account di un docente dell'istituto, non a quello dello studente."
+                        : "Questa iscrizione è collegata a un account con un altro indirizzo email."}{" "}
+                    Con «Correggi email» gli diamo un account suo e gli mandiamo il link per la password.
+                  </div>
+                )}
                 {/* I talk con gli esperti a cui si e iscritto. */}
                 {(r.talk ?? []).length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
@@ -1082,7 +1099,7 @@ export function ReferenteConsole({
                   non ce l'ha proprio; il bottone resta. */}
               {STATI_ISCRIZIONE_ATTIVI.has(r.stato) && !haFattoAccesso(r) && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                  {(!accessiNonLetti || !r.ha_account) && (
+                  {(!accessiNonLetti || !r.ha_account) && !r.account_altrui && (
                     <span
                       className="badge"
                       style={{ background: "#B44A5E1A", color: "#B44A5E" }}
@@ -1095,7 +1112,7 @@ export function ReferenteConsole({
                       Mai entrato
                     </span>
                   )}
-                  {r.ha_account && (
+                  {r.ha_account && !r.account_altrui && (
                     <Button
                       type="button"
                       variant="outline"
@@ -1187,6 +1204,7 @@ export function ReferenteConsole({
               {correggiDi === r.id && (
                 <CorreggiEmail
                   iscrizione={r}
+                  accountAltrui={r.account_altrui ?? null}
                   onChiudi={() => setCorreggiDi(null)}
                   onCorretta={(messaggio) => {
                     setCorreggiDi(null);
