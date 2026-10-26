@@ -1,6 +1,8 @@
 export const dynamic = "force-dynamic";
 
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { areaAccount, areaAlPostoDelPortale } from "@/lib/eventi/area-account";
 import Link from "next/link";
 import type { Metadata } from "next";
 import BioERGOtechPortal, { type PortalUser, type PartnershipLevel } from "./portal-dashboard";
@@ -101,6 +103,13 @@ export default async function MemberPortal() {
       </>
     );
   }
+
+  // Students of the programmes have their own area and do not use the
+  // portal: here they read "Viewer" and find the Foundation's members. They
+  // go to their area instead, also when they follow a link or the navbar.
+  // Members, partners, staff and teachers keep the portal.
+  const alPosto = areaAlPostoDelPortale(await areaAccount(user.id));
+  if (alPosto) redirect(alPosto);
 
   const { data: profile } = await supabase
     .from("profiles")

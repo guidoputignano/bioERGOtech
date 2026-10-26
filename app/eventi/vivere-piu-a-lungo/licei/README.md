@@ -81,7 +81,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email sbagliate | `lib/eventi/email-refusi.ts` (refusi nel dominio, per il modulo e le rotte), `lib/eventi/licei-correggi-email.ts` (la correzione dalla console), `app/courses/AvvisoStudentiLicei.tsx` (l'avviso nel cancello del corso e nella registrazione dal sito) |
-| Dove si arriva dopo l'accesso | `app/auth/dopo-accesso/page.tsx` (area del docente, dello studente dei licei o dell'universita, altrimenti il portale) |
+| Dove si arriva dopo l'accesso, e il portale vietato agli studenti | `lib/eventi/area-account.ts` (la regola), `app/auth/dopo-accesso/page.tsx`, `app/member-portal/page.tsx`, `app/api/account/area/route.ts` e `components/navbar.tsx` ("Student area") |
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
 | Elenco dei mentor nell'area dello studente e in quella dei docenti | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx` (`percorso="docenti"` nella console dei docenti), rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
@@ -840,12 +840,38 @@ i partecipanti dell'universita alla loro, e tutti gli altri al portale come
 prima. Una lettura che non riesce porta al portale. La pagina della password
 non dice piu "application approved" e "member portal".
 
+**Il portale non e degli studenti.** Dopo la segnalazione, la scelta: gli
+studenti dei percorsi non usano il portale della ricerca. La regola sta in
+`lib/eventi/area-account.ts`: e studente chi ha un'iscrizione ai licei in
+attesa o confermata, o una candidatura all'universita, e non e docente dei
+licei, staff, membro o partner della Fondazione. Per loro `/member-portal`
+rimanda alla loro area, anche da un link o da un segnalibro, e la navbar
+mostra "Student area" al posto di "Research Portal" (la chiede a
+`/api/account/area`, solo se c'e il cookie della sessione: chi visita il sito
+non fa richieste). Staff, membri, partner e docenti tengono il portale; un
+membro che e anche studente arriva nella sua area dopo l'accesso, ma il
+portale lo apre. Una lettura che non riesce lascia tutto com'era.
+
+**La rubrica del portale.** La scheda "People" del portale legge
+`GET /api/admin/users`, che rispondeva a qualunque account con nome ed
+email di tutti i profili del sito, compresi gli studenti minorenni di ogni
+scuola: bastava registrarsi dal sito. Ora a chi non e staff arrivano solo i
+profili member, partner e admin; lo staff (pannello utenti, presenze)
+riceve ancora l'elenco completo. Resta aperto, ed e un'altra decisione:
+la rubrica mostra l'email dei membri anche a chi non ha attivato
+`show_email` nel profilo.
+
 Provato con lo stesso client finto: iscrizioni legate al referente
 ricollegate con lo stesso indirizzo o con uno nuovo (account del referente
 intatto), indirizzo del referente rifiutato, una riga legata a un account
 dello studente con un'altra email allineata a quella (niente link) o
 ricollegata a un account nuovo, e `accountAltrui` visto dal referente e da
-un docente del progetto.
+un docente del progetto. `area-account.ts` con un database finto: studente
+dei licei e dell'universita (area, portale bloccato), staff con
+un'iscrizione di prova (portale), membro che e anche studente (area dopo
+l'accesso, portale libero), referente (console), iscrizione ritirata o
+docente revocato (portale), tabella dei docenti assente, profilo non letto
+(portale, nessun blocco).
 
 ## Il progresso sul corso c'era gia, e non lo guardava nessuno
 
