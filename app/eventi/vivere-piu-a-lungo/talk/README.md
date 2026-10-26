@@ -4,8 +4,10 @@ Una serie di incontri brevi, online e gratuiti, fra gli studenti del percorso
 "Biotecnologie e Intelligenza Artificiale" (licei e universita), i loro
 docenti e chi lavora ogni giorno su energia, ambiente, biotecnologie e
 salute. Servono a conoscere problemi veri e a trovare idee concrete per i
-progetti. Il primo e con Emanuele Memmola, responsabile dell'economia
-circolare di Eni a Taranto, lunedi 9 novembre 2026 dalle 15:00 alle 16:00.
+progetti. Il primo e con Emanuele Memmola, presidente della Sezione
+Chimica Energia Ambiente di Confindustria Taranto, "Dalle biomasse
+all'idrogeno verde, sino agli e-fuel", lunedi 9 novembre 2026 dalle 15:00
+alle 16:00.
 
 Sotto modulo dell'evento, accanto a `licei/` e `universita/`, con la stessa
 impostazione: i dati in un file, una migrazione, le guardie nel codice e
@@ -60,7 +62,13 @@ riga nella pagina dei licei e pannello staff la leggono da li.
    funzione SQL.
 7. **Immagine Open Graph**: 1200x630, JPG sotto i 150 KB circa, in
    `public/assets/images/eventi/talk/<slug>-og.jpg`, e il percorso in
-   `immagineOg`.
+   `immagineOg`. Se si rifa l'immagine (titolo o ruolo cambiati), si
+   aggiunge o si incrementa `?v=` nel percorso: le anteprime dei social si
+   rileggono solo se l'indirizzo cambia. Per il talk di Memmola l'immagine
+   e stata rifatta il 26 ottobre senza `grafica/`: logo, etichetta,
+   sottotitolo, temi, nome, data e foto copiati dall'immagine di prima,
+   titolo e ruolo nuovi in Poppins. Le grafiche social (post, storia,
+   quadrato) vanno rifatte con `genera.py`.
 8. **Foto del relatore**: finche e null compare un monogramma con le
    iniziali in un cerchio teal. Con la foto la pagina del talk mostra un
    ritratto grande (quadrato, angoli di 24 px, da 340 a 400 px accanto al

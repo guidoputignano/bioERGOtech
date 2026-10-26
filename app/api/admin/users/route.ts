@@ -7,7 +7,8 @@ import { requireAdmin, requireMember } from "@/lib/auth/admin";
 // questa rotta rispondeva a chiunque con tutte le email del sito.
 //
 // A chi non e staff arrivano solo i membri della Fondazione (member,
-// partner, staff): la rubrica e loro. Prima arrivavano tutti i profili, cioe
+// partner, staff), con l'email solo se l'hanno resa visibile: la rubrica e
+// loro. Prima arrivavano tutti i profili, cioe
 // nome ed email di ogni account del sito, compresi gli studenti minorenni
 // del percorso licei, a chiunque si fosse registrato. Lo staff (pannello
 // utenti, presenze agli eventi) continua a ricevere l'elenco completo.
@@ -18,18 +19,35 @@ export async function GET() {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, chiamante } = guard;
 
-  let query = client
-    .from("profiles")
-    .select("id, email, full_name, partnership_level, organisation_id, organisation_name")
-    .order("email");
-  if (!chiamante.isAdmin) query = query.in("partnership_level", LIVELLI_RUBRICA);
-  const { data, error } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (chiamante.isAdmin) {
+    const { data, error } = await client
+      .from("profiles")
+      .select("id, email, full_name, partnership_level, organisation_id, organisation_name")
+      .order("email");
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ users: data });
   }
 
-  return NextResponse.json({ users: data });
+  // Per la rubrica, l'email solo di chi ha scelto di mostrarla (`show_email`,
+  // nel proprio profilo): e il consenso che il profilo chiede, e prima la
+  // rubrica lo ignorava. `*` perche la colonna non ha una migrazione nel
+  // repository: se mancasse, nessuna email, invece di una rubrica rotta.
+  const { data, error } = await client
+    .from("profiles")
+    .select("*")
+    .in("partnership_level", LIVELLI_RUBRICA)
+    .order("email");
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const users = ((data ?? []) as Record<string, unknown>[]).map((p) => ({
+    id: p.id,
+    email: p.show_email === true ? p.email : null,
+    full_name: p.full_name ?? null,
+    partnership_level: p.partnership_level,
+    organisation_id: p.organisation_id ?? null,
+    organisation_name: p.organisation_name ?? null,
+  }));
+  return NextResponse.json({ users });
 }
 
 // PATCH /api/admin/users — update a user's partnership level or organisation

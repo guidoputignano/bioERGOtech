@@ -113,12 +113,13 @@ export const TALKS: Talk[] = [
   {
     slug: "emanuele-memmola",
     numero: 1,
-    titolo: "Dalle biomasse al metano sintetico",
+    // Il titolo e il ruolo sono quelli indicati dal relatore il 19 ottobre.
+    titolo: "Dalle biomasse all'idrogeno verde, sino agli e-fuel",
     sottotitolo:
       "Energia rinnovabile, territorio e salute: le sfide reali dell'economia circolare raccontate da chi ci lavora.",
     relatore: {
       nome: "Emanuele Memmola",
-      ruolo: "Responsabile dell'economia circolare di Eni a Taranto",
+      ruolo: "Presidente della Sezione Chimica Energia Ambiente di Confindustria Taranto",
       foto: "/assets/images/eventi/talk/emanuele-memmola.webp",
     },
     dataLabel: "Lunedì 9 novembre 2026",
@@ -133,13 +134,13 @@ export const TALKS: Talk[] = [
     link: "https://meet.google.com/qoy-qvkw-ced",
     capienza: null,
     intro:
-      "Uno degli obiettivi del percorso è aiutarvi a trovare idee concrete da sviluppare nei vostri progetti. Per questo vi mettiamo in contatto con esperti del settore, che raccontano le sfide reali che affrontano nel loro lavoro. Il primo incontro è con Emanuele Memmola, che parlerà di metano sintetico e biomasse e delle loro possibili applicazioni in ambito biotech e salute.",
+      "Uno degli obiettivi del percorso è aiutarvi a trovare idee concrete da sviluppare nei vostri progetti. Per questo vi mettiamo in contatto con esperti del settore, che raccontano le sfide reali che affrontano nel loro lavoro. Il primo incontro è con Emanuele Memmola, che parlerà del percorso dalle biomasse all'idrogeno verde fino agli e-fuel, e delle loro possibili applicazioni in ambito biotech e salute.",
     temi: [
       {
-        titolo: "Idrogeno verde e metano sintetico",
+        titolo: "Idrogeno verde ed e-fuel",
         icona: "fa-atom",
         testo:
-          "Come si produce energia rinnovabile combinando idrogeno verde e anidride carbonica, e perché un combustibile pulito conta anche per laboratori, ospedali e filiere della salute.",
+          "Come idrogeno verde e anidride carbonica diventano combustibili sintetici, gli e-fuel, e perché un combustibile pulito conta anche per laboratori, ospedali e filiere della salute.",
       },
       {
         titolo: "Un ettaro di canapa per curare il suolo",
@@ -174,7 +175,10 @@ export const TALKS: Talk[] = [
     spuntiNota: "Sono solo spunti: le idee migliori nasceranno dalle vostre domande.",
     perChi:
       "Per gli studenti del percorso «Biotecnologie e Intelligenza Artificiale», dei licei e dell'università, e per i loro docenti. La partecipazione è gratuita.",
-    immagineOg: "/assets/images/eventi/talk/emanuele-memmola-og.jpg",
+    // "?v=2": l'immagine e stata rifatta con il titolo e il ruolo nuovi, e
+    // WhatsApp, LinkedIn e Facebook rileggono un'anteprima solo se cambia
+    // l'indirizzo.
+    immagineOg: "/assets/images/eventi/talk/emanuele-memmola-og.jpg?v=2",
   },
 ];
 

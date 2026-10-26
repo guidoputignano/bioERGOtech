@@ -1707,7 +1707,7 @@ function MemberDrawer({ member, isAdmin, onClose, onEdit, onDelete }: { member: 
 
 function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: boolean; }) {
   const [membersTab, setMembersTab] = useState<"organisations" | "people">("organisations");
-  const [profiles, setProfiles] = useState<{ id: string; email: string; full_name?: string; partnership_level: string; coin_balance?: number; lifetime_earned?: number; tier?: string }[]>([]);
+  const [profiles, setProfiles] = useState<{ id: string; email: string | null; full_name?: string; partnership_level: string; coin_balance?: number; lifetime_earned?: number; tier?: string }[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
 
   useEffect(() => {
@@ -1722,7 +1722,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
           balanceMap[cb.user_id] = { balance: cb.balance, lifetime_earned: cb.lifetime_earned, tier: cb.tier };
         });
         const filtered = (usersData.users || []).filter((u: { partnership_level: string }) => u.partnership_level !== "admin");
-                const enriched = filtered.map((u: { id: string; email: string; full_name?: string; partnership_level: string }) => ({
+                const enriched = filtered.map((u: { id: string; email: string | null; full_name?: string; partnership_level: string }) => ({
         
           ...u,
           coin_balance: balanceMap[u.id]?.balance ?? 0,
@@ -1831,7 +1831,7 @@ function MembersView({ members, isAdmin }: { members: Organisation[]; isAdmin?: 
                   <div key={p.id} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: SHADOW, display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 42, height: 42, borderRadius: 12, background: `linear-gradient(135deg, ${TEAL}, ${TEAL_DARK})`, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
-                        {(p.full_name || p.email).charAt(0).toUpperCase()}
+                        {(p.full_name || p.email || "?").charAt(0).toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, fontFamily: "'Sora', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{p.full_name || "—"}</div>
