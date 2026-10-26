@@ -60,7 +60,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Indice appiccicato | `app/eventi/vivere-piu-a-lungo/licei/LiceiIndice.tsx` |
 | Modulo di adesione | `app/eventi/vivere-piu-a-lungo/licei/AdesioneForm.tsx` |
 | Iscrizione studenti | `app/eventi/vivere-piu-a-lungo/licei/iscrizione/` |
-| Area dei docenti (referente e docenti del progetto) | `app/eventi/vivere-piu-a-lungo/licei/referente/`: `ReferenteConsole.tsx`, `AccettazioneIstruzioni.tsx`, `DocentiProgetto.tsx`, `QuadroSquadre.tsx`, `RiflessioniReferente.tsx`, `FiltroClasse.tsx`, `filtroPerClasse.ts` |
+| Area dei docenti (referente e docenti del progetto) | `app/eventi/vivere-piu-a-lungo/licei/referente/`: `ReferenteConsole.tsx`, `AccettazioneIstruzioni.tsx`, `DocentiProgetto.tsx`, `QuadroSquadre.tsx`, `RiflessioniReferente.tsx`, `FiltroClasse.tsx`, `filtroPerClasse.ts`, `CorreggiEmail.tsx` |
 | Modulo autorizzazione | `licei/referente/generaAutorizzazione.ts` |
 | Area dello studente | `app/eventi/vivere-piu-a-lungo/licei/studente/` (`StudenteConsole.tsx`, `RiflessioniPassate.tsx` per la scelta sulle riflessioni di prima, `riflessioni/page.tsx` per il link diretto alla scelta) |
 | Area della Commissione | `app/eventi/vivere-piu-a-lungo/licei/commissione/` |
@@ -80,6 +80,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Riflessioni lette dai docenti | `lib/eventi/licei-riflessioni.ts` (anche la scelta dello studente sulle consegne di prima); il flag lo scrive `app/api/courses/submissions/route.ts`, l'avviso e la domanda allo studente stanno in `app/courses/LessonSubmissionBox.tsx` |
 | Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
+| Email sbagliate | `lib/eventi/email-refusi.ts` (refusi nel dominio, per il modulo e le rotte), `lib/eventi/licei-correggi-email.ts` (la correzione dalla console), `app/courses/AvvisoStudentiLicei.tsx` (l'avviso nel cancello del corso e nella registrazione dal sito) |
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
 | Elenco dei mentor nell'area dello studente e in quella dei docenti | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx` (`percorso="docenti"` nella console dei docenti), rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
@@ -346,8 +347,8 @@ con la riga che ha gia.
 
 | Rotta | Chi | Che cosa |
 | --- | --- | --- |
-| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ha_account` (dall'iscrizione), `ultimo_accesso`, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`, `accessi_non_letti` (la funzione degli accessi non ha risposto), `rimanda_tutti` (`ultimo_invio_at`, `prossimo_invio_at`). A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
-| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione. Rinvio del link di accesso: `{ azione: 'rimanda_accesso', id }` a uno studente (409 se l'iscrizione non e attiva), `{ azione: 'rimanda_accesso_tutti' }` a tutti i mai entrati dell'istituto, che risponde `{ inviati, saltati, gia_raggiunti, non_validi, errori, inviato_at, prossimo_invio_at }` oppure 429 con `prossimo_invio_at`. `saltati` sono i rimasti fuori dal tetto o con un link di meno di 5 minuti fa, `gia_raggiunti` quelli a cui il link e gia stato mandato nel ciclo di invii in corso, `non_validi` gli indirizzi da correggere. |
+| `GET /api/eventi/licei/referente` | docenti | Iscrizioni dell'istituto con progresso, `ha_account` (dall'iscrizione), `ultimo_accesso`, `ruolo`, `io` (nome e classi), `docenti_progetto`, `fasi` (`squadre`, `consegne`), squadre senza `codice`, `squadre_errore`, `componenti_altri_istituti`, `accessi_non_letti` (la funzione degli accessi non ha risposto), `rimanda_tutti` (`ultimo_invio_at`, `prossimo_invio_at`), per ogni iscrizione `talk` (gli slug dei talk con gli esperti a cui si e iscritto), `talk_elenco` (`slug`, `etichetta`: "Talk del 9 novembre"), `talk_non_letti` (le iscrizioni ai talk non si sono lette). A istruzioni non accettate risponde 403 con `istruzioni_accettate: false` e solo ruolo e istituto, per la schermata di accettazione. |
+| `PATCH`, `POST` stessa rotta | docenti | Conferma o rifiuto di un'iscrizione. Rinvio del link di accesso: `{ azione: 'rimanda_accesso', id }` a uno studente (409 se l'iscrizione non e attiva), `{ azione: 'rimanda_accesso_tutti' }` a tutti i mai entrati dell'istituto, che risponde `{ inviati, saltati, gia_raggiunti, non_validi, errori, inviato_at, prossimo_invio_at }` oppure 429 con `prossimo_invio_at`. `saltati` sono i rimasti fuori dal tetto o con un link di meno di 5 minuti fa, `gia_raggiunti` quelli a cui il link e gia stato mandato nel ciclo di invii in corso, `non_validi` gli indirizzi da correggere. Correzione dell'email: `{ azione: 'correggi_email', id, email, conferma? }`, solo per un account mai entrato; risponde `{ success, iscrizione, account: 'aggiornato' \| 'creato' \| 'collegato', gia_entrato, email_inviata }` (`email_inviata` null se il link non andava mandato), oppure un errore, con `richiede_conferma` e `suggerimento` quando l'indirizzo somiglia a un refuso (vedi "L'email sbagliata"). |
 | `GET .../referente/export` | solo referente | I due CSV (confermati senza email, elenco minimo per foto e video). |
 | `GET`, `POST .../referente/istruzioni` | docenti, anche prima di accettare | Versione, testo, se e quando accettate; `POST { accetto: true }` registra l'accettazione e porta il docente del progetto a `attivo`. |
 | `GET .../referente/docenti` | docenti | Al referente l'elenco completo; a un docente del progetto solo nome e cognome dei colleghi. |
@@ -710,6 +711,85 @@ il client con la service role key, dietro le guardie che gia c'erano.
 `licei_accessi_istituto` filtra per istituto **dentro** la funzione: il client
 ha la service role key, RLS non lo ferma, e una funzione che restituisse tutto
 lascerebbe il confine in mano a chi la chiama.
+
+## L'email sbagliata
+
+Lo studente scrive l'email una volta sola, e un refuso nel dominio non si
+vede: con "gmail.cpm" invece di "gmail.com" l'account nasce con l'indirizzo
+sbagliato, il link della password non arriva mai, e nella console resta
+"Mai entrato". Rimandare il link non serve. E successo, e la studentessa,
+non riuscendo a entrare, si e creata un account dal sito con l'indirizzo
+giusto: seguiva le lezioni, ma fuori dal percorso, quindi il suo
+referente non la trovava nell'elenco, e lei non poteva entrare in una
+squadra ne iscriversi al talk. Tre rimedi, uno per ogni punto in cui e
+andata storta.
+
+**Prima: il modulo riconosce i refusi** (`lib/eventi/email-refusi.ts`). Due
+livelli. Una terminazione che non esiste (".cpm", ".con", ".ti", un punto
+finale) e un errore certo: `validateIscrizione` rifiuta, nel modulo e nella
+rotta, e suggerisce l'indirizzo giusto quando lo indovina. Un dominio a una
+lettera da un servizio diffuso ("gmial.com", "hotmail.ti", "libero.tt") o
+Gmail con la terminazione sbagliata ("gmail.it") e quasi sempre un refuso,
+ma un dominio vero vicino a uno noto puo esistere: il modulo mostra "Forse
+e ...?" con "Si, correggi" ed "E giusto cosi", e solo la seconda scelta
+(`email_confermata`, non salvata) lo fa passare. I domini noti, anche quelli
+vicini fra loro ("tim.it" e "tin.it", "mail.com" e "gmail.com"), passano
+senza domande, e i suggerimenti puntano solo a domini lunghi e diffusi: a
+una lettera da "me.com" ci sono troppi domini veri per indovinare.
+
+**Dopo: il docente corregge** (`lib/eventi/licei-correggi-email.ts`,
+`referente/CorreggiEmail.tsx`). Sulla riga di uno studente mai entrato c'e
+"Correggi email", anche a iscrizione "Non riconosciuta", perche spesso e
+stata rifiutata proprio per l'indirizzo. Le righe con un refuso evidente
+sono segnate "Email da controllare", e la correzione parte gia con
+l'indirizzo suggerito. Solo per un account **mai entrato**: cambiare
+l'indirizzo di un account decide chi ci entra, e su un account che lo
+studente usa gia sarebbe consegnarlo a chi scrive l'indirizzo nuovo. Un
+account mai usato non ha password, lezioni ne dati. A seconda dell'indirizzo
+nuovo:
+
+- nessun account lo usa: si cambia l'indirizzo dell'account (e del profilo),
+  o se ne crea uno se l'iscrizione non lo aveva, e la riga lo segue;
+- un account c'e gia (il caso della registrazione dal sito): l'iscrizione
+  passa a quell'account, e le lezioni gia fatte si contano. Si rifiuta se e
+  dello staff, di un docente o referente, o e legato a un'altra iscrizione,
+  gli stessi controlli del modulo pubblico, che anche lui lega l'account che
+  trova per email. Il vecchio account, mai usato, resta scollegato: alla
+  chiusura non lo trova nessuna riga, e se serve lo si cancella a mano;
+- l'account ha gia l'indirizzo nuovo (una correzione rimasta a meta): si
+  allinea la riga.
+
+Si rifiuta anche un indirizzo gia usato da un'altra iscrizione dello stesso
+istituto, o da un docente o referente del percorso. Dopo la correzione, a
+un'iscrizione in attesa o confermata con un account mai entrato parte il
+link della password al nuovo indirizzo (`email_inviata`); a una "Non
+riconosciuta" no: la conferma, se il docente la riporta su "Confermata",
+arriva gia al nuovo indirizzo. I messaggi degli `non_validi` del rinvio a
+tutti ora rimandano a questo bottone invece che allo staff.
+
+**Nel corso: l'avviso a chi non riesce a entrare** (`app/courses/AvvisoStudentiLicei.tsx`).
+Il cancello delle lezioni (`GateModal.tsx`) offre "Join the Program", cioe
+la registrazione dal sito. Sotto c'e un avviso in italiano per gli studenti
+dei licei: non creare un account da qui, iscriviti con il codice della
+scuola, e se l'email non arriva chiedi al professore. Lo stesso avviso
+compare nella pagina di registrazione quando ci si arriva da una lezione del
+corso (`returnTo` su `/courses/agentic-ai`). La guida per le scuole
+(`guida/page.tsx`, guasti) ha le voci "Uno studente ha sbagliato l'email" e
+la terza causa di "si e iscritto ma il professore non lo vede".
+
+Collegato: il controllo "gia iscritto" della rotta dell'iscrizione usava
+l'email come pattern di `ilike`, dove "_" vale qualsiasi carattere, e
+"mario_rossi@" risultava gia iscritto se c'era "mario.rossi@". Ora passa da
+`escapeLike`, come lo stesso confronto nella designazione dei finalisti.
+
+Come e stato provato: `email-refusi.ts` su una trentina di indirizzi (refusi
+veri, domini delle scuole, servizi vicini fra loro, "yahoo.fr",
+internazionalizzati); `validateIscrizione` con e senza conferma;
+`correggiEmailIscrizione` con un client Supabase finto, nei tre casi e in
+tutti i rifiuti (account gia entrato, iscrizione ritirata o di un altro
+istituto, indirizzo di un docente, del referente, dello staff, di un'altra
+iscrizione dello stesso istituto o di un account iscritto altrove, refuso
+impossibile, refuso sospetto senza e con conferma, "_" nell'indirizzo).
 
 ## Il progresso sul corso c'era gia, e non lo guardava nessuno
 

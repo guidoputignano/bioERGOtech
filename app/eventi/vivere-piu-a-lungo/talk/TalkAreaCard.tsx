@@ -12,8 +12,9 @@
  * non si puo accedere e solo rumore.
  *
  * Per il docente c'e in piu un numero: quanti studenti del suo istituto si
- * sono iscritti. Solo il numero, mai i nomi; la rotta lo manda solo a chi
- * ha accettato le istruzioni per i docenti.
+ * sono iscritti; la rotta lo manda solo a chi ha accettato le istruzioni per
+ * i docenti. I nomi non passano da qui: li porta l'elenco degli studenti
+ * della console, che segna ognuno con i suoi talk, e la scheda lo dice.
  */
 
 import { useEffect, useState } from "react";
@@ -101,6 +102,9 @@ export function TalkAreaCard({
                 : `${n} studenti del vostro istituto si sono iscritti. `}
             </strong>
           )}
+          {typeof n === "number" &&
+            n > 0 &&
+            `Nell'elenco degli studenti li trova segnati con «${talk.etichetta}», e può filtrarli. `}
           Il talk è aperto agli studenti del percorso e ai loro docenti: potete iscrivervi anche voi.
         </p>
       )}

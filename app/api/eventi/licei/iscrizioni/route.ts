@@ -79,11 +79,13 @@ export async function POST(request: Request) {
     }
 
     // ── Gia iscritto? ──
+    // `escapeLike`: in un pattern di ilike "_" vale qualsiasi carattere, e
+    // "mario_rossi@" risultava gia iscritto se c'era "mario.rossi@".
     const { data: esistente } = await client
       .from("licei_iscrizioni")
       .select("id, stato")
       .eq("adesione_id", adesione.id)
-      .ilike("email", email)
+      .ilike("email", escapeLike(email))
       .maybeSingle();
 
     if (esistente) {

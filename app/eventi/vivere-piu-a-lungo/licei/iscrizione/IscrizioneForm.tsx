@@ -12,7 +12,7 @@
  * compilato tutto il resto.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ import {
   STUDENTE_PATH,
 } from "../content";
 import { normalizzaCodice, validateIscrizione } from "@/lib/eventi/licei-iscrizioni";
+import { refusoEmail } from "@/lib/eventi/email-refusi";
 
 function Consenso({
   checked,
@@ -75,6 +76,11 @@ export function IscrizioneForm({
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [email, setEmail] = useState("");
+  // Il controllo dei refusi nel dominio ("gmail.cpm") si mostra quando lo
+  // studente lascia il campo, non mentre scrive. `emailConfermata` e
+  // l'indirizzo che ha detto giusto cosi, se somigliava a un refuso.
+  const [emailUscita, setEmailUscita] = useState(false);
+  const [emailConfermata, setEmailConfermata] = useState<string | null>(null);
   const [classe, setClasse] = useState("");
   const [anno, setAnno] = useState("");
   const [privacy, setPrivacy] = useState(false);
@@ -97,9 +103,14 @@ export function IscrizioneForm({
     })();
   }, []);
 
+  const refuso = useMemo(() => refusoEmail(email), [email]);
+  const confermata = emailConfermata !== null && emailConfermata === email.trim();
+  const mostraRefuso = refuso !== null && emailUscita && !(confermata && !refuso.impossibile);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setEmailUscita(true);
 
     const payload = {
       codice,
@@ -112,6 +123,7 @@ export function IscrizioneForm({
       dichiara_14_anni: eta14,
       accetta_regolamento: regolamento,
       consenso_newsletter: newsletter,
+      email_confermata: confermata,
       website,
     };
 
@@ -252,7 +264,67 @@ export function IscrizioneForm({
         <p style={{ fontSize: 12, color: "var(--text-light)", margin: 0, lineHeight: 1.5 }}>
           Ti serve per accedere alle lezioni. Usa un indirizzo che leggi davvero.
         </p>
-        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => setEmailUscita(true)}
+          aria-describedby={mostraRefuso ? "email-refuso" : undefined}
+        />
+        {/* Un refuso nel dominio non si nota scrivendo, e l'email con il
+            link della password non arriverebbe mai. */}
+        {mostraRefuso && refuso && (
+          <div
+            id="email-refuso"
+            role="status"
+            style={{
+              background: refuso.impossibile ? "#FDECEF" : "#FFF8E6",
+              border: `1px solid ${refuso.impossibile ? "#F3C2CD" : "#F0D89B"}`,
+              borderRadius: 8,
+              padding: "10px 12px",
+              fontSize: 13,
+              color: refuso.impossibile ? "#8E2C43" : "#75570F",
+              lineHeight: 1.6,
+            }}
+          >
+            {refuso.impossibile ? `«${refuso.dominio}» non esiste. ` : "Controlla l'indirizzo. "}
+            {refuso.suggerimento ? (
+              <>
+                Forse è <strong>{refuso.suggerimento}</strong>?
+              </>
+            ) : (
+              "Correggilo prima di iscriverti."
+            )}
+            <div className="flex flex-wrap gap-2" style={{ marginTop: 8 }}>
+              {refuso.suggerimento && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    setEmail(refuso.suggerimento!);
+                    setError(null);
+                  }}
+                >
+                  Sì, correggi
+                </Button>
+              )}
+              {!refuso.impossibile && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setEmailConfermata(email.trim());
+                    setError(null);
+                  }}
+                >
+                  È giusto così
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

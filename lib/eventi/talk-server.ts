@@ -25,6 +25,7 @@ import {
 import { googleCalendarUrl } from "@/lib/eventi/talk";
 import {
   SITE_URL,
+  TALKS,
   talkConcluso,
   talkPath,
   type Talk,
@@ -333,6 +334,39 @@ export async function contaIscritti(
     throw new Error(`${TABELLA_TALK}: ${error.message}`);
   }
   return { presente: true, totale: count ?? 0 };
+}
+
+/**
+ * I talk a cui si sono iscritti gli studenti dei licei di un istituto, per
+ * account: serve alla console dei docenti, che segna ogni studente con i
+ * suoi talk. Stesso filtro del numero nella scheda del talk (ruolo e
+ * istituto), cosi i badge e il numero tornano. Solo gli slug di `TALKS`.
+ *
+ * Prima della migrazione la tabella non c'e: nessuno e iscritto, `letti`
+ * resta vero. Con un errore vero `letti` e falso, e la console lo dice
+ * invece di far credere che nessuno si sia iscritto.
+ */
+export async function talkPerStudentiIstituto(
+  db: Db,
+  adesioneId: string,
+): Promise<{ letti: boolean; perUtente: Map<string, string[]> }> {
+  const perUtente = new Map<string, string[]>();
+  const { data, error } = await db
+    .from(TABELLA_TALK)
+    .select("talk_slug, user_id")
+    .eq("ruolo", "studente_licei")
+    .eq("adesione_id", adesioneId);
+  if (error) {
+    if (erroreSchemaMancante(error, "tabella")) return { letti: true, perUtente };
+    console.error(`${TABELLA_TALK}: iscrizioni dell'istituto non lette:`, error.message);
+    return { letti: false, perUtente };
+  }
+  const slugValidi = new Set(TALKS.map((t) => t.slug));
+  for (const r of (data ?? []) as { talk_slug: string; user_id: string }[]) {
+    if (!slugValidi.has(r.talk_slug)) continue;
+    perUtente.set(r.user_id, [...(perUtente.get(r.user_id) ?? []), r.talk_slug]);
+  }
+  return { letti: true, perUtente };
 }
 
 /** La persona e gia iscritta a questo talk? */

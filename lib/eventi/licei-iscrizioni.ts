@@ -9,6 +9,11 @@
  * minore, quindi deve poter spiegare a che cosa serve.
  */
 
+import { messaggioRefusoEmail } from "./email-refusi";
+
+/** Come si conferma, nel modulo, un indirizzo che somiglia a un refuso. */
+export const CONFERMA_EMAIL_COME = "scegli «È giusto così» sotto il campo";
+
 export type IscrizioneInput = {
   /** Codice dell'istituto, formato LIC-XXXXXXXX, dal docente referente. */
   codice: string;
@@ -26,6 +31,12 @@ export type IscrizioneInput = {
   accetta_regolamento: boolean;
   /** Facoltativo, mai preselezionato. */
   consenso_newsletter?: boolean;
+  /**
+   * Lo studente ha confermato un indirizzo che somiglia a un refuso
+   * ("gmial.com"): e giusto cosi. Non si salva. Non vale per un indirizzo
+   * con una terminazione che non esiste ("gmail.cpm"), che va corretto.
+   */
+  email_confermata?: boolean;
 
   /** Honeypot anti-spam. Deve restare vuoto. */
   website?: string;
@@ -91,6 +102,11 @@ export function validateIscrizione(input: Partial<IscrizioneInput>): string | nu
 
   if (!isEmail(testo(input.email)))
     return "Inserisci un indirizzo email valido. Ti servirà per accedere alle lezioni.";
+  const refuso = messaggioRefusoEmail(testo(input.email), {
+    confermata: input.email_confermata === true,
+    confermaComeDire: CONFERMA_EMAIL_COME,
+  });
+  if (refuso) return refuso;
 
   if (!testo(input.classe)) return "Indica la tua classe, per esempio 4A.";
   if (testo(input.classe).length > 40) return "La classe è troppo lunga.";

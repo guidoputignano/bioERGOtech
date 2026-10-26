@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { requireAdmin } from "@/lib/auth/admin";
 import { generateCodice } from "@/lib/eventi/registration";
+import { escapeLike } from "@/lib/eventi/licei-docenti";
 import { finalistaEmailHtml, finalistaEmailSubject } from "@/lib/eventi/licei-email";
 import { SESSIONE_FINALISTI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
@@ -103,7 +104,7 @@ export async function POST() {
       const { data: gia } = await client
         .from("event_registrations")
         .select("id")
-        .ilike("email", m.email)
+        .ilike("email", escapeLike(m.email))
         .maybeSingle();
 
       const { data: rpcData, error: rpcError } = await client.rpc("event_register", {

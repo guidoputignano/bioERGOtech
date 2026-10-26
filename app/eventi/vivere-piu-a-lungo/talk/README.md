@@ -147,8 +147,19 @@ anche da chi non partecipa piu. Dopo la fine del talk la rotta rifiuta
 iscrizioni e annullamenti (409).
 
 Il docente vede nella sua area quanti studenti del suo istituto si sono
-iscritti, senza nomi, e solo dopo aver accettato le istruzioni per i
-docenti: il numero passa dalla guardia intera, `requireDocente()`.
+iscritti, e solo dopo aver accettato le istruzioni per i docenti: il numero
+passa dalla guardia intera, `requireDocente()`. **Chi** si e iscritto lo
+vede nell'elenco degli studenti della sua console: ogni iscritto ha un
+badge con il nome breve del talk ("Talk del 9 novembre", `etichettaTalk`,
+dalla data di inizio in ora italiana), e il menu accanto alla ricerca
+mostra solo gli iscritti a un talk. Prima vedeva solo il numero, e alla
+studentessa che chiedeva "mi sono iscritta?" non sapeva rispondere. I dati
+arrivano con la GET della console (`talk`, `talk_elenco`, `talk_non_letti`,
+da `talkPerStudentiIstituto` in `lib/eventi/talk-server.ts`), con lo stesso
+filtro del numero (ruolo `studente_licei`, istituto), quindi badge e numero
+tornano. Se la lettura non riesce la console lo dice, invece di mostrare
+nessun iscritto. La scheda del talk nell'area del docente rimanda
+all'elenco.
 
 Lo staff, dalla scheda "Talk con gli esperti" del pannello dei licei, vede i
 numeri per talk e per ruolo e scarica il CSV: nome, cognome, email, istituto
@@ -253,8 +264,10 @@ studenti universitari e staff non sono del percorso licei e restano.
 
 - L'informativa per gli studenti (`licei/documenti.ts`, "Quali dati
   raccogliamo") nomina le iscrizioni ai talk; quella per scuole e docenti le
-  nomina fra i dati del docente. La data di aggiornamento resta
-  `2026-10-13`.
+  nomina fra i dati del docente. In "Chi può vedere i dati" l'informativa
+  per gli studenti dice che i docenti dell'istituto vedono anche a quali
+  talk si sono iscritti, e la sua data di aggiornamento e ora `2026-10-26`;
+  quella per scuole e docenti rimanda a questi limiti e resta `2026-10-13`.
 - Il percorso universitario non ha un'informativa sua: vale quella del sito
   (`app/legal/privacy/content.ts`), che nella categoria dei partecipanti al
   percorso universitario ora le nomina, in italiano e in inglese. La data li
