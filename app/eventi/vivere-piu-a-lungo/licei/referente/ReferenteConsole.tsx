@@ -1020,7 +1020,9 @@ export function ReferenteConsole({
                 {/* Legata all'account di un altro: si e iscritto da un
                     dispositivo su cui era collegato qualcun altro, spesso il
                     docente. "Correggi email" gli da un account suo. */}
-                {r.account_altrui && (
+                {/* Non su un'iscrizione ritirata: li la correzione non c'e,
+                    e non c'e niente da ricollegare. */}
+                {r.account_altrui && r.stato !== "ritirata" && (
                   <div style={{ fontSize: 12.5, color: "#B44A5E", lineHeight: 1.6, marginTop: 4 }}>
                     <strong>Account da ricollegare.</strong>{" "}
                     {r.account_altrui === "mio"
