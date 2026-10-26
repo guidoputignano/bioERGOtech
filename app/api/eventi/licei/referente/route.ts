@@ -16,6 +16,9 @@ import {
   rimandaAccessoATutti,
   statoRimandaTutti,
 } from "@/lib/eventi/licei-rimanda-accesso";
+import { correggiEmailIscrizione } from "@/lib/eventi/licei-correggi-email";
+import { talkPerStudentiIstituto } from "@/lib/eventi/talk-server";
+import { TALKS, etichettaTalk } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 
 const STATI_VALIDI = new Set<string>(STATI_ISCRIZIONE.map((s) => s.value));
 
@@ -76,7 +79,9 @@ export async function GET() {
   // docenti non devono far cadere l'elenco degli studenti: se la lettura
   // fallisce, la console li chiede da sola alla loro rotta, che l'errore lo
   // dice per esteso.
-  const [{ data, error }, { data: squadre, error: erroreSquadre }, accessi, rimandaTutti, docenti, config] = await Promise.all([
+  // E i talk con gli esperti a cui si sono iscritti i suoi studenti: alla
+  // domanda "mi sono iscritta?" il docente risponde guardando la riga.
+  const [{ data, error }, { data: squadre, error: erroreSquadre }, accessi, rimandaTutti, docenti, config, talk] = await Promise.all([
     client
       .from("licei_iscrizioni")
       .select(`${COLONNE_ISCRIZIONE_DOCENTE}, user_id`)
@@ -96,6 +101,7 @@ export async function GET() {
       return null;
     }),
     leggiConfigLicei(),
+    talkPerStudentiIstituto(client, ctx.adesione.id),
   ]);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -175,7 +181,15 @@ export async function GET() {
       ha_account: !!user_id,
       ultimo_accesso: accessi.ultimoAccesso.get(r.id) ?? null,
       lezioni_completate: user_id ? (progresso.get(user_id) ?? 0) : 0,
+      // Gli slug dei talk a cui si e iscritto. Vuoto anche se i talk non si
+      // sono potuti leggere: per quello c'e `talk_non_letti`.
+      talk: user_id ? (talk.perUtente.get(user_id) ?? []) : [],
     })),
+    // I talk della serie, dal primo, con il nome breve dei badge.
+    talk_elenco: [...TALKS]
+      .sort((a, b) => new Date(a.inizio).getTime() - new Date(b.inizio).getTime())
+      .map((t) => ({ slug: t.slug, etichetta: etichettaTalk(t) })),
+    talk_non_letti: !talk.letti,
     // Vero se gli accessi non si sono potuti leggere: allora `ultimo_accesso`
     // e nullo per tutti e non vuol dire "mai entrato".
     accessi_non_letti: !accessi.letti,
@@ -288,12 +302,15 @@ export async function PATCH(request: Request) {
 }
 
 /**
- * Rimanda il link per impostare la password.
+ * Rimanda il link per impostare la password, o corregge l'email.
  *
  * - `{ azione: "rimanda_accesso", id }`: a uno studente.
  * - `{ azione: "rimanda_accesso_tutti" }`: a tutti gli studenti
  *   dell'istituto, in attesa o confermati, che hanno un account e non sono
  *   mai entrati. Chi sono lo decide il server: il corpo non porta elenchi.
+ * - `{ azione: "correggi_email", id, email, conferma? }`: l'indirizzo di uno
+ *   studente il cui account non e mai entrato, e poi il link al nuovo
+ *   indirizzo (`lib/eventi/licei-correggi-email.ts`).
  *
  * L'iscrizione crea l'account e manda quel link una volta sola, dentro
  * l'email di benvenuto. Se non lo apre, o se la posta della scuola blocca
@@ -310,9 +327,15 @@ export async function POST(request: Request) {
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, ctx } = guard;
 
-  const body = (await request.json().catch(() => ({}))) as { id?: string; azione?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    id?: string;
+    azione?: string;
+    email?: unknown;
+    conferma?: unknown;
+  };
 
   if (body.azione === "rimanda_accesso_tutti") return rimandaATutti(client, ctx);
+  if (body.azione === "correggi_email") return correggiEmail(client, ctx, body);
 
   if (body.azione !== "rimanda_accesso") {
     return NextResponse.json({ error: "Azione non riconosciuta." }, { status: 400 });
@@ -398,6 +421,82 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true });
+}
+
+/**
+ * La correzione dell'email di uno studente mai entrato. I controlli e le
+ * scritture sono in `correggiEmailIscrizione`; qui la risposta e il link
+ * della password al nuovo indirizzo, se l'iscrizione e attiva e l'account
+ * non e gia entrato.
+ */
+async function correggiEmail(
+  client: Parameters<typeof correggiEmailIscrizione>[0]["client"],
+  ctx: { adesione: { id: string; istituto_denominazione: string }; userId: string },
+  body: { id?: string; email?: unknown; conferma?: unknown },
+) {
+  if (!body.id) return NextResponse.json({ error: "Iscrizione non indicata." }, { status: 400 });
+  if (typeof body.email !== "string" || body.email.trim() === "") {
+    return NextResponse.json({ error: "Scriva il nuovo indirizzo email." }, { status: 400 });
+  }
+
+  const esito = await correggiEmailIscrizione({
+    client,
+    adesioneId: ctx.adesione.id,
+    iscrizioneId: body.id,
+    email: body.email,
+    confermata: body.conferma === true,
+    colonne: COLONNE_ISCRIZIONE_DOCENTE,
+    autore: ctx.userId,
+  });
+
+  if (esito.esito === "rifiutata") {
+    return NextResponse.json(
+      {
+        error: esito.errore,
+        richiede_conferma: esito.richiedeConferma === true,
+        suggerimento: esito.suggerimento ?? null,
+      },
+      { status: esito.status },
+    );
+  }
+
+  // Il link al nuovo indirizzo. La correzione e fatta comunque: se l'email
+  // non parte lo si dice, e il bottone "Rimanda il link" resta sulla riga.
+  let emailInviata: boolean | null = null;
+  if (esito.daAvvisare) {
+    emailInviata = false;
+    if (process.env.RESEND_API_KEY) {
+      const url = await linkImpostaPassword(client, esito.daAvvisare.iscrizioneId, esito.daAvvisare.email);
+      if (url) {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          const { error: erroreInvio } = await resend.emails.send({
+            from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+            to: esito.daAvvisare.email,
+            subject: accessoEmailSubject(),
+            html: accessoEmailHtml({
+              nome: esito.daAvvisare.nome,
+              istituto: ctx.adesione.istituto_denominazione,
+              setPasswordUrl: url,
+            }),
+          });
+          if (erroreInvio) throw new Error(erroreInvio.message);
+          emailInviata = true;
+        } catch (err) {
+          console.error(`Licei correggi email: iscrizione ${esito.daAvvisare.iscrizioneId}: email non partita:`, err);
+        }
+      }
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    iscrizione: esito.iscrizione,
+    account: esito.account,
+    gia_entrato: esito.giaEntrato,
+    // null: il link non andava mandato (iscrizione non attiva, o account gia entrato).
+    email_inviata: emailInviata,
+  });
 }
 
 /**

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef, Suspense } from "react";
+import { AvvisoStudentiLicei } from "@/app/courses/AvvisoStudentiLicei";
 
 function generateStrongPassword(): string {
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -122,6 +123,14 @@ function SignUpFormInner({ className, ...props }: React.ComponentPropsWithoutRef
           <CardDescription>Create your bioERGOtech account</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Arriva da una lezione del corso dei licei: prima di creare un
+              account dal sito, lo studente del percorso deve iscriversi con
+              il codice della scuola. */}
+          {returnTo?.startsWith("/courses/agentic-ai") && (
+            <div style={{ marginBottom: 20 }}>
+              <AvvisoStudentiLicei />
+            </div>
+          )}
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">

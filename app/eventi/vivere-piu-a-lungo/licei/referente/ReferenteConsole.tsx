@@ -58,11 +58,13 @@ import {
 import { generaAutorizzazionePDF } from "./generaAutorizzazione";
 import { AccettazioneIstruzioni } from "./AccettazioneIstruzioni";
 import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
+import { CorreggiEmail } from "./CorreggiEmail";
 import { FiltroClasse } from "./FiltroClasse";
 import { QuadroSquadre } from "./QuadroSquadre";
 import { LinkRiflessioniStudenti, RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
 import { MentorElenco } from "../../mentor/MentorElenco";
 import type { IscrizioneQuadroInput, SquadraQuadroInput } from "@/lib/eventi/licei-squadre";
+import { refusoEmail } from "@/lib/eventi/email-refusi";
 import {
   TUTTE_LE_CLASSI,
   corrispondeClasse,
@@ -87,6 +89,8 @@ type Ruolo = "referente" | "docente";
 type Io = { id: string | null; nome: string; cognome: string; classi: string[] };
 /** Le fasi del percorso, come le legge la rotta: "aperte" o "chiuse". */
 type Fasi = { squadre: string; consegne: string };
+/** Un talk della serie, con il nome breve dei badge: "Talk del 9 novembre". */
+type TalkVoce = { slug: string; etichetta: string };
 /** L'esito dell'ultimo rinvio del link a tutti, in soli numeri. */
 type EsitoTutti = {
   inviati: number;
@@ -178,6 +182,15 @@ export function ReferenteConsole({
   // Lo studente di cui sono aperte le riflessioni: uno alla volta, e si
   // leggono solo all'apertura.
   const [riflessioniDi, setRiflessioniDi] = useState<string | null>(null);
+  // I talk con gli esperti: quali ci sono, se le iscrizioni si sono lette, e
+  // il filtro dell'elenco ("" per tutti, altrimenti lo slug di un talk).
+  const [talkElenco, setTalkElenco] = useState<TalkVoce[]>([]);
+  const [talkNonLetti, setTalkNonLetti] = useState(false);
+  const [filtroTalk, setFiltroTalk] = useState("");
+  // La correzione dell'email: di chi e aperta (una alla volta) e l'esito,
+  // per riga, che resta finche la pagina non si ricarica.
+  const [correggiDi, setCorreggiDi] = useState<string | null>(null);
+  const [corrette, setCorrette] = useState<Map<string, string>>(new Map());
 
   // Con `silenzioso` (il bottone "Aggiorna" del quadro) la pagina resta
   // com'e mentre i dati arrivano: niente "Caricamento" al posto di tutto, e
@@ -216,6 +229,8 @@ export function ReferenteConsole({
       setTotaleLezioni(data.totale_lezioni ?? 0);
       setRighe(data.iscrizioni ?? []);
       setAccessiNonLetti(data.accessi_non_letti === true);
+      setTalkElenco(data.talk_elenco ?? []);
+      setTalkNonLetti(data.talk_non_letti === true);
       setProssimoTutti(data.rimanda_tutti?.prossimo_invio_at ?? null);
       setUltimoTutti(data.rimanda_tutti?.ultimo_invio_at ?? null);
       setSquadre(data.squadre ?? []);
@@ -367,11 +382,38 @@ export function ReferenteConsole({
 
   const visibili = useMemo(() => {
     const q = filtro.trim().toLowerCase();
-    if (!q) return righeFiltrate;
-    return righeFiltrate.filter((r) =>
+    const perTalk = filtroTalk
+      ? righeFiltrate.filter((r) => (r.talk ?? []).includes(filtroTalk))
+      : righeFiltrate;
+    if (!q) return perTalk;
+    return perTalk.filter((r) =>
       [r.nome, r.cognome, r.classe, r.email].some((v) => String(v ?? "").toLowerCase().includes(q)),
     );
-  }, [righeFiltrate, filtro]);
+  }, [righeFiltrate, filtro, filtroTalk]);
+
+  // Quanti studenti, nelle classi scelte, si sono iscritti a ciascun talk:
+  // il numero accanto a ogni voce del filtro.
+  const iscrittiPerTalk = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const r of righeFiltrate) {
+      for (const slug of r.talk ?? []) n.set(slug, (n.get(slug) ?? 0) + 1);
+    }
+    return n;
+  }, [righeFiltrate]);
+  // Le righe con un refuso nel dominio dell'email, con l'indirizzo
+  // suggerito (o null se non si indovina).
+  const refusi = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const r of righe) {
+      const refuso = refusoEmail(String(r.email ?? ""));
+      if (refuso) m.set(r.id, refuso.suggerimento);
+    }
+    return m;
+  }, [righe]);
+  const etichettaDi = useMemo(
+    () => new Map(talkElenco.map((t) => [t.slug, t.etichetta])),
+    [talkElenco],
+  );
 
   const conteggi = useMemo(() => {
     const c = { attesa: 0, confermate: 0, per_anno: {} as Record<number, number> };
@@ -719,6 +761,32 @@ export function ReferenteConsole({
           onChange={(e) => setFiltro(e.target.value)}
           style={{ flex: "1 1 240px" }}
         />
+        {/* Chi si e iscritto a un talk: la domanda "mi sono iscritta?" di
+            una studentessa trova risposta qui, e anche l'elenco intero. */}
+        {talkElenco.length > 0 && !talkNonLetti && (
+          <select
+            aria-label="Filtra per iscrizione ai talk"
+            value={filtroTalk}
+            onChange={(e) => setFiltroTalk(e.target.value)}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid var(--border-color)",
+              padding: "0 10px",
+              background: "#fff",
+              fontSize: 13,
+              flex: "0 1 auto",
+              maxWidth: "100%",
+            }}
+          >
+            <option value="">Tutti gli studenti</option>
+            {talkElenco.map((t) => (
+              <option key={t.slug} value={t.slug}>
+                Iscritti al {t.etichetta.replace(/^Talk/, "talk")} ({iscrittiPerTalk.get(t.slug) ?? 0})
+              </option>
+            ))}
+          </select>
+        )}
         {/* Gli export restano al referente principale: un file in piu con
             nomi e classi di minorenni e una copia in piu da custodire. */}
         {principale && (
@@ -851,11 +919,11 @@ export function ReferenteConsole({
               <p style={{ fontSize: 13.5, color: "var(--text-dark)", lineHeight: 1.6, margin: "10px 0 0" }}>
                 {esitoTutti.nessuno ? (
                   esitoTutti.saltati > 0 ? (
-                    `Nessun link è partito: a ${studenti(esitoTutti.saltati)} un link è stato mandato pochi minuti fa, e uno nuovo lo annullerebbe. Se non arriva, può ripetere l'invio fra ${RIMANDA_TUTTI_RECENTE_MINUTI} minuti.${esitoTutti.nonValidi > 0 ? ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: ce lo segnali e lo sistemiamo noi.` : ""}`
+                    `Nessun link è partito: a ${studenti(esitoTutti.saltati)} un link è stato mandato pochi minuti fa, e uno nuovo lo annullerebbe. Se non arriva, può ripetere l'invio fra ${RIMANDA_TUTTI_RECENTE_MINUTI} minuti.${esitoTutti.nonValidi > 0 ? ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: lo corregga con «Correggi email» sulla riga dello studente.` : ""}`
                   ) : esitoTutti.giaRaggiunti > 0 ? (
-                    `Nessun link è partito: con gli invii precedenti è già stato mandato a tutti quelli che non sono ancora entrati. Se uno studente le dice che non gli è arrivato, usi il bottone sulla sua riga.${esitoTutti.nonValidi > 0 ? ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: ce lo segnali e lo sistemiamo noi.` : ""}`
+                    `Nessun link è partito: con gli invii precedenti è già stato mandato a tutti quelli che non sono ancora entrati. Se uno studente le dice che non gli è arrivato, usi il bottone sulla sua riga.${esitoTutti.nonValidi > 0 ? ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: lo corregga con «Correggi email» sulla riga dello studente.` : ""}`
                   ) : esitoTutti.nonValidi > 0 ? (
-                    `Nessun link è partito: per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido. Ce lo segnali e lo sistemiamo noi.`
+                    `Nessun link è partito: per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido. Lo corregga con «Correggi email» sulla riga dello studente.`
                   ) : (
                     "Non c'è nessuno a cui rimandarlo: risultano tutti entrati nel corso."
                   )
@@ -868,7 +936,7 @@ export function ReferenteConsole({
                     {esitoTutti.saltati > 0 &&
                       ` ${esitoTutti.saltati === 1 ? "Resta" : "Restano"} da raggiungere ${studenti(esitoTutti.saltati)}: può ripetere l'invio ${esitoTutti.prossimo ? `dalle ${ora(esitoTutti.prossimo)}` : `fra ${RIMANDA_TUTTI_MINUTI} minuti`}.`}
                     {esitoTutti.nonValidi > 0 &&
-                      ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: ce lo segnali e lo sistemiamo noi.`}
+                      ` Per ${studenti(esitoTutti.nonValidi)} l'indirizzo email non è valido: lo corregga con «Correggi email» sulla riga dello studente.`}
                     {/* Non "riprovi con il bottone sulla riga": la risposta ha
                         solo numeri, e cliccare righe a caso annullerebbe i
                         link appena arrivati. Il bottone serve per chi dice
@@ -894,12 +962,23 @@ export function ReferenteConsole({
 
       {errore && <p style={{ color: "#E74C6F", fontSize: 14 }}>{errore}</p>}
 
+      {/* Le iscrizioni ai talk non si sono lette: senza badge l'elenco
+          farebbe credere che nessuno si sia iscritto, e lo si dice. */}
+      {talkNonLetti && righe.length > 0 && (
+        <p role="status" style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.6, margin: 0 }}>
+          In questo momento non riusciamo a leggere le iscrizioni ai talk: ricarichi la pagina fra
+          qualche minuto per vedere chi si è iscritto.
+        </p>
+      )}
+
       {visibili.length === 0 ? (
         <div className="card text-center" style={{ padding: 40 }}>
           <p className="text-gray-600 m-0">
             {righe.length === 0
               ? "Nessuna iscrizione ancora. Appena diffonde il codice, le trova qui."
-              : "Nessuna iscrizione corrisponde alla ricerca o alla classe scelta."}
+              : filtroTalk
+                ? "Nessuno studente, fra quelli mostrati, risulta iscritto a questo talk."
+                : "Nessuna iscrizione corrisponde alla ricerca o alla classe scelta."}
           </p>
         </div>
       ) : (
@@ -922,7 +1001,35 @@ export function ReferenteConsole({
                 </div>
                 <div className="text-gray-600" style={{ fontSize: 12.5, marginTop: 2 }}>
                   Classe {r.classe} . {r.email}
+                  {/* Un refuso nel dominio ("gmail.cpm"): il link non arriva
+                      mai, e da qui non si vedrebbe perche. */}
+                  {refusi.has(r.id) && (
+                    <span
+                      style={{ color: "#B44A5E", fontWeight: 600 }}
+                      title={`L'indirizzo sembra contenere un errore${
+                        refusi.get(r.id) ? ` (forse ${refusi.get(r.id)})` : ""
+                      }. Se lo studente non è mai entrato, lo corregga con «Correggi email».`}
+                    >
+                      {" "}. Email da controllare
+                    </span>
+                  )}
                 </div>
+                {/* I talk con gli esperti a cui si e iscritto. */}
+                {(r.talk ?? []).length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                    {(r.talk as string[]).map((slug) => (
+                      <span
+                        key={slug}
+                        className="badge badge-primary"
+                        title="Si è iscritto a questo talk con gli esperti."
+                        style={{ fontSize: 11.5 }}
+                      >
+                        <i className="fas fa-check" aria-hidden="true" style={{ marginRight: 5 }} />
+                        {etichettaDi.get(slug) ?? "Talk con gli esperti"}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {/* Il punto del corso a cui e arrivato. Una lezione conta
                     quando ha consegnato la riflessione che la chiude, ed e
                     la stessa consegna che gli sblocca la lezione dopo: e il
@@ -1002,6 +1109,20 @@ export function ReferenteConsole({
                 </div>
               )}
 
+              {/* L'email sbagliata si corregge finche lo studente non e mai
+                  entrato: anche da "Non riconosciuta", che spesso e proprio
+                  un indirizzo sbagliato. Il server lo ricontrolla. */}
+              {r.stato !== "ritirata" && !haFattoAccesso(r) && correggiDi !== r.id && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCorreggiDi(r.id)}
+                  style={{ height: 30, fontSize: 12.5, flexShrink: 0 }}
+                >
+                  Correggi email
+                </Button>
+              )}
+
               {/* Le riflessioni: solo dei confermati, e solo di chi ha
                   consegnato almeno una lezione. Si leggono al clic. */}
               {r.stato === "confermata" && (r.lezioni_completate ?? 0) > 0 && (
@@ -1061,6 +1182,36 @@ export function ReferenteConsole({
                     </option>
                   ))}
                 </select>
+              )}
+
+              {correggiDi === r.id && (
+                <CorreggiEmail
+                  iscrizione={r}
+                  onChiudi={() => setCorreggiDi(null)}
+                  onCorretta={(messaggio) => {
+                    setCorreggiDi(null);
+                    setCorrette((prima) => new Map(prima).set(r.id, messaggio));
+                    // Il bottone "Rimanda il link" torna utilizzabile: il
+                    // link di prima era andato all'indirizzo sbagliato.
+                    setRimandati((prima) => {
+                      const dopo = new Set(prima);
+                      dopo.delete(r.id);
+                      return dopo;
+                    });
+                    // Account, accessi, lezioni e talk possono essere
+                    // cambiati con l'account: si rilegge tutto.
+                    carica({ silenzioso: true });
+                  }}
+                />
+              )}
+              {corrette.has(r.id) && correggiDi !== r.id && (
+                <p
+                  role="status"
+                  style={{ flexBasis: "100%", fontSize: 12.5, color: "var(--text-dark)", lineHeight: 1.6, margin: 0 }}
+                >
+                  <i className="fas fa-check" style={{ marginRight: 6, color: "var(--primary-dark)" }} aria-hidden="true" />
+                  {corrette.get(r.id)}
+                </p>
               )}
 
               {riflessioniDi === r.id && r.stato === "confermata" && (

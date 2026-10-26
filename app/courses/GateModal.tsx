@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AvvisoStudentiLicei } from "./AvvisoStudentiLicei";
 
 interface GateModalProps {
   onClose: () => void;
@@ -34,6 +35,10 @@ export default function GateModal({ onClose }: GateModalProps) {
           padding: "48px 36px",
           maxWidth: 440,
           width: "100%",
+          // Con l'avviso per i licei il riquadro e piu alto: su un telefono
+          // piccolo scorre invece di uscire dallo schermo.
+          maxHeight: "calc(100svh - 48px)",
+          overflowY: "auto",
           textAlign: "center",
           boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
           position: "relative",
@@ -117,6 +122,10 @@ export default function GateModal({ onClose }: GateModalProps) {
         >
           Already a member? Log in
         </Link>
+
+        <div style={{ marginTop: 18 }}>
+          <AvvisoStudentiLicei />
+        </div>
 
         <style>{`
           @keyframes popIn {

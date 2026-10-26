@@ -217,6 +217,18 @@ export function iniziali(nome: string): string {
 export const luogoTalk = (t: Pick<Talk, "modalita" | "luogo">): string =>
   t.modalita === "online" ? "Online" : (t.luogo ?? "In presenza");
 
+/**
+ * "Talk del 9 novembre": il nome breve con cui i docenti lo ritrovano
+ * nell'elenco dei loro studenti. Dalla data di inizio, in ora italiana,
+ * cosi non va tenuto allineato a mano come `dataLabel`.
+ */
+export const etichettaTalk = (t: Pick<Talk, "inizio">): string =>
+  `Talk del ${new Date(t.inizio).toLocaleDateString("it-IT", {
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/Rome",
+  })}`;
+
 /* ── La vista pubblica, l'unica che arriva ai componenti client ──────── */
 
 /**
@@ -228,6 +240,8 @@ export type TalkScheda = {
   slug: string;
   numero: number;
   occhiello: string;
+  /** "Talk del 9 novembre", come lo segna l'elenco degli studenti dei docenti. */
+  etichetta: string;
   titolo: string;
   relatore: { nome: string; ruolo: string; foto: string | null; iniziali: string };
   dataLabel: string;
@@ -243,6 +257,7 @@ export function schedaTalk(t: Talk): TalkScheda {
     slug: t.slug,
     numero: t.numero,
     occhiello: occhielloTalk(t),
+    etichetta: etichettaTalk(t),
     titolo: t.titolo,
     relatore: { ...t.relatore, iniziali: iniziali(t.relatore.nome) },
     dataLabel: t.dataLabel,

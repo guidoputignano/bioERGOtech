@@ -264,7 +264,8 @@ const STUDENTE: Passo[] = [
     },
     poi: {
       titolo: "Usa l'email che leggi davvero",
-      testo: "Tutto il resto passa da lì, e se sbagli indirizzo non te ne accorgi subito.",
+      testo:
+        "Tutto il resto passa da lì, e se sbagli indirizzo non te ne accorgi subito. Se te ne accorgi dopo, non rifare l'iscrizione e non creare un altro account: chiedi al tuo professore di correggerla.",
     },
   },
   {
@@ -406,8 +407,16 @@ const GUASTI = [
     r: 'Spesso la posta istituzionale blocca i messaggi esterni. Chieda alla scuola di accettare quelli di bioergotech.org, poi dalla sua area usi "Rimanda il link a chi non è mai entrato": parte un link nuovo a tutti in una volta. Le iscrizioni restano valide, gli studenti non devono rifarle.',
   },
   {
+    d: "Uno studente ha sbagliato l'email nell'iscrizione",
+    r: 'Non deve rifare l\'iscrizione. Nella sua area, sulla riga dello studente, usi "Correggi email": si può finché lo studente non è mai entrato, e il link per la password parte al nuovo indirizzo. Le righe con un indirizzo che sembra sbagliato, come "gmail.cpm", sono segnate "Email da controllare".',
+  },
+  {
     d: "Uno studente si è iscritto ma il professore non lo vede",
-    r: "Ha usato il codice di un'altra scuola, oppure si è iscritto mentre era già collegato con un altro account. Ce lo segnali e lo sistemiamo.",
+    r: 'Ha usato il codice di un\'altra scuola, oppure si è iscritto mentre era già collegato con un altro account. Oppure, non riuscendo a entrare, si è creato un account dal sito invece di iscriversi con il codice della scuola: segue le lezioni, ma fuori dal percorso. In questo caso, se nell\'elenco c\'è la sua prima iscrizione, usi "Correggi email" su quella riga con l\'indirizzo che usa ora: la colleghiamo al suo account, con le lezioni già fatte. Altrimenti lo studente entri con quell\'account e si iscriva dal link della scuola. Negli altri casi ce lo segnali e lo sistemiamo.',
+  },
+  {
+    d: "Come vedo chi si è iscritto a un talk con gli esperti",
+    r: 'Nell\'elenco degli studenti ogni iscritto è segnato con il talk, per esempio "Talk del 9 novembre", e il menu accanto alla ricerca mostra solo gli iscritti. Lo studente lo vede anche da sé: nella pagina del talk, dopo l\'accesso, compare "Sei iscritto".',
   },
   {
     d: "Il codice viene rifiutato",

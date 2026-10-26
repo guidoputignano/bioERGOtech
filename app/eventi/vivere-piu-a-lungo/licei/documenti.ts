@@ -101,7 +101,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
   titolo: "Informativa privacy per studenti",
   intro:
     "Percorso online «Biotecnologie e Intelligenza Artificiale». Questa informativa spiega in modo semplice come Fondazione bioERGOtech ETS usa i dati degli studenti che partecipano al corso.",
-  aggiornato: "2026-10-13",
+  aggiornato: "2026-10-26",
   sezioni: [
     {
       h: "Chi usa i dati",
@@ -143,7 +143,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
       h: "Chi può vedere i dati",
       ul: [
         "Tu, che vedi i dati e i contenuti del tuo account.",
-        "Il docente referente del tuo istituto e gli altri docenti dell'istituto da lui indicati, ciascuno con credenziali personali: vedono nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, la tua squadra con il tuo ruolo e il progetto della squadra. Vedono anche la riflessione e la domanda che invii nelle lezioni, quando nella lezione te lo segnaliamo. Quelle inviate prima le vedono tre giorni dopo che la piattaforma te lo segnala, a meno che tu scelga che restino solo allo staff. Li usano solo per seguire il percorso formativo e non vedono gli studenti di altri istituti.",
+        "Il docente referente del tuo istituto e gli altri docenti dell'istituto da lui indicati, ciascuno con credenziali personali: vedono nome, cognome, email, classe, stato dell'iscrizione, se sei entrato nel corso e quante lezioni hai completato, a quali talk con gli esperti ti sei iscritto, la tua squadra con il tuo ruolo e il progetto della squadra. Vedono anche la riflessione e la domanda che invii nelle lezioni, quando nella lezione te lo segnaliamo. Quelle inviate prima le vedono tre giorni dopo che la piattaforma te lo segnala, a meno che tu scelga che restino solo allo staff. Li usano solo per seguire il percorso formativo e non vedono gli studenti di altri istituti.",
         "I compagni della tua squadra, che vedono nome, cognome e classe. Quando il progetto viene consegnato, un'email di conferma con i nomi dei componenti arriva a tutta la squadra e al docente referente.",
         "La Commissione di valutazione, con account personali: legge i progetti consegnati con il nome della squadra e dell'istituto, senza i nomi degli studenti, ed è tenuta alla riservatezza.",
         "Il personale autorizzato della Fondazione, nei limiti necessari: gestisce iscrizioni, squadre e finalisti, legge e risponde alle riflessioni e alle domande che invii nelle lezioni, dà assistenza e si occupa della sicurezza.",
