@@ -81,7 +81,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Documenti pubblici | `app/eventi/vivere-piu-a-lungo/licei/documenti.ts` |
 | Progresso sul corso | `lib/eventi/licei-progresso.ts` |
 | Email sbagliate | `lib/eventi/email-refusi.ts` (refusi nel dominio, per il modulo e le rotte), `lib/eventi/licei-correggi-email.ts` (la correzione dalla console), `app/courses/AvvisoStudentiLicei.tsx` (l'avviso nel cancello del corso e nella registrazione dal sito) |
-| Traduzione automatica | `lib/traduttori.ts` (in `app/layout.tsx`), `app/eventi/layout.tsx` e `LinguaPagina.tsx` (`lang="it"`), `translate="no"` nelle pagine delle aree riservate |
+| Traduzione automatica | `lib/traduttori.ts` (in `app/layout.tsx`), `components/LinguaItaliana.tsx` e `LinguaPagina.tsx` (`lang="it"`, nei layout di `app/eventi`, `app/legal/informativa-privacy` e `app/cookie-policy/it`), `translate="no"` nelle pagine delle aree riservate |
 | Dove si arriva dopo l'accesso, e il portale vietato agli studenti | `lib/eventi/area-account.ts` (la regola), `app/auth/dopo-accesso/page.tsx`, `app/member-portal/page.tsx`, `app/api/account/area/route.ts` e `components/navbar.tsx` ("Student area") |
 | Email | `lib/eventi/licei-email.ts` (conferme, invito dei docenti, avviso alla scuola, avviso sulle riflessioni) |
 | Elenco dei mentor nell'area dello studente e in quella dei docenti | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx` (`percorso="docenti"` nella console dei docenti), rotta `app/api/eventi/mentor/route.ts` |
@@ -896,11 +896,12 @@ Tre rimedi, che si coprono a vicenda:
   per tutto il sito, comprese le lezioni del corso, in inglese, che gli
   studenti traducono davvero. Il testo tradotto puo restare indietro, ma la
   pagina non si rompe;
-- `app/eventi/layout.tsx`: le pagine dell'evento e dei percorsi dichiarano
-  `lang="it"`, con uno script al primo caricamento (prima che Chrome scelga
-  la lingua) e `LinguaPagina` per la navigazione dentro il sito, che rimette
-  "en" all'uscita. Chi ha il browser in italiano non si vede piu proporre
-  la traduzione;
+- `components/LinguaItaliana.tsx`, nel layout di `app/eventi` e delle
+  versioni italiane delle pagine legali (`app/legal/informativa-privacy`,
+  `app/cookie-policy/it`): la pagina dichiara `lang="it"`, con uno script al
+  primo caricamento (prima che Chrome scelga la lingua) e `LinguaPagina` per
+  la navigazione dentro il sito, che rimette "en" all'uscita. Chi ha il
+  browser in italiano non si vede piu proporre la traduzione;
 - `translate="no"` sul contenitore delle aree riservate (docenti,
   studenti e commissione dei licei, studenti e commissione dell'universita):
   nomi, email e numeri non si traducono e non restano fermi a un valore
