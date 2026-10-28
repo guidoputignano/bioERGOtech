@@ -14,6 +14,7 @@ const poppins = Poppins({
 import CookieBanner from "@/components/cookie-banner";
 import NewsletterPopup from "@/components/newsletter-popup";
 import { StructuredData } from "@/components/structured-data";
+import { SCRIPT_TRADUTTORI } from "@/lib/traduttori";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -62,6 +63,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Before anything else: keeps React working when Google Translate
+            or an extension rewrites the page's text (lib/traduttori.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TRADUTTORI }} />
         {/* =========================================
             TRACKING
             Google Analytics e Google Ads NON si caricano qui: li carica

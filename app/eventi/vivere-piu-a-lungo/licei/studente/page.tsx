@@ -60,7 +60,7 @@ export default async function StudentePage() {
     <>
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
-        <div className="container mx-auto px-6 py-10">
+        <div className="container mx-auto px-6 py-10" translate="no">
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
             <StudenteConsole
               talk={talk ? <TalkAreaCard talk={schedaTalk(talk)} contesto="studente" /> : null}
