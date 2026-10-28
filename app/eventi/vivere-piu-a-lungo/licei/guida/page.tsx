@@ -423,6 +423,10 @@ const GUASTI = [
     r: "Arrivava nella pagina generale del sito, che segna così gli account senza un ruolo nella Fondazione. Non riguarda l'iscrizione. Ora, dopo aver scelto la password e a ogni accesso, ogni studente arriva nella sua area del percorso, e il docente nella sua.",
   },
   {
+    d: "La pagina si apre e dopo pochi secondi dice \"Impossibile caricare questa pagina\"",
+    r: 'Succedeva con la traduzione automatica di Chrome attiva ("Traduci sempre inglese"): il sito si dichiarava in inglese e il traduttore riscriveva la pagina mentre si caricava. Ora le pagine del percorso si dichiarano in italiano e le aree riservate non si traducono. Se dovesse ricapitare, nella barra degli indirizzi tocchi l\'icona della traduzione, scelga "Mostra originale" e tolga la spunta da "Traduci sempre inglese".',
+  },
+  {
     d: "Come vedo chi si è iscritto a un talk con gli esperti",
     r: 'Nell\'elenco degli studenti ogni iscritto è segnato con il talk, per esempio "Talk del 9 novembre", e il menu accanto alla ricerca mostra solo gli iscritti. Lo studente lo vede anche da sé: nella pagina del talk, dopo l\'accesso, compare "Sei iscritto".',
   },

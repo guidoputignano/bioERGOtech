@@ -58,7 +58,7 @@ export default async function ReferentePage() {
     <>
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
-        <div className="container mx-auto px-6 py-10">
+        <div className="container mx-auto px-6 py-10" translate="no">
           <ReferenteConsole
             talk={talk ? <TalkAreaCard talk={schedaTalk(talk)} contesto="docente" /> : null}
           />
