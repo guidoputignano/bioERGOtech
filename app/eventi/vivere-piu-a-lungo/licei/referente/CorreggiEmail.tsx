@@ -30,8 +30,14 @@ export function CorreggiEmail({
   iscrizione: { id: string; email: string; stato: string };
   /** L'iscrizione e legata all'account di un altro: di chi guarda, di un docente, o con un'altra email. */
   accountAltrui?: "mio" | "docente" | "altro" | null;
-  /** A correzione fatta, con la frase da mostrare sulla riga. */
-  onCorretta: (messaggio: string) => void;
+  /**
+   * A correzione fatta: la frase da mostrare sulla riga, la riga aggiornata
+   * e se il link della password e partito (null: non andava mandato).
+   */
+  onCorretta: (
+    messaggio: string,
+    esito: { iscrizione: Record<string, unknown>; emailInviata: boolean | null },
+  ) => void;
   onChiudi: () => void;
 }) {
   const [email, setEmail] = useState(refusoEmail(iscrizione.email)?.suggerimento ?? iscrizione.email);
@@ -66,6 +72,10 @@ export function CorreggiEmail({
             : data.email_inviata === false
               ? `Fatto: l'iscrizione ora usa ${nuova}, ma l'email con il link non è partita: usi «Rimanda il link» fra qualche minuto.`
               : `Fatto: l'iscrizione ora usa ${nuova}. Se lo studente è suo, porti l'iscrizione su «Confermata»: riceverà la conferma a questo indirizzo, e con «Rimanda il link» il link per entrare.`,
+        {
+          iscrizione: (data.iscrizione ?? {}) as Record<string, unknown>,
+          emailInviata: data.email_inviata === true ? true : data.email_inviata === false ? false : null,
+        },
       );
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Correzione non riuscita.");

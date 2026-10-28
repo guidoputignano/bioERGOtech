@@ -194,6 +194,11 @@ export async function GET() {
     iscrizioni: (data ?? []).map(({ user_id, ...r }) => {
       const altro = altrui.get(r.id) ?? null;
       const suo = user_id && !altro ? user_id : null;
+      // I talk restano anche per un account con un'altra email ("altro"):
+      // l'iscrizione al talk e come studente di questo istituto, e il numero
+      // nella scheda del talk la conta. Non per un account di un docente,
+      // che al talk si iscrive come docente.
+      const perTalk = user_id && altro !== "mio" && altro !== "docente" ? user_id : null;
       return {
         ...r,
         ha_account: !!user_id,
@@ -202,7 +207,7 @@ export async function GET() {
         lezioni_completate: suo ? (progresso.get(suo) ?? 0) : 0,
         // Gli slug dei talk a cui si e iscritto. Vuoto anche se i talk non si
         // sono potuti leggere: per quello c'e `talk_non_letti`.
-        talk: suo ? (talk.perUtente.get(suo) ?? []) : [],
+        talk: perTalk ? (talk.perUtente.get(perTalk) ?? []) : [],
       };
     }),
     // I talk della serie, dal primo, con il nome breve dei badge.

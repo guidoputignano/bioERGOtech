@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { utenteCorrente } from "@/lib/eventi/bando-server";
 import { erroreSchemaMancante, liceiAdminClient, verificaIscrizioniAperte } from "@/lib/eventi/licei-server";
 import { escapeLike } from "@/lib/eventi/licei-docenti";
+import { altroRuoloDellAccount } from "@/lib/eventi/licei-correggi-email";
 import {
   normalizzaCodice,
   validateIscrizione,
@@ -163,6 +164,33 @@ export async function POST(request: Request) {
         },
         { status: 409 },
       );
+    }
+
+    // ── Un account con un altro ruolo non diventa uno studente ──
+    // Il modulo lega l'account che trova per email. Senza questo controllo
+    // chiunque poteva iscrivere come studente l'account di un commissario,
+    // di un membro della Fondazione o di un partecipante dell'universita,
+    // conoscendone solo l'email: l'account cambiava area, e la correzione
+    // dell'email dalla console poteva poi spostarlo. Lo staff in anteprima,
+    // con la propria sessione, passa.
+    if (accountDaLegare && !(sessioneSua && utente.staff)) {
+      const ruolo = await altroRuoloDellAccount(client, accountDaLegare);
+      if (ruolo === undefined) {
+        return NextResponse.json(
+          { error: "Non è stato possibile registrare l'iscrizione. Riprova." },
+          { status: 500 },
+        );
+      }
+      // Un'altra iscrizione ai licei non conta qui: e sempre uno studente.
+      if (ruolo && ruolo !== "iscrizione") {
+        return NextResponse.json(
+          {
+            error:
+              "Con questa email non è possibile iscriversi come studente. Se pensi ci sia un errore, scrivi a info@bioergotech.org.",
+          },
+          { status: 409 },
+        );
+      }
     }
 
     // ── Account dello studente ──

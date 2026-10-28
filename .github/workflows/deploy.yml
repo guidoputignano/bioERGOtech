@@ -8,14 +8,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # The site is also deployed by Vercel's GitHub integration. This job only
+    # runs when the VERCEL_TOKEN secret is set: without it, it failed on every
+    # merge ("--token is missing a value") while the site deployed anyway.
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
+      - name: Skip without a Vercel token
+        if: env.VERCEL_TOKEN == ''
+        run: echo "VERCEL_TOKEN is not set; Vercel's GitHub integration deploys the site."
+
       - uses: actions/checkout@v4
+        if: env.VERCEL_TOKEN != ''
 
       - name: Install Vercel CLI
+        if: env.VERCEL_TOKEN != ''
         run: npm install --global vercel@latest
 
       - name: Deploy to Vercel Production
-        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        if: env.VERCEL_TOKEN != ''
+        run: vercel --prod --token="$VERCEL_TOKEN" --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

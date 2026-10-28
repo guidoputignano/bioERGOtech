@@ -14,6 +14,7 @@ import { ISCRIZIONE_PATH } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 export function AvvisoStudentiLicei() {
   return (
     <div
+      lang="it"
       style={{
         background: "#F4F8FF",
         border: "1px solid #D6E4FA",

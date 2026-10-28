@@ -380,16 +380,22 @@ export function ReferenteConsole({
     [righe, filtroClassi],
   );
 
+  // Il filtro dei talk vale solo finche il menu c'e: se una lettura
+  // successiva non porta i talk, il menu sparisce e con lui il filtro,
+  // invece di lasciare un elenco vuoto che dice "nessuno iscritto".
+  const filtroTalkAttivo =
+    !talkNonLetti && talkElenco.some((t) => t.slug === filtroTalk) ? filtroTalk : "";
+
   const visibili = useMemo(() => {
     const q = filtro.trim().toLowerCase();
-    const perTalk = filtroTalk
-      ? righeFiltrate.filter((r) => (r.talk ?? []).includes(filtroTalk))
+    const perTalk = filtroTalkAttivo
+      ? righeFiltrate.filter((r) => (r.talk ?? []).includes(filtroTalkAttivo))
       : righeFiltrate;
     if (!q) return perTalk;
     return perTalk.filter((r) =>
       [r.nome, r.cognome, r.classe, r.email].some((v) => String(v ?? "").toLowerCase().includes(q)),
     );
-  }, [righeFiltrate, filtro, filtroTalk]);
+  }, [righeFiltrate, filtro, filtroTalkAttivo]);
 
   // Quanti studenti, nelle classi scelte, si sono iscritti a ciascun talk:
   // il numero accanto a ogni voce del filtro.
@@ -769,7 +775,7 @@ export function ReferenteConsole({
         {talkElenco.length > 0 && !talkNonLetti && (
           <select
             aria-label="Filtra per iscrizione ai talk"
-            value={filtroTalk}
+            value={filtroTalkAttivo}
             onChange={(e) => setFiltroTalk(e.target.value)}
             style={{
               height: 36,
@@ -979,7 +985,7 @@ export function ReferenteConsole({
           <p className="text-gray-600 m-0">
             {righe.length === 0
               ? "Nessuna iscrizione ancora. Appena diffonde il codice, le trova qui."
-              : filtroTalk
+              : filtroTalkAttivo
                 ? "Nessuno studente, fra quelli mostrati, risulta iscritto a questo talk."
                 : "Nessuna iscrizione corrisponde alla ricerca o alla classe scelta."}
           </p>
@@ -1131,7 +1137,13 @@ export function ReferenteConsole({
               {/* L'email sbagliata si corregge finche lo studente non e mai
                   entrato: anche da "Non riconosciuta", che spesso e proprio
                   un indirizzo sbagliato. Il server lo ricontrolla. */}
-              {r.stato !== "ritirata" && !haFattoAccesso(r) && correggiDi !== r.id && (
+              {/* Senza gli accessi non sappiamo chi e entrato: allora solo
+                  dove c'e un motivo (account di un altro, refuso, nessun
+                  account), come per il badge "Mai entrato". */}
+              {r.stato !== "ritirata" &&
+                !haFattoAccesso(r) &&
+                (!accessiNonLetti || r.account_altrui || refusi.has(r.id) || !r.ha_account) &&
+                correggiDi !== r.id && (
                 <Button
                   type="button"
                   variant="outline"
@@ -1208,14 +1220,26 @@ export function ReferenteConsole({
                   iscrizione={r}
                   accountAltrui={r.account_altrui ?? null}
                   onChiudi={() => setCorreggiDi(null)}
-                  onCorretta={(messaggio) => {
-                    setCorreggiDi(null);
+                  onCorretta={(messaggio, esito) => {
+                    // Solo il pannello di questa riga: se nel frattempo il
+                    // docente ne ha aperto un altro, resta aperto.
+                    setCorreggiDi((aperto) => (aperto === r.id ? null : aperto));
                     setCorrette((prima) => new Map(prima).set(r.id, messaggio));
-                    // Il bottone "Rimanda il link" torna utilizzabile: il
-                    // link di prima era andato all'indirizzo sbagliato.
+                    // La riga corretta subito, senza aspettare la rilettura
+                    // (che, se non riesce, non lo dice).
+                    setRighe((prima) =>
+                      prima.map((x) =>
+                        x.id === r.id ? { ...x, ...esito.iscrizione, account_altrui: null, ha_account: true } : x,
+                      ),
+                    );
+                    // "Rimanda il link": spento se il link e appena partito
+                    // (uno nuovo annullerebbe quello), riacceso se non e
+                    // partito, perche quello di prima andava all'indirizzo
+                    // sbagliato.
                     setRimandati((prima) => {
                       const dopo = new Set(prima);
-                      dopo.delete(r.id);
+                      if (esito.emailInviata === true) dopo.add(r.id);
+                      else dopo.delete(r.id);
                       return dopo;
                     });
                     // Account, accessi, lezioni e talk possono essere
