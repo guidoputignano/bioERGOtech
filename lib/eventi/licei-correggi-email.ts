@@ -18,15 +18,19 @@
  *
  * Tre casi, a seconda dell'indirizzo nuovo:
  *
- * - **nessun account**: si cambia l'indirizzo dell'account dell'iscrizione
- *   (o se ne crea uno, se l'iscrizione non lo ha), e la riga lo segue;
+ * - **nessun account**: si cambia l'indirizzo dell'account dell'iscrizione,
+ *   ma solo se l'ha creato l'iscrizione stessa e non ha altri ruoli sul
+ *   sito (`altroRuoloDellAccount`); altrimenti, o se l'iscrizione non ne ha
+ *   uno, se ne crea uno nuovo e la riga lo segue. Senza quella condizione un
+ *   docente poteva legare a un finto studente l'account mai usato di
+ *   qualcun altro e poi "correggerne" l'indirizzo con il proprio;
  * - **un account c'e gia**: e il caso di chi, non riuscendo a entrare, si e
  *   registrato dal sito con l'indirizzo giusto e segue le lezioni fuori dal
  *   percorso. L'iscrizione passa a quell'account, cosi le lezioni gia fatte
  *   si contano; quello vecchio, mai usato, resta scollegato. Si rifiuta se
- *   l'account e dello staff, di un docente o referente, o e gia legato a
- *   un'altra iscrizione: sono gli stessi controlli del modulo pubblico, che
- *   lega anche lui l'account che trova per email;
+ *   l'account ha un altro ruolo (staff, membro, docente o referente,
+ *   commissario, universita, un'altra iscrizione): lo stesso controllo del
+ *   modulo pubblico, che lega anche lui l'account che trova per email;
  * - **l'account dell'iscrizione ha gia l'indirizzo nuovo** (una correzione
  *   rimasta a meta): si allinea la riga e basta.
  *
@@ -120,7 +124,7 @@ export async function correggiEmailIscrizione(input: {
   // Il filtro su adesione_id e la guardia: il client ha la service role key.
   const { data: iscrizione, error: erroreIscrizione } = await client
     .from("licei_iscrizioni")
-    .select("id, nome, cognome, email, user_id, stato")
+    .select("id, nome, cognome, email, user_id, stato, created_at")
     .eq("id", iscrizioneId)
     .eq("adesione_id", adesioneId)
     .maybeSingle();
@@ -139,6 +143,14 @@ export async function correggiEmailIscrizione(input: {
   let nonSuo = false;
   let diDocente = false;
   let attualeEntrato = false;
+  // Si puo cambiare l'indirizzo dell'account solo se l'ha creato questa
+  // iscrizione e non ha nessun altro ruolo sul sito. Altrimenti un docente
+  // poteva iscrivere uno "studente" con l'email di un account mai usato di
+  // qualcun altro (un commissario, un membro appena invitato), che il modulo
+  // lega per email, e poi "correggerne" l'indirizzo con il proprio:
+  // l'account, con i suoi ruoli, passava a lui. Se non si puo, lo studente
+  // riceve un account nuovo e quello resta com'e.
+  let rinominabile = false;
   if (iscrizione.user_id) {
     const [{ data: attuale, error }, docenti] = await Promise.all([
       client.auth.admin.getUserById(iscrizione.user_id),
@@ -150,6 +162,13 @@ export async function correggiEmailIscrizione(input: {
     }
     diDocente = docenti.has(iscrizione.user_id);
     attualeEntrato = Boolean(attuale.user.last_sign_in_at);
+    if (!attualeEntrato && creatoDallIscrizione(attuale.user.created_at, iscrizione.created_at)) {
+      const ruolo = await altroRuoloDellAccount(client, iscrizione.user_id, iscrizioneId);
+      if (ruolo === undefined) {
+        return rifiuto(500, "Non è stato possibile verificare l'account dello studente. Riprovi fra poco.");
+      }
+      rinominabile = ruolo === null;
+    }
     nonSuo =
       diDocente ||
       String(attuale.user.email ?? "").trim().toLowerCase() !== String(iscrizione.email).trim().toLowerCase();
@@ -221,43 +240,21 @@ export async function correggiEmailIscrizione(input: {
     giaEntrato = attualeEntrato;
   } else if (esistente) {
     // ── Un account con l'indirizzo giusto c'e gia: l'iscrizione passa li ──
-    if (esistente.partnership_level === "admin") {
-      return rifiuto(409, "Questo indirizzo è di un account dello staff e non può essere usato per uno studente.");
-    }
-    const [altraIscrizione, docentePerAccount, referentePerAccount, utente] = await Promise.all([
-      client.from("licei_iscrizioni").select("id").eq("user_id", esistente.id).neq("id", iscrizioneId).limit(1),
-      client
-        .from("licei_docenti")
-        .select("id")
-        .eq("user_id", esistente.id)
-        .in("stato", ["invitato", "attivo"])
-        .limit(1),
-      client.from("licei_adesioni").select("id").eq("user_id", esistente.id).limit(1),
+    const [ruolo, utente] = await Promise.all([
+      altroRuoloDellAccount(client, esistente.id, iscrizioneId),
       client.auth.admin.getUserById(esistente.id),
     ]);
-    const erroreAccount = [
-      altraIscrizione.error,
-      referentePerAccount.error,
-      utente.error,
-      docentePerAccount.error && !erroreSchemaMancante(docentePerAccount.error, "tabella")
-        ? docentePerAccount.error
-        : null,
-    ].find(Boolean);
-    if (erroreAccount || !utente.data?.user) {
-      console.error(`Licei correggi email: iscrizione ${iscrizioneId}: account esistente non verificato:`, erroreAccount?.message);
+    if (ruolo === undefined || utente.error || !utente.data?.user) {
+      console.error(`Licei correggi email: iscrizione ${iscrizioneId}: account esistente non verificato:`, utente.error?.message);
       return rifiuto(500, "Non è stato possibile completare i controlli. Riprovi fra poco.");
     }
-    if ((docentePerAccount.data ?? []).length > 0 || (referentePerAccount.data ?? []).length > 0) {
-      return rifiuto(409, "Questo indirizzo è di un docente del percorso e non può essere usato per uno studente.");
-    }
-    if ((altraIscrizione.data ?? []).length > 0) {
-      return rifiuto(409, `Questo indirizzo risulta già iscritto al percorso con un'altra iscrizione. ${SCRIVA_ALLO_STAFF}`);
-    }
+    if (ruolo) return rifiuto(409, MESSAGGIO_ALTRO_RUOLO[ruolo]);
     userId = esistente.id;
     account = "collegato";
     giaEntrato = Boolean(utente.data.user.last_sign_in_at);
-  } else if (iscrizione.user_id && !nonSuo) {
-    // ── Nessun account con l'indirizzo nuovo: si corregge quello mai usato ──
+  } else if (iscrizione.user_id && !nonSuo && rinominabile) {
+    // ── Nessun account con l'indirizzo nuovo: si corregge quello mai usato,
+    // creato da questa iscrizione e senza altri ruoli ──
     const { error } = await client.auth.admin.updateUserById(iscrizione.user_id, {
       email: nuova,
       email_confirm: true,
@@ -274,7 +271,8 @@ export async function correggiEmailIscrizione(input: {
     }
     account = "aggiornato";
   } else {
-    // ── L'iscrizione non aveva un account suo: lo si crea, come il modulo ──
+    // ── L'iscrizione non aveva un account suo, o il suo non si puo
+    // rinominare: lo si crea, come il modulo. Quello di prima non si tocca ──
     const { data: creato, error } = await client.auth.admin.createUser({
       email: nuova,
       email_confirm: true,
@@ -399,4 +397,76 @@ export async function accountAltrui(
     }
   }
   return esito;
+}
+
+/* ── Altri ruoli di un account ─────────────────────────────────────────── */
+
+export type AltroRuolo = "staff" | "membro" | "docente" | "iscrizione" | "commissione" | "universita";
+
+export const MESSAGGIO_ALTRO_RUOLO: Record<AltroRuolo, string> = {
+  staff: "Questo indirizzo è di un account dello staff e non può essere usato per uno studente.",
+  membro: `Questo indirizzo è di un account della Fondazione e non può essere usato per uno studente. ${SCRIVA_ALLO_STAFF}`,
+  docente: "Questo indirizzo è di un docente del percorso e non può essere usato per uno studente.",
+  iscrizione: `Questo indirizzo risulta già iscritto al percorso con un'altra iscrizione. ${SCRIVA_ALLO_STAFF}`,
+  commissione: `Questo indirizzo è di un componente di una commissione e non può essere usato per uno studente. ${SCRIVA_ALLO_STAFF}`,
+  universita: `Questo indirizzo partecipa già al percorso universitario. ${SCRIVA_ALLO_STAFF}`,
+};
+
+/**
+ * L'account ha un ruolo sul sito oltre all'iscrizione `tranne` (se data)?
+ * Staff, membro o partner della Fondazione, docente o referente di un
+ * qualunque istituto (anche revocato), un'altra iscrizione ai licei,
+ * commissario dei licei o dell'universita, mentor o partecipante
+ * dell'universita. Un account cosi non si rinomina e non si lega a uno
+ * studente: sarebbe consegnarlo, con i suoi ruoli, a chi scrive l'indirizzo.
+ * Torna il primo ruolo trovato, null se non ne ha, undefined se una lettura
+ * non riesce (una tabella che manca conta come vuota).
+ */
+export async function altroRuoloDellAccount(
+  client: Db,
+  userId: string,
+  tranne?: string,
+): Promise<AltroRuolo | null | undefined> {
+  const per = (tabella: string) => client.from(tabella).select("user_id").eq("user_id", userId).limit(1);
+  const altreIscrizioni = tranne
+    ? client.from("licei_iscrizioni").select("id").eq("user_id", userId).neq("id", tranne).limit(1)
+    : per("licei_iscrizioni");
+  const [profilo, iscrizioni, docenti, adesioni, commissariLicei, commissariUni, mentor, candidature] = await Promise.all([
+    client.from("profiles").select("partnership_level").eq("id", userId).maybeSingle(),
+    altreIscrizioni,
+    per("licei_docenti"),
+    per("licei_adesioni"),
+    per("licei_commissari"),
+    per("universita_commissari"),
+    per("universita_mentor"),
+    per("universita_candidature"),
+  ]);
+  const letture = [iscrizioni, docenti, adesioni, commissariLicei, commissariUni, mentor, candidature];
+  const errore = [profilo.error, ...letture.map((r) => (r.error && !erroreSchemaMancante(r.error, "tabella") ? r.error : null))].find(Boolean);
+  if (errore) {
+    console.error("Licei: ruoli dell'account non verificati:", errore.message);
+    return undefined;
+  }
+  const ce = (r: { data: unknown[] | null; error: unknown }) => !r.error && (r.data ?? []).length > 0;
+  const livello = (profilo.data as { partnership_level?: string | null } | null)?.partnership_level ?? "";
+  if (livello === "admin") return "staff";
+  if (livello === "member" || livello === "partner") return "membro";
+  if (ce(docenti) || ce(adesioni)) return "docente";
+  if (ce(commissariLicei) || ce(commissariUni)) return "commissione";
+  if (ce(mentor) || ce(candidature)) return "universita";
+  if (ce(iscrizioni)) return "iscrizione";
+  return null;
+}
+
+/**
+ * L'account e nato con questa iscrizione? La rotta dell'iscrizione lo crea
+ * pochi istanti prima della riga; un account esistente che il modulo ha
+ * legato per email e nato prima, di solito molto prima. Dieci minuti di
+ * margine, e mai dopo la riga oltre un minuto.
+ */
+function creatoDallIscrizione(accountCreatoAt: string | undefined, iscrizioneCreataAt: string | undefined): boolean {
+  const a = Date.parse(accountCreatoAt ?? "");
+  const i = Date.parse(iscrizioneCreataAt ?? "");
+  if (!Number.isFinite(a) || !Number.isFinite(i)) return false;
+  return a <= i + 60_000 && a >= i - 10 * 60_000;
 }

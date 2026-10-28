@@ -165,7 +165,8 @@ studentessa che chiedeva "mi sono iscritta?" non sapeva rispondere. I dati
 arrivano con la GET della console (`talk`, `talk_elenco`, `talk_non_letti`,
 da `talkPerStudentiIstituto` in `lib/eventi/talk-server.ts`), con lo stesso
 filtro del numero (ruolo `studente_licei`, istituto), quindi badge e numero
-tornano. Se la lettura non riesce la console lo dice, invece di mostrare
+tornano, anche per un'iscrizione legata a un account con un'altra email; non
+per una legata all'account di un docente, che al talk si iscrive come docente. Se la lettura non riesce la console lo dice, invece di mostrare
 nessun iscritto. La scheda del talk nell'area del docente rimanda
 all'elenco.
 

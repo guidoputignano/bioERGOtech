@@ -96,6 +96,7 @@ export function IscrizioneForm({
   // scuola puo essere quello del docente: lo si dice, con il modo di uscire.
   const [collegato, setCollegato] = useState<{ email: string; nome: string } | null>(null);
   const [uscendo, setUscendo] = useState(false);
+  const [erroreUscita, setErroreUscita] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -110,12 +111,20 @@ export function IscrizioneForm({
     })();
   }, []);
 
+  // Solo da questo dispositivo ("local"): il docente resta collegato sui
+  // suoi. signOut non solleva eccezioni, l'errore lo restituisce: se l'uscita
+  // non riesce lo si dice, invece di nascondere l'avviso con la sessione
+  // ancora aperta.
   const esci = async () => {
     setUscendo(true);
+    setErroreUscita(null);
     try {
-      await createClient().auth.signOut();
+      const { error } = await createClient().auth.signOut({ scope: "local" });
+      if (error) throw error;
       setEmail((v) => (collegato && v.trim().toLowerCase() === collegato.email.toLowerCase() ? "" : v));
       setCollegato(null);
+    } catch {
+      setErroreUscita("Non è stato possibile uscire. Ricarica la pagina e riprova.");
     } finally {
       setUscendo(false);
     }
@@ -256,6 +265,11 @@ export function IscrizioneForm({
               {uscendo ? "Uscita…" : "Non sono io, esci"}
             </Button>
           </div>
+          {erroreUscita && (
+            <p role="alert" style={{ color: "#B44A5E", margin: "8px 0 0" }}>
+              {erroreUscita}
+            </p>
+          )}
         </div>
       )}
 

@@ -750,14 +750,23 @@ studente usa gia sarebbe consegnarlo a chi scrive l'indirizzo nuovo. Un
 account mai usato non ha password, lezioni ne dati. A seconda dell'indirizzo
 nuovo:
 
-- nessun account lo usa: si cambia l'indirizzo dell'account (e del profilo),
-  o se ne crea uno se l'iscrizione non lo aveva, e la riga lo segue;
+- nessun account lo usa: si cambia l'indirizzo dell'account (e del profilo)
+  solo se l'ha creato l'iscrizione stessa (pochi minuti prima della riga) e
+  non ha altri ruoli sul sito; altrimenti, o se l'iscrizione non aveva un
+  account, se ne crea uno nuovo e la riga lo segue. Senza questa condizione
+  un docente poteva iscrivere un finto studente con l'email di un account
+  mai usato di qualcun altro (un commissario, un membro appena invitato),
+  che il modulo lega per email, e poi "correggerne" l'indirizzo con il
+  proprio: l'account passava a lui;
 - un account c'e gia (il caso della registrazione dal sito): l'iscrizione
-  passa a quell'account, e le lezioni gia fatte si contano. Si rifiuta se e
-  dello staff, di un docente o referente, o e legato a un'altra iscrizione,
-  gli stessi controlli del modulo pubblico, che anche lui lega l'account che
-  trova per email. Il vecchio account, mai usato, resta scollegato: alla
-  chiusura non lo trova nessuna riga, e se serve lo si cancella a mano;
+  passa a quell'account, e le lezioni gia fatte si contano. Si rifiuta se
+  l'account ha un altro ruolo (`altroRuoloDellAccount`: staff, membro o
+  partner, docente o referente, commissario, mentor o partecipante
+  dell'universita, un'altra iscrizione). Lo stesso controllo vale ora nel
+  modulo pubblico, che lega l'account che trova per email: un account con un
+  ruolo che non e di studente non diventa uno studente. Il vecchio account,
+  mai usato, resta scollegato: alla chiusura non lo trova nessuna riga, e se
+  serve lo si cancella a mano;
 - l'account ha gia l'indirizzo nuovo (una correzione rimasta a meta): si
   allinea la riga.
 
