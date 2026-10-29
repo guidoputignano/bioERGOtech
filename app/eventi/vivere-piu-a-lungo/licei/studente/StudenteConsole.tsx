@@ -41,6 +41,7 @@ import {
 import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/licei-squadre";
 import { MentorElenco } from "../../mentor/MentorElenco";
 import { RiflessioniPassateCard } from "./RiflessioniPassate";
+import { AccountCollegato } from "../AccountCollegato";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Qualsiasi = any;
@@ -230,6 +231,9 @@ export function StudenteConsole({
         <div className="card text-center" style={{ padding: 40 }}>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Area non disponibile</h2>
           <p className="text-gray-600 mb-5">{errore}</p>
+          {/* Su un computer condiviso puo essere collegato un altro account. */}
+          <AccountCollegato destinazione={STUDENTE_PATH} registro="tu" />
+          <div style={{ height: 16 }} />
           <Link href={LICEI_PATH} className="btn-outline inline-block">
             Torna al bando
           </Link>

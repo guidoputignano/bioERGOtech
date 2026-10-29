@@ -883,6 +883,28 @@ l'accesso, portale libero), referente (console), iscrizione ritirata o
 docente revocato (portale), tabella dei docenti assente, profilo non letto
 (portale, nessun blocco).
 
+## "Nessuna adesione risulta associata a questo account"
+
+Quarta segnalazione: una referente che entrava sempre dal link della sua
+email un giorno legge "Nessuna adesione risulta associata a questo
+account". Nessuna modifica di questi giorni scrive adesioni o docenti, e
+la correzione dell'email non rinomina mai un account gia usato o di un
+docente: il caso tipico e il browser collegato a un altro account. Su un
+computer della scuola basta che uno studente vi scelga la password dal
+link della sua email (un link di recupero di Supabase apre la sessione di
+quell'account e sostituisce quella che c'era), e il link di sempre porta
+la referente nella sua area come quello studente. La pagina non lo diceva,
+e non c'era modo di uscirne.
+
+`AccountCollegato.tsx`, nel riquadro "Area non disponibile" della console
+dei docenti e dell'area dello studente: dice con quale account si e
+collegati (nome ed email, dalla sessione del browser) e offre "Esci e
+accedi con un altro account", che esce solo da questo dispositivo e torna
+al login con `returnTo` sulla stessa area. La guida ha la voce
+corrispondente. Se l'account e quello giusto, il messaggio vuol dire
+davvero che non c'e un'adesione (o una riga di docente non revocata) con
+quell'account, e va guardato a database.
+
 ## La traduzione automatica di Chrome
 
 Terza segnalazione: un docente apriva la sua area, la vedeva per qualche
