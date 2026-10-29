@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import {
   ANNI_CORSO,
   ISCRIZIONE_PATH,
+  REFERENTE_PATH,
   SITE_URL,
   STATI_ISCRIZIONE,
   statoAdesioneColore,
@@ -59,6 +60,7 @@ import { generaAutorizzazionePDF } from "./generaAutorizzazione";
 import { AccettazioneIstruzioni } from "./AccettazioneIstruzioni";
 import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
 import { CorreggiEmail } from "./CorreggiEmail";
+import { AccountCollegato } from "../AccountCollegato";
 import { FiltroClasse } from "./FiltroClasse";
 import { QuadroSquadre } from "./QuadroSquadre";
 import { LinkRiflessioniStudenti, RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
@@ -506,6 +508,9 @@ export function ReferenteConsole({
       <div className="card text-center" style={{ padding: 40 }}>
         <h2 className="text-xl font-bold text-gray-800 mb-2">Area non disponibile</h2>
         <p className="text-gray-600">{errore}</p>
+        {/* Spesso e l'account sbagliato: su un computer della scuola, quello
+            di uno studente che vi ha scelto la password. */}
+        <AccountCollegato destinazione={REFERENTE_PATH} registro="lei" />
       </div>
     );
   }

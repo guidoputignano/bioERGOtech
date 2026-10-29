@@ -435,6 +435,10 @@ const GUASTI = [
     r: "O l'adesione dell'istituto non è ancora confermata, o le iscrizioni non sono ancora aperte. In entrambi i casi non c'è niente da correggere: bisogna aspettare.",
   },
   {
+    d: "L'area dice \"Nessuna adesione risulta associata a questo account\"",
+    r: 'Quasi sempre il browser è collegato con un altro account: su un computer della scuola basta che uno studente vi scelga la password dal link della sua email. La pagina dice con quale account è collegato; usi "Esci e accedi con un altro account" e acceda con l\'email con cui ha aderito, o con quella a cui è arrivato l\'invito. Se l\'account è il suo e il messaggio resta, ce lo segnali.',
+  },
+  {
     d: "Il docente non trova l'area riservata",
     r: "Il referente entra con lo stesso indirizzo email usato nel modulo di adesione, un collega indicato dal referente con quello a cui è arrivato l'invito. L'area è legata all'account, non alla scuola.",
   },
