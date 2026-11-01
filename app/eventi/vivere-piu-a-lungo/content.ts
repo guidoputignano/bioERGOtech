@@ -155,7 +155,9 @@ export const RELATORI: Relatore[] = [
   { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
   // Ruolo ripreso dalla sua scheda giocatrice sul sito del BSL San Lazzaro.
   { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista, cresciuta nel vivaio del BSL San Lazzaro", img: `${SPEAKER_IMG}/olivia-botticelli.webp` },
-  { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp` },
+  // Andrea Mandelli non riesce più a partecipare: il panel 2 resta con
+  // Simona Loizzo. La scheda resta qui, nascosta, nel caso torni.
+  { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp`, nascosto: true },
   { id: "loizzo", nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
   { id: "montervino", nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
   { id: "siciliano", nome: "Bruno Siciliano", ruolo: "Robotica, Università Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp` },
@@ -225,8 +227,8 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "panel",
     n: 2,
     titolo: "Chi costruisce la salute di domani",
-    desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Un confronto tra ordine professionale e legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
-    relatori: ["mandelli", "loizzo"],
+    desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Lo sguardo del legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
+    relatori: ["loizzo"],
   },
   {
     tipo: "ragazzi",
