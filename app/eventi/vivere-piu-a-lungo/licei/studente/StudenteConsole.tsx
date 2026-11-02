@@ -304,10 +304,9 @@ export function StudenteConsole({
               Prima la squadra
             </h2>
             <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: 0 }}>
-              Il progetto si sviluppa in squadra, da {SQUADRA_MIN} a {SQUADRA_MAX} studenti della
-              tua stessa scuola. Uno di voi la crea e passa agli altri il codice che compare qui.
-              Cinque è il massimo perché è la rappresentanza che parte per il premio: così la
-              squadra che vince ci va al completo.
+              Il progetto si sviluppa in squadra, fino a {SQUADRA_MAX} studenti della tua stessa
+              scuola, oppure da solo. Uno di voi crea la squadra e passa agli altri il codice che
+              compare qui; chi lavora da solo la crea e basta.
             </p>
             <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: "10px 0 0" }}>
               {NOTA_LEZIONI}

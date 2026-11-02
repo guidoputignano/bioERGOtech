@@ -832,16 +832,18 @@ export const RIFLESSIONI_STUDENTE_PATH = `${STUDENTE_PATH}/riflessioni`;
 /**
  * Quanti studenti in una squadra.
  *
- * Il massimo è cinque, ed è il numero dell'art. 6: la rappresentanza che
- * parte per il premio. Farli coincidere significa che la squadra vincitrice
- * ci va al completo, e nessuno resta a casa a guardare le foto dei compagni.
+ * Da uno a sei, dal 2 novembre 2026: la Fondazione ha cambiato la regola
+ * del bando, che prima diceva da due a cinque. Uno studente può quindi
+ * consegnare da solo. Il tetto vale anche a database, nel trigger
+ * `licei_squadra_capienza` (migrazione 20261221000000): i due numeri vanno
+ * cambiati insieme. La rappresentanza che parte per il premio resta quella
+ * di `PREMI_LICEI`.
  *
- * Il minimo è due perché l'art. 3 chiede un lavoro in team, e uno studente
- * da solo non è un team. Vale alla consegna, non alla creazione: una squadra
- * nasce con il suo fondatore e cresce nei giorni successivi.
+ * Il minimo vale alla consegna, non alla creazione: una squadra nasce con
+ * il suo fondatore e cresce nei giorni successivi.
  */
-export const SQUADRA_MIN = 2;
-export const SQUADRA_MAX = 5;
+export const SQUADRA_MIN = 1;
+export const SQUADRA_MAX = 6;
 
 /** Una squadra sta dentro un solo istituto. Il perché è nella FAQ e nella migrazione. */
 export const SQUADRA_UN_SOLO_ISTITUTO = true;
