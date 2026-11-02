@@ -359,8 +359,8 @@ con la riga che ha gia.
 | `GET .../referente/riflessioni` | docenti | `?iscrizione=<id>` oppure `?lezione=<slug>`, solo studenti confermati dell'istituto. |
 | `GET`, `POST /api/courses/submissions` | studenti | Il GET aggiunge `avviso_referente: { istituto } \| null` e, quando l'avviso c'e, `riflessioni_passate: { scelta, avvisato_at, visibili_dal, visibili, riservate } \| null`; il POST scrive `condivisa_referente_at` solo con `avviso_referente: true` e un'iscrizione licei valida. |
 | `GET`, `POST /api/eventi/licei/studente/riflessioni-passate` | studenti in attesa o confermati | Avviso e scelta sulle riflessioni di prima: GET `{ disponibile, scelta, scelta_at, avvisato_at, visibili_dal, visibili, riservate }`, POST `{ azione: 'visto' }` oppure `{ scelta: 'si' \| 'no' }`. Solo per l'account che chiama, e per l'istituto della sua iscrizione attuale. La pagina del link diretto la usa come la card dell'area. |
-| `GET /api/eventi/licei/admin` | staff | Aggiunge `docenti` (per adesione) e `avviso_riflessioni` (stato dell'invio). |
-| `POST /api/eventi/licei/admin` | staff | `{ azione: 'revoca_docente', id }` oppure `{ azione: 'avviso_riflessioni' }`. |
+| `GET /api/eventi/licei/admin` | staff | Aggiunge `docenti` (per adesione), `avviso_riflessioni` e `avviso_squadre` (stato degli invii). |
+| `POST /api/eventi/licei/admin` | staff | `{ azione: 'revoca_docente', id }`, `{ azione: 'avviso_riflessioni' }`, `{ azione: 'avviso_squadre' }` o `{ azione: 'avviso_squadre_prova' }`. |
 
 ### Accettazione delle istruzioni
 
@@ -1017,7 +1017,9 @@ Per i premi parte tutta la squadra: `PREMI_LICEI` dice "fino a 6 studenti".
 Fino al 30 novembre 2026 l'area dello studente e la console dei docenti
 mostrano un avviso del cambio (`NovitaSquadre.tsx`), che chiede di
 segnalare i problemi al referente o a info@bioergotech.org; poi sparisce da
-solo. La lezione 4.4 del corso, in inglese e uguale per tutti, dice 2-4.
+solo. Ai docenti lo dice anche un'email una tantum dal pannello staff (vedi
+"Avvisi una tantum"). La lezione 4.4 del corso, in inglese e uguale per
+tutti, dice 2-4.
 
 Il minimo vale alla consegna, non alla creazione, perche una squadra nasce con
 il suo fondatore e cresce nei giorni successivi.
@@ -1030,9 +1032,9 @@ quale istituto accompagna quei ragazzi.
 
 Il vincolo e imposto in tre punti, e non e ridondanza inutile: l'API filtra
 per `adesione_id` quando risolve il codice della squadra, un trigger lo
-ricontrolla in scrittura, e il tetto di cinque e preso con un
+ricontrolla in scrittura, e il tetto di sei e preso con un
 `pg_advisory_xact_lock` per squadra. Il lock serve: senza, due studenti che
-entrano nello stesso istante leggono entrambi quattro e diventano sei.
+entrano nello stesso istante leggono entrambi cinque e diventano sette.
 
 L'appartenenza e una colonna su `licei_iscrizioni`, non una tabella ponte.
 Uno studente sta in una squadra sola e la colonna lo impone da se; una tabella
@@ -1239,8 +1241,42 @@ la vera difesa contro le adesioni finte.
 - Stato e note interne per adesione, export CSV.
 - Nel dettaglio di un'adesione, sotto "Referente", i "Docenti del progetto"
   con stato, date e il bottone Revoca.
-- La card "Avviso agli studenti sulle riflessioni", con l'anteprima del testo
-  e il bottone che lo invia una volta sola (vedi sopra).
+- Le card degli avvisi una tantum, ognuna con l'anteprima del testo e il
+  bottone che lo invia una volta sola: "Avviso ai docenti sulle squadre" e
+  "Avviso agli studenti sulle riflessioni" (vedi sotto e sopra).
+
+### Avvisi una tantum
+
+Un'email che lo staff manda a tutti con un bottone, una volta sola. La
+parte comune sta in `lib/eventi/licei-avvisi.ts`, le card in
+`admin/Avvisi.tsx`, i testi in `content.ts` (li usano sia l'email sia
+l'anteprima: chi preme legge esattamente quello che parte).
+
+- Due chiavi per avviso in `licei_config`, fuori da `CONFIG_CHIAVI`: la data
+  dell'invio, scritta PRIMA di mandare qualsiasi email (la chiave primaria
+  fa passare un solo clic, anche fra due persone dello staff), e l'esito in
+  soli numeri. Se non parte nessuna email la prenotazione si toglie e si
+  puo riprovare.
+- Un'email per persona, a blocchi di 50 con una pausa, una chiave di
+  idempotenza per blocco e un solo nuovo tentativo sui rifiuti passeggeri.
+  I fallimenti vanno nei log con un riferimento (`iscrizione <id>`,
+  `adesione <id>`, `docente <id>`), mai con l'email. Le risposte vanno a
+  info@bioergotech.org.
+- **Avviso ai docenti sulle squadre** (`avviso_squadre_docenti_inviato_at`,
+  `avviso_squadre_docenti_esito`): ai referenti delle adesioni confermate e
+  attive e ai docenti del progetto invitati o attivi di quelle adesioni, un
+  indirizzo per persona (chi e sia referente sia docente riceve un'email
+  sola, con il nome da referente). Dice che le squadre vanno da 1 a 6,
+  elenca i problemi segnalati e risolti, chiede un riscontro. Il bottone
+  "Invia una prova a me" manda la stessa email solo a chi lo preme, con
+  "[Prova]" nell'oggetto, senza prenotare niente.
+- **Avviso agli studenti sulle riflessioni**: vedi "Riflessioni e domande,
+  da ora in avanti".
+
+Non parte niente a percorso chiuso o senza `RESEND_API_KEY`. Per un nuovo
+avviso: due chiavi in `licei-server.ts`, il testo in `content.ts`, il
+modello in `licei-email.ts`, un'azione nella rotta e una card in
+`Avvisi.tsx` sopra `AvvisoUnaTantum`.
 
 ## Chiusura del percorso
 

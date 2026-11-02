@@ -34,7 +34,7 @@ export function NovitaSquadre({ registro }: { registro: "lei" | "tu" }) {
       <strong>Novità.</strong>{" "}
       {registro === "tu" ? (
         <>
-          Da oggi una squadra può avere fino a {SQUADRA_MAX} componenti, e il progetto si può fare anche
+          Ora una squadra può avere fino a {SQUADRA_MAX} componenti, e il progetto si può fare anche
           da soli. Se la vostra squadra cresce, chi l&apos;ha creata passa il codice ai nuovi compagni. Se
           qualcosa non funziona, dillo al tuo docente referente o scrivi a{" "}
           <a href={`mailto:${email}`} style={{ color: "#08594A", fontWeight: 600 }}>
@@ -44,7 +44,7 @@ export function NovitaSquadre({ registro }: { registro: "lei" | "tu" }) {
         </>
       ) : (
         <>
-          Da oggi le squadre possono avere fino a {SQUADRA_MAX} componenti, il progetto si può presentare
+          Ora le squadre possono avere fino a {SQUADRA_MAX} componenti, il progetto si può presentare
           anche da soli e per i premi conta tutta la squadra. Se qualcosa non funziona, per Lei o per i
           suoi studenti, ci scriva a{" "}
           <a href={`mailto:${email}`} style={{ color: "#08594A", fontWeight: 600 }}>

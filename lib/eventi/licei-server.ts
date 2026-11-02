@@ -32,6 +32,7 @@ import {
   DOCUMENTO_ISTRUZIONI_DOCENTE,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { ISTRUZIONI_DOCENTE, type SezioneDoc } from "@/app/eventi/vivere-piu-a-lungo/licei/documenti";
+import type { EsitoAvviso, StatoAvviso } from "@/lib/eventi/licei-avvisi";
 
 export type LiceiConfig = {
   stato_adesioni: StatoAdesioni;
@@ -830,23 +831,29 @@ export const COLONNA_RIFLESSIONI_CONDIVISE = "condivisa_referente_at";
 export const CHIAVE_AVVISO_RIFLESSIONI = "avviso_riflessioni_inviato_at";
 export const CHIAVE_ESITO_AVVISO_RIFLESSIONI = "avviso_riflessioni_esito";
 
-export type EsitoAvvisoRiflessioni = {
-  /** Iscrizioni a cui si e provato a scrivere, un indirizzo per persona. */
-  destinatari: number;
-  inviate: number;
-  /** Non partite, indirizzi non validi compresi: i dettagli sono nei log. */
-  fallite: number;
-};
+export type EsitoAvvisoRiflessioni = EsitoAvviso;
 
 /** Lo stato dell'avviso, come lo manda al pannello la rotta dello staff. */
-export type StatoAvvisoRiflessioni = {
-  /** Quando e partito. Null: non ancora. */
-  inviato_at: string | null;
-  esito: EsitoAvvisoRiflessioni | null;
+export type StatoAvvisoRiflessioni = StatoAvviso & {
   /** `assente` prima della migrazione 20261215000000: il bottone resta spento. */
   colonna: "presente" | "assente" | "errore";
   /** Iscrizioni confermate e in attesa, prima di togliere le email doppie. */
   iscritti: number;
+};
+
+/**
+ * L'avviso una tantum ai docenti, via email: le squadre vanno da 1 a 6
+ * componenti, i problemi segnalati sono stati risolti, e se qualcosa non va
+ * ce lo scrivono. Stesse regole dell'avviso sulle riflessioni
+ * (`lib/eventi/licei-avvisi.ts`).
+ */
+export const CHIAVE_AVVISO_SQUADRE = "avviso_squadre_docenti_inviato_at";
+export const CHIAVE_ESITO_AVVISO_SQUADRE = "avviso_squadre_docenti_esito";
+
+/** Lo stato dell'avviso ai docenti, come lo manda al pannello la rotta dello staff. */
+export type StatoAvvisoSquadre = StatoAvviso & {
+  /** Docenti a cui partirebbe, un indirizzo per persona. Null: non letti. */
+  docenti: number | null;
 };
 
 /**
