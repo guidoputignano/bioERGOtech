@@ -294,7 +294,7 @@ const STUDENTE: Passo[] = [
   {
     titolo: "Segui il corso, una lezione alla volta",
     testo:
-      "Online e fuori dall'orario scolastico. Ogni lezione si chiude con una riflessione da consegnare, ed è la consegna che sblocca quella dopo. È anche quello che fa avanzare la barra che il tuo professore vede.",
+      "Online e fuori dall'orario scolastico. Ogni lezione si chiude con una riflessione da consegnare, ed è la consegna che sblocca quella dopo. È anche quello che fa avanzare la barra che il tuo professore vede. Anche quando sei in squadra le lezioni le segui con il tuo account e la riflessione la consegni tu: quella di un compagno non sblocca la lezione per te.",
     link: {
       etichetta: "Il corso",
       href: "/courses/agentic-ai",
@@ -441,6 +441,10 @@ const GUASTI = [
   {
     d: "Il docente non trova l'area riservata",
     r: "Il referente entra con lo stesso indirizzo email usato nel modulo di adesione, un collega indicato dal referente con quello a cui è arrivato l'invito. L'area è legata all'account, non alla scuola.",
+  },
+  {
+    d: "Dopo che un compagno ha creato la squadra, alcuni componenti non vanno avanti con le lezioni",
+    r: "La squadra non blocca le lezioni: ognuno le segue con il proprio account. La lezione successiva si sblocca solo dopo aver consegnato la propria riflessione della lezione in corso, e quella di chi ha creato la squadra non vale per gli altri. Controlli che ciascuno sia entrato con il suo account (non con quello di un compagno, se usano lo stesso computer) e che abbia consegnato la riflessione della lezione 4.4.",
   },
   {
     d: "La squadra non riesce a consegnare",

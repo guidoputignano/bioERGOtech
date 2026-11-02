@@ -43,6 +43,15 @@ import { MentorElenco } from "../../mentor/MentorElenco";
 import { RiflessioniPassateCard } from "./RiflessioniPassate";
 import { AccountCollegato } from "../AccountCollegato";
 
+/**
+ * La squadra e del progetto, le lezioni sono di ciascuno. Un docente ha
+ * segnalato componenti "bloccati" dopo che un compagno aveva creato la
+ * squadra: la lezione dopo si sblocca solo con la propria riflessione, e
+ * quella di chi ha creato la squadra non vale per gli altri.
+ */
+const NOTA_LEZIONI =
+  "La squadra serve per il progetto. Le lezioni ognuno le segue con il proprio account, e la riflessione di ogni lezione la consegna ciascuno: quella di un compagno non sblocca la lezione successiva per te.";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Qualsiasi = any;
 
@@ -293,6 +302,9 @@ export function StudenteConsole({
               Cinque è il massimo perché è la rappresentanza che parte per il premio: così la
               squadra che vince ci va al completo.
             </p>
+            <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: "10px 0 0" }}>
+              {NOTA_LEZIONI}
+            </p>
           </div>
 
           {!squadreAperte && (
@@ -394,6 +406,9 @@ export function StudenteConsole({
                 <p className="text-sm text-gray-600" style={{ margin: "3px 0 0" }}>
                   {membri.length} {membri.length === 1 ? "componente" : "componenti"} su {SQUADRA_MAX}
                   {membri.length < SQUADRA_MIN && ` . ne serve almeno ${SQUADRA_MIN} per consegnare`}
+                </p>
+                <p className="text-xs text-gray-500" style={{ lineHeight: 1.6, margin: "6px 0 0", maxWidth: 520 }}>
+                  {NOTA_LEZIONI}
                 </p>
               </div>
               {progetto && (
