@@ -1013,9 +1013,11 @@ componenti"). Finche la migrazione non e applicata il database ferma ancora la
 squadra a cinque. La stessa migrazione conta come "complete" le squadre con
 almeno un componente nel riepilogo dello staff (`licei_squadre_stats`).
 
-La rappresentanza per il premio resta "fino a 5 studenti" (`PREMI_LICEI`):
-con sei componenti, chi parte lo decide la Fondazione. La lezione 4.4 del
-corso, in inglese e uguale per tutti, dice 2-4.
+Per i premi parte tutta la squadra: `PREMI_LICEI` dice "fino a 6 studenti".
+Fino al 30 novembre 2026 l'area dello studente e la console dei docenti
+mostrano un avviso del cambio (`NovitaSquadre.tsx`), che chiede di
+segnalare i problemi al referente o a info@bioergotech.org; poi sparisce da
+solo. La lezione 4.4 del corso, in inglese e uguale per tutti, dice 2-4.
 
 Il minimo vale alla consegna, non alla creazione, perche una squadra nasce con
 il suo fondatore e cresce nei giorni successivi.

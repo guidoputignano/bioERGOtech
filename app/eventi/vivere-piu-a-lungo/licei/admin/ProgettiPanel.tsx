@@ -486,8 +486,7 @@ export function ProgettiPanel() {
                       {premio.titolo}
                     </div>
                     <div className="text-gray-600" style={{ fontSize: 12, marginTop: 2, lineHeight: 1.5 }}>
-                      {premio.desc} Parte una rappresentanza {premio.rappresentanza}; le squadre
-                      possono avere fino a {SQUADRA_MAX} componenti.
+                      {premio.desc} Parte tutta la squadra, {premio.rappresentanza}.
                     </div>
                   </div>
 

@@ -61,6 +61,7 @@ import { AccettazioneIstruzioni } from "./AccettazioneIstruzioni";
 import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
 import { CorreggiEmail } from "./CorreggiEmail";
 import { AccountCollegato } from "../AccountCollegato";
+import { NovitaSquadre } from "../NovitaSquadre";
 import { FiltroClasse } from "./FiltroClasse";
 import { QuadroSquadre } from "./QuadroSquadre";
 import { LinkRiflessioniStudenti, RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
@@ -546,6 +547,9 @@ export function ReferenteConsole({
           </a>
         </p>
       </div>
+
+      {/* Il cambio di regola delle squadre, finche e una novita. */}
+      <NovitaSquadre registro="lei" />
 
       {adesione?.stato === "ricevuta" && (
         <div

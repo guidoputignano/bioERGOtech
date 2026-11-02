@@ -43,6 +43,7 @@ import { MentorElenco } from "../../mentor/MentorElenco";
 import { RiflessioniPassateCard } from "./RiflessioniPassate";
 import { AccountCollegato } from "../AccountCollegato";
 import { VaiAlleLezioni } from "@/app/courses/VaiAlleLezioni";
+import { NovitaSquadre } from "../NovitaSquadre";
 
 /**
  * La squadra e del progetto, le lezioni sono di ciascuno. Un docente ha
@@ -288,6 +289,9 @@ export function StudenteConsole({
         </div>
       )}
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
+
+      {/* Il cambio di regola delle squadre, finche e una novita. */}
+      {sezione === "tutto" && <NovitaSquadre registro="tu" />}
 
       {/* ══ Le lezioni ══ Prima di tutto: e quello che si fa ogni giorno, e
           prima da qui non si arrivava al corso. Solo nell'area completa. */}
