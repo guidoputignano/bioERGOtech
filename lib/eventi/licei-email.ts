@@ -10,6 +10,8 @@
 import {
   AVVISO_RIFLESSIONI_OGGETTO,
   AVVISO_RIFLESSIONI_TESTO,
+  AVVISO_SQUADRE_OGGETTO,
+  AVVISO_SQUADRE_TESTO,
   COMMISSIONE_PATH,
   CONTATTI_LICEI,
   DICHIARAZIONE_INVITO_DOCENTE_TESTO,
@@ -901,6 +903,49 @@ export function avvisoRiflessioniEmailHtml(input: AvvisoRiflessioniEmailInput): 
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 8px;">
         ${AVVISO_RIFLESSIONI_TESTO.dubbi}
       </p>
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+/* ── Avviso ai docenti: squadre fino a 6, e se qualcosa non va ───────── */
+
+export type AvvisoSquadreEmailInput = {
+  /** Nome e cognome del docente; vuoto per l'invio di prova. */
+  nome: string;
+};
+
+export function avvisoSquadreEmailSubject(): string {
+  return AVVISO_SQUADRE_OGGETTO;
+}
+
+/**
+ * Email una tantum ai docenti: referenti delle adesioni confermate e
+ * docenti del progetto. Dice che le squadre vanno da 1 a 6, quali problemi
+ * segnalati sono stati risolti, e chiede un riscontro: le risposte arrivano
+ * a info@ (`replyTo`). Il testo e in `AVVISO_SQUADRE_TESTO`, lo stesso che
+ * lo staff vede in anteprima prima di inviarlo.
+ */
+export function avvisoSquadreEmailHtml(input: AvvisoSquadreEmailInput): string {
+  const nome = input.nome.trim();
+  const p = (testo: string, margine = "0 0 20px") =>
+    `<p style="color:#4A5568;font-size:15px;line-height:1.7;margin:${margine};">${testo}</p>`;
+  const correzioni = AVVISO_SQUADRE_TESTO.correzioni
+    .map((c) => `<li style="margin:0 0 6px;">${c}</li>`)
+    .join("");
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">${nome ? `Gentile ${esc(nome)},` : "Gentile docente,"}</h2>
+      ${p(AVVISO_SQUADRE_TESTO.apertura)}
+      ${p(AVVISO_SQUADRE_TESTO.squadre)}
+      ${p(AVVISO_SQUADRE_TESTO.correzioniIntro, "0 0 8px")}
+      <ul style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 20px;padding-left:22px;">${correzioni}</ul>
+      ${p(AVVISO_SQUADRE_TESTO.riscontro)}
+      ${p(AVVISO_SQUADRE_TESTO.grazie)}
+      ${p(AVVISO_SQUADRE_TESTO.firma.join("<br />"), "0 0 8px")}
       ${chiusura()}
     </div>
   </div>`;

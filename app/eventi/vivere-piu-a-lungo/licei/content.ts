@@ -848,6 +848,33 @@ export const SQUADRA_MAX = 6;
 /** Una squadra sta dentro un solo istituto. Il perché è nella FAQ e nella migrazione. */
 export const SQUADRA_UN_SOLO_ISTITUTO = true;
 
+/* ── Avviso ai docenti: squadre fino a 6, e se qualcosa non va ──────── */
+
+/**
+ * L'email una tantum ai docenti (referenti delle adesioni confermate e
+ * docenti del progetto) che lo staff invia dal pannello. Il testo sta qui
+ * perche lo usano sia l'email sia l'anteprima nel pannello: chi preme il
+ * bottone legge esattamente quello che parte. Ogni docente riceve la sua
+ * copia, quindi il registro e "Lei".
+ */
+export const AVVISO_SQUADRE_OGGETTO = `Squadre fino a ${SQUADRA_MAX} studenti . ${LICEI.titolo}`;
+export const AVVISO_SQUADRE_TESTO = {
+  apertura: "Le scriviamo con un aggiornamento sul percorso.",
+  squadre: `Le squadre ora possono avere fino a ${SQUADRA_MAX} studenti, sempre dello stesso istituto, e il progetto si può presentare anche da soli. Per i premi conta tutta la squadra. Chi ha già una squadra non deve fare nulla: se vuole allargarsi, lo studente che l'ha creata passa il codice ai nuovi compagni.`,
+  correzioniIntro: "In queste settimane abbiamo anche risolto i problemi che ci sono stati segnalati:",
+  correzioni: [
+    "dopo l'accesso gli studenti arrivano direttamente alle lezioni del corso;",
+    "dalla console può correggere l'email di uno studente che l'ha scritta male e non è ancora riuscito a entrare;",
+    "su un computer condiviso la pagina mostra con quale account si è collegati e permette di uscire;",
+    "la pagina non si blocca più quando il browser la traduce in automatico;",
+    "nella console vede quali suoi studenti si sono iscritti ai talk.",
+  ],
+  riscontro:
+    "Le chiediamo un riscontro: funziona tutto, per Lei e per i suoi studenti? Se qualcosa non va, basta rispondere a questa email: lo sistemiamo noi. Gli studenti possono rivolgersi a Lei o scrivere a info@bioergotech.org.",
+  grazie: "Grazie per il lavoro che sta facendo con i ragazzi.",
+  firma: ["Un cordiale saluto,", "Guido Putignano", "Fondazione bioERGOtech"],
+} as const;
+
 /* ── Interruttori delle fasi ──────────────────────────────────────────── */
 
 /**

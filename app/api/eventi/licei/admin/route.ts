@@ -12,23 +12,38 @@ import {
   adesioneConfermataEmailSubject,
   avvisoRiflessioniEmailHtml,
   avvisoRiflessioniEmailSubject,
+  avvisoSquadreEmailHtml,
+  avvisoSquadreEmailSubject,
 } from "@/lib/eventi/licei-email";
 import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 import { docentiPerIstituto } from "@/lib/eventi/licei-docenti";
 import {
   CHIAVE_AVVISO_RIFLESSIONI,
+  CHIAVE_AVVISO_SQUADRE,
   CHIAVE_ESITO_AVVISO_RIFLESSIONI,
+  CHIAVE_ESITO_AVVISO_SQUADRE,
   erroreSchemaMancante,
   leggiChiusuraPercorso,
   statoColonnaRiflessioni,
-  type EsitoAvvisoRiflessioni,
   type StatoAvvisoRiflessioni,
+  type StatoAvvisoSquadre,
 } from "@/lib/eventi/licei-server";
+import {
+  MITTENTE_AVVISI,
+  RISPOSTE_AVVISI,
+  destinatariUnici,
+  giaInviato,
+  inviaAvvisoUnaVolta,
+  righeDocentiAvviso,
+  statoAvviso,
+  type Destinatario,
+  type RisultatoAvviso,
+} from "@/lib/eventi/licei-avvisi";
 
 const STATI_VALIDI = new Set<string>(STATI_ADESIONE.map((s) => s.value));
 
-// L'avviso sulle riflessioni parte a qualche centinaio di studenti, a
-// blocchi e con una pausa fra un blocco e l'altro: il tempo di default non
+// Gli avvisi una tantum partono a qualche centinaio di persone, a blocchi e
+// con una pausa fra un blocco e l'altro: il tempo di default non
 // basterebbe.
 export const maxDuration = 300;
 
@@ -110,7 +125,8 @@ export async function GET(request: Request) {
   // errore di lettura non fa cadere il pannello, lo dice.
   // E se la colonna delle riflessioni condivise c'e: l'avviso agli
   // studenti non parte prima della migrazione.
-  const [progresso, docenti, colonnaRiflessioni] = await Promise.all([
+  // E a quanti docenti partirebbe l'avviso sulle squadre.
+  const [progresso, docenti, colonnaRiflessioni, docentiAvviso] = await Promise.all([
     progressoPerUtenti(
       client,
       righeStudenti.map((r) => r.user_id).filter((id): id is string => !!id),
@@ -120,6 +136,12 @@ export async function GET(request: Request) {
       return undefined;
     }),
     statoColonnaRiflessioni(client),
+    righeDocentiAvviso(client)
+      .then((righe) => destinatariUnici(righe, null).destinatari.length)
+      .catch((err) => {
+        console.error("Licei admin: destinatari dell'avviso ai docenti non letti:", err);
+        return null;
+      }),
   ]);
 
   const progressoPerIstituto: Record<
@@ -156,6 +178,8 @@ export async function GET(request: Request) {
     }
   }
 
+  const righeConfig = (config ?? []) as { chiave: string; valore: string | null }[];
+
   return NextResponse.json({
     adesioni: data ?? [],
     stats: stats ?? [],
@@ -170,86 +194,27 @@ export async function GET(request: Request) {
       errore: docenti === undefined,
       per_adesione: docenti ?? {},
     },
-    avviso_riflessioni: statoAvvisoRiflessioni(
-      (config ?? []) as { chiave: string; valore: string | null }[],
-      colonnaRiflessioni,
-      righeStudenti.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato)).length,
-    ),
+    avviso_riflessioni: {
+      ...statoAvviso(righeConfig, CHIAVE_AVVISO_RIFLESSIONI, CHIAVE_ESITO_AVVISO_RIFLESSIONI),
+      colonna: colonnaRiflessioni,
+      iscritti: righeStudenti.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato)).length,
+    } satisfies StatoAvvisoRiflessioni,
+    avviso_squadre: {
+      ...statoAvviso(righeConfig, CHIAVE_AVVISO_SQUADRE, CHIAVE_ESITO_AVVISO_SQUADRE),
+      docenti: docentiAvviso,
+    } satisfies StatoAvvisoSquadre,
   });
 }
 
-/* ── Avviso agli studenti sulle riflessioni ──────────────────────────── */
+/* ── Avvisi una tantum ─────────────────────────────────────────────── */
 
-function statoAvvisoRiflessioni(
-  config: { chiave: string; valore: string | null }[],
-  colonna: StatoAvvisoRiflessioni["colonna"],
-  iscritti: number,
-): StatoAvvisoRiflessioni {
-  const valore = (chiave: string) => (config.find((c) => c.chiave === chiave)?.valore ?? "").trim();
-  let esito: EsitoAvvisoRiflessioni | null = null;
-  const grezzo = valore(CHIAVE_ESITO_AVVISO_RIFLESSIONI);
-  if (grezzo) {
-    try {
-      esito = JSON.parse(grezzo) as EsitoAvvisoRiflessioni;
-    } catch {
-      esito = null;
-    }
-  }
-  return { inviato_at: valore(CHIAVE_AVVISO_RIFLESSIONI) || null, esito, colonna, iscritti };
-}
-
-/** Quanti indirizzi per chiamata all'API di invio a blocchi di Resend. */
-const AVVISO_BLOCCO = 50;
-/** Pausa fra un blocco e il successivo, sotto il limite di richieste al secondo. */
-const AVVISO_PAUSA_MS = 600;
-const EMAIL_VALIDA = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const pausa = (ms: number) => new Promise((r) => setTimeout(r, ms));
+type Client = NonNullable<Awaited<ReturnType<typeof requireAdmin>>["client"]>;
 
 /**
- * Prenota l'invio scrivendo la chiave con la data, PRIMA di mandare
- * qualsiasi email. Due clic, o due persone dello staff nello stesso
- * momento, arrivano qui insieme: la chiave primaria di `licei_config` fa
- * passare solo il primo. Una chiave gia presente ma vuota (svuotata a mano
- * dal database) si prenota solo se e ancora vuota, con lo stesso effetto.
+ * I controlli comuni prima di un avviso: percorso aperto, invio email
+ * configurato, avviso non ancora partito. Null se si puo procedere.
  */
-async function prenotaAvviso(
-  client: NonNullable<Awaited<ReturnType<typeof requireAdmin>>["client"]>,
-  adesso: string,
-  autore: string,
-): Promise<"prenotato" | "gia_inviato"> {
-  const riga = { chiave: CHIAVE_AVVISO_RIFLESSIONI, valore: adesso, aggiornato_at: adesso, aggiornato_by: autore };
-  const { error } = await client.from("licei_config").insert(riga);
-  if (!error) return "prenotato";
-  if (error.code !== "23505") throw new Error(`licei_config: ${error.message}`);
-
-  for (const vuota of ["", null] as const) {
-    const base = client.from("licei_config").update(riga).eq("chiave", CHIAVE_AVVISO_RIFLESSIONI);
-    const { data, error: erroreVuota } = await (vuota === null
-      ? base.is("valore", null)
-      : base.eq("valore", vuota)
-    ).select("chiave");
-    if (erroreVuota) throw new Error(`licei_config: ${erroreVuota.message}`);
-    if ((data ?? []).length > 0) return "prenotato";
-  }
-  return "gia_inviato";
-}
-
-/**
- * Invia l'avviso, una volta sola.
- *
- * In ordine: percorso aperto, invio email configurato, colonna presente
- * (l'avviso annuncia una funzione che senza la migrazione non c'e), avviso
- * non ancora inviato, almeno un destinatario. Poi la prenotazione e l'invio
- * a blocchi. Un indirizzo che non parte si registra nei log con l'id
- * dell'iscrizione, non con l'email; i conteggi tornano al pannello e
- * restano in `licei_config`, in soli numeri. Se non parte nessuna email, la
- * prenotazione si toglie e si puo riprovare.
- */
-async function inviaAvvisoRiflessioni(
-  client: NonNullable<Awaited<ReturnType<typeof requireAdmin>>["client"]>,
-  autore: string,
-) {
+async function primaDiUnAvviso(client: Client, chiave: string): Promise<NextResponse | null> {
   const chiusura = await leggiChiusuraPercorso(client);
   if (chiusura.chiusoAt) {
     return NextResponse.json({ error: "Il percorso è chiuso: l'avviso non serve più." }, { status: 409 });
@@ -257,6 +222,48 @@ async function inviaAvvisoRiflessioni(
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "Invio email non configurato: manca RESEND_API_KEY." }, { status: 503 });
   }
+  let inviatoAt: string | null;
+  try {
+    inviatoAt = await giaInviato(client, chiave);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+  if (inviatoAt) {
+    return NextResponse.json({ error: "L'avviso è già stato inviato.", inviato_at: inviatoAt }, { status: 409 });
+  }
+  return null;
+}
+
+/** La risposta al pannello per l'esito di `inviaAvvisoUnaVolta`. */
+function rispostaAvviso(r: RisultatoAvviso): NextResponse {
+  switch (r.stato) {
+    case "gia_inviato":
+      return NextResponse.json({ error: "L'avviso è già stato inviato." }, { status: 409 });
+    case "prenotazione_fallita":
+      return NextResponse.json(
+        { error: "Non è stato possibile registrare l'invio. Riprova fra poco." },
+        { status: 500 },
+      );
+    case "nessuna_partita":
+      return NextResponse.json(
+        { error: "Nessuna email è partita. Controlla i log e riprova.", ...r.esito },
+        { status: 502 },
+      );
+    case "inviato":
+      return NextResponse.json({ success: true, inviato_at: r.inviato_at, ...r.esito });
+  }
+}
+
+/**
+ * L'avviso agli studenti sulle riflessioni, una volta sola.
+ *
+ * In ordine: i controlli comuni, la colonna presente (l'avviso annuncia una
+ * funzione che senza la migrazione non c'e), almeno un destinatario. Poi
+ * prenotazione e invio, in `inviaAvvisoUnaVolta`.
+ */
+async function inviaAvvisoRiflessioni(client: Client, autore: string) {
+  const blocco = await primaDiUnAvviso(client, CHIAVE_AVVISO_RIFLESSIONI);
+  if (blocco) return blocco;
 
   const colonna = await statoColonnaRiflessioni(client);
   if (colonna === "assente") {
@@ -276,24 +283,10 @@ async function inviaAvvisoRiflessioni(
     );
   }
 
-  const { data: gia, error: erroreGia } = await client
-    .from("licei_config")
-    .select("valore")
-    .eq("chiave", CHIAVE_AVVISO_RIFLESSIONI)
-    .maybeSingle();
-  if (erroreGia) return NextResponse.json({ error: erroreGia.message }, { status: 500 });
-  if ((gia?.valore ?? "").trim()) {
-    return NextResponse.json(
-      { error: "L'avviso è già stato inviato.", inviato_at: gia?.valore ?? null },
-      { status: 409 },
-    );
-  }
-
   // I destinatari: confermati e in attesa, di tutti gli istituti, a pagine
-  // (PostgREST tronca oltre il suo tetto senza dirlo). Un indirizzo per
-  // persona: chi risultasse iscritto due volte riceve un'email sola.
+  // (PostgREST tronca oltre il suo tetto senza dirlo).
   const PAGINA = 1000;
-  const righe: { id: string; nome: string | null; email: string | null }[] = [];
+  const righe: Destinatario[] = [];
   for (let da = 0; ; da += PAGINA) {
     const { data, error } = await client
       .from("licei_iscrizioni")
@@ -302,127 +295,88 @@ async function inviaAvvisoRiflessioni(
       .order("id", { ascending: true })
       .range(da, da + PAGINA - 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    righe.push(...((data ?? []) as typeof righe));
-    if ((data ?? []).length < PAGINA) break;
+    const pagina = (data ?? []) as { id: string; nome: string | null; email: string | null }[];
+    righe.push(...pagina.map((r) => ({ rif: `iscrizione ${r.id}`, nome: r.nome ?? "", email: r.email ?? "" })));
+    if (pagina.length < PAGINA) break;
   }
 
-  const visti = new Set<string>();
-  const destinatari: { id: string; nome: string; email: string }[] = [];
-  let scartate = 0;
-  for (const r of righe) {
-    const email = (r.email ?? "").trim();
-    const chiave = email.toLowerCase();
-    if (!EMAIL_VALIDA.test(email)) {
-      scartate += 1;
-      console.error(`Licei avviso riflessioni: iscrizione ${r.id}: indirizzo non valido, non inviato.`);
-      continue;
-    }
-    if (visti.has(chiave)) continue;
-    visti.add(chiave);
-    destinatari.push({ id: r.id, nome: r.nome ?? "", email });
-  }
+  const { destinatari, scartate } = destinatariUnici(righe, "avviso riflessioni");
   if (destinatari.length === 0) {
     return NextResponse.json({ error: "Nessuno studente iscritto a cui inviarlo." }, { status: 409 });
   }
 
-  const adesso = new Date().toISOString();
-  try {
-    if ((await prenotaAvviso(client, adesso, autore)) === "gia_inviato") {
-      return NextResponse.json({ error: "L'avviso è già stato inviato." }, { status: 409 });
-    }
-  } catch (err) {
-    console.error("Licei avviso riflessioni: prenotazione non riuscita:", err);
-    return NextResponse.json({ error: "Non è stato possibile registrare l'invio. Riprova fra poco." }, { status: 500 });
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const subject = avvisoRiflessioniEmailSubject();
-  let inviate = 0;
-  let fallite = scartate;
-
-  for (let i = 0; i < destinatari.length; i += AVVISO_BLOCCO) {
-    const blocco = destinatari.slice(i, i + AVVISO_BLOCCO);
-    if (i > 0) await pausa(AVVISO_PAUSA_MS);
-    const messaggi = blocco.map((d) => ({
-      from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
-      to: d.email,
-      replyTo: "info@bioergotech.org",
-      subject,
-      html: avvisoRiflessioniEmailHtml({ nome: d.nome }),
-    }));
-    // La chiave di idempotenza e legata a questa prenotazione e a questo
-    // blocco: se la rete cade dopo che Resend ha accettato, il secondo
-    // tentativo non manda una seconda copia.
-    const opzioni = {
-      batchValidation: "permissive" as const,
-      idempotencyKey: `licei-avviso-riflessioni-${adesso}-${i / AVVISO_BLOCCO}`,
-    };
-
-    let esito: Awaited<ReturnType<typeof resend.batch.send<typeof opzioni>>> | null = null;
-    for (let tentativo = 0; tentativo < 2; tentativo++) {
-      try {
-        esito = await resend.batch.send(messaggi, opzioni);
-      } catch (err) {
-        esito = {
-          data: null,
-          error: { message: err instanceof Error ? err.message : String(err), statusCode: null, name: "application_error" },
-          headers: null,
-        } as typeof esito;
-      }
-      // Si riprova una volta sola, e solo per un rifiuto passeggero.
-      const codice = esito?.error?.statusCode ?? null;
-      if (!esito?.error || (codice !== null && codice !== 429 && codice < 500) || tentativo > 0) break;
-      await pausa(1500);
-    }
-
-    if (!esito || esito.error) {
-      fallite += blocco.length;
-      for (const d of blocco) {
-        console.error(
-          `Licei avviso riflessioni: iscrizione ${d.id}: non inviato (${esito?.error?.message ?? "errore sconosciuto"}).`,
-        );
-      }
-      continue;
-    }
-    const errori = esito.data?.errors ?? [];
-    for (const e of errori) {
-      const d = blocco[e.index];
-      console.error(`Licei avviso riflessioni: iscrizione ${d?.id ?? "?"}: non inviato (${e.message}).`);
-    }
-    fallite += errori.length;
-    inviate += blocco.length - errori.length;
-  }
-
-  const esito: EsitoAvvisoRiflessioni = { destinatari: destinatari.length + scartate, inviate, fallite };
-
-  if (inviate === 0) {
-    // Non e partito niente: la prenotazione si toglie, cosi lo staff puo
-    // riprovare quando il problema e risolto. Solo la propria: il filtro
-    // sulla data non tocca un invio partito nel frattempo.
-    const { error } = await client
-      .from("licei_config")
-      .delete()
-      .eq("chiave", CHIAVE_AVVISO_RIFLESSIONI)
-      .eq("valore", adesso);
-    if (error) console.error("Licei avviso riflessioni: prenotazione non tolta:", error.message);
-    return NextResponse.json(
-      { error: "Nessuna email è partita. Controlla i log e riprova.", ...esito },
-      { status: 502 },
-    );
-  }
-
-  const { error: erroreEsito } = await client.from("licei_config").upsert(
-    {
-      chiave: CHIAVE_ESITO_AVVISO_RIFLESSIONI,
-      valore: JSON.stringify(esito),
-      aggiornato_at: new Date().toISOString(),
-      aggiornato_by: autore,
-    },
-    { onConflict: "chiave" },
+  return rispostaAvviso(
+    await inviaAvvisoUnaVolta(client, new Resend(process.env.RESEND_API_KEY), {
+      chiave: CHIAVE_AVVISO_RIFLESSIONI,
+      chiaveEsito: CHIAVE_ESITO_AVVISO_RIFLESSIONI,
+      autore,
+      etichetta: "avviso-riflessioni",
+      destinatari,
+      scartate,
+      subject: avvisoRiflessioniEmailSubject(),
+      html: (d) => avvisoRiflessioniEmailHtml({ nome: d.nome }),
+    }),
   );
-  if (erroreEsito) console.error("Licei avviso riflessioni: esito non registrato:", erroreEsito.message);
+}
 
-  return NextResponse.json({ success: true, inviato_at: adesso, ...esito });
+/**
+ * L'avviso ai docenti sulle squadre, una volta sola: referenti delle
+ * adesioni confermate e docenti del progetto (`righeDocentiAvviso`), un
+ * indirizzo per persona. Le risposte arrivano a info@.
+ */
+async function inviaAvvisoSquadre(client: Client, autore: string) {
+  const blocco = await primaDiUnAvviso(client, CHIAVE_AVVISO_SQUADRE);
+  if (blocco) return blocco;
+
+  let righe: Destinatario[];
+  try {
+    righe = await righeDocentiAvviso(client);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+  const { destinatari, scartate } = destinatariUnici(righe, "avviso squadre");
+  if (destinatari.length === 0) {
+    return NextResponse.json({ error: "Nessun docente a cui inviarlo." }, { status: 409 });
+  }
+
+  return rispostaAvviso(
+    await inviaAvvisoUnaVolta(client, new Resend(process.env.RESEND_API_KEY), {
+      chiave: CHIAVE_AVVISO_SQUADRE,
+      chiaveEsito: CHIAVE_ESITO_AVVISO_SQUADRE,
+      autore,
+      etichetta: "avviso-squadre",
+      destinatari,
+      scartate,
+      subject: avvisoSquadreEmailSubject(),
+      html: (d) => avvisoSquadreEmailHtml({ nome: d.nome }),
+    }),
+  );
+}
+
+/**
+ * Una copia di prova dell'avviso ai docenti, solo a chi preme il bottone:
+ * per vedere l'email vera prima di mandarla a tutti. Non prenota niente e
+ * si puo ripetere.
+ */
+async function provaAvvisoSquadre(email: string | null) {
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json({ error: "Invio email non configurato: manca RESEND_API_KEY." }, { status: 503 });
+  }
+  if (!email) return NextResponse.json({ error: "Il tuo account non ha un'email." }, { status: 400 });
+  try {
+    const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
+      from: MITTENTE_AVVISI,
+      to: email,
+      replyTo: RISPOSTE_AVVISI,
+      subject: `[Prova] ${avvisoSquadreEmailSubject()}`,
+      html: avvisoSquadreEmailHtml({ nome: "" }),
+    });
+    if (error) throw new Error(error.message);
+  } catch (err) {
+    console.error("Licei avviso squadre: prova non inviata:", err);
+    return NextResponse.json({ error: "La prova non è partita. Riprova fra poco." }, { status: 502 });
+  }
+  return NextResponse.json({ success: true, email });
 }
 
 /** Istruttoria: stato dell'adesione e note interne. */
@@ -521,6 +475,9 @@ export async function PATCH(request: Request) {
  * - `avviso_riflessioni`: l'email una tantum agli studenti iscritti, che
  *   da ora i docenti dell'istituto leggono riflessioni e domande. Parte una
  *   volta sola, e solo dopo la migrazione 20261215000000.
+ * - `avviso_squadre`: l'email una tantum ai docenti, che le squadre vanno
+ *   da 1 a 6 e che ci scrivano se qualcosa non va. Parte una volta sola.
+ * - `avviso_squadre_prova`: la stessa email, solo a chi la chiede.
  */
 export async function POST(request: Request) {
   const guard = await requireAdmin();
@@ -530,6 +487,8 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as { azione?: unknown; id?: unknown };
 
   if (body.azione === "avviso_riflessioni") return inviaAvvisoRiflessioni(client, chiamante.id);
+  if (body.azione === "avviso_squadre") return inviaAvvisoSquadre(client, chiamante.id);
+  if (body.azione === "avviso_squadre_prova") return provaAvvisoSquadre(chiamante.email);
 
   if (body.azione !== "revoca_docente") {
     return NextResponse.json({ error: "Azione non riconosciuta." }, { status: 400 });
