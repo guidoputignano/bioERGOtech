@@ -22,6 +22,7 @@ import {
   LICEI_PATH,
   REFERENTE_PATH,
   SITE_URL,
+  SQUADRA_MAX,
   STUDENTE_PATH,
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
@@ -449,9 +450,9 @@ export function confermaEmailHtml(input: ConfermaEmailInput): string {
 
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:22px;margin-bottom:24px;">
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 12px;">
-          <strong style="color:#0A1628;">La squadra.</strong> Da 2 a 5 studenti della tua stessa
-          scuola. Uno di voi la crea e passa agli altri il codice: non serve deciderlo adesso, il
-          lavoro in team è uno dei contenuti del corso.
+          <strong style="color:#0A1628;">La squadra.</strong> Fino a ${SQUADRA_MAX} studenti della tua
+          stessa scuola, oppure da solo. Chi la crea passa agli altri il codice: non serve deciderlo
+          adesso, il lavoro in team è uno dei contenuti del corso.
         </p>
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0;">
           <strong style="color:#0A1628;">Il progetto.</strong> Lo scrivete insieme e lo consegnate

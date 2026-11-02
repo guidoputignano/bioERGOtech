@@ -171,21 +171,21 @@ export const PREMI_LICEI = [
     posizione: 1,
     titolo: "Primo premio",
     desc: "Esperienza presso un centro di ricerca, con viaggio di una settimana a New York.",
-    rappresentanza: "fino a 5 studenti",
+    rappresentanza: "fino a 6 studenti",
     icona: "fa-plane-departure",
   },
   {
     posizione: 2,
     titolo: "Secondo premio",
     desc: "Visita guidata di tre giorni in uno dei più importanti club di calcio di Serie A, con walk about stadio, museo, medical lab e data analyst.",
-    rappresentanza: "fino a 5 studenti",
+    rappresentanza: "fino a 6 studenti",
     icona: "fa-futbol",
   },
   {
     posizione: 3,
     titolo: "Terzo premio",
     desc: "Visita guidata presso SS Taranto Calcio, con walk about stadio, museo, medical lab e data analyst.",
-    rappresentanza: "fino a 5 studenti",
+    rappresentanza: "fino a 6 studenti",
     icona: "fa-shield-halved",
   },
 ] as const;
@@ -408,7 +408,7 @@ export const FAQ_LICEI = [
   },
   {
     q: "Come si formano le squadre?",
-    a: "Dentro il corso, non adesso. Il lavoro in team è uno dei contenuti del percorso: i ragazzi si conoscono durante le prime settimane e formano la squadra quando hanno un'idea da sviluppare. Uno crea la squadra dalla sua area e passa ai compagni il codice per entrare. Si va da 2 a 5 studenti, tutti dello stesso istituto. I dieci progetti migliori salgono sul palco il 10 dicembre.",
+    a: "Dentro il corso, non adesso. Il lavoro in team è uno dei contenuti del percorso: i ragazzi si conoscono durante le prime settimane e formano la squadra quando hanno un'idea da sviluppare. Uno crea la squadra dalla sua area e passa ai compagni il codice per entrare. Si va da 1 a 6 studenti, tutti dello stesso istituto: il progetto si può presentare anche da soli. I dieci progetti migliori salgono sul palco il 10 dicembre.",
   },
   {
     q: "Perché una squadra non può unire studenti di due scuole diverse?",
@@ -836,8 +836,8 @@ export const RIFLESSIONI_STUDENTE_PATH = `${STUDENTE_PATH}/riflessioni`;
  * del bando, che prima diceva da due a cinque. Uno studente può quindi
  * consegnare da solo. Il tetto vale anche a database, nel trigger
  * `licei_squadra_capienza` (migrazione 20261221000000): i due numeri vanno
- * cambiati insieme. La rappresentanza che parte per il premio resta quella
- * di `PREMI_LICEI`.
+ * cambiati insieme. Per i premi parte tutta la squadra (`PREMI_LICEI`,
+ * "fino a 6 studenti").
  *
  * Il minimo vale alla consegna, non alla creazione: una squadra nasce con
  * il suo fondatore e cresce nei giorni successivi.
