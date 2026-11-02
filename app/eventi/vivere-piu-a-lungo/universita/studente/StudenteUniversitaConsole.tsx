@@ -59,6 +59,7 @@ import {
 } from "../content";
 import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/universita-squadre";
 import { MentorElenco } from "../../mentor/MentorElenco";
+import { VaiAlleLezioni } from "@/app/courses/VaiAlleLezioni";
 
 // Le rotte tornano righe intere delle loro tabelle, e le colonne le decide
 // la migrazione: ricopiarne qui l'elenco creerebbe un secondo posto da
@@ -650,6 +651,10 @@ export function StudenteUniversitaConsole({
         <Link href={UNIVERSITA_PATH} className="btn-outline inline-block">
           Torna al bando
         </Link>
+        {/* Il corso si segue lo stesso. */}
+        <div style={{ marginTop: 20 }}>
+          <VaiAlleLezioni />
+        </div>
       </div>
     );
   }
@@ -670,6 +675,9 @@ export function StudenteUniversitaConsole({
           </p>
         </div>
       )}
+
+      {/* Le lezioni, prima di tutto: da quest'area prima non si arrivava al corso. */}
+      {sezioni.includes("tutto") && <VaiAlleLezioni />}
 
       {avviso && <div style={NOTA_OK}>{avviso}</div>}
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}

@@ -76,16 +76,21 @@ export async function areaAccount(userId: string): Promise<AreaAccount | null> {
   }
 }
 
+/** The course, where students spend their time. */
+export const CORSO_PATH = "/courses/agentic-ai";
+
 /**
  * Where to go after signing in. Staff to the portal, even when testing the
  * programmes with a registration of their own; teachers to their console;
- * students to their area (a member who is also a student can still open
- * the portal); everyone else to the portal.
+ * students to the course, because the lessons are what they come for (their
+ * area, which opens on the team, had no link to the lessons, and students
+ * at one school could not find them again after creating a team); everyone
+ * else to the portal.
  */
 export function destinazioneDopoAccesso(area: AreaAccount | null): string {
   if (!area || area.staff) return "/member-portal";
   if (area.docente) return REFERENTE_PATH;
-  return area.studente ?? "/member-portal";
+  return area.studente ? CORSO_PATH : "/member-portal";
 }
 
 /** The student area the portal sends this account to, or null if the portal is theirs. */

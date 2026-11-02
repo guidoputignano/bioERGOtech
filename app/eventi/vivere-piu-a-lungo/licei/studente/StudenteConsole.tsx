@@ -42,6 +42,7 @@ import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/licei-squa
 import { MentorElenco } from "../../mentor/MentorElenco";
 import { RiflessioniPassateCard } from "./RiflessioniPassate";
 import { AccountCollegato } from "../AccountCollegato";
+import { VaiAlleLezioni } from "@/app/courses/VaiAlleLezioni";
 
 /**
  * La squadra e del progetto, le lezioni sono di ciascuno. Un docente ha
@@ -247,6 +248,8 @@ export function StudenteConsole({
             Torna al bando
           </Link>
         </div>
+        {/* Il corso si segue anche a iscrizione in attesa. */}
+        <VaiAlleLezioni />
         {/* La scheda si nasconde da sola a chi non puo iscriversi. */}
         {talk}
         <RiflessioniPassateCard />
@@ -285,6 +288,10 @@ export function StudenteConsole({
         </div>
       )}
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
+
+      {/* ══ Le lezioni ══ Prima di tutto: e quello che si fa ogni giorno, e
+          prima da qui non si arrivava al corso. Solo nell'area completa. */}
+      {sezione === "tutto" && <VaiAlleLezioni />}
 
       {/* ══ Talk con gli esperti ══ Solo nell'area completa. */}
       {sezione === "tutto" && talk}

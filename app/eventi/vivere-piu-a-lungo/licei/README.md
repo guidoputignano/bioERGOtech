@@ -845,9 +845,9 @@ e dopo un accesso senza `returnTo` (`login-form.tsx`) si arrivava sempre a
 Fondazione come "Viewer": tradotto dal browser, "Spettatore". Ora si passa
 da `/auth/dopo-accesso`, che manda lo staff al portale, i docenti dei licei
 (referente o docente del progetto non revocato, adesione non ritirata) alla
-loro console, gli studenti dei licei in attesa o confermati alla loro area,
-i partecipanti dell'universita alla loro, e tutti gli altri al portale come
-prima. Una lettura che non riesce porta al portale. La pagina della password
+loro console, gli studenti dei licei in attesa o confermati e i partecipanti
+dell'universita al corso (vedi "Dopo l'accesso, le lezioni"), e tutti gli
+altri al portale come prima. Una lettura che non riesce porta al portale. La pagina della password
 non dice piu "application approved" e "member portal".
 
 **Il portale non e degli studenti.** Dopo la segnalazione, la scelta: gli
@@ -904,6 +904,24 @@ al login con `returnTo` sulla stessa area. La guida ha la voce
 corrispondente. Se l'account e quello giusto, il messaggio vuol dire
 davvero che non c'e un'adesione (o una riga di docente non revocata) con
 quell'account, e va guardato a database.
+
+## Dopo l'accesso, le lezioni
+
+Quinta segnalazione, dal Liceo Ferraris: uno studente e entrato, la
+piattaforma "gli ha fatto creare il gruppo", e da quel momento nessuno dei
+compagni e riuscito a seguire le lezioni. La squadra non c'entrava: dopo
+l'accesso (`/auth/dopo-accesso`) gli studenti arrivavano nella loro area,
+che si apre sulla squadra, e da li non c'era nessun collegamento al corso,
+ne nell'area ne nella barra in alto (dove al posto di "Research Portal"
+compare "Student area", che porta alla stessa area). Era una conseguenza
+del cambio della sezione "Computer condivisi": prima arrivavano al
+portale.
+
+Ora `destinazioneDopoAccesso` manda gli studenti (licei e universita) al
+corso, `/courses/agentic-ai`; i docenti restano sulla console e lo staff
+sul portale. Le due aree degli studenti hanno in cima `VaiAlleLezioni`
+(`app/courses/VaiAlleLezioni.tsx`), anche nel riquadro "Area non
+disponibile", perche a iscrizione in attesa il corso si segue lo stesso.
 
 ## La traduzione automatica di Chrome
 
