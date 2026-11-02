@@ -1000,17 +1000,25 @@ piu avanti, cioe il conteggio sarebbe sbagliato per difetto dove conta di piu.
 
 ## Una squadra sta dentro un istituto
 
-Da 2 a 5 studenti, tutti della stessa scuola. Le due decisioni hanno ragioni
-diverse e vale la pena tenerle distinte.
+Da 1 a 6 studenti, tutti della stessa scuola. Fino al 2 novembre 2026 erano
+da 2 a 5: il due veniva dall'art. 3 (un lavoro in team) e il cinque dalla
+rappresentanza che parte per il premio (art. 6). La Fondazione ha cambiato la
+regola: ora si puo consegnare anche da soli, e la squadra arriva a sei.
 
-**Il cinque** e il numero dell'art. 6: la rappresentanza che parte per il
-premio. Farli coincidere significa che la squadra vincitrice ci va al
-completo, e nessuno resta a casa a guardare le foto dei compagni a New York.
-La lezione 4.4 del corso dice 2-4 e va riallineata quando si tocca.
+I due numeri stanno in `SQUADRA_MIN` e `SQUADRA_MAX` (`content.ts`); il tetto
+vale anche a database, nel trigger `licei_squadra_capienza`, cambiato dalla
+migrazione `20261221000000_licei_squadre_da_1_a_6.sql` (da applicare a mano,
+come le altre; `VERIFICA.sql` ha il controllo "squadre licei: fino a 6
+componenti"). Finche la migrazione non e applicata il database ferma ancora la
+squadra a cinque. La stessa migrazione conta come "complete" le squadre con
+almeno un componente nel riepilogo dello staff (`licei_squadre_stats`).
 
-**Il minimo di due** viene dall'art. 3, che chiede un lavoro in team: uno
-studente da solo non e un team. Vale alla consegna, non alla creazione, perche
-una squadra nasce con il suo fondatore e cresce nei giorni successivi.
+La rappresentanza per il premio resta "fino a 5 studenti" (`PREMI_LICEI`):
+con sei componenti, chi parte lo decide la Fondazione. La lezione 4.4 del
+corso, in inglese e uguale per tutti, dice 2-4.
+
+Il minimo vale alla consegna, non alla creazione, perche una squadra nasce con
+il suo fondatore e cresce nei giorni successivi.
 
 **L'istituto unico** discende dall'art. 4. E' l'istituto che raccoglie le
 candidature, custodisce le autorizzazioni e risponde dei suoi studenti, e il

@@ -410,8 +410,8 @@ export function validateBozza(input: Partial<ProgettoInput>): string | null {
  * Valida la consegna, che e un'altra cosa: qui tutto deve esserci, perche
  * dopo non si tocca piu ed e questo che la Commissione legge.
  *
- * `componenti` non e un dettaglio del form ma il vincolo dell'art. 3: il
- * progetto e un lavoro di squadra, e uno studente da solo non e una squadra.
+ * `componenti` non e un dettaglio del form: i limiti sono quelli di
+ * `SQUADRA_MIN` e `SQUADRA_MAX` (da uno a sei dal 2 novembre 2026).
  */
 export function validateConsegna(
   input: Partial<ProgettoInput>,
@@ -421,7 +421,7 @@ export function validateConsegna(
   if (limiti) return limiti;
 
   if (componenti < SQUADRA_MIN)
-    return `Per consegnare la squadra deve avere almeno ${SQUADRA_MIN} componenti. Il progetto è un lavoro di squadra, l'art. 3 lo chiede esplicitamente.`;
+    return `Per consegnare la squadra deve avere almeno ${SQUADRA_MIN} ${SQUADRA_MIN === 1 ? "componente" : "componenti"}.`;
   if (componenti > SQUADRA_MAX)
     return `Una squadra non può avere più di ${SQUADRA_MAX} componenti.`;
 

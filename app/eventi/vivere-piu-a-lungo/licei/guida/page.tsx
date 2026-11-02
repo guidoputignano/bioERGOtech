@@ -323,7 +323,7 @@ const STUDENTE: Passo[] = [
   {
     titolo: "Fai squadra e consegnate il progetto",
     testo:
-      "Da 2 a 5 persone, tutte della tua scuola. Chi crea la squadra riceve un codice SQ da passare ai compagni. Il progetto lo scrivete insieme, lo consegna il capitano.",
+      "Fino a 6 persone, tutte della tua scuola, oppure da solo. Chi crea la squadra riceve un codice SQ da passare ai compagni. Il progetto lo scrivete insieme, lo consegna il capitano.",
     link: { etichetta: "La tua area", href: STUDENTE_PATH, mostra: "bioergotech.org" + STUDENTE_PATH },
     avvisi: [
       {
@@ -371,7 +371,7 @@ const UNIVERSITARIO: Passo[] = [
     },
   },
   {
-    titolo: "Fai squadra, da due a cinque",
+    titolo: "Fai squadra, fino a sei",
     testo:
       "Se hai già i compagni, crea la squadra e passa loro il codice. Se non conosci nessuno, entri in bacheca con una riga su cosa vorresti fare, vedi chi altro sta cercando e quali squadre hanno un posto libero, e mandi una richiesta. La tua email non compare in bacheca: i contatti si scambiano quando la richiesta viene accettata.",
     link: {
@@ -445,10 +445,6 @@ const GUASTI = [
   {
     d: "Dopo che un compagno ha creato la squadra, alcuni componenti non vanno avanti con le lezioni",
     r: "La squadra non blocca le lezioni: ognuno le segue con il proprio account. La lezione successiva si sblocca solo dopo aver consegnato la propria riflessione della lezione in corso, e quella di chi ha creato la squadra non vale per gli altri. Controlli che ciascuno sia entrato con il suo account (non con quello di un compagno, se usano lo stesso computer) e che abbia consegnato la riflessione della lezione 4.4.",
-  },
-  {
-    d: "La squadra non riesce a consegnare",
-    r: "Serve almeno un secondo componente: il bando chiede un lavoro in team, e una persona sola non lo è.",
   },
   {
     d: "Non arriva nessuna email",

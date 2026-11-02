@@ -432,6 +432,19 @@ select 'talk iscrizioni: le rotte (service_role) scrivono',
          when has_table_privilege('service_role', 'public.talk_iscrizioni', 'SELECT,INSERT,DELETE')
            then 'OK'
          else 'NO: service_role non scrive, le iscrizioni ai talk non funzioneranno'
+       end
+
+union all
+
+-- Le squadre dei licei vanno da 1 a 6 (migrazione 20261221000000): il
+-- trigger deve fermarsi a 6, altrimenti il sesto componente si rifiuta.
+select 'squadre licei: fino a 6 componenti',
+       case
+         when to_regprocedure('public.licei_squadra_capienza()') is null
+           then 'DA ESEGUIRE: manca licei_squadra_capienza (migrazione 20261206000000)'
+         when pg_get_functiondef('public.licei_squadra_capienza()'::regprocedure) like '%v_membri >= 6%'
+           then 'OK'
+         else 'DA ESEGUIRE: la squadra si ferma ancora a 5, esegua 20261221000000'
        end;
 
 
