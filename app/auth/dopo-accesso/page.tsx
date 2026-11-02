@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * Where an account goes after setting its password or signing in without a
- * returnTo: its own area, not the research portal.
+ * returnTo: the course for students, the console for teachers, not the
+ * research portal.
  *
  * Students of the high-school programme used to land on /member-portal, an
  * English page that shows their account level as "Viewer". Translated by the
