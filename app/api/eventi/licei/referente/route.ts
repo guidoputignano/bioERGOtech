@@ -329,7 +329,8 @@ export async function PATCH(request: Request) {
 /**
  * Rimanda il link per impostare la password, o corregge l'email.
  *
- * - `{ azione: "rimanda_accesso", id }`: a uno studente.
+ * - `{ azione: "rimanda_accesso", id }`: a uno studente. A chi e gia entrato
+ *   parte il link per una password nuova (stesso link, testo diverso).
  * - `{ azione: "rimanda_accesso_tutti" }`: a tutti gli studenti
  *   dell'istituto, in attesa o confermati, che hanno un account e non sono
  *   mai entrati. Chi sono lo decide il server: il corpo non porta elenchi.
@@ -411,6 +412,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // Gia entrato almeno una volta? Allora il link e per una password nuova
+  // (dimenticata, o cambiata per sbaglio da un computer condiviso), e
+  // l'email lo dice cosi. Lo decide il server, dall'account: cambia solo il
+  // testo, e se la lettura fallisce resta quello di sempre.
+  let giaEntrato = false;
+  try {
+    const { data: account } = await client.auth.admin.getUserById(iscrizione.user_id);
+    giaEntrato = Boolean(account?.user?.last_sign_in_at);
+  } catch {
+    giaEntrato = false;
+  }
+
   const url = await linkImpostaPassword(client, iscrizione.id, iscrizione.email);
   if (!url) {
     return NextResponse.json(
@@ -426,11 +439,13 @@ export async function POST(request: Request) {
     const { error: erroreInvio } = await resend.emails.send({
       from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
       to: iscrizione.email,
-      subject: accessoEmailSubject(),
+      subject: accessoEmailSubject(giaEntrato),
       html: accessoEmailHtml({
         nome: iscrizione.nome,
         istituto: ctx.adesione.istituto_denominazione,
         setPasswordUrl: url,
+        email: iscrizione.email,
+        nuova: giaEntrato,
       }),
     });
     if (erroreInvio) throw new Error(erroreInvio.message);

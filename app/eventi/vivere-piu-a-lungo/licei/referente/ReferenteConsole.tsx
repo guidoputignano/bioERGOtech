@@ -1147,6 +1147,34 @@ export function ReferenteConsole({
                 </div>
               )}
 
+              {/* Gia entrato e non ci riesce piu: password dimenticata, o
+                  cambiata per sbaglio da un computer della scuola collegato
+                  all'account di un altro. Il link arriva alla sua email, lo
+                  fa entrare nel suo account, e l'email gli dice l'indirizzo
+                  esatto con cui accedere. Lo stesso invio di "Rimanda il
+                  link": il server sceglie il testo. */}
+              {STATI_ISCRIZIONE_ATTIVI.has(r.stato) && haFattoAccesso(r) && r.ha_account && !r.account_altrui && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Mandare a ${r.nome} ${r.cognome} un link per scegliere una nuova password? Arriva all'email ${r.email}.`,
+                      )
+                    ) {
+                      void rimandaAccesso(r.id);
+                    }
+                  }}
+                  disabled={salvando === r.id || rimandati.has(r.id)}
+                  title="Per chi non riesce più a entrare: manda allo studente, alla sua email, un link per scegliere una nuova password."
+                  style={{ height: 30, fontSize: 12.5, flexShrink: 0 }}
+                >
+                  <i className="fas fa-key" style={{ marginRight: 6, fontSize: 11 }} aria-hidden="true" />
+                  {rimandati.has(r.id) ? "Link inviato" : "Nuova password"}
+                </Button>
+              )}
+
               {/* L'email sbagliata si corregge finche lo studente non e mai
                   entrato: anche da "Non riconosciuta", che spesso e proprio
                   un indirizzo sbagliato. Il server lo ricontrolla. */}

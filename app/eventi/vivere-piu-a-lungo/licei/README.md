@@ -883,6 +883,30 @@ l'accesso, portale libero), referente (console), iscrizione ritirata o
 docente revocato (portale), tabella dei docenti assente, profilo non letto
 (portale, nessun blocco).
 
+## "Pur essendo iscritta non riesce ad accedere"
+
+Il 3 novembre 2026 al De Ruggieri una studentessa confermata, entrata una
+sola volta il 26 ottobre, non riusciva piu ad accedere "nonostante il cambio
+password". Tre punti deboli, tutti chiusi:
+
+- **La pagina della password cambiava quella di chi era collegato.**
+  `/auth/update-password` usa la sessione presente nel browser quando non
+  arriva da un link valido. Su un computer della scuola collegato
+  all'account di un altro (la docente, un compagno), "cambia password"
+  cambiava la sua. Ora la pagina dice per quale account si sceglie la
+  password ("You are setting the password for ...") e offre "Sign out on
+  this device"; un link scaduto o gia usato (errore nell'URL) mostra
+  l'errore e non ricade piu sulla sessione presente.
+- **Il referente non poteva rimandare il link a chi era gia entrato.** Il
+  bottone sulla riga c'era solo per chi non era mai entrato. Ora chi e gia
+  entrato ha "Nuova password" (con conferma che mostra l'email): stessa
+  azione `rimanda_accesso`, e il server, se l'account ha gia un accesso,
+  manda il testo "ecco il link per una nuova password". Tutte le email del
+  link ora scrivono l'indirizzo esatto con cui entrare.
+- **Il login rispondeva "Invalid login credentials".** Ora dice di usare
+  esattamente l'email dell'iscrizione (numeri e punti compresi) o di
+  scegliere una nuova password.
+
 ## "Nessuna adesione risulta associata a questo account"
 
 Quarta segnalazione: una referente che entrava sempre dal link della sua
