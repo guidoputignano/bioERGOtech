@@ -1,7 +1,8 @@
 /**
  * Le email una tantum che lo staff manda da un bottone del pannello dei
  * licei: l'avviso agli studenti sulle riflessioni, l'avviso ai docenti sulle
- * squadre. Ognuna parte una volta sola.
+ * squadre, le notizie dal percorso agli studenti. Ognuna parte una volta
+ * sola.
  *
  * Ogni avviso ha due chiavi in `licei_config`, fuori da `CONFIG_CHIAVI`: la
  * data dell'invio, che fa anche da prenotazione, e l'esito in soli numeri
@@ -16,7 +17,10 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Resend } from "resend";
-import { STATI_ADESIONE_CHE_ACCETTANO } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  STATI_ADESIONE_CHE_ACCETTANO,
+  STATI_ISCRIZIONE_ATTIVI,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { erroreSchemaMancante } from "@/lib/eventi/licei-server";
 
 export type EsitoAvviso = {
@@ -104,6 +108,28 @@ export function destinatariUnici(
 }
 
 const PAGINA = 1000;
+
+/**
+ * Gli studenti a cui scrivono gli avvisi: iscrizioni confermate e in attesa,
+ * di tutti gli istituti, a pagine (PostgREST tronca oltre il suo tetto senza
+ * dirlo).
+ */
+export async function righeStudentiAvviso(client: SupabaseClient): Promise<Destinatario[]> {
+  const righe: Destinatario[] = [];
+  for (let da = 0; ; da += PAGINA) {
+    const { data, error } = await client
+      .from("licei_iscrizioni")
+      .select("id, nome, email")
+      .in("stato", [...STATI_ISCRIZIONE_ATTIVI])
+      .order("id", { ascending: true })
+      .range(da, da + PAGINA - 1);
+    if (error) throw new Error(`licei_iscrizioni: ${error.message}`);
+    const pagina = (data ?? []) as { id: string; nome: string | null; email: string | null }[];
+    righe.push(...pagina.map((r) => ({ rif: `iscrizione ${r.id}`, nome: r.nome ?? "", email: r.email ?? "" })));
+    if (pagina.length < PAGINA) break;
+  }
+  return righe;
+}
 
 /**
  * I docenti a cui scrive l'avviso sulle squadre: i referenti delle adesioni

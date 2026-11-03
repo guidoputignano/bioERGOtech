@@ -857,6 +857,22 @@ export type StatoAvvisoSquadre = StatoAvviso & {
 };
 
 /**
+ * Le notizie dal percorso agli studenti, una volta per edizione
+ * (`EDIZIONE_NOTIZIE`): cambiando edizione cambiano le chiavi, e il bottone
+ * torna disponibile.
+ */
+export const chiaveAvvisoNotizie = (edizione: string) => `avviso_notizie_${edizione}_inviato_at`;
+export const chiaveEsitoAvvisoNotizie = (edizione: string) => `avviso_notizie_${edizione}_esito`;
+
+/** Lo stato delle notizie agli studenti, come lo manda al pannello la rotta dello staff. */
+export type StatoAvvisoNotizie = StatoAvviso & {
+  /** Iscrizioni confermate e in attesa, prima di togliere le email doppie. */
+  iscritti: number;
+  /** Il prossimo talk che l'email annuncia, senza il link della riunione. Null: nessuno. */
+  talk: { titolo: string; relatore: string; giorno: string; quando: string; luogo: string } | null;
+};
+
+/**
  * La colonna `condivisa_referente_at` c'e in questo database?
  *
  * `assente` prima della migrazione 20261215000000, e anche quando manca

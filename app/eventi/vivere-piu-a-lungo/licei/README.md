@@ -1227,6 +1227,28 @@ Un'adesione nasce `ricevuta` e non e attiva finche lo staff non la porta a
 e reperibile online e nel sito non c'e rate limiting. La conferma manuale e
 la vera difesa contro le adesioni finte.
 
+## Instagram, e perche non un'email a tutti gli studenti
+
+La Fondazione vuole che studenti e docenti seguano il profilo Instagram
+(`SOCIAL.instagram` in `lib/social.ts`). Il profilo e collegato, senza widget
+ne script di Instagram, in questi punti:
+
+- `SeguiInstagram.tsx`, sotto i talk, nell'area dello studente ("Segui") e
+  nella console dei docenti ("condivida il profilo con i suoi studenti");
+- la pagina del bando, sopra le note dei contatti;
+- il piede di tutte le email del percorso (`chiusura()` in `licei-email.ts`);
+- il footer del sito e i dati strutturati (`sameAs`).
+
+Un'email "seguiteci su Instagram" a tutti gli iscritti invece no: il
+consenso dato all'iscrizione copre il corso, e newsletter e informazioni su
+iniziative future sono una scelta separata e facoltativa (informativa
+studenti, `CONSENSO_NEWSLETTER_STUDENTE_TESTO`). A tutti va invece
+un'email sul percorso, le "Notizie dal percorso" (vedi "Avvisi una
+tantum"), che dentro ha anche gli ultimi post: purche parlino del percorso. Chi l'ha scelta e in
+`newsletter_subscribers` con `source = 'corso-licei'`: un invio a loro e
+possibile, ma ogni email deve permettere di revocare la scelta, e oggi il
+sito non ha un link di cancellazione.
+
 ## Pannello staff
 
 `/eventi/vivere-piu-a-lungo/licei/admin`, accesso `partnership_level = admin`.
@@ -1270,6 +1292,30 @@ l'anteprima: chi preme legge esattamente quello che parte).
   elenca i problemi segnalati e risolti, chiede un riscontro. Il bottone
   "Invia una prova a me" manda la stessa email solo a chi lo preme, con
   "[Prova]" nell'oggetto, senza prenotare niente.
+- **Notizie dal percorso agli studenti** (`avviso_notizie_<edizione>_inviato_at`
+  e `_esito`, edizione in `EDIZIONE_NOTIZIE`): agli iscritti confermati e in
+  attesa (`righeStudentiAvviso`). In ordine: il prossimo talk
+  (`prossimoTalk`, con immagine e pagina, mai il link della riunione), che e
+  anche l'oggetto ("Lunedì 9 novembre: talk con Emanuele Memmola, e altre
+  novità"); un riquadro scuro "Segui il percorso su Instagram" con cosa si
+  trova sul profilo, fino a tre post con la loro immagine e un bottone
+  grande; le squadre fino a 6; a chi dire se qualcosa non va. Un testo di
+  anteprima nascosto accompagna l'oggetto nella casella di posta.
+  - I link passano da `leggiPostInstagram` (`lib/social.ts`) sia nel
+    pannello sia nella rotta: solo post e reel, in forma canonica, senza
+    `?igsh=`. Le descrizioni passano da `esc`.
+  - Le immagini: Instagram non le da senza le sue API, quindi lo staff
+    carica la grafica del post. Il pannello la riduce a 600 px in JPEG e la
+    carica con un URL firmato chiesto a `/api/eventi/licei/admin/immagine`
+    (solo staff, percorso deciso dalla rotta) nel bucket pubblico
+    `licei-notizie` (migrazione `20261222000000`: solo JPEG, al piu 1 MB).
+    `immagineNotizie` accetta solo URL di quel bucket. Senza la migrazione
+    il caricamento dice di applicarla e i post restano link.
+  - La prova a se stessi parte con i post scritti in quel momento.
+  - Per una nuova edizione si cambia `EDIZIONE_NOTIZIE` (e i testi, se
+    serve): le chiavi cambiano e il bottone torna attivo.
+  - Il riquadro dice che sul profilo "annunciamo i talk, raccontiamo il
+    dietro le quinte e, a dicembre, l'evento finale": va tenuto vero.
 - **Avviso agli studenti sulle riflessioni**: vedi "Riflessioni e domande,
   da ora in avanti".
 
@@ -1385,3 +1431,13 @@ riceve insieme l'email di adesione e quella di conferma. La verifica dello
 staff si sposta dopo: un'adesione non autentica si mette su `ritirata`, e il
 codice smette di accettare iscrizioni. La guida del docente mostra il passo
 giusto per la modalità in uso. Le adesioni gia esistenti non cambiano stato.
+
+## Uno spazio che sparisce nel testo JSX
+
+Con il compilatore di Next, un testo JSX che segue un'espressione, inizia
+con uno spazio, va a capo e contiene un'entita (`&apos;`, `&#8599;`) perde
+lo spazio iniziale: `fino a {SQUADRA_MAX} componenti, ... l&apos;ha` su piu
+righe diventava "fino a 6componenti". Sulla stessa riga, o senza entita, lo
+spazio resta. Nel dubbio si scrive `{SQUADRA_MAX}{" "}componenti`. Il
+3 novembre 2026 i punti cosi erano undici (avviso delle squadre, pagina del
+bando, console dei docenti, pagine delle aree): ora nessuno.

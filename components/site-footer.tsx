@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CookieSettingsButton } from "@/components/cookie-settings-button";
+import { SOCIAL } from "@/lib/social";
 
 export function SiteFooter() {
   return (
@@ -22,26 +23,34 @@ export function SiteFooter() {
             <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.875rem", lineHeight: 1.7 }}>
               Making research smarter, not just faster.
             </p>
-            <div style={{ marginTop: "16px" }}>
-              <a
-                href="https://www.linkedin.com/company/bioergotech"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "38px",
-                  height: "38px",
-                  borderRadius: "50%",
-                  background: "rgba(255,255,255,0.1)",
-                  color: "#fff",
-                  textDecoration: "none",
-                  transition: "background 0.2s",
-                }}
-              >
-                <i className="fab fa-linkedin-in" />
-              </a>
+            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+              {[
+                { href: SOCIAL.linkedin, icon: "fab fa-linkedin-in", label: "bioERGOtech on LinkedIn" },
+                { href: SOCIAL.instagram, icon: "fab fa-instagram", label: "bioERGOtech on Instagram" },
+              ].map((s) => (
+                <a
+                  key={s.href}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={s.label}
+                  title={s.label}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "38px",
+                    height: "38px",
+                    borderRadius: "50%",
+                    background: "rgba(255,255,255,0.1)",
+                    color: "#fff",
+                    textDecoration: "none",
+                    transition: "background 0.2s",
+                  }}
+                >
+                  <i className={s.icon} aria-hidden="true" />
+                </a>
+              ))}
             </div>
           </div>
 

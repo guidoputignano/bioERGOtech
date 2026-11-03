@@ -1706,7 +1706,7 @@ export function StudenteUniversitaConsole({
 
               {membri.length < SQUADRA_MIN && (
                 <p style={{ fontSize: 12.5, color: "#8A6100", marginTop: 10, marginBottom: 0 }}>
-                  Per consegnare servono almeno {SQUADRA_MIN} componenti: l&apos;art. 4 parla di
+                  Per consegnare servono almeno {SQUADRA_MIN}{" "}componenti: l&apos;art. 4 parla di
                   team, e una persona sola non è un team. Usate la bacheca per trovare chi manca.
                 </p>
               )}

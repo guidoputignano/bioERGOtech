@@ -44,6 +44,7 @@ import { RiflessioniPassateCard } from "./RiflessioniPassate";
 import { AccountCollegato } from "../AccountCollegato";
 import { VaiAlleLezioni } from "@/app/courses/VaiAlleLezioni";
 import { NovitaSquadre } from "../NovitaSquadre";
+import { SeguiInstagram } from "../SeguiInstagram";
 
 /**
  * La squadra e del progetto, le lezioni sono di ciascuno. Un docente ha
@@ -299,6 +300,9 @@ export function StudenteConsole({
 
       {/* ══ Talk con gli esperti ══ Solo nell'area completa. */}
       {sezione === "tutto" && talk}
+
+      {/* ══ Instagram ══ Dove escono talk e novita. Solo nell'area completa. */}
+      {sezione === "tutto" && <SeguiInstagram registro="tu" />}
 
       {/* ══ Senza squadra ══ */}
       {!squadra && mostraSquadra && (
@@ -735,7 +739,7 @@ export function StudenteConsole({
 
               {sonoCapo && membri.length < SQUADRA_MIN && (
                 <p style={{ fontSize: 12.5, color: "#8A6100", marginTop: 10, marginBottom: 0 }}>
-                  Per consegnare servono almeno {SQUADRA_MIN} componenti: l&apos;art. 3 chiede un
+                  Per consegnare servono almeno {SQUADRA_MIN}{" "}componenti: l&apos;art. 3 chiede un
                   lavoro di squadra. Passa il codice a un compagno.
                 </p>
               )}

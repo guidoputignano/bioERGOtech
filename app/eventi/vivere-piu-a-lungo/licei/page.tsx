@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import { SOCIAL } from "@/lib/social";
 import { AdesioneForm } from "./AdesioneForm";
 import { LiceiIndice } from "./LiceiIndice";
 import { EVENT } from "../content";
@@ -599,7 +600,7 @@ export default async function LiceiPage() {
         <section className="section" id="premi">
           <div className="container mx-auto px-6">
             <Testata n={5} kicker="Evento finale e premi" articolo="Art. 6" titolo="I tre premi">
-              I {LICEI.progettiSulPalco} progetti migliori vengono selezionati ed esposti dagli stessi
+              I {LICEI.progettiSulPalco}{" "}progetti migliori vengono selezionati ed esposti dagli stessi
               studenti sul palco dell&apos;evento finale del {LICEI.dataLabel.toLowerCase()}, al{" "}
               {LICEI.luogo}, davanti a scienziati di primo piano e a una commissione scientifica. Al
               termine della conferenza vengono premiati i migliori progetti.
@@ -870,6 +871,20 @@ export default async function LiceiPage() {
             </div>
 
             <p className="lc-nota" style={{ marginTop: 30 }}>
+              <i className="fab fa-instagram" aria-hidden="true" style={{ color: "var(--primary)", marginRight: 8 }} />
+              Gli aggiornamenti del percorso, i talk con gli esperti e l&apos;evento finale sono anche su
+              Instagram:{" "}
+              <a
+                href={SOCIAL.instagram}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "var(--primary-dark)", fontWeight: 600 }}
+              >
+                {SOCIAL.instagramNome}
+              </a>
+              .
+            </p>
+            <p className="lc-nota" style={{ marginTop: 12 }}>
               Il bando ha finalità informativa e di invito alla partecipazione. Ulteriori modalità
               operative, termini di scadenza per la presentazione delle candidature e documentazione
               di adesione saranno comunicati dagli organizzatori tramite il referente del consorzio

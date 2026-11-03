@@ -5,6 +5,8 @@
  * named organisation, which supports brand search results and
  * knowledge-panel eligibility. Rendered once, in the root layout.
  */
+import { SOCIAL } from "@/lib/social";
+
 const BASE = "https://www.bioergotech.org";
 
 const organisation = {
@@ -40,9 +42,7 @@ const organisation = {
     "AI-driven laboratory automation",
   ],
   areaServed: "Europe",
-  sameAs: [
-    "https://www.linkedin.com/company/bioergotech",
-  ],
+  sameAs: [SOCIAL.linkedin, SOCIAL.instagram],
 };
 
 const website = {

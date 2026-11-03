@@ -447,6 +447,20 @@ select 'squadre licei: fino a 6 componenti',
          else 'DA ESEGUIRE: la squadra si ferma ancora a 5, esegua 20261221000000'
        end;
 
+-- Le immagini dei post nelle notizie agli studenti (migrazione
+-- 20261222000000): un bucket pubblico, solo JPEG, al piu 1 MB.
+select 'notizie licei: bucket delle immagini',
+       case
+         when not exists (select 1 from storage.buckets where id = 'licei-notizie')
+           then 'DA ESEGUIRE: manca il bucket licei-notizie, esegua 20261222000000'
+         when exists (
+           select 1 from storage.buckets
+           where id = 'licei-notizie' and public and allowed_mime_types = array['image/jpeg']
+         )
+           then 'OK'
+         else 'DA RIVEDERE: il bucket licei-notizie esiste ma non e pubblico o accetta altri formati'
+       end;
+
 
 -- =========================================================
 -- TERZA VERIFICA: il contenuto

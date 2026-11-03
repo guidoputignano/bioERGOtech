@@ -875,6 +875,52 @@ export const AVVISO_SQUADRE_TESTO = {
   firma: ["Un cordiale saluto,", "Guido Putignano", "Fondazione bioERGOtech"],
 } as const;
 
+/* ── Notizie dal percorso, agli studenti ─────────────────────────────── */
+
+/**
+ * L'email agli studenti iscritti (confermati e in attesa) con le notizie
+ * del percorso: il prossimo talk, il percorso su Instagram con gli ultimi
+ * post (link e immagini, caricati dallo staff nel pannello) e le squadre
+ * fino a 6. E una comunicazione sul
+ * percorso, quindi rientra nell'iscrizione; un'email solo per chiedere di
+ * seguire Instagram no, perche newsletter e iniziative future sono una
+ * scelta separata (informativa studenti).
+ *
+ * Parte una volta per edizione: per la prossima si cambiano
+ * `EDIZIONE_NOTIZIE` e, se serve, i testi. Il testo e condiviso dall'email
+ * e dall'anteprima nel pannello.
+ */
+export const EDIZIONE_NOTIZIE = "2026-11";
+/**
+ * L'oggetto: con un talk in arrivo e il talk, perche e la notizia che fa
+ * aprire l'email ("Lunedì 9 novembre: talk con Emanuele Memmola, e altre
+ * novità"); senza, le novita.
+ */
+export const oggettoNotizie = (talk: { giorno: string; relatore: string } | null): string =>
+  talk
+    ? `${talk.giorno}: talk con ${talk.relatore}, e altre novità`
+    : `Novità dal percorso ${LICEI.titolo}`;
+
+export const NOTIZIE_STUDENTI_TESTO = {
+  /** Il testo che i client di posta mostrano accanto all'oggetto, prima di aprire. */
+  anteprima: `Il prossimo talk con gli esperti, il percorso su Instagram e le squadre fino a ${SQUADRA_MAX}.`,
+  anteprimaSenzaTalk: `Il percorso su Instagram e le squadre fino a ${SQUADRA_MAX}.`,
+  apertura: "ecco le novità del percorso.",
+  talkTitolo: "Il prossimo talk con gli esperti",
+  talkInvito: "Ti iscrivi dalla pagina del talk, e lì trovi anche il link per collegarti.",
+  talkBottone: "Vai al talk",
+  instagramTitolo: "Segui il percorso su Instagram",
+  instagram:
+    "Su @bioergotech annunciamo i talk con gli esperti, raccontiamo il dietro le quinte del percorso e, a dicembre, l'evento finale con i progetti sul palco.",
+  instagramPost: "Gli ultimi post:",
+  postSenzaTitolo: "Guarda il post",
+  instagramBottone: "Segui @bioergotech",
+  squadreTitolo: `Squadre fino a ${SQUADRA_MAX}`,
+  squadre: `Ora una squadra può avere fino a ${SQUADRA_MAX} studenti della tua stessa scuola, e il progetto si può fare anche da soli. Se la vostra squadra cresce, chi l'ha creata passa il codice ai nuovi compagni.`,
+  problemi:
+    "Se qualcosa non funziona, dillo al tuo docente referente o rispondi a questa email: lo sistemiamo noi.",
+} as const;
+
 /* ── Interruttori delle fasi ──────────────────────────────────────────── */
 
 /**

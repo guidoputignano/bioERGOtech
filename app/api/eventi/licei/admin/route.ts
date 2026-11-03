@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { requireAdmin } from "@/lib/auth/admin";
 import {
+  EDIZIONE_NOTIZIE,
+  SITE_URL,
   STATI_ADESIONE,
   STATI_ADESIONE_CHE_ACCETTANO,
   STATI_ISCRIZIONE_ATTIVI,
   haFattoAccesso,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { luogoTalk, prossimoTalk, talkPath } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
+import { leggiPostInstagram } from "@/lib/social";
 import {
   adesioneConfermataEmailHtml,
   adesioneConfermataEmailSubject,
@@ -14,6 +18,9 @@ import {
   avvisoRiflessioniEmailSubject,
   avvisoSquadreEmailHtml,
   avvisoSquadreEmailSubject,
+  notizieStudentiEmailHtml,
+  notizieStudentiEmailSubject,
+  type NotizieTalk,
 } from "@/lib/eventi/licei-email";
 import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 import { docentiPerIstituto } from "@/lib/eventi/licei-docenti";
@@ -22,10 +29,13 @@ import {
   CHIAVE_AVVISO_SQUADRE,
   CHIAVE_ESITO_AVVISO_RIFLESSIONI,
   CHIAVE_ESITO_AVVISO_SQUADRE,
+  chiaveAvvisoNotizie,
+  chiaveEsitoAvvisoNotizie,
   erroreSchemaMancante,
   leggiChiusuraPercorso,
   statoColonnaRiflessioni,
   type StatoAvvisoRiflessioni,
+  type StatoAvvisoNotizie,
   type StatoAvvisoSquadre,
 } from "@/lib/eventi/licei-server";
 import {
@@ -35,6 +45,7 @@ import {
   giaInviato,
   inviaAvvisoUnaVolta,
   righeDocentiAvviso,
+  righeStudentiAvviso,
   statoAvviso,
   type Destinatario,
   type RisultatoAvviso,
@@ -203,6 +214,14 @@ export async function GET(request: Request) {
       ...statoAvviso(righeConfig, CHIAVE_AVVISO_SQUADRE, CHIAVE_ESITO_AVVISO_SQUADRE),
       docenti: docentiAvviso,
     } satisfies StatoAvvisoSquadre,
+    avviso_notizie: {
+      ...statoAvviso(righeConfig, chiaveAvvisoNotizie(EDIZIONE_NOTIZIE), chiaveEsitoAvvisoNotizie(EDIZIONE_NOTIZIE)),
+      iscritti: righeStudenti.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato)).length,
+      talk: (() => {
+        const t = talkPerNotizie();
+        return t ? { titolo: t.titolo, relatore: t.relatore, giorno: t.giorno, quando: t.quando, luogo: t.luogo } : null;
+      })(),
+    } satisfies StatoAvvisoNotizie,
   });
 }
 
@@ -283,21 +302,12 @@ async function inviaAvvisoRiflessioni(client: Client, autore: string) {
     );
   }
 
-  // I destinatari: confermati e in attesa, di tutti gli istituti, a pagine
-  // (PostgREST tronca oltre il suo tetto senza dirlo).
-  const PAGINA = 1000;
-  const righe: Destinatario[] = [];
-  for (let da = 0; ; da += PAGINA) {
-    const { data, error } = await client
-      .from("licei_iscrizioni")
-      .select("id, nome, email")
-      .in("stato", [...STATI_ISCRIZIONE_ATTIVI])
-      .order("id", { ascending: true })
-      .range(da, da + PAGINA - 1);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    const pagina = (data ?? []) as { id: string; nome: string | null; email: string | null }[];
-    righe.push(...pagina.map((r) => ({ rif: `iscrizione ${r.id}`, nome: r.nome ?? "", email: r.email ?? "" })));
-    if (pagina.length < PAGINA) break;
+  // I destinatari: confermati e in attesa, di tutti gli istituti.
+  let righe: Destinatario[];
+  try {
+    righe = await righeStudentiAvviso(client);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 
   const { destinatari, scartate } = destinatariUnici(righe, "avviso riflessioni");
@@ -354,11 +364,11 @@ async function inviaAvvisoSquadre(client: Client, autore: string) {
 }
 
 /**
- * Una copia di prova dell'avviso ai docenti, solo a chi preme il bottone:
- * per vedere l'email vera prima di mandarla a tutti. Non prenota niente e
- * si puo ripetere.
+ * Una copia di prova di un avviso, solo a chi preme il bottone: per vedere
+ * l'email vera prima di mandarla a tutti. Non prenota niente e si puo
+ * ripetere.
  */
-async function provaAvvisoSquadre(email: string | null) {
+async function inviaProva(email: string | null, subject: string, html: string, etichetta: string) {
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "Invio email non configurato: manca RESEND_API_KEY." }, { status: 503 });
   }
@@ -368,15 +378,73 @@ async function provaAvvisoSquadre(email: string | null) {
       from: MITTENTE_AVVISI,
       to: email,
       replyTo: RISPOSTE_AVVISI,
-      subject: `[Prova] ${avvisoSquadreEmailSubject()}`,
-      html: avvisoSquadreEmailHtml({ nome: "" }),
+      subject: `[Prova] ${subject}`,
+      html,
     });
     if (error) throw new Error(error.message);
   } catch (err) {
-    console.error("Licei avviso squadre: prova non inviata:", err);
+    console.error(`Licei ${etichetta}: prova non inviata:`, err);
     return NextResponse.json({ error: "La prova non è partita. Riprova fra poco." }, { status: 502 });
   }
   return NextResponse.json({ success: true, email });
+}
+
+/**
+ * Il prossimo talk, come lo annunciano le notizie: solo dati pubblici, mai
+ * il link della riunione, che resta sulla pagina del talk per gli iscritti.
+ */
+function talkPerNotizie(): NotizieTalk | null {
+  const t = prossimoTalk();
+  if (!t) return null;
+  return {
+    titolo: t.titolo,
+    relatore: t.relatore.nome,
+    ruolo: t.relatore.ruolo,
+    giorno: t.dataLabel.replace(/\s+\d{4}$/, ""),
+    quando: `${t.dataLabel}, ${t.orarioLabel}`,
+    luogo: luogoTalk(t),
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+    immagine: t.immagineOg ? `${SITE_URL}${t.immagineOg}` : null,
+  };
+}
+
+/**
+ * Le notizie dal percorso agli studenti iscritti, una volta per edizione:
+ * il prossimo talk, le squadre fino a 6 e i post di Instagram che lo staff
+ * ha incollato (`leggiPostInstagram`, che non si fida del pannello).
+ */
+async function inviaNotizie(client: Client, autore: string, postGrezzi: unknown) {
+  const letti = leggiPostInstagram(postGrezzi);
+  if ("errore" in letti) return NextResponse.json({ error: letti.errore }, { status: 400 });
+
+  const chiave = chiaveAvvisoNotizie(EDIZIONE_NOTIZIE);
+  const blocco = await primaDiUnAvviso(client, chiave);
+  if (blocco) return blocco;
+
+  let righe: Destinatario[];
+  try {
+    righe = await righeStudentiAvviso(client);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+  const { destinatari, scartate } = destinatariUnici(righe, "notizie studenti");
+  if (destinatari.length === 0) {
+    return NextResponse.json({ error: "Nessuno studente iscritto a cui inviarle." }, { status: 409 });
+  }
+
+  const talk = talkPerNotizie();
+  return rispostaAvviso(
+    await inviaAvvisoUnaVolta(client, new Resend(process.env.RESEND_API_KEY), {
+      chiave,
+      chiaveEsito: chiaveEsitoAvvisoNotizie(EDIZIONE_NOTIZIE),
+      autore,
+      etichetta: "notizie-studenti",
+      destinatari,
+      scartate,
+      subject: notizieStudentiEmailSubject(talk),
+      html: (d) => notizieStudentiEmailHtml({ nome: d.nome, talk, post: letti.post }),
+    }),
+  );
 }
 
 /** Istruttoria: stato dell'adesione e note interne. */
@@ -478,17 +546,40 @@ export async function PATCH(request: Request) {
  * - `avviso_squadre`: l'email una tantum ai docenti, che le squadre vanno
  *   da 1 a 6 e che ci scrivano se qualcosa non va. Parte una volta sola.
  * - `avviso_squadre_prova`: la stessa email, solo a chi la chiede.
+ * - `avviso_notizie` `{ post }`: le notizie dal percorso agli studenti
+ *   iscritti, con i post di Instagram incollati dallo staff. Una volta per
+ *   edizione (`EDIZIONE_NOTIZIE`).
+ * - `avviso_notizie_prova` `{ post }`: la stessa email, solo a chi la chiede.
  */
 export async function POST(request: Request) {
   const guard = await requireAdmin();
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
   const { client, chiamante } = guard;
 
-  const body = (await request.json().catch(() => ({}))) as { azione?: unknown; id?: unknown };
+  const body = (await request.json().catch(() => ({}))) as { azione?: unknown; id?: unknown; post?: unknown };
 
   if (body.azione === "avviso_riflessioni") return inviaAvvisoRiflessioni(client, chiamante.id);
   if (body.azione === "avviso_squadre") return inviaAvvisoSquadre(client, chiamante.id);
-  if (body.azione === "avviso_squadre_prova") return provaAvvisoSquadre(chiamante.email);
+  if (body.azione === "avviso_squadre_prova") {
+    return inviaProva(
+      chiamante.email,
+      avvisoSquadreEmailSubject(),
+      avvisoSquadreEmailHtml({ nome: "" }),
+      "avviso squadre",
+    );
+  }
+  if (body.azione === "avviso_notizie") return inviaNotizie(client, chiamante.id, body.post);
+  if (body.azione === "avviso_notizie_prova") {
+    const letti = leggiPostInstagram(body.post);
+    if ("errore" in letti) return NextResponse.json({ error: letti.errore }, { status: 400 });
+    const talk = talkPerNotizie();
+    return inviaProva(
+      chiamante.email,
+      notizieStudentiEmailSubject(talk),
+      notizieStudentiEmailHtml({ nome: "", talk, post: letti.post }),
+      "notizie studenti",
+    );
+  }
 
   if (body.azione !== "revoca_docente") {
     return NextResponse.json({ error: "Azione non riconosciuta." }, { status: 400 });

@@ -106,7 +106,7 @@ export default async function AreaPage({
                     className="font-semibold whitespace-nowrap"
                     style={{ color: "var(--primary)" }}
                   >
-                    {figure.credit} &#8599;
+                    {figure.credit}{" "}&#8599;
                   </a>
                 </figcaption>
               </figure>
@@ -160,7 +160,7 @@ export default async function AreaPage({
                     className="font-semibold whitespace-nowrap"
                     style={{ color: "var(--primary)" }}
                   >
-                    {methodsFigure.credit} &#8599;
+                    {methodsFigure.credit}{" "}&#8599;
                   </a>
                 </figcaption>
               </figure>
