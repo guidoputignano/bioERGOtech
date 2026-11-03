@@ -15,9 +15,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 import {
-  NOTIZIE_STUDENTI_OGGETTO,
   NOTIZIE_STUDENTI_TESTO,
+  oggettoNotizie,
   AVVISO_RIFLESSIONI_OGGETTO,
   AVVISO_RIFLESSIONI_TESTO,
   AVVISO_SQUADRE_OGGETTO,
@@ -32,7 +33,13 @@ import type {
   StatoAvvisoRiflessioni,
   StatoAvvisoSquadre,
 } from "@/lib/eventi/licei-server";
-import { POST_INSTAGRAM_MAX, SOCIAL, TITOLO_POST_MAX, leggiPostInstagram } from "@/lib/social";
+import {
+  BUCKET_IMMAGINI_NOTIZIE,
+  POST_INSTAGRAM_MAX,
+  SOCIAL,
+  TITOLO_POST_MAX,
+  leggiPostInstagram,
+} from "@/lib/social";
 
 const dataOra = (iso: string): string =>
   new Date(iso).toLocaleString("it-IT", {
@@ -377,11 +384,40 @@ export function AvvisoSquadre({
   );
 }
 
+/** Lato lungo delle immagini dei post nell'email: bastano per miniature da 150 px nitide. */
+const LATO_IMMAGINE = 600;
+
 /**
- * Le notizie dal percorso agli studenti iscritti: il prossimo talk, le
- * squadre fino a 6 e gli ultimi post di Instagram, che lo staff incolla
- * qui. Una volta per edizione. L'anteprima segue i campi mentre si scrive,
- * e la prova parte con i post scritti in quel momento.
+ * Riduce un'immagine a `LATO_IMMAGINE` px sul lato lungo e la ricodifica in
+ * JPEG: una grafica di Instagram da 1080 px e qualche MB diventa qualche
+ * decina di KB, e l'email si apre in fretta anche col telefono.
+ */
+async function riduciImmagine(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scala = Math.min(1, LATO_IMMAGINE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scala);
+  canvas.height = Math.round(bitmap.height * scala);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return new Promise((ok, ko) =>
+    canvas.toBlob((b) => (b ? ok(b) : ko(new Error("toBlob"))), "image/jpeg", 0.85),
+  );
+}
+
+type RigaPost = { url: string; titolo: string; immagine: string };
+
+/**
+ * Le notizie dal percorso agli studenti iscritti: il prossimo talk, il
+ * percorso su Instagram con gli ultimi post e le squadre fino a 6. Per ogni
+ * post lo staff incolla il link, scrive una riga e, se vuole, carica la
+ * grafica del post: Instagram non la da senza le sue API. L'anteprima segue
+ * i campi, e la prova parte con quello che c'e scritto in quel momento.
+ * Una volta per edizione.
  */
 export function AvvisoNotizie({
   stato,
@@ -390,28 +426,62 @@ export function AvvisoNotizie({
   stato: StatoAvvisoNotizie | null;
   onAggiornato: (s: StatoAvvisoNotizie) => void;
 }) {
-  const [righe, setRighe] = useState(() =>
-    Array.from({ length: POST_INSTAGRAM_MAX }, () => ({ url: "", titolo: "" })),
+  const [righe, setRighe] = useState<RigaPost[]>(() =>
+    Array.from({ length: POST_INSTAGRAM_MAX }, () => ({ url: "", titolo: "", immagine: "" })),
   );
+  const [caricando, setCaricando] = useState<number | null>(null);
+  const [erroreImmagine, setErroreImmagine] = useState<string | null>(null);
   if (!stato) return null;
 
   const letti = leggiPostInstagram(righe);
   const post = "post" in letti ? letti.post : [];
   const errore = "errore" in letti ? letti.errore : null;
   const T = NOTIZIE_STUDENTI_TESTO;
-  const cambia = (i: number, campo: "url" | "titolo", valore: string) =>
+  const cambia = (i: number, campo: keyof RigaPost, valore: string) =>
     setRighe((r) => r.map((x, j) => (j === i ? { ...x, [campo]: valore } : x)));
+
+  const carica = async (i: number, file: File | undefined) => {
+    if (!file) return;
+    setCaricando(i);
+    setErroreImmagine(null);
+    try {
+      if (!file.type.startsWith("image/")) throw new Error("Scegli un'immagine (JPEG, PNG o WebP).");
+      const jpeg = await riduciImmagine(file).catch(() => {
+        throw new Error("Questa immagine non si apre. Prova a salvarla come JPEG o PNG.");
+      });
+      const res = await fetch("/api/eventi/licei/admin/immagine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: "image/jpeg", size: jpeg.size }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { path?: string; token?: string; url?: string; error?: string };
+      if (!res.ok || !data.path || !data.token || !data.url) throw new Error(data.error || "Caricamento non riuscito.");
+      const { error } = await createClient()
+        .storage.from(BUCKET_IMMAGINI_NOTIZIE)
+        .uploadToSignedUrl(data.path, data.token, jpeg, { contentType: "image/jpeg" });
+      if (error) throw new Error("Caricamento non riuscito. Riprova.");
+      cambia(i, "immagine", data.url);
+    } catch (err) {
+      setErroreImmagine(err instanceof Error ? err.message : "Caricamento non riuscito.");
+    } finally {
+      setCaricando(null);
+    }
+  };
+
+  const conImmagine = post.filter((x) => x.immagine);
+  const senzaImmagine = post.filter((x) => !x.immagine);
 
   return (
     <AvvisoUnaTantum
       titolo="Notizie dal percorso agli studenti"
       descrizione={
         <>
-          Un&apos;email a tutti gli iscritti, confermati e in attesa: il prossimo talk, le squadre fino a
-          6 e gli ultimi post di Instagram con il bottone per seguire il profilo. È una comunicazione sul
-          percorso, quindi può andare a tutti; per questo i post devono parlare del percorso. Incolla
-          fino a {POST_INSTAGRAM_MAX}{" "}link (dall&apos;app: Condividi, Copia link) con una riga che li
-          descrive, guarda l&apos;anteprima e manda prima una prova a te. Parte una volta sola.
+          Un&apos;email a tutti gli iscritti, confermati e in attesa: il prossimo talk, il percorso su
+          Instagram con gli ultimi post e le squadre fino a 6. È una comunicazione sul percorso, quindi
+          può andare a tutti; per questo i post devono parlare del percorso. Per ogni post incolla il
+          link (dall&apos;app: Condividi, Copia link), scrivi una riga e carica la grafica del post: con
+          l&apos;immagine l&apos;email convince molto di più. Poi guarda l&apos;anteprima e manda prima
+          una prova a te. Parte una volta sola.
         </>
       }
       stato={stato}
@@ -419,15 +489,19 @@ export function AvvisoNotizie({
       azione="avviso_notizie"
       azioneProva="avviso_notizie_prova"
       corpo={{ post }}
-      pronto={errore === null}
+      pronto={errore === null && caricando === null}
       conferma={`Inviare le notizie dal percorso a ${stato.iscritti} iscritti (confermati e in attesa), con ${post.length} post di Instagram? Si può inviare una volta sola.`}
       bottone="Invia agli studenti"
       conteggio={stato.iscritti === 0 ? null : `${stato.iscritti} iscritti, un'email per indirizzo.`}
       vuoto="Nessuno studente iscritto per ora."
       campi={
-        <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
           {righe.map((r, i) => (
-            <div key={i} className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8 }}>
+            <div
+              key={i}
+              className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto]"
+              style={{ gap: 8, alignItems: "center" }}
+            >
               <Input
                 aria-label={`Link del post ${i + 1}`}
                 placeholder={`Link del post ${i + 1} (https://www.instagram.com/p/...)`}
@@ -436,16 +510,58 @@ export function AvvisoNotizie({
               />
               <Input
                 aria-label={`Descrizione del post ${i + 1}`}
-                placeholder="Una riga che lo descrive, es. Il talk di lunedì con Emanuele Memmola"
+                placeholder="Una riga, es. Il talk di lunedì con Emanuele Memmola"
                 maxLength={TITOLO_POST_MAX}
                 value={r.titolo}
                 onChange={(e) => cambia(i, "titolo", e.target.value)}
               />
+              <div className="flex items-center gap-2">
+                {r.immagine ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={r.immagine}
+                      alt=""
+                      width={40}
+                      height={40}
+                      style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }}
+                    />
+                    <Button type="button" size="sm" variant="outline" onClick={() => cambia(i, "immagine", "")}>
+                      Togli
+                    </Button>
+                  </>
+                ) : (
+                  <label
+                    className="text-sm"
+                    style={{
+                      cursor: caricando === null ? "pointer" : "wait",
+                      border: "1px dashed var(--border-color)",
+                      borderRadius: 8,
+                      padding: "7px 12px",
+                      whiteSpace: "nowrap",
+                      color: "var(--text-dark)",
+                    }}
+                  >
+                    {caricando === i ? "Caricamento…" : "Carica immagine"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      aria-label={`Immagine del post ${i + 1}`}
+                      disabled={caricando !== null}
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        void carica(i, e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           ))}
-          {errore && (
+          {(errore || erroreImmagine) && (
             <p role="alert" style={{ color: "#B44A5E", fontSize: 13, margin: 0 }}>
-              {errore}
+              {errore || erroreImmagine}
             </p>
           )}
         </div>
@@ -453,7 +569,7 @@ export function AvvisoNotizie({
       anteprima={
         <>
           <p style={ANTEPRIMA_P}>
-            <strong>Oggetto:</strong> {NOTIZIE_STUDENTI_OGGETTO}
+            <strong>Oggetto:</strong> {oggettoNotizie(stato.talk)}
           </p>
           <p style={ANTEPRIMA_P}>Ciao (nome dello studente), {T.apertura}</p>
           {stato.talk ? (
@@ -466,25 +582,38 @@ export function AvvisoNotizie({
               Nessun talk in programma: la parte sul talk non compare.
             </p>
           )}
+          <div style={{ background: "#0A1628", color: "#CBD5E1", borderRadius: 10, padding: "14px 16px", margin: "0 0 8px" }}>
+            <p style={{ margin: "0 0 4px", color: "#fff", fontWeight: 700 }}>{T.instagramTitolo}</p>
+            <p style={{ margin: "0 0 8px" }}>{T.instagram}</p>
+            {post.length > 0 && <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "#94A3B8" }}>{T.instagramPost}</p>}
+            {conImmagine.length > 0 && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                {conImmagine.map((x) => (
+                  <a key={x.url} href={x.url} target="_blank" rel="noreferrer" style={{ width: 120, color: "#CFFAEC", fontSize: 12 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={x.immagine} alt="" style={{ width: 120, height: "auto", borderRadius: 6, display: "block" }} />
+                    <span style={{ display: "block", marginTop: 4 }}>{x.titolo || T.postSenzaTitolo}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+            {senzaImmagine.length > 0 && (
+              <ul style={{ margin: "0 0 8px", paddingLeft: 20, listStyle: "disc" }}>
+                {senzaImmagine.map((x) => (
+                  <li key={x.url} style={{ overflowWrap: "anywhere" }}>
+                    <a href={x.url} target="_blank" rel="noreferrer" style={{ color: "#5EEAC4" }}>
+                      {x.titolo || T.postSenzaTitolo}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p style={{ margin: 0, color: "#00C896", fontWeight: 700 }}>
+              [{T.instagramBottone}] ({SOCIAL.instagram})
+            </p>
+          </div>
           <p style={ANTEPRIMA_P}>
             <strong>{T.squadreTitolo}</strong>. {T.squadre}
-          </p>
-          <p style={{ margin: "0 0 4px" }}>
-            <strong>{T.instagramTitolo}</strong>. {post.length ? T.instagram : T.instagramSenzaPost}
-          </p>
-          {post.length > 0 && (
-            <ul style={{ margin: "0 0 8px", paddingLeft: 20, listStyle: "disc" }}>
-              {post.map((x) => (
-                <li key={x.url} style={{ overflowWrap: "anywhere" }}>
-                  <a href={x.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary-dark)" }}>
-                    {x.titolo || T.postSenzaTitolo}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p style={ANTEPRIMA_P}>
-            [{T.instagramBottone}] ({SOCIAL.instagram})
           </p>
           <p style={{ margin: 0 }}>{T.problemi}</p>
         </>

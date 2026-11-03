@@ -219,7 +219,7 @@ export async function GET(request: Request) {
       iscritti: righeStudenti.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato)).length,
       talk: (() => {
         const t = talkPerNotizie();
-        return t ? { titolo: t.titolo, relatore: t.relatore, quando: t.quando, luogo: t.luogo } : null;
+        return t ? { titolo: t.titolo, relatore: t.relatore, giorno: t.giorno, quando: t.quando, luogo: t.luogo } : null;
       })(),
     } satisfies StatoAvvisoNotizie,
   });
@@ -400,6 +400,7 @@ function talkPerNotizie(): NotizieTalk | null {
     titolo: t.titolo,
     relatore: t.relatore.nome,
     ruolo: t.relatore.ruolo,
+    giorno: t.dataLabel.replace(/\s+\d{4}$/, ""),
     quando: `${t.dataLabel}, ${t.orarioLabel}`,
     luogo: luogoTalk(t),
     url: `${SITE_URL}${talkPath(t.slug)}`,
@@ -440,7 +441,7 @@ async function inviaNotizie(client: Client, autore: string, postGrezzi: unknown)
       etichetta: "notizie-studenti",
       destinatari,
       scartate,
-      subject: notizieStudentiEmailSubject(),
+      subject: notizieStudentiEmailSubject(talk),
       html: (d) => notizieStudentiEmailHtml({ nome: d.nome, talk, post: letti.post }),
     }),
   );
@@ -571,10 +572,11 @@ export async function POST(request: Request) {
   if (body.azione === "avviso_notizie_prova") {
     const letti = leggiPostInstagram(body.post);
     if ("errore" in letti) return NextResponse.json({ error: letti.errore }, { status: 400 });
+    const talk = talkPerNotizie();
     return inviaProva(
       chiamante.email,
-      notizieStudentiEmailSubject(),
-      notizieStudentiEmailHtml({ nome: "", talk: talkPerNotizie(), post: letti.post }),
+      notizieStudentiEmailSubject(talk),
+      notizieStudentiEmailHtml({ nome: "", talk, post: letti.post }),
       "notizie studenti",
     );
   }

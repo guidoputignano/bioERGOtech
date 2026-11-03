@@ -12,8 +12,8 @@ import {
   AVVISO_RIFLESSIONI_TESTO,
   AVVISO_SQUADRE_OGGETTO,
   AVVISO_SQUADRE_TESTO,
-  NOTIZIE_STUDENTI_OGGETTO,
   NOTIZIE_STUDENTI_TESTO,
+  oggettoNotizie,
   COMMISSIONE_PATH,
   CONTATTI_LICEI,
   DICHIARAZIONE_INVITO_DOCENTE_TESTO,
@@ -962,6 +962,8 @@ export type NotizieTalk = {
   titolo: string;
   relatore: string;
   ruolo: string;
+  /** "Lunedì 9 novembre", per l'oggetto. */
+  giorno: string;
   /** "Lunedì 9 novembre 2026, dalle 15:00 alle 16:00". */
   quando: string;
   luogo: string;
@@ -978,15 +980,21 @@ export type NotizieStudentiEmailInput = {
   post: PostInstagram[];
 };
 
-export function notizieStudentiEmailSubject(): string {
-  return NOTIZIE_STUDENTI_OGGETTO;
+export function notizieStudentiEmailSubject(talk: NotizieTalk | null): string {
+  return oggettoNotizie(talk);
 }
 
 /**
- * Le notizie dal percorso agli studenti iscritti: il prossimo talk, le
- * squadre fino a 6, gli ultimi post di Instagram scelti dallo staff, e a chi
- * dire se qualcosa non va. I titoli dei post li scrive lo staff: passano da
- * `esc`, i link sono gia canonici (`leggiPostInstagram`).
+ * Le notizie dal percorso agli studenti iscritti. In ordine: il prossimo
+ * talk (la notizia che fa aprire l'email), Instagram, le squadre fino a 6, a
+ * chi dire se qualcosa non va.
+ *
+ * Instagram e un riquadro scuro subito dopo il talk, non una riga in fondo:
+ * dice cosa si trova sul profilo, mostra gli ultimi post con la loro
+ * immagine (caricata dallo staff, vedi `immagineNotizie`) e ha un bottone
+ * grande, che dal telefono apre l'app. I post senza immagine restano link.
+ * Le miniature stanno in una tabella, che i client di posta impaginano
+ * tutti allo stesso modo. Descrizioni dello staff: passano da `esc`.
  */
 export function notizieStudentiEmailHtml(input: NotizieStudentiEmailInput): string {
   const T = NOTIZIE_STUDENTI_TESTO;
@@ -994,12 +1002,12 @@ export function notizieStudentiEmailHtml(input: NotizieStudentiEmailInput): stri
   const testo = "color:#4A5568;font-size:15px;line-height:1.7;";
   const titolo = (t: string) =>
     `<h3 style="color:#0A1628;font-size:17px;margin:0 0 8px;font-weight:700;">${t}</h3>`;
-  const bottone = (href: string, etichetta: string) =>
-    `<a href="${esc(href)}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:12px 24px;border-radius:8px;">${etichetta}</a>`;
+  const bottone = (href: string, etichetta: string, extra = "") =>
+    `<a href="${esc(href)}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:12px 24px;border-radius:8px;${extra}">${etichetta}</a>`;
 
   const talk = input.talk
     ? `
-      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;margin:0 0 28px;overflow:hidden;">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;margin:0 0 24px;overflow:hidden;">
         ${
           input.talk.immagine
             ? `<a href="${esc(input.talk.url)}"><img src="${esc(input.talk.immagine)}" alt="${esc(input.talk.titolo)}" width="518" style="display:block;width:100%;height:auto;border:0;" /></a>`
@@ -1016,28 +1024,49 @@ export function notizieStudentiEmailHtml(input: NotizieStudentiEmailInput): stri
       </div>`
     : "";
 
-  const post = input.post.length
-    ? `<ul style="${testo}margin:0 0 18px;padding-left:22px;">${input.post
+  const conImmagine = input.post.filter((x) => x.immagine);
+  const senzaImmagine = input.post.filter((x) => !x.immagine);
+  const descrizione = (x: PostInstagram) => esc(x.titolo || T.postSenzaTitolo);
+  const miniature = conImmagine.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;"><tr>${conImmagine
         .map(
-          (x) =>
-            `<li style="margin:0 0 6px;"><a href="${esc(x.url)}" style="color:#008F6B;font-weight:700;">${esc(x.titolo || T.postSenzaTitolo)}</a></li>`,
+          (x, i) => `<td width="${Math.floor(100 / conImmagine.length)}%" valign="top" style="padding:0 ${i < conImmagine.length - 1 ? "8px" : "0"} 0 0;">
+            <a href="${esc(x.url)}" style="text-decoration:none;">
+              <img src="${esc(x.immagine!)}" alt="${descrizione(x)}" width="150" style="display:block;width:100%;max-width:${conImmagine.length === 1 ? 300 : 150}px;height:auto;border:0;border-radius:8px;" />
+              <span style="display:block;color:#CFFAEC;font-size:12.5px;line-height:1.45;margin:6px 0 0;">${descrizione(x)}</span>
+            </a>
+          </td>`,
         )
+        .join("")}</tr></table>`
+    : "";
+  const link = senzaImmagine.length
+    ? `<ul style="color:#E2E8F0;font-size:14.5px;line-height:1.7;margin:0 0 14px;padding-left:20px;">${senzaImmagine
+        .map((x) => `<li style="margin:0 0 4px;"><a href="${esc(x.url)}" style="color:#5EEAC4;font-weight:700;">${descrizione(x)}</a></li>`)
         .join("")}</ul>`
     : "";
 
+  const instagram = `
+      <div style="background:#0A1628;border-radius:10px;padding:24px 22px;margin:0 0 28px;">
+        <p style="color:#00C896;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">Instagram . ${esc(SOCIAL.instagramNome)}</p>
+        <p style="color:#FFFFFF;font-size:19px;font-weight:700;line-height:1.35;margin:0 0 8px;">${T.instagramTitolo}</p>
+        <p style="color:#CBD5E1;font-size:14.5px;line-height:1.7;margin:0 0 ${input.post.length ? "14px" : "18px"};">${T.instagram}</p>
+        ${input.post.length ? `<p style="color:#94A3B8;font-size:12.5px;margin:0 0 8px;">${T.instagramPost}</p>` : ""}
+        ${miniature}
+        ${link}
+        ${bottone(SOCIAL.instagram, T.instagramBottone, "display:block;text-align:center;padding:14px 24px;font-size:16px;")}
+      </div>`;
+
   return `
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${input.talk ? T.anteprima : T.anteprimaSenzaTalk}</div>
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
     ${INTESTAZIONE}
     <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
       <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">${nome ? `Ciao ${esc(nome)},` : "Ciao,"}</h2>
       <p style="${testo}margin:0 0 24px;">${T.apertura}</p>
       ${talk}
+      ${instagram}
       ${titolo(T.squadreTitolo)}
       <p style="${testo}margin:0 0 28px;">${T.squadre}</p>
-      ${titolo(T.instagramTitolo)}
-      <p style="${testo}margin:0 0 ${input.post.length ? "8px" : "18px"};">${input.post.length ? T.instagram : T.instagramSenzaPost}</p>
-      ${post}
-      <p style="margin:0 0 28px;">${bottone(SOCIAL.instagram, T.instagramBottone)}</p>
       <p style="${testo}margin:0 0 8px;">${T.problemi}</p>
       ${chiusura()}
     </div>

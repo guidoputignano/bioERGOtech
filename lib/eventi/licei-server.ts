@@ -869,7 +869,7 @@ export type StatoAvvisoNotizie = StatoAvviso & {
   /** Iscrizioni confermate e in attesa, prima di togliere le email doppie. */
   iscritti: number;
   /** Il prossimo talk che l'email annuncia, senza il link della riunione. Null: nessuno. */
-  talk: { titolo: string; relatore: string; quando: string; luogo: string } | null;
+  talk: { titolo: string; relatore: string; giorno: string; quando: string; luogo: string } | null;
 };
 
 /**

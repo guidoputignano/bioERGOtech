@@ -1294,16 +1294,28 @@ l'anteprima: chi preme legge esattamente quello che parte).
   "[Prova]" nell'oggetto, senza prenotare niente.
 - **Notizie dal percorso agli studenti** (`avviso_notizie_<edizione>_inviato_at`
   e `_esito`, edizione in `EDIZIONE_NOTIZIE`): agli iscritti confermati e in
-  attesa (`righeStudentiAvviso`). Il prossimo talk (`prossimoTalk`, con
-  immagine e pagina, mai il link della riunione), le squadre fino a 6, fino a
-  tre post di Instagram che lo staff incolla nella card con una riga di
-  descrizione, il bottone "Segui @bioergotech" e a chi dire se qualcosa non
-  va. I link passano da `leggiPostInstagram` (`lib/social.ts`) sia nel
-  pannello sia nella rotta: solo post e reel, in forma canonica, senza
-  `?igsh=`. Le descrizioni passano da `esc`. Anche qui c'e la prova a se
-  stessi, con i post scritti in quel momento. Per una nuova edizione si
-  cambia `EDIZIONE_NOTIZIE` (e i testi, se serve): le chiavi cambiano e il
-  bottone torna attivo.
+  attesa (`righeStudentiAvviso`). In ordine: il prossimo talk
+  (`prossimoTalk`, con immagine e pagina, mai il link della riunione), che e
+  anche l'oggetto ("Lunedì 9 novembre: talk con Emanuele Memmola, e altre
+  novità"); un riquadro scuro "Segui il percorso su Instagram" con cosa si
+  trova sul profilo, fino a tre post con la loro immagine e un bottone
+  grande; le squadre fino a 6; a chi dire se qualcosa non va. Un testo di
+  anteprima nascosto accompagna l'oggetto nella casella di posta.
+  - I link passano da `leggiPostInstagram` (`lib/social.ts`) sia nel
+    pannello sia nella rotta: solo post e reel, in forma canonica, senza
+    `?igsh=`. Le descrizioni passano da `esc`.
+  - Le immagini: Instagram non le da senza le sue API, quindi lo staff
+    carica la grafica del post. Il pannello la riduce a 600 px in JPEG e la
+    carica con un URL firmato chiesto a `/api/eventi/licei/admin/immagine`
+    (solo staff, percorso deciso dalla rotta) nel bucket pubblico
+    `licei-notizie` (migrazione `20261222000000`: solo JPEG, al piu 1 MB).
+    `immagineNotizie` accetta solo URL di quel bucket. Senza la migrazione
+    il caricamento dice di applicarla e i post restano link.
+  - La prova a se stessi parte con i post scritti in quel momento.
+  - Per una nuova edizione si cambia `EDIZIONE_NOTIZIE` (e i testi, se
+    serve): le chiavi cambiano e il bottone torna attivo.
+  - Il riquadro dice che sul profilo "annunciamo i talk, raccontiamo il
+    dietro le quinte e, a dicembre, l'evento finale": va tenuto vero.
 - **Avviso agli studenti sulle riflessioni**: vedi "Riflessioni e domande,
   da ora in avanti".
 
