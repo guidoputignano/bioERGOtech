@@ -12,6 +12,8 @@ import {
   AVVISO_RIFLESSIONI_TESTO,
   AVVISO_SQUADRE_OGGETTO,
   AVVISO_SQUADRE_TESTO,
+  NOTIZIE_STUDENTI_OGGETTO,
+  NOTIZIE_STUDENTI_TESTO,
   COMMISSIONE_PATH,
   CONTATTI_LICEI,
   DICHIARAZIONE_INVITO_DOCENTE_TESTO,
@@ -28,7 +30,7 @@ import {
   STUDENTE_PATH,
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
-import { SOCIAL } from "@/lib/social";
+import { SOCIAL, type PostInstagram } from "@/lib/social";
 
 export type LiceiEmailInput = {
   referente: string;
@@ -948,6 +950,95 @@ export function avvisoSquadreEmailHtml(input: AvvisoSquadreEmailInput): string {
       ${p(AVVISO_SQUADRE_TESTO.riscontro)}
       ${p(AVVISO_SQUADRE_TESTO.grazie)}
       ${p(AVVISO_SQUADRE_TESTO.firma.join("<br />"), "0 0 8px")}
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+/* ── Notizie dal percorso, agli studenti ─────────────────────────────── */
+
+/** Il talk che le notizie annunciano. Solo dati pubblici: mai il link della riunione. */
+export type NotizieTalk = {
+  titolo: string;
+  relatore: string;
+  ruolo: string;
+  /** "Lunedì 9 novembre 2026, dalle 15:00 alle 16:00". */
+  quando: string;
+  luogo: string;
+  /** La pagina del talk, assoluta. */
+  url: string;
+  /** L'immagine del talk, assoluta; null senza. */
+  immagine: string | null;
+};
+
+export type NotizieStudentiEmailInput = {
+  /** Il nome dello studente; vuoto per l'invio di prova. */
+  nome: string;
+  talk: NotizieTalk | null;
+  post: PostInstagram[];
+};
+
+export function notizieStudentiEmailSubject(): string {
+  return NOTIZIE_STUDENTI_OGGETTO;
+}
+
+/**
+ * Le notizie dal percorso agli studenti iscritti: il prossimo talk, le
+ * squadre fino a 6, gli ultimi post di Instagram scelti dallo staff, e a chi
+ * dire se qualcosa non va. I titoli dei post li scrive lo staff: passano da
+ * `esc`, i link sono gia canonici (`leggiPostInstagram`).
+ */
+export function notizieStudentiEmailHtml(input: NotizieStudentiEmailInput): string {
+  const T = NOTIZIE_STUDENTI_TESTO;
+  const nome = input.nome.trim();
+  const testo = "color:#4A5568;font-size:15px;line-height:1.7;";
+  const titolo = (t: string) =>
+    `<h3 style="color:#0A1628;font-size:17px;margin:0 0 8px;font-weight:700;">${t}</h3>`;
+  const bottone = (href: string, etichetta: string) =>
+    `<a href="${esc(href)}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:12px 24px;border-radius:8px;">${etichetta}</a>`;
+
+  const talk = input.talk
+    ? `
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;margin:0 0 28px;overflow:hidden;">
+        ${
+          input.talk.immagine
+            ? `<a href="${esc(input.talk.url)}"><img src="${esc(input.talk.immagine)}" alt="${esc(input.talk.titolo)}" width="518" style="display:block;width:100%;height:auto;border:0;" /></a>`
+            : ""
+        }
+        <div style="padding:20px 22px;">
+          <p style="color:#008F6B;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px;">${T.talkTitolo}</p>
+          <p style="color:#0A1628;font-size:17px;font-weight:700;line-height:1.4;margin:0 0 6px;">${esc(input.talk.titolo)}</p>
+          <p style="${testo}margin:0 0 4px;"><strong>${esc(input.talk.relatore)}</strong>, ${esc(input.talk.ruolo)}</p>
+          <p style="${testo}margin:0 0 12px;">${esc(input.talk.quando)} . ${esc(input.talk.luogo)}</p>
+          <p style="${testo}margin:0 0 16px;">${T.talkInvito}</p>
+          ${bottone(input.talk.url, T.talkBottone)}
+        </div>
+      </div>`
+    : "";
+
+  const post = input.post.length
+    ? `<ul style="${testo}margin:0 0 18px;padding-left:22px;">${input.post
+        .map(
+          (x) =>
+            `<li style="margin:0 0 6px;"><a href="${esc(x.url)}" style="color:#008F6B;font-weight:700;">${esc(x.titolo || T.postSenzaTitolo)}</a></li>`,
+        )
+        .join("")}</ul>`
+    : "";
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">${nome ? `Ciao ${esc(nome)},` : "Ciao,"}</h2>
+      <p style="${testo}margin:0 0 24px;">${T.apertura}</p>
+      ${talk}
+      ${titolo(T.squadreTitolo)}
+      <p style="${testo}margin:0 0 28px;">${T.squadre}</p>
+      ${titolo(T.instagramTitolo)}
+      <p style="${testo}margin:0 0 ${input.post.length ? "8px" : "18px"};">${input.post.length ? T.instagram : T.instagramSenzaPost}</p>
+      ${post}
+      <p style="margin:0 0 28px;">${bottone(SOCIAL.instagram, T.instagramBottone)}</p>
+      <p style="${testo}margin:0 0 8px;">${T.problemi}</p>
       ${chiusura()}
     </div>
   </div>`;

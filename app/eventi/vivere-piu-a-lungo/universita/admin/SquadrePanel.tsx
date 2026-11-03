@@ -583,7 +583,7 @@ export function SquadrePanel({
       {vista === "squadre" && progetti.length > 0 && (
         <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.7, margin: 0 }}>
           {conta(progetti.filter((p) => p.stato === "bozza").length, "bozza", "bozze")} in corso
-          su {conta(progetti.length, "progetto", "progetti")} in tutto. Gli ambiti previsti
+          su {conta(progetti.length, "progetto", "progetti")}{" "}in tutto. Gli ambiti previsti
           dall&apos;art. 1 sono {AMBITI_PROGETTO.map((a) => a.label).join(", ")}.
         </p>
       )}

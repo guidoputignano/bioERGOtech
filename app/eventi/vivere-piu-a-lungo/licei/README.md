@@ -1242,7 +1242,9 @@ ne script di Instagram, in questi punti:
 Un'email "seguiteci su Instagram" a tutti gli iscritti invece no: il
 consenso dato all'iscrizione copre il corso, e newsletter e informazioni su
 iniziative future sono una scelta separata e facoltativa (informativa
-studenti, `CONSENSO_NEWSLETTER_STUDENTE_TESTO`). Chi l'ha scelta e in
+studenti, `CONSENSO_NEWSLETTER_STUDENTE_TESTO`). A tutti va invece
+un'email sul percorso, le "Notizie dal percorso" (vedi "Avvisi una
+tantum"), che dentro ha anche gli ultimi post: purche parlino del percorso. Chi l'ha scelta e in
 `newsletter_subscribers` con `source = 'corso-licei'`: un invio a loro e
 possibile, ma ogni email deve permettere di revocare la scelta, e oggi il
 sito non ha un link di cancellazione.
@@ -1290,6 +1292,18 @@ l'anteprima: chi preme legge esattamente quello che parte).
   elenca i problemi segnalati e risolti, chiede un riscontro. Il bottone
   "Invia una prova a me" manda la stessa email solo a chi lo preme, con
   "[Prova]" nell'oggetto, senza prenotare niente.
+- **Notizie dal percorso agli studenti** (`avviso_notizie_<edizione>_inviato_at`
+  e `_esito`, edizione in `EDIZIONE_NOTIZIE`): agli iscritti confermati e in
+  attesa (`righeStudentiAvviso`). Il prossimo talk (`prossimoTalk`, con
+  immagine e pagina, mai il link della riunione), le squadre fino a 6, fino a
+  tre post di Instagram che lo staff incolla nella card con una riga di
+  descrizione, il bottone "Segui @bioergotech" e a chi dire se qualcosa non
+  va. I link passano da `leggiPostInstagram` (`lib/social.ts`) sia nel
+  pannello sia nella rotta: solo post e reel, in forma canonica, senza
+  `?igsh=`. Le descrizioni passano da `esc`. Anche qui c'e la prova a se
+  stessi, con i post scritti in quel momento. Per una nuova edizione si
+  cambia `EDIZIONE_NOTIZIE` (e i testi, se serve): le chiavi cambiano e il
+  bottone torna attivo.
 - **Avviso agli studenti sulle riflessioni**: vedi "Riflessioni e domande,
   da ora in avanti".
 
@@ -1405,3 +1419,13 @@ riceve insieme l'email di adesione e quella di conferma. La verifica dello
 staff si sposta dopo: un'adesione non autentica si mette su `ritirata`, e il
 codice smette di accettare iscrizioni. La guida del docente mostra il passo
 giusto per la modalità in uso. Le adesioni gia esistenti non cambiano stato.
+
+## Uno spazio che sparisce nel testo JSX
+
+Con il compilatore di Next, un testo JSX che segue un'espressione, inizia
+con uno spazio, va a capo e contiene un'entita (`&apos;`, `&#8599;`) perde
+lo spazio iniziale: `fino a {SQUADRA_MAX} componenti, ... l&apos;ha` su piu
+righe diventava "fino a 6componenti". Sulla stessa riga, o senza entita, lo
+spazio resta. Nel dubbio si scrive `{SQUADRA_MAX}{" "}componenti`. Il
+3 novembre 2026 i punti cosi erano undici (avviso delle squadre, pagina del
+bando, console dei docenti, pagine delle aree): ora nessuno.

@@ -875,6 +875,40 @@ export const AVVISO_SQUADRE_TESTO = {
   firma: ["Un cordiale saluto,", "Guido Putignano", "Fondazione bioERGOtech"],
 } as const;
 
+/* ── Notizie dal percorso, agli studenti ─────────────────────────────── */
+
+/**
+ * L'email agli studenti iscritti (confermati e in attesa) con le notizie
+ * del percorso: il prossimo talk, le squadre fino a 6 e gli ultimi post di
+ * Instagram, che lo staff incolla nel pannello. E una comunicazione sul
+ * percorso, quindi rientra nell'iscrizione; un'email solo per chiedere di
+ * seguire Instagram no, perche newsletter e iniziative future sono una
+ * scelta separata (informativa studenti).
+ *
+ * Parte una volta per edizione: per la prossima si cambiano
+ * `EDIZIONE_NOTIZIE` e, se serve, i testi. Il testo e condiviso dall'email
+ * e dall'anteprima nel pannello.
+ */
+export const EDIZIONE_NOTIZIE = "2026-11";
+export const NOTIZIE_STUDENTI_OGGETTO = `Notizie dal percorso . ${LICEI.titolo}`;
+export const NOTIZIE_STUDENTI_TESTO = {
+  apertura: "ecco le novità del percorso.",
+  talkTitolo: "Il prossimo talk con gli esperti",
+  talkInvito: "Ti iscrivi dalla pagina del talk, e lì trovi anche il link per collegarti.",
+  talkBottone: "Vai al talk",
+  squadreTitolo: `Squadre fino a ${SQUADRA_MAX}`,
+  squadre: `Ora una squadra può avere fino a ${SQUADRA_MAX} studenti della tua stessa scuola, e il progetto si può fare anche da soli. Se la vostra squadra cresce, chi l'ha creata passa il codice ai nuovi compagni.`,
+  instagramTitolo: "Dal nostro Instagram",
+  instagram:
+    "Sul profilo pubblichiamo gli aggiornamenti del percorso: i talk, le novità e l'evento finale. Gli ultimi post:",
+  instagramSenzaPost:
+    "Sul profilo pubblichiamo gli aggiornamenti del percorso: i talk, le novità e l'evento finale.",
+  postSenzaTitolo: "Guarda il post",
+  instagramBottone: "Segui @bioergotech",
+  problemi:
+    "Se qualcosa non funziona, dillo al tuo docente referente o rispondi a questa email: lo sistemiamo noi.",
+} as const;
+
 /* ── Interruttori delle fasi ──────────────────────────────────────────── */
 
 /**

@@ -600,7 +600,7 @@ export default async function LiceiPage() {
         <section className="section" id="premi">
           <div className="container mx-auto px-6">
             <Testata n={5} kicker="Evento finale e premi" articolo="Art. 6" titolo="I tre premi">
-              I {LICEI.progettiSulPalco} progetti migliori vengono selezionati ed esposti dagli stessi
+              I {LICEI.progettiSulPalco}{" "}progetti migliori vengono selezionati ed esposti dagli stessi
               studenti sul palco dell&apos;evento finale del {LICEI.dataLabel.toLowerCase()}, al{" "}
               {LICEI.luogo}, davanti a scienziati di primo piano e a una commissione scientifica. Al
               termine della conferenza vengono premiati i migliori progetti.

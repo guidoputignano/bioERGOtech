@@ -204,14 +204,14 @@ export function DocentiProgetto({
       {risposta && !risposta.disponibile && (
         <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: 0 }}>
           <strong>Funzione in attivazione.</strong> Fra poco potrà indicare qui fino a{" "}
-          {DOCENTI_PROGETTO_MAX} colleghi dell&apos;istituto che seguono il percorso insieme a lei.
+          {DOCENTI_PROGETTO_MAX}{" "}colleghi dell&apos;istituto che seguono il percorso insieme a lei.
         </p>
       )}
 
       {risposta?.disponibile && (
         <>
           <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, marginBottom: 14 }}>
-            Può indicare fino a {max} colleghi dell&apos;istituto che seguono gli studenti del
+            Può indicare fino a {max}{" "}colleghi dell&apos;istituto che seguono gli studenti del
             percorso. Ognuno riceve un accesso personale e, dopo aver accettato le istruzioni, vede
             tutti gli studenti dell&apos;istituto: può confermare le iscrizioni e rimandare i link di
             accesso, ma non indicare altri docenti né scaricare gli elenchi. A ogni nuovo docente
@@ -351,7 +351,7 @@ export function DocentiProgetto({
             </p>
           ) : nonRevocati >= max ? (
             <p className="text-sm text-gray-600" style={{ margin: 0 }}>
-              Ha raggiunto il massimo di {max} docenti del progetto. Per indicarne un altro revochi
+              Ha raggiunto il massimo di {max}{" "}docenti del progetto. Per indicarne un altro revochi
               prima l&apos;accesso di uno di loro.
             </p>
           ) : !formAperto ? (

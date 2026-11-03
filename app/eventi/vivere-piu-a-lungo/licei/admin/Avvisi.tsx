@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Le email una tantum dello staff, ognuna con il suo bottone: l'avviso agli
- * studenti sulle riflessioni e l'avviso ai docenti sulle squadre.
+ * Le email una tantum dello staff, ognuna con il suo bottone: le notizie dal
+ * percorso agli studenti, l'avviso ai docenti sulle squadre e l'avviso agli
+ * studenti sulle riflessioni.
  *
  * Ogni scheda dice a chi parte e quanti sono, mostra il testo esatto
  * dell'email prima di premere, chiede conferma e parte una volta sola: la
@@ -13,7 +14,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
+  NOTIZIE_STUDENTI_OGGETTO,
+  NOTIZIE_STUDENTI_TESTO,
   AVVISO_RIFLESSIONI_OGGETTO,
   AVVISO_RIFLESSIONI_TESTO,
   AVVISO_SQUADRE_OGGETTO,
@@ -23,7 +27,12 @@ import {
 } from "../content";
 // Solo i tipi: i moduli sono del server.
 import type { EsitoAvviso, StatoAvviso } from "@/lib/eventi/licei-avvisi";
-import type { StatoAvvisoRiflessioni, StatoAvvisoSquadre } from "@/lib/eventi/licei-server";
+import type {
+  StatoAvvisoNotizie,
+  StatoAvvisoRiflessioni,
+  StatoAvvisoSquadre,
+} from "@/lib/eventi/licei-server";
+import { POST_INSTAGRAM_MAX, SOCIAL, TITOLO_POST_MAX, leggiPostInstagram } from "@/lib/social";
 
 const dataOra = (iso: string): string =>
   new Date(iso).toLocaleString("it-IT", {
@@ -55,6 +64,9 @@ function AvvisoUnaTantum({
   vuoto,
   blocco,
   onErrore,
+  corpo,
+  campi,
+  pronto = true,
   anteprima,
 }: {
   titolo: string;
@@ -76,6 +88,12 @@ function AvvisoUnaTantum({
   blocco?: React.ReactNode;
   /** Per i campi di una risposta d'errore propri di un avviso. */
   onErrore?: (data: Record<string, unknown>) => void;
+  /** Quello che l'avviso manda in piu alla rotta, con l'invio e con la prova. */
+  corpo?: Record<string, unknown>;
+  /** Campi da compilare prima di inviare, sopra i bottoni. */
+  campi?: React.ReactNode;
+  /** Falso finche i campi non sono a posto: i bottoni restano spenti. */
+  pronto?: boolean;
   /** Il testo dell'email, come parte. */
   anteprima: React.ReactNode;
 }) {
@@ -86,7 +104,7 @@ function AvvisoUnaTantum({
     const res = await fetch("/api/eventi/licei/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ azione: azioneDaFare }),
+      body: JSON.stringify({ ...corpo, azione: azioneDaFare }),
     });
     return { res, data: (await res.json().catch(() => ({}))) as Record<string, unknown> };
   };
@@ -164,18 +182,21 @@ function AvvisoUnaTantum({
       ) : blocco ? (
         blocco
       ) : (
+        <>
+        {campi}
         <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: 12 }}>
-          <Button type="button" disabled={inviando !== null || conteggio === null} onClick={invia}>
+          <Button type="button" disabled={inviando !== null || conteggio === null || !pronto} onClick={invia}>
             <i className="fas fa-envelope" style={{ marginRight: 8 }} />
             {inviando === "tutti" ? "Invio in corso…" : bottone}
           </Button>
           {azioneProva && (
-            <Button type="button" variant="outline" disabled={inviando !== null} onClick={prova}>
+            <Button type="button" variant="outline" disabled={inviando !== null || !pronto} onClick={prova}>
               {inviando === "prova" ? "Invio della prova…" : "Invia una prova a me"}
             </Button>
           )}
           <span style={{ fontSize: 12.5, color: "var(--text-light)" }}>{conteggio ?? vuoto}</span>
         </div>
+        </>
       )}
 
       {messaggio && (
@@ -350,6 +371,122 @@ export function AvvisoSquadre({
               </span>
             ))}
           </p>
+        </>
+      }
+    />
+  );
+}
+
+/**
+ * Le notizie dal percorso agli studenti iscritti: il prossimo talk, le
+ * squadre fino a 6 e gli ultimi post di Instagram, che lo staff incolla
+ * qui. Una volta per edizione. L'anteprima segue i campi mentre si scrive,
+ * e la prova parte con i post scritti in quel momento.
+ */
+export function AvvisoNotizie({
+  stato,
+  onAggiornato,
+}: {
+  stato: StatoAvvisoNotizie | null;
+  onAggiornato: (s: StatoAvvisoNotizie) => void;
+}) {
+  const [righe, setRighe] = useState(() =>
+    Array.from({ length: POST_INSTAGRAM_MAX }, () => ({ url: "", titolo: "" })),
+  );
+  if (!stato) return null;
+
+  const letti = leggiPostInstagram(righe);
+  const post = "post" in letti ? letti.post : [];
+  const errore = "errore" in letti ? letti.errore : null;
+  const T = NOTIZIE_STUDENTI_TESTO;
+  const cambia = (i: number, campo: "url" | "titolo", valore: string) =>
+    setRighe((r) => r.map((x, j) => (j === i ? { ...x, [campo]: valore } : x)));
+
+  return (
+    <AvvisoUnaTantum
+      titolo="Notizie dal percorso agli studenti"
+      descrizione={
+        <>
+          Un&apos;email a tutti gli iscritti, confermati e in attesa: il prossimo talk, le squadre fino a
+          6 e gli ultimi post di Instagram con il bottone per seguire il profilo. È una comunicazione sul
+          percorso, quindi può andare a tutti; per questo i post devono parlare del percorso. Incolla
+          fino a {POST_INSTAGRAM_MAX}{" "}link (dall&apos;app: Condividi, Copia link) con una riga che li
+          descrive, guarda l&apos;anteprima e manda prima una prova a te. Parte una volta sola.
+        </>
+      }
+      stato={stato}
+      onStato={(p) => onAggiornato({ ...stato, ...p })}
+      azione="avviso_notizie"
+      azioneProva="avviso_notizie_prova"
+      corpo={{ post }}
+      pronto={errore === null}
+      conferma={`Inviare le notizie dal percorso a ${stato.iscritti} iscritti (confermati e in attesa), con ${post.length} post di Instagram? Si può inviare una volta sola.`}
+      bottone="Invia agli studenti"
+      conteggio={stato.iscritti === 0 ? null : `${stato.iscritti} iscritti, un'email per indirizzo.`}
+      vuoto="Nessuno studente iscritto per ora."
+      campi={
+        <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+          {righe.map((r, i) => (
+            <div key={i} className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 8 }}>
+              <Input
+                aria-label={`Link del post ${i + 1}`}
+                placeholder={`Link del post ${i + 1} (https://www.instagram.com/p/...)`}
+                value={r.url}
+                onChange={(e) => cambia(i, "url", e.target.value)}
+              />
+              <Input
+                aria-label={`Descrizione del post ${i + 1}`}
+                placeholder="Una riga che lo descrive, es. Il talk di lunedì con Emanuele Memmola"
+                maxLength={TITOLO_POST_MAX}
+                value={r.titolo}
+                onChange={(e) => cambia(i, "titolo", e.target.value)}
+              />
+            </div>
+          ))}
+          {errore && (
+            <p role="alert" style={{ color: "#B44A5E", fontSize: 13, margin: 0 }}>
+              {errore}
+            </p>
+          )}
+        </div>
+      }
+      anteprima={
+        <>
+          <p style={ANTEPRIMA_P}>
+            <strong>Oggetto:</strong> {NOTIZIE_STUDENTI_OGGETTO}
+          </p>
+          <p style={ANTEPRIMA_P}>Ciao (nome dello studente), {T.apertura}</p>
+          {stato.talk ? (
+            <p style={ANTEPRIMA_P}>
+              <strong>{T.talkTitolo}</strong> (con l&apos;immagine del talk): «{stato.talk.titolo}», {stato.talk.relatore}.{" "}
+              {stato.talk.quando} . {stato.talk.luogo}. {T.talkInvito} [{T.talkBottone}]
+            </p>
+          ) : (
+            <p style={{ ...ANTEPRIMA_P, color: "#8A6100" }}>
+              Nessun talk in programma: la parte sul talk non compare.
+            </p>
+          )}
+          <p style={ANTEPRIMA_P}>
+            <strong>{T.squadreTitolo}</strong>. {T.squadre}
+          </p>
+          <p style={{ margin: "0 0 4px" }}>
+            <strong>{T.instagramTitolo}</strong>. {post.length ? T.instagram : T.instagramSenzaPost}
+          </p>
+          {post.length > 0 && (
+            <ul style={{ margin: "0 0 8px", paddingLeft: 20, listStyle: "disc" }}>
+              {post.map((x) => (
+                <li key={x.url} style={{ overflowWrap: "anywhere" }}>
+                  <a href={x.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary-dark)" }}>
+                    {x.titolo || T.postSenzaTitolo}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p style={ANTEPRIMA_P}>
+            [{T.instagramBottone}] ({SOCIAL.instagram})
+          </p>
+          <p style={{ margin: 0 }}>{T.problemi}</p>
         </>
       }
     />

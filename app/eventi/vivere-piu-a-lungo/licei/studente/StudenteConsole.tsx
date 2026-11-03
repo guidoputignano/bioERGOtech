@@ -739,7 +739,7 @@ export function StudenteConsole({
 
               {sonoCapo && membri.length < SQUADRA_MIN && (
                 <p style={{ fontSize: 12.5, color: "#8A6100", marginTop: 10, marginBottom: 0 }}>
-                  Per consegnare servono almeno {SQUADRA_MIN} componenti: l&apos;art. 3 chiede un
+                  Per consegnare servono almeno {SQUADRA_MIN}{" "}componenti: l&apos;art. 3 chiede un
                   lavoro di squadra. Passa il codice a un compagno.
                 </p>
               )}
