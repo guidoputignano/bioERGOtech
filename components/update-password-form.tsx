@@ -193,13 +193,27 @@ export function UpdatePasswordForm() {
         )}
 
         <form onSubmit={handle} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* For the phone's and browser's password manager: which account
+              the new password belongs to. Without it the manager keeps the
+              old saved password and fills it in on the next sign-in, which
+              then fails ("Invalid login credentials"). It happened. */}
+          <input
+            type="email"
+            name="username"
+            autoComplete="username"
+            value={account ?? ""}
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none", overflow: "hidden" }}
+          />
           <div>
             <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#4A5568", marginBottom: 6 }}>New Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" required style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E8EDF3", fontSize: 14, color: "#1A2332", outline: "none", boxSizing: "border-box" as const, fontFamily: "'DM Sans', sans-serif" }} />
+            <input type="password" name="new-password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" required style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E8EDF3", fontSize: 14, color: "#1A2332", outline: "none", boxSizing: "border-box" as const, fontFamily: "'DM Sans', sans-serif" }} />
           </div>
           <div>
             <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#4A5568", marginBottom: 6 }}>Confirm Password</label>
-            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat your password" required style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E8EDF3", fontSize: 14, color: "#1A2332", outline: "none", boxSizing: "border-box" as const, fontFamily: "'DM Sans', sans-serif" }} />
+            <input type="password" name="confirm-password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat your password" required style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1.5px solid #E8EDF3", fontSize: 14, color: "#1A2332", outline: "none", boxSizing: "border-box" as const, fontFamily: "'DM Sans', sans-serif" }} />
           </div>
 
           {error && <div style={{ padding: "10px 14px", borderRadius: 10, background: "#FDECF1", border: "1px solid #F9C3CE", color: "#D63563", fontSize: 13 }}>{error}</div>}

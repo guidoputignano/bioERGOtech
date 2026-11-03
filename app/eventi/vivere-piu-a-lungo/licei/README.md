@@ -906,6 +906,18 @@ password". Tre punti deboli, tutti chiusi:
 - **Il login rispondeva "Invalid login credentials".** Ora dice di usare
   esattamente l'email dell'iscrizione (numeri e punti compresi) o di
   scegliere una nuova password.
+- **Il telefono inseriva la password vecchia.** La foto del tentativo
+  mostrava email e password compilate dal browser (i campi gialli), quattro
+  minuti dopo il cambio della password: il gestore delle password del
+  telefono non sapeva che la password era cambiata, perche la pagina della
+  nuova password non diceva per quale account era (`autocomplete`). Ora la
+  pagina ha un campo nascosto `username` con l'email dell'account e i due
+  campi `new-password`, cosi il telefono propone di aggiornare la password
+  salvata; il login ha `username` e `current-password`, niente maiuscola
+  automatica ne correzione sull'email, e l'email si invia senza gli spazi
+  che la tastiera aggiunge col suggerimento (anche in "password
+  dimenticata"). Il messaggio d'errore dice che una password compilata dal
+  telefono puo essere vecchia.
 
 ## "Nessuna adesione risulta associata a questo account"
 
