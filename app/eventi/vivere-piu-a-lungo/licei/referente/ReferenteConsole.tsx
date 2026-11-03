@@ -62,6 +62,7 @@ import { ColleghiDocente, DocentiProgetto } from "./DocentiProgetto";
 import { CorreggiEmail } from "./CorreggiEmail";
 import { AccountCollegato } from "../AccountCollegato";
 import { NovitaSquadre } from "../NovitaSquadre";
+import { SeguiInstagram } from "../SeguiInstagram";
 import { FiltroClasse } from "./FiltroClasse";
 import { QuadroSquadre } from "./QuadroSquadre";
 import { LinkRiflessioniStudenti, RiflessioniPerLezione, RiflessioniStudente } from "./RiflessioniReferente";
@@ -685,6 +686,9 @@ export function ReferenteConsole({
 
       {/* ── Talk con gli esperti ── */}
       {talk}
+
+      {/* ── Instagram: il docente lo puo girare alla classe ── */}
+      <SeguiInstagram registro="lei" />
 
       {/* ── Filtro per classe ──
           Sopra i numeri, perche vale anche per loro. Un filtro e non un

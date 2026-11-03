@@ -1227,6 +1227,26 @@ Un'adesione nasce `ricevuta` e non e attiva finche lo staff non la porta a
 e reperibile online e nel sito non c'e rate limiting. La conferma manuale e
 la vera difesa contro le adesioni finte.
 
+## Instagram, e perche non un'email a tutti gli studenti
+
+La Fondazione vuole che studenti e docenti seguano il profilo Instagram
+(`SOCIAL.instagram` in `lib/social.ts`). Il profilo e collegato, senza widget
+ne script di Instagram, in questi punti:
+
+- `SeguiInstagram.tsx`, sotto i talk, nell'area dello studente ("Segui") e
+  nella console dei docenti ("condivida il profilo con i suoi studenti");
+- la pagina del bando, sopra le note dei contatti;
+- il piede di tutte le email del percorso (`chiusura()` in `licei-email.ts`);
+- il footer del sito e i dati strutturati (`sameAs`).
+
+Un'email "seguiteci su Instagram" a tutti gli iscritti invece no: il
+consenso dato all'iscrizione copre il corso, e newsletter e informazioni su
+iniziative future sono una scelta separata e facoltativa (informativa
+studenti, `CONSENSO_NEWSLETTER_STUDENTE_TESTO`). Chi l'ha scelta e in
+`newsletter_subscribers` con `source = 'corso-licei'`: un invio a loro e
+possibile, ma ogni email deve permettere di revocare la scelta, e oggi il
+sito non ha un link di cancellazione.
+
 ## Pannello staff
 
 `/eventi/vivere-piu-a-lungo/licei/admin`, accesso `partnership_level = admin`.

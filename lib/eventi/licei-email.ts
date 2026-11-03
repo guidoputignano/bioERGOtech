@@ -28,6 +28,7 @@ import {
   STUDENTE_PATH,
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { SOCIAL } from "@/lib/social";
 
 export type LiceiEmailInput = {
   referente: string;
@@ -252,7 +253,8 @@ const chiusura = (extra = ""): string => `
         Fondazione bioERGOtech e SafesPro .
         <a href="${SITE_URL}${GUIDA_PATH}" style="color:#008F6B;">Chi fa cosa</a> .
         <a href="${SITE_URL}${LICEI_PATH}" style="color:#008F6B;">Il bando</a> .
-        <a href="mailto:${CONTATTI_LICEI.fondazione.email}" style="color:#008F6B;">${CONTATTI_LICEI.fondazione.email}</a>
+        <a href="mailto:${CONTATTI_LICEI.fondazione.email}" style="color:#008F6B;">${CONTATTI_LICEI.fondazione.email}</a> .
+        <a href="${SOCIAL.instagram}" style="color:#008F6B;">Instagram</a>
       </p>`;
 
 export type ConsegnaEmailInput = {

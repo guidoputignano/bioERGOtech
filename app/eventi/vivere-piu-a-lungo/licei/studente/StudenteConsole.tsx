@@ -44,6 +44,7 @@ import { RiflessioniPassateCard } from "./RiflessioniPassate";
 import { AccountCollegato } from "../AccountCollegato";
 import { VaiAlleLezioni } from "@/app/courses/VaiAlleLezioni";
 import { NovitaSquadre } from "../NovitaSquadre";
+import { SeguiInstagram } from "../SeguiInstagram";
 
 /**
  * La squadra e del progetto, le lezioni sono di ciascuno. Un docente ha
@@ -299,6 +300,9 @@ export function StudenteConsole({
 
       {/* ══ Talk con gli esperti ══ Solo nell'area completa. */}
       {sezione === "tutto" && talk}
+
+      {/* ══ Instagram ══ Dove escono talk e novita. Solo nell'area completa. */}
+      {sezione === "tutto" && <SeguiInstagram registro="tu" />}
 
       {/* ══ Senza squadra ══ */}
       {!squadra && mostraSquadra && (
