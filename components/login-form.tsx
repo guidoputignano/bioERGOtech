@@ -41,6 +41,28 @@ function safeReturnTo(returnTo: string | null): string {
   }
 }
 
+/**
+ * What the sign-in error means, in words people can act on. Supabase answers
+ * "Invalid login credentials" both for a wrong password and for an email
+ * that has no account, and students often type an address that is almost
+ * theirs (a missing number or dot). Teachers forwarded these messages to us
+ * without knowing what to check.
+ */
+function messaggioAccesso(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  const code = (error as { code?: string } | null)?.code ?? "";
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(message)) {
+    return "Email or password is not correct. Use exactly the email you registered with (check numbers and dots), or choose a new password with \"Forgot your password?\".";
+  }
+  if (code === "email_not_confirmed" || /email not confirmed/i.test(message)) {
+    return "This email is not confirmed yet. Open the link we sent you, or choose a new password with \"Forgot your password?\".";
+  }
+  if (code === "over_request_rate_limit" || /rate limit|too many/i.test(message)) {
+    return "Too many attempts. Wait a few minutes and try again.";
+  }
+  return message || "An error occurred";
+}
+
 function LoginFormInner({
   className,
   ...props
@@ -66,7 +88,7 @@ function LoginFormInner({
       if (error) throw error;
       router.push(safeReturnTo(returnTo));
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(messaggioAccesso(error));
     } finally {
       setIsLoading(false);
     }

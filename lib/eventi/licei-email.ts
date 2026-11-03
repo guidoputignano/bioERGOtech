@@ -620,14 +620,32 @@ export type AccessoEmailInput = {
   nome: string;
   istituto: string;
   setPasswordUrl: string;
+  /**
+   * L'indirizzo dell'account, scritto nell'email: e quello da usare per
+   * entrare. Molti non entrano perche ne scrivono un altro (un numero o un
+   * punto in meno).
+   */
+  email?: string;
+  /**
+   * Lo studente e gia entrato altre volte: il link serve a scegliere una
+   * password nuova, non la prima. Cambia solo il testo.
+   */
+  nuova?: boolean;
 };
 
-export function accessoEmailSubject(): string {
-  return `Il link per entrare nel corso . ${LICEI.titolo}`;
+export function accessoEmailSubject(nuova = false): string {
+  return nuova
+    ? `Il link per una nuova password . ${LICEI.titolo}`
+    : `Il link per entrare nel corso . ${LICEI.titolo}`;
 }
 
 /**
  * Rimanda allo studente il link per impostare la password.
+ *
+ * Con `nuova` e il link per una password nuova, per chi e gia entrato e
+ * non ci riesce piu (password dimenticata, o cambiata per sbaglio da un
+ * computer condiviso). Con `email` l'email dice anche l'indirizzo esatto
+ * con cui entrare.
  *
  * Serve perche l'iscrizione gli crea l'account e gli manda quel link una
  * volta sola, dentro l'email di benvenuto. Se quella finisce nello spam, o
@@ -640,23 +658,37 @@ export function accessoEmailSubject(): string {
  * conservato: un link di recupero che vive in un database e una password.
  */
 export function accessoEmailHtml(input: AccessoEmailInput): string {
-  const { nome, istituto, setPasswordUrl } = input;
+  const { nome, istituto, setPasswordUrl, email, nuova } = input;
+  const titolo = nuova
+    ? `Ciao ${esc(nome)}, ecco il link per una nuova password.`
+    : `Ciao ${esc(nome)}, ti manca solo la password.`;
+  const testo = nuova
+    ? `Il docente referente del tuo istituto (${esc(istituto)}) ci ha chiesto di mandarti un link per
+        scegliere una nuova password. La scegli in un minuto dal pulsante qui sotto, e poi entri direttamente nelle lezioni.`
+    : `Sei iscritto al percorso con ${esc(istituto)}, ma il tuo account non ha ancora una password,
+        quindi non puoi entrare nelle lezioni. Si imposta in un minuto, dal pulsante qui sotto.`;
+  const indirizzo = email
+    ? `
+      <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
+        Per entrare usa sempre questa email, scritta esattamente così:
+        <strong style="color:#0A1628;">${esc(email)}</strong>
+      </p>`
+    : "";
 
   return `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
     ${INTESTAZIONE}
     <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
       <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">
-        Ciao ${esc(nome)}, ti manca solo la password.
+        ${titolo}
       </h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
-        Sei iscritto al percorso con ${esc(istituto)}, ma il tuo account non ha ancora una password,
-        quindi non puoi entrare nelle lezioni. Si imposta in un minuto, dal pulsante qui sotto.
+        ${testo}
       </p>
-
+      ${indirizzo}
       <div style="text-align:center;margin-bottom:24px;">
         <a href="${setPasswordUrl}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
-          Imposta la password
+          ${nuova ? "Scegli la nuova password" : "Imposta la password"}
         </a>
       </div>
 
