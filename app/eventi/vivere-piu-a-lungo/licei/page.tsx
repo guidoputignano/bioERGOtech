@@ -12,6 +12,7 @@ import { MENTOR_PATH } from "../universita/content";
 import { LINEE_GUIDA_MENTOR_PATH } from "../linee-guida-mentor/content";
 import { luogoTalk, prossimoTalk, talkPath } from "../talk/content";
 import {
+  SCADENZA_CONSEGNA_LABEL,
   ANNI_CORSO,
   COMMISSIONE_LICEI,
   CONTATTI_LICEI,
@@ -632,9 +633,10 @@ export default async function LiceiPage() {
               articolo="Art. 7"
               titolo="Come si assegnano i punti"
             >
-              I progetti sono valutati dalla Commissione su sei criteri, per un punteggio massimo
-              complessivo di {LICEI.punteggioMassimo} punti. I {LICEI.progettiSulPalco} progetti con
-              il punteggio più alto accedono alla presentazione dal palco.
+              I progetti si consegnano dall&apos;area dello studente entro {SCADENZA_CONSEGNA_LABEL}.
+              Sono valutati dalla Commissione su sei criteri, per un punteggio massimo complessivo
+              di {LICEI.punteggioMassimo} punti. I {LICEI.progettiSulPalco}{" "}progetti con il
+              punteggio più alto accedono alla presentazione dal palco.
             </Testata>
 
             <div className="lc-criteri">

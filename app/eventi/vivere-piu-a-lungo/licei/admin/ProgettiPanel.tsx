@@ -16,9 +16,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  SCADENZA_CONSEGNA_LABEL,
+  consegnaScaduta,
   AMBITI_PROGETTO,
   LICEI,
   NOTA_ISCRIZIONE_UFFICIO,
@@ -98,7 +99,6 @@ export function ProgettiPanel() {
   const [errore, setErrore] = useState<string | null>(null);
   const [avviso, setAvviso] = useState<string | null>(null);
   const [occupato, setOccupato] = useState(false);
-  const [scadenza, setScadenza] = useState("");
   const [vista, setVista] = useState<"classifica" | "squadre">("classifica");
 
   const carica = useCallback(async () => {
@@ -118,7 +118,6 @@ export function ProgettiPanel() {
         const mappa: Record<string, string> = {};
         for (const c of dataConfig.config ?? []) mappa[c.chiave] = c.valore ?? "";
         setConfig(mappa);
-        setScadenza(mappa.scadenza_consegna_label ?? "");
       }
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Caricamento non riuscito.");
@@ -336,7 +335,7 @@ export function ProgettiPanel() {
           />
           <Interruttore
             titolo="Consegna dei progetti"
-            spiega="Le squadre scrivono la bozza e la consegnano. Chiudere qui è il termine."
+            spiega="Le squadre scrivono la bozza e la consegnano. Aprire qui le apre; il termine del 25 novembre le chiude da solo."
             valore={config.stato_consegne ?? "chiuse"}
             opzioni={APERTO_CHIUSO}
             disabilitato={occupato}
@@ -352,34 +351,15 @@ export function ProgettiPanel() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 items-end" style={{ marginTop: 16 }}>
-          <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 5,
-              fontSize: 12,
-              fontWeight: 600,
-              color: "var(--text-light)",
-              flex: "1 1 260px",
-            }}
-          >
-            Termine per la consegna, come compare agli studenti
-            <Input
-              placeholder="per esempio 15 novembre 2026"
-              value={scadenza}
-              onChange={(e) => setScadenza(e.target.value)}
-            />
-          </label>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={occupato}
-            onClick={() => salvaConfig({ scadenza_consegna_label: scadenza })}
-          >
-            Salva il termine
-          </Button>
-        </div>
+        {/* Il termine e nel codice (SCADENZA_CONSEGNA) e lo applica il server:
+            qui si legge soltanto. Prima era un testo libero che non chiudeva
+            niente da solo. */}
+        <p className="text-sm" style={{ marginTop: 16, marginBottom: 0, lineHeight: 1.7, color: "var(--text-dark)" }}>
+          Termine definitivo per la consegna: <strong>{SCADENZA_CONSEGNA_LABEL}</strong>.{" "}
+          {consegnaScaduta()
+            ? "È passato: le consegne sono chiuse per gli studenti, qualunque sia l'interruttore."
+            : "A quell'ora il modulo si chiude da solo per gli studenti, anche con l'interruttore su aperte. Per spostarlo serve una modifica al codice."}
+        </p>
       </div>
 
       {/* ── Conteggi ── */}

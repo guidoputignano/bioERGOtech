@@ -18,6 +18,8 @@ import {
   STATO_VALUTAZIONE_DEFAULT,
   adesioniAperte,
   consegneAperte,
+  consegnaScaduta,
+  SCADENZA_CONSEGNA_LABEL,
   iscrizioniAperte,
   squadreAperte,
   valutazioneAperta,
@@ -589,9 +591,9 @@ export async function verificaConsegneAperte(
   if (!consegneAperte(config.stato_consegne)) {
     return {
       ok: false,
-      errore: config.scadenza_consegna_label
-        ? `Le consegne sono chiuse. Il termine era il ${config.scadenza_consegna_label}.`
-        : "Le consegne non sono ancora aperte.",
+      errore: consegnaScaduta()
+        ? `Le consegne sono chiuse: il termine era ${SCADENZA_CONSEGNA_LABEL}. I progetti ora passano alla valutazione.`
+        : `Le consegne non sono ancora aperte. Il termine per consegnare sarà ${SCADENZA_CONSEGNA_LABEL}.`,
     };
   }
   return { ok: true };

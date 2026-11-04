@@ -145,8 +145,9 @@ pannello staff:
 - `stato_iscrizioni`: `chiuse` (default) o `aperte`.
 - `scadenza_iscrizioni_label`: il termine delle iscrizioni, in chiaro.
 - `stato_squadre`: `chiuse` (default) o `aperte`.
-- `stato_consegne`: `chiuse` (default) o `aperte`. Chiuderlo **e** il termine.
-- `scadenza_consegna_label`: il termine di consegna, in chiaro.
+- `stato_consegne`: `chiuse` (default) o `aperte`. Apre le consegne; le
+  chiude anche il termine definitivo, vedi sotto.
+- `scadenza_consegna_label`: non piu usata (era il termine in chiaro).
 - `stato_valutazione`: `chiusa` (default) o `aperta`. Chiuderla congela i
   punteggi prima del calcolo della classifica.
 
@@ -157,6 +158,18 @@ mostrare a chi le apre.
 
 Per questo la pagina e `dynamic = "force-dynamic"`: lo stato si legge a ogni
 richiesta.
+
+**L'eccezione: il termine della consegna.** Il 4 novembre 2026 la Fondazione
+ha fissato la consegna dei progetti entro mercoledi 25 novembre 2026, ore
+23:59, come termine definitivo: dopo, i progetti passano alla valutazione.
+Sta nel codice (`SCADENZA_CONSEGNA` e `SCADENZA_CONSEGNA_LABEL` in
+`content.ts`) e lo applica il server: `consegneAperte` e falso dopo quell'ora
+anche con l'interruttore su aperte, quindi salvataggi e consegne si fermano
+da soli (`verificaConsegneAperte`; lo staff resta escluso dal cancello, come
+per le altre fasi). Lo mostrano l'area dello studente (anche prima
+dell'apertura), il quadro delle squadre dei docenti, il pannello staff (in
+sola lettura, al posto del campo di testo), la pagina del bando all'art. 7 e
+le "Notizie dal percorso". Spostarlo e una modifica di codice.
 
 ## Dati degli studenti: il minimo, e da dove viene il vincolo
 

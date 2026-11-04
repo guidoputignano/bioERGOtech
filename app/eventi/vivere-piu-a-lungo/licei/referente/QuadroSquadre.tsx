@@ -18,7 +18,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SQUADRA_MAX, SQUADRA_MIN, statoIscrizioneLabel } from "../content";
+import { SCADENZA_CONSEGNA_LABEL, SQUADRA_MAX, SQUADRA_MIN, consegnaScaduta, statoIscrizioneLabel } from "../content";
 import {
   quadroSquadre,
   type ComponenteQuadro,
@@ -197,6 +197,11 @@ export function QuadroSquadre({
       <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, marginBottom: 12 }}>
         Le squadre le formano gli studenti, poco per volta: qui si seguono, senza modificarle.
         Per vedere le ultime novità usi «Aggiorna».
+      </p>
+      <p className="text-sm" style={{ lineHeight: 1.7, margin: "0 0 12px", color: "var(--text-dark)" }}>
+        {consegnaScaduta()
+          ? <>Il termine per la consegna dei progetti era <strong>{SCADENZA_CONSEGNA_LABEL}</strong>: ora passano alla valutazione.</>
+          : <>Termine per la consegna dei progetti: <strong>{SCADENZA_CONSEGNA_LABEL}</strong>. La consegna la fa il capitano, dall&apos;area dello studente.</>}
       </p>
 
       {erroreAggiorna && (

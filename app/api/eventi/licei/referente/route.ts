@@ -8,7 +8,11 @@ import {
   confermaEmailHtml,
   confermaEmailSubject,
 } from "@/lib/eventi/licei-email";
-import { STATI_ISCRIZIONE, STATI_ISCRIZIONE_ATTIVI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  STATI_ISCRIZIONE,
+  STATI_ISCRIZIONE_ATTIVI,
+  consegneAperte,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { TOTALE_LEZIONI, progressoPerUtenti } from "@/lib/eventi/licei-progresso";
 import {
   leggiAccessiIstituto,
@@ -178,7 +182,10 @@ export async function GET() {
     docenti_progetto: docenti,
     // Le fasi aperte o chiuse: il quadro delle squadre dice "non ancora
     // aperta" invece di mostrare un elenco vuoto.
-    fasi: { squadre: config.stato_squadre, consegne: config.stato_consegne },
+    fasi: {
+      squadre: config.stato_squadre,
+      consegne: consegneAperte(config.stato_consegne) ? "aperte" : "chiuse",
+    },
     istruzioni_accettate: true,
     totale_lezioni: TOTALE_LEZIONI,
     // `user_id` serve al server per contare le lezioni e poi esce dalla
