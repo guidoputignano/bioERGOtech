@@ -859,7 +859,17 @@ function Lesson_4_4({ separateTrack }: { separateTrack?: boolean }) {
     <>
       <Section title="Project Idea Brief Workshop">
         <p style={p}>This is the final session of Phase 2. By the end, every team will have submitted a completed one-page Project Idea Brief. Submitting the brief is not the end of Week 4 — it is the beginning of Phase 3.</p>
-        <CalloutBox label="Team Size">2 to 5 students per team, all from the same school. Five is the cap because it matches the delegation that travels for the prize, so a winning team goes in full. Two is the floor because the brief is a team exercise. Mixed-track teams are allowed. A Track A student and a Track C student can collaborate if the project suits both skill levels.</CalloutBox>
+        {separateTrack ? (
+          // Programme students: their team rules are in the programme box at
+          // the end of this lesson (high schools now allow 1 to 6), and the
+          // brief has no upload. Students looked for a way to attach the
+          // completed brief and found none.
+          <CalloutBox label="Where your brief goes">
+            In your programme you do not upload the brief as a file. Write it with your team in a shared document. It is the starting point of the project you will submit from your programme area, where you can also add the document&apos;s link. For this lesson, what you submit is the reflection in the box below. Team rules are in your programme box at the end of the lesson.
+          </CalloutBox>
+        ) : (
+          <CalloutBox label="Team Size">2 to 5 students per team, all from the same school. Five is the cap because it matches the delegation that travels for the prize, so a winning team goes in full. Two is the floor because the brief is a team exercise. Mixed-track teams are allowed. A Track A student and a Track C student can collaborate if the project suits both skill levels.</CalloutBox>
+        )}
       </Section>
       <Section title="The Project Idea Brief — Six Sections">
       <SlideImage src="/assets/courses/lesson-4-4/slide-1.png" alt="Slide 1" />

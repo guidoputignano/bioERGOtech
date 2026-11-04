@@ -1099,6 +1099,16 @@ progetto e di tutti, ma dell'atto finale deve rispondere qualcuno. Dopo la
 consegna il progetto non si tocca piu, e dalla squadra non si esce: l'elenco
 degli autori di un lavoro consegnato non e piu modificabile.
 
+**Il Brief della lezione 4.4 non si carica.** La lezione (in inglese, uguale
+per tutti) dice che ogni squadra "submits" il Project Idea Brief, e degli
+studenti hanno cercato dove allegarlo. Per chi segue un percorso
+(`separateTrack`) la lezione ora mostra "Where your brief goes" al posto del
+riquadro "Team Size 2 to 5": il Brief si scrive in un documento condiviso, e
+la base del progetto da consegnare dall'area, dove va il link; la consegna
+della lezione e la riflessione. Lo stesso, in italiano, nel riquadro "La tua
+squadra" della 4.4. Finche le consegne sono chiuse il modulo del progetto e
+in sola lettura: per far scrivere le bozze si aprono le consegne dal pannello.
+
 ## Commissione: schede individuali e voto dell'art. 8
 
 `/eventi/vivere-piu-a-lungo/licei/commissione`, per chi sta in
