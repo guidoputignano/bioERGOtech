@@ -71,7 +71,7 @@ type Campaign = {
 type Metrics = Record<string, number> & { byStatus: Record<string, number>; byPriority: Record<string, number> };
 type Readiness = {
   allowedSenders: string[]; senderAllowed: boolean; resendConfigured: boolean; gmailSendConfigured: boolean;
-  replyCronConfigured: boolean; deliveryWebhookConfigured: boolean; classifierModel: boolean; sentToday: number;
+  replyCronConfigured: boolean; deliveryWebhookConfigured: boolean; classifierModel: boolean; sentToday: number; missingFacts?: string[];
 };
 type Template = { key: string; label: string; subject: string; body: string; version: number; updated_at: string };
 
@@ -633,7 +633,6 @@ function ThreadPanel({ inst, campaign, thread, reload, notify }: { inst: Institu
   const [sourceUrl, setSourceUrl] = useState(inst.source_url || "");
   const [log, setLog] = useState({ direction: "inbound", historical: false, from_email: "", to_email: "", subject: "", body: "", date: todayIso() });
   const [busy, setBusy] = useState(false);
-  const missingFacts = !campaign?.selection_status || !campaign?.age_range || !campaign?.chaperone;
 
   const create = async (kind: "sequence" | "coordinator" | "reply", extra: Record<string, unknown> = {}) => {
     setBusy(true);
@@ -674,7 +673,6 @@ function ThreadPanel({ inst, campaign, thread, reload, notify }: { inst: Institu
         </div>
         {!hasHistory ? (
           <>
-            {missingFacts && <div style={{ fontSize: 12, color: AMBER }}>Selection status, ages or chaperone are not confirmed in Settings yet. The draft will show placeholders and cannot be approved until they are filled.</div>}
             <div>
               <span style={labelStyle}>Research connection (completes &quot;Given your institution&apos;s work in …&quot;)</span>
               <input style={inputStyle} value={connection} onChange={(e) => setConnection(e.target.value)} placeholder="e.g. cancer biology and its high-school laboratory programmes" />
@@ -1057,7 +1055,7 @@ function SettingsView({ campaign, readiness, onChanged, notify }: { campaign: Ca
           {text("selection_status", "The students …", "are being selected")}
           {text("age_range", "Aged …", "16 to 18")}
           {text("chaperone", "Accompanied by …", "two teachers from their school")}
-          <div style={{ fontSize: 11, color: TEXT_LIGHT }}>Leave empty until confirmed by leadership: a first e-mail cannot be approved without them.</div>
+          <div style={{ fontSize: 11, color: TEXT_LIGHT }}>Only needed if a template uses the placeholder. Leave a used one empty until confirmed: a first e-mail cannot be approved while it is blank.</div>
         </div>
         <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={sectionTitle}>Follow-ups and pacing</div>
@@ -1074,7 +1072,7 @@ function SettingsView({ campaign, readiness, onChanged, notify }: { campaign: Ca
         </div>
         <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={sectionTitle}>Approval and sending</div>
-          {check(!!campaign.selection_status && !!campaign.age_range && !!campaign.chaperone, "Student facts confirmed")}
+          {check(!!readiness && !readiness.missingFacts?.length, readiness?.missingFacts?.length ? `Facts used by the templates still blank: ${readiness.missingFacts.join(", ")}` : "Every fact the templates use is filled in")}
           {check(readiness?.senderAllowed, `Sender in RC_ALLOWED_SENDERS (${readiness?.allowedSenders.join(", ") || "none set"})`)}
           {check(campaign.sender_provider === "gmail" ? readiness?.gmailSendConfigured : readiness?.resendConfigured, campaign.sender_provider === "gmail" ? "Gmail sending credentials (RC_GMAIL_REFRESH_TOKEN)" : "Resend API key")}
           {check(readiness?.replyCronConfigured, "Reply sync configured (RC_GMAIL_USER, RC_GMAIL_REFRESH_TOKEN, CRON_SECRET). Without it, follow-ups are held.")}
