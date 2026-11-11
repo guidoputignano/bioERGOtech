@@ -361,3 +361,10 @@ test("dashboard counts institutions, not messages, and ignores earlier correspon
   assert.equal(m.draftsAwaitingReview, 1);
   assert.equal(m.overdueActions, 1);
 });
+
+// ── Campaign facts: only those the templates use are required ───────────
+test("only facts used by the templates are required", async () => {
+  const { factsUsed } = await import("../lib/research-campaign/templates.ts");
+  assert.deepEqual(factsUsed([{ subject: "x", body: "aged {{age_range}} with {{ chaperone }}" }]), ["age_range", "chaperone"]);
+  assert.deepEqual(factsUsed([{ subject: "x", body: "five Italian high school students" }]), []);
+});

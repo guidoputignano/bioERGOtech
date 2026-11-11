@@ -39,6 +39,13 @@ export function unknownPlaceholders(text: string): string[] {
   return [...found];
 }
 
+/** Campaign-level facts (set in Settings) that the current templates actually use. */
+export const CAMPAIGN_FACTS = ["selection_status", "age_range", "chaperone"] as const;
+export function factsUsed(templates: { subject: string; body: string }[]): (typeof CAMPAIGN_FACTS)[number][] {
+  const text = templates.map((t) => `${t.subject}\n${t.body}`).join("\n");
+  return CAMPAIGN_FACTS.filter((f) => new RegExp(`\\{\\{\\s*${f}\\s*\\}\\}`).test(text));
+}
+
 export function greetingFor(c: { person_name: string | null; person_title: string | null; department: string | null }): string {
   if (c.person_name) {
     const name = c.person_name.replace(/,.*$/, "").trim();

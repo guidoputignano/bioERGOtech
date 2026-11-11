@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { loadCampaign, logEvent, sentTodayCount } from "@/lib/research-campaign/server";
 import { dashboardMetrics, isValidEmail, normaliseEmail, parseAllowedSenders } from "@/lib/research-campaign/core";
+import { factsUsed, loadTemplates } from "@/lib/research-campaign/templates";
+
+/** Facts the templates use but Settings has not filled in yet. */
+async function missingFacts(db: Parameters<typeof loadTemplates>[0], campaign: Record<string, unknown> & { id: string }): Promise<string[]> {
+  const templates = await loadTemplates(db, campaign.id);
+  return factsUsed(Object.values(templates)).filter((f) => !String(campaign[f] ?? "").trim());
+}
 
 // GET /api/admin/research/campaign  → settings, readiness and dashboard metrics
 export async function GET() {
@@ -41,6 +48,7 @@ export async function GET() {
       deliveryWebhookConfigured: !!process.env.RC_RESEND_WEBHOOK_SECRET,
       classifierModel: !!process.env.ANTHROPIC_API_KEY,
       sentToday: await sentTodayCount(db, campaign.id),
+      missingFacts: await missingFacts(db, campaign),
     };
     return NextResponse.json({ campaign, metrics, readiness });
   } catch (e) {
@@ -107,7 +115,10 @@ export async function PATCH(request: Request) {
       switch (action) {
         case "approve":
           if (!sender || !allowed.has(sender)) return NextResponse.json({ error: "Set a sender listed in RC_ALLOWED_SENDERS before approving" }, { status: 400 });
-          if (!campaign.selection_status || !campaign.age_range || !campaign.chaperone) return NextResponse.json({ error: "Confirm the selection status, the students' ages and who accompanies them first" }, { status: 400 });
+          {
+            const missing = await missingFacts(db, campaign);
+            if (missing.length) return NextResponse.json({ error: `The templates use facts not yet confirmed in Settings: ${missing.join(", ")}` }, { status: 400 });
+          }
           Object.assign(update, { status: "approved", approved_by: guard.chiamante.id, approved_at: new Date().toISOString() });
           break;
         case "revoke":
