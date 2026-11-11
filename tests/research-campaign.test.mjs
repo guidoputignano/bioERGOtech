@@ -368,3 +368,18 @@ test("only facts used by the templates are required", async () => {
   assert.deepEqual(factsUsed([{ subject: "x", body: "aged {{age_range}} with {{ chaperone }}" }]), ["age_range", "chaperone"]);
   assert.deepEqual(factsUsed([{ subject: "x", body: "five Italian high school students" }]), []);
 });
+
+// ── One-step sending ────────────────────────────────────────────────────
+test("the research sentence is filled from the institution's specialisations", async () => {
+  const { researchConnectionFor, previousOutreachBlocks } = await import("../lib/research-campaign/core.ts");
+  assert.equal(researchConnectionFor({ specialisations: "Cancer biology, nanomedicine, bioengineering" }), "cancer biology, nanomedicine and bioengineering");
+  assert.equal(researchConnectionFor({ specialisations: "Neuroscience" }), "neuroscience");
+  assert.equal(researchConnectionFor({ specialisations: "AI in medicine, DNA sequencing" }), "AI in medicine and DNA sequencing");
+  assert.equal(researchConnectionFor({ specialisations: "Genomics, computational biology, AI and data science in medicine." }), "genomics, computational biology and AI and data science in medicine");
+  assert.equal(researchConnectionFor({ specialisations: "a, b, c, d, e, f" }), "a, b, c and d");
+  assert.equal(researchConnectionFor({ specialisations: "" }), null);
+  assert.equal(researchConnectionFor({ specialisations: null }), null);
+  assert.equal(previousOutreachBlocks("Previous response reported: hosting fee requested; details pending verification"), true);
+  assert.equal(previousOutreachBlocks("Contacted (reported); no documented reply"), false);
+  assert.equal(previousOutreachBlocks(null), false);
+});

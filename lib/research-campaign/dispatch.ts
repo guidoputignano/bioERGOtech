@@ -35,9 +35,17 @@ export async function dispatchMessage(
   const reasons = checkSendable({
     campaign, institution, contact, message,
     suppressedEmails: suppress.emails, suppressedDomains: suppress.domains,
-    allowedSenders: parseAllowedSenders(process.env.RC_ALLOWED_SENDERS), sentToday,
+    allowedSenders: parseAllowedSenders(process.env.RC_ALLOWED_SENDERS), sentToday: 0,
   });
   if (reasons.length) return { id: messageId, status: "blocked", reasons };
+
+  // Over the daily cap: wait for the next daily run rather than refusing.
+  if (sentToday >= campaign.daily_send_cap) {
+    if (!message.scheduled_for) {
+      await db.from("rc_messages").update({ scheduled_for: now.toISOString(), updated_at: now.toISOString() }).eq("id", message.id).eq("state", "approved");
+    }
+    return { id: messageId, status: "queued", reason: `Daily limit of ${campaign.daily_send_cap} reached: queued for the next daily run` };
+  }
 
   // Only inside the recipient's business hours. Outside them the message is
   // queued for the next daily run, never sent at night.

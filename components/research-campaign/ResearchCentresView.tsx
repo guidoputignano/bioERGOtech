@@ -138,7 +138,7 @@ type Notify = (ok: boolean, t: string) => void;
 
 // ── Component ───────────────────────────────────────────────────────────
 export default function ResearchCentresView() {
-  const [tab, setTab] = useState<"dashboard" | "institutions" | "review" | "tasks" | "settings">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "send" | "institutions" | "review" | "tasks" | "settings">("send");
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [readiness, setReadiness] = useState<Readiness | null>(null);
@@ -196,15 +196,17 @@ export default function ResearchCentresView() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {campaign && <CampaignBanner campaign={campaign} readiness={readiness} />}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button style={tabBtn("send")} onClick={() => setTab("send")}>Send</button>
         <button style={tabBtn("dashboard")} onClick={() => setTab("dashboard")}>Dashboard</button>
         <button style={tabBtn("institutions")} onClick={() => setTab("institutions")}>Institutions{badge(institutions.length, tab === "institutions")}</button>
-        <button style={tabBtn("review")} onClick={() => setTab("review")}>Review &amp; send{badge(reviewCount, tab === "review")}</button>
+        <button style={tabBtn("review")} onClick={() => setTab("review")}>Outbox{badge(reviewCount, tab === "review")}</button>
         <button style={tabBtn("tasks")} onClick={() => setTab("tasks")}>Tasks &amp; calls{badge(tasks.length, tab === "tasks")}</button>
         <button style={tabBtn("settings")} onClick={() => setTab("settings")}>Settings &amp; templates</button>
         <button style={{ ...btn("ghost"), marginLeft: "auto" }} onClick={loadAll}>{loading ? "Refreshing…" : "⟳ Refresh"}</button>
       </div>
       {flash && <div role="status" style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, background: flash.ok ? "#E6F9F4" : "#FDECEA", color: flash.ok ? GREEN : RED }}>{flash.text}</div>}
 
+      {tab === "send" && <SendView notify={notify} onSent={loadAll} onOpen={setDrawerId} />}
       {tab === "dashboard" && metrics && <Dashboard metrics={metrics} institutions={institutions} onOpen={setDrawerId} />}
       {tab === "institutions" && <InstitutionsTable institutions={institutions} onOpen={setDrawerId} onCreated={(id) => { loadAll(); setDrawerId(id); }} notify={notify} />}
       {tab === "review" && <ReviewQueue queue={queue} campaign={campaign} readiness={readiness} onChanged={loadAll} notify={notify} onOpen={setDrawerId} />}
@@ -851,6 +853,175 @@ function CostsPanel({ instId, costs, reload, notify }: { instId: string; costs: 
   );
 }
 
+// ── Send (one step: tick, preview, send) ────────────────────────────────
+type ComposeRow = {
+  contact_id: string; institution_id: string; institution: string; cluster: string | null; state: string | null; priority: string | null;
+  status: string; email: string | null; person: string | null; department: string | null; verification: string; source_url: string | null;
+  reason: string | null; subject: string | null; body: string | null;
+};
+type ComposeMeta = { noEmail: number; senderOk: boolean; paused: boolean; campaign: { sender_name: string | null; sender_email: string | null; daily_send_cap: number } };
+type ComposeResult = { id: string; status: string; institution?: string; email?: string; reasons?: string[]; reason?: string; error?: string };
+
+function SendView({ notify, onSent, onOpen }: { notify: Notify; onSent: () => void; onOpen: (id: string) => void }) {
+  const [rows, setRows] = useState<ComposeRow[]>([]);
+  const [meta, setMeta] = useState<ComposeMeta | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [cluster, setCluster] = useState("");
+  const [onlyReady, setOnlyReady] = useState(true);
+  const [sending, setSending] = useState<{ done: number; total: number } | null>(null);
+  const [results, setResults] = useState<ComposeResult[]>([]);
+  const [areaDraft, setAreaDraft] = useState<Record<string, string>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const d = await api<ComposeMeta & { rows: ComposeRow[] }>("/api/admin/research/compose");
+      setRows(d.rows); setMeta(d);
+      setPreviewId((p) => p ?? d.rows.find((r) => !r.reason)?.contact_id ?? d.rows[0]?.contact_id ?? null);
+    } catch (e) { notify(false, e instanceof Error ? e.message : "Could not load contacts"); }
+    setLoading(false);
+  }, [notify]);
+  useEffect(() => { load(); }, [load]);
+
+  const clusters = [...new Set(rows.map((r) => r.cluster).filter(Boolean))].sort() as string[];
+  const visible = rows.filter((r) => (!onlyReady || !r.reason) && (!cluster || r.cluster === cluster)
+    && (!search || `${r.institution} ${r.email} ${r.person ?? ""} ${r.state ?? ""}`.toLowerCase().includes(search.toLowerCase())));
+  const ready = visible.filter((r) => !r.reason);
+  const preview = rows.find((r) => r.contact_id === previewId) || null;
+  const toggle = (id: string, on: boolean) => setSelected((s) => { const n = new Set(s); if (on) n.add(id); else n.delete(id); return n; });
+  const blocked = !selected.size || !!sending || !meta?.senderOk || !!meta?.paused;
+
+  const markVerified = async (r: ComposeRow) => {
+    if (!confirm(`Have you checked that ${r.email} appears on the institution's official page?${r.source_url ? `\n\n${r.source_url}` : ""}`)) return;
+    try { await api("/api/admin/research/contacts", "PATCH", { id: r.contact_id, verification: "verified_department", verified_on: todayIso() }); notify(true, "Marked as verified"); load(); }
+    catch (e) { notify(false, e instanceof Error ? e.message : "Failed"); }
+  };
+
+  const saveArea = async (r: ComposeRow) => {
+    const v = (areaDraft[r.institution_id] || "").trim();
+    if (!v) return;
+    try { await api("/api/admin/research/institutions", "PATCH", { id: r.institution_id, specialisations: v }); notify(true, "Research area saved"); load(); }
+    catch (e) { notify(false, e instanceof Error ? e.message : "Failed"); }
+  };
+
+  const send = async () => {
+    const chosen = rows.filter((r) => selected.has(r.contact_id) && !r.reason);
+    if (!chosen.length) return;
+    const list = chosen.slice(0, 15).map((r) => `• ${r.institution} → ${r.email}`).join("\n") + (chosen.length > 15 ? `\n… and ${chosen.length - 15} more` : "");
+    if (!confirm(`Send the enquiry to ${chosen.length} institution(s) from ${meta?.campaign.sender_email}?\n\n${list}\n\nFollow-ups go automatically on Day 3 and Day 7 unless they reply. E-mails outside US office hours, or over today's limit of ${meta?.campaign.daily_send_cap}, wait for the next daily run.`)) return;
+    const all: ComposeResult[] = [];
+    setSending({ done: 0, total: chosen.length });
+    for (let i = 0; i < chosen.length; i += 10) {
+      const batch = chosen.slice(i, i + 10).map((r) => r.contact_id);
+      try {
+        const d = await api<{ results: ComposeResult[] }>("/api/admin/research/compose", "POST", { contact_ids: batch });
+        all.push(...d.results);
+      } catch (e) {
+        all.push(...batch.map((id) => ({ id, status: "failed", error: e instanceof Error ? e.message : "Failed" })));
+      }
+      setSending({ done: Math.min(i + 10, chosen.length), total: chosen.length });
+    }
+    setSending(null); setResults(all); setSelected(new Set());
+    const n = (s: string) => all.filter((r) => r.status === s).length;
+    notify(n("failed") === 0, `${n("sent")} sent · ${n("queued")} waiting for the next daily run · ${n("skipped") + n("blocked")} skipped · ${n("failed")} failed`);
+    load(); onSent();
+  };
+
+  if (loading && !meta) return <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>Loading contacts…</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ ...cardStyle, padding: 14, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 280px", fontSize: 13, color: TEXT_MID }}>
+          <b style={{ color: TEXT }}>1.</b> Tick institutions · <b style={{ color: TEXT }}>2.</b> check the e-mail on the right · <b style={{ color: TEXT }}>3.</b> Send.
+          <span style={{ color: TEXT_LIGHT }}> Follow-ups and reply checking then run automatically.</span>
+          {meta && !meta.senderOk && <div style={{ color: RED, marginTop: 4 }}>The sender is not allowed yet (Vercel setting RC_ALLOWED_SENDERS).</div>}
+          {meta?.paused && <div style={{ color: AMBER, marginTop: 4 }}>Sending is paused. Resume it in Settings.</div>}
+        </div>
+        <button style={btn("primary", blocked)} disabled={blocked} onClick={send}>
+          {sending ? `Sending ${sending.done}/${sending.total}…` : `Send to ${selected.size} institution${selected.size === 1 ? "" : "s"}`}
+        </button>
+      </div>
+
+      {results.length > 0 && (
+        <div style={{ ...cardStyle, padding: 14, fontSize: 12, display: "flex", flexDirection: "column", gap: 3 }}>
+          {results.map((r) => (
+            <div key={r.id} style={{ color: r.status === "sent" ? GREEN : r.status === "queued" ? "#1A6DD4" : r.status === "failed" ? RED : AMBER }}>
+              {r.status === "sent" ? "✓ Sent" : r.status === "queued" ? "◷ Waiting" : r.status === "failed" ? "✕ Failed" : "– Skipped"}: {r.institution || ""} {r.email ? `(${r.email})` : ""} {r.reason || r.reasons?.join("; ") || r.error || ""}
+            </div>
+          ))}
+          <button style={{ ...btn("ghost"), alignSelf: "flex-end", marginTop: 6 }} onClick={() => setResults([])}>Hide</button>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(420px, 100%), 1fr))", gap: 12, alignItems: "start" }}>
+        <div style={{ ...cardStyle, padding: 0 }}>
+          <div style={{ padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", borderBottom: `1px solid ${BORDER}` }}>
+            <input style={{ ...inputStyle, flex: "2 1 160px" }} placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <select aria-label="Cluster" style={{ ...inputStyle, flex: "1 1 120px", width: "auto" }} value={cluster} onChange={(e) => setCluster(e.target.value)}>
+              <option value="">All clusters</option>{clusters.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <label style={{ fontSize: 12, color: TEXT_MID, display: "flex", gap: 6, alignItems: "center" }}>
+              <input type="checkbox" checked={onlyReady} onChange={(e) => setOnlyReady(e.target.checked)} /> Ready only
+            </label>
+            <button style={btn("ghost", !ready.length)} disabled={!ready.length} onClick={() => setSelected(new Set([...selected, ...ready.map((r) => r.contact_id)]))}>Tick all ready ({ready.length})</button>
+            {selected.size > 0 && <button style={btn("ghost")} onClick={() => setSelected(new Set())}>Clear</button>}
+          </div>
+          <div style={{ maxHeight: 560, overflowY: "auto" }}>
+            {visible.length === 0 && <div style={{ padding: 24, textAlign: "center", fontSize: 13, color: TEXT_LIGHT }}>{rows.length ? "Nothing matches. Untick \"Ready only\" to see every contact." : "No contacts with an e-mail address yet."}</div>}
+            {visible.map((r) => (
+              <div key={r.contact_id} onClick={() => setPreviewId(r.contact_id)}
+                style={{ display: "flex", gap: 10, padding: "9px 12px", borderTop: `1px solid ${BORDER}`, cursor: "pointer", background: previewId === r.contact_id ? "rgba(46,196,182,0.08)" : undefined, alignItems: "flex-start" }}>
+                <input type="checkbox" aria-label={`Select ${r.institution}`} style={{ marginTop: 3 }} disabled={!!r.reason} checked={selected.has(r.contact_id)} onClick={(e) => e.stopPropagation()} onChange={(e) => toggle(r.contact_id, e.target.checked)} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    {priorityPill(r.priority)}
+                    <span style={{ fontWeight: 700, color: TEXT, fontSize: 13 }}>{r.institution}</span>
+                    <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{[r.cluster, r.state].filter(Boolean).join(" · ")}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: TEXT_MID, overflowWrap: "anywhere" }}>{r.person ? `${r.person} · ` : ""}{r.email}</div>
+                  {r.reason && (
+                    <div style={{ fontSize: 11, color: AMBER, marginTop: 2, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      {r.reason}
+                      {r.reason === "Address not verified yet" && <>
+                        {r.source_url && <a href={r.source_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: TEAL }}>check source ↗</a>}
+                        <button style={{ ...btn("ghost"), padding: "2px 8px", fontSize: 11 }} onClick={(e) => { e.stopPropagation(); markVerified(r); }}>Mark verified</button>
+                      </>}
+                      {r.reason.startsWith("No research area") && <span style={{ display: "flex", gap: 4 }} onClick={(e) => e.stopPropagation()}>
+                        <input style={{ ...inputStyle, padding: "3px 8px", fontSize: 11, width: 220 }} placeholder="e.g. cancer biology, genomics" value={areaDraft[r.institution_id] ?? ""} onChange={(e) => setAreaDraft({ ...areaDraft, [r.institution_id]: e.target.value })} />
+                        <button style={{ ...btn("ghost"), padding: "2px 8px", fontSize: 11 }} onClick={() => saveArea(r)}>Save</button>
+                      </span>}
+                      {r.reason.startsWith("Already written") && <button style={{ ...btn("ghost"), padding: "2px 8px", fontSize: 11 }} onClick={(e) => { e.stopPropagation(); onOpen(r.institution_id); }}>Open</button>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          {!!meta?.noEmail && <div style={{ padding: "8px 12px", fontSize: 11, color: TEXT_LIGHT, borderTop: `1px solid ${BORDER}` }}>{meta.noEmail} institutions have no e-mail contact yet: add one in Institutions → Contacts.</div>}
+        </div>
+
+        <div style={{ ...cardStyle, position: "sticky", top: 12 }}>
+          <div style={sectionTitle}>E-mail preview</div>
+          {!preview ? <div style={{ fontSize: 13, color: TEXT_LIGHT }}>Click a contact to see its e-mail.</div> : !preview.body ? (
+            <div style={{ fontSize: 13, color: AMBER }}>{preview.reason}</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 12, color: TEXT_LIGHT, overflowWrap: "anywhere" }}>From: {meta?.campaign.sender_name} &lt;{meta?.campaign.sender_email}&gt;<br />To: {preview.email}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{preview.subject}</div>
+              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: TEXT_MID, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: 0, maxHeight: 480, overflowY: "auto" }}>{preview.body}</pre>
+              <div style={{ fontSize: 11, color: TEXT_LIGHT }}>The greeting and &quot;your institution&apos;s work in …&quot; come from the institution record. To change the wording for everyone, edit Template 1 in Settings.</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Review & send ───────────────────────────────────────────────────────
 function ReviewQueue({ queue, campaign, readiness, onChanged, notify, onOpen }: { queue: Message[]; campaign: Campaign | null; readiness: Readiness | null; onChanged: () => void; notify: Notify; onOpen: (id: string) => void }) {
   const sendable = (m: Message) => m.state === "approved" && m.step !== "followup1" && m.step !== "followup2" && !m.scheduled_for;
@@ -1071,21 +1242,23 @@ function SettingsView({ campaign, readiness, onChanged, notify }: { campaign: Ca
           <div style={{ textAlign: "right" }}><button style={btn()} onClick={saveSettings}>Save settings</button></div>
         </div>
         <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={sectionTitle}>Approval and sending</div>
+          <div style={sectionTitle}>Sending</div>
           {check(!!readiness && !readiness.missingFacts?.length, readiness?.missingFacts?.length ? `Facts used by the templates still blank: ${readiness.missingFacts.join(", ")}` : "Every fact the templates use is filled in")}
           {check(readiness?.senderAllowed, `Sender in RC_ALLOWED_SENDERS (${readiness?.allowedSenders.join(", ") || "none set"})`)}
           {check(campaign.sender_provider === "gmail" ? readiness?.gmailSendConfigured : readiness?.resendConfigured, campaign.sender_provider === "gmail" ? "Gmail sending credentials (RC_GMAIL_REFRESH_TOKEN)" : "Resend API key")}
           {check(readiness?.replyCronConfigured, "Reply sync configured (RC_GMAIL_USER, RC_GMAIL_REFRESH_TOKEN, CRON_SECRET). Without it, follow-ups are held.")}
           {campaign.sender_provider === "resend" && check(readiness?.deliveryWebhookConfigured, "Delivery webhook (RC_RESEND_WEBHOOK_SECRET)")}
           {check(readiness?.classifierModel, "Reply classifier model (otherwise keyword rules)")}
-          {check(!!campaign.approved_at, `Campaign approved${campaign.approved_at ? ` on ${fmtDate(campaign.approved_at)}` : ""}`)}
+          <div style={{ fontSize: 12, color: TEXT_MID, marginTop: 6 }}>
+            {campaign.status === "paused" || campaign.status === "closed"
+              ? "Paused: nothing is sent, including follow-ups."
+              : campaign.status === "active" && campaign.sending_enabled
+                ? "On: follow-ups go automatically on their due days unless the institution replies."
+                : "Starts automatically the first time you press Send in the Send tab."}
+          </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-            {!campaign.approved_at && <button style={btn()} onClick={() => confirm("Approve this campaign's sender, student facts and templates?") && patch({ action: "approve" }, "Campaign approved")}>Approve campaign</button>}
-            {campaign.approved_at && <button style={btn("ghost")} onClick={() => patch({ action: "revoke" }, "Approval revoked")}>Revoke approval</button>}
-            {campaign.approved_at && campaign.status !== "active" && <button style={btn()} onClick={() => patch({ action: "activate" }, "Campaign active")}>Activate</button>}
-            {campaign.status === "active" && !campaign.sending_enabled && <button style={btn()} onClick={() => confirm("Switch sending ON? Initial e-mails go only when you press Send; approved follow-ups then go automatically on their due dates unless a reply or stop condition intervenes.") && patch({ action: "enable_sending" }, "Sending switched on")}>Switch sending ON</button>}
-            {campaign.sending_enabled && <button style={btn("danger")} onClick={() => patch({ action: "disable_sending" }, "Sending switched off: nothing will be sent, including follow-ups")}>Switch sending OFF</button>}
-            {campaign.status === "active" && <button style={btn("ghost")} onClick={() => patch({ action: "pause" }, "Campaign paused")}>Pause</button>}
+            {campaign.status === "active" && campaign.sending_enabled && <button style={btn("danger")} onClick={() => confirm("Pause all sending? Follow-ups will wait until you resume.") && patch({ action: "pause" }, "Sending paused: nothing will be sent")}>Pause all sending</button>}
+            {(campaign.status === "paused" || (campaign.status === "active" && !campaign.sending_enabled)) && <button style={btn()} onClick={() => patch({ action: "resume" }, "Sending resumed")}>Resume sending</button>}
           </div>
         </div>
       </div>
