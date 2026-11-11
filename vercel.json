@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/mou-followup",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/research-replies",
+      "schedule": "0 17 * * 1-5"
     }
   ]
 }

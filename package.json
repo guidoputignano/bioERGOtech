@@ -4,7 +4,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:research": "node --test tests/research-campaign.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

@@ -4719,6 +4719,49 @@ function OutreachView({ adminUserId }: { adminUserId: string }) {
 }
 // ─── END OutreachView ─────────────────────────────────────────────────────────
 
+// ─── Outreach section switch ──────────────────────────────────────────────────
+// Two independent systems under one section. OutreachView (Outreach & MoU
+// Pipeline) is unchanged; ResearchCentresView has its own tables, routes and
+// cron. The choice is remembered per browser.
+const ResearchCentresView = dynamic(() => import("@/components/research-campaign/ResearchCentresView"), {
+  ssr: false,
+  loading: () => <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT }}>Loading…</div>,
+});
+
+function OutreachHub({ adminUserId }: { adminUserId: string }) {
+  const [system, setSystem] = useState<"mou" | "research">("mou");
+  useEffect(() => {
+    try { if (localStorage.getItem("be_outreach_system") === "research") setSystem("research"); } catch { /* storage unavailable */ }
+  }, []);
+  const choose = (s: "mou" | "research") => {
+    setSystem(s);
+    try { localStorage.setItem("be_outreach_system", s); } catch { /* storage unavailable */ }
+  };
+  const opt = (id: "mou" | "research", title: string, sub: string) => (
+    <button
+      onClick={() => choose(id)}
+      aria-pressed={system === id}
+      style={{
+        flex: 1, minWidth: 220, textAlign: "left" as const, padding: "12px 16px", borderRadius: 14, cursor: "pointer",
+        border: `1.5px solid ${system === id ? TEAL : BORDER}`, background: system === id ? "rgba(46,196,182,0.08)" : CARD,
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      <div style={{ fontSize: 14, fontWeight: 800, color: system === id ? TEAL : TEXT }}>{title}</div>
+      <div style={{ fontSize: 12, color: TEXT_LIGHT, marginTop: 2 }}>{sub}</div>
+    </button>
+  );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
+        {opt("mou", "Outreach & MoU Pipeline", "Partnership outreach, MoU and DocuSign")}
+        {opt("research", "US Research Centres 2027", "Student research visits: institutions, approvals, replies")}
+      </div>
+      {system === "mou" ? <OutreachView adminUserId={adminUserId} /> : <ResearchCentresView />}
+    </div>
+  );
+}
+
 function SectionWrapper({ sectionId, sectionName, partnershipLevel, children }: { sectionId: string; sectionName: string; partnershipLevel: PartnershipLevel; children: React.ReactNode }) {
   const lockedEntry = LOCKED_SECTIONS[partnershipLevel]?.find(s => s.id === sectionId);
   if (lockedEntry) {
@@ -4938,7 +4981,7 @@ export default function BioERGOtechPortal({ user }: { user: PortalUser }) {
 
       case "outreach":
         return isAdmin ? (
-          <OutreachView adminUserId={user.sub} />
+          <OutreachHub adminUserId={user.sub} />
         ) : (
           <div style={{ padding: 40, textAlign: "center", color: TEXT_LIGHT, fontSize: 14 }}>
             Admin access required for Outreach.
