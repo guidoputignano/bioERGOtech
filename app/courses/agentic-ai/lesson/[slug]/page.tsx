@@ -41,8 +41,11 @@ const LEZIONI_LICEI: Record<string, { sezione: SezioneStudente; titolo: string; 
   "lesson-4-4": {
     sezione: "squadra",
     titolo: "La tua squadra",
+    // Il Brief della lezione non si carica: degli studenti hanno cercato
+    // dove allegarlo e non l'hanno trovato. I materiali del progetto sono un
+    // link, non un file (README del percorso, "Il modulo di consegna").
     sottotitolo:
-      "Questa lezione ti chiede di formare la squadra. Puoi farlo da qui, senza andare da nessuna parte.",
+      "Questa lezione ti chiede di formare la squadra. Puoi farlo da qui, senza andare da nessuna parte. Il Brief non si carica come file: scrivetelo in un documento condiviso. È la base del progetto che consegnerete dalla vostra area, dove potrete aggiungere il link al documento.",
   },
   "course-closing": {
     sezione: "progetto",

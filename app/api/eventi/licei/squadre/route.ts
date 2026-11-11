@@ -11,7 +11,12 @@ import {
   validateCodiceSquadra,
   validateNomeSquadra,
 } from "@/lib/eventi/licei-squadre";
-import { SQUADRA_MAX } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import {
+  SCADENZA_CONSEGNA_LABEL,
+  SQUADRA_MAX,
+  consegnaScaduta,
+  consegneAperte,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 /** Le colonne dei compagni di squadra. Niente email: fra loro si conoscono. */
 const CAMPI_MEMBRO = "id, nome, cognome, classe, anno_corso, squadra_ruolo";
@@ -66,8 +71,11 @@ export async function GET() {
     istituto: ctx.istituto,
     fasi: {
       squadre: config.stato_squadre,
-      consegne: config.stato_consegne,
-      scadenza_consegna: config.scadenza_consegna_label,
+      // Aperte solo se l'interruttore e aperto e il termine non e passato:
+      // dopo il 25 novembre il modulo si chiude da solo.
+      consegne: consegneAperte(config.stato_consegne) ? "aperte" : "chiuse",
+      scadenza_consegna: SCADENZA_CONSEGNA_LABEL,
+      consegna_scaduta: consegnaScaduta(),
     },
   };
 

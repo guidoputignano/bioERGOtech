@@ -145,8 +145,9 @@ pannello staff:
 - `stato_iscrizioni`: `chiuse` (default) o `aperte`.
 - `scadenza_iscrizioni_label`: il termine delle iscrizioni, in chiaro.
 - `stato_squadre`: `chiuse` (default) o `aperte`.
-- `stato_consegne`: `chiuse` (default) o `aperte`. Chiuderlo **e** il termine.
-- `scadenza_consegna_label`: il termine di consegna, in chiaro.
+- `stato_consegne`: `chiuse` (default) o `aperte`. Apre le consegne; le
+  chiude anche il termine definitivo, vedi sotto.
+- `scadenza_consegna_label`: non piu usata (era il termine in chiaro).
 - `stato_valutazione`: `chiusa` (default) o `aperta`. Chiuderla congela i
   punteggi prima del calcolo della classifica.
 
@@ -157,6 +158,18 @@ mostrare a chi le apre.
 
 Per questo la pagina e `dynamic = "force-dynamic"`: lo stato si legge a ogni
 richiesta.
+
+**L'eccezione: il termine della consegna.** Il 4 novembre 2026 la Fondazione
+ha fissato la consegna dei progetti entro mercoledi 25 novembre 2026, ore
+23:59, come termine definitivo: dopo, i progetti passano alla valutazione.
+Sta nel codice (`SCADENZA_CONSEGNA` e `SCADENZA_CONSEGNA_LABEL` in
+`content.ts`) e lo applica il server: `consegneAperte` e falso dopo quell'ora
+anche con l'interruttore su aperte, quindi salvataggi e consegne si fermano
+da soli (`verificaConsegneAperte`; lo staff resta escluso dal cancello, come
+per le altre fasi). Lo mostrano l'area dello studente (anche prima
+dell'apertura), il quadro delle squadre dei docenti, il pannello staff (in
+sola lettura, al posto del campo di testo), la pagina del bando all'art. 7 e
+le "Notizie dal percorso". Spostarlo e una modifica di codice.
 
 ## Dati degli studenti: il minimo, e da dove viene il vincolo
 
@@ -906,6 +919,18 @@ password". Tre punti deboli, tutti chiusi:
 - **Il login rispondeva "Invalid login credentials".** Ora dice di usare
   esattamente l'email dell'iscrizione (numeri e punti compresi) o di
   scegliere una nuova password.
+- **Il telefono inseriva la password vecchia.** La foto del tentativo
+  mostrava email e password compilate dal browser (i campi gialli), quattro
+  minuti dopo il cambio della password: il gestore delle password del
+  telefono non sapeva che la password era cambiata, perche la pagina della
+  nuova password non diceva per quale account era (`autocomplete`). Ora la
+  pagina ha un campo nascosto `username` con l'email dell'account e i due
+  campi `new-password`, cosi il telefono propone di aggiornare la password
+  salvata; il login ha `username` e `current-password`, niente maiuscola
+  automatica ne correzione sull'email, e l'email si invia senza gli spazi
+  che la tastiera aggiunge col suggerimento (anche in "password
+  dimenticata"). Il messaggio d'errore dice che una password compilata dal
+  telefono puo essere vecchia.
 
 ## "Nessuna adesione risulta associata a questo account"
 
@@ -1086,6 +1111,16 @@ La consegna la fa il capitano, la bozza la scrive chiunque sia in squadra. Il
 progetto e di tutti, ma dell'atto finale deve rispondere qualcuno. Dopo la
 consegna il progetto non si tocca piu, e dalla squadra non si esce: l'elenco
 degli autori di un lavoro consegnato non e piu modificabile.
+
+**Il Brief della lezione 4.4 non si carica.** La lezione (in inglese, uguale
+per tutti) dice che ogni squadra "submits" il Project Idea Brief, e degli
+studenti hanno cercato dove allegarlo. Per chi segue un percorso
+(`separateTrack`) la lezione ora mostra "Where your brief goes" al posto del
+riquadro "Team Size 2 to 5": il Brief si scrive in un documento condiviso, e
+la base del progetto da consegnare dall'area, dove va il link; la consegna
+della lezione e la riflessione. Lo stesso, in italiano, nel riquadro "La tua
+squadra" della 4.4. Finche le consegne sono chiuse il modulo del progetto e
+in sola lettura: per far scrivere le bozze si aprono le consegne dal pannello.
 
 ## Commissione: schede individuali e voto dell'art. 8
 

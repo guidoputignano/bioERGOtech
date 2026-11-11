@@ -22,6 +22,11 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  DOCUMENTI_PATH,
+  GUIDA_PATH,
+  INFORMATIVA_STUDENTI_PATH,
+  SCADENZA_CONSEGNA_LABEL,
+  consegnaScaduta,
   AMBITI_PROGETTO,
   CAMPI_PROGETTO,
   CRITERI_LICEI,
@@ -590,11 +595,13 @@ export function StudenteConsole({
                     marginBottom: 18,
                   }}
                 >
-                  Le consegne non sono aperte in questo momento, quindi il modulo è in sola lettura.
+                  {consegnaScaduta()
+                    ? `Il termine per la consegna era ${SCADENZA_CONSEGNA_LABEL}: il modulo è chiuso e i progetti passano alla valutazione.`
+                    : `Le consegne non sono ancora aperte, quindi il modulo è in sola lettura. Il termine per consegnare sarà ${SCADENZA_CONSEGNA_LABEL}.`}
                 </div>
               )}
 
-              {dati?.fasi?.scadenza_consegna && consegneAperte && (
+              {consegneAperte && (
                 <div
                   style={{
                     background: "#ECFAF6",
@@ -606,7 +613,8 @@ export function StudenteConsole({
                     marginBottom: 18,
                   }}
                 >
-                  Termine per la consegna: {dati.fasi.scadenza_consegna}.
+                  Termine per la consegna: <strong>{SCADENZA_CONSEGNA_LABEL}</strong>. Dopo, il
+                  modulo si chiude da solo: la consegna la fa il capitano.
                 </div>
               )}
 
@@ -759,6 +767,24 @@ export function StudenteConsole({
           dalla squadra, perche un parere si puo chiedere anche prima di
           averne una. */}
       {sezione === "tutto" && <MentorElenco percorso="licei" />}
+
+      {/* ══ Documenti ══ L'informativa privacy e gli altri documenti: prima
+          da qui non ci si arrivava, e i docenti chiedevano dove trovarla. */}
+      {sezione === "tutto" && (
+        <p className="text-sm text-gray-600" style={{ margin: "4px 0 0", lineHeight: 1.8, textAlign: "center" }}>
+          <Link href={INFORMATIVA_STUDENTI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Informativa privacy per studenti
+          </Link>
+          {" . "}
+          <Link href={DOCUMENTI_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Documenti del percorso
+          </Link>
+          {" . "}
+          <Link href={GUIDA_PATH} style={{ color: "var(--primary-dark)", fontWeight: 600 }}>
+            Chi fa cosa
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

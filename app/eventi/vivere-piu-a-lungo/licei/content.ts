@@ -273,7 +273,7 @@ export const CONFIG_CHIAVI = {
   stato_squadre: "Formazione delle squadre: chiuse oppure aperte.",
   stato_consegne: "Consegna dei progetti: chiuse oppure aperte.",
   scadenza_consegna_label:
-    "Termine per la consegna dei progetti, in chiaro. Vuoto finché non è stato fissato.",
+    "Non più usata: il termine definitivo è SCADENZA_CONSEGNA, nel codice.",
   stato_valutazione: "Schede della Commissione: chiusa oppure aperta.",
   conferma_adesioni: "Conferma delle adesioni degli istituti: automatica oppure manuale.",
 } as const;
@@ -848,6 +848,19 @@ export const SQUADRA_MAX = 6;
 /** Una squadra sta dentro un solo istituto. Il perché è nella FAQ e nella migrazione. */
 export const SQUADRA_UN_SOLO_ISTITUTO = true;
 
+/**
+ * Il termine definitivo per la consegna dei progetti: mercoledì 25 novembre
+ * 2026, a fine giornata in Italia. Lo ha fissato la Fondazione il 4 novembre
+ * 2026; dopo, i progetti passano alla valutazione. Sta nel codice e non in
+ * `licei_config` perché è definitivo: il server lo applica da solo, e dopo
+ * quell'ora non si salva e non si consegna più, qualunque sia
+ * l'interruttore "Consegna dei progetti" (che serve ad aprirle prima).
+ * Spostarlo richiede una modifica qui. Lo staff, come per le altre fasi,
+ * può ancora intervenire.
+ */
+export const SCADENZA_CONSEGNA = "2026-11-25T23:59:59+01:00";
+export const SCADENZA_CONSEGNA_LABEL = "mercoledì 25 novembre 2026, ore 23:59";
+
 /* ── Avviso ai docenti: squadre fino a 6, e se qualcosa non va ──────── */
 
 /**
@@ -903,8 +916,8 @@ export const oggettoNotizie = (talk: { giorno: string; relatore: string } | null
 
 export const NOTIZIE_STUDENTI_TESTO = {
   /** Il testo che i client di posta mostrano accanto all'oggetto, prima di aprire. */
-  anteprima: `Il prossimo talk con gli esperti, il percorso su Instagram e le squadre fino a ${SQUADRA_MAX}.`,
-  anteprimaSenzaTalk: `Il percorso su Instagram e le squadre fino a ${SQUADRA_MAX}.`,
+  anteprima: "Il prossimo talk con gli esperti, il percorso su Instagram e la consegna dei progetti entro il 25 novembre.",
+  anteprimaSenzaTalk: "Il percorso su Instagram e la consegna dei progetti entro il 25 novembre.",
   apertura: "ecco le novità del percorso.",
   talkTitolo: "Il prossimo talk con gli esperti",
   talkInvito: "Ti iscrivi dalla pagina del talk, e lì trovi anche il link per collegarti.",
@@ -915,8 +928,8 @@ export const NOTIZIE_STUDENTI_TESTO = {
   instagramPost: "Gli ultimi post:",
   postSenzaTitolo: "Guarda il post",
   instagramBottone: "Segui @bioergotech",
-  squadreTitolo: `Squadre fino a ${SQUADRA_MAX}`,
-  squadre: `Ora una squadra può avere fino a ${SQUADRA_MAX} studenti della tua stessa scuola, e il progetto si può fare anche da soli. Se la vostra squadra cresce, chi l'ha creata passa il codice ai nuovi compagni.`,
+  squadreTitolo: "Squadre e consegna del progetto",
+  squadre: `Ora una squadra può avere fino a ${SQUADRA_MAX} studenti della tua stessa scuola, e il progetto si può fare anche da soli. Se la vostra squadra cresce, chi l'ha creata passa il codice ai nuovi compagni. Il progetto si consegna dalla vostra area entro ${SCADENZA_CONSEGNA_LABEL}: lo scrivete insieme, e la consegna la fa il capitano.`,
   problemi:
     "Se qualcosa non funziona, dillo al tuo docente referente o rispondi a questa email: lo sistemiamo noi.",
 } as const;
@@ -939,8 +952,13 @@ export const STATO_VALUTAZIONE_DEFAULT: StatoValutazione = "chiusa";
 export const squadreAperte = (stato: StatoSquadre): boolean =>
   !ARCHIVE_MODE && stato === "aperte";
 
-export const consegneAperte = (stato: StatoConsegne): boolean =>
-  !ARCHIVE_MODE && stato === "aperte";
+
+/** Il termine della consegna è passato? */
+export const consegnaScaduta = (adesso: number = Date.now()): boolean =>
+  adesso > Date.parse(SCADENZA_CONSEGNA);
+
+export const consegneAperte = (stato: StatoConsegne, adesso: number = Date.now()): boolean =>
+  !ARCHIVE_MODE && stato === "aperte" && !consegnaScaduta(adesso);
 
 export const valutazioneAperta = (stato: StatoValutazione): boolean =>
   !ARCHIVE_MODE && stato === "aperta";
