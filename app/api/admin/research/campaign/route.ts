@@ -128,6 +128,11 @@ export async function PATCH(request: Request) {
           if (!campaign.approved_at) return NextResponse.json({ error: "Approve the campaign first" }, { status: 400 });
           update.status = "active";
           break;
+        case "resume":
+          if (!campaign.approved_at) return NextResponse.json({ error: "Nothing to resume yet: sending starts with your first Send" }, { status: 400 });
+          if (!sender || !allowed.has(sender)) return NextResponse.json({ error: "Sender is not in RC_ALLOWED_SENDERS" }, { status: 400 });
+          Object.assign(update, { status: "active", sending_enabled: true });
+          break;
         case "pause":
           Object.assign(update, { status: "paused", sending_enabled: false });
           break;

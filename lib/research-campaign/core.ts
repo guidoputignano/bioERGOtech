@@ -868,3 +868,31 @@ export function dashboardMetrics(
     byStatus, byPriority, overdueActions: overdue,
   };
 }
+
+// ── One-step sending helpers ────────────────────────────────────────────
+
+/**
+ * Fills "Given your institution's work in …" from the institution's
+ * recorded specialisations, so nobody has to type it per e-mail.
+ * "Cancer biology, nanomedicine, bioengineering" → "cancer biology,
+ * nanomedicine and bioengineering". Null when nothing usable is on file.
+ */
+export function researchConnectionFor(inst: { specialisations: string | null }): string | null {
+  const raw = (inst.specialisations || "").replace(/\s+/g, " ").trim().replace(/[.;]+$/, "");
+  if (!raw || /synthetic test data/i.test(raw)) return null;
+  const parts = raw.split(/\s*[,;]\s*/).map((p) => p.trim()).filter(Boolean).slice(0, 4);
+  // Lower-case a leading capital only when it starts an ordinary word (keep "AI", "DNA", "RNA").
+  const soften = (p: string) => (/^[A-Z][a-z]/.test(p) ? p[0].toLowerCase() + p.slice(1) : p);
+  const items = parts.map((p, i) => (i === 0 ? soften(p) : soften(p)));
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1].replace(/^and\s+/i, "")}`;
+}
+
+/**
+ * Earlier outreach that rules out a fresh cold e-mail: a reply or a fee
+ * request is already on record (e.g. Mount Sinai). "Contacted, no
+ * documented reply" does not block.
+ */
+export function previousOutreachBlocks(previous: string | null): boolean {
+  return !!previous && /response reported|fee requested|replied|in discussion|meeting/i.test(previous);
+}
