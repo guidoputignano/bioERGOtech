@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { areaAccount, areaAlPostoDelPortale } from "@/lib/eventi/area-account";
+import { areaAccount, areaAlPostoDelPortale, etichettaArea } from "@/lib/eventi/area-account";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +14,10 @@ export async function GET() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const href = user ? areaAlPostoDelPortale(await areaAccount(user.id)) : null;
+  const area = user ? await areaAccount(user.id) : null;
+  const href = areaAlPostoDelPortale(area);
   return NextResponse.json(
-    { area: href ? { href, etichetta: "Student area" } : null },
+    { area: href ? { href, etichetta: etichettaArea(area, href) } : null },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 }
