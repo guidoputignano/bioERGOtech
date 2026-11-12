@@ -1157,6 +1157,16 @@ per innovativita, che l'art. 7 indica come criterio dirimente. Il terzo
 livello e la data di consegna: non e nel bando, serve a rendere l'ordinamento
 deterministico.
 
+**Dopo l'accesso i giudici arrivano alla Commissione.** Prima finivano nel
+portale dei membri, dove leggevano "Viewer", e dovevano ritrovare il link
+nell'email di invito. `areaAccount` (`lib/eventi/area-account.ts`) riconosce
+un commissario attivo dei licei o dell'universita, e `destinazioneDopoAccesso`
+lo manda alla sua area (dopo lo staff, prima dei docenti). A chi non e
+membro della Fondazione la barra in alto mostra "Commission" al posto di
+"Research Portal", e il portale lo rimanda alla Commissione; un giudice che
+e anche membro tiene il portale. La guida per i giudici e un PDF fuori dal
+repository.
+
 ## Finalisti: designare e iscrivere sono due comandi
 
 **Designare** propone i primi dieci in base ai punteggi di quel momento e
