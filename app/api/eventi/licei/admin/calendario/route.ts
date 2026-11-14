@@ -48,6 +48,10 @@ const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => 
     subject: () => E.aggiornamentoScuoleSubject(E.talkDaAnnunciare()),
     html: () => E.aggiornamentoScuoleHtml({ nome: "Maria Rossi", talk: E.talkDaAnnunciare() }),
   },
+  invito_mentor: {
+    subject: E.invitoMentorSubject(false),
+    html: () => E.invitoMentorHtml({ nome: "Laura Neri", url: "https://www.bioergotech.org/", promemoria: false }),
+  },
   consegna_studente: {
     subject: E.promemoriaConsegnaSubject(false),
     html: () => E.promemoriaConsegnaStudenteHtml({ nome: "Giulia", squadra: "BioTeam", titolo: "Un sensore per l'acqua", ultimo: false }),

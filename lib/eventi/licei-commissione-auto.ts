@@ -52,6 +52,7 @@ import {
   type Destinatario,
 } from "@/lib/eventi/licei-avvisi";
 import * as E from "@/lib/eventi/licei-commissione-email";
+import { linkDiventaGiudice, mentorDaInvitare } from "@/lib/eventi/licei-mentor-giudici";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = SupabaseClient<any, "public", any>;
@@ -593,6 +594,31 @@ async function passoAggiornamento(db: Db, resend: Invio): Promise<RisultatoPasso
   return { fatto: s.ok && d.ok, dettagli: [s.testo, d.testo] };
 }
 
+/**
+ * L'invito ai mentor approvati che non sono ancora in Commissione, con il
+ * link firmato al pulsante "Si, partecipo come giudice". Il promemoria va a
+ * chi, nel frattempo, non ha cliccato.
+ */
+async function passoInvitoMentor(db: Db, resend: Invio, promemoria: boolean): Promise<RisultatoPasso> {
+  const daInvitare = await mentorDaInvitare(db);
+  const link = new Map<string, string>();
+  const righe: Destinatario[] = [];
+  for (const m of daInvitare) {
+    const url = linkDiventaGiudice(m.id);
+    if (!url) continue;
+    const rif = `mentor ${m.id}`;
+    link.set(rif, url);
+    righe.push({ rif, nome: m.nome, email: m.email });
+  }
+  if (daInvitare.length > 0 && righe.length === 0) {
+    return { fatto: false, dettagli: ["Link non firmati: manca SUPABASE_SERVICE_ROLE_KEY."] };
+  }
+  const id = promemoria ? "invito_mentor_promemoria" : "invito_mentor";
+  const r = await invia(db, resend, `auto_${id}_mentor`, "Mentor", righe,
+    E.invitoMentorSubject(promemoria), (d) => E.invitoMentorHtml({ nome: d.nome, url: link.get(d.rif)!, promemoria }));
+  return { fatto: r.ok, dettagli: [r.testo] };
+}
+
 async function passoConsegna(db: Db, resend: Invio, ultimo: boolean): Promise<RisultatoPasso> {
   const { adesioni, studenti, squadre, progettoDi, docentiDi } = await leggiScuole(db);
   const consegnata = (squadraId: string | null) => !!squadraId && progettoDi.get(squadraId)?.stato === "consegnato";
@@ -858,6 +884,8 @@ async function passoCopertura(db: Db, resend: Invio): Promise<RisultatoPasso> {
 
 const ESEGUI: Record<IdPasso, (db: Db, resend: Invio) => Promise<RisultatoPasso>> = {
   aggiornamento: passoAggiornamento,
+  invito_mentor: (db, r) => passoInvitoMentor(db, r, false),
+  invito_mentor_promemoria: (db, r) => passoInvitoMentor(db, r, true),
   consegna_tre_giorni: (db, r) => passoConsegna(db, r, false),
   consegna_ultimo_giorno: (db, r) => passoConsegna(db, r, true),
   smistamento: passoSmistamento,

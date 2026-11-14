@@ -33,6 +33,7 @@ import {
   MINUTI_PER_PROGETTO,
   durata,
   PROGETTI_EXTRA,
+  PROGETTI_MAX_PER_GIUDICE,
   SCADENZA_GIUDICI_BREVE,
   SCADENZA_GIUDICI_LABEL,
   SCADENZA_RISERVA_LABEL,
@@ -198,6 +199,38 @@ export function aggiornamentoScuoleHtml({ nome, talk = null }: { nome: string; t
       ${p(`Alla consegna le squadre scelgono uno o due temi: servono ad affidare ogni progetto a ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti di quel campo. Il 26 novembre riceverà il riepilogo dei progetti consegnati dal suo istituto.`)}
       ${bottone(AREA_DOCENTE, "Apri l'area docenti")}
       ${p("Per qualsiasi dubbio può rispondere a questa email.")}
+      ${firma}`);
+}
+
+/* ── 16 e 20 novembre: i mentor come giudici ─────────────────────────── */
+
+export const invitoMentorSubject = (promemoria: boolean) =>
+  promemoria
+    ? "Ultimi giorni: ci darebbe una mano come giudice?"
+    : "Ci darebbe una mano come giudice? Meno di due ore";
+
+export function invitoMentorHtml({ nome, url, promemoria }: { nome: string; url: string; promemoria: boolean }): string {
+  const n = nome.trim();
+  const apertura = promemoria
+    ? p("le riscrivo per l'invito dei giorni scorsi: giovedì 26 novembre smistiamo i progetti fra i giudici, e se vuole far parte della Commissione basta un clic entro mercoledì 25.")
+    : `${p("grazie per il tempo che ha dedicato in queste settimane agli studenti del percorso.")}
+      ${p("Le scrivo per chiederle un aiuto in più: entrare nella Commissione che valuta i progetti delle scuole superiori. Il bando lo prevede espressamente, e con circa 80 progetti in arrivo il parere di chi conosce il lavoro reale fa la differenza.")}`;
+  return cornice(`
+      ${titolo(n ? `Gentile ${esc(n)},` : "Gentile mentor,")}
+      ${apertura}
+      ${riquadro(
+        "Che cosa le chiederemmo",
+        elenco([
+          `<strong>Circa dieci progetti, mai più di ${PROGETTI_MAX_PER_GIUDICE}:</strong> circa ${MINUTI_PER_PROGETTO} minuti l'uno, meno di due ore in tutto, online, quando le è più comodo, anche in due sedute.`,
+          `<strong>Fra giovedì 26 novembre e ${SCADENZA_GIUDICI_LABEL}.</strong>`,
+          "<strong>Progetti scelti soprattutto fra i temi che indica lei.</strong> La scheda ha i sei criteri del bando e le indicazioni per dare i punteggi; i commenti scritti sono facoltativi.",
+          "<strong>Il suo è uno dei due pareri:</strong> ogni progetto è letto anche da un altro giudice, in modo indipendente.",
+          "<strong>Se fra i suoi progetti c'è una squadra che ha seguito come mentor,</strong> con un clic passa a un collega.",
+        ]),
+      )}
+      ${p(`I ${LICEI.progettiSulPalco} progetti migliori saliranno sul palco ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}.`)}
+      ${bottone(url, "Sì, partecipo come giudice")}
+      ${p("Il pulsante la inserisce subito in Commissione e le mandiamo un'email per accedere all'area, dove sceglie i temi. Se non riesce, non deve fare nulla: il suo aiuto come mentor resta prezioso.")}
       ${firma}`);
 }
 

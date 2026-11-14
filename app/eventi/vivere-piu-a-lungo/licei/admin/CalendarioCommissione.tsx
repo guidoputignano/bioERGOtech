@@ -21,6 +21,7 @@ type Qualsiasi = any;
 const NOMI_ANTEPRIME: Record<string, string> = {
   aggiornamento_studenti: "16 nov . Aggiornamento agli studenti",
   aggiornamento_scuole: "16 nov . Aggiornamento alle scuole",
+  invito_mentor: "16 nov . Invito ai mentor a fare da giudici",
   consegna_studente: "23 nov . Promemoria agli studenti",
   consegna_docente: "23 nov . Squadre in bozza, ai docenti",
   consegna_ultimo: "25 nov . Ultimo giorno, agli studenti",
@@ -201,12 +202,12 @@ export function CalendarioCommissione() {
             onClick={() =>
               chiama(
                 { azione: "aggiornamento_ora" },
-                "Inviare adesso l'aggiornamento a tutti gli studenti e a tutti i docenti? Parte una volta sola.",
+                "Inviare adesso le email del 16 novembre: l'aggiornamento a studenti e docenti e l'invito ai mentor? Partono una volta sola.",
                 riassunto,
               )
             }
           >
-            Invia adesso l&apos;aggiornamento
+            Invia adesso le email del 16 novembre
           </Button>
         )}
         <Button

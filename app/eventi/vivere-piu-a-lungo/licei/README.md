@@ -1205,6 +1205,8 @@ Italia) esegue i passi di `PASSI_AUTOMATICI`, ognuno una volta sola:
 | Quando | Passo |
 |---|---|
 | lunedi 16 novembre | aggiornamento a studenti e docenti (date, temi, organizzare l'uscita) |
+| lunedi 16 novembre | invito ai mentor approvati a fare anche da giudici, con il pulsante "Si, partecipo come giudice" |
+| venerdi 20 novembre | promemoria ai mentor che non hanno ancora risposto |
 | lunedi 23 novembre | promemoria agli studenti senza consegna; ai docenti l'elenco delle squadre in bozza |
 | mercoledi 25 novembre | ultimo giorno, agli studenti delle squadre in bozza |
 | giovedi 26 novembre | smistamento, apertura delle schede, email a giudici, riserva, scuole, studenti, staff |
@@ -1218,6 +1220,15 @@ non manda email doppie; un passo mancato si recupera il giorno dopo, se e
 ancora nella sua finestra. Dopo lo smistamento ogni giro ridà un giudice ai
 progetti che l'hanno perso (giudice disattivato, conflitto). L'annuncio dei
 finalisti resta allo staff, dal pannello Progetti.
+
+**Mentor come giudici.** Il pulsante dell'email porta a
+`commissione/diventa-giudice?t=...`: il link e firmato (HMAC dell'id del
+mentor, chiave derivata da quella di servizio, `lib/eventi/licei-mentor-giudici.ts`),
+quindi non serve l'accesso. Un clic, una spunta sul conflitto di interessi,
+e il mentor entra in Commissione con il ruolo "Impresa e mentor", con il
+suo account se ne ha uno, e riceve l'email di accesso (la stessa funzione
+del pannello, `aggiungiCommissario`). Fino al 30 novembre; dopo il 26
+riceve subito le seconde letture che mancano.
 
 Nel pannello, scheda "Commissione": il calendario con lo stato di ogni
 passo, le anteprime e le prove di tutte le email, "Invia adesso

@@ -108,6 +108,16 @@ export const ANNUNCIO_FINALISTI_LABEL = "venerdì 4 dicembre 2026";
 /** La riserva interna, il 4 dicembre, chiude le schede entro quest'ora. */
 export const SCADENZA_RISERVA_LABEL = "venerdì 4 dicembre, ore 18:00";
 
+/**
+ * Fino a quando un mentor puo entrare in Commissione dal pulsante
+ * dell'email. Dopo lo smistamento del 26 riceve subito le seconde letture
+ * che mancano; dopo il 30 non avrebbe piu il tempo per farle.
+ */
+export const ADESIONI_MENTOR_FINO = "2026-11-30T23:59:59+01:00";
+
+/** La pagina in cui il mentor conferma la disponibilita. */
+export const DIVENTA_GIUDICE_SLUG = "diventa-giudice";
+
 /** Il termine e passato? */
 export const scadenzaGiudiciPassata = (adesso: number = Date.now()): boolean =>
   adesso > Date.parse(SCADENZA_GIUDICI);
@@ -125,6 +135,8 @@ export const scadenzaGiudiciPassata = (adesso: number = Date.now()): boolean =>
  */
 export type IdPasso =
   | "aggiornamento"
+  | "invito_mentor"
+  | "invito_mentor_promemoria"
   | "consegna_tre_giorni"
   | "consegna_ultimo_giorno"
   | "smistamento"
@@ -151,6 +163,23 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
     titolo: "Aggiornamento a studenti e scuole",
     descrizione:
       "Le date fino al 10 dicembre, i temi nel modulo di consegna e che cosa chiediamo ai docenti. Parte prima se lo invii dal riquadro qui sotto.",
+  },
+  {
+    id: "invito_mentor",
+    da: "2026-11-16T08:00:00+01:00",
+    fino: "2026-11-25T23:59:59+01:00",
+    quando: "Lunedì 16 novembre, ore 8",
+    titolo: "Invito ai mentor: fare anche da giudici",
+    descrizione:
+      "A ogni mentor approvato che non è già in Commissione, con il pulsante «Sì, partecipo come giudice»: un clic e il mentor entra in Commissione con il ruolo «Impresa e mentor» e riceve l'accesso.",
+  },
+  {
+    id: "invito_mentor_promemoria",
+    da: "2026-11-20T08:00:00+01:00",
+    fino: "2026-11-25T23:59:59+01:00",
+    quando: "Venerdì 20 novembre, ore 8",
+    titolo: "Promemoria ai mentor",
+    descrizione: "Ai mentor che non hanno ancora risposto, prima dello smistamento del 26.",
   },
   {
     id: "consegna_tre_giorni",
