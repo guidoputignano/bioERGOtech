@@ -18,6 +18,7 @@ import {
   type CampoPunteggio,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { normalizzaClasse } from "@/lib/eventi/licei-iscrizioni";
+import { TEMI_MAX, TEMI_MIN, TEMI_VALIDI } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 const testo = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
@@ -374,6 +375,11 @@ export type ProgettoInput = {
   etica: string;
   metodo: string;
   link_materiali?: string;
+  /**
+   * I temi (migrazione 20261231100000). `undefined`: la colonna non c'e
+   * ancora, e la consegna non li chiede; null o un elenco: la colonna c'e.
+   */
+  temi?: string[] | null;
 };
 
 const AMBITI_VALIDI = new Set(["sanitario", "ambientale", "industriale"]);
@@ -394,6 +400,13 @@ export function validateBozza(input: Partial<ProgettoInput>): string | null {
     const v = testo(input[c.campo]);
     if (v.length > c.max)
       return `"${c.label}" supera i ${c.max} caratteri. Sintetizzate: fa parte del lavoro.`;
+  }
+
+  if (input.temi !== undefined && input.temi !== null) {
+    if (!Array.isArray(input.temi) || input.temi.some((t) => typeof t !== "string" || !TEMI_VALIDI.has(t)))
+      return "Uno dei temi indicati non è fra quelli previsti.";
+    if (new Set(input.temi).size > TEMI_MAX)
+      return `Scegliete al massimo ${TEMI_MAX} temi.`;
   }
 
   const link = testo(input.link_materiali);
@@ -428,6 +441,11 @@ export function validateConsegna(
   if (!testo(input.titolo)) return "Date un titolo al progetto.";
   if (!testo(input.ambito))
     return "Indicate l'ambito del progetto: sanitario, ambientale o industriale.";
+
+  // I temi si chiedono solo se la colonna c'e: prima della migrazione
+  // 20261231100000 il progetto letto dal database non ha la chiave.
+  if ("temi" in input && (input.temi ?? []).length < TEMI_MIN)
+    return "Scegliete almeno un tema: serve ad affidare il progetto ai giudici di quel campo.";
 
   for (const c of CAMPI_PROGETTO) {
     if (!testo(input[c.campo]))

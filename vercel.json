@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/research-replies",
       "schedule": "0 17 * * 1-5"
+    },
+    {
+      "path": "/api/cron/licei-commissione",
+      "schedule": "0 7 * * *"
     }
   ]
 }

@@ -44,6 +44,7 @@ import {
   statoProgettoLabel,
 } from "../content";
 import { completezzaProgetto, type ProgettoInput } from "@/lib/eventi/licei-squadre";
+import { TEMI_MAX, TEMI_PROGETTO, TESTI_SMISTAMENTO } from "../smistamento";
 import { MentorElenco } from "../../mentor/MentorElenco";
 import { RiflessioniPassateCard } from "./RiflessioniPassate";
 import { AccountCollegato } from "../AccountCollegato";
@@ -655,6 +656,56 @@ export function StudenteConsole({
                     ))}
                   </select>
                 </div>
+
+                {/* I temi compaiono solo se il progetto letto li ha (anche
+                    null): prima della migrazione 20261231100000 non ci sono,
+                    e la consegna non li chiede. */}
+                {bozza.temi !== undefined && (
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-dark)" }} id="temi-etichetta">
+                      Temi (uno o due)
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--text-light)", margin: "3px 0 8px" }}>
+                      {TESTI_SMISTAMENTO.temiStudenti}
+                    </p>
+                    <div role="group" aria-labelledby="temi-etichetta" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {TEMI_PROGETTO.map((t) => {
+                        const scelti = bozza.temi ?? [];
+                        const scelto = scelti.includes(t.value);
+                        const pieno = !scelto && scelti.length >= TEMI_MAX;
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            aria-pressed={scelto}
+                            disabled={!consegneAperte || pieno}
+                            onClick={() =>
+                              setBozza({
+                                ...bozza,
+                                temi: scelto ? scelti.filter((x) => x !== t.value) : [...scelti, t.value],
+                              })
+                            }
+                            style={{
+                              padding: "7px 13px",
+                              borderRadius: 999,
+                              fontSize: 13,
+                              fontWeight: 600,
+                              fontFamily: "inherit",
+                              cursor: !consegneAperte || pieno ? "default" : "pointer",
+                              border: `1.5px solid ${scelto ? "var(--primary)" : "var(--border-color)"}`,
+                              background: scelto ? "#E6F8F5" : "#fff",
+                              color: scelto ? "#0A7A66" : pieno ? "var(--text-light)" : "var(--text-dark)",
+                              opacity: pieno ? 0.6 : 1,
+                            }}
+                          >
+                            {scelto && <i className="fas fa-check" aria-hidden="true" style={{ marginRight: 6, fontSize: 11 }} />}
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <p
                   role="note"

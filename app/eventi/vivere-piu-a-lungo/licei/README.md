@@ -1167,6 +1167,60 @@ membro della Fondazione la barra in alto mostra "Commission" al posto di
 e anche membro tiene il portale. La guida per i giudici e un PDF fuori dal
 repository.
 
+## Smistamento e calendario automatico
+
+Con circa 80 progetti e 8 giudici non si chiede a tutti di leggere tutto.
+Ogni progetto va a **due giudici** (`GIUDICI_PER_PROGETTO`), scelti per tema
+e con carichi uguali, e ogni giudice con diritto di voto vede e valuta solo
+i suoi. Date, temi e testi stanno in `smistamento.ts`; la regola, pura e
+provata, in `lib/eventi/licei-smistamento.ts`; il lavoro in
+`lib/eventi/licei-commissione-auto.ts`; le email in
+`lib/eventi/licei-commissione-email.ts`.
+
+- **Temi.** Alla consegna la squadra sceglie uno o due temi da un elenco
+  chiuso di otto (`TEMI_PROGETTO`); il giudice sceglie i suoi nella sua
+  area. Lo smistamento li usa per dare a ciascuno soprattutto progetti del
+  suo campo, senza superare la media piu uno.
+- **Riserva.** Nel pannello, la spunta "Riserva" su un giudice con voto: la
+  riserva interna non entra nello smistamento e riceve progetti solo se
+  servono.
+- **Il giudice** vede in alto i suoi progetti, le schede chiuse e la
+  scadenza (`SCADENZA_GIUDICI`, giovedi 3 dicembre alle 23:59). Sotto ogni
+  criterio, tre fasce di punteggio (`LIVELLI_CRITERI`), perche giudici
+  diversi usino lo stesso metro. "Conosco questa squadra" passa il progetto
+  a un collega; "Ho tempo, me ne dia altri" ne affida tre in piu, scelti
+  dalla regola fra quelli con meno schede.
+
+Il cron `/api/cron/licei-commissione` (ogni giorno alle 7 UTC, le 8 in
+Italia) esegue i passi di `PASSI_AUTOMATICI`, ognuno una volta sola:
+
+| Quando | Passo |
+|---|---|
+| lunedi 16 novembre | aggiornamento a studenti e docenti (date, temi, organizzare l'uscita) |
+| lunedi 23 novembre | promemoria agli studenti senza consegna; ai docenti l'elenco delle squadre in bozza |
+| mercoledi 25 novembre | ultimo giorno, agli studenti delle squadre in bozza |
+| giovedi 26 novembre | smistamento, apertura delle schede, email a giudici, riserva, scuole, studenti, staff |
+| lunedi 30 novembre | promemoria ai giudici indietro; chi non ha iniziato e avvisato |
+| mercoledi 2 dicembre | i progetti di chi non ha salvato nemmeno una scheda passano alla riserva |
+| giovedi 3 dicembre | ultimo giorno per i giudici |
+| venerdi 4 dicembre | i progetti con meno di due schede chiuse alla riserva; allo staff l'8°-13° posto da rivedere |
+
+Ogni invio ha la sua prenotazione in `licei_config`, quindi un giro in piu
+non manda email doppie; un passo mancato si recupera il giorno dopo, se e
+ancora nella sua finestra. Dopo lo smistamento ogni giro ridà un giudice ai
+progetti che l'hanno perso (giudice disattivato, conflitto). L'annuncio dei
+finalisti resta allo staff, dal pannello Progetti.
+
+Nel pannello, scheda "Commissione": il calendario con lo stato di ogni
+passo, le anteprime e le prove di tutte le email, "Invia adesso
+l'aggiornamento", "Esegui ora i passi dovuti" (se il cron non e partito) e,
+per ogni giudice, temi, avanzamento, media e "Ridistribuisci".
+
+Serve la migrazione `20261231100000_licei_smistamento.sql`: senza, il
+modulo non chiede i temi, l'area dei giudici resta com'era e il cron salta
+aggiornamento e smistamento, dicendolo nel pannello. Senza `CRON_SECRET`
+il cron non parte, e il pannello lo segnala.
+
 ## Finalisti: designare e iscrivere sono due comandi
 
 **Designare** propone i primi dieci in base ai punteggi di quel momento e

@@ -19,6 +19,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { COMMISSIONE_PATH, RUOLI_COMMISSIONE, ruoloCommissioneLabel } from "../content";
+import { temaLabel } from "../smistamento";
+import { CalendarioCommissione } from "./CalendarioCommissione";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Qualsiasi = any;
@@ -42,6 +44,8 @@ export function CommissariPanel() {
   const [avviso, setAvviso] = useState<string | null>(null);
   const [occupato, setOccupato] = useState(false);
   const [nuovo, setNuovo] = useState(VUOTO);
+  const [smistamentoPresente, setSmistamentoPresente] = useState(false);
+  const [mediaGenerale, setMediaGenerale] = useState<number | null>(null);
 
   const carica = useCallback(async () => {
     setLoading(true);
@@ -51,6 +55,8 @@ export function CommissariPanel() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
       setRighe(data.commissari ?? []);
+      setSmistamentoPresente(!!data.smistamento_presente);
+      setMediaGenerale(data.media_generale ?? null);
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Caricamento non riuscito.");
     } finally {
@@ -98,10 +104,41 @@ export function CommissariPanel() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Salvataggio non riuscito.");
       setRighe((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, ...data.commissario, schede: r.schede } : r)),
+        prev.map((r) =>
+          r.id === id ? { ...r, ...data.commissario, schede: r.schede, smistamento: r.smistamento, media: r.media } : r,
+        ),
       );
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Salvataggio non riuscito.");
+    } finally {
+      setOccupato(false);
+    }
+  };
+
+  /** Toglie al giudice i progetti non chiusi e li affida alla riserva (o agli altri). */
+  const ridistribuisci = async (r: Qualsiasi) => {
+    const aperti = (r.smistamento?.assegnati ?? 0) - (r.smistamento?.chiusi ?? 0);
+    if (
+      !confirm(
+        `Togliere a ${r.nome} ${r.cognome} i ${aperti} progetti non ancora chiusi? Vanno alla riserva (o, senza riserva, ai giudici con meno carico), che riceve subito un'email. Le schede già chiuse restano.`,
+      )
+    )
+      return;
+    setOccupato(true);
+    setErrore(null);
+    setAvviso(null);
+    try {
+      const res = await fetch("/api/eventi/licei/admin/calendario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ azione: "ridistribuisci", commissario_id: r.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ridistribuzione non riuscita.");
+      setAvviso(`Tolti ${data.tolte} progetti a ${r.cognome}; ${data.affidate} nuove assegnazioni.`);
+      await carica();
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Ridistribuzione non riuscita.");
     } finally {
       setOccupato(false);
     }
@@ -141,6 +178,8 @@ export function CommissariPanel() {
           <code style={{ fontSize: 12.5 }}>{COMMISSIONE_PATH}</code>
         </p>
       </div>
+
+      <CalendarioCommissione />
 
       {avviso && (
         <div
@@ -240,7 +279,35 @@ export function CommissariPanel() {
                   {r.email}
                   {r.ruolo ? ` . ${ruoloCommissioneLabel(r.ruolo)}` : ""}
                 </div>
+                {smistamentoPresente && r.diritto_voto && (
+                  <div style={{ fontSize: 12, color: "var(--text-mid)", marginTop: 4, lineHeight: 1.5 }}>
+                    {Array.isArray(r.temi) && r.temi.length > 0
+                      ? `Temi: ${r.temi.map(temaLabel).join(", ")}`
+                      : "Temi non ancora scelti"}
+                    {r.smistamento?.assegnati
+                      ? ` . ${r.smistamento.chiusi}/${r.smistamento.assegnati} progetti chiusi`
+                      : ""}
+                    {typeof r.media === "number"
+                      ? ` . media ${r.media}${mediaGenerale !== null ? ` (tutti: ${mediaGenerale})` : ""}`
+                      : ""}
+                  </div>
+                )}
               </div>
+
+              {smistamentoPresente && r.diritto_voto && (
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-mid)", flexShrink: 0 }}
+                  title="La riserva interna riceve progetti solo se servono: giudici che non iniziano, schede mancanti alla scadenza."
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!r.riserva}
+                    disabled={occupato}
+                    onChange={(e) => aggiorna(r.id, { riserva: e.target.checked })}
+                  />
+                  Riserva
+                </label>
+              )}
 
               <span
                 className="badge"
@@ -285,6 +352,26 @@ export function CommissariPanel() {
               >
                 {r.attivo ? "Disattiva" : "Riattiva"}
               </Button>
+
+              {smistamentoPresente && (r.smistamento?.assegnati ?? 0) > (r.smistamento?.chiusi ?? 0) && (
+                <button
+                  type="button"
+                  onClick={() => ridistribuisci(r)}
+                  disabled={occupato}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    fontSize: 12.5,
+                    color: "#8A6100",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  Ridistribuisci
+                </button>
+              )}
 
               <button
                 type="button"

@@ -242,13 +242,13 @@ export function studenteEmailHtml(input: StudenteEmailInput): string {
 
 /* ── Fase 3. Consegna, Commissione, finalisti ─────────────────────────── */
 
-const INTESTAZIONE = `
+export const INTESTAZIONE = `
     <div style="background:#0A1628;padding:32px 40px;border-radius:12px 12px 0 0;">
       <h1 style="color:#00C896;font-size:22px;margin:0;font-weight:700;">Fondazione bioERGOtech</h1>
       <p style="color:#94A3B8;font-size:13px;margin:4px 0 0;">${LICEI.titolo}</p>
     </div>`;
 
-const chiusura = (extra = ""): string => `
+export const chiusura = (extra = ""): string => `
       <hr style="border:none;border-top:1px solid #E2E8F0;margin:32px 0;" />
       <p style="color:#A0AEC0;font-size:12px;margin:0;line-height:1.6;">
         ${extra}
@@ -341,6 +341,15 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
           massimi, per un totale di ${LICEI.punteggioMassimo} punti. Vede solo le sue schede: il
           punteggio degli altri commissari non le compare, così il suo giudizio resta indipendente.
         </p>
+        ${
+          diritto_voto
+            ? `<p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 14px;">
+          <strong style="color:#0A1628;">I suoi temi.</strong> Appena entra, scelga i temi in cui
+          si sente più competente: il 26 novembre, chiuse le consegne, i progetti vengono smistati
+          e a lei arrivano soprattutto quelli su quei temi, con la scadenza per le schede.
+        </p>`
+            : ""
+        }
         <p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0;">
           <strong style="color:#0A1628;">${diritto_voto ? "Il suo voto conta nella media." : "Funzioni consultive."}</strong>
           ${
@@ -714,7 +723,7 @@ export function accessoEmailHtml(input: AccessoEmailInput): string {
  * a tutti, senza che nessuno abbia guardato la riga. Gli altri modelli di
  * questo file inseriscono ancora i loro testi cosi come arrivano.
  */
-const esc = (s: string): string =>
+export const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const dataEstesa = (iso: string): string =>

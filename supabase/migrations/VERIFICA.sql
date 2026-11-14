@@ -423,6 +423,26 @@ select 'talk iscrizioni: RLS attiva',
 
 union all
 
+-- Lo smistamento dei progetti alla Commissione (migrazione 20261231100000):
+-- senza, il modulo non chiede i temi e il cron del 26 novembre non smista.
+select 'licei smistamento: temi, riserva e assegnazioni',
+       case
+         when to_regclass('public.licei_assegnazioni') is null
+           then 'DA ESEGUIRE: 20261231100000_licei_smistamento, il cron del 26 novembre non smista senza'
+         when not exists (select 1 from information_schema.columns
+                          where table_schema = 'public' and table_name = 'licei_progetti' and column_name = 'temi')
+           or not exists (select 1 from information_schema.columns
+                          where table_schema = 'public' and table_name = 'licei_commissari' and column_name = 'riserva')
+           then 'PARZIALE: rieseguire 20261231100000_licei_smistamento per intero'
+         when not (select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.licei_assegnazioni'))
+           or has_table_privilege('anon', 'public.licei_assegnazioni', 'SELECT')
+           or has_table_privilege('authenticated', 'public.licei_assegnazioni', 'INSERT,UPDATE,DELETE')
+           then 'NO: RLS o privilegi di licei_assegnazioni troppo larghi, rieseguire 20261231100000'
+         else 'OK'
+       end
+
+union all
+
 -- I talk aperti a tutti iscrivono chi non segue il percorso come `ospite`
 -- (migrazione 20261231000000): senza, la loro iscrizione risponde 503.
 select 'talk iscrizioni: il ruolo ospite e ammesso',

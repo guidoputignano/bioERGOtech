@@ -6,6 +6,8 @@ import {
   RUOLI_COMMISSIONE,
   SITE_URL,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { temiPuliti } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
+import { analizza, leggiQuadro } from "@/lib/eventi/licei-commissione-auto";
 
 const RUOLI_VALIDI = new Set<string>(RUOLI_COMMISSIONE.map((r) => r.value));
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -36,10 +38,38 @@ export async function GET() {
     conteggi.set(s.commissario_id, c);
   }
 
+  // Lo smistamento: quanti progetti ha ciascuno, quanti ne ha chiusi, e la
+  // media dei suoi totali accanto a quella di tutti. Un giudice molto piu
+  // severo (o generoso) degli altri si vede qui, prima dell'annuncio.
+  let smistamento: Record<string, { assegnati: number; chiusi: number }> = {};
+  let presente = false;
+  try {
+    const q = await leggiQuadro(client);
+    presente = q.assegnazioni.presente;
+    const a = analizza(q);
+    smistamento = Object.fromEntries([...a.perGiudice].map(([id, c]) => [id, { assegnati: c.assegnati, chiusi: c.chiusi }]));
+  } catch (err) {
+    console.error("Licei commissari: smistamento non letto:", err);
+  }
+  const { data: totali } = await client.from("licei_valutazioni").select("commissario_id, totale").eq("chiusa", true);
+  const somme = new Map<string, { s: number; n: number }>();
+  let tutte = { s: 0, n: 0 };
+  for (const r of (totali ?? []) as { commissario_id: string; totale: number | null }[]) {
+    const v = Number(r.totale ?? 0);
+    const c = somme.get(r.commissario_id) ?? { s: 0, n: 0 };
+    somme.set(r.commissario_id, { s: c.s + v, n: c.n + 1 });
+    tutte = { s: tutte.s + v, n: tutte.n + 1 };
+  }
+  const media = (x: { s: number; n: number } | undefined) => (x && x.n ? Math.round((x.s / x.n) * 10) / 10 : null);
+
   return NextResponse.json({
+    smistamento_presente: presente,
+    media_generale: media(tutte),
     commissari: (commissari ?? []).map((c: { id: string }) => ({
       ...c,
       schede: conteggi.get(c.id) ?? { aperte: 0, chiuse: 0 },
+      smistamento: smistamento[c.id] ?? { assegnati: 0, chiusi: 0 },
+      media: media(somme.get(c.id)),
     })),
   });
 }
@@ -163,6 +193,8 @@ export async function PATCH(request: Request) {
     ruolo?: string;
     diritto_voto?: boolean;
     attivo?: boolean;
+    riserva?: boolean;
+    temi?: unknown;
   };
 
   if (!body.id) return NextResponse.json({ error: "Commissario non indicato." }, { status: 400 });
@@ -177,6 +209,9 @@ export async function PATCH(request: Request) {
   }
   if (body.diritto_voto !== undefined) patch.diritto_voto = !!body.diritto_voto;
   if (body.attivo !== undefined) patch.attivo = !!body.attivo;
+  // Riserva e temi chiedono la migrazione 20261231100000.
+  if (body.riserva !== undefined) patch.riserva = !!body.riserva;
+  if (body.temi !== undefined) patch.temi = temiPuliti(body.temi);
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nessuna modifica richiesta." }, { status: 400 });
@@ -189,7 +224,12 @@ export async function PATCH(request: Request) {
     .select()
     .maybeSingle();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    if (/riserva|temi/.test(error.message ?? "") && /column|schema cache/i.test(error.message ?? "")) {
+      return NextResponse.json({ error: "Riserva e temi chiedono la migrazione 20261231100000." }, { status: 503 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   if (!data) return NextResponse.json({ error: "Commissario non trovato." }, { status: 404 });
 
   return NextResponse.json({ success: true, commissario: data });

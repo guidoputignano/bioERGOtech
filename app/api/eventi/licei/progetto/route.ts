@@ -14,6 +14,7 @@ import {
   referenteConsegnaEmailSubject,
 } from "@/lib/eventi/licei-email";
 import { CAMPI_PROGETTO } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { temiPuliti } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 const testo = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
@@ -26,6 +27,12 @@ function patchDaBody(body: Partial<ProgettoInput>): Record<string, unknown> {
     if (body[c.campo] !== undefined) patch[c.campo] = testo(body[c.campo]);
   }
   if (body.link_materiali !== undefined) patch.link_materiali = testo(body.link_materiali) || null;
+  // I temi arrivano solo se la colonna c'e: il modulo li manda quando il
+  // progetto letto li ha (anche null), cioe dopo la migrazione 20261231100000.
+  if (body.temi !== undefined) {
+    const temi = temiPuliti(body.temi);
+    patch.temi = temi.length > 0 ? temi : null;
+  }
   return patch;
 }
 
