@@ -283,10 +283,10 @@ export default async function TalkPage({ params }: { params: Promise<{ slug: str
         {/* ── Spunti ── */}
         <section className="section bg-light-gray" id="spunti">
           <div className="container mx-auto px-6">
-            <div className="tk-kicker">Per i vostri progetti</div>
-            <h2 className="tk-titolo-sezione">Spunti per i vostri progetti</h2>
+            <div className="tk-kicker">{t.spuntiSezione?.kicker ?? "Per i vostri progetti"}</div>
+            <h2 className="tk-titolo-sezione">{t.spuntiSezione?.titolo ?? "Spunti per i vostri progetti"}</h2>
             <p className="tk-testo" style={{ margin: "0 0 18px" }}>
-              Qualche esempio di progetto che potrebbe nascere da questo incontro:
+              {t.spuntiSezione?.intro ?? "Qualche esempio di progetto che potrebbe nascere da questo incontro:"}
             </p>
             <ul className="tk-spunti">
               {t.spunti.map((s) => (

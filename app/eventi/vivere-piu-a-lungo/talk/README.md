@@ -8,6 +8,15 @@ progetti. Il primo e con Emanuele Memmola, presidente della Sezione
 Chimica Energia Ambiente di Confindustria Taranto, "Dalle biomasse
 all'idrogeno verde, sino agli e-fuel", lunedi 9 novembre 2026 dalle 15:00
 alle 16:00.
+Il secondo e con Roberta Gilardi, CEO di G-Gravity, hub di innovazione con
+sede a Milano: "Dall'idea al pitch: come presentare il vostro progetto",
+giovedi 19 novembre 2026 dalle 15:00 alle 16:00 (l'invito del calendario dice
+17-18 perche e nel fuso di Riyadh). Link della riunione
+`https://meet.google.com/dpz-xbdd-aar`. I temi in pagina sono una prima
+stesura da far rivedere alla relatrice; finche non arriva la foto, la pagina
+mostra il monogramma. L'immagine Open Graph e stata fatta senza `grafica/`,
+nello stile di quella di Memmola. Un talk che non propone progetti ma cose da
+preparare usa `spuntiSezione` per i titoli della sezione degli spunti.
 
 Sotto modulo dell'evento, accanto a `licei/` e `universita/`, con la stessa
 impostazione: i dati in un file, una migrazione, le guardie nel codice e
