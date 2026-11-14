@@ -286,7 +286,7 @@ export function giudiceSmistamentoHtml(i: GiudiceSmistamento): string {
           `<strong>Ogni progetto si legge in pochi minuti:</strong> sei risposte brevi, circa ${MINUTI_PER_PROGETTO} minuti con la scheda. Il link ai materiali lo apra solo se le serve per decidere.`,
           "<strong>Le schede sono aperte:</strong> una scheda conta quando la chiude, con tutti e sei i punteggi.",
           "<strong>Se riconosce una squadra</strong>, usi «Conosco questa squadra»: il progetto passa a un collega.",
-          `<strong>Se finisce prima e ha tempo</strong>, «Ho tempo, me ne dia altri» le affida ${PROGETTI_EXTRA} progetti in più.`,
+          `<strong>Se finisce prima e ha tempo</strong>, «Ho tempo, me ne dia altri» le affida, se ce ne sono, fino a ${PROGETTI_EXTRA} progetti che hanno ancora una lettura sola. È facoltativo.`,
         ]),
       )}
       ${bottone(AREA_GIUDICE, "Apri i miei progetti")}
