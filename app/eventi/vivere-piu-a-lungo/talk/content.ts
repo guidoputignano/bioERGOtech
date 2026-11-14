@@ -104,6 +104,12 @@ export type Talk = {
   spunti: string[];
   /** La riga che chiude gli spunti. */
   spuntiNota: string;
+  /**
+   * I titoli della sezione degli spunti, se diversi da quelli di un talk
+   * tematico ("Spunti per i vostri progetti", con esempi di progetti). Un
+   * talk su come presentare un'idea ha piuttosto cose da preparare.
+   */
+  spuntiSezione?: { kicker: string; titolo: string; intro: string };
   perChi: string;
   /** Immagine Open Graph, 1200x630, in `public/`. */
   immagineOg: string;
@@ -179,6 +185,82 @@ export const TALKS: Talk[] = [
     // WhatsApp, LinkedIn e Facebook rileggono un'anteprima solo se cambia
     // l'indirizzo.
     immagineOg: "/assets/images/eventi/talk/emanuele-memmola-og.jpg?v=2",
+  },
+  {
+    slug: "roberta-gilardi",
+    numero: 2,
+    // Il tema concordato con la relatrice l'11 novembre: come presentare
+    // un'idea e il proprio progetto, per studenti delle superiori. I temi
+    // sotto sono una prima stesura da far rivedere a lei.
+    titolo: "Dall'idea al pitch: come presentare il vostro progetto",
+    sottotitolo:
+      "Chiarezza nella testa, chiarezza nel discorso: le domande giuste per capire un problema e il modo migliore per raccontarlo.",
+    relatore: {
+      nome: "Roberta Gilardi",
+      ruolo: "CEO di G-Gravity, hub di innovazione con sede a Milano",
+      // La foto l'ha mandata la relatrice il 14 novembre: tagliata come i
+      // ritratti degli altri relatori, con il suo sfondo chiaro.
+      foto: "/assets/images/eventi/talk/roberta-gilardi.webp",
+    },
+    dataLabel: "Giovedì 19 novembre 2026",
+    // Ora italiana, dalle 15 alle 16. L'invito del calendario mostra dalle
+    // 17 alle 18 perche e impostato sul fuso di Riyadh, due ore avanti
+    // rispetto all'Italia a novembre: l'orario giusto e questo.
+    orarioLabel: "dalle 15:00 alle 16:00",
+    inizio: "2026-11-19T15:00:00+01:00",
+    fine: "2026-11-19T16:00:00+01:00",
+    modalita: "online",
+    luogo: null,
+    link: "https://meet.google.com/dpz-xbdd-aar",
+    capienza: null,
+    intro:
+      "I vostri progetti stanno prendendo forma, e presto andranno raccontati: nella consegna del 25 novembre, davanti alla Commissione e, per i finalisti, sul palco del 10 dicembre. In questo incontro Roberta Gilardi, CEO di G-Gravity, hub di innovazione che con sedi a Milano, Roma e Helsinki accompagna startup e aziende nei loro percorsi di innovazione, spiega come si presenta un'idea: quali domande porsi per capire davvero un problema, e come trasformare quella chiarezza in un discorso che convince.",
+    temi: [
+      {
+        titolo: "Le domande giuste",
+        icona: "fa-circle-question",
+        testo:
+          "Chi ha il problema, quanto spesso lo incontra, che cosa succede se nessuno lo risolve: le domande che un innovatore si pone prima di cercare una soluzione.",
+      },
+      {
+        titolo: "Presentare un problema",
+        icona: "fa-bullseye",
+        testo:
+          "Come far capire in pochi secondi perché un problema è importante, partendo da una persona reale e da un dato.",
+      },
+      {
+        titolo: "La struttura di un pitch",
+        icona: "fa-list-ol",
+        testo:
+          "Problema, soluzione, chi la usa, perché adesso, che cosa serve per andare avanti: l'ordine che aiuta chi ascolta a seguirvi.",
+      },
+      {
+        titolo: "Chiarezza in testa, chiarezza nel discorso",
+        icona: "fa-lightbulb",
+        testo:
+          "Se un'idea è chiara a chi la presenta, lo diventa anche per chi ascolta: come semplificare senza banalizzare.",
+      },
+      {
+        titolo: "Come lavora un hub di innovazione",
+        icona: "fa-rocket",
+        testo:
+          "Che cosa cerca chi deve scegliere un progetto, e come un'idea diventa un percorso con persone, partner e risorse.",
+      },
+    ],
+    spuntiSezione: {
+      kicker: "Prima del talk",
+      titolo: "Che cosa preparare",
+      intro: "Tre cose da preparare con la vostra squadra, per seguire l'incontro pensando già al vostro progetto:",
+    },
+    spunti: [
+      "la frase con cui oggi descrivereste il vostro progetto a chi non lo conosce;",
+      "il problema che volete risolvere, scritto in una riga, con la persona che lo vive;",
+      "una domanda su come presentare il vostro lavoro alla Commissione e sul palco.",
+    ],
+    spuntiNota: "Non serve consegnarle: servono a voi, per ricavare il massimo dall'incontro.",
+    perChi:
+      "Per gli studenti del percorso «Biotecnologie e Intelligenza Artificiale», dei licei e dell'università, e per i loro docenti. La partecipazione è gratuita.",
+    immagineOg: "/assets/images/eventi/talk/roberta-gilardi-og.jpg",
   },
 ];
 
