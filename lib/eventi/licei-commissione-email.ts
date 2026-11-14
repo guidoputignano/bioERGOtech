@@ -12,6 +12,12 @@
  */
 
 import { INTESTAZIONE, chiusura, esc } from "@/lib/eventi/licei-email";
+// Solo dati pubblici del talk: mai `link`, che resta agli iscritti.
+import {
+  luogoTalk,
+  prossimoTalk,
+  talkPath,
+} from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 import {
   COMMISSIONE_PATH,
   LICEI,
@@ -93,13 +99,69 @@ const AREA_GIUDICE = `${SITE_URL}${COMMISSIONE_PATH}`;
 
 /* ── 16 novembre: aggiornamento ──────────────────────────────────────── */
 
-export const aggiornamentoStudentiSubject = () => "Consegna dei progetti: le date e che cosa succede dopo";
+/** Il prossimo talk, come lo annuncia l'aggiornamento. Solo dati pubblici. */
+export type TalkAnnuncio = {
+  titolo: string;
+  sottotitolo: string;
+  relatore: string;
+  ruolo: string;
+  /** "giovedì 19 novembre", per l'oggetto. */
+  giorno: string;
+  /** "Giovedì 19 novembre 2026, dalle 15:00 alle 16:00, online". */
+  quando: string;
+  url: string;
+  aperto: boolean;
+};
 
-export function aggiornamentoStudentiHtml({ nome }: { nome: string }): string {
+/**
+ * Il talk da annunciare nell'aggiornamento: il prossimo non ancora finito
+ * nel momento in cui l'email parte. Se il cron parte dopo il talk, il
+ * riquadro sparisce da solo.
+ */
+export function talkDaAnnunciare(adesso: Date = new Date()): TalkAnnuncio | null {
+  const t = prossimoTalk(adesso);
+  if (!t) return null;
+  return {
+    titolo: t.titolo,
+    sottotitolo: t.sottotitolo,
+    relatore: t.relatore.nome,
+    ruolo: t.relatore.ruolo,
+    giorno: t.dataLabel.replace(/\s+\d{4}$/, "").toLowerCase(),
+    quando: `${t.dataLabel}, ${t.orarioLabel}, ${luogoTalk(t).toLowerCase()}`,
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+    aperto: !!t.apertoATutti,
+  };
+}
+
+const riquadroTalk = (t: TalkAnnuncio, invito: string, bottoneTesto: string) => `
+      <div style="background:#fff;border:1px solid #B4E3D8;border-left:4px solid #00C896;border-radius:8px;padding:20px 22px;margin:0 0 22px;">
+        <p style="color:#008F6B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Il prossimo talk con gli esperti</p>
+        <p style="color:#0A1628;font-size:17px;font-weight:700;line-height:1.4;margin:0 0 6px;">${esc(t.titolo)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.6;margin:0 0 10px;">con <strong>${esc(t.relatore)}</strong>, ${esc(t.ruolo)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.6;margin:0 0 10px;">${esc(t.sottotitolo)}</p>
+        <p style="color:#0A1628;font-size:14px;font-weight:600;line-height:1.6;margin:0 0 12px;">${esc(t.quando)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.6;margin:0 0 14px;">${invito}</p>
+        <a href="${t.url}" style="display:inline-block;border:2px solid #00C896;color:#0A7A66;font-weight:700;font-size:14px;text-decoration:none;padding:9px 20px;border-radius:8px;">${bottoneTesto}</a>
+      </div>`;
+
+export const aggiornamentoStudentiSubject = (talk: TalkAnnuncio | null = null) =>
+  talk
+    ? `Il talk di ${talk.giorno} e la consegna dei progetti: le prossime date`
+    : "Consegna dei progetti: le date e che cosa succede dopo";
+
+export function aggiornamentoStudentiHtml({ nome, talk = null }: { nome: string; talk?: TalkAnnuncio | null }): string {
   const esempi = TEMI_PROGETTO.slice(0, 2).map((t) => `«${t.label}»`).join(" o ");
+  const blocco = talk
+    ? riquadroTalk(
+        talk,
+        `Un'ora per capire come raccontare il vostro progetto, prima della consegna del 25. Ci si iscrive dalla pagina del talk, con l'account delle lezioni, e il link per collegarsi compare lì.${talk.aperto ? " Il talk è aperto a tutti: puoi invitare anche compagni e amici." : ""}`,
+        "Iscriviti al talk",
+      )
+    : "";
   return cornice(`
       ${titolo(saluto(nome, true))}
-      ${p("ti scriviamo con le date dei prossimi passi del percorso, fino all'evento finale.")}
+      ${p(talk ? `ti scriviamo con due cose: il talk di ${talk.giorno} e le date dei prossimi passi del percorso, fino all'evento finale.` : "ti scriviamo con le date dei prossimi passi del percorso, fino all'evento finale.")}
+      ${blocco}
       ${date()}
       ${p(`<strong>Una novità nel modulo di consegna: i temi.</strong> Quando consegnate, scegliete uno o due temi fra quelli proposti, per esempio ${esempi}. Servono ad affidare il vostro progetto ai giudici che conoscono meglio quel campo.`)}
       ${p("Se il progetto della tua squadra non è ancora consegnato, ti mandiamo un promemoria il 23 e il 25 novembre. La consegna la fa il capitano, dall'area studenti.")}
@@ -107,12 +169,23 @@ export function aggiornamentoStudentiHtml({ nome }: { nome: string }): string {
       ${firma}`);
 }
 
-export const aggiornamentoScuoleSubject = () => `Il calendario fino all'evento del 10 dicembre . ${LICEI.titolo}`;
+export const aggiornamentoScuoleSubject = (talk: TalkAnnuncio | null = null) =>
+  talk
+    ? `Il talk di ${talk.giorno} e il calendario fino al 10 dicembre . ${LICEI.titolo}`
+    : `Il calendario fino all'evento del 10 dicembre . ${LICEI.titolo}`;
 
-export function aggiornamentoScuoleHtml({ nome }: { nome: string }): string {
+export function aggiornamentoScuoleHtml({ nome, talk = null }: { nome: string; talk?: TalkAnnuncio | null }): string {
+  const blocco = talk
+    ? riquadroTalk(
+        talk,
+        `È pensato per le squadre che stanno preparando la consegna del 25.${talk.aperto ? " È aperto a tutti: può partecipare anche lei, e condividerlo con le classi e con i colleghi." : " Possono partecipare anche i docenti."}`,
+        "La pagina del talk",
+      )
+    : "";
   return cornice(`
       ${titolo(saluto(nome, false))}
       ${p("Le scriviamo con il calendario delle prossime settimane e con due cose in cui il suo aiuto fa la differenza.")}
+      ${blocco}
       ${date()}
       ${riquadro(
         "Che cosa le chiediamo",

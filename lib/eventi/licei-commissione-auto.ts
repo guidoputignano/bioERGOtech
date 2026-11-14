@@ -543,10 +543,12 @@ async function passoAggiornamento(db: Db, resend: Invio): Promise<RisultatoPasso
   if (!(await migrazioneApplicata(db))) {
     return { fatto: false, dettagli: [`L'aggiornamento parla dei temi: parte dopo la migrazione ${MIGRAZIONE}.`] };
   }
+  // Il prossimo talk, se non e ancora passato: un'email sola invece di due.
+  const talk = E.talkDaAnnunciare();
   const s = await invia(db, resend, "auto_aggiornamento_studenti", "Studenti", await righeStudentiAvviso(db),
-    E.aggiornamentoStudentiSubject(), (d) => E.aggiornamentoStudentiHtml({ nome: d.nome }));
+    E.aggiornamentoStudentiSubject(talk), (d) => E.aggiornamentoStudentiHtml({ nome: d.nome, talk }));
   const d = await invia(db, resend, "auto_aggiornamento_scuole", "Docenti", await righeDocentiAvviso(db),
-    E.aggiornamentoScuoleSubject(), (x) => E.aggiornamentoScuoleHtml({ nome: x.nome }));
+    E.aggiornamentoScuoleSubject(talk), (x) => E.aggiornamentoScuoleHtml({ nome: x.nome, talk }));
   return { fatto: s.ok && d.ok, dettagli: [s.testo, d.testo] };
 }
 

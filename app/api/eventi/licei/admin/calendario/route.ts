@@ -33,9 +33,16 @@ import { GIUDICI_PER_PROGETTO, SCHEDE_MINIME, passo } from "@/app/eventi/vivere-
 export const maxDuration = 300;
 
 /** Le email in anteprima, con dati di esempio. */
-const ANTEPRIME: Record<string, { subject: string; html: () => string }> = {
-  aggiornamento_studenti: { subject: E.aggiornamentoStudentiSubject(), html: () => E.aggiornamentoStudentiHtml({ nome: "Giulia" }) },
-  aggiornamento_scuole: { subject: E.aggiornamentoScuoleSubject(), html: () => E.aggiornamentoScuoleHtml({ nome: "Maria Rossi" }) },
+const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => string }> = {
+  // Il talk e quello vero del momento: l'anteprima mostra cio che partirebbe adesso.
+  aggiornamento_studenti: {
+    subject: () => E.aggiornamentoStudentiSubject(E.talkDaAnnunciare()),
+    html: () => E.aggiornamentoStudentiHtml({ nome: "Giulia", talk: E.talkDaAnnunciare() }),
+  },
+  aggiornamento_scuole: {
+    subject: () => E.aggiornamentoScuoleSubject(E.talkDaAnnunciare()),
+    html: () => E.aggiornamentoScuoleHtml({ nome: "Maria Rossi", talk: E.talkDaAnnunciare() }),
+  },
   consegna_studente: {
     subject: E.promemoriaConsegnaSubject(false),
     html: () => E.promemoriaConsegnaStudenteHtml({ nome: "Giulia", squadra: "BioTeam", titolo: "Un sensore per l'acqua", ultimo: false }),
@@ -77,6 +84,8 @@ const ANTEPRIME: Record<string, { subject: string; html: () => string }> = {
   giudice_ultimo: { subject: E.giudiceUltimoGiornoSubject(), html: () => E.giudiceUltimoGiornoHtml({ nome: "Mario Bianchi", mancano: 4, assegnati: 20 }) },
 };
 
+const oggettoDi = (a: { subject: string | (() => string) }) => (typeof a.subject === "function" ? a.subject() : a.subject);
+
 export async function GET(request: Request) {
   const guard = await requireAdmin();
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
@@ -86,8 +95,9 @@ export async function GET(request: Request) {
   if (tipo) {
     const a = ANTEPRIME[tipo];
     if (!a) return NextResponse.json({ error: "Anteprima non trovata." }, { status: 404 });
+    const oggetto = oggettoDi(a);
     return new NextResponse(
-      `<!doctype html><html lang="it"><head><meta charset="utf-8"><title>${a.subject}</title></head><body style="margin:0;padding:24px;background:#EEF2F5;"><p style="font-family:sans-serif;font-size:13px;color:#4A5568;max-width:600px;margin:0 auto 12px;"><strong>Oggetto:</strong> ${a.subject}</p>${a.html()}</body></html>`,
+      `<!doctype html><html lang="it"><head><meta charset="utf-8"><title>${oggetto}</title></head><body style="margin:0;padding:24px;background:#EEF2F5;"><p style="font-family:sans-serif;font-size:13px;color:#4A5568;max-width:600px;margin:0 auto 12px;"><strong>Oggetto:</strong> ${oggetto}</p>${a.html()}</body></html>`,
       { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store" } },
     );
   }
@@ -150,7 +160,7 @@ export async function POST(request: Request) {
       from: MITTENTE_AVVISI,
       to: chiamante.email,
       replyTo: RISPOSTE_AVVISI,
-      subject: `[Prova] ${a.subject}`,
+      subject: `[Prova] ${oggettoDi(a)}`,
       html: a.html(),
     });
     if (error) {
