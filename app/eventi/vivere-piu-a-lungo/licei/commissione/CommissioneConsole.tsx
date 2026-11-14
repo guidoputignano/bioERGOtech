@@ -33,6 +33,7 @@ import {
   AMBITI_PROGETTO,
   CAMPI_PROGETTO,
   CRITERI_LICEI,
+  COMMISSIONE_PATH,
   CRITERIO_DIRIMENTE_LICEI,
   LICEI,
   NOTA_CRITERIO_PRESENTAZIONE,
@@ -42,6 +43,7 @@ import {
 import { totaleValutazione, type ValutazioneInput } from "@/lib/eventi/licei-squadre";
 import {
   APERTI_PER_CHIEDERE_ALTRI,
+  GUIDA_COMMISSIONE_SLUG,
   LIVELLI_CRITERI,
   MINUTI_PER_PROGETTO,
   durata,
@@ -216,6 +218,14 @@ export function CommissioneConsole() {
           {dati?.commissario?.nome} {dati?.commissario?.cognome}
           {dati?.commissario?.ruolo ? ` . ${ruoloCommissioneLabel(dati.commissario.ruolo)}` : ""}
         </p>
+        <a
+          href={`${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 600, color: "#0A7A66", marginTop: 6 }}
+        >
+          <i className="fas fa-book-open" aria-hidden="true" /> Guida per la Commissione: criteri, fasce e scadenze
+        </a>
       </div>
 
       {!puoVotare && (
