@@ -13,6 +13,11 @@
  * Il link della riunione non e nelle props e non e nella pagina: arriva solo
  * dalla risposta della rotta, e solo a chi e iscritto e ancora idoneo.
  *
+ * Un talk aperto a tutti (`stato.aperto`) lo dice a chi non ha fatto
+ * l'accesso, e accanto all'accesso offre di creare un account. Dopo
+ * l'accesso il flusso e lo stesso: chi non partecipa al percorso risulta
+ * idoneo come ospite e si iscrive con un clic.
+ *
  * Il calendario compare solo a chi e iscritto. Il link per Google Calendar
  * lo costruisce il server e arriva nella stessa risposta
  * (`calendarioGoogle`), con il link della riunione dentro; il file .ics lo
@@ -35,6 +40,8 @@ type Props = {
   fine: string;
   icsUrl: string;
   loginHref: string;
+  /** La registrazione di un account nuovo, per i talk aperti a tutti. */
+  signupHref: string;
   liceiPath: string;
   universitaPath: string;
 };
@@ -128,6 +135,7 @@ export function IscrizioneTalk({
   fine,
   icsUrl,
   loginHref,
+  signupHref,
   liceiPath,
   universitaPath,
 }: Props) {
@@ -225,6 +233,25 @@ export function IscrizioneTalk({
 
   // ── Accesso da fare ──
   if (!stato.autenticato) {
+    if (stato.aperto) {
+      return (
+        <div style={box} aria-live="polite">
+          <p style={{ ...titoloStato, display: "flex", alignItems: "center", gap: 8 }}>
+            <i className="fas fa-users" aria-hidden="true" style={{ color: "var(--primary)", fontSize: 16 }} />
+            {T.apertoTitolo}
+          </p>
+          <p style={{ ...nota, marginBottom: 16 }}>{T.apertoNota}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Link href={loginHref} className="btn-primary" style={pieno}>
+              {T.accedi}
+            </Link>
+            <Link href={signupHref} className="btn-outline" style={{ ...pieno, padding: "11px 18px", fontSize: 13.5 }}>
+              {T.creaAccount}
+            </Link>
+          </div>
+        </div>
+      );
+    }
     return (
       <div style={box} aria-live="polite">
         <Link href={loginHref} className="btn-primary" style={pieno}>

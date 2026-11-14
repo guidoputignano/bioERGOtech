@@ -17,7 +17,8 @@ import { ruoloTalkLabel, trovaTalk } from "@/app/eventi/vivere-piu-a-lungo/talk/
  * piu al percorso (iscrizione ai licei rifiutata o ritirata, candidatura non
  * confermata, docente revocato, adesione ritirata, percorso licei chiuso)
  * resta nel conteggio del pannello ma non entra nel file, e i suoi dati non
- * si leggono nemmeno.
+ * si leggono nemmeno. In un talk aperto a tutti (`apertoATutti`) entrano
+ * tutti, come sul sito: chi non partecipa piu al percorso resta come ospite.
  *
  * La tabella delle iscrizioni non contiene nomi: lega l'account al talk e
  * basta. I nomi si leggono qui, al momento dell'export, dal posto in cui
@@ -67,7 +68,7 @@ async function righeDove<T>(
 
 type Persona = { nome: string; cognome: string; email: string };
 
-const ORDINE_RUOLI = ["studente_licei", "studente_universita", "docente", "staff"];
+const ORDINE_RUOLI = ["studente_licei", "studente_universita", "docente", "staff", "ospite"];
 
 export async function GET(request: Request) {
   const guard = await requireAdmin();
@@ -103,7 +104,11 @@ export async function GET(request: Request) {
     }
 
     // 2. Solo chi vedrebbe il link sul sito: iscritto e ancora idoneo.
-    const idoneita = await idoneitaTalkPerUtenti(db, iscrizioni.map((r) => r.user_id));
+    const idoneita = await idoneitaTalkPerUtenti(
+      db,
+      iscrizioni.map((r) => r.user_id),
+      !!talk.apertoATutti,
+    );
     const idonee = iscrizioni.filter((r) => idoneita.get(r.user_id)?.idoneo === true);
 
     const ids = [...new Set(idonee.map((r) => r.user_id))];
@@ -154,7 +159,8 @@ export async function GET(request: Request) {
           : stessoIstituto(docenti.filter((d) => d.user_id === r.user_id));
       }
       if (p) return { nome: p.nome, cognome: p.cognome, email: p.email };
-      // Ultimo ripiego: il profilo, con il nome intero nella prima colonna.
+      // Ultimo ripiego, e la strada degli ospiti: il profilo, con il nome
+      // intero nella prima colonna.
       const prof = profiloDi.get(r.user_id);
       return { nome: prof?.full_name ?? "", cognome: "", email: prof?.email ?? "" };
     };

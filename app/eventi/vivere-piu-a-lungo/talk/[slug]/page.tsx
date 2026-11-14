@@ -181,6 +181,11 @@ export default async function TalkPage({ params }: { params: Promise<{ slug: str
       <span className="tk-fatto">
         <i className="fas fa-euro-sign" aria-hidden="true" /> Gratuito
       </span>
+      {t.apertoATutti && (
+        <span className="tk-fatto">
+          <i className="fas fa-users" aria-hidden="true" /> Aperto a tutti
+        </span>
+      )}
     </div>
   );
 
@@ -190,6 +195,7 @@ export default async function TalkPage({ params }: { params: Promise<{ slug: str
       fine={t.fine}
       icsUrl={`/api/eventi/talk/${t.slug}/ics`}
       loginHref={`/auth/login?returnTo=${encodeURIComponent(path)}`}
+      signupHref={`/auth/sign-up?returnTo=${encodeURIComponent(path)}`}
       liceiPath={LICEI_PATH}
       universitaPath={UNIVERSITA_PATH}
     />
@@ -325,7 +331,9 @@ export default async function TalkPage({ params }: { params: Promise<{ slug: str
               Registriamo solo la tua iscrizione, collegata al tuo account.{" "}
               <Link href={INFORMATIVA_STUDENTI_PATH}>Informativa privacy per studenti</Link>. Per i
               docenti vale l&apos;<Link href={INFORMATIVA_SCUOLE_PATH}>informativa per scuole e docenti</Link>,
-              per gli studenti universitari l&apos;
+              {t.apertoATutti
+                ? " per gli studenti universitari e per chi partecipa senza seguire il percorso l'"
+                : " per gli studenti universitari l'"}
               <Link href="/legal/informativa-privacy">informativa del sito</Link>.
             </p>
           </div>
