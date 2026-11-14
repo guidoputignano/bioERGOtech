@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { COMMISSIONE_PATH } from "../../content";
-import { MINUTI_PER_PROGETTO, PROGETTI_MAX_PER_GIUDICE, SCADENZA_GIUDICI_LABEL } from "../../smistamento";
+import { GUIDA_COMMISSIONE_SLUG, MINUTI_PER_PROGETTO, PROGETTI_MAX_PER_GIUDICE, SCADENZA_GIUDICI_LABEL } from "../../smistamento";
 
 type Stato =
   | { stato: "non_valido" }
@@ -93,9 +93,14 @@ export function DiventaGiudice() {
             ? "Le abbiamo appena mandato un'email per accedere all'area della Commissione. Appena entra, scelga i temi in cui si sente più competente: il 26 novembre riceve i suoi progetti."
             : "Trova i suoi progetti e la scelta dei temi nell'area della Commissione."}
         </p>
-        <Link href={COMMISSIONE_PATH} className="btn-primary">
-          Area della Commissione
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href={COMMISSIONE_PATH} className="btn-primary">
+            Area della Commissione
+          </Link>
+          <Link href={`${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`} className="btn-outline">
+            La guida per i giudici
+          </Link>
+        </div>
       </>,
     );
   }

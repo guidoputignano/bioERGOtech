@@ -30,6 +30,7 @@ import {
   ANNUNCIO_FINALISTI_LABEL,
   DATE_PERCORSO,
   GIUDICI_PER_PROGETTO_LETTERE,
+  GUIDA_COMMISSIONE_SLUG,
   MINUTI_PER_PROGETTO,
   durata,
   PROGETTI_EXTRA,
@@ -98,6 +99,7 @@ const CHIUSURA_CONSEGNE = SCADENZA_CONSEGNA_LABEL.replace(/ \d{4}, ore /, " alle
 const AREA_STUDENTE = `${SITE_URL}${STUDENTE_PATH}`;
 const AREA_DOCENTE = `${SITE_URL}${REFERENTE_PATH}`;
 const AREA_GIUDICE = `${SITE_URL}${COMMISSIONE_PATH}`;
+const GUIDA = `${AREA_GIUDICE}/${GUIDA_COMMISSIONE_SLUG}`;
 
 /* ── 16 novembre: aggiornamento ──────────────────────────────────────── */
 
@@ -230,7 +232,7 @@ export function invitoMentorHtml({ nome, url, promemoria }: { nome: string; url:
       )}
       ${p(`I ${LICEI.progettiSulPalco} progetti migliori saliranno sul palco ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}.`)}
       ${bottone(url, "Sì, partecipo come giudice")}
-      ${p("Il pulsante la inserisce subito in Commissione e le mandiamo un'email per accedere all'area, dove sceglie i temi. Se non riesce, non deve fare nulla: il suo aiuto come mentor resta prezioso.")}
+      ${p(`Il pulsante la inserisce subito in Commissione e le mandiamo un'email per accedere all'area, dove sceglie i temi. Se vuole dare un'occhiata prima, qui c'è la <a href="${GUIDA}" style="color:#008F6B;font-weight:700;">guida per i giudici</a>. Se non riesce, non deve fare nulla: il suo aiuto come mentor resta prezioso.`)}
       ${firma}`);
 }
 
@@ -323,7 +325,7 @@ export function giudiceSmistamentoHtml(i: GiudiceSmistamento): string {
         ]),
       )}
       ${bottone(AREA_GIUDICE, "Apri i miei progetti")}
-      ${p("Lunedì 30 novembre le mandiamo un promemoria con il punto della situazione. Per qualsiasi dubbio può rispondere a questa email.")}
+      ${p(`I criteri, le fasce di punteggio e le scadenze sono nella <a href="${GUIDA}" style="color:#008F6B;font-weight:700;">guida per la Commissione</a>. Lunedì 30 novembre le mandiamo un promemoria con il punto della situazione. Per qualsiasi dubbio può rispondere a questa email.`)}
       ${firma}`);
 }
 

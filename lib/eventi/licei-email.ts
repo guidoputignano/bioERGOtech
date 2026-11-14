@@ -31,7 +31,7 @@ import {
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { SOCIAL, type PostInstagram } from "@/lib/social";
-import { PROGETTI_MAX_PER_GIUDICE } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
+import { GUIDA_COMMISSIONE_SLUG, PROGETTI_MAX_PER_GIUDICE } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 export type LiceiEmailInput = {
   referente: string;
@@ -379,6 +379,10 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
           Area della Commissione
         </a>
       </div>
+      <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:16px 0 0;text-align:center;">
+        Come si compilano le schede, i criteri e le scadenze:
+        <a href="${areaUrl}/${GUIDA_COMMISSIONE_SLUG}" style="color:#008F6B;font-weight:700;">la guida per la Commissione</a>.
+      </p>
       ${chiusura()}
     </div>
   </div>`;

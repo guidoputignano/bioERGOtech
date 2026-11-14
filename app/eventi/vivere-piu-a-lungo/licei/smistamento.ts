@@ -118,6 +118,9 @@ export const ADESIONI_MENTOR_FINO = "2026-11-30T23:59:59+01:00";
 /** La pagina in cui il mentor conferma la disponibilita. */
 export const DIVENTA_GIUDICE_SLUG = "diventa-giudice";
 
+/** La guida per la Commissione, nell'area dei giudici: la linkano l'area e le email. */
+export const GUIDA_COMMISSIONE_SLUG = "guida";
+
 /** Il termine e passato? */
 export const scadenzaGiudiciPassata = (adesso: number = Date.now()): boolean =>
   adesso > Date.parse(SCADENZA_GIUDICI);
