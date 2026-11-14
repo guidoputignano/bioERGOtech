@@ -198,8 +198,9 @@ export const TALKS: Talk[] = [
     relatore: {
       nome: "Roberta Gilardi",
       ruolo: "CEO di G-Gravity, hub di innovazione con sede a Milano",
-      // La foto la manda la relatrice: fino ad allora, il monogramma.
-      foto: null,
+      // La foto l'ha mandata la relatrice il 14 novembre: tagliata come i
+      // ritratti degli altri relatori, con il suo sfondo chiaro.
+      foto: "/assets/images/eventi/talk/roberta-gilardi.webp",
     },
     dataLabel: "Giovedì 19 novembre 2026",
     // Ora italiana, dalle 15 alle 16. L'invito del calendario mostra dalle

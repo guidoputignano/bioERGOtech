@@ -13,9 +13,10 @@ sede a Milano: "Dall'idea al pitch: come presentare il vostro progetto",
 giovedi 19 novembre 2026 dalle 15:00 alle 16:00 (l'invito del calendario dice
 17-18 perche e nel fuso di Riyadh). Link della riunione
 `https://meet.google.com/dpz-xbdd-aar`. I temi in pagina sono una prima
-stesura da far rivedere alla relatrice; finche non arriva la foto, la pagina
-mostra il monogramma. L'immagine Open Graph e stata fatta senza `grafica/`,
-nello stile di quella di Memmola. Un talk che non propone progetti ma cose da
+stesura da far rivedere alla relatrice. La foto (inviata dalla relatrice il
+14 novembre) e tagliata a mano come gli altri ritratti, senza `prep_foto.py`:
+lo sfondo e quello originale, chiaro, e non il grigio da studio. L'immagine
+Open Graph e stata fatta senza `grafica/`, nello stile di quella di Memmola. Un talk che non propone progetti ma cose da
 preparare usa `spuntiSezione` per i titoli della sezione degli spunti.
 
 Sotto modulo dell'evento, accanto a `licei/` e `universita/`, con la stessa
