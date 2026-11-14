@@ -27,6 +27,13 @@ export const TESTI_TALK = {
   accedi: "Accedi per iscriverti",
   accediNota: "Usa lo stesso account con cui segui le lezioni.",
 
+  apertoTitolo: "Aperto a tutti",
+  apertoNota:
+    "Se segui il percorso, accedi con l'account delle lezioni. Se non hai ancora un account sul sito, puoi crearlo gratis in un minuto: poi torni qui e ti iscrivi con un clic.",
+  creaAccount: "Crea un account gratuito",
+  ospitiNonAncora:
+    "Le iscrizioni per chi non segue il percorso si attivano a breve. Riprova fra qualche ora.",
+
   nonIdoneo: "I talk sono riservati a chi partecipa al percorso.",
   nonIdoneoNota: "Se ti sei iscritto a uno dei due percorsi, accedi con lo stesso account che usi per le lezioni.",
   percorsoLicei: "Percorso per i licei",
@@ -59,6 +66,7 @@ export const RUOLI_TALK_LABEL: Record<string, string> = {
   studente_universita: "Studente università",
   docente: "Docente",
   staff: "Staff",
+  ospite: "Ospite",
 };
 
 /** Il ruolo come etichetta, con ripiego sul valore grezzo. */

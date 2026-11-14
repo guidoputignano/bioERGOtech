@@ -99,6 +99,16 @@ export type Talk = {
   link: string | null;
   /** Posti disponibili. Null: nessun limite. */
   capienza: number | null;
+  /**
+   * Aperto a tutti, non solo a chi partecipa al percorso. Chiunque abbia un
+   * account sul sito (anche creato apposta, gratis) si iscrive con un clic
+   * e riceve il link, con il ruolo `ospite`; chi partecipa al percorso si
+   * iscrive con il suo ruolo di sempre, e il docente continua a vedere i
+   * suoi studenti iscritti. Il link resta fuori dall'HTML pubblico come per
+   * gli altri talk: serve un account, quindi chi entra nella riunione ha un
+   * nome e un'email. Serve la migrazione 20261231000000 (il ruolo `ospite`).
+   */
+  apertoATutti?: boolean;
   intro: string;
   temi: TemaTalk[];
   spunti: string[];
@@ -213,6 +223,9 @@ export const TALKS: Talk[] = [
     luogo: null,
     link: "https://meet.google.com/dpz-xbdd-aar",
     capienza: null,
+    // Deciso il 14 novembre: come presentare un'idea serve a tutti, non
+    // solo a chi segue il percorso.
+    apertoATutti: true,
     intro:
       "I vostri progetti stanno prendendo forma, e presto andranno raccontati: nella consegna del 25 novembre, davanti alla Commissione e, per i finalisti, sul palco del 10 dicembre. In questo incontro Roberta Gilardi, CEO di G-Gravity, hub di innovazione che con sedi a Milano, Roma e Helsinki accompagna startup e aziende nei loro percorsi di innovazione, spiega come si presenta un'idea: quali domande porsi per capire davvero un problema, e come trasformare quella chiarezza in un discorso che convince.",
     temi: [
@@ -259,7 +272,7 @@ export const TALKS: Talk[] = [
     ],
     spuntiNota: "Non serve consegnarle: servono a voi, per ricavare il massimo dall'incontro.",
     perChi:
-      "Per gli studenti del percorso «Biotecnologie e Intelligenza Artificiale», dei licei e dell'università, e per i loro docenti. La partecipazione è gratuita.",
+      "Il talk è aperto a tutti: agli studenti e ai docenti del percorso «Biotecnologie e Intelligenza Artificiale», dei licei e dell'università, e a chiunque voglia imparare a presentare un'idea o un progetto. Per iscriversi e ricevere il link basta un account sul sito, che si crea gratis in un minuto. La partecipazione è gratuita.",
     immagineOg: "/assets/images/eventi/talk/roberta-gilardi-og.jpg",
   },
 ];

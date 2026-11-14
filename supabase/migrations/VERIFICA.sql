@@ -423,6 +423,22 @@ select 'talk iscrizioni: RLS attiva',
 
 union all
 
+-- I talk aperti a tutti iscrivono chi non segue il percorso come `ospite`
+-- (migrazione 20261231000000): senza, la loro iscrizione risponde 503.
+select 'talk iscrizioni: il ruolo ospite e ammesso',
+       case
+         when to_regclass('public.talk_iscrizioni') is null
+           then 'DA ESEGUIRE: manca talk_iscrizioni (migrazione 20261216000000)'
+         when exists (select 1 from pg_constraint
+                      where conrelid = to_regclass('public.talk_iscrizioni')
+                        and conname = 'talk_iscrizioni_ruolo_check'
+                        and pg_get_constraintdef(oid) like '%ospite%')
+           then 'OK'
+         else 'DA ESEGUIRE: 20261231000000_talk_ospiti, senza chi non segue il percorso non si iscrive ai talk aperti a tutti'
+       end
+
+union all
+
 -- Il rovescio: la revoca non deve aver tolto la scrittura alle rotte, che
 -- usano la service role. Se qui esce NO, nessuno riesce a iscriversi.
 select 'talk iscrizioni: le rotte (service_role) scrivono',

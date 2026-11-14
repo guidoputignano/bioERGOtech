@@ -40,7 +40,7 @@ niente che si rompa prima che la migrazione sia applicata.
 | Rotta dell'iscrizione | `app/api/eventi/talk/[slug]/iscrizione/route.ts` (GET, POST, DELETE) |
 | File .ics | `app/api/eventi/talk/[slug]/ics/route.ts` |
 | Numeri e export per lo staff | `app/api/eventi/talk/admin/route.ts`, `app/api/eventi/talk/admin/export/route.ts` |
-| Migrazione | `supabase/migrations/20261216000000_talk_iscrizioni.sql` (da applicare a mano, vedi sotto) |
+| Migrazione | `supabase/migrations/20261216000000_talk_iscrizioni.sql` (da applicare a mano, vedi sotto); `20261231000000_talk_ospiti.sql` per i talk aperti a tutti |
 
 ## Come si aggiunge un talk
 
@@ -160,7 +160,20 @@ l'istituto. Possono iscriversi (`idoneitaTalk`, nell'ordine):
 4. staff (`partnership_level = 'admin'`), per provare il flusso.
 
 Chiunque altro legge "I talk sono riservati a chi partecipa al percorso.",
-con i link ai due percorsi. La propria iscrizione si puo annullare sempre,
+con i link ai due percorsi.
+
+**Talk aperti a tutti.** Con `apertoATutti: true` (il talk di Roberta
+Gilardi del 19 novembre) c'e una quinta strada: qualsiasi altro account si
+iscrive come `ospite`. Chi non ha fatto l'accesso legge "Aperto a tutti", con
+"Accedi per iscriverti" e "Crea un account gratuito" (la registrazione del
+sito, che dopo la conferma dell'email riporta alla pagina del talk con
+"Sign in and continue"). Il link resta fuori dall'HTML pubblico come negli
+altri talk: lo vede solo chi ha un account ed e iscritto, quindi in riunione
+entra chi ha un nome e un'email. Nell'export gli ospiti hanno nome ed email
+dal profilo, istituto vuoto e ruolo "Ospite". Il ruolo `ospite` chiede la
+migrazione `20261231000000_talk_ospiti.sql`: prima, l'iscrizione di un
+ospite risponde 503 con "Le iscrizioni per chi non segue il percorso si
+attivano a breve.", e chi partecipa al percorso si iscrive come sempre. La propria iscrizione si puo annullare sempre,
 anche da chi non partecipa piu. Dopo la fine del talk la rotta rifiuta
 iscrizioni e annullamenti (409).
 

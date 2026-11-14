@@ -41,15 +41,17 @@ export const TABELLA_TALK = "talk_iscrizioni";
 
 /**
  * Il ruolo con cui una persona si iscrive. E anche il valore della colonna
- * `ruolo`, con lo stesso vincolo a database.
+ * `ruolo`, con lo stesso vincolo a database. `ospite` e chi non partecipa al
+ * percorso e si iscrive a un talk aperto a tutti (migrazione 20261231000000).
  */
-export type RuoloTalk = "studente_licei" | "studente_universita" | "docente" | "staff";
+export type RuoloTalk = "studente_licei" | "studente_universita" | "docente" | "staff" | "ospite";
 
 export const RUOLI_TALK: readonly RuoloTalk[] = [
   "studente_licei",
   "studente_universita",
   "docente",
   "staff",
+  "ospite",
 ];
 
 export type Idoneita =
@@ -98,8 +100,16 @@ type Letture = {
  * manda il link elenca cosi le stesse persone che il link lo vedono sul sito.
  * Ogni stato si ricontrolla qui, quindi le righe possono anche arrivare non
  * filtrate.
+ *
+ * `aperto`: il talk e aperto a tutti (`apertoATutti`). Chi non passa da
+ * nessuna delle quattro strade entra come `ospite`, invece di restare fuori.
  */
-function decidiIdoneita(l: Letture, liceiAperti: boolean, staff: boolean): Idoneita {
+function decidiIdoneita(
+  l: Letture,
+  liceiAperti: boolean,
+  staff: boolean,
+  aperto: boolean,
+): Idoneita {
   // 1. Studente dei licei.
   if (controlla(l.licei.error, "licei_iscrizioni") && liceiAperti) {
     const righe = l.licei.data ?? [];
@@ -137,6 +147,9 @@ function decidiIdoneita(l: Letture, liceiAperti: boolean, staff: boolean): Idone
   // 4. Staff.
   if (staff) return { idoneo: true, ruolo: "staff", adesioneId: null };
 
+  // 5. Un talk aperto a tutti: qualsiasi account.
+  if (aperto) return { idoneo: true, ruolo: "ospite", adesioneId: null };
+
   return NON_IDONEO;
 }
 
@@ -156,7 +169,9 @@ function decidiIdoneita(l: Letture, liceiAperti: boolean, staff: boolean): Idone
  *  3. docente dei licei, a percorso non chiuso: referente di un'adesione
  *     non ritirata, oppure docente del progetto `attivo` di un'adesione non
  *     ritirata;
- *  4. staff della Fondazione, per provare il flusso.
+ *  4. staff della Fondazione, per provare il flusso;
+ *  5. per un talk aperto a tutti (`aperto`), qualsiasi altro account, come
+ *     `ospite`.
  *
  * L'ordine decide solo il ruolo registrato, che lo staff legge nell'export:
  * uno studente che e anche staff risulta studente, perche e quello che e
@@ -167,7 +182,12 @@ function decidiIdoneita(l: Letture, liceiAperti: boolean, staff: boolean): Idone
  * `licei_docenti`). Un errore vero solleva: meglio un 500 che dire a un
  * partecipante che non lo e.
  */
-export async function idoneitaTalk(db: Db, userId: string, staff: boolean): Promise<Idoneita> {
+export async function idoneitaTalk(
+  db: Db,
+  userId: string,
+  staff: boolean,
+  aperto = false,
+): Promise<Idoneita> {
   if (!userId) return NON_IDONEO;
 
   const [licei, universita, referente, docente, chiusura] = await Promise.all([
@@ -204,6 +224,7 @@ export async function idoneitaTalk(db: Db, userId: string, staff: boolean): Prom
     },
     chiusura.chiusoAt === null,
     staff,
+    aperto,
   );
 }
 
@@ -250,6 +271,7 @@ type ConUtente = { user_id: string };
 export async function idoneitaTalkPerUtenti(
   db: Db,
   userIds: string[],
+  aperto = false,
 ): Promise<Map<string, Idoneita>> {
   const ids = [...new Set(userIds.filter(Boolean))];
   const esito = new Map<string, Idoneita>();
@@ -311,6 +333,7 @@ export async function idoneitaTalkPerUtenti(
         },
         liceiAperti,
         staff.has(id),
+        aperto,
       ),
     );
   }
@@ -386,6 +409,8 @@ export type StatoTalk = {
   /** Falso prima della migrazione 20261216000000. */
   disponibile: boolean;
   concluso: boolean;
+  /** Il talk e aperto a tutti: il riquadro lo dice a chi non ha ancora fatto l'accesso. */
+  aperto: boolean;
   autenticato: boolean;
   idoneo: boolean;
   ruolo: RuoloTalk | null;
@@ -432,7 +457,7 @@ export async function linkPerIscritto(
   const conteggio = await contaIscritti(db, talk.slug);
   if (!conteggio.presente) return null;
   if (!(await giaIscritto(db, talk.slug, utente.id))) return null;
-  const idoneita = await idoneitaTalk(db, utente.id, utente.staff);
+  const idoneita = await idoneitaTalk(db, utente.id, utente.staff, !!talk.apertoATutti);
   return idoneita.idoneo ? link : null;
 }
 
@@ -462,6 +487,7 @@ export async function statoTalk(
   const base: StatoTalk = {
     disponibile: conteggio.presente,
     concluso,
+    aperto: !!talk.apertoATutti,
     autenticato: !!utente.id,
     idoneo: false,
     ruolo: null,
@@ -472,7 +498,7 @@ export async function statoTalk(
   };
   if (!utente.id) return base;
 
-  const idoneita = await idoneitaTalk(db, utente.id, utente.staff);
+  const idoneita = await idoneitaTalk(db, utente.id, utente.staff, !!talk.apertoATutti);
   const stato: StatoTalk = { ...base, idoneo: idoneita.idoneo, ruolo: idoneita.ruolo };
   if (!conteggio.presente) return stato;
 

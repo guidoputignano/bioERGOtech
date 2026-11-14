@@ -81,7 +81,7 @@ export async function POST(_request: Request, ctx: Contesto) {
       return risposta({ disponibile: false, error: TESTI_TALK.nonDisponibile }, 503);
     }
 
-    const idoneita = await idoneitaTalk(db, utente.id, utente.staff);
+    const idoneita = await idoneitaTalk(db, utente.id, utente.staff, !!talk.apertoATutti);
     if (!idoneita.idoneo) return risposta({ error: TESTI_TALK.nonIdoneo }, 403);
 
     // Un secondo clic, o due schede aperte: chi e gia iscritto resta iscritto.
@@ -100,6 +100,12 @@ export async function POST(_request: Request, ctx: Contesto) {
         ruolo: idoneita.ruolo,
         adesione_id: idoneita.adesioneId,
       });
+      // 23514 per un ospite: il vincolo del ruolo e ancora quello di prima
+      // della migrazione 20261231000000. Non e un errore di chi clicca.
+      if (error?.code === "23514" && idoneita.ruolo === "ospite") {
+        console.error("Talk iscrizione: ruolo ospite rifiutato, manca la migrazione 20261231000000");
+        return risposta({ error: TESTI_TALK.ospitiNonAncora }, 503);
+      }
       // 23505: la stessa persona, nello stesso istante, da un'altra scheda.
       if (error && error.code !== "23505") throw new Error(`${TABELLA_TALK}: ${error.message}`);
     }
