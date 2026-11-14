@@ -19,6 +19,12 @@
  * 3. Una scheda entra in classifica solo quando viene chiusa. Una scheda a
  *    meta non e un voto basso, e un voto non ancora dato, e farla pesare
  *    penalizzerebbe un progetto senza che nessuno lo abbia deciso.
+ *
+ * Dal 26 novembre i progetti sono smistati (`smistamento.ts`): chi vota
+ * vede solo i suoi, con il conto e la scadenza in alto, e due bottoni per
+ * i casi che lo smistamento non puo sapere: "Conosco questa squadra" e
+ * "Ho tempo, me ne dia altri". Sotto ogni criterio, le tre fasce di
+ * punteggio, perche giudici diversi usino lo stesso metro.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -34,6 +40,30 @@ import {
   ruoloCommissioneLabel,
 } from "../content";
 import { totaleValutazione, type ValutazioneInput } from "@/lib/eventi/licei-squadre";
+import {
+  APERTI_PER_CHIEDERE_ALTRI,
+  LIVELLI_CRITERI,
+  TEMI_PROGETTO,
+  TESTI_SMISTAMENTO,
+  temaLabel,
+} from "../smistamento";
+
+const banner: React.CSSProperties = {
+  background: "#FFF8E6",
+  border: "1px solid #F0D89B",
+  borderRadius: 10,
+  padding: "12px 16px",
+  fontSize: 13.5,
+  color: "#75570F",
+  lineHeight: 1.6,
+};
+
+const bannerInfo: React.CSSProperties = {
+  ...banner,
+  background: "#ECFAF6",
+  border: "1px solid #B4E3D8",
+  color: "#08594A",
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Qualsiasi = any;
@@ -46,6 +76,9 @@ export function CommissioneConsole() {
   const [schede, setSchede] = useState<Record<string, ValutazioneInput>>({});
   const [salvando, setSalvando] = useState<string | null>(null);
   const [salvato, setSalvato] = useState<string | null>(null);
+  const [avviso, setAvviso] = useState<string | null>(null);
+  const [occupato, setOccupato] = useState(false);
+  const [temi, setTemi] = useState<string[]>([]);
 
   const carica = useCallback(async () => {
     setLoading(true);
@@ -55,6 +88,7 @@ export function CommissioneConsole() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
       setDati(data);
+      setTemi(data.commissario?.temi ?? []);
       const mappa: Record<string, ValutazioneInput> = {};
       for (const v of data.valutazioni ?? []) {
         mappa[v.progetto_id] = {
@@ -102,15 +136,64 @@ export function CommissioneConsole() {
     }
   };
 
+  /** Le azioni dello smistamento: temi, conflitto, altri progetti. */
+  const azione = async (corpo: Record<string, unknown>, messaggio: string | null) => {
+    setOccupato(true);
+    setErrore(null);
+    setAvviso(null);
+    try {
+      const res = await fetch("/api/eventi/licei/commissione", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Operazione non riuscita.");
+      if (messaggio) setAvviso(messaggio.replace("{n}", String(data.aggiunti ?? "")));
+      return data;
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Operazione non riuscita.");
+      return null;
+    } finally {
+      setOccupato(false);
+    }
+  };
+
+  const cambiaTema = async (valore: string) => {
+    const prima = temi;
+    const dopo = temi.includes(valore) ? temi.filter((t) => t !== valore) : [...temi, valore];
+    setTemi(dopo);
+    const ok = await azione({ azione: "temi", temi: dopo }, null);
+    if (!ok) setTemi(prima);
+  };
+
+  const conflitto = async (progettoId: string) => {
+    if (!confirm(TESTI_SMISTAMENTO.conflittoConferma)) return;
+    const ok = await azione({ azione: "conflitto", progetto_id: progettoId }, "Fatto: il progetto è passato a un collega.");
+    if (ok) {
+      setAperto(null);
+      await carica();
+    }
+  };
+
+  const chiediAltri = async () => {
+    const ok = await azione({ azione: "altri" }, "Le abbiamo affidato {n} progetti in più: li trova in fondo all'elenco.");
+    if (ok) await carica();
+  };
+
   const progetti: Qualsiasi[] = useMemo(() => dati?.progetti ?? [], [dati]);
   const faseAperta = dati?.fase === "aperta";
   const puoVotare = dati?.commissario?.diritto_voto;
+  const smistamento = dati?.smistamento ?? null;
+  const smistati = !!smistamento?.attivo;
+  const riserva = !!dati?.commissario?.riserva;
 
   const conteggi = useMemo(() => {
     let chiuse = 0;
     for (const p of progetti) if (schede[p.id]?.chiusa) chiuse += 1;
     return { chiuse, totali: progetti.length };
   }, [progetti, schede]);
+  const aperti = conteggi.totali - conteggi.chiuse;
 
   if (loading) return <p className="text-gray-600">Caricamento…</p>;
 
@@ -168,10 +251,52 @@ export function CommissioneConsole() {
         </div>
       )}
 
+      {puoVotare && !smistati && <div style={bannerInfo}>{riserva ? TESTI_SMISTAMENTO.riserva : TESTI_SMISTAMENTO.primaDelloSmistamento}</div>}
+
+      {/* I temi del giudice: servono allo smistamento, e restano modificabili. */}
+      {puoVotare && smistamento?.presente && (
+        <div className="card" style={{ padding: 20 }}>
+          <h2 className="font-semibold text-gray-800" style={{ fontSize: 15, margin: "0 0 4px" }}>
+            I suoi temi
+          </h2>
+          <p style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6, margin: "0 0 12px" }}>
+            {TESTI_SMISTAMENTO.temiGiudice}
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {TEMI_PROGETTO.map((t) => {
+              const scelto = temi.includes(t.value);
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  aria-pressed={scelto}
+                  disabled={occupato}
+                  onClick={() => cambiaTema(t.value)}
+                  style={{
+                    padding: "7px 13px",
+                    borderRadius: 999,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    fontFamily: "inherit",
+                    cursor: "pointer",
+                    border: `1.5px solid ${scelto ? "var(--primary)" : "var(--border-color)"}`,
+                    background: scelto ? "#E6F8F5" : "#fff",
+                    color: scelto ? "#0A7A66" : "var(--text-dark)",
+                  }}
+                >
+                  {scelto && <i className="fas fa-check" aria-hidden="true" style={{ marginRight: 6, fontSize: 11 }} />}
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{conteggi.totali}</div>
-          <div className="stat-label">Progetti consegnati</div>
+          <div className="stat-label">{smistati ? "I suoi progetti" : "Progetti consegnati"}</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
           <div className="stat-number" style={{ fontSize: 26 }}>{conteggi.chiuse}</div>
@@ -184,10 +309,18 @@ export function CommissioneConsole() {
           <div className="stat-label">Ancora da valutare</div>
         </div>
         <div className="card-sm" style={{ padding: 16 }}>
-          <div style={{ fontSize: 12.5, color: "var(--text-mid)", lineHeight: 1.6 }}>
-            A parità di punteggio decide <strong>{CRITERIO_DIRIMENTE_LICEI}</strong>, come previsto
-            dall&apos;art. 7.
-          </div>
+          {smistati ? (
+            <div style={{ fontSize: 12.5, color: "var(--text-mid)", lineHeight: 1.6 }}>
+              <strong style={{ color: "var(--text-dark)" }}>Scadenza</strong>
+              <br />
+              {smistamento.scadenza}
+            </div>
+          ) : (
+            <div style={{ fontSize: 12.5, color: "var(--text-mid)", lineHeight: 1.6 }}>
+              A parità di punteggio decide <strong>{CRITERIO_DIRIMENTE_LICEI}</strong>, come previsto
+              dall&apos;art. 7.
+            </div>
+          )}
         </div>
       </div>
 
@@ -196,11 +329,16 @@ export function CommissioneConsole() {
       </p>
 
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
+      {avviso && <div style={bannerInfo}>{avviso}</div>}
 
       {progetti.length === 0 ? (
         <div className="card text-center" style={{ padding: 40 }}>
           <p className="text-gray-600 m-0">
-            Nessun progetto è stato ancora consegnato. Appena le squadre consegnano, li trova qui.
+            {smistati
+              ? riserva
+                ? "Per ora non ha progetti da valutare: se serve, glieli affidiamo e la avvisiamo via email."
+                : "Non ha progetti da valutare in questo momento."
+              : "Nessun progetto è stato ancora consegnato. Appena le squadre consegnano, li trova qui."}
           </p>
         </div>
       ) : (
@@ -240,6 +378,23 @@ export function CommissioneConsole() {
                       {squadra} . {istituto}
                       {ambito ? ` . ${ambito}` : ""}
                     </div>
+                    {Array.isArray(p.temi) && p.temi.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                        {p.temi.map((t: string) => (
+                          <span
+                            key={t}
+                            className="badge"
+                            style={{
+                              background: temi.includes(t) ? "#E6F8F5" : "#F1F5F9",
+                              color: temi.includes(t) ? "#0A7A66" : "var(--text-mid)",
+                              fontSize: 11.5,
+                            }}
+                          >
+                            {temaLabel(t)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <span
@@ -326,6 +481,19 @@ export function CommissioneConsole() {
                                 <div style={{ fontSize: 11.5, color: "#8A6100", lineHeight: 1.5, marginTop: 3 }}>
                                   {NOTA_CRITERIO_PRESENTAZIONE}
                                 </div>
+                              )}
+                              {/* Le tre fasce: lo stesso metro per giudici diversi. */}
+                              {LIVELLI_CRITERI[c.campo] && (
+                                <ul style={{ fontSize: 11.5, color: "var(--text-mid)", lineHeight: 1.5, margin: "5px 0 0", paddingLeft: 16 }}>
+                                  {LIVELLI_CRITERI[c.campo].map((l) => (
+                                    <li key={l.da}>
+                                      <strong>
+                                        {l.da} a {l.a}
+                                      </strong>
+                                      : {l.testo}
+                                    </li>
+                                  ))}
+                                </ul>
                               )}
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -439,12 +607,61 @@ export function CommissioneConsole() {
                           privato.
                         </p>
                       )}
+
+                      {smistati && !chiusa && (
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
+                          <button
+                            type="button"
+                            disabled={occupato}
+                            onClick={() => conflitto(p.id)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              fontSize: 12.5,
+                              color: "var(--text-mid)",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              fontFamily: "inherit",
+                            }}
+                          >
+                            {TESTI_SMISTAMENTO.conflitto}
+                          </button>
+                          <span style={{ fontSize: 12, color: "var(--text-light)" }}>
+                            : il progetto passa a un collega.
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {smistati && faseAperta && !riserva && (
+        <div className="card" style={{ padding: 20 }}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+              <h2 className="font-semibold text-gray-800" style={{ fontSize: 15, margin: "0 0 4px" }}>
+                Ha finito e ha ancora tempo?
+              </h2>
+              <p style={{ fontSize: 13, color: "var(--text-mid)", lineHeight: 1.6, margin: 0 }}>
+                {aperti <= APERTI_PER_CHIEDERE_ALTRI ? TESTI_SMISTAMENTO.altriNota : TESTI_SMISTAMENTO.altriNonAncora}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={occupato || aperti > APERTI_PER_CHIEDERE_ALTRI}
+              onClick={chiediAltri}
+              style={{ height: 38, fontSize: 13 }}
+            >
+              {TESTI_SMISTAMENTO.altri}
+            </Button>
+          </div>
         </div>
       )}
     </div>

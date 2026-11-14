@@ -201,7 +201,7 @@ async function prenota(
   client: SupabaseClient,
   chiave: string,
   adesso: string,
-  autore: string,
+  autore: string | null,
 ): Promise<"prenotato" | "gia_inviato"> {
   const riga = { chiave, valore: adesso, aggiornato_at: adesso, aggiornato_by: autore };
   const { error } = await client.from("licei_config").insert(riga);
@@ -238,7 +238,8 @@ export async function inviaAvvisoUnaVolta(
   opzioni: {
     chiave: string;
     chiaveEsito: string;
-    autore: string;
+    /** L'id dello staff che invia; null per gli invii automatici del cron. */
+    autore: string | null;
     /** Per i log e per la chiave di idempotenza, per esempio "avviso-riflessioni". */
     etichetta: string;
     destinatari: Destinatario[];
