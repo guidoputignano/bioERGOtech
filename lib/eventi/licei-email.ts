@@ -31,6 +31,7 @@ import {
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { SOCIAL, type PostInstagram } from "@/lib/social";
+import { PROGETTI_MAX_PER_GIUDICE } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 export type LiceiEmailInput = {
   referente: string;
@@ -346,7 +347,8 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
             ? `<p style="color:#4A5568;font-size:14px;line-height:1.75;margin:0 0 14px;">
           <strong style="color:#0A1628;">I suoi temi.</strong> Appena entra, scelga i temi in cui
           si sente più competente: il 26 novembre, chiuse le consegne, i progetti vengono smistati
-          e a lei arrivano soprattutto quelli su quei temi, con la scadenza per le schede.
+          e a lei arrivano soprattutto quelli su quei temi, al massimo ${PROGETTI_MAX_PER_GIUDICE}:
+          circa due ore in tutto, da distribuire come preferisce fino al 3 dicembre.
         </p>`
             : ""
         }

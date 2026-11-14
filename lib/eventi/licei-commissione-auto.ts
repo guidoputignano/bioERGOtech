@@ -29,6 +29,7 @@ import {
   GIUDICI_PER_PROGETTO,
   PASSI_AUTOMATICI,
   PROGETTI_EXTRA,
+  PROGETTI_MAX_PER_GIUDICE,
   SCADENZA_GIUDICI,
   SCHEDE_MINIME,
   chiavePasso,
@@ -51,6 +52,7 @@ import {
   type Destinatario,
 } from "@/lib/eventi/licei-avvisi";
 import * as E from "@/lib/eventi/licei-commissione-email";
+import { linkDiventaGiudice, mentorDaInvitare } from "@/lib/eventi/licei-mentor-giudici";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = SupabaseClient<any, "public", any>;
@@ -265,15 +267,31 @@ export async function assicuraSmistamento(
     q = { ...q, assegnazioni: { ...q.assegnazioni, righe: q.assegnazioni.righe.map((r) => (ids.has(r.id) ? { ...r, rimossa_at: adesso } : r)) } };
   }
   const a = analizza(q);
-  const bisogno = bisognoSmistamento(q.progetti, q.assegnazioni.righe, a.validi, GIUDICI_PER_PROGETTO);
-  let nuove = pianoAssegnazioni(q.progetti, a.ordinari, q.assegnazioni.righe, bisogno);
-  // Se gli ordinari non bastano (tutti in conflitto su un progetto), la riserva.
-  const coperte = contaProgetti(nuove);
-  const resto = new Map([...bisogno].map(([id, n]) => [id, n - (coperte.get(id) ?? 0)] as const).filter(([, n]) => n > 0));
-  if (resto.size > 0 && a.riserva.length > 0) {
-    const giaPrese = nuove.map((n) => ({ ...n, conflitto: false, rimossa_at: null }));
-    nuove = [...nuove, ...pianoAssegnazioni(q.progetti, a.riserva, [...q.assegnazioni.righe, ...giaPrese], resto)];
-  }
+  const come = (n: NuovaAssegnazione[]) => n.map((x) => ({ ...x, conflitto: false, rimossa_at: null }));
+
+  // Prima una lettura a ogni progetto, poi la seconda: se il tetto di
+  // `PROGETTI_MAX_PER_GIUDICE` non basta per tutte e due, nessun progetto
+  // resta senza giudice e quelli con una lettura sola si vedono nel pannello.
+  const prima = pianoAssegnazioni(
+    q.progetti,
+    a.ordinari,
+    q.assegnazioni.righe,
+    bisognoSmistamento(q.progetti, q.assegnazioni.righe, a.validi, 1),
+    PROGETTI_MAX_PER_GIUDICE,
+  );
+  let righe = [...q.assegnazioni.righe, ...come(prima)];
+  // Un progetto che nessun ordinario puo prendere (tetto, conflitti): la riserva.
+  const senza = bisognoSmistamento(q.progetti, righe, a.validi, 1);
+  const riserva1 = senza.size > 0 && a.riserva.length > 0 ? pianoAssegnazioni(q.progetti, a.riserva, righe, senza) : [];
+  righe = [...righe, ...come(riserva1)];
+  const seconda = pianoAssegnazioni(
+    q.progetti,
+    a.ordinari,
+    righe,
+    bisognoSmistamento(q.progetti, righe, a.validi, GIUDICI_PER_PROGETTO),
+    PROGETTI_MAX_PER_GIUDICE,
+  );
+  const nuove = [...prima, ...riserva1, ...seconda];
   await inserisci(db, nuove, origine);
   return nuove;
 }
@@ -328,9 +346,11 @@ export async function ridistribuisci(
   const tolteSet = new Set(righeTolte);
   const esistenti = q.assegnazioni.righe.map((r) => (tolteSet.has(r.id) ? { ...r, rimossa_at: adesso } : r));
   const validi = new Set([...a.validi].filter((id) => !togli.has(id)));
-  const pool = (a.riserva.length > 0 ? a.riserva : a.ordinari).filter((g) => !togli.has(g.id));
+  const conRiserva = a.riserva.length > 0;
+  const pool = (conRiserva ? a.riserva : a.ordinari).filter((g) => !togli.has(g.id));
   const bisogno = bisognoSmistamento(q.progetti, esistenti, validi, GIUDICI_PER_PROGETTO);
-  const nuove = pianoAssegnazioni(q.progetti, pool, esistenti, bisogno);
+  // Agli ordinari, solo fino al tetto delle due ore; la riserva non ne ha.
+  const nuove = pianoAssegnazioni(q.progetti, pool, esistenti, bisogno, conRiserva ? Infinity : PROGETTI_MAX_PER_GIUDICE);
   await inserisci(db, nuove, "ridistribuzione");
   return { tolte, nuove };
 }
@@ -342,6 +362,26 @@ export async function ridistribuisci(
  * lavorando.
  */
 export async function copertura(db: Db, q: Quadro): Promise<{ nuove: NuovaAssegnazione[]; scoperti: number }> {
+  // Scaduto il termine, le schede non chiuse dei giudici ordinari non contano
+  // piu: le assegnazioni si tolgono, cosi il progetto passa alla riserva e
+  // nessun progetto e letto piu di due volte.
+  const a0 = analizza(q);
+  const riservaSet = new Set(a0.riserva.map((g) => g.id));
+  const scadute = a0.attive.filter(
+    (r) => !riservaSet.has(r.commissario_id) && !a0.chiusa.has(`${r.progetto_id}:${r.commissario_id}`),
+  );
+  if (scadute.length > 0) {
+    const adesso = new Date().toISOString();
+    for (let i = 0; i < scadute.length; i += 200) {
+      const { error } = await db
+        .from("licei_assegnazioni")
+        .update({ rimossa_at: adesso })
+        .in("id", scadute.slice(i, i + 200).map((r) => r.id));
+      if (error) throw new Error(`licei_assegnazioni: ${error.message}`);
+    }
+    const ids = new Set(scadute.map((r) => r.id));
+    q = { ...q, assegnazioni: { ...q.assegnazioni, righe: q.assegnazioni.righe.map((r) => (ids.has(r.id) ? { ...r, rimossa_at: adesso } : r)) } };
+  }
   const a = analizza(q);
   const riservaIds = new Set(a.riserva.map((g) => g.id));
   const aperteRiserva = new Map<string, number>();
@@ -401,6 +441,8 @@ export async function assegnaAltri(db: Db, giudice: Pick<Giudice, "id" | "temi" 
     q.assegnazioni.righe,
     a.chiusePerProgetto,
     PROGETTI_EXTRA,
+    // Mai una terza lettura: solo progetti che ne hanno ancora una sola.
+    GIUDICI_PER_PROGETTO,
   );
   await inserisci(db, ids.map((progetto_id) => ({ progetto_id, commissario_id: giudice.id })), "richiesta");
   return ids.length;
@@ -543,11 +585,38 @@ async function passoAggiornamento(db: Db, resend: Invio): Promise<RisultatoPasso
   if (!(await migrazioneApplicata(db))) {
     return { fatto: false, dettagli: [`L'aggiornamento parla dei temi: parte dopo la migrazione ${MIGRAZIONE}.`] };
   }
+  // Il prossimo talk, se non e ancora passato: un'email sola invece di due.
+  const talk = E.talkDaAnnunciare();
   const s = await invia(db, resend, "auto_aggiornamento_studenti", "Studenti", await righeStudentiAvviso(db),
-    E.aggiornamentoStudentiSubject(), (d) => E.aggiornamentoStudentiHtml({ nome: d.nome }));
+    E.aggiornamentoStudentiSubject(talk), (d) => E.aggiornamentoStudentiHtml({ nome: d.nome, talk }));
   const d = await invia(db, resend, "auto_aggiornamento_scuole", "Docenti", await righeDocentiAvviso(db),
-    E.aggiornamentoScuoleSubject(), (x) => E.aggiornamentoScuoleHtml({ nome: x.nome }));
+    E.aggiornamentoScuoleSubject(talk), (x) => E.aggiornamentoScuoleHtml({ nome: x.nome, talk }));
   return { fatto: s.ok && d.ok, dettagli: [s.testo, d.testo] };
+}
+
+/**
+ * L'invito ai mentor approvati che non sono ancora in Commissione, con il
+ * link firmato al pulsante "Si, partecipo come giudice". Il promemoria va a
+ * chi, nel frattempo, non ha cliccato.
+ */
+async function passoInvitoMentor(db: Db, resend: Invio, promemoria: boolean): Promise<RisultatoPasso> {
+  const daInvitare = await mentorDaInvitare(db);
+  const link = new Map<string, string>();
+  const righe: Destinatario[] = [];
+  for (const m of daInvitare) {
+    const url = linkDiventaGiudice(m.id);
+    if (!url) continue;
+    const rif = `mentor ${m.id}`;
+    link.set(rif, url);
+    righe.push({ rif, nome: m.nome, email: m.email });
+  }
+  if (daInvitare.length > 0 && righe.length === 0) {
+    return { fatto: false, dettagli: ["Link non firmati: manca SUPABASE_SERVICE_ROLE_KEY."] };
+  }
+  const id = promemoria ? "invito_mentor_promemoria" : "invito_mentor";
+  const r = await invia(db, resend, `auto_${id}_mentor`, "Mentor", righe,
+    E.invitoMentorSubject(promemoria), (d) => E.invitoMentorHtml({ nome: d.nome, url: link.get(d.rif)!, promemoria }));
+  return { fatto: r.ok, dettagli: [r.testo] };
 }
 
 async function passoConsegna(db: Db, resend: Invio, ultimo: boolean): Promise<RisultatoPasso> {
@@ -815,6 +884,8 @@ async function passoCopertura(db: Db, resend: Invio): Promise<RisultatoPasso> {
 
 const ESEGUI: Record<IdPasso, (db: Db, resend: Invio) => Promise<RisultatoPasso>> = {
   aggiornamento: passoAggiornamento,
+  invito_mentor: (db, r) => passoInvitoMentor(db, r, false),
+  invito_mentor_promemoria: (db, r) => passoInvitoMentor(db, r, true),
   consegna_tre_giorni: (db, r) => passoConsegna(db, r, false),
   consegna_ultimo_giorno: (db, r) => passoConsegna(db, r, true),
   smistamento: passoSmistamento,

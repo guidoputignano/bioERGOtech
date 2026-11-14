@@ -12,6 +12,12 @@
  */
 
 import { INTESTAZIONE, chiusura, esc } from "@/lib/eventi/licei-email";
+// Solo dati pubblici del talk: mai `link`, che resta agli iscritti.
+import {
+  luogoTalk,
+  prossimoTalk,
+  talkPath,
+} from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 import {
   COMMISSIONE_PATH,
   LICEI,
@@ -25,7 +31,9 @@ import {
   DATE_PERCORSO,
   GIUDICI_PER_PROGETTO_LETTERE,
   MINUTI_PER_PROGETTO,
+  durata,
   PROGETTI_EXTRA,
+  PROGETTI_MAX_PER_GIUDICE,
   SCADENZA_GIUDICI_BREVE,
   SCADENZA_GIUDICI_LABEL,
   SCADENZA_RISERVA_LABEL,
@@ -93,13 +101,69 @@ const AREA_GIUDICE = `${SITE_URL}${COMMISSIONE_PATH}`;
 
 /* ── 16 novembre: aggiornamento ──────────────────────────────────────── */
 
-export const aggiornamentoStudentiSubject = () => "Consegna dei progetti: le date e che cosa succede dopo";
+/** Il prossimo talk, come lo annuncia l'aggiornamento. Solo dati pubblici. */
+export type TalkAnnuncio = {
+  titolo: string;
+  sottotitolo: string;
+  relatore: string;
+  ruolo: string;
+  /** "giovedì 19 novembre", per l'oggetto. */
+  giorno: string;
+  /** "Giovedì 19 novembre 2026, dalle 15:00 alle 16:00, online". */
+  quando: string;
+  url: string;
+  aperto: boolean;
+};
 
-export function aggiornamentoStudentiHtml({ nome }: { nome: string }): string {
+/**
+ * Il talk da annunciare nell'aggiornamento: il prossimo non ancora finito
+ * nel momento in cui l'email parte. Se il cron parte dopo il talk, il
+ * riquadro sparisce da solo.
+ */
+export function talkDaAnnunciare(adesso: Date = new Date()): TalkAnnuncio | null {
+  const t = prossimoTalk(adesso);
+  if (!t) return null;
+  return {
+    titolo: t.titolo,
+    sottotitolo: t.sottotitolo,
+    relatore: t.relatore.nome,
+    ruolo: t.relatore.ruolo,
+    giorno: t.dataLabel.replace(/\s+\d{4}$/, "").toLowerCase(),
+    quando: `${t.dataLabel}, ${t.orarioLabel}, ${luogoTalk(t).toLowerCase()}`,
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+    aperto: !!t.apertoATutti,
+  };
+}
+
+const riquadroTalk = (t: TalkAnnuncio, invito: string, bottoneTesto: string) => `
+      <div style="background:#fff;border:1px solid #B4E3D8;border-left:4px solid #00C896;border-radius:8px;padding:20px 22px;margin:0 0 22px;">
+        <p style="color:#008F6B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Il prossimo talk con gli esperti</p>
+        <p style="color:#0A1628;font-size:17px;font-weight:700;line-height:1.4;margin:0 0 6px;">${esc(t.titolo)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.6;margin:0 0 10px;">con <strong>${esc(t.relatore)}</strong>, ${esc(t.ruolo)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.6;margin:0 0 10px;">${esc(t.sottotitolo)}</p>
+        <p style="color:#0A1628;font-size:14px;font-weight:600;line-height:1.6;margin:0 0 12px;">${esc(t.quando)}</p>
+        <p style="color:#4A5568;font-size:14px;line-height:1.6;margin:0 0 14px;">${invito}</p>
+        <a href="${t.url}" style="display:inline-block;border:2px solid #00C896;color:#0A7A66;font-weight:700;font-size:14px;text-decoration:none;padding:9px 20px;border-radius:8px;">${bottoneTesto}</a>
+      </div>`;
+
+export const aggiornamentoStudentiSubject = (talk: TalkAnnuncio | null = null) =>
+  talk
+    ? `Il talk di ${talk.giorno} e la consegna dei progetti: le prossime date`
+    : "Consegna dei progetti: le date e che cosa succede dopo";
+
+export function aggiornamentoStudentiHtml({ nome, talk = null }: { nome: string; talk?: TalkAnnuncio | null }): string {
   const esempi = TEMI_PROGETTO.slice(0, 2).map((t) => `«${t.label}»`).join(" o ");
+  const blocco = talk
+    ? riquadroTalk(
+        talk,
+        `Un'ora per capire come raccontare il vostro progetto, prima della consegna del 25. Ci si iscrive dalla pagina del talk, con l'account delle lezioni, e il link per collegarsi compare lì.${talk.aperto ? " Il talk è aperto a tutti: puoi invitare anche compagni e amici." : ""}`,
+        "Iscriviti al talk",
+      )
+    : "";
   return cornice(`
       ${titolo(saluto(nome, true))}
-      ${p("ti scriviamo con le date dei prossimi passi del percorso, fino all'evento finale.")}
+      ${p(talk ? `ti scriviamo con due cose: il talk di ${talk.giorno} e le date dei prossimi passi del percorso, fino all'evento finale.` : "ti scriviamo con le date dei prossimi passi del percorso, fino all'evento finale.")}
+      ${blocco}
       ${date()}
       ${p(`<strong>Una novità nel modulo di consegna: i temi.</strong> Quando consegnate, scegliete uno o due temi fra quelli proposti, per esempio ${esempi}. Servono ad affidare il vostro progetto ai giudici che conoscono meglio quel campo.`)}
       ${p("Se il progetto della tua squadra non è ancora consegnato, ti mandiamo un promemoria il 23 e il 25 novembre. La consegna la fa il capitano, dall'area studenti.")}
@@ -107,12 +171,23 @@ export function aggiornamentoStudentiHtml({ nome }: { nome: string }): string {
       ${firma}`);
 }
 
-export const aggiornamentoScuoleSubject = () => `Il calendario fino all'evento del 10 dicembre . ${LICEI.titolo}`;
+export const aggiornamentoScuoleSubject = (talk: TalkAnnuncio | null = null) =>
+  talk
+    ? `Il talk di ${talk.giorno} e il calendario fino al 10 dicembre . ${LICEI.titolo}`
+    : `Il calendario fino all'evento del 10 dicembre . ${LICEI.titolo}`;
 
-export function aggiornamentoScuoleHtml({ nome }: { nome: string }): string {
+export function aggiornamentoScuoleHtml({ nome, talk = null }: { nome: string; talk?: TalkAnnuncio | null }): string {
+  const blocco = talk
+    ? riquadroTalk(
+        talk,
+        `È pensato per le squadre che stanno preparando la consegna del 25.${talk.aperto ? " È aperto a tutti: può partecipare anche lei, e condividerlo con le classi e con i colleghi." : " Possono partecipare anche i docenti."}`,
+        "La pagina del talk",
+      )
+    : "";
   return cornice(`
       ${titolo(saluto(nome, false))}
       ${p("Le scriviamo con il calendario delle prossime settimane e con due cose in cui il suo aiuto fa la differenza.")}
+      ${blocco}
       ${date()}
       ${riquadro(
         "Che cosa le chiediamo",
@@ -121,9 +196,41 @@ export function aggiornamentoScuoleHtml({ nome }: { nome: string }): string {
           `<strong>Organizzare fin d'ora la partecipazione all'evento finale</strong> di ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}. ${maiuscola(ANNUNCIO_FINALISTI_LABEL)} sapremo quali squadre salgono sul palco, ma l'evento è aperto a tutte le classi coinvolte: conviene avviare ora autorizzazioni e trasporti.`,
         ]),
       )}
-      ${p(`Alla consegna le squadre scelgono uno o due temi: servono ad affidare ogni progetto ad almeno ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti di quel campo. Il 26 novembre riceverà il riepilogo dei progetti consegnati dal suo istituto.`)}
+      ${p(`Alla consegna le squadre scelgono uno o due temi: servono ad affidare ogni progetto a ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti di quel campo. Il 26 novembre riceverà il riepilogo dei progetti consegnati dal suo istituto.`)}
       ${bottone(AREA_DOCENTE, "Apri l'area docenti")}
       ${p("Per qualsiasi dubbio può rispondere a questa email.")}
+      ${firma}`);
+}
+
+/* ── 16 e 20 novembre: i mentor come giudici ─────────────────────────── */
+
+export const invitoMentorSubject = (promemoria: boolean) =>
+  promemoria
+    ? "Ultimi giorni: ci darebbe una mano come giudice?"
+    : "Ci darebbe una mano come giudice? Meno di due ore";
+
+export function invitoMentorHtml({ nome, url, promemoria }: { nome: string; url: string; promemoria: boolean }): string {
+  const n = nome.trim();
+  const apertura = promemoria
+    ? p("le riscrivo per l'invito dei giorni scorsi: giovedì 26 novembre smistiamo i progetti fra i giudici, e se vuole far parte della Commissione basta un clic entro mercoledì 25.")
+    : `${p("grazie per il tempo che ha dedicato in queste settimane agli studenti del percorso.")}
+      ${p("Le scrivo per chiederle un aiuto in più: entrare nella Commissione che valuta i progetti delle scuole superiori. Il bando lo prevede espressamente, e con circa 80 progetti in arrivo il parere di chi conosce il lavoro reale fa la differenza.")}`;
+  return cornice(`
+      ${titolo(n ? `Gentile ${esc(n)},` : "Gentile mentor,")}
+      ${apertura}
+      ${riquadro(
+        "Che cosa le chiederemmo",
+        elenco([
+          `<strong>Circa dieci progetti, mai più di ${PROGETTI_MAX_PER_GIUDICE}:</strong> circa ${MINUTI_PER_PROGETTO} minuti l'uno, meno di due ore in tutto, online, quando le è più comodo, anche in due sedute.`,
+          `<strong>Fra giovedì 26 novembre e ${SCADENZA_GIUDICI_LABEL}.</strong>`,
+          "<strong>Progetti scelti soprattutto fra i temi che indica lei.</strong> La scheda ha i sei criteri del bando e le indicazioni per dare i punteggi; i commenti scritti sono facoltativi.",
+          "<strong>Il suo è uno dei due pareri:</strong> ogni progetto è letto anche da un altro giudice, in modo indipendente.",
+          "<strong>Se fra i suoi progetti c'è una squadra che ha seguito come mentor,</strong> con un clic passa a un collega.",
+        ]),
+      )}
+      ${p(`I ${LICEI.progettiSulPalco} progetti migliori saliranno sul palco ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}.`)}
+      ${bottone(url, "Sì, partecipo come giudice")}
+      ${p("Il pulsante la inserisce subito in Commissione e le mandiamo un'email per accedere all'area, dove sceglie i temi. Se non riesce, non deve fare nulla: il suo aiuto come mentor resta prezioso.")}
       ${firma}`);
 }
 
@@ -201,18 +308,18 @@ export function giudiceSmistamentoHtml(i: GiudiceSmistamento): string {
       ${p(`Riceve progetti solo se servono: se un collega non ha iniziato entro mercoledì 2 dicembre, o se dopo il ${SCADENZA_GIUDICI_LABEL} a un progetto mancano schede. In quel caso le scriviamo subito, con i tempi.`)}
       ${firma}`);
   }
-  const ore = Math.max(1, Math.round((i.assegnati * MINUTI_PER_PROGETTO) / 60));
+  const tempo = durata(i.assegnati * MINUTI_PER_PROGETTO);
   return cornice(`
       ${titolo(saluto(i.nome, false))}
-      ${p(`le consegne sono chiuse e i progetti sono stati smistati. <strong>A lei ne sono stati affidati ${i.assegnati}</strong>, scelti soprattutto fra i temi che ha indicato. Ogni progetto è letto da ${GIUDICI_PER_PROGETTO_LETTERE} giudici, in modo indipendente.`)}
+      ${p(`le consegne sono chiuse e i progetti sono stati smistati. <strong>A lei ne abbiamo affidati ${i.assegnati}, circa ${tempo} in tutto</strong>, scelti soprattutto fra i temi che ha indicato. Ogni progetto è letto anche da un secondo giudice, in modo indipendente: il suo è uno dei due pareri, non l'unico.`)}
       ${riquadro(
         "In breve",
         elenco([
-          `<strong>Scadenza:</strong> ${SCADENZA_GIUDICI_LABEL}.`,
-          `<strong>Tempo:</strong> circa ${MINUTI_PER_PROGETTO} minuti a progetto, ${ore === 1 ? "un'ora" : `${ore} ore`} in tutto. Uno o due progetti al giorno bastano.`,
+          `<strong>Scadenza:</strong> ${SCADENZA_GIUDICI_LABEL}. Può farlo in una o due sedute, quando le è più comodo.`,
+          `<strong>Ogni progetto si legge in pochi minuti:</strong> sei risposte brevi, circa ${MINUTI_PER_PROGETTO} minuti con la scheda. Il link ai materiali lo apra solo se le serve per decidere.`,
           "<strong>Le schede sono aperte:</strong> una scheda conta quando la chiude, con tutti e sei i punteggi.",
           "<strong>Se riconosce una squadra</strong>, usi «Conosco questa squadra»: il progetto passa a un collega.",
-          `<strong>Se finisce prima e ha tempo</strong>, «Ho tempo, me ne dia altri» le affida ${PROGETTI_EXTRA} progetti in più.`,
+          `<strong>Se finisce prima e ha tempo</strong>, «Ho tempo, me ne dia altri» le affida, se ce ne sono, fino a ${PROGETTI_EXTRA} progetti che hanno ancora una lettura sola. È facoltativo.`,
         ]),
       )}
       ${bottone(AREA_GIUDICE, "Apri i miei progetti")}

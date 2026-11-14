@@ -21,6 +21,7 @@ type Qualsiasi = any;
 const NOMI_ANTEPRIME: Record<string, string> = {
   aggiornamento_studenti: "16 nov . Aggiornamento agli studenti",
   aggiornamento_scuole: "16 nov . Aggiornamento alle scuole",
+  invito_mentor: "16 nov . Invito ai mentor a fare da giudici",
   consegna_studente: "23 nov . Promemoria agli studenti",
   consegna_docente: "23 nov . Squadre in bozza, ai docenti",
   consegna_ultimo: "25 nov . Ultimo giorno, agli studenti",
@@ -155,6 +156,23 @@ export function CalendarioCommissione() {
         </div>
       )}
 
+      {n && n.progetti > 0 && (
+        <p
+          style={{
+            fontSize: 13,
+            lineHeight: 1.6,
+            margin: "0 0 14px",
+            color: n.carico_previsto !== null && n.carico_previsto <= n.tetto ? "var(--text-mid)" : "#8A6100",
+          }}
+        >
+          {n.carico_previsto === null
+            ? `Nessun giudice ancora: per ${n.progetti} progetti, con due letture e al massimo ${n.tetto} a testa (circa due ore), ne servono ${n.giudici_necessari}.`
+            : n.carico_previsto <= n.tetto
+              ? `Con ${n.giudici} giudici e due letture: circa ${n.carico_previsto} progetti a testa, sotto il tetto di ${n.tetto} (circa due ore).`
+              : `Con ${n.giudici} giudici ne toccherebbero ${n.carico_previsto} a testa, oltre il tetto di ${n.tetto} (circa due ore): ne servono ${n.giudici_necessari}. Aggiungi giudici o mentor (ruolo «Impresa e mentor»), altrimenti una parte dei progetti avrà una lettura sola fino alla copertura del 4 dicembre.`}
+        </p>
+      )}
+
       <ol style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
         {(dati.passi ?? []).map((p: Qualsiasi) => {
           const c = COLORI[p.stato] ?? COLORI.in_programma;
@@ -184,12 +202,12 @@ export function CalendarioCommissione() {
             onClick={() =>
               chiama(
                 { azione: "aggiornamento_ora" },
-                "Inviare adesso l'aggiornamento a tutti gli studenti e a tutti i docenti? Parte una volta sola.",
+                "Inviare adesso le email del 16 novembre: l'aggiornamento a studenti e docenti e l'invito ai mentor? Partono una volta sola.",
                 riassunto,
               )
             }
           >
-            Invia adesso l&apos;aggiornamento
+            Invia adesso le email del 16 novembre
           </Button>
         )}
         <Button

@@ -1169,10 +1169,18 @@ repository.
 
 ## Smistamento e calendario automatico
 
-Con circa 80 progetti e 8 giudici non si chiede a tutti di leggere tutto.
-Ogni progetto va a **due giudici** (`GIUDICI_PER_PROGETTO`), scelti per tema
-e con carichi uguali, e ogni giudice con diritto di voto vede e valuta solo
-i suoi. Date, temi e testi stanno in `smistamento.ts`; la regola, pura e
+Con circa 80 progetti non si chiede a tutti di leggere tutto. Ogni
+progetto va a **due giudici** e mai di piu (`GIUDICI_PER_PROGETTO`), scelti
+per tema e con carichi uguali, e ogni giudice con diritto di voto vede e
+valuta solo i suoi: **al massimo 12** (`PROGETTI_MAX_PER_GIUDICE`), circa
+due ore, il tempo che chiediamo. Per le due letture di 80 progetti servono
+quindi 14 giudici: i mentor del percorso possono entrare in Commissione
+(art. 8, ruolo "Impresa e mentor"). Con meno giudici lo smistamento da
+prima una lettura a tutti, poi la seconda fin dove arriva il tetto, e il
+pannello dice quanti ne mancano; i giudici aggiunti dopo completano le
+seconde letture al giro successivo del cron. "Me ne dia altri" non da mai
+una terza lettura. Alla scadenza le schede non chiuse si tolgono e passano
+alla riserva. Date, temi e testi stanno in `smistamento.ts`; la regola, pura e
 provata, in `lib/eventi/licei-smistamento.ts`; il lavoro in
 `lib/eventi/licei-commissione-auto.ts`; le email in
 `lib/eventi/licei-commissione-email.ts`.
@@ -1197,6 +1205,8 @@ Italia) esegue i passi di `PASSI_AUTOMATICI`, ognuno una volta sola:
 | Quando | Passo |
 |---|---|
 | lunedi 16 novembre | aggiornamento a studenti e docenti (date, temi, organizzare l'uscita) |
+| lunedi 16 novembre | invito ai mentor approvati a fare anche da giudici, con il pulsante "Si, partecipo come giudice" |
+| venerdi 20 novembre | promemoria ai mentor che non hanno ancora risposto |
 | lunedi 23 novembre | promemoria agli studenti senza consegna; ai docenti l'elenco delle squadre in bozza |
 | mercoledi 25 novembre | ultimo giorno, agli studenti delle squadre in bozza |
 | giovedi 26 novembre | smistamento, apertura delle schede, email a giudici, riserva, scuole, studenti, staff |
@@ -1210,6 +1220,15 @@ non manda email doppie; un passo mancato si recupera il giorno dopo, se e
 ancora nella sua finestra. Dopo lo smistamento ogni giro ridà un giudice ai
 progetti che l'hanno perso (giudice disattivato, conflitto). L'annuncio dei
 finalisti resta allo staff, dal pannello Progetti.
+
+**Mentor come giudici.** Il pulsante dell'email porta a
+`commissione/diventa-giudice?t=...`: il link e firmato (HMAC dell'id del
+mentor, chiave derivata da quella di servizio, `lib/eventi/licei-mentor-giudici.ts`),
+quindi non serve l'accesso. Un clic, una spunta sul conflitto di interessi,
+e il mentor entra in Commissione con il ruolo "Impresa e mentor", con il
+suo account se ne ha uno, e riceve l'email di accesso (la stessa funzione
+del pannello, `aggiungiCommissario`). Fino al 30 novembre; dopo il 26
+riceve subito le seconde letture che mancano.
 
 Nel pannello, scheda "Commissione": il calendario con lo stato di ogni
 passo, le anteprime e le prove di tutte le email, "Invia adesso

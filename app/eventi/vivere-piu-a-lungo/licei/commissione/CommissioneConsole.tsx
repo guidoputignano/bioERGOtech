@@ -43,6 +43,8 @@ import { totaleValutazione, type ValutazioneInput } from "@/lib/eventi/licei-squ
 import {
   APERTI_PER_CHIEDERE_ALTRI,
   LIVELLI_CRITERI,
+  MINUTI_PER_PROGETTO,
+  durata,
   TEMI_PROGETTO,
   TESTI_SMISTAMENTO,
   temaLabel,
@@ -323,6 +325,38 @@ export function CommissioneConsole() {
           )}
         </div>
       </div>
+
+      {/* Quanto manca, in tempo e non solo in numero: dieci progetti
+          sembrano tanti, "restano 40 minuti" no. */}
+      {smistati && conteggi.totali > 0 && (
+        <div className="card-sm" style={{ padding: "14px 16px" }}>
+          <div className="flex flex-wrap items-center justify-between gap-2" style={{ fontSize: 13.5, color: "var(--text-dark)", marginBottom: 8 }}>
+            <span>
+              Ha chiuso <strong>{conteggi.chiuse}</strong> {conteggi.chiuse === 1 ? "progetto" : "progetti"} su{" "}
+              {conteggi.totali}
+            </span>
+            <span style={{ color: "var(--text-mid)" }}>
+              {aperti === 0 ? "Finito, grazie!" : `Restano circa ${durata(aperti * MINUTI_PER_PROGETTO)}`}
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={conteggi.totali}
+            aria-valuenow={conteggi.chiuse}
+            style={{ height: 8, borderRadius: 999, background: "#E2E8F0", overflow: "hidden" }}
+          >
+            <div
+              style={{
+                width: `${Math.round((conteggi.chiuse / conteggi.totali) * 100)}%`,
+                height: "100%",
+                background: "var(--primary)",
+                borderRadius: 999,
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <p style={{ fontSize: 12.5, color: "var(--text-light)", lineHeight: 1.7, margin: 0 }}>
         {NOTA_VALUTAZIONE_INDIPENDENTE}

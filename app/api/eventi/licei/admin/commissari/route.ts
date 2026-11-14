@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import { requireAdmin } from "@/lib/auth/admin";
-import { commissarioEmailHtml, commissarioEmailSubject } from "@/lib/eventi/licei-email";
-import {
-  RUOLI_COMMISSIONE,
-  SITE_URL,
-} from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { RUOLI_COMMISSIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { aggiungiCommissario } from "@/lib/eventi/licei-commissari";
 import { temiPuliti } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 import { analizza, leggiQuadro } from "@/lib/eventi/licei-commissione-auto";
 
 const RUOLI_VALIDI = new Set<string>(RUOLI_COMMISSIONE.map((r) => r.value));
-const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const testo = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
 /** La Commissione dell'art. 8, con quante schede ciascuno ha chiuso. */
@@ -96,88 +91,15 @@ export async function POST(request: Request) {
     diritto_voto?: boolean;
   };
 
-  const nome = testo(body.nome);
-  const cognome = testo(body.cognome);
-  const email = testo(body.email).toLowerCase();
-  const ruolo = testo(body.ruolo);
-
-  if (!nome) return NextResponse.json({ error: "Indica il nome." }, { status: 400 });
-  if (!cognome) return NextResponse.json({ error: "Indica il cognome." }, { status: 400 });
-  if (!isEmail(email)) return NextResponse.json({ error: "Email non valida." }, { status: 400 });
-  if (ruolo && !RUOLI_VALIDI.has(ruolo)) {
-    return NextResponse.json({ error: "Ruolo non previsto dall'art. 8." }, { status: 400 });
-  }
-
-  // Il diritto di voto segue il ruolo, salvo indicazione contraria: l'art. 8
-  // lo nega al solo referente del consorzio, e lasciare la scelta libera
-  // significherebbe poterlo dimenticare.
-  const dirittoDaRuolo = RUOLI_COMMISSIONE.find((r) => r.value === ruolo)?.voto ?? true;
-  const diritto_voto = body.diritto_voto === undefined ? dirittoDaRuolo : !!body.diritto_voto;
-
-  /* ── Account ── */
-  let userId: string | null = null;
-  let setPasswordUrl: string | undefined;
-
-  const { data: profilo } = await client
-    .from("profiles")
-    .select("id")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (profilo?.id) {
-    userId = profilo.id;
-  } else {
-    const { data: creato, error: erroreCreazione } = await client.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      user_metadata: { full_name: `${nome} ${cognome}` },
-    });
-    if (erroreCreazione || !creato.user) {
-      console.error("Licei commissario createUser error:", erroreCreazione);
-      return NextResponse.json(
-        { error: "Non è stato possibile creare l'account del commissario." },
-        { status: 500 },
-      );
-    }
-    userId = creato.user.id;
-
-    const { data: link } = await client.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: { redirectTo: `${SITE_URL}/auth/update-password` },
-    });
-    setPasswordUrl = link?.properties?.action_link;
-  }
-
-  const { data, error } = await client
-    .from("licei_commissari")
-    .upsert(
-      { user_id: userId, nome, cognome, email, ruolo: ruolo || null, diritto_voto, attivo: true },
-      { onConflict: "user_id" },
-    )
-    .select()
-    .maybeSingle();
-
-  if (error) {
-    console.error("Licei commissario upsert error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
-        to: email,
-        subject: commissarioEmailSubject(),
-        html: commissarioEmailHtml({ nome, ruolo, diritto_voto, setPasswordUrl }),
-      });
-    } catch (mailErr) {
-      console.error("Licei commissario email failed:", mailErr);
-    }
-  }
-
-  return NextResponse.json({ success: true, commissario: data });
+  const esito = await aggiungiCommissario(client, {
+    nome: testo(body.nome),
+    cognome: testo(body.cognome),
+    email: testo(body.email),
+    ruolo: testo(body.ruolo),
+    diritto_voto: body.diritto_voto,
+  });
+  if (!esito.ok) return NextResponse.json({ error: esito.errore }, { status: esito.status });
+  return NextResponse.json({ success: true, commissario: esito.commissario });
 }
 
 /** Ruolo, diritto di voto, attivazione. */
