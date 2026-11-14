@@ -29,6 +29,7 @@ import {
   GIUDICI_PER_PROGETTO,
   PASSI_AUTOMATICI,
   PROGETTI_EXTRA,
+  PROGETTI_MAX_PER_GIUDICE,
   SCADENZA_GIUDICI,
   SCHEDE_MINIME,
   chiavePasso,
@@ -265,15 +266,31 @@ export async function assicuraSmistamento(
     q = { ...q, assegnazioni: { ...q.assegnazioni, righe: q.assegnazioni.righe.map((r) => (ids.has(r.id) ? { ...r, rimossa_at: adesso } : r)) } };
   }
   const a = analizza(q);
-  const bisogno = bisognoSmistamento(q.progetti, q.assegnazioni.righe, a.validi, GIUDICI_PER_PROGETTO);
-  let nuove = pianoAssegnazioni(q.progetti, a.ordinari, q.assegnazioni.righe, bisogno);
-  // Se gli ordinari non bastano (tutti in conflitto su un progetto), la riserva.
-  const coperte = contaProgetti(nuove);
-  const resto = new Map([...bisogno].map(([id, n]) => [id, n - (coperte.get(id) ?? 0)] as const).filter(([, n]) => n > 0));
-  if (resto.size > 0 && a.riserva.length > 0) {
-    const giaPrese = nuove.map((n) => ({ ...n, conflitto: false, rimossa_at: null }));
-    nuove = [...nuove, ...pianoAssegnazioni(q.progetti, a.riserva, [...q.assegnazioni.righe, ...giaPrese], resto)];
-  }
+  const come = (n: NuovaAssegnazione[]) => n.map((x) => ({ ...x, conflitto: false, rimossa_at: null }));
+
+  // Prima una lettura a ogni progetto, poi la seconda: se il tetto di
+  // `PROGETTI_MAX_PER_GIUDICE` non basta per tutte e due, nessun progetto
+  // resta senza giudice e quelli con una lettura sola si vedono nel pannello.
+  const prima = pianoAssegnazioni(
+    q.progetti,
+    a.ordinari,
+    q.assegnazioni.righe,
+    bisognoSmistamento(q.progetti, q.assegnazioni.righe, a.validi, 1),
+    PROGETTI_MAX_PER_GIUDICE,
+  );
+  let righe = [...q.assegnazioni.righe, ...come(prima)];
+  // Un progetto che nessun ordinario puo prendere (tetto, conflitti): la riserva.
+  const senza = bisognoSmistamento(q.progetti, righe, a.validi, 1);
+  const riserva1 = senza.size > 0 && a.riserva.length > 0 ? pianoAssegnazioni(q.progetti, a.riserva, righe, senza) : [];
+  righe = [...righe, ...come(riserva1)];
+  const seconda = pianoAssegnazioni(
+    q.progetti,
+    a.ordinari,
+    righe,
+    bisognoSmistamento(q.progetti, righe, a.validi, GIUDICI_PER_PROGETTO),
+    PROGETTI_MAX_PER_GIUDICE,
+  );
+  const nuove = [...prima, ...riserva1, ...seconda];
   await inserisci(db, nuove, origine);
   return nuove;
 }
@@ -328,9 +345,11 @@ export async function ridistribuisci(
   const tolteSet = new Set(righeTolte);
   const esistenti = q.assegnazioni.righe.map((r) => (tolteSet.has(r.id) ? { ...r, rimossa_at: adesso } : r));
   const validi = new Set([...a.validi].filter((id) => !togli.has(id)));
-  const pool = (a.riserva.length > 0 ? a.riserva : a.ordinari).filter((g) => !togli.has(g.id));
+  const conRiserva = a.riserva.length > 0;
+  const pool = (conRiserva ? a.riserva : a.ordinari).filter((g) => !togli.has(g.id));
   const bisogno = bisognoSmistamento(q.progetti, esistenti, validi, GIUDICI_PER_PROGETTO);
-  const nuove = pianoAssegnazioni(q.progetti, pool, esistenti, bisogno);
+  // Agli ordinari, solo fino al tetto delle due ore; la riserva non ne ha.
+  const nuove = pianoAssegnazioni(q.progetti, pool, esistenti, bisogno, conRiserva ? Infinity : PROGETTI_MAX_PER_GIUDICE);
   await inserisci(db, nuove, "ridistribuzione");
   return { tolte, nuove };
 }
@@ -342,6 +361,26 @@ export async function ridistribuisci(
  * lavorando.
  */
 export async function copertura(db: Db, q: Quadro): Promise<{ nuove: NuovaAssegnazione[]; scoperti: number }> {
+  // Scaduto il termine, le schede non chiuse dei giudici ordinari non contano
+  // piu: le assegnazioni si tolgono, cosi il progetto passa alla riserva e
+  // nessun progetto e letto piu di due volte.
+  const a0 = analizza(q);
+  const riservaSet = new Set(a0.riserva.map((g) => g.id));
+  const scadute = a0.attive.filter(
+    (r) => !riservaSet.has(r.commissario_id) && !a0.chiusa.has(`${r.progetto_id}:${r.commissario_id}`),
+  );
+  if (scadute.length > 0) {
+    const adesso = new Date().toISOString();
+    for (let i = 0; i < scadute.length; i += 200) {
+      const { error } = await db
+        .from("licei_assegnazioni")
+        .update({ rimossa_at: adesso })
+        .in("id", scadute.slice(i, i + 200).map((r) => r.id));
+      if (error) throw new Error(`licei_assegnazioni: ${error.message}`);
+    }
+    const ids = new Set(scadute.map((r) => r.id));
+    q = { ...q, assegnazioni: { ...q.assegnazioni, righe: q.assegnazioni.righe.map((r) => (ids.has(r.id) ? { ...r, rimossa_at: adesso } : r)) } };
+  }
   const a = analizza(q);
   const riservaIds = new Set(a.riserva.map((g) => g.id));
   const aperteRiserva = new Map<string, number>();
@@ -401,6 +440,8 @@ export async function assegnaAltri(db: Db, giudice: Pick<Giudice, "id" | "temi" 
     q.assegnazioni.righe,
     a.chiusePerProgetto,
     PROGETTI_EXTRA,
+    // Mai una terza lettura: solo progetti che ne hanno ancora una sola.
+    GIUDICI_PER_PROGETTO,
   );
   await inserisci(db, ids.map((progetto_id) => ({ progetto_id, commissario_id: giudice.id })), "richiesta");
   return ids.length;

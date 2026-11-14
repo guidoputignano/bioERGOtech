@@ -31,6 +31,7 @@ import {
   DATE_PERCORSO,
   GIUDICI_PER_PROGETTO_LETTERE,
   MINUTI_PER_PROGETTO,
+  durata,
   PROGETTI_EXTRA,
   SCADENZA_GIUDICI_BREVE,
   SCADENZA_GIUDICI_LABEL,
@@ -194,7 +195,7 @@ export function aggiornamentoScuoleHtml({ nome, talk = null }: { nome: string; t
           `<strong>Organizzare fin d'ora la partecipazione all'evento finale</strong> di ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}. ${maiuscola(ANNUNCIO_FINALISTI_LABEL)} sapremo quali squadre salgono sul palco, ma l'evento è aperto a tutte le classi coinvolte: conviene avviare ora autorizzazioni e trasporti.`,
         ]),
       )}
-      ${p(`Alla consegna le squadre scelgono uno o due temi: servono ad affidare ogni progetto ad almeno ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti di quel campo. Il 26 novembre riceverà il riepilogo dei progetti consegnati dal suo istituto.`)}
+      ${p(`Alla consegna le squadre scelgono uno o due temi: servono ad affidare ogni progetto a ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti di quel campo. Il 26 novembre riceverà il riepilogo dei progetti consegnati dal suo istituto.`)}
       ${bottone(AREA_DOCENTE, "Apri l'area docenti")}
       ${p("Per qualsiasi dubbio può rispondere a questa email.")}
       ${firma}`);
@@ -274,15 +275,15 @@ export function giudiceSmistamentoHtml(i: GiudiceSmistamento): string {
       ${p(`Riceve progetti solo se servono: se un collega non ha iniziato entro mercoledì 2 dicembre, o se dopo il ${SCADENZA_GIUDICI_LABEL} a un progetto mancano schede. In quel caso le scriviamo subito, con i tempi.`)}
       ${firma}`);
   }
-  const ore = Math.max(1, Math.round((i.assegnati * MINUTI_PER_PROGETTO) / 60));
+  const tempo = durata(i.assegnati * MINUTI_PER_PROGETTO);
   return cornice(`
       ${titolo(saluto(i.nome, false))}
-      ${p(`le consegne sono chiuse e i progetti sono stati smistati. <strong>A lei ne sono stati affidati ${i.assegnati}</strong>, scelti soprattutto fra i temi che ha indicato. Ogni progetto è letto da ${GIUDICI_PER_PROGETTO_LETTERE} giudici, in modo indipendente.`)}
+      ${p(`le consegne sono chiuse e i progetti sono stati smistati. <strong>A lei ne abbiamo affidati ${i.assegnati}, circa ${tempo} in tutto</strong>, scelti soprattutto fra i temi che ha indicato. Ogni progetto è letto anche da un secondo giudice, in modo indipendente: il suo è uno dei due pareri, non l'unico.`)}
       ${riquadro(
         "In breve",
         elenco([
-          `<strong>Scadenza:</strong> ${SCADENZA_GIUDICI_LABEL}.`,
-          `<strong>Tempo:</strong> circa ${MINUTI_PER_PROGETTO} minuti a progetto, ${ore === 1 ? "un'ora" : `${ore} ore`} in tutto. Uno o due progetti al giorno bastano.`,
+          `<strong>Scadenza:</strong> ${SCADENZA_GIUDICI_LABEL}. Può farlo in una o due sedute, quando le è più comodo.`,
+          `<strong>Ogni progetto si legge in pochi minuti:</strong> sei risposte brevi, circa ${MINUTI_PER_PROGETTO} minuti con la scheda. Il link ai materiali lo apra solo se le serve per decidere.`,
           "<strong>Le schede sono aperte:</strong> una scheda conta quando la chiude, con tutti e sei i punteggi.",
           "<strong>Se riconosce una squadra</strong>, usi «Conosco questa squadra»: il progetto passa a un collega.",
           `<strong>Se finisce prima e ha tempo</strong>, «Ho tempo, me ne dia altri» le affida ${PROGETTI_EXTRA} progetti in più.`,

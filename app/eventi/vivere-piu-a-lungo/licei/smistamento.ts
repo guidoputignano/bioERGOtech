@@ -51,13 +51,22 @@ export const temiPuliti = (v: unknown): string[] =>
 /* ── Regole dello smistamento ─────────────────────────────────────────── */
 
 /**
- * Giudici per progetto. Con 80 progetti e 8 giudici fa 20 progetti a
- * testa, circa cinque ore di lettura in otto giorni. Con 3 sarebbero 30 a
- * testa: troppi per chi lo fa a titolo gratuito. Il secondo parere evita
- * che un progetto dipenda da un giudice solo; i progetti vicini al 10°
- * posto li rivede comunque la Commissione prima dell'annuncio.
+ * Giudici per progetto, e mai di piu: ogni progetto e letto al massimo due
+ * volte. Il secondo parere evita che un progetto dipenda da un giudice
+ * solo; i progetti vicini al 10° posto li rivede comunque la Commissione
+ * prima dell'annuncio.
  */
 export const GIUDICI_PER_PROGETTO = 2;
+
+/**
+ * Il tetto per giudice: 12 progetti, circa due ore, il tempo che ai giudici
+ * chiediamo. Con 80 progetti servono 14 giudici per le due letture (giudici
+ * e mentor dell'art. 8): con meno, lo smistamento da prima una lettura a
+ * tutti i progetti e poi la seconda fin dove arriva il tetto, e il pannello
+ * dice quanti progetti restano con una lettura sola. Chi preme "me ne dia
+ * altri" lo supera per sua scelta; la riserva interna non ha tetto.
+ */
+export const PROGETTI_MAX_PER_GIUDICE = 12;
 
 /** Lo stesso numero in lettere, per i testi: "letto da due giudici". */
 export const GIUDICI_PER_PROGETTO_LETTERE = ({ 1: "un", 2: "due", 3: "tre", 4: "quattro" } as Record<number, string>)[GIUDICI_PER_PROGETTO] ?? String(GIUDICI_PER_PROGETTO);
@@ -71,8 +80,20 @@ export const PROGETTI_EXTRA = 3;
 /** Per chiederne altri, al giudice non devono restare piu di tanti progetti aperti. */
 export const APERTI_PER_CHIEDERE_ALTRI = 2;
 
-/** Il tempo che chiediamo per progetto, nelle email: aiuta a bloccare l'agenda. */
-export const MINUTI_PER_PROGETTO = 15;
+/**
+ * Il tempo per progetto, nelle email e nell'area: le sei risposte stanno in
+ * circa 900 parole, piu la scheda. Aiuta a bloccare l'agenda.
+ */
+export const MINUTI_PER_PROGETTO = 10;
+
+/** "50 minuti", "un'ora e 40 minuti", "due ore". */
+export function durata(minuti: number): string {
+  const ore = Math.floor(minuti / 60);
+  const resto = minuti % 60;
+  const h = ore === 0 ? "" : ore === 1 ? "un'ora" : ore === 2 ? "due ore" : `${ore} ore`;
+  if (!h) return `${resto} minuti`;
+  return resto ? `${h} e ${resto} minuti` : h;
+}
 
 /* ── Date ─────────────────────────────────────────────────────────────── */
 
@@ -154,7 +175,7 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
     fino: SCADENZA_GIUDICI,
     quando: "Giovedì 26 novembre, ore 8",
     titolo: "Smistamento e apertura delle schede",
-    descrizione: `Ogni progetto va a ${GIUDICI_PER_PROGETTO} giudici, per tema e con carichi uguali; si aprono le schede. Email a ogni giudice con i suoi progetti, a ogni scuola con i progetti consegnati, agli studenti con le date.`,
+    descrizione: `Ogni progetto va a ${GIUDICI_PER_PROGETTO} giudici, per tema e con carichi uguali, mai oltre ${PROGETTI_MAX_PER_GIUDICE} progetti a giudice (circa due ore); si aprono le schede. Email a ogni giudice con i suoi progetti, a ogni scuola con i progetti consegnati, agli studenti con le date.`,
   },
   {
     id: "giudici_meta",
@@ -246,21 +267,21 @@ export const TESTI_SMISTAMENTO = {
     "Scegliete uno o due temi: servono ad affidare il progetto ai giudici che conoscono meglio quel campo.",
   temiGiudice:
     "Scelga i temi in cui si sente più competente: lo smistamento del 26 novembre le affida soprattutto progetti su quei temi.",
-  primaDelloSmistamento: `Il 26 novembre, chiuse le consegne, riceve i suoi progetti: ognuno è letto da ${GIUDICI_PER_PROGETTO_LETTERE} giudici, scelti per tema, con carichi uguali. Fino ad allora può leggere i progetti che arrivano.`,
+  primaDelloSmistamento: `Il 26 novembre, chiuse le consegne, riceve i suoi progetti: al massimo ${PROGETTI_MAX_PER_GIUDICE}, circa due ore in tutto, scelti soprattutto fra i suoi temi. Ognuno è letto da ${GIUDICI_PER_PROGETTO_LETTERE} giudici, in modo indipendente. Fino ad allora può leggere i progetti che arrivano.`,
   riserva:
     "Lei fa parte della riserva interna: riceve progetti solo se servono, cioè se un collega non riesce a chiudere le sue schede in tempo.",
   conflitto: "Conosco questa squadra",
   conflittoConferma:
     "Il progetto passa a un altro giudice e lei non lo vede più. Lo conferma?",
   altri: "Ho tempo, me ne dia altri",
-  altriNota: `Riceve ${PROGETTI_EXTRA} progetti in più, scelti fra quelli con meno schede: non si scelgono a mano, così nessuno sceglie le squadre.`,
+  altriNota: `Riceve fino a ${PROGETTI_EXTRA} progetti in più, fra quelli che hanno ancora una lettura sola: non si scelgono a mano, così nessuno sceglie le squadre.`,
   altriNonAncora: `Potrà chiederne altri quando gliene resteranno al massimo ${APERTI_PER_CHIEDERE_ALTRI} da chiudere.`,
 } as const;
 
 /** Le date del percorso, in ordine, come le leggono studenti e scuole. */
 export const DATE_PERCORSO = [
   { quando: SCADENZA_CONSEGNA_LABEL.replace(/^m/, "M"), cosa: "termine per consegnare il progetto. Lo consegna il capitano dall'area studenti; dopo, il modulo si chiude da solo." },
-  { quando: "Dal 26 novembre", cosa: `la Commissione legge i progetti. Ognuno è letto da almeno ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti dei temi scelti dalla squadra.` },
+  { quando: "Dal 26 novembre", cosa: `la Commissione legge i progetti. Ognuno è letto da ${GIUDICI_PER_PROGETTO_LETTERE} giudici esperti dei temi scelti dalla squadra, in modo indipendente.` },
   { quando: ANNUNCIO_FINALISTI_LABEL.replace(/^v/, "V"), cosa: `l'elenco dei ${LICEI.progettiSulPalco} progetti finalisti.` },
   { quando: LICEI.dataLabel, cosa: `l'evento finale al ${LICEI.luogo}, con le presentazioni dei finalisti dal palco.` },
 ] as const;

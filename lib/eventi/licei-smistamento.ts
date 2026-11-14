@@ -86,6 +86,8 @@ export function pianoAssegnazioni(
   giudici: GiudiceSmistamento[],
   esistenti: AssegnazioneLetta[],
   bisogno: Map<string, number>,
+  /** Il tetto rigido per giudice: chi ci e arrivato non riceve altro. */
+  tettoRigido: number = Infinity,
 ): NuovaAssegnazione[] {
   if (giudici.length === 0) return [];
 
@@ -110,7 +112,8 @@ export function pianoAssegnazioni(
   // Il tetto: la media arrotondata per eccesso, piu uno di margine per i temi.
   const tetto = Math.ceil((caricoIniziale + slotTotali) / giudici.length) + 1;
 
-  const liberiPer = (p: ProgettoSmistamento) => giudici.filter((g) => !coppie.has(`${p.id}:${g.id}`));
+  const liberiPer = (p: ProgettoSmistamento) =>
+    giudici.filter((g) => !coppie.has(`${p.id}:${g.id}`) && (carico.get(g.id) ?? 0) < tettoRigido);
 
   // Prima i progetti con meno giudici possibili e con meno giudici del loro
   // tema: sono quelli che restano scoperti se arrivano per ultimi.
@@ -202,6 +205,8 @@ export function progettiExtra(
   esistenti: AssegnazioneLetta[],
   schedeChiuse: Map<string, number>,
   quanti: number,
+  /** Un progetto non si legge piu di tante volte: solo quelli sotto. */
+  maxLetture: number = Infinity,
 ): string[] {
   const giaAvuti = new Set(esistenti.filter((a) => a.commissario_id === giudice.id).map((a) => a.progetto_id));
   const attive = new Map<string, number>();
@@ -209,7 +214,7 @@ export function progettiExtra(
     if (assegnazioneAttiva(a)) attive.set(a.progetto_id, (attive.get(a.progetto_id) ?? 0) + 1);
   }
   return progetti
-    .filter((p) => !giaAvuti.has(p.id))
+    .filter((p) => !giaAvuti.has(p.id) && (attive.get(p.id) ?? 0) < maxLetture)
     .sort(
       (a, b) =>
         (attive.get(a.id) ?? 0) - (attive.get(b.id) ?? 0) ||

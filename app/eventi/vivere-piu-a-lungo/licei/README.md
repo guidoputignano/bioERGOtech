@@ -1169,10 +1169,18 @@ repository.
 
 ## Smistamento e calendario automatico
 
-Con circa 80 progetti e 8 giudici non si chiede a tutti di leggere tutto.
-Ogni progetto va a **due giudici** (`GIUDICI_PER_PROGETTO`), scelti per tema
-e con carichi uguali, e ogni giudice con diritto di voto vede e valuta solo
-i suoi. Date, temi e testi stanno in `smistamento.ts`; la regola, pura e
+Con circa 80 progetti non si chiede a tutti di leggere tutto. Ogni
+progetto va a **due giudici** e mai di piu (`GIUDICI_PER_PROGETTO`), scelti
+per tema e con carichi uguali, e ogni giudice con diritto di voto vede e
+valuta solo i suoi: **al massimo 12** (`PROGETTI_MAX_PER_GIUDICE`), circa
+due ore, il tempo che chiediamo. Per le due letture di 80 progetti servono
+quindi 14 giudici: i mentor del percorso possono entrare in Commissione
+(art. 8, ruolo "Impresa e mentor"). Con meno giudici lo smistamento da
+prima una lettura a tutti, poi la seconda fin dove arriva il tetto, e il
+pannello dice quanti ne mancano; i giudici aggiunti dopo completano le
+seconde letture al giro successivo del cron. "Me ne dia altri" non da mai
+una terza lettura. Alla scadenza le schede non chiuse si tolgono e passano
+alla riserva. Date, temi e testi stanno in `smistamento.ts`; la regola, pura e
 provata, in `lib/eventi/licei-smistamento.ts`; il lavoro in
 `lib/eventi/licei-commissione-auto.ts`; le email in
 `lib/eventi/licei-commissione-email.ts`.

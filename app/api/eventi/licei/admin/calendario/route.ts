@@ -12,7 +12,12 @@ import {
   type Db,
 } from "@/lib/eventi/licei-commissione-auto";
 import * as E from "@/lib/eventi/licei-commissione-email";
-import { GIUDICI_PER_PROGETTO, SCHEDE_MINIME, passo } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
+import {
+  GIUDICI_PER_PROGETTO,
+  PROGETTI_MAX_PER_GIUDICE,
+  SCHEDE_MINIME,
+  passo,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 /**
  * Il calendario automatico della Commissione, per lo staff.
@@ -122,6 +127,11 @@ export async function GET(request: Request) {
         assegnazioni: a.attive.length,
         sotto_giudici: q.progetti.filter((p) => (conGiudici.get(p.id) ?? 0) < GIUDICI_PER_PROGETTO).length,
         sotto_schede: q.progetti.filter((p) => (a.chiusePerProgetto.get(p.id) ?? 0) < SCHEDE_MINIME).length,
+        // Quanti progetti a testa con due letture, e quanti giudici servono
+        // per restare sotto il tetto delle due ore.
+        carico_previsto: a.ordinari.length ? Math.ceil((q.progetti.length * GIUDICI_PER_PROGETTO) / a.ordinari.length) : null,
+        giudici_necessari: Math.ceil((q.progetti.length * GIUDICI_PER_PROGETTO) / PROGETTI_MAX_PER_GIUDICE),
+        tetto: PROGETTI_MAX_PER_GIUDICE,
       };
     }
     return NextResponse.json(

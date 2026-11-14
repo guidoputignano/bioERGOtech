@@ -155,6 +155,23 @@ export function CalendarioCommissione() {
         </div>
       )}
 
+      {n && n.progetti > 0 && (
+        <p
+          style={{
+            fontSize: 13,
+            lineHeight: 1.6,
+            margin: "0 0 14px",
+            color: n.carico_previsto !== null && n.carico_previsto <= n.tetto ? "var(--text-mid)" : "#8A6100",
+          }}
+        >
+          {n.carico_previsto === null
+            ? `Nessun giudice ancora: per ${n.progetti} progetti, con due letture e al massimo ${n.tetto} a testa (circa due ore), ne servono ${n.giudici_necessari}.`
+            : n.carico_previsto <= n.tetto
+              ? `Con ${n.giudici} giudici e due letture: circa ${n.carico_previsto} progetti a testa, sotto il tetto di ${n.tetto} (circa due ore).`
+              : `Con ${n.giudici} giudici ne toccherebbero ${n.carico_previsto} a testa, oltre il tetto di ${n.tetto} (circa due ore): ne servono ${n.giudici_necessari}. Aggiungi giudici o mentor (ruolo «Impresa e mentor»), altrimenti una parte dei progetti avrà una lettura sola fino alla copertura del 4 dicembre.`}
+        </p>
+      )}
+
       <ol style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
         {(dati.passi ?? []).map((p: Qualsiasi) => {
           const c = COLORI[p.stato] ?? COLORI.in_programma;
