@@ -681,6 +681,11 @@ export function parseAllowedSenders(env: string | undefined): Set<string> {
   return new Set((env || "").split(/[\s,;]+/).map((s) => normaliseEmail(s)).filter((s): s is string => !!s && isValidEmail(s)));
 }
 
+/** The daily limit counts new first e-mails only; follow-ups and replies to institutions are not limited. */
+export function countsTowardDailyLimit(step: string | null | undefined): boolean {
+  return step === "initial";
+}
+
 export function idempotencyKey(messageId: string, attemptScope = "send"): string {
   return `rc:${attemptScope}:${messageId}`;
 }

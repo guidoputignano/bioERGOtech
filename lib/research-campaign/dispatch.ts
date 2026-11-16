@@ -4,7 +4,7 @@
  * gate, the same atomic claim and the same bookkeeping.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { checkSendable, idempotencyKey, inSendWindow, parseAllowedSenders, sequenceDueDates } from "./core";
+import { checkSendable, countsTowardDailyLimit, idempotencyKey, inSendWindow, parseAllowedSenders, sequenceDueDates } from "./core";
 import { sendViaGmail, sendViaResend, type SendResult } from "./mailer";
 import { loadSuppressions, logEvent, sentTodayCount, touchInstitution, type Campaign } from "./server";
 
@@ -39,8 +39,9 @@ export async function dispatchMessage(
   });
   if (reasons.length) return { id: messageId, status: "blocked", reasons };
 
-  // Over the daily cap: wait for the next daily run rather than refusing.
-  if (sentToday >= campaign.daily_send_cap) {
+  // Over the daily limit (new first e-mails only): wait for the next daily
+  // run rather than refusing. Follow-ups and replies are never limited.
+  if (countsTowardDailyLimit(message.step) && sentToday >= campaign.daily_send_cap) {
     if (!message.scheduled_for) {
       await db.from("rc_messages").update({ scheduled_for: now.toISOString(), updated_at: now.toISOString() }).eq("id", message.id).eq("state", "approved");
     }
