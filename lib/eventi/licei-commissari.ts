@@ -32,7 +32,7 @@ export type NuovoCommissario = {
 };
 
 export type EsitoCommissario =
-  | { ok: true; commissario: Record<string, unknown> }
+  | { ok: true; commissario: Record<string, unknown>; emailInviata: boolean; loginEmail: string }
   | { ok: false; errore: string; status: number };
 
 export async function aggiungiCommissario(client: Db, input: NuovoCommissario): Promise<EsitoCommissario> {
@@ -54,7 +54,7 @@ export async function aggiungiCommissario(client: Db, input: NuovoCommissario): 
 
   /* ── Account ── */
   let userId: string | null = input.userId ?? null;
-  let setPasswordUrl: string | undefined;
+  let nuovoAccount = false;
 
   if (!userId) {
     const { data: profilo } = await client.from("profiles").select("id").eq("email", email).maybeSingle();
@@ -72,13 +72,7 @@ export async function aggiungiCommissario(client: Db, input: NuovoCommissario): 
       return { ok: false, errore: "Non è stato possibile creare l'account del commissario.", status: 500 };
     }
     userId = creato.user.id;
-
-    const { data: link } = await client.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: { redirectTo: `${SITE_URL}/auth/update-password` },
-    });
-    setPasswordUrl = link?.properties?.action_link;
+    nuovoAccount = true;
   }
 
   const { data, error } = await client
@@ -95,19 +89,83 @@ export async function aggiungiCommissario(client: Db, input: NuovoCommissario): 
     return { ok: false, errore: error.message, status: 500 };
   }
 
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
-        from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
-        to: email,
-        subject: commissarioEmailSubject(),
-        html: commissarioEmailHtml({ nome, ruolo, diritto_voto, setPasswordUrl }),
-      });
-    } catch (mailErr) {
-      console.error("Licei commissario email failed:", mailErr);
-    }
+  const accesso = await inviaAccesso(client, {
+    userId,
+    email,
+    nome,
+    ruolo,
+    diritto_voto,
+    nuovo: nuovoAccount,
+  });
+
+  return {
+    ok: true,
+    commissario: (data ?? {}) as Record<string, unknown>,
+    emailInviata: accesso.inviata,
+    loginEmail: accesso.loginEmail,
+  };
+}
+
+/**
+ * L'email di accesso alla Commissione, con il link per scegliere la
+ * password. Anche a chi l'account ce l'ha gia: un mentor creato dallo staff
+ * spesso la password non l'ha mai scelta, e senza il link resta fuori. Il
+ * link apre l'account di accesso, che per un mentor puo avere un indirizzo
+ * diverso da quello a cui scriviamo: l'email lo dice.
+ *
+ * Torna se l'email e partita davvero: Resend un rifiuto lo restituisce, non
+ * lo solleva, e prima andava perso.
+ */
+export async function inviaAccesso(
+  client: Db,
+  c: { userId: string; email: string; nome: string; ruolo: string | null; diritto_voto: boolean; nuovo?: boolean },
+  invio?: Pick<Resend, "emails">,
+): Promise<{ inviata: boolean; loginEmail: string }> {
+  let loginEmail = c.email;
+  try {
+    const { data } = await client.auth.admin.getUserById(c.userId);
+    if (data?.user?.email) loginEmail = data.user.email;
+  } catch (err) {
+    console.error("Licei commissario: account non letto:", err);
   }
 
-  return { ok: true, commissario: (data ?? {}) as Record<string, unknown> };
+  let setPasswordUrl: string | undefined;
+  try {
+    const { data: link, error } = await client.auth.admin.generateLink({
+      type: "recovery",
+      email: loginEmail,
+      options: { redirectTo: `${SITE_URL}/auth/update-password` },
+    });
+    if (error) console.error("Licei commissario: link per la password non creato:", error.message);
+    setPasswordUrl = link?.properties?.action_link;
+  } catch (err) {
+    console.error("Licei commissario: link per la password non creato:", err);
+  }
+
+  const resend = invio ?? (process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null);
+  if (!resend) return { inviata: false, loginEmail };
+  try {
+    const { error } = await resend.emails.send({
+      from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
+      to: c.email,
+      replyTo: "info@bioergotech.org",
+      subject: commissarioEmailSubject(),
+      html: commissarioEmailHtml({
+        nome: c.nome,
+        ruolo: c.ruolo ?? "",
+        diritto_voto: c.diritto_voto,
+        setPasswordUrl,
+        loginEmail: loginEmail.toLowerCase() !== c.email.toLowerCase() ? loginEmail : undefined,
+        nuovo: !!c.nuovo,
+      }),
+    });
+    if (error) {
+      console.error("Licei commissario: email di accesso non partita:", error.message);
+      return { inviata: false, loginEmail };
+    }
+    return { inviata: true, loginEmail };
+  } catch (err) {
+    console.error("Licei commissario: email di accesso non partita:", err);
+    return { inviata: false, loginEmail };
+  }
 }

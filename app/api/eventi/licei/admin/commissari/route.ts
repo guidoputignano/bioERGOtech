@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { RUOLI_COMMISSIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
-import { aggiungiCommissario } from "@/lib/eventi/licei-commissari";
+import { aggiungiCommissario, inviaAccesso } from "@/lib/eventi/licei-commissari";
 import { temiPuliti } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 import { analizza, leggiQuadro } from "@/lib/eventi/licei-commissione-auto";
 
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     diritto_voto: body.diritto_voto,
   });
   if (!esito.ok) return NextResponse.json({ error: esito.errore }, { status: esito.status });
-  return NextResponse.json({ success: true, commissario: esito.commissario });
+  return NextResponse.json({ success: true, commissario: esito.commissario, email_inviata: esito.emailInviata });
 }
 
 /** Ruolo, diritto di voto, attivazione. */
@@ -117,9 +117,33 @@ export async function PATCH(request: Request) {
     attivo?: boolean;
     riserva?: boolean;
     temi?: unknown;
+    azione?: string;
   };
 
   if (!body.id) return NextResponse.json({ error: "Commissario non indicato." }, { status: 400 });
+
+  // "Rimanda l'accesso": di nuovo l'email con il link per scegliere la
+  // password, a chi dice di non essere riuscito a entrare.
+  if (body.azione === "rimanda_accesso") {
+    const { data: c, error: e } = await client
+      .from("licei_commissari")
+      .select("id, user_id, nome, cognome, email, ruolo, diritto_voto")
+      .eq("id", body.id)
+      .maybeSingle();
+    if (e) return NextResponse.json({ error: e.message }, { status: 500 });
+    if (!c) return NextResponse.json({ error: "Commissario non trovato." }, { status: 404 });
+    const r = await inviaAccesso(client, {
+      userId: c.user_id,
+      email: c.email,
+      nome: `${c.nome} ${c.cognome}`.trim(),
+      ruolo: c.ruolo,
+      diritto_voto: c.diritto_voto,
+    });
+    if (!r.inviata) {
+      return NextResponse.json({ error: "L'email non è partita. Riprova fra poco, o controlla l'indirizzo." }, { status: 502 });
+    }
+    return NextResponse.json({ success: true, email: c.email, login_email: r.loginEmail });
+  }
 
   const patch: Record<string, unknown> = {};
   if (body.ruolo !== undefined) {

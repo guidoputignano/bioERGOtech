@@ -309,7 +309,12 @@ export type CommissarioEmailInput = {
   nome: string;
   ruolo: string;
   diritto_voto: boolean;
+  /** Il link per scegliere la password: a chi ha l'account nuovo, e anche a chi lo aveva gia. */
   setPasswordUrl?: string;
+  /** L'indirizzo con cui si accede, se diverso da quello a cui scriviamo (un mentor). */
+  loginEmail?: string;
+  /** L'account e stato creato adesso. */
+  nuovo?: boolean;
 };
 
 export function commissarioEmailSubject(): string {
@@ -322,8 +327,11 @@ export function commissarioEmailSubject(): string {
  * del consorzio nell'art. 8, siede con funzioni consultive.
  */
 export function commissarioEmailHtml(input: CommissarioEmailInput): string {
-  const { nome, ruolo, diritto_voto, setPasswordUrl } = input;
+  const { nome, ruolo, diritto_voto, setPasswordUrl, loginEmail, nuovo = true } = input;
   const areaUrl = `${SITE_URL}${COMMISSIONE_PATH}`;
+  const conIndirizzo = loginEmail
+    ? ` Per accedere usi l'indirizzo <strong>${esc(loginEmail)}</strong>.`
+    : "";
 
   return `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
@@ -365,10 +373,18 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
       ${
         setPasswordUrl
           ? `<div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
-              <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0;">
-                Abbiamo creato il suo account.
-                <a href="${setPasswordUrl}" style="color:#008F6B;font-weight:700;">Imposti la password</a>,
-                poi acceda all'area della Commissione.
+              <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0 0 8px;">
+                ${
+                  nuovo
+                    ? `Abbiamo creato il suo account.${conIndirizzo}`
+                    : `Entra con l'account che ha già sul sito.${conIndirizzo} Se non ha mai scelto una password, o non la ricorda, la imposti da qui.`
+                }
+              </p>
+              <p style="margin:0 0 8px;">
+                <a href="${setPasswordUrl}" style="display:inline-block;background:#0A1628;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:10px 20px;border-radius:8px;">Imposti la password</a>
+              </p>
+              <p style="color:#065f46;font-size:12.5px;line-height:1.6;margin:0;">
+                Il link vale per poco tempo. Se è scaduto, nella pagina di accesso usi «Forgot your password?» e ne riceve uno nuovo.
               </p>
             </div>`
           : ""
