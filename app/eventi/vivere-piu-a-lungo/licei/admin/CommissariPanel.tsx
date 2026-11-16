@@ -107,7 +107,9 @@ export function CommissariPanel() {
       if (!res.ok) throw new Error(data.error || "Salvataggio non riuscito.");
       setRighe((prev) =>
         prev.map((r) =>
-          r.id === id ? { ...r, ...data.commissario, schede: r.schede, smistamento: r.smistamento, media: r.media } : r,
+          r.id === id
+            ? { ...r, ...data.commissario, schede: r.schede, smistamento: r.smistamento, media: r.media, accesso: r.accesso }
+            : r,
         ),
       );
     } catch (err) {
@@ -344,6 +346,31 @@ export function CommissariPanel() {
               >
                 {r.diritto_voto ? "Con voto" : "Consultivo"}
               </span>
+
+              {/* E entrato nell'area? Chi non entra riceve da solo un promemoria dopo un giorno. */}
+              {r.attivo && r.accesso && (
+                <span
+                  className="badge"
+                  title={
+                    r.accesso.entrato
+                      ? r.accesso.quando
+                        ? `Entrato il ${new Date(r.accesso.quando).toLocaleDateString("it-IT", { day: "numeric", month: "long" })}`
+                        : "Entrato nell'area"
+                      : "Non ha ancora aperto l'area della Commissione"
+                  }
+                  style={{
+                    background: r.accesso.entrato ? "#0A7A661A" : "#8A61001A",
+                    color: r.accesso.entrato ? "#0A7A66" : "#8A6100",
+                    flexShrink: 0,
+                  }}
+                >
+                  {r.accesso.entrato
+                    ? "Entrato"
+                    : r.accesso.promemoria_at
+                      ? `Non ancora entrato . promemoria il ${new Date(r.accesso.promemoria_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })}`
+                      : "Non ancora entrato"}
+                </span>
+              )}
 
               <span style={{ fontSize: 12.5, color: "var(--text-light)", flexShrink: 0, minWidth: 96 }}>
                 {r.schede?.chiuse ?? 0} chiuse

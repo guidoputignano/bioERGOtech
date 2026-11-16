@@ -246,7 +246,8 @@ export function CommissioneConsole() {
         </div>
       )}
 
-      {!faseAperta && (
+      {/* Prima dello smistamento le schede chiuse sono la norma: i primi passi lo spiegano. */}
+      {!faseAperta && (smistati || !puoVotare) && (
         <div
           style={{
             background: "#FFF8E6",
@@ -263,7 +264,77 @@ export function CommissioneConsole() {
         </div>
       )}
 
-      {puoVotare && !smistati && <div style={bannerInfo}>{riserva ? TESTI_SMISTAMENTO.riserva : TESTI_SMISTAMENTO.primaDelloSmistamento}</div>}
+      {/* Benvenuto alla prima visita, e i primi passi fino allo smistamento:
+          chi entra vede subito che e dentro e che cosa gli resta da fare. */}
+      {dati?.prima_visita && (
+        <div style={{ ...bannerInfo, fontSize: 14.5 }}>
+          <strong>Le diamo il benvenuto nella Commissione.</strong> È tutto pronto: qui sotto trova i primi passi.
+        </div>
+      )}
+
+      {puoVotare && !smistati && (
+        <div className="card" style={{ padding: 20 }}>
+          <h2 className="font-semibold text-gray-800" style={{ fontSize: 15, margin: "0 0 12px" }}>
+            Primi passi
+          </h2>
+          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { fatto: true, testo: "È nella Commissione: l'accesso funziona." },
+              {
+                fatto: temi.length > 0,
+                testo: temi.length > 0 ? `Ha scelto i suoi temi (${temi.length}).` : "Scelga i suoi temi, qui sotto.",
+              },
+              {
+                fatto: false,
+                testo: (
+                  <>
+                    Dia un&apos;occhiata alla{" "}
+                    <a
+                      href={`${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0A7A66", fontWeight: 600 }}
+                    >
+                      guida per la Commissione
+                    </a>
+                    : criteri, fasce e scadenze.
+                  </>
+                ),
+              },
+              {
+                fatto: false,
+                testo: riserva
+                  ? "Fa parte della riserva: riceve progetti solo se servono, e la avvisiamo via email."
+                  : "Giovedì 26 novembre riceve i suoi progetti, con un'email: circa dieci, meno di due ore in tutto. Fino ad allora può leggere quelli che arrivano.",
+              },
+            ].map((s, i) => (
+              <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: "var(--text-dark)", lineHeight: 1.6 }}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 11,
+                    marginTop: 1,
+                    background: s.fatto ? "var(--primary)" : "#fff",
+                    color: s.fatto ? "#fff" : "var(--text-light)",
+                    border: s.fatto ? "none" : "1.5px solid var(--border-color)",
+                  }}
+                >
+                  {s.fatto ? <i className="fas fa-check" /> : i + 1}
+                </span>
+                <span>{s.testo}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
 
       {/* I temi del giudice: servono allo smistamento, e restano modificabili. */}
       {puoVotare && smistamento?.presente && (

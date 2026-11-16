@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { RUOLI_COMMISSIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
-import { aggiungiCommissario, inviaAccesso } from "@/lib/eventi/licei-commissari";
+import { accessiGiudici, aggiungiCommissario, inviaAccesso } from "@/lib/eventi/licei-commissari";
 import { temiPuliti } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 import { analizza, leggiQuadro } from "@/lib/eventi/licei-commissione-auto";
 
@@ -57,6 +57,17 @@ export async function GET() {
   }
   const media = (x: { s: number; n: number } | undefined) => (x && x.n ? Math.round((x.s / x.n) * 10) / 10 : null);
 
+  // Chi e entrato nell'area e chi no, e se il promemoria e partito.
+  let accessi = new Map<string, { entrato: boolean; quando: string | null; promemoria_at: string | null }>();
+  try {
+    accessi = await accessiGiudici(
+      client,
+      (commissari ?? []) as { id: string; user_id: string; created_at?: string | null; temi?: unknown }[],
+    );
+  } catch (err) {
+    console.error("Licei commissari: accessi non letti:", err);
+  }
+
   return NextResponse.json({
     smistamento_presente: presente,
     media_generale: media(tutte),
@@ -65,6 +76,7 @@ export async function GET() {
       schede: conteggi.get(c.id) ?? { aperte: 0, chiuse: 0 },
       smistamento: smistamento[c.id] ?? { assegnati: 0, chiusi: 0 },
       media: media(somme.get(c.id)),
+      accesso: accessi.get(c.id) ?? null,
     })),
   });
 }

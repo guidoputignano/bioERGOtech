@@ -53,6 +53,7 @@ import {
 } from "@/lib/eventi/licei-avvisi";
 import * as E from "@/lib/eventi/licei-commissione-email";
 import { linkDiventaGiudice, mentorDaInvitare } from "@/lib/eventi/licei-mentor-giudici";
+import { promemoriaAccessoGiudici } from "@/lib/eventi/licei-commissari";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = SupabaseClient<any, "public", any>;
@@ -898,7 +899,7 @@ const ESEGUI: Record<IdPasso, (db: Db, resend: Invio) => Promise<RisultatoPasso>
 /* ── Il giro del cron ─────────────────────────────────────────────────── */
 
 export type EsitoPasso = {
-  id: IdPasso | "manutenzione";
+  id: IdPasso | "manutenzione" | "promemoria_accesso";
   stato: "eseguito" | "da_rifare" | "gia_fatto" | "futuro" | "scaduto";
   dettagli: string[];
 };
@@ -991,6 +992,23 @@ export async function eseguiCalendario(
         console.error(`Licei calendario: passo ${p.id} non riuscito:`, msg);
         await segnaTentativo(db, p.id, [`Errore: ${msg}`]);
         esiti.push({ id: p.id, stato: "da_rifare", dettagli: [`Errore: ${msg}`] });
+      }
+    }
+
+    // Chi e in Commissione da un giorno e non e ancora entrato nell'area: un
+    // promemoria con le istruzioni di accesso, una volta per giudice.
+    if (t >= Date.parse(PASSI_AUTOMATICI[0].da) && t <= Date.parse(SCADENZA_GIUDICI)) {
+      try {
+        const r = await promemoriaAccessoGiudici(db, adesso);
+        esiti.push({
+          id: "promemoria_accesso",
+          stato: "eseguito",
+          dettagli: [`${r.inviati} promemoria di accesso${r.falliti ? `, ${r.falliti} non partiti (si riprova domani)` : ""}.`],
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("Licei calendario: promemoria di accesso non riuscito:", msg);
+        esiti.push({ id: "promemoria_accesso", stato: "da_rifare", dettagli: [`Errore: ${msg}`] });
       }
     }
 

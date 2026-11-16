@@ -1230,6 +1230,16 @@ suo account se ne ha uno, e riceve l'email di accesso (la stessa funzione
 del pannello, `aggiungiCommissario`). Fino al 30 novembre; dopo il 26
 riceve subito le seconde letture che mancano.
 
+**Chi entra in Commissione e chi no.** L'area scrive in `licei_config` la
+prima visita di ogni giudice (`giudice_visto_<id>`, solo id e data) e la
+saluta con "Le diamo il benvenuto" e i "Primi passi" (temi, guida, 26
+novembre). Il pannello mostra accanto a ogni giudice "Entrato" o "Non ancora
+entrato". Ogni mattina il cron manda, una volta sola
+(`giudice_promemoria_<id>`), a chi e in Commissione da almeno 20 ore e non
+e ancora entrato l'email di accesso con l'apertura "le riscriviamo perche
+non risulta ancora entrato": con "Accedi" a chi usa gia il sito, con il link
+per la password a chi non e mai entrato.
+
 Nel pannello, scheda "Commissione": il calendario con lo stato di ogni
 passo, le anteprime e le prove di tutte le email, "Invia adesso
 l'aggiornamento", "Esegui ora i passi dovuti" (se il cron non e partito) e,
