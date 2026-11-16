@@ -169,7 +169,23 @@ export default function ResearchCentresView() {
     }
     setLoading(false);
   }, []);
-  useEffect(() => { loadAll(); }, [loadAll]);
+  // Inbox check: reads new replies from the mailbox (never sends anything).
+  const [inbox, setInbox] = useState<{ state: "idle" | "checking" | "done" | "error"; at?: string; stored?: number; text?: string }>({ state: "idle" });
+  const checkInbox = useCallback(async (): Promise<number> => {
+    setInbox((x) => ({ ...x, state: "checking" }));
+    try {
+      const d = await api<{ checked_at: string; repliesStored: number; errors: string[] }>("/api/admin/research/sync", "POST", {});
+      setInbox({ state: d.errors.length ? "error" : "done", at: d.checked_at, stored: d.repliesStored, text: d.errors[0] });
+      if (d.repliesStored > 0) notify(true, `${d.repliesStored} new ${d.repliesStored === 1 ? "reply" : "replies"} from the inbox`);
+      return d.repliesStored;
+    } catch (e) {
+      setInbox({ state: "error", text: e instanceof Error ? e.message : "Inbox check failed" });
+      return 0;
+    }
+  }, [notify]);
+  // Opening the page shows the data at once, then checks the inbox and reloads if a reply came in.
+  useEffect(() => { loadAll().then(() => checkInbox()).then((n) => { if (n > 0) loadAll(); }); }, [loadAll, checkInbox]);
+  const refresh = useCallback(async () => { await checkInbox(); await loadAll(); }, [checkInbox, loadAll]);
   const closeDrawer = useCallback(() => setDrawerId(null), []);
 
   const tabBtn = (id: typeof tab): React.CSSProperties => ({
@@ -202,7 +218,10 @@ export default function ResearchCentresView() {
         <button style={tabBtn("review")} onClick={() => setTab("review")}>Outbox{badge(reviewCount, tab === "review")}</button>
         <button style={tabBtn("tasks")} onClick={() => setTab("tasks")}>Tasks &amp; calls{badge(tasks.length, tab === "tasks")}</button>
         <button style={tabBtn("settings")} onClick={() => setTab("settings")}>Settings &amp; templates</button>
-        <button style={{ ...btn("ghost"), marginLeft: "auto" }} onClick={loadAll}>{loading ? "Refreshing…" : "⟳ Refresh"}</button>
+        <span style={{ marginLeft: "auto", alignSelf: "center", fontSize: 11, color: inbox.state === "error" ? RED : TEXT_LIGHT }} title={inbox.text || ""}>
+          {inbox.state === "checking" ? "Checking inbox…" : inbox.state === "error" ? "Inbox check failed" : inbox.at ? `Inbox checked ${new Date(inbox.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}
+        </span>
+        <button style={btn("ghost")} onClick={refresh} disabled={loading || inbox.state === "checking"}>{loading || inbox.state === "checking" ? "Refreshing…" : "⟳ Refresh"}</button>
       </div>
       {flash && <div role="status" style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, background: flash.ok ? "#E6F9F4" : "#FDECEA", color: flash.ok ? GREEN : RED }}>{flash.text}</div>}
 

@@ -826,7 +826,7 @@ export function classifyByKeywords(body: string, subject?: string | null): Reply
   if (bySubject) return bySubject;
   if (/(this is an )?automat(ic|ed) (reply|response|acknowledg)|we have received your (message|e-?mail|enquiry|inquiry)|ticket (number|#)|do not reply to this/.test(b)) return "auto_ack";
   if (detectOptOut(b)) return "not_interested";
-  if (/only (open|available) to|must be (a )?(u\.?s\.?|us) (citizen|resident)|residents of|must be (at least )?\d+ (years|or older)|(under|younger than) \d+ (are|is|cannot|can't)|not (open|eligible) (to|for) (international|minors|high school)|eligib/.test(b)) return "not_eligible";
+  if (/only (open|available) to|must be (a )?(u\.?s\.?|us) (citizen|resident)|residents of|must be (at least )?\d+ (years|or older)|(under|younger than) \d+ (are|is|cannot|can't)|not (open|eligible) (to|for) (international|minors|high school)|(restricted|limited) to (u\.?s\.?(?![a-z])|american|domestic)|eligib/.test(b)) return "not_eligible";
   if (/(do not|don't|cannot|can't|unable( to)?|not able( to)?|not in a position to) (host|accommodate|accept|offer|support)|not interested|no thank|not a good fit|must decline|fully booked|no (capacity|availability)/.test(b)) return "not_interested";
   if (/(fee|cost|price|pricing|quote|quotation|invoice|\$\s?\d|usd|per student|per group|charge)/.test(b)) return "fee_request";
   if (/(meeting|zoom|teams|call|schedule a time|speak (with|to) you|set up a time)/.test(b)) return "meeting_requested";

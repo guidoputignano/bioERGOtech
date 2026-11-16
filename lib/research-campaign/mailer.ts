@@ -9,6 +9,11 @@
  *    replies thread naturally. Uses RC_GMAIL_REFRESH_TOKEN, separate from the
  *    Outreach pipeline's GMAIL_REFRESH_TOKEN.
  *
+ * Resend sends a blind copy to the sender's own mailbox (copyTo), so every
+ * portal e-mail also appears in that mailbox, threaded with the conversation.
+ * The reply sync skips mail from the sender, so the copy is never read back
+ * as a reply. Gmail needs no copy: the message is already in Sent.
+ *
  * Both set our own Message-ID so replies can be matched by header, and
  * In-Reply-To/References when continuing a thread. Plain text only, no
  * tracking pixels, no attachments.
@@ -25,6 +30,7 @@ export type OutgoingMail = {
   inReplyTo?: string | null;     // Message-ID of the message being answered
   references?: string | null;
   gmailThreadId?: string | null; // keep the Gmail thread when continuing it
+  copyTo?: string | null;        // blind copy for the sender's own mailbox (Resend only)
 };
 
 export type SendResult = { provider: "resend" | "gmail"; providerMessageId: string; rfcMessageId: string; threadId: string | null };
@@ -49,12 +55,28 @@ function assertNoHeaderInjection(...values: (string | null | undefined)[]) {
   for (const v of values) if (v && /[\r\n]/.test(v)) throw new Error("Header value contains a line break");
 }
 
-export async function sendViaResend(mail: OutgoingMail, apiKey: string, idempotencyKey: string): Promise<SendResult> {
-  assertNoHeaderInjection(mail.to, mail.subject, mail.fromEmail, mail.replyTo, mail.inReplyTo, mail.references);
-  const rfcMessageId = newMessageId(mail.fromEmail);
+/** The Resend request body. The recipient never sees the blind copy. */
+export function resendPayload(mail: OutgoingMail, rfcMessageId: string): Record<string, unknown> {
+  assertNoHeaderInjection(mail.to, mail.subject, mail.fromEmail, mail.replyTo, mail.inReplyTo, mail.references, mail.copyTo);
   const headers: Record<string, string> = { "Message-ID": rfcMessageId };
   if (mail.inReplyTo) headers["In-Reply-To"] = mail.inReplyTo;
   if (mail.references || mail.inReplyTo) headers["References"] = [mail.references, mail.inReplyTo].filter(Boolean).join(" ");
+  const copy = mail.copyTo?.trim();
+  const withCopy = !!copy && copy.toLowerCase() !== mail.to.trim().toLowerCase();
+  return {
+    from: formatFrom(mail.fromName, mail.fromEmail),
+    to: [mail.to],
+    ...(withCopy ? { bcc: [copy] } : {}),
+    ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
+    subject: mail.subject,
+    text: mail.text,
+    headers,
+  };
+}
+
+export async function sendViaResend(mail: OutgoingMail, apiKey: string, idempotencyKey: string): Promise<SendResult> {
+  const rfcMessageId = newMessageId(mail.fromEmail);
+  const payload = resendPayload(mail, rfcMessageId);
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -63,14 +85,7 @@ export async function sendViaResend(mail: OutgoingMail, apiKey: string, idempote
       // Resend de-duplicates retries carrying the same key for 24 h.
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({
-      from: formatFrom(mail.fromName, mail.fromEmail),
-      to: [mail.to],
-      ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
-      subject: mail.subject,
-      text: mail.text,
-      headers,
-    }),
+    body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data as { message?: string }).message || `Resend error ${res.status}`);
