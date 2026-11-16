@@ -420,3 +420,10 @@ test("mail from our own domain only matches through the campaign thread", () => 
   // Other domains are unaffected.
   assert.equal(matchInbound({ from: "pjuza@ucsd.edu" }, [{ ...out[0], institution_id: "u" }], [{ id: "u", domain: "extendedstudies.ucsd.edu" }], [], "bioergotech.org").method, "domain");
 });
+
+// ── Daily limit counts first e-mails only (16 Nov) ──────────────────────
+test("only new first e-mails count toward the daily limit", async () => {
+  const { countsTowardDailyLimit } = await import("../lib/research-campaign/core.ts");
+  assert.equal(countsTowardDailyLimit("initial"), true);
+  for (const step of ["followup1", "followup2", "reply", "coordinator", "custom"]) assert.equal(countsTowardDailyLimit(step), false, step);
+});

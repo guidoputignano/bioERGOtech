@@ -233,7 +233,7 @@ function CampaignBanner({ campaign, readiness }: { campaign: Campaign; readiness
       </div>
       {pill(`Campaign: ${campaign.status}`, "#F3F5F8", TEXT_MID)}
       {live ? pill("Sending ON", "#D0F5EA", "#007A5A") : pill("Sending OFF", "#FDF3DD", AMBER)}
-      {readiness && pill(`${readiness.sentToday}/${campaign.daily_send_cap} sent today`, "#F3F5F8", TEXT_MID)}
+      {readiness && pill(`${readiness.sentToday}/${campaign.daily_send_cap} new e-mails today`, "#F3F5F8", TEXT_MID)}
     </div>
   );
 }
@@ -1053,7 +1053,7 @@ function ReviewQueue({ queue, campaign, readiness, onChanged, notify, onOpen }: 
         <div style={{ flex: "1 1 260px", fontSize: 12, color: TEXT_MID }}>
           Approve each institution&apos;s initial e-mail (its two follow-ups are approved with it), select it, then <b>Send</b>. The daily job sends due follow-ups at 17:00 UTC unless the institution replied, paused or bounced. Every gate is re-checked before each message.
           {!live && <div style={{ color: AMBER, marginTop: 4 }}>Sending is off for this campaign. Approved messages wait here until it is switched on in Settings.</div>}
-          {readiness && <div style={{ color: TEXT_LIGHT, marginTop: 4 }}>{readiness.sentToday} of {campaign?.daily_send_cap} sent today.</div>}
+          {readiness && <div style={{ color: TEXT_LIGHT, marginTop: 4 }}>{readiness.sentToday} of {campaign?.daily_send_cap} new first e-mails sent today (follow-ups and replies are not limited).</div>}
         </div>
         <button style={btn("primary", !live || sending || selected.size === 0)} disabled={!live || sending || selected.size === 0} onClick={send}>{sending ? "Sending…" : `Send ${selected.size} approved`}</button>
       </div>
