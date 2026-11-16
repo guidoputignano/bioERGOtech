@@ -8,7 +8,7 @@ import { classifyReply } from "./classify";
 import { cancelFollowups, logEvent, touchInstitution } from "./server";
 import {
   addBusinessDays, detectOptOut, emailDomain, isValidEmail, LABEL_TO_STATUS, NON_STOPPING_LABELS, normaliseEmail,
-  parseReturnDate, REPLY_LABEL_ACTION, suggestTemplate4, timezoneForState, type ReplyLabel,
+  parseReturnDate, REPLY_LABEL_ACTION, stripQuotedReply, suggestTemplate4, timezoneForState, type ReplyLabel,
 } from "./core";
 
 export type InboundInput = {
@@ -57,14 +57,15 @@ export async function storeInbound(db: SupabaseClient, input: InboundInput): Pro
   }).select("id").single();
   if (error || !msg) throw new Error(error?.message || "Could not store reply");
 
-  const c = await classifyReply(input.body, inst?.name || "the institution");
-  const optOut = detectOptOut(input.body);
+  const c = await classifyReply(input.body, inst?.name || "the institution", input.subject);
+  const ownText = stripQuotedReply(input.body);
+  const optOut = detectOptOut(ownText);
   const returnDate = c.label === "out_of_office" ? parseReturnDate(input.body, new Date(input.received_at)) : null;
   await db.from("rc_reply_labels").insert({
     message_id: msg.id, label: c.label, source: c.source, confidence: c.confidence, rationale: c.rationale,
     opt_out: optOut, return_date: returnDate,
   });
-  const template4 = suggestTemplate4(c.label, respondentAppropriate, input.body);
+  const template4 = suggestTemplate4(c.label, respondentAppropriate, ownText);
 
   if (!input.historical) {
     const patch: Record<string, unknown> = {};

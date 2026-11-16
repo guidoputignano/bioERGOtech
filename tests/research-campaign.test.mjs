@@ -5,7 +5,7 @@ import {
   normaliseDomain, normaliseEmail, isValidEmail, toE164, timezoneForState,
   totalScore, clampScores, derivePriority, parseCsv, csvToRecords, toCsv,
   mapImportRecord, planImport, renderTemplate, unresolvedMarkers, addBusinessDays,
-  checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords,
+  checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
   followupDecision, parseReturnDate, detectOptOut, suggestTemplate4,
 } from "../lib/research-campaign/core.ts";
@@ -221,6 +221,27 @@ test("keyword classifier covers the brief's reply classes", () => {
   assert.equal(classifyByKeywords("How many students and which dates?"), "more_info");
   assert.equal(classifyByKeywords("We would be happy to host your group."), "interested");
   assert.equal(classifyByKeywords("Thanks."), "unclear");
+});
+
+test("the quoted copy of our enquiry does not decide the class", () => {
+  const ours = "Dear Dr Goode,\r\n\r\nWe are reaching out to explore whether you would host these students, ideally without institutional hosting fees. Could we arrange a brief virtual meeting?\r\n";
+  const outlook = `Hi Olufemi,\r\n\r\nThank you for the email. We are unable accommodate this request.\r\n\r\n-GG\r\n________________________________\r\nFrom: Olufemi Yusuf <olufemi.yusuf@bioergotech.org>\r\nSent: Wednesday\r\n\r\n${ours}`;
+  assert.equal(stripQuotedReply(outlook), "Hi Olufemi,\n\nThank you for the email. We are unable accommodate this request.\n\n-GG");
+  assert.equal(classifyByKeywords(outlook), "not_interested");
+  const gmail = `Sounds wonderful, we would be happy to host your group.\n\nOn Wed, Nov 11, 2026 at 1:26 PM Olufemi Yusuf <olufemi.yusuf@bioergotech.org>\nwrote:\n> ${ours}`;
+  assert.equal(classifyByKeywords(gmail), "interested");
+  assert.equal(stripQuotedReply("Just a line."), "Just a line.");
+});
+
+test("auto-replies are recognised from the subject line", () => {
+  const ack = "Hello,\n\nThank you for reaching out. Our team has received a high volume of inquiries and is working through the inbox as quickly as possible.";
+  assert.equal(autoReplyFromSubject("Automatic reply: [EXTERNAL] Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(autoReplyFromSubject("Out of Office: Research Collaboration Enquiry"), "out_of_office");
+  assert.equal(autoReplyFromSubject("Re: Research Collaboration Enquiry"), null);
+  assert.equal(classifyByKeywords(ack, "Automatic reply: [EXTERNAL] Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(classifyByKeywords(ack, "Re: Research Collaboration Enquiry"), "unclear");
+  // An Outlook out-of-office also says "Automatic reply"; the body wins so the return date is used.
+  assert.equal(classifyByKeywords("I am out of the office until 30 November.", "Automatic reply: Enquiry"), "out_of_office");
 });
 
 test("opt-out wording is detected", () => {
