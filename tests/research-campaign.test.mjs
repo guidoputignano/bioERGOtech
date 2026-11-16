@@ -5,9 +5,9 @@ import {
   normaliseDomain, normaliseEmail, isValidEmail, toE164, timezoneForState,
   totalScore, clampScores, derivePriority, parseCsv, csvToRecords, toCsv,
   mapImportRecord, planImport, renderTemplate, unresolvedMarkers, addBusinessDays,
-  checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords,
+  checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
-  followupDecision, parseReturnDate, detectOptOut, suggestTemplate4,
+  followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
 } from "../lib/research-campaign/core.ts";
 
 // ── Normalisation ───────────────────────────────────────────────────────
@@ -223,6 +223,27 @@ test("keyword classifier covers the brief's reply classes", () => {
   assert.equal(classifyByKeywords("Thanks."), "unclear");
 });
 
+test("the quoted copy of our enquiry does not decide the class", () => {
+  const ours = "Dear Dr Goode,\r\n\r\nWe are reaching out to explore whether you would host these students, ideally without institutional hosting fees. Could we arrange a brief virtual meeting?\r\n";
+  const outlook = `Hi Olufemi,\r\n\r\nThank you for the email. We are unable accommodate this request.\r\n\r\n-GG\r\n________________________________\r\nFrom: Olufemi Yusuf <olufemi.yusuf@bioergotech.org>\r\nSent: Wednesday\r\n\r\n${ours}`;
+  assert.equal(stripQuotedReply(outlook), "Hi Olufemi,\n\nThank you for the email. We are unable accommodate this request.\n\n-GG");
+  assert.equal(classifyByKeywords(outlook), "not_interested");
+  const gmail = `Sounds wonderful, we would be happy to host your group.\n\nOn Wed, Nov 11, 2026 at 1:26 PM Olufemi Yusuf <olufemi.yusuf@bioergotech.org>\nwrote:\n> ${ours}`;
+  assert.equal(classifyByKeywords(gmail), "interested");
+  assert.equal(stripQuotedReply("Just a line."), "Just a line.");
+});
+
+test("auto-replies are recognised from the subject line", () => {
+  const ack = "Hello,\n\nThank you for reaching out. Our team has received a high volume of inquiries and is working through the inbox as quickly as possible.";
+  assert.equal(autoReplyFromSubject("Automatic reply: [EXTERNAL] Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(autoReplyFromSubject("Out of Office: Research Collaboration Enquiry"), "out_of_office");
+  assert.equal(autoReplyFromSubject("Re: Research Collaboration Enquiry"), null);
+  assert.equal(classifyByKeywords(ack, "Automatic reply: [EXTERNAL] Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(classifyByKeywords(ack, "Re: Research Collaboration Enquiry"), "unclear");
+  // An Outlook out-of-office also says "Automatic reply"; the body wins so the return date is used.
+  assert.equal(classifyByKeywords("I am out of the office until 30 November.", "Automatic reply: Enquiry"), "out_of_office");
+});
+
 test("opt-out wording is detected", () => {
   assert.ok(detectOptOut("Please do not contact us again."));
   assert.ok(detectOptOut("Kindly remove me / unsubscribe."));
@@ -360,6 +381,21 @@ test("dashboard counts institutions, not messages, and ignores earlier correspon
   assert.equal(m.followupsQueued, 1);
   assert.equal(m.draftsAwaitingReview, 1);
   assert.equal(m.overdueActions, 1);
+});
+
+test("a corrected reply counts only under its corrected class", () => {
+  const labels = [
+    { message_institution_id: "i1", message_id: "m1", label: "fee_request", confirmed: false, created_at: "2026-11-13T20:00:00Z" },
+    { message_institution_id: "i1", message_id: "m1", label: "not_interested", confirmed: true, created_at: "2026-11-16T18:00:00Z" },
+    { message_institution_id: "i2", message_id: "m2", label: "fee_request", confirmed: false, created_at: "2026-11-13T23:00:00Z" },
+    // A later unconfirmed suggestion never overrides a confirmed class.
+    { message_institution_id: "i3", message_id: "m3", label: "interested", confirmed: true, created_at: "2026-11-10T00:00:00Z" },
+    { message_institution_id: "i3", message_id: "m3", label: "unclear", confirmed: false, created_at: "2026-11-11T00:00:00Z" },
+  ];
+  assert.deepEqual(currentLabels(labels).map((l) => l.label).sort(), ["fee_request", "interested", "not_interested"]);
+  const m = dashboardMetrics([], [], [], labels, [], new Date("2026-11-16T00:00:00Z"));
+  assert.equal(m.feesRequested, 1);
+  assert.equal(m.positiveResponses, 2);
 });
 
 // ── Campaign facts: only those the templates use are required ───────────
