@@ -715,7 +715,7 @@ function stripAngles(id: string): string { return id.trim().replace(/^<|>$/g, ""
  * Gmail thread → In-Reply-To/References → known contact address →
  * institution domain (a colleague answering; flagged for review).
  */
-export function matchInbound(env: InboundEnvelope, outbound: OutboundRef[], institutions: InstitutionRef[], contacts: ContactRef[]): MatchResult {
+export function matchInbound(env: InboundEnvelope, outbound: OutboundRef[], institutions: InstitutionRef[], contacts: ContactRef[], ownDomain: string | null = null): MatchResult {
   if (env.threadId) {
     const hit = [...outbound].reverse().find((o) => o.thread_id && o.thread_id === env.threadId);
     if (hit) return { matched: true, method: "thread", institution_id: hit.institution_id, contact_id: hit.contact_id, parent_id: hit.id, needsReview: false };
@@ -728,6 +728,9 @@ export function matchInbound(env: InboundEnvelope, outbound: OutboundRef[], inst
   }
   const from = extractAddress(env.from);
   if (!from) return { matched: false, reason: "No sender address" };
+  // Mail from our own domain (colleagues, notifications) only counts when it
+  // belongs to a campaign thread (matched above), never by address or domain.
+  if (ownDomain && rootDomain(emailDomain(from)) === rootDomain(ownDomain.toLowerCase())) return { matched: false, reason: "Internal sender, not in a campaign thread" };
   const contact = contacts.find((c) => normaliseEmail(c.email) === from);
   if (contact) {
     const parent = [...outbound].reverse().find((o) => o.contact_id === contact.id) || null;

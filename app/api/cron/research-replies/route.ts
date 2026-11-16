@@ -4,7 +4,7 @@ import { cancelFollowups, loadCampaign, logEvent, type Campaign } from "@/lib/re
 import { storeInbound } from "@/lib/research-campaign/ingest";
 import { dispatchMessage } from "@/lib/research-campaign/dispatch";
 import { gmailAccessToken } from "@/lib/research-campaign/mailer";
-import { callingWindow, followupDecision, matchInbound, normaliseEmail, sequenceDueDates, type ReplyLabel } from "@/lib/research-campaign/core";
+import { callingWindow, emailDomain, followupDecision, matchInbound, normaliseEmail, sequenceDueDates, type ReplyLabel } from "@/lib/research-campaign/core";
 
 /**
  * Research Centres campaign: daily job (weekdays 17:00 UTC, inside office
@@ -67,7 +67,7 @@ async function syncReplies(db: SupabaseClient, campaign: Campaign, report: { rep
       const from = h("from");
       const fromAddr = normaliseEmail(from?.match(/<([^>]+)>/)?.[1] ?? from);
       if (fromAddr === self) continue;
-      const match = matchInbound({ from, threadId: full.threadId, inReplyTo: h("in-reply-to"), references: h("references") }, outbound, insts || [], contacts || []);
+      const match = matchInbound({ from, threadId: full.threadId, inReplyTo: h("in-reply-to"), references: h("references") }, outbound, insts || [], contacts || [], emailDomain(campaign.sender_email));
       if (!match.matched) { report.unmatched++; continue; }
       await storeInbound(db, {
         campaign_id: campaign.id, institution_id: match.institution_id, contact_id: match.contact_id, parent_message_id: match.parent_id,
