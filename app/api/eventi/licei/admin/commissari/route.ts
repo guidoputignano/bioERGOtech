@@ -138,7 +138,7 @@ export async function PATCH(request: Request) {
       nome: `${c.nome} ${c.cognome}`.trim(),
       ruolo: c.ruolo,
       diritto_voto: c.diritto_voto,
-    });
+    }, undefined, { forzaLink: true });
     if (!r.inviata) {
       return NextResponse.json({ error: "L'email non è partita. Riprova fra poco, o controlla l'indirizzo." }, { status: 502 });
     }

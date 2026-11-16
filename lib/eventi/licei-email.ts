@@ -315,6 +315,8 @@ export type CommissarioEmailInput = {
   loginEmail?: string;
   /** L'account e stato creato adesso. */
   nuovo?: boolean;
+  /** L'account e gia stato usato: basta accedere con le credenziali di sempre. */
+  giaEntrato?: boolean;
 };
 
 export function commissarioEmailSubject(): string {
@@ -327,7 +329,8 @@ export function commissarioEmailSubject(): string {
  * del consorzio nell'art. 8, siede con funzioni consultive.
  */
 export function commissarioEmailHtml(input: CommissarioEmailInput): string {
-  const { nome, ruolo, diritto_voto, setPasswordUrl, loginEmail, nuovo = true } = input;
+  const { nome, ruolo, diritto_voto, setPasswordUrl, loginEmail, nuovo = true, giaEntrato = false } = input;
+  const loginUrl = `${SITE_URL}/auth/login?returnTo=${encodeURIComponent(COMMISSIONE_PATH)}`;
   const areaUrl = `${SITE_URL}${COMMISSIONE_PATH}`;
   const conIndirizzo = loginEmail
     ? ` Per accedere usi l'indirizzo <strong>${esc(loginEmail)}</strong>.`
@@ -371,7 +374,18 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
       </div>
 
       ${
-        setPasswordUrl
+        giaEntrato
+          ? `<div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
+              <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0;">
+                Per entrare le bastano le credenziali che usa già sul sito${loginEmail ? `: l'indirizzo <strong>${esc(loginEmail)}</strong> e la sua password` : ""}.
+                ${
+                  setPasswordUrl
+                    ? `Se non la ricorda, <a href="${setPasswordUrl}" style="color:#008F6B;font-weight:700;">ne scelga una nuova da qui</a>.`
+                    : `Se non ricorda la password, nella pagina di accesso usi «Forgot your password?».`
+                }
+              </p>
+            </div>`
+          : setPasswordUrl
           ? `<div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:24px;">
               <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0 0 8px;">
                 ${
@@ -391,8 +405,8 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
       }
 
       <div style="text-align:center;margin-bottom:8px;">
-        <a href="${areaUrl}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
-          Area della Commissione
+        <a href="${giaEntrato ? loginUrl : areaUrl}" style="display:inline-block;background:#00C896;color:#04231C;font-weight:700;font-size:15px;text-decoration:none;padding:13px 28px;border-radius:8px;">
+          ${giaEntrato ? "Accedi all'area della Commissione" : "Area della Commissione"}
         </a>
       </div>
       <p style="color:#4A5568;font-size:14px;line-height:1.7;margin:16px 0 0;text-align:center;">
