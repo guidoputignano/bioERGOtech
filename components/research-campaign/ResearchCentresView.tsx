@@ -52,7 +52,7 @@ type Message = {
   from_email: string | null; to_email: string | null; subject: string | null; body: string | null; sent_at: string | null;
   received_at: string | null; created_at: string; delivery_status: string | null; error_message: string | null; historical: boolean;
   scheduled_for: string | null; personalisation_source: string | null; template_key: string | null; template_version: number | null;
-  approved_at: string | null; rc_reply_labels: Label[]; markers: string[];
+  approved_at: string | null; rc_reply_labels: Label[]; markers: string[]; cc_emails?: string[] | null;
   rc_institutions?: { name: string } | null; rc_contacts?: { person_name: string | null; email: string | null; approved_for_contact: boolean } | null;
 };
 type Task = {
@@ -383,6 +383,7 @@ function DrillMessageRow({ m, onOpen }: { m: Message; onOpen: (id: string) => vo
       {open && (
         <div style={{ marginTop: 8, marginLeft: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{m.subject}</div>
+          {(m.cc_emails?.length ?? 0) > 0 && <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 6 }}><b>Cc:</b> {m.cc_emails!.join(", ")}</div>}
           <pre style={{ whiteSpace: "pre-wrap", fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: TEXT_MID, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: 0, maxHeight: 420, overflowY: "auto" }}>{m.body}</pre>
           <button style={{ ...btn("ghost"), marginTop: 8 }} onClick={() => onOpen(m.institution_id)}>Open the whole conversation</button>
         </div>
@@ -859,6 +860,7 @@ function MessageCard({ m, inst, onChanged, notify, showInstitution = false, onOp
   const [editing, setEditing] = useState(false);
   const [subject, setSubject] = useState(m.subject || "");
   const [body, setBody] = useState(m.body || "");
+  const [ccText, setCcText] = useState((m.cc_emails || []).join(", "));
   const [open, setOpen] = useState(m.direction === "inbound" || ["draft", "in_review", "failed"].includes(m.state) || (m.state === "approved" && m.step !== "followup1" && m.step !== "followup2"));
   const labels = [...(m.rc_reply_labels || [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
   const confirmed = labels.find((l) => l.confirmed_at);
@@ -908,14 +910,18 @@ function MessageCard({ m, inst, onChanged, notify, showInstitution = false, onOp
           {editing ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <input style={inputStyle} value={subject} onChange={(e) => setSubject(e.target.value)} />
+              {m.direction === "outbound" && <input aria-label="Cc" style={inputStyle} value={ccText} onChange={(e) => setCcText(e.target.value)} placeholder="Cc: addresses separated by commas (optional)" />}
               <textarea style={{ ...inputStyle, minHeight: 300, fontFamily: "'DM Mono', monospace", fontSize: 12 }} value={body} onChange={(e) => setBody(e.target.value)} />
               <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                <button style={btn("ghost")} onClick={() => { setEditing(false); setSubject(m.subject || ""); setBody(m.body || ""); }}>Discard</button>
-                <button style={btn()} onClick={() => act("edit", { subject, body })}>Save</button>
+                <button style={btn("ghost")} onClick={() => { setEditing(false); setSubject(m.subject || ""); setBody(m.body || ""); setCcText((m.cc_emails || []).join(", ")); }}>Discard</button>
+                <button style={btn()} onClick={() => act("edit", { subject, body, ...(m.direction === "outbound" ? { cc: ccText } : {}) })}>Save</button>
               </div>
             </div>
           ) : (
-            <pre style={{ whiteSpace: "pre-wrap", fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: TEXT_MID, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: 0, maxHeight: 420, overflowY: "auto" }}>{m.body}</pre>
+            <>
+              {(m.cc_emails?.length ?? 0) > 0 && <div style={{ fontSize: 12, color: TEXT_MID, marginBottom: 6 }}><b>Cc:</b> {m.cc_emails!.join(", ")}</div>}
+              <pre style={{ whiteSpace: "pre-wrap", fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: TEXT_MID, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: 0, maxHeight: 420, overflowY: "auto" }}>{m.body}</pre>
+            </>
           )}
           {m.personalisation_source && <div style={{ marginTop: 6, fontSize: 11, color: TEXT_LIGHT }}>Personalisation source: <a href={m.personalisation_source} target="_blank" rel="noreferrer" style={{ color: TEAL }}>{m.personalisation_source}</a>{m.template_key ? ` · template ${m.template_key} v${m.template_version}` : ""}</div>}
           {m.markers?.length > 0 && <div style={{ marginTop: 8, fontSize: 12, color: RED }}>To fill before approval: {m.markers.join(", ")}</div>}

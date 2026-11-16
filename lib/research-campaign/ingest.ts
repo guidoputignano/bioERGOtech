@@ -13,7 +13,7 @@ import {
 
 export type InboundInput = {
   campaign_id: string; institution_id: string; contact_id: string | null; parent_message_id: string | null;
-  from_email: string | null; to_email: string | null; subject: string | null; body: string;
+  from_email: string | null; to_email: string | null; cc_emails?: string[] | null; subject: string | null; body: string;
   received_at: string; rfc_message_id?: string | null; in_reply_to?: string | null; thread_id?: string | null;
   provider?: string | null; provider_message_id?: string | null; needsReview?: boolean; historical?: boolean; actor: string;
 };
@@ -49,7 +49,7 @@ export async function storeInbound(db: SupabaseClient, input: InboundInput): Pro
   const { data: msg, error } = await db.from("rc_messages").insert({
     campaign_id: input.campaign_id, institution_id: input.institution_id, contact_id: contactId,
     direction: "inbound", step: "inbound", parent_message_id: input.parent_message_id, state: "received",
-    historical: !!input.historical, from_email: from, to_email: normaliseEmail(input.to_email),
+    historical: !!input.historical, from_email: from, to_email: normaliseEmail(input.to_email), cc_emails: input.cc_emails ?? null,
     subject: input.subject, body: input.body, received_at: input.received_at,
     rfc_message_id: input.rfc_message_id ?? null, in_reply_to: input.in_reply_to ?? null, thread_id: input.thread_id ?? null,
     provider: input.provider ?? null, provider_message_id: input.provider_message_id ?? null,

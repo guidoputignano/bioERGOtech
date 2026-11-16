@@ -8,8 +8,9 @@ import {
   checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
   followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
+  parseAddressList, parseCcInput, replyAllCc,
 } from "../lib/research-campaign/core.ts";
-import { resendPayload } from "../lib/research-campaign/mailer.ts";
+import { resendPayload, buildMime } from "../lib/research-campaign/mailer.ts";
 
 // ── Normalisation ───────────────────────────────────────────────────────
 test("domains and e-mails normalise", () => {
@@ -258,6 +259,29 @@ test("Resend e-mails carry a blind copy for the sender's mailbox", () => {
   assert.equal(resendPayload({ ...mail, copyTo: null }, "<x>").bcc, undefined);
   assert.equal(resendPayload({ ...mail, to: "Olufemi.Yusuf@bioergotech.org" }, "<x>").bcc, undefined);
   assert.throws(() => resendPayload({ ...mail, copyTo: "a@b.org\r\nBcc: x@y.org" }, "<x>"));
+});
+
+test("reply all: people in copy are kept, minus us and the recipient", () => {
+  const to = 'Olufemi Yusuf <olufemi.yusuf@bioergotech.org>';
+  const cc = '"Caviness, Chloe" <CCaviness@buckinstitute.org>, Sue Holland <sholland@buckinstitute.org>';
+  assert.deepEqual(parseAddressList(to), ["olufemi.yusuf@bioergotech.org"]);
+  const kept = replyAllCc([...parseAddressList(to), ...parseAddressList(cc)], ["olufemi.yusuf@bioergotech.org", "mhorn@buckinstitute.org"]);
+  assert.deepEqual(kept, ["ccaviness@buckinstitute.org", "sholland@buckinstitute.org"]);
+  // Answering Marc: Chloe and Sue stay in copy; Marc is the recipient, not copied.
+  assert.deepEqual(replyAllCc([...kept, "MHorn@buckinstitute.org"], ["mhorn@buckinstitute.org", "olufemi.yusuf@bioergotech.org"]), kept);
+  assert.deepEqual(parseCcInput("a@b.org; C@D.org,  a@b.org"), { list: ["a@b.org", "c@d.org"], invalid: [] });
+  assert.deepEqual(parseCcInput("a@b.org, not-an-address").invalid, ["not-an-address"]);
+  assert.deepEqual(parseCcInput(""), { list: [], invalid: [] });
+});
+
+test("Cc reaches both providers; the Bcc copy is not doubled", () => {
+  const mail = { fromName: null, fromEmail: "olufemi.yusuf@bioergotech.org", replyTo: null, to: "mhorn@buckinstitute.org", subject: "Re: Enquiry", text: "Dear Marc", copyTo: "olufemi.yusuf@bioergotech.org", cc: ["ccaviness@buckinstitute.org", "sholland@buckinstitute.org"] };
+  const p = resendPayload(mail, "<x@bioergotech.org>");
+  assert.deepEqual(p.cc, ["ccaviness@buckinstitute.org", "sholland@buckinstitute.org"]);
+  assert.deepEqual(p.bcc, ["olufemi.yusuf@bioergotech.org"]);
+  assert.equal(resendPayload({ ...mail, cc: [] }, "<x>").cc, undefined);
+  assert.match(buildMime(mail, "<x@bioergotech.org>"), /\r\nCc: ccaviness@buckinstitute.org, sholland@buckinstitute.org\r\n/);
+  assert.throws(() => resendPayload({ ...mail, cc: ["a@b.org\r\nBcc: x@y.org"] }, "<x>"));
 });
 
 test("opt-out wording is detected", () => {

@@ -4,7 +4,7 @@
  * gate, the same atomic claim and the same bookkeeping.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { checkSendable, countsTowardDailyLimit, idempotencyKey, inSendWindow, parseAllowedSenders, sequenceDueDates } from "./core";
+import { checkSendable, countsTowardDailyLimit, emailDomain, idempotencyKey, inSendWindow, parseAllowedSenders, replyAllCc, sequenceDueDates } from "./core";
 import { sendViaGmail, sendViaResend, type SendResult } from "./mailer";
 import { loadSuppressions, logEvent, sentTodayCount, touchInstitution, type Campaign } from "./server";
 
@@ -81,6 +81,9 @@ export async function dispatchMessage(
       to: contact!.email!, subject: message.subject!, text: message.body!, inReplyTo, references, gmailThreadId,
       // A copy for the sender's own mailbox, so portal e-mails can be found there too.
       copyTo: campaign.sender_email,
+      // People kept in copy, never anyone who asked not to be contacted.
+      cc: replyAllCc(message.cc_emails || [], [contact!.email, campaign.sender_email])
+        .filter((a) => !suppress.emails.has(a) && !suppress.domains.has(emailDomain(a) || "")),
     };
     let sent: SendResult;
     if (campaign.sender_provider === "gmail") {
