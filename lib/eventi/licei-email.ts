@@ -317,10 +317,12 @@ export type CommissarioEmailInput = {
   nuovo?: boolean;
   /** L'account e gia stato usato: basta accedere con le credenziali di sempre. */
   giaEntrato?: boolean;
+  /** Il promemoria a chi e in Commissione da un giorno e non e ancora entrato nell'area. */
+  promemoria?: boolean;
 };
 
-export function commissarioEmailSubject(): string {
-  return `Commissione di valutazione . ${LICEI.titolo}`;
+export function commissarioEmailSubject(promemoria = false): string {
+  return promemoria ? "Commissione: come entrare nella sua area" : `Commissione di valutazione . ${LICEI.titolo}`;
 }
 
 /**
@@ -329,7 +331,7 @@ export function commissarioEmailSubject(): string {
  * del consorzio nell'art. 8, siede con funzioni consultive.
  */
 export function commissarioEmailHtml(input: CommissarioEmailInput): string {
-  const { nome, ruolo, diritto_voto, setPasswordUrl, loginEmail, nuovo = true, giaEntrato = false } = input;
+  const { nome, ruolo, diritto_voto, setPasswordUrl, loginEmail, nuovo = true, giaEntrato = false, promemoria = false } = input;
   const loginUrl = `${SITE_URL}/auth/login?returnTo=${encodeURIComponent(COMMISSIONE_PATH)}`;
   const areaUrl = `${SITE_URL}${COMMISSIONE_PATH}`;
   const conIndirizzo = loginEmail
@@ -342,8 +344,12 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
     <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
       <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">Gentile ${nome},</h2>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">
-        la ringraziamo per aver accettato di far parte della Commissione di valutazione del percorso
-        ${LICEI.titolo}${ruolo ? `, in qualità di ${ruoloCommissioneLabel(ruolo).toLowerCase()}` : ""}.
+        ${
+          promemoria
+            ? `le riscriviamo perché non risulta ancora entrato nell'area della Commissione del percorso ${LICEI.titolo}. Bastano due minuti: entrare e scegliere i temi, così il 26 novembre le affidiamo i progetti più vicini al suo campo.`
+            : `la ringraziamo per aver accettato di far parte della Commissione di valutazione del percorso
+        ${LICEI.titolo}${ruolo ? `, in qualità di ${ruoloCommissioneLabel(ruolo).toLowerCase()}` : ""}.`
+        }
       </p>
 
       <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:22px;margin-bottom:24px;">

@@ -25,6 +25,7 @@ import { assegnazioneAttiva } from "@/lib/eventi/licei-smistamento";
 import { erroreSchemaMancante } from "@/lib/eventi/licei-server";
 import { MITTENTE_AVVISI, RISPOSTE_AVVISI } from "@/lib/eventi/licei-avvisi";
 import { ENTRO_GIUDICI, giudiceNuoviHtml, giudiceNuoviSubject } from "@/lib/eventi/licei-commissione-email";
+import { segnaVisto } from "@/lib/eventi/licei-commissari";
 
 /**
  * Quello che la Commissione vede di un progetto.
@@ -80,7 +81,7 @@ export async function GET() {
 
   const config = await leggiConfigLicei();
 
-  const [{ data: progetti, error }, { data: valutazioni }, profilo, smistamento] = await Promise.all([
+  const [{ data: progetti, error }, { data: valutazioni }, profilo, smistamento, primaVisita] = await Promise.all([
     progettiConsegnati(client),
     client
       .from("licei_valutazioni")
@@ -88,6 +89,9 @@ export async function GET() {
       .eq("commissario_id", ctx.commissario.id),
     profiloGiudice(client, ctx.commissario.id),
     smistamentoPer(client, ctx.commissario.id, ctx.commissario.diritto_voto),
+    // La prima visita: l'area da il benvenuto, lo staff vede che e entrato e
+    // il promemoria di accesso non parte.
+    segnaVisto(client, ctx.commissario.id),
   ]);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -111,6 +115,7 @@ export async function GET() {
     // giudizi indipendenti.
     valutazioni: valutazioni ?? [],
     fase: config.stato_valutazione,
+    prima_visita: primaVisita,
   });
 }
 
