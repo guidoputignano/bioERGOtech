@@ -32,7 +32,7 @@ export type NuovoCommissario = {
 };
 
 export type EsitoCommissario =
-  | { ok: true; commissario: Record<string, unknown>; emailInviata: boolean; loginEmail: string }
+  | { ok: true; commissario: Record<string, unknown>; emailInviata: boolean; loginEmail: string; giaEntrato: boolean }
   | { ok: false; errore: string; status: number };
 
 export async function aggiungiCommissario(client: Db, input: NuovoCommissario): Promise<EsitoCommissario> {
@@ -103,15 +103,22 @@ export async function aggiungiCommissario(client: Db, input: NuovoCommissario): 
     commissario: (data ?? {}) as Record<string, unknown>,
     emailInviata: accesso.inviata,
     loginEmail: accesso.loginEmail,
+    giaEntrato: accesso.giaEntrato,
   };
 }
 
 /**
- * L'email di accesso alla Commissione, con il link per scegliere la
- * password. Anche a chi l'account ce l'ha gia: un mentor creato dallo staff
- * spesso la password non l'ha mai scelta, e senza il link resta fuori. Il
- * link apre l'account di accesso, che per un mentor puo avere un indirizzo
- * diverso da quello a cui scriviamo: l'email lo dice.
+ * L'email di accesso alla Commissione. Due casi:
+ *  - l'account e gia stato usato (`last_sign_in_at`): la persona conosce la
+ *    sua password, e l'email dice solo di accedere con le credenziali di
+ *    sempre, con un rimando a "Forgot your password?" se non la ricorda;
+ *  - l'account e nuovo, o non e mai entrato (un mentor creato dallo staff
+ *    che non ha usato il link dell'approvazione): l'email porta il link per
+ *    scegliere la password.
+ * `forzaLink` (il "Rimanda l'accesso" dello staff, per chi dice di non
+ * riuscire a entrare) aggiunge il link anche nel primo caso, come
+ * alternativa. Il link apre l'account di accesso, che per un mentor puo
+ * avere un indirizzo diverso da quello a cui scriviamo: l'email lo dice.
  *
  * Torna se l'email e partita davvero: Resend un rifiuto lo restituisce, non
  * lo solleva, e prima andava perso.
@@ -120,17 +127,20 @@ export async function inviaAccesso(
   client: Db,
   c: { userId: string; email: string; nome: string; ruolo: string | null; diritto_voto: boolean; nuovo?: boolean },
   invio?: Pick<Resend, "emails">,
-): Promise<{ inviata: boolean; loginEmail: string }> {
+  opzioni: { forzaLink?: boolean } = {},
+): Promise<{ inviata: boolean; loginEmail: string; giaEntrato: boolean }> {
   let loginEmail = c.email;
+  let giaEntrato = false;
   try {
     const { data } = await client.auth.admin.getUserById(c.userId);
     if (data?.user?.email) loginEmail = data.user.email;
+    giaEntrato = !c.nuovo && !!data?.user?.last_sign_in_at;
   } catch (err) {
     console.error("Licei commissario: account non letto:", err);
   }
 
   let setPasswordUrl: string | undefined;
-  try {
+  if (!giaEntrato || opzioni.forzaLink) try {
     const { data: link, error } = await client.auth.admin.generateLink({
       type: "recovery",
       email: loginEmail,
@@ -143,7 +153,7 @@ export async function inviaAccesso(
   }
 
   const resend = invio ?? (process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null);
-  if (!resend) return { inviata: false, loginEmail };
+  if (!resend) return { inviata: false, loginEmail, giaEntrato };
   try {
     const { error } = await resend.emails.send({
       from: "Fondazione bioERGOtech <noreply@bioergotech.org>",
@@ -157,15 +167,16 @@ export async function inviaAccesso(
         setPasswordUrl,
         loginEmail: loginEmail.toLowerCase() !== c.email.toLowerCase() ? loginEmail : undefined,
         nuovo: !!c.nuovo,
+        giaEntrato,
       }),
     });
     if (error) {
       console.error("Licei commissario: email di accesso non partita:", error.message);
-      return { inviata: false, loginEmail };
+      return { inviata: false, loginEmail, giaEntrato };
     }
-    return { inviata: true, loginEmail };
+    return { inviata: true, loginEmail, giaEntrato };
   } catch (err) {
     console.error("Licei commissario: email di accesso non partita:", err);
-    return { inviata: false, loginEmail };
+    return { inviata: false, loginEmail, giaEntrato };
   }
 }

@@ -16,25 +16,38 @@ import { GUIDA_COMMISSIONE_SLUG, MINUTI_PER_PROGETTO, PROGETTI_MAX_PER_GIUDICE, 
 type Stato =
   | { stato: "non_valido" }
   | { stato: "chiuso" | "gia_giudice" | "disattivato" | "da_confermare"; nome: string }
-  | { stato: "entrato"; nome: string; emailInviata: boolean; loginEmail: string };
+  | { stato: "entrato"; nome: string; emailInviata: boolean; loginEmail: string; giaEntrato: boolean };
 
 const LOGIN_HREF = `/auth/login?returnTo=${encodeURIComponent(COMMISSIONE_PATH)}`;
 
-/** Come si entra, per chi ha appena aderito e per chi torna sulla pagina. */
-function ComeSiEntra({ loginEmail }: { loginEmail?: string }) {
+/**
+ * Come si entra. Chi ha gia usato il sito accede e basta, con le
+ * credenziali di sempre; chi non e mai entrato ha il link per la password
+ * nell'email. In tutti e due i casi "Accedi" e il primo pulsante.
+ */
+function ComeSiEntra({ loginEmail, giaEntrato }: { loginEmail?: string; giaEntrato?: boolean }) {
+  const indirizzo = loginEmail ? <strong>{loginEmail}</strong> : "la sua email";
   return (
     <div style={{ background: "#ECFAF6", border: "1px solid #B4E3D8", borderRadius: 10, padding: "14px 16px", margin: "0 0 18px" }}>
       <p style={{ fontSize: 14, color: "#08594A", lineHeight: 1.7, margin: "0 0 10px" }}>
-        <strong>Per entrare:</strong> acceda con {loginEmail ? <strong>{loginEmail}</strong> : "la sua email"} e la
-        sua password. Se non ha mai scelto una password, o non la ricorda, la imposti con «Imposta la password»: le arriva un
-        link via email.
+        {giaEntrato === false ? (
+          <>
+            <strong>Per entrare:</strong> scelga la password dal link che le abbiamo mandato via email, poi acceda con{" "}
+            {indirizzo}.
+          </>
+        ) : (
+          <>
+            <strong>Per entrare</strong> basta accedere con le credenziali che usa già sul sito: {indirizzo} e la sua
+            password.
+          </>
+        )}
       </p>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Link href={LOGIN_HREF} className="btn-primary">
           Accedi
         </Link>
-        <Link href="/auth/forgot-password" className="btn-outline">
-          Imposta la password
+        <Link href="/auth/forgot-password" style={{ fontSize: 13.5, color: "var(--text-mid)", textDecoration: "underline" }}>
+          {giaEntrato === false ? "Il link è scaduto o non è arrivato?" : "Non ricorda la password?"}
         </Link>
       </div>
     </div>
@@ -115,12 +128,13 @@ export function DiventaGiudice() {
         </h1>
         <p className="text-gray-600" style={{ lineHeight: 1.7 }}>
           {entrato
-            ? entrato.emailInviata
-              ? "Le abbiamo mandato un'email con il link per scegliere la password: se non la trova, guardi anche nello spam. Appena entra, scelga i temi in cui si sente più competente: il 26 novembre riceve i suoi progetti."
-              : "L'email con il link per la password non è partita: può entrare comunque da qui sotto. Appena entra, scelga i temi in cui si sente più competente."
+            ? "Appena entra, scelga i temi in cui si sente più competente: il 26 novembre riceve i suoi progetti."
             : "Trova i suoi progetti e la scelta dei temi nell'area della Commissione."}
+          {entrato && !entrato.giaEntrato && !entrato.emailInviata
+            ? " L'email con il link per la password non è partita: usi «Il link è scaduto o non è arrivato?» qui sotto."
+            : ""}
         </p>
-        <ComeSiEntra loginEmail={entrato?.loginEmail} />
+        <ComeSiEntra loginEmail={entrato?.loginEmail} giaEntrato={entrato ? entrato.giaEntrato : undefined} />
         <Link href={`${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`} style={{ fontSize: 14, fontWeight: 600, color: "#0A7A66" }}>
           La guida per i giudici
         </Link>

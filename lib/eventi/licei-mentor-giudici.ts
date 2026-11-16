@@ -144,7 +144,11 @@ export const mascheraEmail = (e: string): string => {
 export async function accettaInvito(
   db: Db,
   token: string | null | undefined,
-): Promise<StatoInvito | { stato: "entrato"; nome: string; emailInviata: boolean; loginEmail: string } | { stato: "errore"; errore: string }> {
+): Promise<
+  | StatoInvito
+  | { stato: "entrato"; nome: string; emailInviata: boolean; loginEmail: string; giaEntrato: boolean }
+  | { stato: "errore"; errore: string }
+> {
   const prima = await statoInvito(db, token);
   if (prima.stato !== "da_confermare") return prima;
   const m = (await trova(db, token))!;
@@ -156,5 +160,11 @@ export async function accettaInvito(
     userId: m.user_id,
   });
   if (!esito.ok) return { stato: "errore", errore: esito.errore };
-  return { stato: "entrato", nome: m.nome, emailInviata: esito.emailInviata, loginEmail: mascheraEmail(esito.loginEmail) };
+  return {
+    stato: "entrato",
+    nome: m.nome,
+    emailInviata: esito.emailInviata,
+    loginEmail: mascheraEmail(esito.loginEmail),
+    giaEntrato: esito.giaEntrato,
+  };
 }
