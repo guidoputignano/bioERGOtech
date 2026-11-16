@@ -383,3 +383,40 @@ test("the research sentence is filled from the institution's specialisations", a
   assert.equal(previousOutreachBlocks("Contacted (reported); no documented reply"), false);
   assert.equal(previousOutreachBlocks(null), false);
 });
+
+// ── Greeting and own-domain safety (16 Nov) ─────────────────────────────
+test("greetings never use notes from the department field", async () => {
+  const { greetingFor, departmentForGreeting } = await import("../lib/research-campaign/templates.ts");
+  const g = (department, person_name = null) => greetingFor({ person_name, person_title: null, department });
+  assert.equal(g("International programs office + inquiry form"), "International Programs Office Team");
+  assert.equal(g("Education office + application form"), "Education Office Team");
+  assert.equal(g("Office of Community & Engagement inquiry form"), "Office of Community & Engagement Team");
+  assert.equal(g("Booking email"), "Research Outreach Team");
+  assert.equal(g("Plan Your Visit form"), "Research Outreach Team");
+  assert.equal(g("STEM visit request form; R-STEM email"), "Research Outreach Team");
+  assert.equal(g("Outreach tours email"), "Research Outreach Team");
+  assert.equal(g("Programme email"), "Research Outreach Team");
+  assert.equal(g("General"), "Research Outreach Team");
+  assert.equal(g("Public Affairs"), "Public Affairs Team");
+  assert.equal(g("IGS outreach"), "IGS Outreach Team");
+  assert.equal(g("RockEDU"), "RockEDU Team");
+  assert.equal(g(null), "Research Outreach Team");
+  assert.equal(g("Site coordinators + inquiry form", "Lauren Correri (CSH/Sleepy Hollow)"), "Lauren Correri");
+  assert.equal(g("x", "Cailey Bice, Education Program Coordinator"), "Cailey Bice");
+  assert.equal(g("x", "Gennifer Goode, PhD, Program Manager, Student Tours & Visits"), "Dr Goode");
+  assert.equal(departmentForGreeting("Museum tours"), "Museum Tours");
+});
+
+test("mail from our own domain only matches through the campaign thread", () => {
+  const out = [{ id: "m9", institution_id: "test", contact_id: "c9", rfc_message_id: "<rc-1@bioergotech.org>", thread_id: null, to_email: "vercel@bioergotech.org" }];
+  const insts = [{ id: "test", domain: "bioergotech.org" }];
+  const contacts = [{ id: "c9", institution_id: "test", email: "vercel@bioergotech.org" }];
+  // A notification or a colleague's e-mail: not a reply.
+  assert.equal(matchInbound({ from: "noreply@bioergotech.org" }, out, insts, contacts, "bioergotech.org").matched, false);
+  assert.equal(matchInbound({ from: "Guido <guido.putignano@bioergotech.org>" }, out, insts, contacts, "bioergotech.org").matched, false);
+  assert.equal(matchInbound({ from: "vercel@bioergotech.org" }, out, insts, contacts, "bioergotech.org").matched, false);
+  // A genuine reply in the thread still matches.
+  assert.equal(matchInbound({ from: "vercel@bioergotech.org", inReplyTo: "<rc-1@bioergotech.org>" }, out, insts, contacts, "bioergotech.org").method, "header");
+  // Other domains are unaffected.
+  assert.equal(matchInbound({ from: "pjuza@ucsd.edu" }, [{ ...out[0], institution_id: "u" }], [{ id: "u", domain: "extendedstudies.ucsd.edu" }], [], "bioergotech.org").method, "domain");
+});
