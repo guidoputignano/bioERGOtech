@@ -707,6 +707,33 @@ export type MatchResult =
   | { matched: true; method: "thread" | "header" | "address" | "domain"; institution_id: string; contact_id: string | null; parent_id: string | null; needsReview: boolean }
   | { matched: false; reason: string };
 
+/** Every address in a To/Cc header or a typed list ("Name <a@b>, c@d"), lower-case, valid, once each. */
+export function parseAddressList(header: string | null | undefined): string[] {
+  if (!header) return [];
+  const found = header.match(/[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi) || [];
+  return [...new Set(found.map((a) => a.toLowerCase()))].filter(isValidEmail);
+}
+
+/** A typed Cc list: the valid addresses, and anything that is not one. */
+export function parseCcInput(value: unknown): { list: string[]; invalid: string[] } {
+  const parts = (Array.isArray(value) ? value.map(String) : typeof value === "string" ? [value] : [])
+    .flatMap((v) => v.split(/[,;\s]+/)).map((v) => v.trim().replace(/^<|>$/g, "")).filter(Boolean);
+  const list: string[] = [], invalid: string[] = [];
+  for (const p of parts) { const n = normaliseEmail(p)!; if (isValidEmail(n)) { if (!list.includes(n)) list.push(n); } else invalid.push(p); }
+  return { list, invalid };
+}
+
+/** Who stays in copy ("Reply all"): everyone given, except us and the person written to; at most 10. */
+export function replyAllCc(addresses: (string | null | undefined)[], exclude: (string | null | undefined)[]): string[] {
+  const ex = new Set(exclude.map((e) => normaliseEmail(e)).filter(Boolean));
+  const out: string[] = [];
+  for (const a of addresses) {
+    const n = normaliseEmail(a);
+    if (n && isValidEmail(n) && !ex.has(n) && !out.includes(n)) out.push(n);
+  }
+  return out.slice(0, 10);
+}
+
 export function extractAddress(header: string | null | undefined): string | null {
   if (!header) return null;
   const m = header.match(/<([^>]+)>/) || header.match(/([^\s<>"']+@[^\s<>"']+)/);

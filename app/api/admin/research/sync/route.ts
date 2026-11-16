@@ -26,7 +26,8 @@ export async function POST() {
 
   const actor = guard.chiamante.email || guard.chiamante.id;
   const report: SyncReport = { repliesStored: 0, unmatched: 0, errors: [] };
-  try { await syncReplies(db, campaign, report, actor); }
+  // The daily job reads the last 21 days; Refresh only needs the last few.
+  try { await syncReplies(db, campaign, report, actor, "3d"); }
   catch (e) { report.errors.push(e instanceof Error ? e.message : String(e)); }
   const checkedAt = new Date().toISOString();
   await logEvent(db, { campaign_id: campaign.id, actor, action: "replies.synced", detail: { ...report, source: "refresh" } });

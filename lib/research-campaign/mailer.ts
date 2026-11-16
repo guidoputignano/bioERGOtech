@@ -31,6 +31,7 @@ export type OutgoingMail = {
   references?: string | null;
   gmailThreadId?: string | null; // keep the Gmail thread when continuing it
   copyTo?: string | null;        // blind copy for the sender's own mailbox (Resend only)
+  cc?: string[] | null;          // people kept in copy (visible to the recipient)
 };
 
 export type SendResult = { provider: "resend" | "gmail"; providerMessageId: string; rfcMessageId: string; threadId: string | null };
@@ -57,15 +58,17 @@ function assertNoHeaderInjection(...values: (string | null | undefined)[]) {
 
 /** The Resend request body. The recipient never sees the blind copy. */
 export function resendPayload(mail: OutgoingMail, rfcMessageId: string): Record<string, unknown> {
-  assertNoHeaderInjection(mail.to, mail.subject, mail.fromEmail, mail.replyTo, mail.inReplyTo, mail.references, mail.copyTo);
+  assertNoHeaderInjection(mail.to, mail.subject, mail.fromEmail, mail.replyTo, mail.inReplyTo, mail.references, mail.copyTo, ...(mail.cc || []));
   const headers: Record<string, string> = { "Message-ID": rfcMessageId };
   if (mail.inReplyTo) headers["In-Reply-To"] = mail.inReplyTo;
   if (mail.references || mail.inReplyTo) headers["References"] = [mail.references, mail.inReplyTo].filter(Boolean).join(" ");
   const copy = mail.copyTo?.trim();
-  const withCopy = !!copy && copy.toLowerCase() !== mail.to.trim().toLowerCase();
+  const cc = (mail.cc || []).filter((a) => a.toLowerCase() !== mail.to.trim().toLowerCase());
+  const withCopy = !!copy && copy.toLowerCase() !== mail.to.trim().toLowerCase() && !cc.some((a) => a.toLowerCase() === copy.toLowerCase());
   return {
     from: formatFrom(mail.fromName, mail.fromEmail),
     to: [mail.to],
+    ...(cc.length ? { cc } : {}),
     ...(withCopy ? { bcc: [copy] } : {}),
     ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
     subject: mail.subject,
@@ -107,10 +110,12 @@ export async function gmailAccessToken(refreshToken: string): Promise<string> {
 }
 
 export function buildMime(mail: OutgoingMail, rfcMessageId: string): string {
-  assertNoHeaderInjection(mail.to, mail.subject, mail.fromEmail, mail.replyTo, mail.inReplyTo, mail.references);
+  assertNoHeaderInjection(mail.to, mail.subject, mail.fromEmail, mail.replyTo, mail.inReplyTo, mail.references, ...(mail.cc || []));
+  const cc = (mail.cc || []).filter((a) => a.toLowerCase() !== mail.to.trim().toLowerCase());
   const lines = [
     `From: ${encodeHeader(formatFrom(mail.fromName, mail.fromEmail))}`,
     `To: ${mail.to}`,
+    ...(cc.length ? [`Cc: ${cc.join(", ")}`] : []),
     ...(mail.replyTo ? [`Reply-To: ${mail.replyTo}`] : []),
     `Subject: ${encodeHeader(mail.subject)}`,
     `Message-ID: ${rfcMessageId}`,
