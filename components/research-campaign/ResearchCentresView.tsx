@@ -207,7 +207,7 @@ export default function ResearchCentresView() {
       {flash && <div role="status" style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, background: flash.ok ? "#E6F9F4" : "#FDECEA", color: flash.ok ? GREEN : RED }}>{flash.text}</div>}
 
       {tab === "send" && <SendView notify={notify} onSent={loadAll} onOpen={setDrawerId} />}
-      {tab === "dashboard" && metrics && <Dashboard metrics={metrics} institutions={institutions} onOpen={setDrawerId} />}
+      {tab === "dashboard" && metrics && <Dashboard metrics={metrics} institutions={institutions} tasks={tasks} onOpen={setDrawerId} />}
       {tab === "institutions" && <InstitutionsTable institutions={institutions} onOpen={setDrawerId} onCreated={(id) => { loadAll(); setDrawerId(id); }} notify={notify} />}
       {tab === "review" && <ReviewQueue queue={queue} campaign={campaign} readiness={readiness} onChanged={loadAll} notify={notify} onOpen={setDrawerId} />}
       {tab === "tasks" && <TasksView tasks={tasks} onChanged={loadAll} notify={notify} onOpen={setDrawerId} />}
@@ -239,22 +239,23 @@ function CampaignBanner({ campaign, readiness }: { campaign: Campaign; readiness
 }
 
 // ── Dashboard ───────────────────────────────────────────────────────────
-function Dashboard({ metrics, institutions, onOpen }: { metrics: Metrics; institutions: Institution[]; onOpen: (id: string) => void }) {
-  const tiles: { label: string; value: number; color: string }[] = [
-    { label: "Institutions discovered", value: metrics.institutionsDiscovered, color: TEAL },
-    { label: "Verified", value: metrics.verified, color: "#1A5DA8" },
-    { label: "Approved", value: metrics.approved, color: "#1A6DD4" },
-    { label: "E-mails sent", value: metrics.emailsSent, color: "#6B4BCC" },
-    { label: "Bounced", value: metrics.bounced, color: metrics.bounced ? RED : TEXT_LIGHT },
-    { label: "Institutions replied", value: metrics.repliesReceived, color: GREEN },
-    { label: "Positive responses", value: metrics.positiveResponses, color: "#007A5A" },
-    { label: "Referrals", value: metrics.referrals, color: GREEN },
-    { label: "Meetings", value: metrics.meetings, color: AMBER },
-    { label: "Fees requested", value: metrics.feesRequested, color: AMBER },
-    { label: "Negotiation", value: metrics.negotiating, color: AMBER },
-    { label: "Hosting confirmed", value: metrics.confirmed, color: GREEN },
-    { label: "No response", value: metrics.noResponse, color: TEXT_LIGHT },
-    { label: "Outstanding actions", value: metrics.outstandingActions, color: metrics.outstandingActions ? RED : TEXT_LIGHT },
+function Dashboard({ metrics, institutions, tasks, onOpen }: { metrics: Metrics; institutions: Institution[]; tasks: Task[]; onOpen: (id: string) => void }) {
+  const [drill, setDrill] = useState<string | null>(null);
+  const tiles: { key: string; label: string; value: number; color: string }[] = [
+    { key: "discovered", label: "Institutions discovered", value: metrics.institutionsDiscovered, color: TEAL },
+    { key: "verified", label: "Verified", value: metrics.verified, color: "#1A5DA8" },
+    { key: "approved", label: "Approved", value: metrics.approved, color: "#1A6DD4" },
+    { key: "sent", label: "E-mails sent", value: metrics.emailsSent, color: "#6B4BCC" },
+    { key: "bounced", label: "Bounced", value: metrics.bounced, color: metrics.bounced ? RED : TEXT_LIGHT },
+    { key: "replied", label: "Institutions replied", value: metrics.repliesReceived, color: GREEN },
+    { key: "positive", label: "Positive responses", value: metrics.positiveResponses, color: "#007A5A" },
+    { key: "referrals", label: "Referrals", value: metrics.referrals, color: GREEN },
+    { key: "meetings", label: "Meetings", value: metrics.meetings, color: AMBER },
+    { key: "fees", label: "Fees requested", value: metrics.feesRequested, color: AMBER },
+    { key: "negotiating", label: "Negotiation", value: metrics.negotiating, color: AMBER },
+    { key: "confirmed", label: "Hosting confirmed", value: metrics.confirmed, color: GREEN },
+    { key: "noresponse", label: "No response", value: metrics.noResponse, color: TEXT_LIGHT },
+    { key: "outstanding", label: "Outstanding actions", value: metrics.outstandingActions, color: metrics.outstandingActions ? RED : TEXT_LIGHT },
   ];
   const upcoming = institutions
     .filter((i) => i.next_action && !["declined", "ineligible", "closed"].includes(i.status))
@@ -275,12 +276,14 @@ function Dashboard({ metrics, institutions, onOpen }: { metrics: Metrics; instit
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(150px, 100%), 1fr))", gap: 10 }}>
         {tiles.map((s) => (
-          <div key={s.label} style={{ ...cardStyle, padding: 14, borderLeft: `3px solid ${s.color}` }}>
+          <button key={s.key} type="button" onClick={() => setDrill(drill === s.key ? null : s.key)} aria-pressed={drill === s.key} title="Show the list behind this number"
+            style={{ ...cardStyle, padding: 14, borderLeft: `3px solid ${s.color}`, textAlign: "left", cursor: "pointer", font: "inherit", outline: drill === s.key ? `2px solid ${s.color}` : "none" }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: s.color, fontFamily: "'Sora', sans-serif" }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>{s.label}</div>
-          </div>
+            <div style={{ fontSize: 10, color: TEXT_LIGHT, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 3 }}>{s.label} ›</div>
+          </button>
         ))}
       </div>
+      {drill && <DrillPanel which={drill} title={tiles.find((t) => t.key === drill)?.label || ""} institutions={institutions} tasks={tasks} onOpen={onOpen} onClose={() => setDrill(null)} />}
       <div style={{ fontSize: 11, color: TEXT_LIGHT }}>
         &quot;Sent&quot; means accepted by the mail provider, not read; opens are not tracked. {metrics.followupsQueued} follow-up(s) approved and waiting · {metrics.draftsAwaitingReview} draft(s) to review · {metrics.overdueActions} overdue next action(s).
       </div>
@@ -329,6 +332,124 @@ function Dashboard({ metrics, institutions, onOpen }: { metrics: Metrics; instit
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Dashboard drill-down (the list behind each card) ───────────────────
+const POSITIVE_LABELS = new Set(["interested", "more_info", "meeting_requested", "fee_request"]);
+const VERIFIED_STAGES = new Set(["verified", "approved", "contacted", "followup_due", "responded", "qualified", "meeting", "negotiating", "confirmed", "no_response"]);
+const APPROVED_STAGES = new Set(["approved", "contacted", "followup_due", "responded", "qualified", "meeting", "negotiating", "confirmed", "no_response"]);
+
+function bestLabel(m: Message): string | null {
+  const ls = [...(m.rc_reply_labels || [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return (ls.find((l) => l.confirmed_at) || ls[0])?.label ?? null;
+}
+
+function DrillMessageRow({ m, onOpen }: { m: Message; onOpen: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const label = m.direction === "inbound" ? bestLabel(m) : null;
+  const when = m.direction === "inbound" ? m.received_at : m.sent_at;
+  return (
+    <div style={{ borderTop: `1px solid ${BORDER}`, padding: "8px 4px" }}>
+      <div onClick={() => setOpen(!open)} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", cursor: "pointer" }}>
+        <span style={{ fontSize: 11, color: TEXT_LIGHT, width: 14 }}>{open ? "▾" : "▸"}</span>
+        <span style={{ fontWeight: 700, color: TEXT, fontSize: 13 }}>{m.rc_institutions?.name || "—"}</span>
+        {pill(m.direction === "inbound" ? "Reply received" : STEP_TEXT[m.step] || m.step, "#F3F5F8", m.direction === "inbound" ? GREEN : TEXT_MID)}
+        {label && pill(REPLY_LABEL_TEXT[label as keyof typeof REPLY_LABEL_TEXT] || label, "#E6F9F4", GREEN)}
+        {m.delivery_status && m.delivery_status !== "delivered" && pill(m.delivery_status, "#FDECEA", RED)}
+        <span style={{ fontSize: 12, color: TEXT_MID, flex: "1 1 160px", overflowWrap: "anywhere" }}>{m.direction === "inbound" ? `from ${m.from_email}` : `to ${m.to_email}`}</span>
+        <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{when ? new Date(when).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</span>
+      </div>
+      {open && (
+        <div style={{ marginTop: 8, marginLeft: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{m.subject}</div>
+          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: TEXT_MID, background: "#FAFBFC", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: 0, maxHeight: 420, overflowY: "auto" }}>{m.body}</pre>
+          <button style={{ ...btn("ghost"), marginTop: 8 }} onClick={() => onOpen(m.institution_id)}>Open the whole conversation</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DrillPanel({ which, title, institutions, tasks, onOpen, onClose }: { which: string; title: string; institutions: Institution[]; tasks: Task[]; onOpen: (id: string) => void; onClose: () => void }) {
+  const [messages, setMessages] = useState<Message[] | null>(null);
+  const [error, setError] = useState("");
+  const needsMessages = ["sent", "bounced", "replied", "positive", "fees", "meetings"].includes(which);
+  useEffect(() => {
+    if (!needsMessages || messages) return;
+    api<{ messages: Message[] }>("/api/admin/research/messages").then((d) => setMessages(d.messages)).catch((e) => setError(e instanceof Error ? e.message : "Could not load messages"));
+  }, [needsMessages, messages]);
+
+  const live = (messages || []).filter((m) => !m.historical);
+  const stamp = (m: Message) => m.sent_at || m.received_at || m.created_at;
+  const byDate = (a: Message, b: Message) => stamp(b).localeCompare(stamp(a));
+  let msgRows: Message[] | null = null;
+  let instRows: Institution[] | null = null;
+  let other: React.ReactNode[] | null = null;
+  switch (which) {
+    case "discovered": instRows = institutions; break;
+    case "verified": instRows = institutions.filter((i) => VERIFIED_STAGES.has(i.status)); break;
+    case "approved": instRows = institutions.filter((i) => APPROVED_STAGES.has(i.status)); break;
+    case "sent": if (messages) msgRows = live.filter((m) => m.direction === "outbound" && m.state === "sent").sort(byDate); break;
+    case "bounced": if (messages) msgRows = live.filter((m) => m.direction === "outbound" && (m.delivery_status === "bounced" || m.delivery_status === "complained")).sort(byDate); break;
+    case "replied": if (messages) msgRows = live.filter((m) => m.direction === "inbound").sort(byDate); break;
+    case "positive": if (messages) msgRows = live.filter((m) => m.direction === "inbound" && POSITIVE_LABELS.has(bestLabel(m) || "")).sort(byDate); break;
+    case "fees": if (messages) msgRows = live.filter((m) => m.direction === "inbound" && bestLabel(m) === "fee_request").sort(byDate); break;
+    case "meetings": {
+      if (!messages) break;
+      const ids = new Set([...institutions.filter((i) => i.status === "meeting").map((i) => i.id), ...live.filter((m) => m.direction === "inbound" && bestLabel(m) === "meeting_requested").map((m) => m.institution_id)]);
+      instRows = institutions.filter((i) => ids.has(i.id)); break;
+    }
+    case "negotiating": instRows = institutions.filter((i) => i.status === "negotiating"); break;
+    case "confirmed": instRows = institutions.filter((i) => i.status === "confirmed"); break;
+    case "noresponse": instRows = institutions.filter((i) => i.status === "no_response"); break;
+    case "referrals":
+      other = institutions.flatMap((i) => i.rc_contacts.filter((c) => c.referred_by_contact_id).map((c) => {
+        const by = i.rc_contacts.find((x) => x.id === c.referred_by_contact_id);
+        return (
+          <div key={c.id} onClick={() => onOpen(i.id)} style={{ borderTop: `1px solid ${BORDER}`, padding: "8px 4px", cursor: "pointer", fontSize: 13 }}>
+            <b style={{ color: TEXT }}>{i.name}</b> <span style={{ color: TEXT_MID }}>· {c.person_name || c.email}{c.person_title ? `, ${c.person_title}` : ""}{by ? ` (referred by ${by.person_name || by.email})` : ""}</span>
+          </div>
+        );
+      }));
+      break;
+    case "outstanding":
+      other = tasks.filter((t) => t.status === "open").map((t) => (
+        <div key={t.id} onClick={() => onOpen(t.institution_id)} style={{ borderTop: `1px solid ${BORDER}`, padding: "8px 4px", cursor: "pointer", fontSize: 13 }}>
+          <b style={{ color: TEXT }}>{t.rc_institutions?.name}</b> <span style={{ color: TEXT_MID }}>· {t.objective || t.task_type}</span> <span style={{ color: TEXT_LIGHT }}>{t.due_date ? `· due ${t.due_date}` : ""}</span>
+        </div>
+      ));
+      break;
+  }
+  const loading = needsMessages && !messages && !error;
+  const count = msgRows?.length ?? instRows?.length ?? other?.length ?? 0;
+  return (
+    <div style={{ ...cardStyle, padding: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <div style={{ ...sectionTitle, marginBottom: 0, flex: 1 }}>{title} ({loading ? "…" : count})</div>
+        <button style={btn("ghost")} onClick={onClose}>✕ Close</button>
+      </div>
+      {error && <div style={{ fontSize: 13, color: RED }}>{error}</div>}
+      {loading && <div style={{ fontSize: 13, color: TEXT_LIGHT }}>Loading…</div>}
+      {msgRows && (msgRows.length ? (
+        <div style={{ maxHeight: 620, overflowY: "auto" }}>
+          <div style={{ fontSize: 11, color: TEXT_LIGHT, marginBottom: 4 }}>Click a row to read the e-mail.</div>
+          {msgRows.map((m) => <DrillMessageRow key={m.id} m={m} onOpen={onOpen} />)}
+        </div>
+      ) : <div style={{ fontSize: 13, color: TEXT_LIGHT }}>Nothing yet.</div>)}
+      {instRows && (instRows.length ? (
+        <div style={{ maxHeight: 620, overflowY: "auto" }}>
+          {instRows.map((i) => (
+            <div key={i.id} onClick={() => onOpen(i.id)} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", borderTop: `1px solid ${BORDER}`, padding: "8px 4px", cursor: "pointer" }}>
+              {priorityPill(i.priority)} <span style={{ fontWeight: 700, color: TEXT, fontSize: 13 }}>{i.name}</span> {statusPill(i.status)}
+              <span style={{ fontSize: 12, color: TEXT_MID, flex: "1 1 160px" }}>{i.next_action || ""}</span>
+              <span style={{ fontSize: 11, color: TEXT_LIGHT }}>{i.activity.sent} sent · {i.activity.inbound} in</span>
+            </div>
+          ))}
+        </div>
+      ) : <div style={{ fontSize: 13, color: TEXT_LIGHT }}>Nothing yet.</div>)}
+      {other && (other.length ? other : <div style={{ fontSize: 13, color: TEXT_LIGHT }}>Nothing yet.</div>)}
     </div>
   );
 }

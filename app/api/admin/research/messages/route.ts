@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     .eq("campaign_id", campaign.id);
   if (p.get("institution_id")) q = q.eq("institution_id", p.get("institution_id")!).order("created_at", { ascending: true });
   else if (p.get("queue") === "review") q = q.eq("direction", "outbound").eq("historical", false).in("state", ["draft", "in_review", "approved", "failed"]).order("created_at", { ascending: true });
-  else q = q.order("created_at", { ascending: false }).limit(300);
+  else q = q.order("created_at", { ascending: false }).limit(2000);
   const { data, error } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const messages = (data || []).map((m) => ({ ...m, markers: m.direction === "outbound" && !m.historical ? unresolvedMarkers(`${m.subject ?? ""}\n${m.body ?? ""}`) : [] }));
