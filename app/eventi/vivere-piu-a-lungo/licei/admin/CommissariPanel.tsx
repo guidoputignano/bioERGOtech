@@ -81,7 +81,9 @@ export function CommissariPanel() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Inserimento non riuscito.");
       setAvviso(
-        `${nuovo.nome} ${nuovo.cognome} è stato aggiunto alla Commissione e ha ricevuto l'email con l'accesso.`,
+        data.email_inviata === false
+          ? `${nuovo.nome} ${nuovo.cognome} è stato aggiunto alla Commissione, ma l'email di accesso non è partita: usa «Rimanda l'accesso».`
+          : `${nuovo.nome} ${nuovo.cognome} è stato aggiunto alla Commissione e ha ricevuto l'email con l'accesso e il link per la password.`,
       );
       setNuovo(VUOTO);
       await carica();
@@ -110,6 +112,29 @@ export function CommissariPanel() {
       );
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Salvataggio non riuscito.");
+    } finally {
+      setOccupato(false);
+    }
+  };
+
+  /** Di nuovo l'email di accesso, con il link per scegliere la password. */
+  const rimandaAccesso = async (r: Qualsiasi) => {
+    setOccupato(true);
+    setErrore(null);
+    setAvviso(null);
+    try {
+      const res = await fetch("/api/eventi/licei/admin/commissari", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: r.id, azione: "rimanda_accesso" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invio non riuscito.");
+      setAvviso(
+        `Email di accesso mandata a ${data.email}${data.login_email && data.login_email.toLowerCase() !== data.email.toLowerCase() ? ` (si accede con ${data.login_email})` : ""}, con il link per scegliere la password.`,
+      );
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Invio non riuscito.");
     } finally {
       setOccupato(false);
     }
@@ -352,6 +377,26 @@ export function CommissariPanel() {
               >
                 {r.attivo ? "Disattiva" : "Riattiva"}
               </Button>
+
+              {r.attivo && (
+                <button
+                  type="button"
+                  onClick={() => rimandaAccesso(r)}
+                  disabled={occupato}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    fontSize: 12.5,
+                    color: "#0A7A66",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  Rimanda l&apos;accesso
+                </button>
+              )}
 
               {smistamentoPresente && (r.smistamento?.assegnati ?? 0) > (r.smistamento?.chiusi ?? 0) && (
                 <button

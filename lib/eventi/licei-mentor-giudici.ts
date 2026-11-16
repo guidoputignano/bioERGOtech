@@ -133,8 +133,18 @@ export async function statoInvito(db: Db, token: string | null | undefined): Pro
   return { stato: "da_confermare", nome: m.nome };
 }
 
+/** "mario.rossi@x.it" diventa "ma***@x.it": la pagina e aperta a chi ha il link. */
+export const mascheraEmail = (e: string): string => {
+  const [nome, dominio] = e.split("@");
+  if (!dominio) return "";
+  return `${nome.slice(0, 2)}***@${dominio}`;
+};
+
 /** Il clic di conferma: il mentor entra in Commissione e riceve l'email di accesso. */
-export async function accettaInvito(db: Db, token: string | null | undefined): Promise<StatoInvito | { stato: "errore"; errore: string }> {
+export async function accettaInvito(
+  db: Db,
+  token: string | null | undefined,
+): Promise<StatoInvito | { stato: "entrato"; nome: string; emailInviata: boolean; loginEmail: string } | { stato: "errore"; errore: string }> {
   const prima = await statoInvito(db, token);
   if (prima.stato !== "da_confermare") return prima;
   const m = (await trova(db, token))!;
@@ -146,5 +156,5 @@ export async function accettaInvito(db: Db, token: string | null | undefined): P
     userId: m.user_id,
   });
   if (!esito.ok) return { stato: "errore", errore: esito.errore };
-  return { stato: "gia_giudice", nome: m.nome };
+  return { stato: "entrato", nome: m.nome, emailInviata: esito.emailInviata, loginEmail: mascheraEmail(esito.loginEmail) };
 }
