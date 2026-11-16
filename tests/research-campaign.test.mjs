@@ -7,7 +7,7 @@ import {
   mapImportRecord, planImport, renderTemplate, unresolvedMarkers, addBusinessDays,
   checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
-  followupDecision, parseReturnDate, detectOptOut, suggestTemplate4,
+  followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
 } from "../lib/research-campaign/core.ts";
 
 // ── Normalisation ───────────────────────────────────────────────────────
@@ -381,6 +381,21 @@ test("dashboard counts institutions, not messages, and ignores earlier correspon
   assert.equal(m.followupsQueued, 1);
   assert.equal(m.draftsAwaitingReview, 1);
   assert.equal(m.overdueActions, 1);
+});
+
+test("a corrected reply counts only under its corrected class", () => {
+  const labels = [
+    { message_institution_id: "i1", message_id: "m1", label: "fee_request", confirmed: false, created_at: "2026-11-13T20:00:00Z" },
+    { message_institution_id: "i1", message_id: "m1", label: "not_interested", confirmed: true, created_at: "2026-11-16T18:00:00Z" },
+    { message_institution_id: "i2", message_id: "m2", label: "fee_request", confirmed: false, created_at: "2026-11-13T23:00:00Z" },
+    // A later unconfirmed suggestion never overrides a confirmed class.
+    { message_institution_id: "i3", message_id: "m3", label: "interested", confirmed: true, created_at: "2026-11-10T00:00:00Z" },
+    { message_institution_id: "i3", message_id: "m3", label: "unclear", confirmed: false, created_at: "2026-11-11T00:00:00Z" },
+  ];
+  assert.deepEqual(currentLabels(labels).map((l) => l.label).sort(), ["fee_request", "interested", "not_interested"]);
+  const m = dashboardMetrics([], [], [], labels, [], new Date("2026-11-16T00:00:00Z"));
+  assert.equal(m.feesRequested, 1);
+  assert.equal(m.positiveResponses, 2);
 });
 
 // ── Campaign facts: only those the templates use are required ───────────

@@ -855,7 +855,24 @@ export function suggestTemplate4(label: ReplyLabel, respondentIsAppropriate: boo
 export type DashInstitution = { id: string; status: string; priority: string | null; next_action_due: string | null };
 export type DashContact = { verification: string; approved_for_contact: boolean; institution_id: string; referred_by_contact_id?: string | null };
 export type DashMessage = { direction: string; state: string; step: string; delivery_status: string | null; institution_id: string; historical?: boolean };
-export type DashLabel = { message_institution_id: string; label: string; confirmed: boolean };
+export type DashLabel = { message_institution_id: string; label: string; confirmed: boolean; message_id?: string; created_at?: string };
+
+/**
+ * One label per reply: the latest confirmed one, else the latest suggestion.
+ * A correction adds a new label row, so counting every row would keep the
+ * superseded class in the figures. Rows without a message id stand alone.
+ */
+export function currentLabels(labels: DashLabel[]): DashLabel[] {
+  const best = new Map<string, DashLabel>();
+  const loose: DashLabel[] = [];
+  for (const l of labels) {
+    if (!l.message_id) { loose.push(l); continue; }
+    const cur = best.get(l.message_id);
+    const better = !cur || (l.confirmed && !cur.confirmed) || (l.confirmed === cur.confirmed && (l.created_at || "") > (cur.created_at || ""));
+    if (better) best.set(l.message_id, l);
+  }
+  return [...best.values(), ...loose];
+}
 export type DashTask = { status: string; task_type: string; due_date: string | null };
 
 export type DashboardMetrics = {
@@ -875,7 +892,8 @@ export function dashboardMetrics(
 ): DashboardMetrics {
   const count = <T>(arr: T[], f: (x: T) => boolean) => arr.reduce((n, x) => n + (f(x) ? 1 : 0), 0);
   // Confirmed labels win; otherwise the latest suggestion counts.
-  const institutionsWith = (pred: (l: DashLabel) => boolean) => new Set(labels.filter(pred).map((l) => l.message_institution_id)).size;
+  const current = currentLabels(labels);
+  const institutionsWith = (pred: (l: DashLabel) => boolean) => new Set(current.filter(pred).map((l) => l.message_institution_id)).size;
   const todayIso = today.toISOString().slice(0, 10);
   const byStatus: Record<string, number> = {};
   const byPriority: Record<string, number> = {};
