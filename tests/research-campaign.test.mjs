@@ -9,6 +9,7 @@ import {
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
   followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
 } from "../lib/research-campaign/core.ts";
+import { resendPayload } from "../lib/research-campaign/mailer.ts";
 
 // ── Normalisation ───────────────────────────────────────────────────────
 test("domains and e-mails normalise", () => {
@@ -242,6 +243,18 @@ test("auto-replies are recognised from the subject line", () => {
   assert.equal(classifyByKeywords(ack, "Re: Research Collaboration Enquiry"), "unclear");
   // An Outlook out-of-office also says "Automatic reply"; the body wins so the return date is used.
   assert.equal(classifyByKeywords("I am out of the office until 30 November.", "Automatic reply: Enquiry"), "out_of_office");
+});
+
+test("Resend e-mails carry a blind copy for the sender's mailbox", () => {
+  const mail = { fromName: "Olufemi Yusuf", fromEmail: "olufemi.yusuf@bioergotech.org", replyTo: null, to: "pjuza@ucsd.edu", subject: "Re: Enquiry", text: "Dear Patti", inReplyTo: "<a@ucsd.edu>", copyTo: "olufemi.yusuf@bioergotech.org" };
+  const p = resendPayload(mail, "<rc-1@bioergotech.org>");
+  assert.deepEqual(p.to, ["pjuza@ucsd.edu"]);
+  assert.deepEqual(p.bcc, ["olufemi.yusuf@bioergotech.org"]);
+  assert.equal(p.headers["In-Reply-To"], "<a@ucsd.edu>");
+  // No copy when none is set, or when the recipient is the sender (test e-mails).
+  assert.equal(resendPayload({ ...mail, copyTo: null }, "<x>").bcc, undefined);
+  assert.equal(resendPayload({ ...mail, to: "Olufemi.Yusuf@bioergotech.org" }, "<x>").bcc, undefined);
+  assert.throws(() => resendPayload({ ...mail, copyTo: "a@b.org\r\nBcc: x@y.org" }, "<x>"));
 });
 
 test("opt-out wording is detected", () => {

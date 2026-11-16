@@ -79,6 +79,8 @@ export async function dispatchMessage(
     const mail = {
       fromName: campaign.sender_name, fromEmail: campaign.sender_email!, replyTo: campaign.reply_to,
       to: contact!.email!, subject: message.subject!, text: message.body!, inReplyTo, references, gmailThreadId,
+      // A copy for the sender's own mailbox, so portal e-mails can be found there too.
+      copyTo: campaign.sender_email,
     };
     let sent: SendResult;
     if (campaign.sender_provider === "gmail") {
