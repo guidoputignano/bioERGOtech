@@ -681,6 +681,11 @@ export function parseAllowedSenders(env: string | undefined): Set<string> {
   return new Set((env || "").split(/[\s,;]+/).map((s) => normaliseEmail(s)).filter((s): s is string => !!s && isValidEmail(s)));
 }
 
+/** The daily limit counts new first e-mails only; follow-ups and replies to institutions are not limited. */
+export function countsTowardDailyLimit(step: string | null | undefined): boolean {
+  return step === "initial";
+}
+
 export function idempotencyKey(messageId: string, attemptScope = "send"): string {
   return `rc:${attemptScope}:${messageId}`;
 }
@@ -702,6 +707,33 @@ export type MatchResult =
   | { matched: true; method: "thread" | "header" | "address" | "domain"; institution_id: string; contact_id: string | null; parent_id: string | null; needsReview: boolean }
   | { matched: false; reason: string };
 
+/** Every address in a To/Cc header or a typed list ("Name <a@b>, c@d"), lower-case, valid, once each. */
+export function parseAddressList(header: string | null | undefined): string[] {
+  if (!header) return [];
+  const found = header.match(/[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+/gi) || [];
+  return [...new Set(found.map((a) => a.toLowerCase()))].filter(isValidEmail);
+}
+
+/** A typed Cc list: the valid addresses, and anything that is not one. */
+export function parseCcInput(value: unknown): { list: string[]; invalid: string[] } {
+  const parts = (Array.isArray(value) ? value.map(String) : typeof value === "string" ? [value] : [])
+    .flatMap((v) => v.split(/[,;\s]+/)).map((v) => v.trim().replace(/^<|>$/g, "")).filter(Boolean);
+  const list: string[] = [], invalid: string[] = [];
+  for (const p of parts) { const n = normaliseEmail(p)!; if (isValidEmail(n)) { if (!list.includes(n)) list.push(n); } else invalid.push(p); }
+  return { list, invalid };
+}
+
+/** Who stays in copy ("Reply all"): everyone given, except us and the person written to; at most 10. */
+export function replyAllCc(addresses: (string | null | undefined)[], exclude: (string | null | undefined)[]): string[] {
+  const ex = new Set(exclude.map((e) => normaliseEmail(e)).filter(Boolean));
+  const out: string[] = [];
+  for (const a of addresses) {
+    const n = normaliseEmail(a);
+    if (n && isValidEmail(n) && !ex.has(n) && !out.includes(n)) out.push(n);
+  }
+  return out.slice(0, 10);
+}
+
 export function extractAddress(header: string | null | undefined): string | null {
   if (!header) return null;
   const m = header.match(/<([^>]+)>/) || header.match(/([^\s<>"']+@[^\s<>"']+)/);
@@ -715,7 +747,7 @@ function stripAngles(id: string): string { return id.trim().replace(/^<|>$/g, ""
  * Gmail thread → In-Reply-To/References → known contact address →
  * institution domain (a colleague answering; flagged for review).
  */
-export function matchInbound(env: InboundEnvelope, outbound: OutboundRef[], institutions: InstitutionRef[], contacts: ContactRef[]): MatchResult {
+export function matchInbound(env: InboundEnvelope, outbound: OutboundRef[], institutions: InstitutionRef[], contacts: ContactRef[], ownDomain: string | null = null): MatchResult {
   if (env.threadId) {
     const hit = [...outbound].reverse().find((o) => o.thread_id && o.thread_id === env.threadId);
     if (hit) return { matched: true, method: "thread", institution_id: hit.institution_id, contact_id: hit.contact_id, parent_id: hit.id, needsReview: false };
@@ -728,6 +760,9 @@ export function matchInbound(env: InboundEnvelope, outbound: OutboundRef[], inst
   }
   const from = extractAddress(env.from);
   if (!from) return { matched: false, reason: "No sender address" };
+  // Mail from our own domain (colleagues, notifications) only counts when it
+  // belongs to a campaign thread (matched above), never by address or domain.
+  if (ownDomain && rootDomain(emailDomain(from)) === rootDomain(ownDomain.toLowerCase())) return { matched: false, reason: "Internal sender, not in a campaign thread" };
   const contact = contacts.find((c) => normaliseEmail(c.email) === from);
   if (contact) {
     const parent = [...outbound].reverse().find((o) => o.contact_id === contact.id) || null;
@@ -779,13 +814,47 @@ export function detectOptOut(body: string): boolean {
   return /please remove|unsubscribe|do not (contact|e-?mail|write)|don't (contact|e-?mail)|no further (contact|e-?mails?)|stop (e-?mailing|contacting)|take (me|us) off/.test((body || "").toLowerCase());
 }
 
-export function classifyByKeywords(body: string): ReplyLabel {
-  const b = (body || "").toLowerCase().slice(0, 4000);
+/**
+ * The reply's own words: drops the quoted copy of our e-mail that most mail
+ * programs append (Outlook "From:"/underscore separator, Gmail "On … wrote:",
+ * "Original Message", ">" lines). Our enquiry mentions fees, meetings and
+ * an e-mail address, so classifying the quote mislabels short replies.
+ */
+export function stripQuotedReply(body: string): string {
+  const lines = (body || "").replace(/\r\n?/g, "\n").split("\n");
+  const starts = (i: number): boolean => {
+    const l = lines[i].trim();
+    if (/^_{8,}$/.test(l) || /^-{2,}\s*original message\s*-{2,}/i.test(l) || /^>/.test(l)) return true;
+    if (/^from:\s+\S/i.test(l)) return true;
+    const two = `${l} ${(lines[i + 1] || "").trim()}`;
+    return /^on\s.{4,300}\swrote:$/i.test(l) || /^on\s.{4,300}\swrote:$/i.test(two);
+  };
+  for (let i = 1; i < lines.length; i++) {
+    if (starts(i)) {
+      const own = lines.slice(0, i).join("\n").trim();
+      return own || (body || "").trim();
+    }
+  }
+  return (body || "").trim();
+}
+
+/** Auto-replies announced in the subject line ("Automatic reply:", "Out of Office:"). */
+export function autoReplyFromSubject(subject: string | null | undefined): ReplyLabel | null {
+  const s = (subject || "").trim();
+  if (/^(out of (the )?office|ooo)\b/i.test(s)) return "out_of_office";
+  if (/^(automatic reply|auto[- ]?reply|autoreply|auto[- ]?response|automatic response|risposta automatica)\b/i.test(s)) return "auto_ack";
+  return null;
+}
+
+export function classifyByKeywords(body: string, subject?: string | null): ReplyLabel {
+  const b = stripQuotedReply(body).toLowerCase().slice(0, 4000);
   if (/out of (the )?office|i am (currently )?(away|travell?ing|on leave)|on (annual |parental )?leave|limited access to (my )?e-?mail|will be back|returning (on|to the office)/.test(b)) return "out_of_office";
+  const bySubject = autoReplyFromSubject(subject);
+  if (bySubject) return bySubject;
   if (/(this is an )?automat(ic|ed) (reply|response|acknowledg)|we have received your (message|e-?mail|enquiry|inquiry)|ticket (number|#)|do not reply to this/.test(b)) return "auto_ack";
   if (detectOptOut(b)) return "not_interested";
-  if (/only (open|available) to|must be (a )?(u\.?s\.?|us) (citizen|resident)|residents of|must be (at least )?\d+ (years|or older)|(under|younger than) \d+ (are|is|cannot|can't)|not (open|eligible) (to|for) (international|minors|high school)|eligib/.test(b)) return "not_eligible";
-  if (/(do not|don't|cannot|can't|unable to|not able to|not in a position to) (host|accommodate|accept|offer|support)|not interested|no thank|not a good fit|must decline|fully booked|no (capacity|availability)/.test(b)) return "not_interested";
+  if (/only (open|available) to|must be (a )?(u\.?s\.?|us) (citizen|resident)|residents of|must be (at least )?\d+ (years|or older)|(under|younger than) \d+ (are|is|cannot|can't)|not (open|eligible) (to|for) (international|minors|high school)|(restricted|limited) to (u\.?s\.?(?![a-z])|american|domestic)|eligib/.test(b)) return "not_eligible";
+  if (/(do not|don't|cannot|can't|unable( to)?|not able( to)?|not in a position to) (host|accommodate|accept|offer|support)|not interested|no thank|not a good fit|must decline|fully booked|no (capacity|availability)/.test(b)) return "not_interested";
   if (/(fee|cost|price|pricing|quote|quotation|invoice|\$\s?\d|usd|per student|per group|charge)/.test(b)) return "fee_request";
   if (/(meeting|zoom|teams|call|schedule a time|speak (with|to) you|set up a time)/.test(b)) return "meeting_requested";
   if (/(forward(ed|ing)?|cc'?d|copying|copied|reach out to|contact .{0,60} (instead|directly)|better (person|placed)|right (person|office|department)|would be the best (person|contact)|in charge of)/.test(b)) return "referred";
@@ -813,7 +882,24 @@ export function suggestTemplate4(label: ReplyLabel, respondentIsAppropriate: boo
 export type DashInstitution = { id: string; status: string; priority: string | null; next_action_due: string | null };
 export type DashContact = { verification: string; approved_for_contact: boolean; institution_id: string; referred_by_contact_id?: string | null };
 export type DashMessage = { direction: string; state: string; step: string; delivery_status: string | null; institution_id: string; historical?: boolean };
-export type DashLabel = { message_institution_id: string; label: string; confirmed: boolean };
+export type DashLabel = { message_institution_id: string; label: string; confirmed: boolean; message_id?: string; created_at?: string };
+
+/**
+ * One label per reply: the latest confirmed one, else the latest suggestion.
+ * A correction adds a new label row, so counting every row would keep the
+ * superseded class in the figures. Rows without a message id stand alone.
+ */
+export function currentLabels(labels: DashLabel[]): DashLabel[] {
+  const best = new Map<string, DashLabel>();
+  const loose: DashLabel[] = [];
+  for (const l of labels) {
+    if (!l.message_id) { loose.push(l); continue; }
+    const cur = best.get(l.message_id);
+    const better = !cur || (l.confirmed && !cur.confirmed) || (l.confirmed === cur.confirmed && (l.created_at || "") > (cur.created_at || ""));
+    if (better) best.set(l.message_id, l);
+  }
+  return [...best.values(), ...loose];
+}
 export type DashTask = { status: string; task_type: string; due_date: string | null };
 
 export type DashboardMetrics = {
@@ -833,7 +919,8 @@ export function dashboardMetrics(
 ): DashboardMetrics {
   const count = <T>(arr: T[], f: (x: T) => boolean) => arr.reduce((n, x) => n + (f(x) ? 1 : 0), 0);
   // Confirmed labels win; otherwise the latest suggestion counts.
-  const institutionsWith = (pred: (l: DashLabel) => boolean) => new Set(labels.filter(pred).map((l) => l.message_institution_id)).size;
+  const current = currentLabels(labels);
+  const institutionsWith = (pred: (l: DashLabel) => boolean) => new Set(current.filter(pred).map((l) => l.message_institution_id)).size;
   const todayIso = today.toISOString().slice(0, 10);
   const byStatus: Record<string, number> = {};
   const byPriority: Record<string, number> = {};

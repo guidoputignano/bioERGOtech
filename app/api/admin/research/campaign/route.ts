@@ -24,7 +24,7 @@ export async function GET() {
       db.from("rc_institutions").select("id, status, priority, next_action_due").eq("campaign_id", campaign.id),
       db.from("rc_contacts").select("verification, approved_for_contact, institution_id, referred_by_contact_id").eq("campaign_id", campaign.id),
       db.from("rc_messages").select("id, direction, state, step, delivery_status, institution_id, historical").eq("campaign_id", campaign.id),
-      db.from("rc_reply_labels").select("label, confirmed_at, rc_messages!inner(institution_id, campaign_id)").eq("rc_messages.campaign_id", campaign.id),
+      db.from("rc_reply_labels").select("label, confirmed_at, created_at, message_id, rc_messages!inner(institution_id, campaign_id)").eq("rc_messages.campaign_id", campaign.id),
       db.from("rc_tasks").select("status, task_type, due_date").eq("campaign_id", campaign.id),
     ]);
     for (const r of [inst, cont, msgs, labels, tasks]) if (r.error) throw new Error(r.error.message);
@@ -33,7 +33,7 @@ export async function GET() {
       inst.data || [], cont.data || [], msgs.data || [],
       (labels.data || []).map((l) => {
         const m = l.rc_messages as unknown as { institution_id: string };
-        return { message_institution_id: m.institution_id, label: l.label, confirmed: !!l.confirmed_at };
+        return { message_institution_id: m.institution_id, label: l.label, confirmed: !!l.confirmed_at, message_id: l.message_id, created_at: l.created_at };
       }),
       tasks.data || [], new Date(),
     );

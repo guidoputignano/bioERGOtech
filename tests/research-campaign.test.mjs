@@ -5,10 +5,12 @@ import {
   normaliseDomain, normaliseEmail, isValidEmail, toE164, timezoneForState,
   totalScore, clampScores, derivePriority, parseCsv, csvToRecords, toCsv,
   mapImportRecord, planImport, renderTemplate, unresolvedMarkers, addBusinessDays,
-  checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords,
+  checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
-  followupDecision, parseReturnDate, detectOptOut, suggestTemplate4,
+  followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
+  parseAddressList, parseCcInput, replyAllCc,
 } from "../lib/research-campaign/core.ts";
+import { resendPayload, buildMime } from "../lib/research-campaign/mailer.ts";
 
 // ── Normalisation ───────────────────────────────────────────────────────
 test("domains and e-mails normalise", () => {
@@ -212,6 +214,9 @@ test("keyword classifier covers the brief's reply classes", () => {
   assert.equal(classifyByKeywords("I am out of the office until Monday, November 30."), "out_of_office");
   assert.equal(classifyByKeywords("This is an automatic reply: we have received your message."), "auto_ack");
   assert.equal(classifyByKeywords("Our programme is only open to US citizens."), "not_eligible");
+  assert.equal(classifyByKeywords("Our programs are not able to accommodate international high school students and are presently restricted to U.S. students."), "not_eligible");
+  assert.equal(classifyByKeywords("Places are limited to US students this year."), "not_eligible");
+  assert.equal(classifyByKeywords("Access is restricted to users with a badge, but we would be happy to host your group."), "interested");
   assert.equal(classifyByKeywords("Unfortunately we do not host visiting student groups."), "not_interested");
   assert.equal(classifyByKeywords("Please remove me from your list."), "not_interested");
   assert.equal(classifyByKeywords("The fee is $400 per group."), "fee_request");
@@ -221,6 +226,62 @@ test("keyword classifier covers the brief's reply classes", () => {
   assert.equal(classifyByKeywords("How many students and which dates?"), "more_info");
   assert.equal(classifyByKeywords("We would be happy to host your group."), "interested");
   assert.equal(classifyByKeywords("Thanks."), "unclear");
+});
+
+test("the quoted copy of our enquiry does not decide the class", () => {
+  const ours = "Dear Dr Goode,\r\n\r\nWe are reaching out to explore whether you would host these students, ideally without institutional hosting fees. Could we arrange a brief virtual meeting?\r\n";
+  const outlook = `Hi Olufemi,\r\n\r\nThank you for the email. We are unable accommodate this request.\r\n\r\n-GG\r\n________________________________\r\nFrom: Olufemi Yusuf <olufemi.yusuf@bioergotech.org>\r\nSent: Wednesday\r\n\r\n${ours}`;
+  assert.equal(stripQuotedReply(outlook), "Hi Olufemi,\n\nThank you for the email. We are unable accommodate this request.\n\n-GG");
+  assert.equal(classifyByKeywords(outlook), "not_interested");
+  const gmail = `Sounds wonderful, we would be happy to host your group.\n\nOn Wed, Nov 11, 2026 at 1:26 PM Olufemi Yusuf <olufemi.yusuf@bioergotech.org>\nwrote:\n> ${ours}`;
+  assert.equal(classifyByKeywords(gmail), "interested");
+  assert.equal(stripQuotedReply("Just a line."), "Just a line.");
+});
+
+test("auto-replies are recognised from the subject line", () => {
+  const ack = "Hello,\n\nThank you for reaching out. Our team has received a high volume of inquiries and is working through the inbox as quickly as possible.";
+  assert.equal(autoReplyFromSubject("Automatic reply: [EXTERNAL] Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(autoReplyFromSubject("Out of Office: Research Collaboration Enquiry"), "out_of_office");
+  assert.equal(autoReplyFromSubject("Re: Research Collaboration Enquiry"), null);
+  assert.equal(classifyByKeywords(ack, "Automatic reply: [EXTERNAL] Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(classifyByKeywords(ack, "Re: Research Collaboration Enquiry"), "unclear");
+  // An Outlook out-of-office also says "Automatic reply"; the body wins so the return date is used.
+  assert.equal(classifyByKeywords("I am out of the office until 30 November.", "Automatic reply: Enquiry"), "out_of_office");
+});
+
+test("Resend e-mails carry a blind copy for the sender's mailbox", () => {
+  const mail = { fromName: "Olufemi Yusuf", fromEmail: "olufemi.yusuf@bioergotech.org", replyTo: null, to: "pjuza@ucsd.edu", subject: "Re: Enquiry", text: "Dear Patti", inReplyTo: "<a@ucsd.edu>", copyTo: "olufemi.yusuf@bioergotech.org" };
+  const p = resendPayload(mail, "<rc-1@bioergotech.org>");
+  assert.deepEqual(p.to, ["pjuza@ucsd.edu"]);
+  assert.deepEqual(p.bcc, ["olufemi.yusuf@bioergotech.org"]);
+  assert.equal(p.headers["In-Reply-To"], "<a@ucsd.edu>");
+  // No copy when none is set, or when the recipient is the sender (test e-mails).
+  assert.equal(resendPayload({ ...mail, copyTo: null }, "<x>").bcc, undefined);
+  assert.equal(resendPayload({ ...mail, to: "Olufemi.Yusuf@bioergotech.org" }, "<x>").bcc, undefined);
+  assert.throws(() => resendPayload({ ...mail, copyTo: "a@b.org\r\nBcc: x@y.org" }, "<x>"));
+});
+
+test("reply all: people in copy are kept, minus us and the recipient", () => {
+  const to = 'Olufemi Yusuf <olufemi.yusuf@bioergotech.org>';
+  const cc = '"Caviness, Chloe" <CCaviness@buckinstitute.org>, Sue Holland <sholland@buckinstitute.org>';
+  assert.deepEqual(parseAddressList(to), ["olufemi.yusuf@bioergotech.org"]);
+  const kept = replyAllCc([...parseAddressList(to), ...parseAddressList(cc)], ["olufemi.yusuf@bioergotech.org", "mhorn@buckinstitute.org"]);
+  assert.deepEqual(kept, ["ccaviness@buckinstitute.org", "sholland@buckinstitute.org"]);
+  // Answering Marc: Chloe and Sue stay in copy; Marc is the recipient, not copied.
+  assert.deepEqual(replyAllCc([...kept, "MHorn@buckinstitute.org"], ["mhorn@buckinstitute.org", "olufemi.yusuf@bioergotech.org"]), kept);
+  assert.deepEqual(parseCcInput("a@b.org; C@D.org,  a@b.org"), { list: ["a@b.org", "c@d.org"], invalid: [] });
+  assert.deepEqual(parseCcInput("a@b.org, not-an-address").invalid, ["not-an-address"]);
+  assert.deepEqual(parseCcInput(""), { list: [], invalid: [] });
+});
+
+test("Cc reaches both providers; the Bcc copy is not doubled", () => {
+  const mail = { fromName: null, fromEmail: "olufemi.yusuf@bioergotech.org", replyTo: null, to: "mhorn@buckinstitute.org", subject: "Re: Enquiry", text: "Dear Marc", copyTo: "olufemi.yusuf@bioergotech.org", cc: ["ccaviness@buckinstitute.org", "sholland@buckinstitute.org"] };
+  const p = resendPayload(mail, "<x@bioergotech.org>");
+  assert.deepEqual(p.cc, ["ccaviness@buckinstitute.org", "sholland@buckinstitute.org"]);
+  assert.deepEqual(p.bcc, ["olufemi.yusuf@bioergotech.org"]);
+  assert.equal(resendPayload({ ...mail, cc: [] }, "<x>").cc, undefined);
+  assert.match(buildMime(mail, "<x@bioergotech.org>"), /\r\nCc: ccaviness@buckinstitute.org, sholland@buckinstitute.org\r\n/);
+  assert.throws(() => resendPayload({ ...mail, cc: ["a@b.org\r\nBcc: x@y.org"] }, "<x>"));
 });
 
 test("opt-out wording is detected", () => {
@@ -362,6 +423,21 @@ test("dashboard counts institutions, not messages, and ignores earlier correspon
   assert.equal(m.overdueActions, 1);
 });
 
+test("a corrected reply counts only under its corrected class", () => {
+  const labels = [
+    { message_institution_id: "i1", message_id: "m1", label: "fee_request", confirmed: false, created_at: "2026-11-13T20:00:00Z" },
+    { message_institution_id: "i1", message_id: "m1", label: "not_interested", confirmed: true, created_at: "2026-11-16T18:00:00Z" },
+    { message_institution_id: "i2", message_id: "m2", label: "fee_request", confirmed: false, created_at: "2026-11-13T23:00:00Z" },
+    // A later unconfirmed suggestion never overrides a confirmed class.
+    { message_institution_id: "i3", message_id: "m3", label: "interested", confirmed: true, created_at: "2026-11-10T00:00:00Z" },
+    { message_institution_id: "i3", message_id: "m3", label: "unclear", confirmed: false, created_at: "2026-11-11T00:00:00Z" },
+  ];
+  assert.deepEqual(currentLabels(labels).map((l) => l.label).sort(), ["fee_request", "interested", "not_interested"]);
+  const m = dashboardMetrics([], [], [], labels, [], new Date("2026-11-16T00:00:00Z"));
+  assert.equal(m.feesRequested, 1);
+  assert.equal(m.positiveResponses, 2);
+});
+
 // ── Campaign facts: only those the templates use are required ───────────
 test("only facts used by the templates are required", async () => {
   const { factsUsed } = await import("../lib/research-campaign/templates.ts");
@@ -382,4 +458,48 @@ test("the research sentence is filled from the institution's specialisations", a
   assert.equal(previousOutreachBlocks("Previous response reported: hosting fee requested; details pending verification"), true);
   assert.equal(previousOutreachBlocks("Contacted (reported); no documented reply"), false);
   assert.equal(previousOutreachBlocks(null), false);
+});
+
+// ── Greeting and own-domain safety (16 Nov) ─────────────────────────────
+test("greetings never use notes from the department field", async () => {
+  const { greetingFor, departmentForGreeting } = await import("../lib/research-campaign/templates.ts");
+  const g = (department, person_name = null) => greetingFor({ person_name, person_title: null, department });
+  assert.equal(g("International programs office + inquiry form"), "International Programs Office Team");
+  assert.equal(g("Education office + application form"), "Education Office Team");
+  assert.equal(g("Office of Community & Engagement inquiry form"), "Office of Community & Engagement Team");
+  assert.equal(g("Booking email"), "Research Outreach Team");
+  assert.equal(g("Plan Your Visit form"), "Research Outreach Team");
+  assert.equal(g("STEM visit request form; R-STEM email"), "Research Outreach Team");
+  assert.equal(g("Outreach tours email"), "Research Outreach Team");
+  assert.equal(g("Programme email"), "Research Outreach Team");
+  assert.equal(g("General"), "Research Outreach Team");
+  assert.equal(g("Public Affairs"), "Public Affairs Team");
+  assert.equal(g("IGS outreach"), "IGS Outreach Team");
+  assert.equal(g("RockEDU"), "RockEDU Team");
+  assert.equal(g(null), "Research Outreach Team");
+  assert.equal(g("Site coordinators + inquiry form", "Lauren Correri (CSH/Sleepy Hollow)"), "Lauren Correri");
+  assert.equal(g("x", "Cailey Bice, Education Program Coordinator"), "Cailey Bice");
+  assert.equal(g("x", "Gennifer Goode, PhD, Program Manager, Student Tours & Visits"), "Dr Goode");
+  assert.equal(departmentForGreeting("Museum tours"), "Museum Tours");
+});
+
+test("mail from our own domain only matches through the campaign thread", () => {
+  const out = [{ id: "m9", institution_id: "test", contact_id: "c9", rfc_message_id: "<rc-1@bioergotech.org>", thread_id: null, to_email: "vercel@bioergotech.org" }];
+  const insts = [{ id: "test", domain: "bioergotech.org" }];
+  const contacts = [{ id: "c9", institution_id: "test", email: "vercel@bioergotech.org" }];
+  // A notification or a colleague's e-mail: not a reply.
+  assert.equal(matchInbound({ from: "noreply@bioergotech.org" }, out, insts, contacts, "bioergotech.org").matched, false);
+  assert.equal(matchInbound({ from: "Guido <guido.putignano@bioergotech.org>" }, out, insts, contacts, "bioergotech.org").matched, false);
+  assert.equal(matchInbound({ from: "vercel@bioergotech.org" }, out, insts, contacts, "bioergotech.org").matched, false);
+  // A genuine reply in the thread still matches.
+  assert.equal(matchInbound({ from: "vercel@bioergotech.org", inReplyTo: "<rc-1@bioergotech.org>" }, out, insts, contacts, "bioergotech.org").method, "header");
+  // Other domains are unaffected.
+  assert.equal(matchInbound({ from: "pjuza@ucsd.edu" }, [{ ...out[0], institution_id: "u" }], [{ id: "u", domain: "extendedstudies.ucsd.edu" }], [], "bioergotech.org").method, "domain");
+});
+
+// ── Daily limit counts first e-mails only (16 Nov) ──────────────────────
+test("only new first e-mails count toward the daily limit", async () => {
+  const { countsTowardDailyLimit } = await import("../lib/research-campaign/core.ts");
+  assert.equal(countsTowardDailyLimit("initial"), true);
+  for (const step of ["followup1", "followup2", "reply", "coordinator", "custom"]) assert.equal(countsTowardDailyLimit(step), false, step);
 });

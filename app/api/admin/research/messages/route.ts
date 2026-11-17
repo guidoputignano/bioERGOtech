@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { loadCampaign, logEvent } from "@/lib/research-campaign/server";
-import { isValidEmail, renderTemplate, unresolvedMarkers } from "@/lib/research-campaign/core";
+import { isValidEmail, parseCcInput, renderTemplate, replyAllCc, unresolvedMarkers } from "@/lib/research-campaign/core";
 import { loadTemplates, templateVars } from "@/lib/research-campaign/templates";
 
 const EDITABLE = ["draft", "in_review", "approved", "failed"];
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     .eq("campaign_id", campaign.id);
   if (p.get("institution_id")) q = q.eq("institution_id", p.get("institution_id")!).order("created_at", { ascending: true });
   else if (p.get("queue") === "review") q = q.eq("direction", "outbound").eq("historical", false).in("state", ["draft", "in_review", "approved", "failed"]).order("created_at", { ascending: true });
-  else q = q.order("created_at", { ascending: false }).limit(300);
+  else q = q.order("created_at", { ascending: false }).limit(2000);
   const { data, error } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const messages = (data || []).map((m) => ({ ...m, markers: m.direction === "outbound" && !m.historical ? unresolvedMarkers(`${m.subject ?? ""}\n${m.body ?? ""}`) : [] }));
@@ -32,7 +32,9 @@ export async function GET(request: Request) {
 // { institution_id, contact_id, kind: "sequence", research_connection, personalisation_source, override_previous? }
 //     → initial + follow-up 1 + follow-up 2 drafts (Templates 1-3), approved together later
 // { institution_id, contact_id, kind: "coordinator" }               → Template 4 in the thread
-// { institution_id, contact_id, kind: "reply", subject?, body }     → contextual reply in the thread
+// { institution_id, contact_id, kind: "reply", subject?, body, cc? } → contextual reply in the thread
+//     Replies and Template 4 keep in copy everyone on the institution's last
+//     message ("Reply all"), unless cc is given; the Cc can be edited later.
 export async function POST(request: Request) {
   const guard = await requireAdmin();
   if (guard.error !== null) return NextResponse.json({ error: guard.error }, { status: guard.status });
@@ -111,9 +113,19 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json({ error: "Unknown kind" }, { status: 400 });
     }
+    let cc: string[];
+    if (b.cc !== undefined) {
+      const typed = parseCcInput(b.cc);
+      if (typed.invalid.length) return NextResponse.json({ error: `Not an e-mail address: ${typed.invalid.join(", ")}` }, { status: 400 });
+      cc = replyAllCc(typed.list, [contact.email, campaign.sender_email]);
+    } else {
+      const { data: lastIn } = await db.from("rc_messages").select("from_email, cc_emails").eq("institution_id", inst.id)
+        .eq("direction", "inbound").eq("historical", false).order("received_at", { ascending: false }).limit(1).maybeSingle();
+      cc = replyAllCc([...(lastIn?.cc_emails || []), lastIn?.from_email], [contact.email, campaign.sender_email]);
+    }
     const { data, error } = await db.from("rc_messages").insert({
       ...base, step: b.kind === "coordinator" ? "coordinator" : "reply", parent_message_id: last.id,
-      template_key: templateKey, template_version: templateVersion, subject, body,
+      template_key: templateKey, template_version: templateVersion, subject, body, cc_emails: cc,
     }).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await logEvent(db, { campaign_id: campaign.id, institution_id: inst.id, actor: guard.chiamante.email || guard.chiamante.id, action: `message.draft.${b.kind}` });
@@ -152,6 +164,11 @@ export async function PATCH(request: Request) {
         const update: Record<string, unknown> = { state: "draft", approved_at: null, approved_by: null, updated_at: now };
         if (typeof b.subject === "string") update.subject = b.subject;
         if (typeof b.body === "string") update.body = b.body;
+        if (b.cc !== undefined) {
+          const typed = parseCcInput(b.cc);
+          if (typed.invalid.length) return NextResponse.json({ error: `Not an e-mail address: ${typed.invalid.join(", ")}` }, { status: 400 });
+          update.cc_emails = replyAllCc(typed.list, [m.to_email, m.from_email]);
+        }
         const { data, error } = await db.from("rc_messages").update(update).eq("id", m.id).eq("state", m.state).select().maybeSingle();
         if (error || !data) return NextResponse.json({ error: error?.message || "Changed meanwhile; reload" }, { status: 409 });
         break;

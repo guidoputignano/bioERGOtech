@@ -43,13 +43,13 @@ export async function loadSuppressions(db: SupabaseClient): Promise<{ emails: Se
   return { emails, domains };
 }
 
-/** Sends counted against the daily cap: anything that left today (UTC). */
+/** New first e-mails sent today (UTC): the only sends the daily limit counts. Follow-ups and replies are not limited. */
 export async function sentTodayCount(db: SupabaseClient, campaignId: string): Promise<number> {
   const start = new Date();
   start.setUTCHours(0, 0, 0, 0);
   const { count, error } = await db.from("rc_messages")
     .select("id", { count: "exact", head: true })
-    .eq("campaign_id", campaignId).eq("direction", "outbound")
+    .eq("campaign_id", campaignId).eq("direction", "outbound").eq("step", "initial")
     .in("state", ["sent", "sending"]).gte("sent_at", start.toISOString());
   if (error) throw new Error(error.message);
   return count ?? 0;

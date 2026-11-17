@@ -4,7 +4,7 @@
  * gate, the same atomic claim and the same bookkeeping.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { checkSendable, idempotencyKey, inSendWindow, parseAllowedSenders, sequenceDueDates } from "./core";
+import { checkSendable, countsTowardDailyLimit, emailDomain, idempotencyKey, inSendWindow, parseAllowedSenders, replyAllCc, sequenceDueDates } from "./core";
 import { sendViaGmail, sendViaResend, type SendResult } from "./mailer";
 import { loadSuppressions, logEvent, sentTodayCount, touchInstitution, type Campaign } from "./server";
 
@@ -39,8 +39,9 @@ export async function dispatchMessage(
   });
   if (reasons.length) return { id: messageId, status: "blocked", reasons };
 
-  // Over the daily cap: wait for the next daily run rather than refusing.
-  if (sentToday >= campaign.daily_send_cap) {
+  // Over the daily limit (new first e-mails only): wait for the next daily
+  // run rather than refusing. Follow-ups and replies are never limited.
+  if (countsTowardDailyLimit(message.step) && sentToday >= campaign.daily_send_cap) {
     if (!message.scheduled_for) {
       await db.from("rc_messages").update({ scheduled_for: now.toISOString(), updated_at: now.toISOString() }).eq("id", message.id).eq("state", "approved");
     }
@@ -78,6 +79,11 @@ export async function dispatchMessage(
     const mail = {
       fromName: campaign.sender_name, fromEmail: campaign.sender_email!, replyTo: campaign.reply_to,
       to: contact!.email!, subject: message.subject!, text: message.body!, inReplyTo, references, gmailThreadId,
+      // A copy for the sender's own mailbox, so portal e-mails can be found there too.
+      copyTo: campaign.sender_email,
+      // People kept in copy, never anyone who asked not to be contacted.
+      cc: replyAllCc(message.cc_emails || [], [contact!.email, campaign.sender_email])
+        .filter((a) => !suppress.emails.has(a) && !suppress.domains.has(emailDomain(a) || "")),
     };
     let sent: SendResult;
     if (campaign.sender_provider === "gmail") {

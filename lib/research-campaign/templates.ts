@@ -46,14 +46,36 @@ export function factsUsed(templates: { subject: string; body: string }[]): (type
   return CAMPAIGN_FACTS.filter((f) => new RegExp(`\\{\\{\\s*${f}\\s*\\}\\}`).test(text));
 }
 
+/**
+ * Turns a contact's department field into a team name fit for a greeting,
+ * or null when it is really a note ("Booking email", "Plan Your Visit form",
+ * "Office … + inquiry form", "General"). Imported research notes often sit
+ * in this field, so it is never used as-is.
+ */
+export function departmentForGreeting(department: string | null): string | null {
+  if (!department) return null;
+  let d = department.split(/\s*[+;]\s*/)[0].trim();
+  d = d.replace(/\b(?:(?:inquiry|enquiry|request|application|booking|contact|information|visit request)\s+)?(?:form|e-?mail|line)\b.*$/i, "").trim();
+  d = d.replace(/[,(].*$/, "").trim();
+  if (d.length < 2 || d.length > 50) return null;
+  if (/^(general|named( contact| education staff)?|test|programmes?|programs?|tours?|booking|plan your visit|stem( visit)?|site coordinators?|outreach tours?|channel|main line|information|ors)$/i.test(d)) return null;
+  if (/\b(form|e-?mail|named|channel)\b/i.test(d)) return null;
+  const small = new Set(["of", "and", "for", "the", "&"]);
+  return d.split(/\s+/).map((w, i) => (/[A-Z]{2,}|[a-z][A-Z]/.test(w) ? w : i > 0 && small.has(w.toLowerCase()) ? w.toLowerCase() : w[0].toUpperCase() + w.slice(1))).join(" ");
+}
+
 export function greetingFor(c: { person_name: string | null; person_title: string | null; department: string | null }): string {
   if (c.person_name) {
-    const name = c.person_name.replace(/,.*$/, "").trim();
-    const isDoctor = /\bph\.?\s?d|\bm\.?d\b|\bdr\b|professor/i.test(`${c.person_title ?? ""} ${c.person_name}`);
-    const surname = name.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, "").split(/\s+/).slice(-1)[0];
-    return isDoctor ? `Dr ${surname}` : name;
+    const name = c.person_name.replace(/\s*\(.*?\)\s*/g, " ").replace(/,.*$/, "").replace(/\s+/g, " ").trim();
+    if (name) {
+      const isDoctor = /\bph\.?\s?d|\bm\.?d\b|\bdr\b|professor/i.test(`${c.person_title ?? ""} ${c.person_name}`);
+      const surname = name.replace(/^(dr\.?|prof\.?|mr\.?|ms\.?|mrs\.?)\s+/i, "").split(/\s+/).slice(-1)[0];
+      return isDoctor ? `Dr ${surname}` : name;
+    }
   }
-  return c.department ? `${c.department} Team` : "Research Outreach Team";
+  const dept = departmentForGreeting(c.department);
+  if (!dept) return "Research Outreach Team";
+  return /\bteam$/i.test(dept) ? dept : `${dept} Team`;
 }
 
 /**
