@@ -15,7 +15,7 @@ import {
 } from "@/app/eventi/vivere-piu-a-lungo/content";
 import { LICEI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { luogoTalk, prossimoTalk, talkPath } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
-import { numeriHome, type NumeriHome } from "@/lib/home/numeri";
+import { numeriHome, vociNumeri } from "@/lib/home/numeri";
 import { COPIA } from "@/lib/home/copia";
 import Image from "next/image";
 import Link from "next/link";
@@ -116,37 +116,12 @@ const NEWS = [
   },
 ];
 
-/** The live numbers worth showing: only the ones the database gave, and not zero. */
-function voci(n: NumeriHome | null) {
-  if (!n) return [];
-  const v: { valore: number; etichetta: string; largo?: boolean }[] = [];
-  // Tiny counts are left out: "1 mentors" reads wrong, and next to the
-  // large ones it says nothing.
-  const add = (valore: number | null, etichetta: string, largo = false, minimo = 3) => {
-    if (valore !== null && valore >= minimo) v.push({ valore, etichetta, largo });
-  };
-  // Social proof for the event only once it is meaningful.
-  add(n.iscrittiEvento, "people already registered for Vivere più a lungo", true, 50);
-  add(n.studenti, "students enrolled in the school programme");
-  add(n.scuole, "schools taking part");
-  add(n.comuni, "towns in the province of Taranto");
-  add(n.squadre, "student teams");
-  add(n.progetti, "projects submitted so far");
-  add(n.giudici, "experts on the evaluation committee");
-  add(n.mentor, "mentors from research and industry");
-  add(n.universitari, "university students in the university track");
-  add(n.iscrittiTalk, "registrations to the talks with experts");
-  add(n.lezioni, "lessons completed in the Agentic AI course");
-  add(n.certificati, "course certificates issued", false, 5);
-  return v;
-}
-
 export default async function Home() {
   const talk = prossimoTalk();
   const [giorno1, giorno2] = SESSIONS;
   const altriVolti = Math.max(0, RELATORI_HOME.length + 1 - VOLTI);
   const numeri = await numeriHome();
-  const elenco = voci(numeri);
+  const elenco = vociNumeri(numeri);
   const posti = new Map((numeri?.posti ?? []).map((p) => [p.slug, p]));
 
   /**
@@ -514,7 +489,7 @@ export default async function Home() {
               </span>
             </Reveal>
             <div className={s.numbers}>
-              {elenco.slice(0, 9).map((x, i) => (
+              {elenco.map((x, i) => (
                 <Reveal key={x.etichetta} ritardo={(i % 4) * 80} className={`${s.number} ${x.largo ? s.numberWide : ""}`}>
                   <b>
                     <CountUp valore={x.valore} />
