@@ -8,7 +8,7 @@ import {
   checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
   followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
-  parseAddressList, parseCcInput, replyAllCc,
+  parseAddressList, parseCcInput, replyAllCc, copiesToSenderMailbox,
 } from "../lib/research-campaign/core.ts";
 import { resendPayload, buildMime } from "../lib/research-campaign/mailer.ts";
 
@@ -284,6 +284,24 @@ test("Cc reaches both providers; the Bcc copy is not doubled", () => {
   assert.throws(() => resendPayload({ ...mail, cc: ["a@b.org\r\nBcc: x@y.org"] }, "<x>"));
 });
 
+test("the sender's mailbox gets a copy of the conversation, not of the first e-mails", () => {
+  assert.equal(copiesToSenderMailbox("initial"), false);
+  for (const step of ["followup1", "followup2", "reply", "coordinator", "custom"]) assert.equal(copiesToSenderMailbox(step), true, step);
+});
+
+test("helpdesk acknowledgements are automatic, not opt-outs; more decline wording", () => {
+  const ack = "Your request has been received and a team member will get back to you within 48 hours.\n\nThank you for contacting The New York Academy of Sciences.\n\nBest regards\n\nUnsubscribe (https://example.org/preferences)";
+  assert.equal(classifyByKeywords(ack, "Thank you for your inquiry"), "auto_ack");
+  assert.equal(classifyByKeywords(ack, "Re: Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(detectOptOut(ack), false);
+  assert.equal(detectOptOut("Please unsubscribe me from these e-mails."), true);
+  assert.equal(detectOptOut("Unsubscribe us, thank you."), true);
+  assert.equal(classifyByKeywords("We at the Education Department are unfortunately unable to provide collaboration of this type to organizations at this time."), "not_interested");
+  assert.equal(classifyByKeywords("Unfortunately, due to logistics of teaching space, time, and resources we're currently unable to fulfill your request."), "not_interested");
+  // A real reply that thanks us for contacting them is not an acknowledgement.
+  assert.equal(classifyByKeywords("Thank you for contacting us. We would be happy to host your group.", "Re: Enquiry"), "interested");
+});
+
 test("opt-out wording is detected", () => {
   assert.ok(detectOptOut("Please do not contact us again."));
   assert.ok(detectOptOut("Kindly remove me / unsubscribe."));
@@ -297,6 +315,12 @@ test("out-of-office return dates are read, with the right year", () => {
   assert.equal(parseReturnDate("I am away until 12/02 with limited access", nov), "2026-12-02");
   assert.equal(parseReturnDate("Back 2026-12-07.", nov), "2026-12-07");
   assert.equal(parseReturnDate("I am out of the office.", nov), null);
+  // The return date, not the first day away (Cold Spring Harbor, received 11 Nov 2026).
+  const csh = "I will be out of the office from Monday, November 9, through Friday, November 13, returning Monday, November 16.";
+  assert.equal(parseReturnDate(csh, new Date("2026-11-11T22:26:00Z")), "2026-11-16");
+  assert.equal(parseReturnDate("I am away from November 9 through November 13.", new Date("2026-11-11T22:26:00Z")), "2026-11-13");
+  // A stale auto-reply a day after the return date is not a year away.
+  assert.equal(parseReturnDate("Returning Monday, November 16.", new Date("2026-11-17T10:00:00Z")), "2026-11-16");
 });
 
 test("Template 4 is suggested only when nobody responsible is named", () => {
