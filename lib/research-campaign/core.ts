@@ -686,6 +686,15 @@ export function countsTowardDailyLimit(step: string | null | undefined): boolean
   return step === "initial";
 }
 
+/**
+ * Whether the sender's own mailbox gets a copy of the e-mail. Not for the
+ * first (cold) e-mails: only the conversation after them (follow-ups,
+ * replies, Template 4), so the inbox shows correspondence, not the batches.
+ */
+export function copiesToSenderMailbox(step: string | null | undefined): boolean {
+  return step !== "initial";
+}
+
 export function idempotencyKey(messageId: string, attemptScope = "send"): string {
   return `rc:${attemptScope}:${messageId}`;
 }
