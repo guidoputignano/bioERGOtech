@@ -801,22 +801,29 @@ export function parseReturnDate(body: string, received: Date): string | null {
   const b = (body || "").toLowerCase().slice(0, 1500);
   const iso = b.match(/\b(20\d{2})-(\d{2})-(\d{2})\b/);
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  const ctx = "(?:back|return|returning|until|through|thru|from)[^.\\n]{0,40}?";
   const build = (month: number, day: number): string | null => {
     if (month < 0 || month > 11 || day < 1 || day > 31) return null;
     let y = received.getUTCFullYear();
     const cand = new Date(Date.UTC(y, month, day));
-    if (cand.getTime() < received.getTime() - 86400000) y++;
+    // A date well before the reply is next year's ("returning 4 January" sent in December);
+    // a few days before is a stale auto-reply, not a year away.
+    if (cand.getTime() < received.getTime() - 60 * 86400000) y++;
     const d = new Date(Date.UTC(y, month, day));
     return d.getUTCMonth() === month ? d.toISOString().slice(0, 10) : null;
   };
-  let m = b.match(new RegExp(ctx + "\\b(" + MONTHS.join("|") + ")[a-z]*\\.?\\s+(\\d{1,2})"));
-  if (m) return build(MONTHS.indexOf(m[1]), Number(m[2]));
-  m = b.match(new RegExp(ctx + "\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(" + MONTHS.join("|") + ")[a-z]*"));
-  if (m) return build(MONTHS.indexOf(m[2]), Number(m[1]));
-  m = b.match(new RegExp(ctx + "\\b(\\d{1,2})/(\\d{1,2})(?:/\\d{2,4})?\\b"));
-  if (m) return build(Number(m[1]) - 1, Number(m[2])); // US month/day
-  return null;
+  const find = (ctx: string): string | null => {
+    let m = b.match(new RegExp(ctx + "\\b(" + MONTHS.join("|") + ")[a-z]*\\.?\\s+(\\d{1,2})"));
+    if (m) return build(MONTHS.indexOf(m[1]), Number(m[2]));
+    m = b.match(new RegExp(ctx + "\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(" + MONTHS.join("|") + ")[a-z]*"));
+    if (m) return build(MONTHS.indexOf(m[2]), Number(m[1]));
+    m = b.match(new RegExp(ctx + "\\b(\\d{1,2})/(\\d{1,2})(?:/\\d{2,4})?\\b"));
+    if (m) return build(Number(m[1]) - 1, Number(m[2])); // US month/day
+    return null;
+  };
+  // The day they are back wins; then the last day away. Never the first day
+  // of the absence ("from Monday, November 9"), which is already past.
+  return find("(?:back|return|returns|returning|in the office on)[^.\\n]{0,40}?")
+    ?? find("(?:until|till|through|thru)[^.\\n]{0,40}?");
 }
 
 /**

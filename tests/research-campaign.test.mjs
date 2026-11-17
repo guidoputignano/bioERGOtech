@@ -315,6 +315,12 @@ test("out-of-office return dates are read, with the right year", () => {
   assert.equal(parseReturnDate("I am away until 12/02 with limited access", nov), "2026-12-02");
   assert.equal(parseReturnDate("Back 2026-12-07.", nov), "2026-12-07");
   assert.equal(parseReturnDate("I am out of the office.", nov), null);
+  // The return date, not the first day away (Cold Spring Harbor, received 11 Nov 2026).
+  const csh = "I will be out of the office from Monday, November 9, through Friday, November 13, returning Monday, November 16.";
+  assert.equal(parseReturnDate(csh, new Date("2026-11-11T22:26:00Z")), "2026-11-16");
+  assert.equal(parseReturnDate("I am away from November 9 through November 13.", new Date("2026-11-11T22:26:00Z")), "2026-11-13");
+  // A stale auto-reply a day after the return date is not a year away.
+  assert.equal(parseReturnDate("Returning Monday, November 16.", new Date("2026-11-17T10:00:00Z")), "2026-11-16");
 });
 
 test("Template 4 is suggested only when nobody responsible is named", () => {
