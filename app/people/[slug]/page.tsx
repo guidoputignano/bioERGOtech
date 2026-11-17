@@ -152,7 +152,7 @@ export default async function PersonPage({
               ))}
             </div>
             <Link
-              href="/#research"
+              href="/programmes"
               className="font-semibold inline-block mt-8"
               style={{ color: "var(--primary)" }}
             >

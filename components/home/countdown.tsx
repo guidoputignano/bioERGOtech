@@ -39,7 +39,14 @@ export function Countdown({ inizio, fine }: { inizio: string; fine: string }) {
   ];
 
   return (
-    <div className={s.countdown} role="timer" aria-label={`Mancano ${giorni} giorni, ${ore} ore e ${minuti} minuti all'evento`}>
+    <div
+      className={s.countdown}
+      role="timer"
+      aria-label={`Mancano ${parti
+        .map(([n, l]) => `${n} ${l}`)
+        .join(", ")
+        .replace(/, ([^,]*)$/, " e $1")} all'evento`}
+    >
       {parti.map(([n, label]) => (
         <div key={label} className={s.countdownCell}>
           <b>{String(n).padStart(2, "0")}</b>

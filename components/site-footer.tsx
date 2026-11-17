@@ -57,7 +57,7 @@ export function SiteFooter() {
           {/* Navigation */}
           <div>
             <h4 style={{ fontWeight: 700, fontSize: "0.9rem", color: "#fff", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Programmes
+              Explore
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {[
@@ -85,6 +85,7 @@ export function SiteFooter() {
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {[
+                { href: "/taranto", label: "Taranto" },
                 { href: "/programmes", label: "Research" },
                 { href: "/member-portal", label: "Research Portal" },
                 { href: "/join-us", label: "Join Us" },

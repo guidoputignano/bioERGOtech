@@ -95,7 +95,7 @@ export default function NewsletterJune2026() {
                 <span className="nl-read">4 min read</span>
               </div>
               <h1 className="nl-title">A foundation is <em>born.</em></h1>
-              <p className="nl-lede">bioERGOtech is live. We are building the ecosystem where diverse competencies meet, resources are shared, and collaboration replaces competition — turning concrete clinical needs into sustainable solutions.</p>
+              <p className="nl-lede">bioERGOtech is live. We are building the ecosystem where diverse competencies meet, resources are shared, and collaboration replaces competition, to turn concrete clinical needs into sustainable solutions.</p>
               <div className="nl-by">
                 <span className="nl-av">b</span>
                 <span>By <strong>bioERGOtech Foundation</strong></span>

@@ -62,7 +62,7 @@ export const GUIDA_COMMISSIONE: Documento = {
       h: "Come si entra in Commissione",
       ul: [
         "Se è un mentor del percorso: nell'email della Fondazione che la invita a fare da giudice trova il pulsante «Sì, partecipo come giudice». Un clic, e le arriva subito l'email di accesso. Il pulsante vale fino al 30 novembre.",
-        "Se ha ricevuto il link di invito: lo apra e lasci nome, email, ruolo e organizzazione. La Fondazione conferma la candidatura, di solito in giornata, e le arriva l'email di accesso.",
+        "Se ha ricevuto il link di invito: lo apra e lasci nome, email, ruolo e organizzazione. La Fondazione conferma la candidatura, di solito in giornata, e le arriva l'email di accesso. Anche il link vale fino al 30 novembre.",
         "L'email di accesso arriva da noreply@bioergotech.org: se non la trova, guardi anche nello spam. La prima volta sceglie la password; se usa già il sito, entra con l'email e la password di sempre.",
       ],
     },

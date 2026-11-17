@@ -21,6 +21,15 @@ const articles = [
     readTime: "9 min read",
   },
   {
+    slug: "newsletter-june-2026",
+    img: "/assets/images/Home/Ecosystem.webp",
+    date: "June 2026",
+    title: "Founding Edition: A Foundation Is Born",
+    desc: "The first newsletter of the Fondazione bioERGOtech ETS: who we are, the first members, and the road from the Taranto Biotech Days.",
+    author: "bioERGOtech Foundation",
+    readTime: "4 min read",
+  },
+  {
     slug: "news-predict-healthcare-joins-2026",
     img: "/assets/images/News/Predict/predict-welcome.webp",
     date: "May 31, 2026",

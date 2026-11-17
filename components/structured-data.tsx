@@ -16,7 +16,7 @@ const organisation = {
   url: BASE,
   logo: `${BASE}/favicon.png`,
   description:
-    "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Its programmes are free and end at the event Vivere più a lungo: sport e intelligenza artificiale, in Taranto.",
+    "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Its programmes are free, and the best projects of the students are presented at the event Vivere più a lungo: sport e intelligenza artificiale, in Taranto.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Taranto",

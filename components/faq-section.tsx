@@ -6,13 +6,13 @@
  * requirement for FAQ rich results). Answers target the questions a student,
  * a parent or a school asks before joining a programme or the event.
  */
-const LINK = "color:#1A9E92;font-weight:600";
+const LINK = "color:#127A71;font-weight:600;text-decoration:underline";
 const EVENTO = "/eventi/vivere-piu-a-lungo";
 
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What is the bioERGOtech Foundation?",
-    a: `A non-profit foundation based in Taranto, Italy. We train high-school and university students to build digital scientists: AI agents that read, test and explain science, with a person in charge. Our programmes are free and end on stage at <a href="${EVENTO}" style="${LINK}">Vivere più a lungo: sport e intelligenza artificiale</a>.`,
+    a: `A non-profit foundation based in Taranto, Italy. We train high-school and university students to build digital scientists: AI agents that read, test and explain science, with a person in charge. Our programmes are free, and the best projects of the students are presented on stage at <a href="${EVENTO}" style="${LINK}">Vivere più a lungo: sport e intelligenza artificiale</a>.`,
   },
   {
     q: "What is a digital scientist?",
@@ -24,7 +24,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Who can take part in the programmes?",
-    a: `Upper-secondary students in Taranto and its province, through their school (<a href="${EVENTO}/licei" style="${LINK}">school programme</a>); university students (<a href="${EVENTO}/universita" style="${LINK}">university track</a>); and any high-school student who wants to learn on their own with the free online <a href="/courses/agentic-ai" style="${LINK}">Agentic AI course</a>. No prior experience with AI is required.`,
+    a: `Students in the last three years of upper-secondary school in Taranto and its province, through their school (<a href="${EVENTO}/licei" style="${LINK}">school programme</a>); university students (<a href="${EVENTO}/universita" style="${LINK}">university track</a>); and any high-school student who wants to learn on their own with the free online <a href="/courses/agentic-ai" style="${LINK}">Agentic AI course</a>. No prior experience with AI is required.`,
   },
   {
     q: "How much does it cost?",
@@ -54,9 +54,12 @@ export function FaqSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="container mx-auto px-6">
-        <h2 className="section-title text-center block" style={{ color: "var(--text-dark)", textAlign: "center" }}>
-          Frequently asked questions
-        </h2>
+        {/* main.css makes .section-title an inline block: the wrapper centres it. */}
+        <div style={{ textAlign: "center" }}>
+          <h2 className="section-title text-center" style={{ color: "var(--text-dark)" }}>
+            Frequently asked questions
+          </h2>
+        </div>
         <div className="max-w-3xl mx-auto mt-8 space-y-4">
           {FAQS.map((f) => (
             <details
