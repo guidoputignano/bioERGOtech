@@ -284,6 +284,19 @@ test("Cc reaches both providers; the Bcc copy is not doubled", () => {
   assert.throws(() => resendPayload({ ...mail, cc: ["a@b.org\r\nBcc: x@y.org"] }, "<x>"));
 });
 
+test("helpdesk acknowledgements are automatic, not opt-outs; more decline wording", () => {
+  const ack = "Your request has been received and a team member will get back to you within 48 hours.\n\nThank you for contacting The New York Academy of Sciences.\n\nBest regards\n\nUnsubscribe (https://example.org/preferences)";
+  assert.equal(classifyByKeywords(ack, "Thank you for your inquiry"), "auto_ack");
+  assert.equal(classifyByKeywords(ack, "Re: Research Collaboration Enquiry"), "auto_ack");
+  assert.equal(detectOptOut(ack), false);
+  assert.equal(detectOptOut("Please unsubscribe me from these e-mails."), true);
+  assert.equal(detectOptOut("Unsubscribe us, thank you."), true);
+  assert.equal(classifyByKeywords("We at the Education Department are unfortunately unable to provide collaboration of this type to organizations at this time."), "not_interested");
+  assert.equal(classifyByKeywords("Unfortunately, due to logistics of teaching space, time, and resources we're currently unable to fulfill your request."), "not_interested");
+  // A real reply that thanks us for contacting them is not an acknowledgement.
+  assert.equal(classifyByKeywords("Thank you for contacting us. We would be happy to host your group.", "Re: Enquiry"), "interested");
+});
+
 test("opt-out wording is detected", () => {
   assert.ok(detectOptOut("Please do not contact us again."));
   assert.ok(detectOptOut("Kindly remove me / unsubscribe."));

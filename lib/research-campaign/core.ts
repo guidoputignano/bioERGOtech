@@ -810,8 +810,13 @@ export function parseReturnDate(body: string, received: Date): string | null {
   return null;
 }
 
+/**
+ * A person asking not to be written to again. A bare "Unsubscribe" link in
+ * a newsletter or helpdesk footer is not a request, so "unsubscribe" counts
+ * only with a person attached ("please unsubscribe me", "unsubscribe us").
+ */
 export function detectOptOut(body: string): boolean {
-  return /please remove|unsubscribe|do not (contact|e-?mail|write)|don't (contact|e-?mail)|no further (contact|e-?mails?)|stop (e-?mailing|contacting)|take (me|us) off/.test((body || "").toLowerCase());
+  return /please remove|remove (me|us)\b|unsubscribe (me|us)\b|please unsubscribe|do not (contact|e-?mail|write)|don't (contact|e-?mail)|no further (contact|e-?mails?)|stop (e-?mailing|contacting)|take (me|us) off/.test((body || "").toLowerCase());
 }
 
 /**
@@ -843,6 +848,7 @@ export function autoReplyFromSubject(subject: string | null | undefined): ReplyL
   const s = (subject || "").trim();
   if (/^(out of (the )?office|ooo)\b/i.test(s)) return "out_of_office";
   if (/^(automatic reply|auto[- ]?reply|autoreply|auto[- ]?response|automatic response|risposta automatica)\b/i.test(s)) return "auto_ack";
+  if (/^(thank you for (your )?(inquiry|enquiry|message|e-?mail|contacting)|we('ve| have) received your|request received|your request has been received)\b/i.test(s)) return "auto_ack";
   return null;
 }
 
@@ -851,10 +857,10 @@ export function classifyByKeywords(body: string, subject?: string | null): Reply
   if (/out of (the )?office|i am (currently )?(away|travell?ing|on leave)|on (annual |parental )?leave|limited access to (my )?e-?mail|will be back|returning (on|to the office)/.test(b)) return "out_of_office";
   const bySubject = autoReplyFromSubject(subject);
   if (bySubject) return bySubject;
-  if (/(this is an )?automat(ic|ed) (reply|response|acknowledg)|we have received your (message|e-?mail|enquiry|inquiry)|ticket (number|#)|do not reply to this/.test(b)) return "auto_ack";
+  if (/(this is an )?automat(ic|ed) (reply|response|acknowledg)|we have received your (message|e-?mail|enquiry|inquiry|request)|your (request|inquiry|enquiry|message|e-?mail) has been received|a (team member|member of our team) will (get back|respond|reply)|ticket (number|#)|do not reply to this/.test(b)) return "auto_ack";
   if (detectOptOut(b)) return "not_interested";
   if (/only (open|available) to|must be (a )?(u\.?s\.?|us) (citizen|resident)|residents of|must be (at least )?\d+ (years|or older)|(under|younger than) \d+ (are|is|cannot|can't)|not (open|eligible) (to|for) (international|minors|high school)|(restricted|limited) to (u\.?s\.?(?![a-z])|american|domestic)|eligib/.test(b)) return "not_eligible";
-  if (/(do not|don't|cannot|can't|unable( to)?|not able( to)?|not in a position to) (host|accommodate|accept|offer|support)|not interested|no thank|not a good fit|must decline|fully booked|no (capacity|availability)/.test(b)) return "not_interested";
+  if (/(do not|don't|cannot|can't|unable( to)?|not able( to)?|not in a position to) (host|accommodate|accept|offer|support|provide|fulfil+|facilitate|arrange)|not interested|no thank|not a good fit|must decline|fully booked|no (capacity|availability)/.test(b)) return "not_interested";
   if (/(fee|cost|price|pricing|quote|quotation|invoice|\$\s?\d|usd|per student|per group|charge)/.test(b)) return "fee_request";
   if (/(meeting|zoom|teams|call|schedule a time|speak (with|to) you|set up a time)/.test(b)) return "meeting_requested";
   if (/(forward(ed|ing)?|cc'?d|copying|copied|reach out to|contact .{0,60} (instead|directly)|better (person|placed)|right (person|office|department)|would be the best (person|contact)|in charge of)/.test(b)) return "referred";
