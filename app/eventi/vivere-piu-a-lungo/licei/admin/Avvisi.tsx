@@ -32,7 +32,7 @@ import type {
   StatoAvvisoNotizie,
   StatoAvvisoRiflessioni,
   StatoAvvisoSquadre,
-  StatoAvvisoTalkDocenti,
+  StatoAvvisoTalk,
 } from "@/lib/eventi/licei-server";
 import {
   BUCKET_IMMAGINI_NOTIZIE,
@@ -314,44 +314,56 @@ export function AvvisoRiflessioni({
 }
 
 /**
- * L'avviso ai docenti sul prossimo talk: perche e importante esserci e come
- * iscriversi. Una volta per talk; prima si puo mandarne una prova a se
- * stessi.
+ * L'avviso sul prossimo talk, ai docenti o agli studenti: perche e
+ * importante esserci e come iscriversi. Una volta per talk; prima si puo
+ * mandarne una prova a se stessi.
  */
-export function AvvisoTalkDocenti({
+export function AvvisoTalk({
+  chi,
   stato,
   onAggiornato,
 }: {
-  stato: StatoAvvisoTalkDocenti | null;
-  onAggiornato: (s: StatoAvvisoTalkDocenti) => void;
+  chi: "docenti" | "studenti";
+  stato: StatoAvvisoTalk | null;
+  onAggiornato: (s: StatoAvvisoTalk) => void;
 }) {
   if (!stato) return null;
-  const n = stato.docenti;
+  const n = stato.destinatari;
   const t = stato.talk;
+  const docenti = chi === "docenti";
+  const etichetta = docenti ? "docenti" : "studenti";
 
   return (
     <AvvisoUnaTantum
-      titolo="Avviso ai docenti sul prossimo talk"
+      titolo={`Avviso ${docenti ? "ai docenti" : "agli studenti"} sul prossimo talk`}
       descrizione={
         <>
-          Un&apos;email a ogni docente (referenti delle adesioni confermate e docenti del progetto, un
-          indirizzo per persona): perché è importante partecipare al prossimo talk e come iscriversi.
-          Non contiene il link della riunione: lo vede chi si iscrive dalla pagina del talk. Le risposte
-          arrivano a info@bioergotech.org. Prima puoi mandarne una prova a te. Parte una volta per talk.
+          {docenti
+            ? "Un'email a ogni docente (referenti delle adesioni confermate e docenti del progetto, un indirizzo per persona)"
+            : "Un'email a ogni studente iscritto al percorso, confermato o in attesa, un indirizzo per persona"}
+          : perché è importante partecipare al prossimo talk e come iscriversi. Non contiene il link
+          della riunione: lo vede chi si iscrive dalla pagina del talk. Le risposte arrivano a
+          info@bioergotech.org. Prima puoi mandarne una prova a te. Parte una volta per talk.
         </>
       }
       stato={stato}
       onStato={(p) => onAggiornato({ ...stato, ...p })}
-      azione="avviso_talk_docenti"
-      azioneProva="avviso_talk_docenti_prova"
-      conferma={`Inviare l'avviso sul talk a ${n ?? 0} docenti? Si può inviare una volta sola.`}
-      bottone="Invia ai docenti"
-      conteggio={t && n ? `${n} docenti, un'email per indirizzo.` : null}
-      vuoto={t ? "Nessun docente con un'adesione confermata per ora." : "Nessun talk in programma."}
+      azione={`avviso_talk_${chi}`}
+      azioneProva={`avviso_talk_${chi}_prova`}
+      conferma={`Inviare l'avviso sul talk a ${n ?? 0} ${etichetta}? Si può inviare una volta sola.`}
+      bottone={`Invia ${docenti ? "ai docenti" : "agli studenti"}`}
+      conteggio={t && n ? `${n} ${etichetta}, un'email per indirizzo.` : null}
+      vuoto={
+        !t
+          ? "Nessun talk in programma."
+          : docenti
+            ? "Nessun docente con un'adesione confermata per ora."
+            : "Nessuno studente iscritto per ora."
+      }
       blocco={
         n === null ? (
           <p className="text-sm" style={{ color: "#B44A5E", lineHeight: 1.7, margin: "0 0 12px" }}>
-            Non è stato possibile contare i docenti: ricarica il pannello.
+            Non è stato possibile contare i destinatari: ricarica il pannello.
           </p>
         ) : undefined
       }
@@ -361,19 +373,21 @@ export function AvvisoTalkDocenti({
             <p style={ANTEPRIMA_P}>
               <strong>Oggetto:</strong> {t.oggetto}
             </p>
-            <p style={ANTEPRIMA_P}>Gentile (nome e cognome del docente),</p>
+            <p style={ANTEPRIMA_P}>{docenti ? "Gentile (nome e cognome del docente)," : "Ciao (nome),"}</p>
             {t.paragrafi.slice(0, 4).map((x, i) => (
               <p key={i} style={i === 1 ? { ...ANTEPRIMA_P, fontWeight: 600 } : ANTEPRIMA_P}>
                 {x}
               </p>
             ))}
-            <p style={ANTEPRIMA_P}>[Bottone: La pagina del talk]</p>
+            <p style={ANTEPRIMA_P}>[Bottone: {docenti ? "La pagina del talk" : "Iscriviti al talk"}]</p>
             {t.paragrafi.slice(4).map((x, i) => (
               <p key={`r${i}`} style={ANTEPRIMA_P}>
                 {x}
               </p>
             ))}
-            <p style={{ margin: 0 }}>{AVVISO_SQUADRE_TESTO.firma.join(" ")}</p>
+            <p style={{ margin: 0 }}>
+              {docenti ? AVVISO_SQUADRE_TESTO.firma.join(" ") : "Un saluto, Guido Putignano, Fondazione bioERGOtech"}
+            </p>
           </>
         ) : (
           <p style={{ margin: 0 }}>Nessun talk in programma.</p>

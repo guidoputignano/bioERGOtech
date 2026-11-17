@@ -115,6 +115,8 @@ export type Talk = {
    * che il talk e pensato per le squadre.
    */
   invitoDocenti?: string;
+  /** Lo stesso, detto agli studenti: un paragrafo dell'avviso agli studenti. */
+  invitoStudenti?: string;
   intro: string;
   temi: TemaTalk[];
   spunti: string[];
@@ -236,6 +238,8 @@ export const TALKS: Talk[] = [
     // progetto e come lo valutera la Commissione.
     invitoDocenti:
       "È un appuntamento molto importante per le squadre: a pochi giorni dalla consegna del 25 novembre, è l'occasione per capire come presentare il progetto e come verrà poi valutato dalla Commissione.",
+    invitoStudenti:
+      "È un appuntamento molto importante per la tua squadra: a pochi giorni dalla consegna del 25 novembre, è l'occasione per capire come presentare il progetto e come verrà poi valutato dalla Commissione.",
     intro:
       "I vostri progetti stanno prendendo forma, e presto andranno raccontati: nella consegna del 25 novembre, davanti alla Commissione e, per i finalisti, sul palco del 10 dicembre. In questo incontro Roberta Gilardi, CEO di G-Gravity, hub di innovazione che con sedi a Milano, Roma e Helsinki accompagna startup e aziende nei loro percorsi di innovazione, spiega come si presenta un'idea: quali domande porsi per capire davvero un problema, e come trasformare quella chiarezza in un discorso che convince.",
     temi: [
