@@ -1230,6 +1230,15 @@ suo account se ne ha uno, e riceve l'email di accesso (la stessa funzione
 del pannello, `aggiungiCommissario`). Fino al 30 novembre; dopo il 26
 riceve subito le seconde letture che mancano.
 
+**Il video per i giudici.** `public/assets/video/commissione/tutorial-giudici.mp4`
+(1 minuto e 53 secondi, senza audio, con le didascalie, 1,9 MB) e la sua
+copertina: email, accesso, primi passi, temi, una scheda compilata e
+chiusa, "Conosco questa squadra". E nella guida all'ancora `#video`
+(`VIDEO_GIUDICI_ANCORA`), linkato dall'area, dall'email di accesso, da
+quella del 26 novembre, dall'invito ai mentor e dalla loro pagina di
+conferma. E stato registrato con Playwright sul sito, con dati di esempio
+e le API simulate: se l'area cambia molto, va rifatto.
+
 **Chi entra in Commissione e chi no.** L'area scrive in `licei_config` la
 prima visita di ogni giudice (`giudice_visto_<id>`, solo id e data) e la
 saluta con "Le diamo il benvenuto" e i "Primi passi" (temi, guida, 26

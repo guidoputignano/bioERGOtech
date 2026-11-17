@@ -31,6 +31,7 @@ import {
   DATE_PERCORSO,
   GIUDICI_PER_PROGETTO_LETTERE,
   GUIDA_COMMISSIONE_SLUG,
+  VIDEO_GIUDICI_ANCORA,
   MINUTI_PER_PROGETTO,
   durata,
   PROGETTI_EXTRA,
@@ -100,6 +101,7 @@ const AREA_STUDENTE = `${SITE_URL}${STUDENTE_PATH}`;
 const AREA_DOCENTE = `${SITE_URL}${REFERENTE_PATH}`;
 const AREA_GIUDICE = `${SITE_URL}${COMMISSIONE_PATH}`;
 const GUIDA = `${AREA_GIUDICE}/${GUIDA_COMMISSIONE_SLUG}`;
+const VIDEO = `${AREA_GIUDICE}/${VIDEO_GIUDICI_ANCORA}`;
 
 /* ── 16 novembre: aggiornamento ──────────────────────────────────────── */
 
@@ -232,7 +234,7 @@ export function invitoMentorHtml({ nome, url, promemoria }: { nome: string; url:
       )}
       ${p(`I ${LICEI.progettiSulPalco} progetti migliori saliranno sul palco ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}.`)}
       ${bottone(url, "Sì, partecipo come giudice")}
-      ${p(`Il pulsante la inserisce subito in Commissione e le mandiamo un'email per accedere all'area, dove sceglie i temi. Se vuole dare un'occhiata prima, qui c'è la <a href="${GUIDA}" style="color:#008F6B;font-weight:700;">guida per i giudici</a>. Se non riesce, non deve fare nulla: il suo aiuto come mentor resta prezioso.`)}
+      ${p(`Il pulsante la inserisce subito in Commissione e le mandiamo un'email per accedere all'area, dove sceglie i temi. Se vuole dare un'occhiata prima, qui ci sono un <a href="${VIDEO}" style="color:#008F6B;font-weight:700;">video di due minuti</a> e la <a href="${GUIDA}" style="color:#008F6B;font-weight:700;">guida per i giudici</a>. Se non riesce, non deve fare nulla: il suo aiuto come mentor resta prezioso.`)}
       ${firma}`);
 }
 
@@ -325,7 +327,7 @@ export function giudiceSmistamentoHtml(i: GiudiceSmistamento): string {
         ]),
       )}
       ${bottone(AREA_GIUDICE, "Apri i miei progetti")}
-      ${p(`I criteri, le fasce di punteggio e le scadenze sono nella <a href="${GUIDA}" style="color:#008F6B;font-weight:700;">guida per la Commissione</a>. Lunedì 30 novembre le mandiamo un promemoria con il punto della situazione. Per qualsiasi dubbio può rispondere a questa email.`)}
+      ${p(`Come si compila una scheda lo mostra un <a href="${VIDEO}" style="color:#008F6B;font-weight:700;">video di due minuti</a>; i criteri, le fasce di punteggio e le scadenze sono nella <a href="${GUIDA}" style="color:#008F6B;font-weight:700;">guida per la Commissione</a>. Lunedì 30 novembre le mandiamo un promemoria con il punto della situazione. Per qualsiasi dubbio può rispondere a questa email.`)}
       ${firma}`);
 }
 

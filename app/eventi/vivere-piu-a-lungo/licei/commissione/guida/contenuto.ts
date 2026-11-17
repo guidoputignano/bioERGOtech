@@ -18,6 +18,8 @@ import {
   PROGETTI_MAX_PER_GIUDICE,
   SCADENZA_GIUDICI_LABEL,
   TEMI_PROGETTO,
+  VIDEO_GIUDICI,
+  VIDEO_GIUDICI_POSTER,
 } from "../../smistamento";
 
 export const GUIDA_COMMISSIONE_PATH = `${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`;
@@ -36,7 +38,13 @@ export const GUIDA_COMMISSIONE: Documento = {
   occhiello: "Commissione di valutazione",
   titolo: "Guida per la Commissione di valutazione",
   intro: `Grazie per far parte della Commissione. Le squadre degli istituti superiori consegnano i loro progetti entro ${SCADENZA_CONSEGNA_LABEL}: sono circa 80. Ogni progetto è affidato a ${GIUDICI_PER_PROGETTO_LETTERE} giudici, scelti per tema e con carichi uguali, e ognuno valuta solo i suoi: circa dieci, mai più di ${PROGETTI_MAX_PER_GIUDICE}, meno di due ore in tutto. I ${LICEI.progettiSulPalco} progetti con il punteggio più alto vengono presentati dagli studenti sul palco ${LICEI.dataLabel.toLowerCase()} al ${LICEI.luogo}.`,
-  aggiornato: "2026-11-14",
+  aggiornato: "2026-11-17",
+  video: {
+    src: VIDEO_GIUDICI,
+    poster: VIDEO_GIUDICI_POSTER,
+    titolo: "Il video: come si entra e come si valuta, in due minuti",
+    nota: "Senza audio, con le didascalie: si guarda anche in treno. I progetti e i nomi sono di esempio.",
+  },
   sezioni: [
     {
       h: "Le tappe",

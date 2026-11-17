@@ -33,6 +33,22 @@ export function DocumentoPagina({ doc, indice = true }: { doc: Documento; indice
               <StampaDocumento />
             </div>
 
+            {doc.video && (
+              <figure id="video" className="no-print mb-10" style={{ scrollMarginTop: 96, margin: "0 0 40px" }}>
+                <h2 className="text-xl font-semibold text-gray-800 mb-3">{doc.video.titolo}</h2>
+                <video
+                  controls
+                  playsInline
+                  preload="none"
+                  poster={doc.video.poster}
+                  style={{ width: "100%", borderRadius: 12, border: "1px solid var(--border-color)", background: "#0A1628" }}
+                >
+                  <source src={doc.video.src} type="video/mp4" />
+                </video>
+                <figcaption className="text-sm text-gray-500 mt-2">{doc.video.nota}</figcaption>
+              </figure>
+            )}
+
             {doc.modulo?.campiInizio && <Campi campi={doc.modulo.campiInizio} />}
 
             <div className="prose max-w-none text-gray-700 space-y-8">
