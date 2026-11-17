@@ -385,6 +385,33 @@ export function studenteDopoConsegnaHtml(i: StudenteDopoConsegna): string {
       ${firma}`);
 }
 
+/* ── 24 novembre: i giudici senza temi ────────────────────────────────── */
+
+export type GiudiceTemi = {
+  nome: string;
+  /** E gia entrato nell'area: se no, anche il link per scegliere la password. */
+  entrato: boolean;
+};
+
+export const giudiceTemiSubject = () => "Commissione: scelga i suoi temi entro mercoledì";
+
+export function giudiceTemiHtml(i: GiudiceTemi): string {
+  const password = i.entrato
+    ? ""
+    : p(
+        `Non ha ancora scelto una password? <a href="${SITE_URL}/auth/forgot-password" style="color:#008F6B;font-weight:700;">La imposti da qui</a>: scriva il suo indirizzo email e le arriva un link.`,
+        "0 0 22px",
+      );
+  return cornice(`
+      ${titolo(saluto(i.nome, false))}
+      ${p(`giovedì 26 novembre le affidiamo i progetti da valutare. Per darle quelli più vicini al suo campo ci servono i suoi temi, che non risultano ancora indicati.`)}
+      ${riquadro("I temi fra cui scegliere", elenco(TEMI_PROGETTO.map((t) => t.label)))}
+      ${p(`Basta un minuto: nell'area della Commissione, un clic per ogni tema, e si salvano da soli. Lo può fare fino a <strong>mercoledì 25 novembre</strong>. Senza temi riceve comunque i progetti, ma assegnati senza tenere conto della sua competenza.`)}
+      ${bottone(AREA_GIUDICE, "Scelga i suoi temi")}
+      ${password}
+      ${firma}`);
+}
+
 /* ── 30 novembre, 2 e 3 dicembre: i giudici ──────────────────────────── */
 
 export type GiudiceMeta = { nome: string; assegnati: number; chiusi: number; nonIniziato: boolean };
