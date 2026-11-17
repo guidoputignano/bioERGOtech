@@ -387,7 +387,7 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
                 ${
                   setPasswordUrl
                     ? `Se non la ricorda, <a href="${setPasswordUrl}" style="color:#008F6B;font-weight:700;">ne scelga una nuova da qui</a>.`
-                    : `Se non ricorda la password, nella pagina di accesso usi «Forgot your password?».`
+                    : `Se non ricorda la password, <a href="${SITE_URL}/auth/forgot-password" style="color:#008F6B;font-weight:700;">ne scelga una nuova da qui</a>: scriva il suo indirizzo email e le arriva un link.`
                 }
               </p>
             </div>`
@@ -404,7 +404,7 @@ export function commissarioEmailHtml(input: CommissarioEmailInput): string {
                 <a href="${setPasswordUrl}" style="display:inline-block;background:#0A1628;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:10px 20px;border-radius:8px;">Imposti la password</a>
               </p>
               <p style="color:#065f46;font-size:12.5px;line-height:1.6;margin:0;">
-                Il link vale per poco tempo. Se è scaduto, nella pagina di accesso usi «Forgot your password?» e ne riceve uno nuovo.
+                Il link vale per poco tempo. Se è scaduto, <a href="${SITE_URL}/auth/forgot-password" style="color:#065f46;font-weight:700;">ne chieda uno nuovo da qui</a>: scriva il suo indirizzo email e le arriva subito.
               </p>
             </div>`
           : ""

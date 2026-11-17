@@ -62,7 +62,7 @@ export const GUIDA_COMMISSIONE: Documento = {
       h: "Come si accede",
       ul: [
         "Entri su www.bioergotech.org con l'email a cui è arrivato l'invito e la password che ha scelto: dopo l'accesso il sito la porta direttamente nell'area della Commissione. Per tornarci, in alto trova il link «Commission».",
-        "Se il link per scegliere la password è scaduto, o non ricorda la password, nella pagina di accesso usi «Forgot your password?»: le arriva un link nuovo.",
+        "Se il link per scegliere la password è scaduto, o non ricorda la password, nella pagina di accesso usi «First time, or forgot your password?», scriva la sua email e le arriva un link nuovo.",
       ],
     },
     {

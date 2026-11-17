@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { RUOLI_COMMISSIONE } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { accessiGiudici, aggiungiCommissario, inviaAccesso } from "@/lib/eventi/licei-commissari";
+import {
+  approvaCandidatura,
+  codiceInvito,
+  linkInvito,
+  richiesteInAttesa,
+  rifiutaCandidatura,
+  rigeneraCodice,
+} from "@/lib/eventi/licei-candidature-giudici";
 import { temiPuliti } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 import { analizza, leggiQuadro } from "@/lib/eventi/licei-commissione-auto";
 
@@ -68,7 +76,17 @@ export async function GET() {
     console.error("Licei commissari: accessi non letti:", err);
   }
 
+  // Il link di invito per i giudici, e le candidature in attesa.
+  let invito: string | null = null;
+  let richieste = new Map<string, { at: string; nuovo: boolean }>();
+  try {
+    [invito, richieste] = await Promise.all([codiceInvito(client).then(linkInvito), richiesteInAttesa(client)]);
+  } catch (err) {
+    console.error("Licei commissari: invito non letto:", err);
+  }
+
   return NextResponse.json({
+    invito_link: invito,
     smistamento_presente: presente,
     media_generale: media(tutte),
     commissari: (commissari ?? []).map((c: { id: string }) => ({
@@ -77,6 +95,7 @@ export async function GET() {
       smistamento: smistamento[c.id] ?? { assegnati: 0, chiusi: 0 },
       media: media(somme.get(c.id)),
       accesso: accessi.get(c.id) ?? null,
+      richiesta: richieste.get(c.id)?.at ?? null,
     })),
   });
 }
@@ -132,7 +151,25 @@ export async function PATCH(request: Request) {
     azione?: string;
   };
 
+  // Un link di invito nuovo: quello di prima smette di funzionare.
+  if (body.azione === "rigenera_invito") {
+    const codice = await rigeneraCodice(client, guard.chiamante?.id ?? null);
+    return NextResponse.json({ success: true, invito_link: linkInvito(codice) });
+  }
+
   if (!body.id) return NextResponse.json({ error: "Commissario non indicato." }, { status: 400 });
+
+  // Le candidature dal link di invito.
+  if (body.azione === "approva") {
+    const r = await approvaCandidatura(client, body.id);
+    if (!r.ok) return NextResponse.json({ error: r.errore }, { status: 409 });
+    return NextResponse.json({ success: true, email_inviata: r.emailInviata });
+  }
+  if (body.azione === "rifiuta") {
+    const r = await rifiutaCandidatura(client, body.id);
+    if (!r.ok) return NextResponse.json({ error: r.errore }, { status: 409 });
+    return NextResponse.json({ success: true });
+  }
 
   // "Rimanda l'accesso": di nuovo l'email con il link per scegliere la
   // password, a chi dice di non essere riuscito a entrare.

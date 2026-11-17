@@ -1231,9 +1231,10 @@ del pannello, `aggiungiCommissario`). Fino al 30 novembre; dopo il 26
 riceve subito le seconde letture che mancano.
 
 **Il video per i giudici.** `public/assets/video/commissione/tutorial-giudici.mp4`
-(1 minuto e 53 secondi, senza audio, con le didascalie, 1,9 MB) e la sua
-copertina: email, accesso, primi passi, temi, una scheda compilata e
-chiusa, "Conosco questa squadra". E nella guida all'ancora `#video`
+(2 minuti e 17 secondi, senza audio, con le didascalie, 2,1 MB) e la sua
+copertina: la candidatura dal link di invito, email, la pagina per scegliere
+la password, il login delle volte successive, primi passi,
+temi, una scheda compilata e chiusa, "Conosco questa squadra". E nella guida all'ancora `#video`
 (`VIDEO_GIUDICI_ANCORA`), linkato dall'area, dall'email di accesso, da
 quella del 26 novembre, dall'invito ai mentor e dalla loro pagina di
 conferma. E stato registrato con Playwright sul sito, con dati di esempio
@@ -1248,6 +1249,22 @@ entrato". Ogni mattina il cron manda, una volta sola
 e ancora entrato l'email di accesso con l'apertura "le riscriviamo perche
 non risulta ancora entrato": con "Accedi" a chi usa gia il sito, con il link
 per la password a chi non e mai entrato.
+
+**Le candidature dal link di invito.** Nel pannello, scheda "Commissione",
+il riquadro "Link di invito per i giudici" da un link
+(`commissione/candidatura?c=...`) da mandare anche su WhatsApp: chi lo apre
+lascia nome, email, ruolo e organizzazione e dichiara di non avere
+conflitti. Non entra in Commissione: diventa una riga di
+`licei_commissari` con `attivo = false`, segnata come candidatura da
+`giudice_richiesta_<id>` in `licei_config` (solo id, data e se l'account e
+nato con la candidatura). Lo staff riceve un'email su info@ e la trova in
+"Candidature da approvare": "Approva" la rende attiva e manda l'email di
+accesso, "Rifiuta" la cancella (e cancella l'account, se era nato con la
+candidatura). "Crea un link nuovo" cambia il codice
+(`commissione_invito_codice`) e il link vecchio smette di funzionare. Le
+candidature si chiudono con le adesioni dei mentor, il 30 novembre. Il
+codice sta in `lib/eventi/licei-candidature-giudici.ts`; nessuna
+migrazione.
 
 Nel pannello, scheda "Commissione": il calendario con lo stato di ogni
 passo, le anteprime e le prove di tutte le email, "Invia adesso
