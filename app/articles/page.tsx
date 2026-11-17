@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Biotech News and Insights",
-  description: "News, stories, and insights from the bioERGOtech Foundation, covering biotech innovation, team journeys, and ecosystem milestones.",
+  description: "News and stories from the bioERGOtech Foundation, from the Taranto Biotech Days 2024 to the programmes that train students to build digital scientists.",
   alternates: { canonical: "/articles" },
 };
 
@@ -25,7 +25,7 @@ const articles = [
     img: "/assets/images/News/Predict/predict-welcome.webp",
     date: "May 31, 2026",
     title: "Predict Healthcare Joins the Foundation",
-    desc: "The Apulian leader in in-vivo diagnostics and medical imaging joins the ecosystem, bringing clinical depth, imaging technology, and a clear ambition to move closer to biotech.",
+    desc: "The Apulian leader in in-vivo diagnostics and medical imaging joins the Foundation as one of its first members, bringing clinical depth, imaging technology, and a clear ambition to move closer to biotech.",
     author: "bioERGOtech Foundation",
     readTime: "4 min read",
   },
@@ -34,7 +34,7 @@ const articles = [
     img: "/assets/images/News/Priver/priver-welcome.webp",
     date: "May 31, 2026",
     title: "Priver Joins the Foundation",
-    desc: "The Taranto engineering company joins the bioERGOtech ecosystem, bringing four decades of motion control, fluid power, and the thermal and computing-infrastructure expertise a digital workforce depends on.",
+    desc: "The Taranto engineering company joins the Foundation as one of its first members, bringing four decades of motion control, fluid power, and the thermal and computing-infrastructure expertise a digital workforce depends on.",
     author: "bioERGOtech Foundation",
     readTime: "5 min read",
   },
@@ -46,6 +46,15 @@ const articles = [
     desc: "The Italian startup targets the non-human market first before expanding into clinical genomics applications — a bold, strategic bet on where genomics goes next.",
     author: "bioERGOtech Foundation",
     readTime: "5 min read",
+  },
+  {
+    slug: "launch-event",
+    img: "/assets/images/launch_event/first_image.webp",
+    date: "October 29, 2025",
+    title: "bioERGOtech Launch Event: Innovation Summit Recap",
+    desc: "The official launch of the Foundation at the Sala della Regina, Palazzo Montecitorio, Rome, on 28 and 29 October 2025.",
+    author: "bioERGOtech Foundation",
+    readTime: "6 min read",
   },
   {
     slug: "news-interview-guido-putignano-2025",
@@ -64,15 +73,6 @@ const articles = [
     desc: "The Bridge Between Research and Real-World Impact.",
     author: "bioERGOtech Foundation",
     readTime: "7 min read",
-  },
-  {
-    slug: "launch-event",
-    img: "/assets/images/launch_event/first_image.webp",
-    date: "October 29, 2025",
-    title: "bioERGOtech Launch Event: Innovation Summit Recap",
-    desc: "A recap of our successful launch event for the Taranto Biotech Hub, celebrating the foundation's official launch.",
-    author: "bioERGOtech Foundation",
-    readTime: "6 min read",
   },
   {
     slug: "news-alessia-soru-2025",
@@ -133,7 +133,7 @@ export default function Articles() {
             Articles &amp; News
           </h1>
           <p className="text-xl max-w-2xl mx-auto text-gray-700">
-            Stories, insights, and updates from the bioERGOtech ecosystem.
+            Stories and news from the bioERGOtech Foundation, from the Taranto Biotech Days to today.
           </p>
         </div>
       </section>
