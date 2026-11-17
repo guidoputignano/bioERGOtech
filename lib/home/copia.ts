@@ -17,7 +17,7 @@ export const COPIA = {
   visionTitle: "Why a foundation, and why students",
   visionParagraphs: [
     "We believe students can do more than learn about science. They can build tools for it. A digital scientist is an AI agent that does part of a scientist's work: it reads, tests and explains, with a person always in charge. As a non-profit foundation, we train students to build them.",
-    "At first, we also supported startups, through the BioShot competition and incubation. Along the way, we saw that our work with students created the most value. So we made a choice: we now put everything into students, from upper-secondary schools to universities.",
+    "We began by supporting startups, through the BioShot competition. Along the way, we saw that our work with students created the most value. So we made a choice: students now come first, from upper-secondary schools to universities.",
   ],
   commitments: [
     { title: "Free for students", text: "Programmes, the online course, the talks and our December event: everything we offer students is free." },
@@ -63,7 +63,7 @@ export const COPIA = {
     {
       when: "December 2026",
       title: "Students on stage in Taranto",
-      text: "On 10 and 11 December, the ten best school projects are presented at “Vivere più a lungo”. Free entry, registration required.",
+      text: "On 10 December, the ten best school projects are presented on stage at “Vivere più a lungo”, in Taranto. Two days, free entry, registration required.",
     },
   ],
 } as const;
@@ -85,7 +85,7 @@ export const COPIA_ABOUT = {
     },
     {
       title: "Mentors and a stage",
-      text: "Mentors from research and industry support the teams. A committee of experts evaluates the projects, and the ten best are presented on stage in Taranto.",
+      text: "Mentors from research and industry support the teams. A committee of experts evaluates the projects, and the ten best school projects are presented on stage in Taranto on 10 December.",
     },
   ],
 } as const;

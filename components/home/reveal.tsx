@@ -29,10 +29,14 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!("IntersectionObserver" in window)) return;
+    // Printing shows everything, even what has not scrolled into view yet.
+    const stampa = () => setStato("fermo");
+    window.addEventListener("beforeprint", stampa);
+    const fine = () => window.removeEventListener("beforeprint", stampa);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return fine;
+    if (!("IntersectionObserver" in window)) return fine;
     const r = el.getBoundingClientRect();
-    if (r.top < window.innerHeight * 0.92) return; // already on screen: leave it alone
+    if (r.top < window.innerHeight * 0.92) return fine; // already on screen: leave it alone
     setStato("nascosto");
     const io = new IntersectionObserver(
       (voci) => {
@@ -44,7 +48,10 @@ export function Reveal({
       { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      fine();
+    };
   }, []);
 
   const stile: CSSProperties =
@@ -58,8 +65,18 @@ export function Reveal({
         };
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <Tag ref={ref as any} className={className} style={{ ...style, ...stile }}>
+    <Tag
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ref={ref as any}
+      data-reveal=""
+      className={className}
+      style={{ ...style, ...stile }}
+      // Once in place, the inline transform and transition go away, so the
+      // card's own hover effects (lift, shadow) work again.
+      onTransitionEnd={(e: React.TransitionEvent) => {
+        if (e.target === e.currentTarget && stato === "visibile") setStato("fermo");
+      }}
+    >
       {children}
     </Tag>
   );

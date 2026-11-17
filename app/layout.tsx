@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     siteName: "bioERGOtech Foundation",
     images: [
       {
-        url: "https://www.bioergotech.org/assets/images/og-home.jpg",
+        url: "https://www.bioergotech.org/assets/images/og-brand.jpg",
         width: 1200,
         height: 630,
         alt: "bioERGOtech Foundation: we train students to build digital scientists",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     title: "bioERGOtech Foundation: training students to build digital scientists",
     description:
       "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Free programmes in Taranto and online.",
-    images: ["https://www.bioergotech.org/assets/images/og-home.jpg"],
+    images: ["https://www.bioergotech.org/assets/images/og-brand.jpg"],
   },
 };
 

@@ -653,7 +653,11 @@
   text-decoration: none;
   color: var(--ink);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  overflow: hidden;
+}
+
+.programme:has(.programmeLink:focus-visible) {
+  border-color: var(--teal-dark);
+  box-shadow: 0 0 0 3px var(--teal-dark);
 }
 
 .programme:hover {
@@ -958,7 +962,7 @@
 }
 
 @media (max-width: 560px) {
-  .wrap { padding: 0 16px; }
+  .wrap { padding-left: 16px; padding-right: 16px; }
   .speakers { grid-template-columns: repeat(2, 1fr); }
   .roles { grid-template-columns: 1fr; }
   .stripInner { grid-template-columns: repeat(2, 1fr); }
@@ -1167,7 +1171,9 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(0deg, rgba(10, 22, 40, 0.95) 0%, rgba(10, 22, 40, 0.55) 55%, rgba(10, 22, 40, 0.2) 100%);
+  background:
+    linear-gradient(0deg, rgba(10, 22, 40, 0.96) 0%, rgba(10, 22, 40, 0.82) 55%, rgba(10, 22, 40, 0.6) 100%),
+    linear-gradient(90deg, rgba(10, 22, 40, 0.35) 0%, rgba(10, 22, 40, 0) 60%);
 }
 
 .storyPhotoInner {
@@ -1438,11 +1444,31 @@
 /* Visible focus for keyboard users on every link and button of the page. */
 .page a:focus-visible,
 .page button:focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--teal-dark);
   outline-offset: 3px;
-  border-radius: 10px;
+}
+
+.programmeLink:focus-visible {
+  outline: none;
+}
+
+/* Printing: everything the scroll reveal may still be hiding is shown. */
+@media print {
+  .page [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @media (max-width: 560px) {
   .programmeLink { padding: 22px; }
+}
+
+/* The eyebrow over the story photo: lighter than the teal, 7:1 on the overlay. */
+.eyebrowPhoto {
+  color: #7DF2E6;
+}
+
+.eyebrowPhoto::before {
+  background: #7DF2E6;
 }

@@ -36,8 +36,9 @@ import s from "./home.module.css";
  */
 
 const TITOLO = "bioERGOtech Foundation: we train students to build digital scientists";
-const DESCRIZIONE =
-  "A non-profit foundation in Taranto. Free programmes where students learn agentic AI by building digital scientists. Join us on 10 and 11 December 2026.";
+const DESCRIZIONE = ARCHIVE_MODE
+  ? "A non-profit foundation in Taranto. Free programmes where students learn agentic AI by building digital scientists."
+  : "A non-profit foundation in Taranto. Free programmes where students learn agentic AI by building digital scientists. Join us on 10 and 11 December 2026.";
 const IMMAGINE = "https://www.bioergotech.org/assets/images/og-home.jpg";
 
 export const metadata: Metadata = {
@@ -104,14 +105,14 @@ const NEWS = [
     img: "/assets/images/Home/Ecosystem.webp",
     data: "June 2026",
     titolo: "A foundation is born",
-    testo: "The founding edition of our newsletter: who we are, the first members, and the road from the Taranto Biotech Days.",
+    testo: "The founding edition of our newsletter: who we are, our hubs and our first two members.",
   },
   {
     href: "/articles/news-lorenzo-tarricone-2025",
     img: "/assets/images/News/Lorenzo_Tarricone/IMG_28041.jpg",
     data: "July 2025",
     titolo: "Lorenzo Tarricone: science, innovation and dreams",
-    testo: "From the student track of the Taranto Biotech Days to a career between research and real-world impact.",
+    testo: "A DPhil researcher at Oxford who spoke to students at the Taranto Biotech Days, on bridging research and real-world impact.",
   },
 ];
 
@@ -119,7 +120,9 @@ const NEWS = [
 function voci(n: NumeriHome | null) {
   if (!n) return [];
   const v: { valore: number; etichetta: string; largo?: boolean }[] = [];
-  const add = (valore: number | null, etichetta: string, largo = false, minimo = 1) => {
+  // Tiny counts are left out: "1 mentors" reads wrong, and next to the
+  // large ones it says nothing.
+  const add = (valore: number | null, etichetta: string, largo = false, minimo = 3) => {
     if (valore !== null && valore >= minimo) v.push({ valore, etichetta, largo });
   };
   // Social proof for the event only once it is meaningful.
@@ -134,7 +137,7 @@ function voci(n: NumeriHome | null) {
   add(n.universitari, "university students in the university track");
   add(n.iscrittiTalk, "registrations to the talks with experts");
   add(n.lezioni, "lessons completed in the Agentic AI course");
-  add(n.certificati, "course certificates issued");
+  add(n.certificati, "course certificates issued", false, 5);
   return v;
 }
 
@@ -146,11 +149,16 @@ export default async function Home() {
   const elenco = voci(numeri);
   const posti = new Map((numeri?.posti ?? []).map((p) => [p.slug, p]));
 
-  /** "300 posti", "Restano 42 posti" when less than half is left, "Lista d'attesa" when full. */
+  /**
+   * "300 posti"; "Restano 42 posti" when less than half is left; "Ultimi
+   * posti" near the end (the page can be up to an hour old, so no exact
+   * number there); the waiting list when full.
+   */
   const postiLabel = (slug: string, capienza: number) => {
     const p = posti.get(slug);
     if (!p || CHIUSO) return `${capienza} posti`;
     if (p.rimanenti <= 0) return "Posti esauriti, lista d'attesa";
+    if (p.rimanenti <= Math.max(10, p.capienza * 0.1)) return "Ultimi posti disponibili";
     if (p.rimanenti < p.capienza / 2) return `Restano ${p.rimanenti} posti`;
     return `${p.capienza} posti`;
   };
@@ -214,7 +222,9 @@ export default async function Home() {
             {!CHIUSO && <Countdown inizio={EVENT.startDateISO} fine={EVENT.endDateISO} />}
           </div>
         </div>
-        <i className={`fas fa-chevron-down ${s.scrollHint}`} aria-hidden="true" />
+        <span className={s.scrollHint} aria-hidden="true">
+          <i className="fas fa-chevron-down" />
+        </span>
       </header>
 
       {/* ── The event in numbers ── */}
@@ -364,7 +374,7 @@ export default async function Home() {
               <h3>{CHIUSO ? "Grazie a chi c'era" : "Ci vediamo a Taranto il 10 e l'11 dicembre"}</h3>
               <p>
                 {CHIUSO
-                  ? "Foto, premiati e momenti delle due giornate nella pagina dell'evento."
+                  ? "Il racconto delle due giornate è nella pagina dell'evento."
                   : "Studenti, famiglie, scuole, appassionati: l'ingresso è gratuito, basta iscriversi."}
               </p>
             </div>
@@ -382,8 +392,8 @@ export default async function Home() {
             <span className={s.eyebrow}>Our programmes</span>
             <h2 className={s.h2}>Four ways in, all free</h2>
             <p className={s.lead}>
-              Each programme can be followed on its own. They meet in Taranto on 10 and 11 December, where the best
-              projects of the students are presented on stage.
+              Each programme can be followed on its own. They meet at the event in Taranto, where on 10 December the
+              best projects of the students are presented on stage.
             </p>
           </Reveal>
 
@@ -475,7 +485,7 @@ export default async function Home() {
                 </span>
                 <div>
                   <h3 style={{ marginBottom: 6 }}>Talks with experts</h3>
-                  <p>Online meetings with experts from research, industry and innovation, open to everyone.</p>
+                  <p>Online meetings with experts, for the students and teachers of the programmes. Some talks are open to everyone.</p>
                   {talk && (
                     <div className={s.talkBox} lang="it">
                       <span className={s.eyebrow}>Prossimo talk</span>
@@ -558,7 +568,7 @@ export default async function Home() {
           />
           <div className={`${s.wrap} ${s.storyPhotoInner}`}>
             <Reveal>
-              <span className={`${s.eyebrow} ${s.eyebrowLight}`}>Our story</span>
+              <span className={`${s.eyebrow} ${s.eyebrowPhoto}`}>Our story</span>
               <h2>{COPIA.storyTitle}</h2>
             </Reveal>
             <Reveal ritardo={120}>
@@ -607,7 +617,7 @@ export default async function Home() {
           </Reveal>
           <div className={s.roles}>
             {[
-              { icona: "fa-graduation-cap", titolo: "Students", testo: "Start the free Agentic AI course, follow the talks, and come to Taranto to meet scientists and champions.", href: "/courses/agentic-ai", cta: "Start the course" },
+              { icona: "fa-graduation-cap", titolo: "Students", testo: "Start the free Agentic AI course, join a programme with your school, and come to Taranto to meet scientists and champions.", href: "/courses/agentic-ai", cta: "Start the course" },
               { icona: "fa-school", titolo: "Schools and teachers", testo: "Bring your classes to the event, free of charge, and follow your teams in the school programme.", href: CHIUSO ? EVENTO : ISCRIZIONE, cta: CHIUSO ? "The event" : "Register for the event" },
               { icona: "fa-user-doctor", titolo: "Experts", testo: "Mentor a team, sit on the committee that evaluates the projects, or give a talk to the students.", href: "mailto:info@bioergotech.org?subject=I%20would%20like%20to%20help", cta: "Write to us" },
               { icona: "fa-people-group", titolo: "Families and the public", testo: "Two days of sport, health and AI in Taranto, with a concert. Free entry, registration required.", href: CHIUSO ? EVENTO : ISCRIZIONE, cta: CHIUSO ? "The event" : "Register for free" },

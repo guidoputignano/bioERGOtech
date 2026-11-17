@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Biotech News and Insights",
-  description: "News and stories from the bioERGOtech Foundation, from the Taranto Biotech Days 2024 to the programmes that train students to build digital scientists.",
+  description: "News and stories from the bioERGOtech Foundation, from the Taranto Biotech Days 2024 to today.",
   alternates: { canonical: "/articles" },
 };
 
@@ -25,7 +25,7 @@ const articles = [
     img: "/assets/images/Home/Ecosystem.webp",
     date: "June 2026",
     title: "Founding Edition: A Foundation Is Born",
-    desc: "The first newsletter of the Fondazione bioERGOtech ETS: who we are, the first members, and the road from the Taranto Biotech Days.",
+    desc: "The first newsletter of the Fondazione bioERGOtech ETS: who we are, our hubs and our first two members.",
     author: "bioERGOtech Foundation",
     readTime: "4 min read",
   },
