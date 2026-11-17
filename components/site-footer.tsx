@@ -21,7 +21,7 @@ export function SiteFooter() {
               <span style={{ fontWeight: 700, fontSize: "1.1rem", color: "#fff" }}>bioERGOtech</span>
             </Link>
             <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.875rem", lineHeight: 1.7 }}>
-              Making research smarter, not just faster.
+              We train students to build digital scientists: AI agents for health, sport and longevity.
             </p>
             <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
               {[
@@ -57,14 +57,17 @@ export function SiteFooter() {
           {/* Navigation */}
           <div>
             <h4 style={{ fontWeight: 700, fontSize: "0.9rem", color: "#fff", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Navigation
+              Programmes
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {[
-                { href: "/", label: "Home" },
+                { href: "/eventi/vivere-piu-a-lungo", label: "Vivere più a lungo: the event" },
+                { href: "/eventi/vivere-piu-a-lungo/licei", label: "School programme" },
+                { href: "/eventi/vivere-piu-a-lungo/universita", label: "University track" },
+                { href: "/courses/agentic-ai", label: "Agentic AI course" },
+                { href: "/eventi/vivere-piu-a-lungo/talk", label: "Talks with experts" },
                 { href: "/about-us", label: "About Us" },
                 { href: "/articles", label: "Articles" },
-                { href: "/member-portal", label: "Research Portal" },
               ].map((l) => (
                 <li key={l.href} style={{ marginBottom: "10px" }}>
                   <Link href={l.href} style={{ color: "rgba(255,255,255,0.65)", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }}>
@@ -78,10 +81,12 @@ export function SiteFooter() {
           {/* Get Involved */}
           <div>
             <h4 style={{ fontWeight: 700, fontSize: "0.9rem", color: "#fff", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Get Involved
+              More
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {[
+                { href: "/programmes", label: "Research" },
+                { href: "/member-portal", label: "Research Portal" },
                 { href: "/join-us", label: "Join Us" },
                 { href: "/partner-with-us", label: "Partner With Us" },
                 { href: "/build-with-us", label: "Build With Us" },

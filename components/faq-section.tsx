@@ -3,39 +3,36 @@
  *
  * The visible accordion and the JSON-LD are generated from the same FAQS
  * array, so the structured data always matches the on-page content (a Google
- * requirement for FAQ rich results). Answers target question-style searches
- * around the ecosystem, location, membership, and synthetic biology.
+ * requirement for FAQ rich results). Answers target the questions a student,
+ * a parent or a school asks before joining a programme or the event.
  */
-const LINK = "color:#2EC4B6;font-weight:600";
+const LINK = "color:#1A9E92;font-weight:600";
+const EVENTO = "/eventi/vivere-piu-a-lungo";
 
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What is the bioERGOtech Foundation?",
-    a: "bioERGOtech is a foundation and biotech ecosystem that helps medical and life-science solutions move from the lab to the market. We build Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, from our operational base in Taranto, Italy.",
+    a: `A non-profit foundation based in Taranto, Italy. We train high-school and university students to build digital scientists: AI agents that read, test and explain science, with a person in charge. Our programmes are free and end on stage at <a href="${EVENTO}" style="${LINK}">Vivere più a lungo: sport e intelligenza artificiale</a>.`,
   },
   {
-    q: "Where is bioERGOtech based?",
-    a: `Our operational base is in <a href="/taranto" style="${LINK}">Taranto</a>, in the Puglia region of Southern Italy. Further locations in Zurich and Riyadh are planned from 2027.`,
+    q: "What is a digital scientist?",
+    a: "An AI agent that does part of a scientist's work: it reads papers and data, runs an analysis or a simulation, and explains what it found and how sure it is. A person always stays in charge of the decision. Our students design one around a real question about health, sport or longevity.",
   },
   {
-    q: "Who can join the ecosystem?",
-    a: `Startups, companies, hospitals and clinical centres, universities, and investors. Whether you are an early-stage founder or an established organisation, we map what you can access and how you can contribute. You can <a href="/join-us" style="${LINK}">join the ecosystem</a> in a few steps.`,
+    q: "When and where is the event?",
+    a: `On 10 and 11 December 2026 in Taranto: day 1 at the PalaMazzola, from 9:00 to 16:00, and day 2 at the Teatro Fusco, from 9:00 to 13:00. Taking part is free, but registration is required because seats are limited: <a href="${EVENTO}#iscrizione" style="${LINK}">register here</a>.`,
   },
   {
-    q: "How much does it cost to join?",
-    a: `Membership is free for seed-stage startups. For other members, the level of engagement and any contribution depend on your goals. The first step is a short <a href="/contact" style="${LINK}">exploratory call</a>, with no commitment.`,
+    q: "Who can take part in the programmes?",
+    a: `Upper-secondary students in Taranto and its province, through their school (<a href="${EVENTO}/licei" style="${LINK}">school programme</a>); university students (<a href="${EVENTO}/universita" style="${LINK}">university track</a>); and any high-school student who wants to learn on their own with the free online <a href="/courses/agentic-ai" style="${LINK}">Agentic AI course</a>. No prior experience with AI is required.`,
   },
   {
-    q: "What do members get access to?",
-    a: "Shared lab infrastructure and equipment, GPU computing, a validated clinical network, hands-on support with regional and European funding, mentorship, and introductions across the ecosystem.",
+    q: "How much does it cost?",
+    a: "Nothing. The programmes, the course, the talks with experts and the event are free for students, schools and the public.",
   },
   {
-    q: "What is an Engineered Living System?",
-    a: "An Engineered Living System is a biological system designed and built to perform a defined function, combining synthetic biology, automation, and data. They sit at the core of our work, from digital twin therapeutics to automated biomanufacturing.",
-  },
-  {
-    q: "What are the Taranto Biotech Days?",
-    a: "The Taranto Biotech Days are our annual event in Southern Italy, home to the BioShot startup competition. They bring together researchers, founders, clinicians, and investors from leading institutions worldwide.",
+    q: "I am a researcher, doctor or professional. How can I help?",
+    a: `You can mentor a team, sit on the committee that evaluates the projects, or give a talk to the students. Write to <a href="mailto:info@bioergotech.org" style="${LINK}">info@bioergotech.org</a> and tell us what you would like to do.`,
   },
 ];
 
@@ -57,7 +54,9 @@ export function FaqSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="container mx-auto px-6">
-        <h2 className="section-title text-center">Frequently asked questions</h2>
+        <h2 className="section-title text-center block" style={{ color: "var(--text-dark)", textAlign: "center" }}>
+          Frequently asked questions
+        </h2>
         <div className="max-w-3xl mx-auto mt-8 space-y-4">
           {FAQS.map((f) => (
             <details

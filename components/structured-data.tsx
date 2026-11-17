@@ -11,12 +11,12 @@ const BASE = "https://www.bioergotech.org";
 
 const organisation = {
   "@context": "https://schema.org",
-  "@type": "ResearchOrganization",
+  "@type": "EducationalOrganization",
   name: "bioERGOtech Foundation",
   url: BASE,
   logo: `${BASE}/favicon.png`,
   description:
-    "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
+    "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Its programmes are free and end at the event Vivere più a lungo: sport e intelligenza artificiale, in Taranto.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Taranto",
@@ -34,12 +34,12 @@ const organisation = {
     areaServed: "Europe",
   },
   knowsAbout: [
-    "Synthetic biology",
+    "Agentic AI",
+    "AI agents for science",
+    "Artificial intelligence education",
     "Biotechnology",
-    "Engineered Living Systems",
-    "Automated biomanufacturing",
-    "Cell therapy",
-    "AI-driven laboratory automation",
+    "Sport and health",
+    "Longevity",
   ],
   areaServed: "Europe",
   sameAs: [SOCIAL.linkedin, SOCIAL.instagram],

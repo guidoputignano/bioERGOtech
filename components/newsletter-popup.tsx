@@ -119,7 +119,7 @@ export default function NewsletterPopup() {
               lineHeight: 1.5,
             }}
           >
-            Get updates on research, innovation, events, and funding opportunities.
+            Get updates on our programmes for students, the talks with experts and our events.
           </div>
         </div>
 
