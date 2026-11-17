@@ -8,7 +8,7 @@ import {
   checkSendable, parseAllowedSenders, matchInbound, extractAddress, classifyByKeywords, stripQuotedReply, autoReplyFromSubject,
   dashboardMetrics, rootDomain, domainMatches, sequenceDueDates, inSendWindow, localTime,
   followupDecision, parseReturnDate, detectOptOut, suggestTemplate4, currentLabels,
-  parseAddressList, parseCcInput, replyAllCc,
+  parseAddressList, parseCcInput, replyAllCc, copiesToSenderMailbox,
 } from "../lib/research-campaign/core.ts";
 import { resendPayload, buildMime } from "../lib/research-campaign/mailer.ts";
 
@@ -282,6 +282,11 @@ test("Cc reaches both providers; the Bcc copy is not doubled", () => {
   assert.equal(resendPayload({ ...mail, cc: [] }, "<x>").cc, undefined);
   assert.match(buildMime(mail, "<x@bioergotech.org>"), /\r\nCc: ccaviness@buckinstitute.org, sholland@buckinstitute.org\r\n/);
   assert.throws(() => resendPayload({ ...mail, cc: ["a@b.org\r\nBcc: x@y.org"] }, "<x>"));
+});
+
+test("the sender's mailbox gets a copy of the conversation, not of the first e-mails", () => {
+  assert.equal(copiesToSenderMailbox("initial"), false);
+  for (const step of ["followup1", "followup2", "reply", "coordinator", "custom"]) assert.equal(copiesToSenderMailbox(step), true, step);
 });
 
 test("opt-out wording is detected", () => {
