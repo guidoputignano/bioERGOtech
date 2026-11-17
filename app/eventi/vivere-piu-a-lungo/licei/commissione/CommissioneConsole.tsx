@@ -45,6 +45,7 @@ import {
   APERTI_PER_CHIEDERE_ALTRI,
   GUIDA_COMMISSIONE_SLUG,
   LIVELLI_CRITERI,
+  VIDEO_GIUDICI_ANCORA,
   MINUTI_PER_PROGETTO,
   durata,
   TEMI_PROGETTO,
@@ -226,6 +227,14 @@ export function CommissioneConsole() {
         >
           <i className="fas fa-book-open" aria-hidden="true" /> Guida per la Commissione: criteri, fasce e scadenze
         </a>
+        <a
+          href={`${COMMISSIONE_PATH}/${VIDEO_GIUDICI_ANCORA}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 600, color: "#0A7A66", marginTop: 6, marginLeft: 18 }}
+        >
+          <i className="fas fa-circle-play" aria-hidden="true" /> Il video di due minuti
+        </a>
       </div>
 
       {!puoVotare && (
@@ -297,7 +306,16 @@ export function CommissioneConsole() {
                     >
                       guida per la Commissione
                     </a>
-                    : criteri, fasce e scadenze.
+                    : criteri, fasce e scadenze, con un{" "}
+                    <a
+                      href={`${COMMISSIONE_PATH}/${VIDEO_GIUDICI_ANCORA}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0A7A66", fontWeight: 600 }}
+                    >
+                      video di due minuti
+                    </a>
+                    .
                   </>
                 ),
               },
@@ -619,6 +637,10 @@ export function CommissioneConsole() {
                                 step={0.5}
                                 value={scheda[c.campo] ?? ""}
                                 disabled={!faseAperta || chiusa}
+                                // Con la casella attiva, la rotella del mouse cambierebbe il
+                                // punteggio mentre il giudice scorre la pagina: si toglie il
+                                // fuoco, e la pagina scorre senza toccare il numero.
+                                onWheel={(e) => (e.target as HTMLInputElement).blur()}
                                 onChange={(e) =>
                                   setSchede((prev) => ({
                                     ...prev,

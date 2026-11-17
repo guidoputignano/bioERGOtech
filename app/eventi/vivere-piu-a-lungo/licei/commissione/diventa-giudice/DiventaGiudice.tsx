@@ -11,7 +11,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { COMMISSIONE_PATH } from "../../content";
-import { GUIDA_COMMISSIONE_SLUG, MINUTI_PER_PROGETTO, PROGETTI_MAX_PER_GIUDICE, SCADENZA_GIUDICI_LABEL } from "../../smistamento";
+import {
+  GUIDA_COMMISSIONE_SLUG,
+  MINUTI_PER_PROGETTO,
+  PROGETTI_MAX_PER_GIUDICE,
+  SCADENZA_GIUDICI_LABEL,
+  VIDEO_GIUDICI_ANCORA,
+} from "../../smistamento";
 
 type Stato =
   | { stato: "non_valido" }
@@ -135,9 +141,14 @@ export function DiventaGiudice() {
             : ""}
         </p>
         <ComeSiEntra loginEmail={entrato?.loginEmail} giaEntrato={entrato ? entrato.giaEntrato : undefined} />
-        <Link href={`${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`} style={{ fontSize: 14, fontWeight: 600, color: "#0A7A66" }}>
-          La guida per i giudici
-        </Link>
+        <div className="flex flex-wrap gap-4">
+          <Link href={`${COMMISSIONE_PATH}/${VIDEO_GIUDICI_ANCORA}`} style={{ fontSize: 14, fontWeight: 600, color: "#0A7A66" }}>
+            <i className="fas fa-circle-play" aria-hidden="true" /> Il video di due minuti
+          </Link>
+          <Link href={`${COMMISSIONE_PATH}/${GUIDA_COMMISSIONE_SLUG}`} style={{ fontSize: 14, fontWeight: 600, color: "#0A7A66" }}>
+            La guida per i giudici
+          </Link>
+        </div>
       </>,
     );
   }

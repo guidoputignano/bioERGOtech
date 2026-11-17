@@ -63,6 +63,8 @@ export type Documento = {
   /** Data dell'ultimo aggiornamento del testo, AAAA-MM-GG. */
   aggiornato: string;
   modulo?: ModuloDoc;
+  /** Un video tutorial sotto l'introduzione, con l'ancora `#video`. */
+  video?: { src: string; poster: string; titolo: string; nota: string };
 };
 
 const MESI = [

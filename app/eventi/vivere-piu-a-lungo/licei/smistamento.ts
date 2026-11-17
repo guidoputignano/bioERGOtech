@@ -121,6 +121,17 @@ export const DIVENTA_GIUDICE_SLUG = "diventa-giudice";
 /** La guida per la Commissione, nell'area dei giudici: la linkano l'area e le email. */
 export const GUIDA_COMMISSIONE_SLUG = "guida";
 
+/**
+ * Il video tutorial per i giudici (1 minuto e 53 secondi, senza audio, con le
+ * didascalie): come si entra, i temi, come si compila e si chiude una
+ * scheda. Sta nella guida, all'ancora `#video`. Registrato sul sito con
+ * dati di esempio; se l'area cambia molto, va rifatto.
+ */
+export const VIDEO_GIUDICI = "/assets/video/commissione/tutorial-giudici.mp4";
+export const VIDEO_GIUDICI_POSTER = "/assets/video/commissione/tutorial-giudici.jpg";
+/** La guida, aperta sul video. */
+export const VIDEO_GIUDICI_ANCORA = `${GUIDA_COMMISSIONE_SLUG}#video`;
+
 /** Il termine e passato? */
 export const scadenzaGiudiciPassata = (adesso: number = Date.now()): boolean =>
   adesso > Date.parse(SCADENZA_GIUDICI);
