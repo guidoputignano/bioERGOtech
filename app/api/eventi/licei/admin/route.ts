@@ -18,6 +18,9 @@ import {
   avvisoRiflessioniEmailSubject,
   avvisoSquadreEmailHtml,
   avvisoSquadreEmailSubject,
+  avvisoTalkDocenti,
+  avvisoTalkEmailHtml,
+  avvisoTalkStudenti,
   notizieStudentiEmailHtml,
   notizieStudentiEmailSubject,
   type NotizieTalk,
@@ -37,16 +40,20 @@ import {
   type StatoAvvisoRiflessioni,
   type StatoAvvisoNotizie,
   type StatoAvvisoSquadre,
+  type StatoAvvisoTalk,
 } from "@/lib/eventi/licei-server";
 import {
   MITTENTE_AVVISI,
   RISPOSTE_AVVISI,
+  chiaveAvvisoTalk,
+  chiaveEsitoAvvisoTalk,
   destinatariUnici,
   giaInviato,
   inviaAvvisoUnaVolta,
   righeDocentiAvviso,
   righeStudentiAvviso,
   statoAvviso,
+  type DestinatariAvvisoTalk,
   type Destinatario,
   type RisultatoAvviso,
 } from "@/lib/eventi/licei-avvisi";
@@ -214,6 +221,12 @@ export async function GET(request: Request) {
       ...statoAvviso(righeConfig, CHIAVE_AVVISO_SQUADRE, CHIAVE_ESITO_AVVISO_SQUADRE),
       docenti: docentiAvviso,
     } satisfies StatoAvvisoSquadre,
+    avviso_talk_docenti: statoAvvisoTalk(righeConfig, "docenti", docentiAvviso),
+    avviso_talk_studenti: statoAvvisoTalk(
+      righeConfig,
+      "studenti",
+      righeStudenti.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato)).length,
+    ),
     avviso_notizie: {
       ...statoAvviso(righeConfig, chiaveAvvisoNotizie(EDIZIONE_NOTIZIE), chiaveEsitoAvvisoNotizie(EDIZIONE_NOTIZIE)),
       iscritti: righeStudenti.filter((r) => STATI_ISCRIZIONE_ATTIVI.has(r.stato)).length,
@@ -359,6 +372,65 @@ async function inviaAvvisoSquadre(client: Client, autore: string) {
       scartate,
       subject: avvisoSquadreEmailSubject(),
       html: (d) => avvisoSquadreEmailHtml({ nome: d.nome }),
+    }),
+  );
+}
+
+/** Il testo dell'avviso sul prossimo talk, per docenti o studenti; null senza talk in programma. */
+const avvisoTalkPer = (chi: DestinatariAvvisoTalk) => {
+  const t = prossimoTalk();
+  if (!t) return null;
+  return chi === "docenti" ? avvisoTalkDocenti(t) : avvisoTalkStudenti(t);
+};
+
+function statoAvvisoTalk(
+  righeConfig: { chiave: string; valore: string | null }[],
+  chi: DestinatariAvvisoTalk,
+  destinatari: number | null,
+): StatoAvvisoTalk {
+  const a = avvisoTalkPer(chi);
+  return {
+    ...(a
+      ? statoAvviso(righeConfig, chiaveAvvisoTalk(chi, a.slug), chiaveEsitoAvvisoTalk(chi, a.slug))
+      : { inviato_at: null, esito: null }),
+    destinatari,
+    talk: a,
+  };
+}
+
+/**
+ * L'avviso sul prossimo talk: perche e importante esserci e come
+ * iscriversi. Ai docenti (gli stessi dell'avviso sulle squadre) o agli
+ * studenti iscritti (gli stessi delle riflessioni), una volta per talk.
+ */
+async function inviaAvvisoTalk(client: Client, autore: string, chi: DestinatariAvvisoTalk) {
+  const a = avvisoTalkPer(chi);
+  if (!a) return NextResponse.json({ error: "Nessun talk in programma." }, { status: 409 });
+  const chiave = chiaveAvvisoTalk(chi, a.slug);
+  const blocco = await primaDiUnAvviso(client, chiave);
+  if (blocco) return blocco;
+
+  let righe: Destinatario[];
+  try {
+    righe = chi === "docenti" ? await righeDocentiAvviso(client) : await righeStudentiAvviso(client);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
+  const { destinatari, scartate } = destinatariUnici(righe, `avviso talk ${chi}`);
+  if (destinatari.length === 0) {
+    return NextResponse.json({ error: chi === "docenti" ? "Nessun docente a cui inviarlo." : "Nessuno studente a cui inviarlo." }, { status: 409 });
+  }
+
+  return rispostaAvviso(
+    await inviaAvvisoUnaVolta(client, new Resend(process.env.RESEND_API_KEY), {
+      chiave,
+      chiaveEsito: chiaveEsitoAvvisoTalk(chi, a.slug),
+      autore,
+      etichetta: `avviso-talk-${chi}`,
+      destinatari,
+      scartate,
+      subject: a.oggetto,
+      html: (d) => avvisoTalkEmailHtml(a, d.nome, chi),
     }),
   );
 }
@@ -546,6 +618,8 @@ export async function PATCH(request: Request) {
  * - `avviso_squadre`: l'email una tantum ai docenti, che le squadre vanno
  *   da 1 a 6 e che ci scrivano se qualcosa non va. Parte una volta sola.
  * - `avviso_squadre_prova`: la stessa email, solo a chi la chiede.
+ * - `avviso_talk_docenti` e `avviso_talk_studenti`: l'email una tantum sul
+ *   prossimo talk, una volta per talk; `..._prova`: la stessa, a chi la chiede.
  * - `avviso_notizie` `{ post }`: le notizie dal percorso agli studenti
  *   iscritti, con i post di Instagram incollati dallo staff. Una volta per
  *   edizione (`EDIZIONE_NOTIZIE`).
@@ -567,6 +641,14 @@ export async function POST(request: Request) {
       avvisoSquadreEmailHtml({ nome: "" }),
       "avviso squadre",
     );
+  }
+  for (const chi of ["docenti", "studenti"] as const) {
+    if (body.azione === `avviso_talk_${chi}`) return inviaAvvisoTalk(client, chiamante.id, chi);
+    if (body.azione === `avviso_talk_${chi}_prova`) {
+      const a = avvisoTalkPer(chi);
+      if (!a) return NextResponse.json({ error: "Nessun talk in programma." }, { status: 409 });
+      return inviaProva(chiamante.email, a.oggetto, avvisoTalkEmailHtml(a, "", chi), `avviso talk ${chi}`);
+    }
   }
   if (body.azione === "avviso_notizie") return inviaNotizie(client, chiamante.id, body.post);
   if (body.azione === "avviso_notizie_prova") {

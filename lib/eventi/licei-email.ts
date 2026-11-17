@@ -31,6 +31,7 @@ import {
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { SOCIAL, type PostInstagram } from "@/lib/social";
+import { luogoTalk, talkPath, type Talk } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 import { GUIDA_COMMISSIONE_SLUG, PROGETTI_MAX_PER_GIUDICE, VIDEO_GIUDICI_ANCORA } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 export type LiceiEmailInput = {
@@ -1035,6 +1036,84 @@ export function avvisoSquadreEmailHtml(input: AvvisoSquadreEmailInput): string {
       ${p(AVVISO_SQUADRE_TESTO.riscontro)}
       ${p(AVVISO_SQUADRE_TESTO.grazie)}
       ${p(AVVISO_SQUADRE_TESTO.firma.join("<br />"), "0 0 8px")}
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+/* ── Avviso ai docenti: il prossimo talk ─────────────────────────────── */
+
+/**
+ * Il testo di un avviso sul talk, lo stesso nell'email e nell'anteprima del
+ * pannello. `paragrafi`: [quando e chi, perche esserci (in evidenza), che
+ * cosa chiediamo, come iscriversi (poi il bottone), i dubbi].
+ */
+export type AvvisoTalk = { slug: string; oggetto: string; paragrafi: string[]; url: string };
+
+const giornoTalk = (t: Talk) => t.dataLabel.replace(/\s+\d{4}$/, "").toLowerCase(); // "giovedì 19 novembre"
+const quandoTalk = (t: Talk) => {
+  const g = giornoTalk(t);
+  return `${g.charAt(0).toUpperCase()}${g.slice(1)}, ${t.orarioLabel}, ${luogoTalk(t).toLowerCase()}`;
+};
+
+export function avvisoTalkDocenti(t: Talk): AvvisoTalk {
+  return {
+    slug: t.slug,
+    oggetto: `Talk di ${giornoTalk(t)}: un appuntamento importante per le squadre`,
+    paragrafi: [
+      `${quandoTalk(t)}, si tiene il talk «${t.titolo}» con ${t.relatore.nome}, ${t.relatore.ruolo}.`,
+      t.invitoDocenti ?? "È pensato per le squadre del percorso, e possono partecipare anche i docenti.",
+      `Le chiediamo di partecipare e di invitare le sue squadre a collegarsi.${t.apertoATutti ? " È aperto a tutti: può condividerlo anche con le classi e con i colleghi." : ""}`,
+      "Per partecipare basta iscriversi dalla pagina del talk con il proprio account: subito dopo compare il link per collegarsi. Gli studenti si iscrivono dalla stessa pagina, con il loro account del percorso.",
+      "Per qualsiasi dubbio può rispondere a questa email.",
+    ],
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+  };
+}
+
+export function avvisoTalkStudenti(t: Talk): AvvisoTalk {
+  return {
+    slug: t.slug,
+    oggetto: `Talk di ${giornoTalk(t)}: iscriviti, serve al tuo progetto`,
+    paragrafi: [
+      `${quandoTalk(t)}, c'è il talk «${t.titolo}» con ${t.relatore.nome}, ${t.relatore.ruolo}.`,
+      t.invitoStudenti ?? "È pensato per le squadre del percorso: ti aspettiamo.",
+      "Partecipa e dillo anche ai tuoi compagni di squadra: più siete, più è utile.",
+      "Iscriviti dalla pagina del talk con il tuo account del percorso: subito dopo trovi il link per collegarti.",
+      "Se hai dubbi, rispondi a questa email.",
+    ],
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+  };
+}
+
+/**
+ * Email una tantum sul prossimo talk, ai docenti (referenti delle adesioni
+ * confermate e docenti del progetto) o agli studenti iscritti. Mai il link
+ * della riunione: lo vede chi si iscrive, dalla pagina del talk.
+ */
+export function avvisoTalkEmailHtml(a: AvvisoTalk, nome: string, chi: "docenti" | "studenti"): string {
+  const n = chi === "studenti" ? nome.trim().split(/\s+/)[0] ?? "" : nome.trim();
+  const saluto = chi === "studenti" ? (n ? `Ciao ${esc(n)},` : "Ciao,") : n ? `Gentile ${esc(n)},` : "Gentile docente,";
+  const firma = chi === "studenti" ? ["Un saluto,", "Guido Putignano", "Fondazione bioERGOtech"] : AVVISO_SQUADRE_TESTO.firma;
+  const p = (testo: string, margine = "0 0 20px") =>
+    `<p style="color:#4A5568;font-size:15px;line-height:1.7;margin:${margine};">${testo}</p>`;
+  const [primo, perche, ...resto] = a.paragrafi;
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">${saluto}</h2>
+      ${p(esc(primo))}
+      <div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:14px 18px;margin:0 0 20px;">
+        <p style="color:#065f46;font-size:15px;line-height:1.7;margin:0;font-weight:600;">${esc(perche)}</p>
+      </div>
+      ${p(esc(resto[0]))}
+      ${p(esc(resto[1]), "0 0 16px")}
+      <div style="margin:0 0 24px;">
+        <a href="${a.url}" style="display:inline-block;background:#00C896;color:#0A1628;font-weight:700;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:8px;">${chi === "studenti" ? "Iscriviti al talk" : "La pagina del talk"}</a>
+      </div>
+      ${resto.slice(2).map((x) => p(esc(x))).join("")}
+      ${p(firma.join("<br />"), "0 0 8px")}
       ${chiusura()}
     </div>
   </div>`;

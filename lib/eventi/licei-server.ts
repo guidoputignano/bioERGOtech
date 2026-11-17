@@ -859,6 +859,16 @@ export type StatoAvvisoSquadre = StatoAvviso & {
 };
 
 /**
+ * Lo stato di un avviso sul talk (le chiavi stanno in `licei-avvisi.ts`,
+ * `chiaveAvvisoTalk`), come lo manda al pannello la rotta dello staff. */
+export type StatoAvvisoTalk = StatoAvviso & {
+  /** A quanti partirebbe (docenti: un indirizzo per persona; studenti: le iscrizioni). Null: non letti. */
+  destinatari: number | null;
+  /** Il testo dell'email per il prossimo talk; null se non ce n'e uno in programma. */
+  talk: { slug: string; oggetto: string; paragrafi: string[]; url: string } | null;
+};
+
+/**
  * Le notizie dal percorso agli studenti, una volta per edizione
  * (`EDIZIONE_NOTIZIE`): cambiando edizione cambiano le chiavi, e il bottone
  * torna disponibile.

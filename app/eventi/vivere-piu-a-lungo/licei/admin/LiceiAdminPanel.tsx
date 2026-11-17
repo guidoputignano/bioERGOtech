@@ -23,9 +23,14 @@ import {
 } from "../content";
 // Solo i tipi: i moduli sono del server.
 import type { DocenteProgettoVista } from "@/lib/eventi/licei-docenti";
-import type { StatoAvvisoNotizie, StatoAvvisoRiflessioni, StatoAvvisoSquadre } from "@/lib/eventi/licei-server";
+import type {
+  StatoAvvisoNotizie,
+  StatoAvvisoRiflessioni,
+  StatoAvvisoSquadre,
+  StatoAvvisoTalk,
+} from "@/lib/eventi/licei-server";
 import { TalkStaffCard } from "../../talk/TalkStaffCard";
-import { AvvisoNotizie, AvvisoRiflessioni, AvvisoSquadre } from "./Avvisi";
+import { AvvisoNotizie, AvvisoRiflessioni, AvvisoSquadre, AvvisoTalk } from "./Avvisi";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Adesione = any;
@@ -100,6 +105,8 @@ export function LiceiAdminPanel() {
   const [docenti, setDocenti] = useState<DocentiStaff>({ disponibile: false, errore: false, per_adesione: {} });
   const [avvisoRiflessioni, setAvvisoRiflessioni] = useState<StatoAvvisoRiflessioni | null>(null);
   const [avvisoSquadre, setAvvisoSquadre] = useState<StatoAvvisoSquadre | null>(null);
+  const [avvisoTalkDocenti, setAvvisoTalkDocenti] = useState<StatoAvvisoTalk | null>(null);
+  const [avvisoTalkStudenti, setAvvisoTalkStudenti] = useState<StatoAvvisoTalk | null>(null);
   const [avvisoNotizie, setAvvisoNotizie] = useState<StatoAvvisoNotizie | null>(null);
   const [loading, setLoading] = useState(true);
   const [errore, setErrore] = useState<string | null>(null);
@@ -129,6 +136,8 @@ export function LiceiAdminPanel() {
       setDocenti(data.docenti ?? { disponibile: false, errore: false, per_adesione: {} });
       setAvvisoRiflessioni(data.avviso_riflessioni ?? null);
       setAvvisoSquadre(data.avviso_squadre ?? null);
+      setAvvisoTalkDocenti(data.avviso_talk_docenti ?? null);
+      setAvvisoTalkStudenti(data.avviso_talk_studenti ?? null);
       setAvvisoNotizie(data.avviso_notizie ?? null);
       const mappa: Record<string, string> = {};
       for (const c of data.config ?? []) mappa[c.chiave] = c.valore ?? "";
@@ -381,6 +390,8 @@ export function LiceiAdminPanel() {
       {/* Le email una tantum: le notizie dal percorso agli studenti, ai
           docenti sulle squadre, agli studenti sulle riflessioni lette dai
           docenti. */}
+      <AvvisoTalk chi="docenti" stato={avvisoTalkDocenti} onAggiornato={setAvvisoTalkDocenti} />
+      <AvvisoTalk chi="studenti" stato={avvisoTalkStudenti} onAggiornato={setAvvisoTalkStudenti} />
       <AvvisoNotizie stato={avvisoNotizie} onAggiornato={setAvvisoNotizie} />
       <AvvisoSquadre stato={avvisoSquadre} onAggiornato={setAvvisoSquadre} />
       <AvvisoRiflessioni stato={avvisoRiflessioni} onAggiornato={setAvvisoRiflessioni} />
