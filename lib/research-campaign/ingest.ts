@@ -59,7 +59,8 @@ export async function storeInbound(db: SupabaseClient, input: InboundInput): Pro
 
   const c = await classifyReply(input.body, inst?.name || "the institution", input.subject);
   const ownText = stripQuotedReply(input.body);
-  const optOut = detectOptOut(ownText);
+  // An automatic message never asks to stop contact (helpdesk footers carry "Unsubscribe" links).
+  const optOut = !NON_STOPPING_LABELS.has(c.label) && detectOptOut(ownText);
   const returnDate = c.label === "out_of_office" ? parseReturnDate(input.body, new Date(input.received_at)) : null;
   await db.from("rc_reply_labels").insert({
     message_id: msg.id, label: c.label, source: c.source, confidence: c.confidence, rationale: c.rationale,
