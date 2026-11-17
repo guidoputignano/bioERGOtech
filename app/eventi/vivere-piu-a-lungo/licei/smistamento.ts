@@ -150,6 +150,7 @@ export const scadenzaGiudiciPassata = (adesso: number = Date.now()): boolean =>
 export type IdPasso =
   | "aggiornamento"
   | "invito_mentor"
+  | "avviso_talk"
   | "invito_mentor_promemoria"
   | "consegna_tre_giorni"
   | "giudici_temi"
@@ -187,6 +188,17 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
     titolo: "Invito ai mentor: fare anche da giudici",
     descrizione:
       "A ogni mentor approvato che non è già in Commissione, con il pulsante «Sì, partecipo come giudice»: un clic e il mentor entra in Commissione con il ruolo «Impresa e mentor» e riceve l'accesso.",
+  },
+  {
+    id: "avviso_talk",
+    // Deciso il 17 novembre, alle 21: parte al primo giro utile (il cron
+    // delle 8 del 18, o "Esegui ora i passi dovuti" dal pannello).
+    da: "2026-11-17T20:00:00+01:00",
+    fino: "2026-11-19T12:00:00+01:00",
+    quando: "Mercoledì 18 novembre, ore 8",
+    titolo: "Talk del 19 novembre: avviso a docenti e studenti",
+    descrizione:
+      "Perché è importante partecipare (come presentare il progetto e come verrà valutato) e come iscriversi, a ogni docente e a ogni studente iscritto. Sono le stesse email dei due avvisi sul talk nella scheda dei licei: se le hai già mandate da lì, non partono di nuovo.",
   },
   {
     id: "invito_mentor_promemoria",

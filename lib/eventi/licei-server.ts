@@ -859,15 +859,8 @@ export type StatoAvvisoSquadre = StatoAvviso & {
 };
 
 /**
- * Gli avvisi sul prossimo talk, ai docenti e agli studenti, una volta per
- * talk: la chiave contiene lo slug, quindi col talk successivo i bottoni
- * tornano disponibili.
- */
-export type DestinatariAvvisoTalk = "docenti" | "studenti";
-export const chiaveAvvisoTalk = (chi: DestinatariAvvisoTalk, slug: string) => `avviso_talk_${chi}_${slug}_inviato_at`;
-export const chiaveEsitoAvvisoTalk = (chi: DestinatariAvvisoTalk, slug: string) => `avviso_talk_${chi}_${slug}_esito`;
-
-/** Lo stato di un avviso sul talk, come lo manda al pannello la rotta dello staff. */
+ * Lo stato di un avviso sul talk (le chiavi stanno in `licei-avvisi.ts`,
+ * `chiaveAvvisoTalk`), come lo manda al pannello la rotta dello staff. */
 export type StatoAvvisoTalk = StatoAvviso & {
   /** A quanti partirebbe (docenti: un indirizzo per persona; studenti: le iscrizioni). Null: non letti. */
   destinatari: number | null;

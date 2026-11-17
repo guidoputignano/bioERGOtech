@@ -41,6 +41,16 @@ export type StatoAvviso = {
 /** Un destinatario. `rif` va nei log al posto dell'email, per esempio "iscrizione <id>". */
 export type Destinatario = { rif: string; nome: string; email: string };
 
+/**
+ * Gli avvisi sul prossimo talk, ai docenti e agli studenti, una volta per
+ * talk: la chiave contiene lo slug, quindi col talk successivo i bottoni
+ * tornano disponibili. Le usano il pannello e il calendario automatico, cosi
+ * un avviso mandato da una parte non riparte dall'altra.
+ */
+export type DestinatariAvvisoTalk = "docenti" | "studenti";
+export const chiaveAvvisoTalk = (chi: DestinatariAvvisoTalk, slug: string) => `avviso_talk_${chi}_${slug}_inviato_at`;
+export const chiaveEsitoAvvisoTalk = (chi: DestinatariAvvisoTalk, slug: string) => `avviso_talk_${chi}_${slug}_esito`;
+
 export const MITTENTE_AVVISI = "Fondazione bioERGOtech <noreply@bioergotech.org>";
 export const RISPOSTE_AVVISI = "info@bioergotech.org";
 

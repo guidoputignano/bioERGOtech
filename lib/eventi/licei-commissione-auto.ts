@@ -45,6 +45,8 @@ import {
 } from "@/lib/eventi/licei-smistamento";
 import {
   RISPOSTE_AVVISI,
+  chiaveAvvisoTalk,
+  chiaveEsitoAvvisoTalk,
   destinatariUnici,
   inviaAvvisoUnaVolta,
   righeDocentiAvviso,
@@ -54,6 +56,8 @@ import {
 import * as E from "@/lib/eventi/licei-commissione-email";
 import { linkDiventaGiudice, mentorDaInvitare } from "@/lib/eventi/licei-mentor-giudici";
 import { accessiGiudici, promemoriaAccessoGiudici } from "@/lib/eventi/licei-commissari";
+import { avvisoTalkDocenti, avvisoTalkEmailHtml, avvisoTalkStudenti } from "@/lib/eventi/licei-email";
+import { TALKS, talkConcluso } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = SupabaseClient<any, "public", any>;
@@ -554,12 +558,14 @@ async function invia(
   righe: Destinatario[],
   subject: string,
   html: (d: Destinatario) => string,
+  /** La chiave dell'esito, se non e `<chiave>_esito` (gli avvisi del pannello hanno la loro). */
+  chiaveEsito: string = `${chiave}_esito`,
 ): Promise<EsitoInvio> {
   const { destinatari, scartate } = destinatariUnici(righe, chiave);
   if (destinatari.length === 0 && scartate === 0) return { ok: true, testo: `${cosa}: nessun destinatario` };
   const r = await inviaAvvisoUnaVolta(db, resend, {
     chiave,
-    chiaveEsito: `${chiave}_esito`,
+    chiaveEsito,
     autore: null,
     etichetta: chiave.replace(/_/g, "-"),
     destinatari,
@@ -618,6 +624,26 @@ async function passoInvitoMentor(db: Db, resend: Invio, promemoria: boolean): Pr
   const r = await invia(db, resend, `auto_${id}_mentor`, "Mentor", righe,
     E.invitoMentorSubject(promemoria), (d) => E.invitoMentorHtml({ nome: d.nome, url: link.get(d.rif)!, promemoria }));
   return { fatto: r.ok, dettagli: [r.testo] };
+}
+
+/** Il talk di cui il calendario manda l'avviso a docenti e studenti. */
+const TALK_AVVISO = "roberta-gilardi";
+
+/**
+ * L'avviso sul talk del 19 novembre, a ogni docente e a ogni studente
+ * iscritto: le stesse email dei due avvisi del pannello dei licei, con le
+ * stesse chiavi, quindi chi le ha gia mandate da li non le rimanda.
+ */
+async function passoAvvisoTalk(db: Db, resend: Invio, adesso: Date): Promise<RisultatoPasso> {
+  const t = TALKS.find((x) => x.slug === TALK_AVVISO);
+  if (!t || talkConcluso(t, adesso)) return { fatto: true, dettagli: ["Il talk è già passato."] };
+  const docenti = avvisoTalkDocenti(t);
+  const studenti = avvisoTalkStudenti(t);
+  const d = await invia(db, resend, chiaveAvvisoTalk("docenti", t.slug), "Docenti", await righeDocentiAvviso(db),
+    docenti.oggetto, (x) => avvisoTalkEmailHtml(docenti, x.nome, "docenti"), chiaveEsitoAvvisoTalk("docenti", t.slug));
+  const s = await invia(db, resend, chiaveAvvisoTalk("studenti", t.slug), "Studenti", await righeStudentiAvviso(db),
+    studenti.oggetto, (x) => avvisoTalkEmailHtml(studenti, x.nome, "studenti"), chiaveEsitoAvvisoTalk("studenti", t.slug));
+  return { fatto: d.ok && s.ok, dettagli: [d.testo, s.testo] };
 }
 
 /** Un giorno: chi ha ricevuto un'email di accesso da meno di cosi, oggi non ne riceve un'altra. */
@@ -937,6 +963,7 @@ async function passoCopertura(db: Db, resend: Invio): Promise<RisultatoPasso> {
 const ESEGUI: Record<IdPasso, (db: Db, resend: Invio, adesso: Date) => Promise<RisultatoPasso>> = {
   aggiornamento: passoAggiornamento,
   invito_mentor: (db, r) => passoInvitoMentor(db, r, false),
+  avviso_talk: passoAvvisoTalk,
   invito_mentor_promemoria: (db, r) => passoInvitoMentor(db, r, true),
   consegna_tre_giorni: (db, r) => passoConsegna(db, r, false),
   giudici_temi: passoGiudiciTemi,
