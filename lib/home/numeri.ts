@@ -138,3 +138,46 @@ export async function numeriHome(): Promise<NumeriHome | null> {
         : posti.data.map((p) => ({ slug: String(p.slug), capienza: Number(p.capienza_max), rimanenti: Number(p.rimanenti) })),
   };
 }
+
+export type VoceNumero = { valore: number; etichetta: string; largo: boolean };
+
+/**
+ * The numbers worth showing, in order, laid out to fill whole rows of the
+ * four-column grid (a wide card takes two columns).
+ *
+ * A count is left out when it is missing or below its minimum: "1 mentors"
+ * reads wrong, and a small figure next to large ones says nothing. Projects
+ * and university students start counting once there are ten, the event
+ * registrations once there are fifty.
+ */
+export function vociNumeri(n: NumeriHome | null): VoceNumero[] {
+  if (!n) return [];
+  const v: VoceNumero[] = [];
+  const add = (valore: number | null, etichetta: string, minimo = 3, largo = false) => {
+    if (valore !== null && valore >= minimo) v.push({ valore, etichetta, largo });
+  };
+  add(n.iscrittiEvento, "people already registered for Vivere più a lungo", 50, true);
+  add(n.studenti, "students enrolled in the school programme");
+  add(n.scuole, "schools taking part");
+  add(n.comuni, "towns in the province of Taranto");
+  add(n.squadre, "student teams");
+  add(n.progetti, "projects submitted so far", 10);
+  add(n.giudici, "experts on the evaluation committee");
+  add(n.mentor, "mentors from research and industry");
+  add(n.universitari, "university students in the university track", 10);
+  add(n.iscrittiTalk, "registrations to the talks with experts");
+  add(n.lezioni, "lessons completed in the Agentic AI course", 20);
+  add(n.certificati, "course certificates issued", 5);
+
+  // At most two rows, and no row left half empty.
+  const unita = () => v.reduce((t, x) => t + (x.largo ? 2 : 1), 0);
+  while (unita() > 8) v.pop();
+  for (let giri = 0; giri < 4 && unita() % 4 !== 0; giri++) {
+    const resto = unita() % 4;
+    const stretto = v.find((x) => !x.largo);
+    if (resto === 1 && v.length > 4) v.pop();
+    else if (stretto) stretto.largo = true;
+    else v.pop();
+  }
+  return v;
+}
