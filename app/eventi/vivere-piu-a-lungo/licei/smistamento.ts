@@ -152,6 +152,7 @@ export type IdPasso =
   | "invito_mentor"
   | "invito_mentor_promemoria"
   | "consegna_tre_giorni"
+  | "giudici_temi"
   | "consegna_ultimo_giorno"
   | "smistamento"
   | "giudici_meta"
@@ -203,6 +204,15 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
     titolo: "Promemoria: mancano tre giorni",
     descrizione:
       "Agli studenti delle squadre che non hanno consegnato e a chi non è in una squadra; a ogni docente, l'elenco delle squadre del suo istituto ancora in bozza.",
+  },
+  {
+    id: "giudici_temi",
+    da: "2026-11-24T08:00:00+01:00",
+    fino: "2026-11-25T23:59:59+01:00",
+    quando: "Martedì 24 novembre, ore 8",
+    titolo: "Promemoria ai giudici senza temi",
+    descrizione:
+      "A chi vota e non ha ancora scelto i temi, perché lo smistamento del 26 gli affidi i progetti del suo campo. Non a chi è entrato in Commissione nelle ultime 24 ore o ha appena ricevuto il promemoria di accesso, che chiede già i temi.",
   },
   {
     id: "consegna_ultimo_giorno",

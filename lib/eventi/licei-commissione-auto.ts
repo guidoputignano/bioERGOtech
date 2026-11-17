@@ -53,7 +53,7 @@ import {
 } from "@/lib/eventi/licei-avvisi";
 import * as E from "@/lib/eventi/licei-commissione-email";
 import { linkDiventaGiudice, mentorDaInvitare } from "@/lib/eventi/licei-mentor-giudici";
-import { promemoriaAccessoGiudici } from "@/lib/eventi/licei-commissari";
+import { accessiGiudici, promemoriaAccessoGiudici } from "@/lib/eventi/licei-commissari";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = SupabaseClient<any, "public", any>;
@@ -620,6 +620,57 @@ async function passoInvitoMentor(db: Db, resend: Invio, promemoria: boolean): Pr
   return { fatto: r.ok, dettagli: [r.testo] };
 }
 
+/** Un giorno: chi ha ricevuto un'email di accesso da meno di cosi, oggi non ne riceve un'altra. */
+const GIORNO_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Il 24 novembre, ai giudici che votano e non hanno ancora scelto i temi:
+ * lo smistamento del 26 li usa per affidare a ognuno i progetti del suo
+ * campo. Restano fuori, per non mandare due email in un giorno: chi e in
+ * Commissione da meno di 24 ore (l'email di accesso chiede gia i temi),
+ * chi ha ricevuto il promemoria di accesso da meno di 24 ore, e chi non e
+ * mai entrato e non l'ha ancora ricevuto (parte in questo stesso giro, e
+ * chiede anche i temi). A chi non e mai entrato l'email aggiunge il link
+ * per scegliere la password.
+ */
+async function passoGiudiciTemi(db: Db, resend: Invio, adesso: Date): Promise<RisultatoPasso> {
+  if (!(await migrazioneApplicata(db))) {
+    return { fatto: false, dettagli: [`I temi arrivano con la migrazione ${MIGRAZIONE}.`] };
+  }
+  const { data, error } = await db
+    .from("licei_commissari")
+    .select("id, user_id, nome, cognome, email, ruolo, diritto_voto, attivo, riserva, created_at, temi");
+  if (error) throw new Error(`licei_commissari: ${error.message}`);
+  const t = adesso.getTime();
+  const recente = (iso: string | null | undefined) => !!iso && t - Date.parse(iso) < GIORNO_MS;
+  const senzaTemi = ((data ?? []) as {
+    id: string; user_id: string; nome: string; cognome: string; email: string; ruolo: string | null;
+    diritto_voto: boolean; attivo: boolean; riserva: boolean | null; created_at: string | null; temi: unknown;
+  }[]).filter(
+    (g) =>
+      g.attivo !== false &&
+      g.diritto_voto !== false &&
+      g.riserva !== true &&
+      !(Array.isArray(g.temi) && g.temi.length > 0) &&
+      !recente(g.created_at),
+  );
+  const accessi = await accessiGiudici(db, senzaTemi);
+  const entrato = new Map<string, boolean>();
+  const righe: Destinatario[] = [];
+  for (const g of senzaTemi) {
+    const a = accessi.get(g.id);
+    if (!a) continue;
+    if (recente(a.promemoria_at)) continue;
+    if (!a.entrato && !a.promemoria_at) continue;
+    const d: Destinatario = { rif: `commissario ${g.id}`, nome: `${g.nome} ${g.cognome}`.trim(), email: g.email };
+    entrato.set(d.rif, a.entrato);
+    righe.push(d);
+  }
+  const r = await invia(db, resend, "auto_giudici_temi", "Giudici senza temi", righe,
+    E.giudiceTemiSubject(), (d) => E.giudiceTemiHtml({ nome: d.nome, entrato: entrato.get(d.rif) ?? false }));
+  return { fatto: r.ok, dettagli: [r.testo] };
+}
+
 async function passoConsegna(db: Db, resend: Invio, ultimo: boolean): Promise<RisultatoPasso> {
   const { adesioni, studenti, squadre, progettoDi, docentiDi } = await leggiScuole(db);
   const consegnata = (squadraId: string | null) => !!squadraId && progettoDi.get(squadraId)?.stato === "consegnato";
@@ -883,11 +934,12 @@ async function passoCopertura(db: Db, resend: Invio): Promise<RisultatoPasso> {
   return { fatto: nu.ok && sf.ok, dettagli: righe.slice(0, scoperti ? 3 : 2) };
 }
 
-const ESEGUI: Record<IdPasso, (db: Db, resend: Invio) => Promise<RisultatoPasso>> = {
+const ESEGUI: Record<IdPasso, (db: Db, resend: Invio, adesso: Date) => Promise<RisultatoPasso>> = {
   aggiornamento: passoAggiornamento,
   invito_mentor: (db, r) => passoInvitoMentor(db, r, false),
   invito_mentor_promemoria: (db, r) => passoInvitoMentor(db, r, true),
   consegna_tre_giorni: (db, r) => passoConsegna(db, r, false),
+  giudici_temi: passoGiudiciTemi,
   consegna_ultimo_giorno: (db, r) => passoConsegna(db, r, true),
   smistamento: passoSmistamento,
   giudici_meta: passoGiudiciMeta,
@@ -983,7 +1035,7 @@ export async function eseguiCalendario(
         continue;
       }
       try {
-        const r = await ESEGUI[p.id](db, resend);
+        const r = await ESEGUI[p.id](db, resend, adesso);
         if (r.fatto) await segnaFatto(db, p.id, r.dettagli);
         else await segnaTentativo(db, p.id, r.dettagli);
         esiti.push({ id: p.id, stato: r.fatto ? "eseguito" : "da_rifare", dettagli: r.dettagli });

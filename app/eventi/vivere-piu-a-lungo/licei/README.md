@@ -1208,6 +1208,7 @@ Italia) esegue i passi di `PASSI_AUTOMATICI`, ognuno una volta sola:
 | lunedi 16 novembre | invito ai mentor approvati a fare anche da giudici, con il pulsante "Si, partecipo come giudice" |
 | venerdi 20 novembre | promemoria ai mentor che non hanno ancora risposto |
 | lunedi 23 novembre | promemoria agli studenti senza consegna; ai docenti l'elenco delle squadre in bozza |
+| martedi 24 novembre | ai giudici che votano e non hanno scelto i temi (non a chi e in Commissione da meno di 24 ore, ne a chi ha appena avuto o sta per avere il promemoria di accesso); a chi non e mai entrato, anche il link per la password |
 | mercoledi 25 novembre | ultimo giorno, agli studenti delle squadre in bozza |
 | giovedi 26 novembre | smistamento, apertura delle schede, email a giudici, riserva, scuole, studenti, staff |
 | lunedi 30 novembre | promemoria ai giudici indietro; chi non ha iniziato e avvisato |

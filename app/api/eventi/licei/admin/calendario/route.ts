@@ -71,6 +71,7 @@ const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => 
         consegnati: 5,
       }),
   },
+  giudice_temi: { subject: E.giudiceTemiSubject(), html: () => E.giudiceTemiHtml({ nome: "Mario Bianchi", entrato: false }) },
   giudice_smistamento: { subject: E.giudiceSmistamentoSubject(false), html: () => E.giudiceSmistamentoHtml({ nome: "Mario Bianchi", assegnati: 20, riserva: false }) },
   giudice_riserva: { subject: E.giudiceSmistamentoSubject(true), html: () => E.giudiceSmistamentoHtml({ nome: "Mario Bianchi", assegnati: 0, riserva: true }) },
   scuola_consegne: {

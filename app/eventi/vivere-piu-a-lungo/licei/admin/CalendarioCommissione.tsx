@@ -24,6 +24,7 @@ const NOMI_ANTEPRIME: Record<string, string> = {
   invito_mentor: "16 nov . Invito ai mentor a fare da giudici",
   consegna_studente: "23 nov . Promemoria agli studenti",
   consegna_docente: "23 nov . Squadre in bozza, ai docenti",
+  giudice_temi: "24 nov . Scegliere i temi, ai giudici",
   consegna_ultimo: "25 nov . Ultimo giorno, agli studenti",
   giudice_smistamento: "26 nov . I progetti, a ogni giudice",
   giudice_riserva: "26 nov . Alla riserva",
