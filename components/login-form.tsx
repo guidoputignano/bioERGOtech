@@ -52,10 +52,10 @@ function messaggioAccesso(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
   const code = (error as { code?: string } | null)?.code ?? "";
   if (code === "invalid_credentials" || /invalid login credentials/i.test(message)) {
-    return "Email or password is not correct. Use exactly the email you registered with (check numbers and dots). If your phone or browser filled in the password by itself, it may be an old one: type it by hand, or choose a new one with \"Forgot your password?\".";
+    return "Email or password is not correct. Use exactly the email you registered with (check numbers and dots). If your phone or browser filled in the password by itself, it may be an old one: type it by hand, or choose a new one with \"First time, or forgot your password?\".";
   }
   if (code === "email_not_confirmed" || /email not confirmed/i.test(message)) {
-    return "This email is not confirmed yet. Open the link we sent you, or choose a new password with \"Forgot your password?\".";
+    return "This email is not confirmed yet. Open the link we sent you, or choose a password with \"First time, or forgot your password?\".";
   }
   if (code === "over_request_rate_limit" || /rate limit|too many/i.test(message)) {
     return "Too many attempts. Wait a few minutes and try again.";
@@ -132,7 +132,7 @@ function LoginFormInner({
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    First time, or forgot your password?
                   </Link>
                 </div>
                 <Input

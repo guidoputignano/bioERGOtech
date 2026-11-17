@@ -111,7 +111,7 @@ export async function aggiungiCommissario(client: Db, input: NuovoCommissario): 
  * L'email di accesso alla Commissione. Due casi:
  *  - l'account e gia stato usato (`last_sign_in_at`): la persona conosce la
  *    sua password, e l'email dice solo di accedere con le credenziali di
- *    sempre, con un rimando a "Forgot your password?" se non la ricorda;
+ *    sempre, con un link alla pagina per sceglierne una nuova se non la ricorda;
  *  - l'account e nuovo, o non e mai entrato (un mentor creato dallo staff
  *    che non ha usato il link dell'approvazione): l'email porta il link per
  *    scegliere la password.

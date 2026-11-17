@@ -46,6 +46,8 @@ export function CommissariPanel() {
   const [nuovo, setNuovo] = useState(VUOTO);
   const [smistamentoPresente, setSmistamentoPresente] = useState(false);
   const [mediaGenerale, setMediaGenerale] = useState<number | null>(null);
+  const [invitoLink, setInvitoLink] = useState<string | null>(null);
+  const [copiato, setCopiato] = useState(false);
 
   const carica = useCallback(async () => {
     setLoading(true);
@@ -57,6 +59,7 @@ export function CommissariPanel() {
       setRighe(data.commissari ?? []);
       setSmistamentoPresente(!!data.smistamento_presente);
       setMediaGenerale(data.media_generale ?? null);
+      setInvitoLink(data.invito_link ?? null);
     } catch (err) {
       setErrore(err instanceof Error ? err.message : "Caricamento non riuscito.");
     } finally {
@@ -118,6 +121,44 @@ export function CommissariPanel() {
       setOccupato(false);
     }
   };
+
+  /** Le candidature dal link di invito, e il link stesso. */
+  const azioneCandidatura = async (corpo: Record<string, unknown>, messaggio: (d: Qualsiasi) => string, conferma?: string) => {
+    if (conferma && !confirm(conferma)) return;
+    setOccupato(true);
+    setErrore(null);
+    setAvviso(null);
+    try {
+      const res = await fetch("/api/eventi/licei/admin/commissari", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Operazione non riuscita.");
+      if (data.invito_link) setInvitoLink(data.invito_link);
+      setAvviso(messaggio(data));
+      await carica();
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : "Operazione non riuscita.");
+    } finally {
+      setOccupato(false);
+    }
+  };
+
+  const copiaInvito = async () => {
+    if (!invitoLink) return;
+    try {
+      await navigator.clipboard.writeText(invitoLink);
+      setCopiato(true);
+      setTimeout(() => setCopiato(false), 2500);
+    } catch {
+      setErrore("Copia non riuscita: seleziona il link e copialo a mano.");
+    }
+  };
+
+  const inAttesa = righe.filter((r) => r.richiesta);
+  const commissione = righe.filter((r) => !r.richiesta);
 
   /** Di nuovo l'email di accesso, con il link per scegliere la password. */
   const rimandaAccesso = async (r: Qualsiasi) => {
@@ -224,6 +265,111 @@ export function CommissariPanel() {
       )}
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
 
+      {/* ── Link di invito e candidature ── */}
+      {invitoLink && (
+        <div className="card" style={{ padding: 18 }}>
+          <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
+            Link di invito per i giudici
+          </h2>
+          <p className="text-sm text-gray-600 mb-3" style={{ lineHeight: 1.7 }}>
+            Mandalo a chi vuoi in Commissione, anche su WhatsApp: compila nome, email e ruolo, e la candidatura
+            arriva qui sotto. Entra solo se la approvi; con l&apos;approvazione parte l&apos;email di accesso. Ti
+            avvisiamo anche via email a ogni candidatura. I mentor non ne hanno bisogno: hanno il loro invito.
+          </p>
+          <div className="flex flex-wrap gap-3 items-center">
+            <code
+              style={{ fontSize: 12.5, background: "#F1F5F9", padding: "8px 10px", borderRadius: 8, flex: "1 1 320px", minWidth: 0, overflowWrap: "anywhere" }}
+            >
+              {invitoLink}
+            </code>
+            <Button type="button" onClick={copiaInvito} disabled={occupato} style={{ height: 36, fontSize: 13 }}>
+              {copiato ? "Copiato" : "Copia il link"}
+            </Button>
+            <button
+              type="button"
+              disabled={occupato}
+              onClick={() =>
+                azioneCandidatura(
+                  { azione: "rigenera_invito" },
+                  () => "Link nuovo pronto: quello di prima non funziona più.",
+                  "Creare un link nuovo? Quello mandato finora smette di funzionare.",
+                )
+              }
+              style={{ background: "none", border: "none", padding: 0, fontSize: 12.5, color: "var(--text-light)", textDecoration: "underline", cursor: "pointer" }}
+            >
+              Crea un link nuovo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {inAttesa.length > 0 && (
+        <div className="card" style={{ padding: 0, overflow: "hidden", borderColor: "#F0D89B" }}>
+          <div style={{ padding: "14px 18px", background: "#FFF8E6", borderBottom: "1px solid #F0D89B" }}>
+            <h2 className="font-semibold" style={{ fontSize: 15, margin: 0, color: "#75570F" }}>
+              Candidature da approvare: {inAttesa.length}
+            </h2>
+          </div>
+          {inAttesa.map((r, i) => (
+            <div
+              key={r.id}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 12,
+                padding: "14px 18px",
+                borderTop: i === 0 ? "none" : "1px solid var(--border-color)",
+              }}
+            >
+              <div style={{ flex: "1 1 260px", minWidth: 0 }}>
+                <div className="font-semibold text-gray-800" style={{ fontSize: 14.5 }}>
+                  {r.cognome} {r.nome}
+                </div>
+                <div className="text-gray-600" style={{ fontSize: 12.5, marginTop: 2 }}>
+                  {r.email}
+                  {r.ruolo ? ` . ${ruoloCommissioneLabel(r.ruolo)}` : ""}
+                  {r.richiesta
+                    ? ` . arrivata il ${new Date(r.richiesta).toLocaleDateString("it-IT", { day: "numeric", month: "long" })}`
+                    : ""}
+                </div>
+              </div>
+              <Button
+                type="button"
+                disabled={occupato}
+                onClick={() =>
+                  azioneCandidatura(
+                    { id: r.id, azione: "approva" },
+                    (d) =>
+                      d.email_inviata === false
+                        ? `${r.nome} ${r.cognome} è in Commissione, ma l'email di accesso non è partita: usa «Rimanda l'accesso».`
+                        : `${r.nome} ${r.cognome} è in Commissione e ha ricevuto l'email di accesso.`,
+                  )
+                }
+                style={{ height: 34, fontSize: 13 }}
+              >
+                Approva
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={occupato}
+                onClick={() =>
+                  azioneCandidatura(
+                    { id: r.id, azione: "rifiuta" },
+                    () => `Candidatura di ${r.nome} ${r.cognome} rifiutata.`,
+                    `Rifiutare la candidatura di ${r.nome} ${r.cognome}? Non riceve nessuna email.`,
+                  )
+                }
+                style={{ height: 34, fontSize: 13 }}
+              >
+                Rifiuta
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Aggiungi ── */}
       <div className="card" style={{ padding: 18 }}>
         <h2 className="font-semibold text-gray-800 mb-1" style={{ fontSize: 15 }}>
@@ -276,7 +422,7 @@ export function CommissariPanel() {
       </div>
 
       {/* ── Elenco ── */}
-      {righe.length === 0 ? (
+      {commissione.length === 0 ? (
         <div className="card text-center" style={{ padding: 40 }}>
           <p className="text-gray-600 m-0">
             La Commissione è vuota. Finché non ci sono commissari attivi con diritto di voto, la
@@ -285,7 +431,7 @@ export function CommissariPanel() {
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          {righe.map((r, i) => (
+          {commissione.map((r, i) => (
             <div
               key={r.id}
               style={{

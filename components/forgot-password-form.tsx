@@ -49,23 +49,28 @@ export function ForgotPasswordForm({
       {success ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+            <CardTitle className="text-2xl">Check your email</CardTitle>
+            <CardDescription>We sent you a link to choose your password</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+              If an account exists for this email, the link arrives within a
+              few minutes. Look in the spam folder too, and open the most
+              recent email: each new link replaces the previous one.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+            {/* The same page for the first password and for a forgotten
+                one: an account created for you (a judge, a student) has
+                none yet, and "reset" read as the wrong page. */}
+            <CardTitle className="text-2xl">Choose your password</CardTitle>
             <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
+              Type the email of your account and we&apos;ll send you a link to
+              choose a password. It works the first time too, and if you have
+              forgotten it.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -90,7 +95,7 @@ export function ForgotPasswordForm({
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
+                  {isLoading ? "Sending..." : "Send me the link"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">

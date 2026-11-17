@@ -72,7 +72,7 @@ export default async function MemberPortal() {
                 </div>
                 <p className="text-center text-sm text-gray-500 mt-6">
                   <Link href="/auth/forgot-password" style={{ color: "var(--primary)" }}>
-                    Forgot your password?
+                    First time, or forgot your password?
                   </Link>
                 </p>
               </div>

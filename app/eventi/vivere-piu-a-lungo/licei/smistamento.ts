@@ -122,9 +122,9 @@ export const DIVENTA_GIUDICE_SLUG = "diventa-giudice";
 export const GUIDA_COMMISSIONE_SLUG = "guida";
 
 /**
- * Il video tutorial per i giudici (1 minuto e 53 secondi, senza audio, con le
- * didascalie): come si entra, i temi, come si compila e si chiude una
- * scheda. Sta nella guida, all'ancora `#video`. Registrato sul sito con
+ * Il video tutorial per i giudici (2 minuti e 17 secondi, senza audio, con
+ * le didascalie): la candidatura dal link di invito, come si entra, i temi,
+ * come si compila e si chiude una scheda. Sta nella guida, all'ancora `#video`. Registrato sul sito con
  * dati di esempio; se l'area cambia molto, va rifatto.
  */
 export const VIDEO_GIUDICI = "/assets/video/commissione/tutorial-giudici.mp4";
