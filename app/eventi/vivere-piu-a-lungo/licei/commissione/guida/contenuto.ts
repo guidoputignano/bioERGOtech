@@ -47,15 +47,23 @@ export const GUIDA_COMMISSIONE: Documento = {
   },
   sezioni: [
     {
-      h: "Le tappe",
+      h: "Le date e cosa fare",
       ul: [
-        "Riceve un'email dalla Fondazione con il link per scegliere la password e il pulsante per entrare nell'area della Commissione. Appena entra, sceglie i suoi temi.",
-        "Fino al 25 novembre le squadre consegnano, scegliendo uno o due temi per il loro progetto. Può già leggere i progetti man mano che arrivano.",
-        "Giovedì 26 novembre: smistamento e apertura delle schede. Riceve un'email con il numero dei suoi progetti, e nella sua area vede solo quelli.",
-        "Lunedì 30 novembre: un promemoria con il punto della situazione. Chi non ha ancora iniziato entro il 1° dicembre lascia i suoi progetti alla riserva interna.",
-        `${maiuscola(SCADENZA_GIUDICI_LABEL)}: tutte le schede chiuse.`,
-        `${maiuscola(ANNUNCIO_FINALISTI_LABEL)}: la riserva copre i progetti con meno di due schede, e annunciamo i ${LICEI.progettiSulPalco} finalisti.`,
-        `${LICEI.dataLabel}: i progetti finalisti vengono presentati dal palco. Fra le presentazioni e la premiazione le schede si riaprono, per rivedere il criterio «Qualità della presentazione» dopo averlo visto dal vivo.`,
+        "Subito, in due minuti: entri nell'area della Commissione e scelga i suoi temi. Lo smistamento li usa per affidarle i progetti del suo campo. Martedì 24 novembre chi non li ha ancora scelti riceve un promemoria.",
+        `Fino a ${SCADENZA_CONSEGNA_LABEL}: le squadre consegnano i progetti. Nell'area può già leggerli man mano che arrivano, ma le schede sono ancora chiuse.`,
+        "Giovedì 26 novembre: le arriva un'email con i suoi progetti, circa dieci, e le schede si aprono. Da quel momento nell'area vede solo i suoi.",
+        "Lunedì 30 novembre: un promemoria con il punto della situazione. Se non ha ancora iniziato, inizi entro martedì 1° dicembre: mercoledì 2 dicembre i progetti di chi non ha salvato nemmeno una scheda passano alla riserva interna.",
+        `${maiuscola(SCADENZA_GIUDICI_LABEL)}: tutte le schede chiuse. Quella mattina un ultimo promemoria arriva a chi ne ha ancora aperte.`,
+        `${maiuscola(ANNUNCIO_FINALISTI_LABEL)}: la riserva interna completa i progetti con meno di due schede, e annunciamo i ${LICEI.progettiSulPalco} finalisti.`,
+        `${LICEI.dataLabel}: i finalisti presentano i progetti sul palco del ${LICEI.luogo}. Fra le presentazioni e la premiazione le schede si riaprono, per rivedere il criterio «Qualità della presentazione» dopo averlo visto dal vivo.`,
+      ],
+    },
+    {
+      h: "Come si entra in Commissione",
+      ul: [
+        "Se è un mentor del percorso: nell'email della Fondazione che la invita a fare da giudice trova il pulsante «Sì, partecipo come giudice». Un clic, e le arriva subito l'email di accesso. Il pulsante vale fino al 30 novembre.",
+        "Se ha ricevuto il link di invito: lo apra e lasci nome, email, ruolo e organizzazione. La Fondazione conferma la candidatura, di solito in giornata, e le arriva l'email di accesso. Anche il link vale fino al 30 novembre.",
+        "L'email di accesso arriva da noreply@bioergotech.org: se non la trova, guardi anche nello spam. La prima volta sceglie la password; se usa già il sito, entra con l'email e la password di sempre.",
       ],
     },
     {
@@ -110,7 +118,10 @@ export const GUIDA_COMMISSIONE: Documento = {
     },
     {
       h: "Contatti",
-      p: ["Per qualsiasi domanda o problema di accesso: Guido Putignano, Fondazione bioERGOtech, info@bioergotech.org."],
+      p: [
+        "Per qualsiasi domanda o problema di accesso: Guido Putignano, Fondazione bioERGOtech, info@bioergotech.org.",
+        "Questa guida, sempre aggiornata e con il video di due minuti, è online: www.bioergotech.org/eventi/vivere-piu-a-lungo/licei/commissione/guida",
+      ],
     },
   ],
 };

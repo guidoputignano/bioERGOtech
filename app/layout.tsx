@@ -20,38 +20,38 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bioergotech.org"),
   title: {
-    default: "bioERGOtech Foundation: Engineered Living Systems",
+    default: "bioERGOtech Foundation: training students to build digital scientists",
     template: "%s | bioERGOtech Foundation",
   },
   description:
-    "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
+    "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Free programmes in Taranto and online.",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
     apple: "/favicon.png",
   },
   openGraph: {
-    title: "bioERGOtech Foundation: Engineered Living Systems",
+    title: "bioERGOtech Foundation: training students to build digital scientists",
     description:
-      "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
+      "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Free programmes in Taranto and online.",
     url: "https://www.bioergotech.org",
     siteName: "bioERGOtech Foundation",
     images: [
       {
-        url: "https://www.bioergotech.org/assets/images/og-image-v2.jpg",
+        url: "https://www.bioergotech.org/assets/images/og-brand.jpg",
         width: 1200,
         height: 630,
-        alt: "bioERGOtech Foundation",
+        alt: "bioERGOtech Foundation: we train students to build digital scientists",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "bioERGOtech Foundation: Engineered Living Systems",
+    title: "bioERGOtech Foundation: training students to build digital scientists",
     description:
-      "bioERGOtech Foundation develops Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design.",
-    images: ["https://www.bioergotech.org/assets/images/og-image-v2.jpg"],
+      "bioERGOtech Foundation trains high-school and university students to build digital scientists: AI agents for health, sport and longevity. Free programmes in Taranto and online.",
+    images: ["https://www.bioergotech.org/assets/images/og-brand.jpg"],
   },
 };
 

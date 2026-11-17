@@ -4,26 +4,28 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-// Research leads, because it is the thing a first-time visitor came to see and
-// the only item here that names what the Foundation does rather than who the
-// reader is. The audience-segmented labels below it are unchanged for now:
-// they are useful conversion pages, and demoting them out of the top level is
-// a separate decision.
+// The Foundation trains students to build digital scientists, and the menu
+// follows the programmes: the event first, then the school programme, the
+// course and the talks. The startup and research pages (Research, For
+// Innovators, For Partners, Careers, the grant navigator) are out of the
+// menu but still online, linked from the footer under "More": their URLs
+// are indexed and printed material may point to them.
 const navLinks = [
-  { href: "/programmes", label: "Research" },
+  { href: "/eventi/vivere-piu-a-lungo", label: "The Event" },
+  { href: "/eventi/vivere-piu-a-lungo/licei", label: "Schools" },
+  { href: "/courses/agentic-ai", label: "AI Course" },
+  { href: "/eventi/vivere-piu-a-lungo/talk", label: "Talks" },
   { href: "/about-us", label: "About Us" },
-  { href: "/build-with-us", label: "For Innovators" },
-  { href: "/partner-with-us", label: "For Partners" },
   { href: "/articles", label: "Articles" },
-  { href: "/careers", label: "Careers" },
 ];
 
-// Persistent calls to action, always visible on the right of the nav.
-const memberPortal = { href: "/member-portal", label: "Research Portal" };
-// "Work with us" rather than "Join the Ecosystem". This is the one call to
-// action on every page, and "join" asks a visitor to become part of something
-// before they know what the work is. The URL is unchanged.
-const joinCta = { href: "/join-us", label: "Work with us" };
+// A quiet link on the right: "Log in" for visitors (students, teachers and
+// judges sign in there and land in their area), the account for whoever is
+// already signed in, and their own area when they have one.
+const accesso = { href: "/auth/login", label: "Log in" };
+const account = { href: "/member-portal", label: "My account" };
+// The one call to action on every page: registering for the event.
+const joinCta = { href: "/eventi/vivere-piu-a-lungo#iscrizione", label: "Join the event" };
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,10 +33,11 @@ export function Navbar() {
   // area", pointing to their area. Asked only when a Supabase session cookie
   // is there, so visitors make no request; the server decides from the
   // session (/api/account/area).
-  const [portale, setPortale] = useState(memberPortal);
+  const [portale, setPortale] = useState(accesso);
 
   useEffect(() => {
     if (!document.cookie.includes("-auth-token")) return;
+    setPortale(account);
     let attivo = true;
     fetch("/api/account/area", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
@@ -79,7 +82,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -106,7 +109,7 @@ export function Navbar() {
               </Link>
             ))}
 
-            {/* Research Portal, a quiet link for people already inside */}
+            {/* Log in, or the account / area of whoever is signed in */}
             <Link
               key={portale.href}
               href={portale.href}
@@ -126,7 +129,7 @@ export function Navbar() {
               {portale.label}
             </Link>
 
-            {/* Primary CTA — for everyone who isn't a member yet */}
+            {/* Primary CTA: register for the event */}
             <Link
               key={joinCta.href}
               href={joinCta.href}
@@ -150,7 +153,7 @@ export function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             style={{ background: "none", border: "none", cursor: "pointer", padding: "8px", color: "var(--dark)" }}
             aria-label="Toggle menu"

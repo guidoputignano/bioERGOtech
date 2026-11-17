@@ -1,824 +1,685 @@
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { FaqSection } from "@/components/faq-section";
-import { PUBLICATIONS } from "@/lib/publications";
-import { PROGRAMMES, STAGE_STYLE } from "@/lib/programmes";
+import { Countdown } from "@/components/home/countdown";
+import { CountUp } from "@/components/home/count-up";
+import { Reveal } from "@/components/home/reveal";
+import {
+  ARCHIVE_MODE,
+  EVENT,
+  MODERATRICE,
+  PARTNER_PUBBLICI,
+  RELATORI_PUBBLICI,
+  SESSIONS,
+  STATS,
+} from "@/app/eventi/vivere-piu-a-lungo/content";
+import { LICEI } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { luogoTalk, prossimoTalk, talkPath } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
+import { numeriHome, type NumeriHome } from "@/lib/home/numeri";
+import { COPIA } from "@/lib/home/copia";
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import s from "./home.module.css";
+
+/*
+ * The homepage. One message: we train students to build digital scientists,
+ * and the place where it all comes together is the event "Vivere più a
+ * lungo: sport e intelligenza artificiale". Every section ends in a way to
+ * take part, and the main one is registering for the event.
+ *
+ * The event block is in Italian, like the event and its audience; the rest
+ * of the page is in English, like the rest of the site. Event data comes
+ * from the event's own content file (read only: the event pages are not
+ * touched), the numbers from the database (lib/home/numeri.ts), the words
+ * of the vision and the story from lib/home/copia.ts.
+ */
+
+const TITOLO = "bioERGOtech Foundation: we train students to build digital scientists";
+const DESCRIZIONE = ARCHIVE_MODE
+  ? "A non-profit foundation in Taranto. Free programmes where students learn agentic AI by building digital scientists."
+  : "A non-profit foundation in Taranto. Free programmes where students learn agentic AI by building digital scientists. Join us on 10 and 11 December 2026.";
+const IMMAGINE = "https://www.bioergotech.org/assets/images/og-home.jpg";
 
 export const metadata: Metadata = {
-  title: {
-    absolute:
-      "bioERGOtech Foundation: digital scientists for real clinical problems",
-  },
-  description:
-    "A research foundation in Taranto, Italy. We build software agents inside clinical problems someone already has, and publish what we find, including where we stopped.",
+  title: { absolute: TITOLO },
+  description: DESCRIZIONE,
   alternates: { canonical: "/" },
   openGraph: {
-    title:
-      "bioERGOtech Foundation: digital scientists for real clinical problems",
-    description:
-      "A research foundation in Taranto, Italy. We build software agents inside clinical problems someone already has, and publish what we find, including where we stopped.",
+    title: TITOLO,
+    description: DESCRIZIONE,
     url: "https://www.bioergotech.org",
+    images: [{ url: IMMAGINE, width: 1200, height: 630, alt: "We train students to build digital scientists. Vivere più a lungo, Taranto, 10 and 11 December 2026" }],
   },
+  twitter: { card: "summary_large_image", title: TITOLO, description: DESCRIZIONE, images: [IMMAGINE] },
 };
 
-/* This used to exist because main.css overrode --primary-light with a harsh
-   saturated mint and clobbered the design system on every page that did not
-   pin it back by hand. That is fixed at the root now: main.css calls its
-   bright accent --primary-bright, and globals.css carries this exact tint for
-   the whole site. The pin is kept only because it is harmless and the wrapper
-   is load bearing nowhere else. */
-const SOFT_BRAND: CSSProperties = { "--primary-light": "#E1F5EE" } as CSSProperties;
+// The numbers, the next talk and the seats left change: rebuilt hourly.
+export const revalidate = 3600;
 
-/* ── The finding. One published result, stated so a reader can check it.
-      Replaces the old traction counters, which measured the size of the
-      Foundation rather than anything it had found. ── */
-const FINDING = {
-  number: "356,022",
-  unit: "patients",
-  claim:
-    "In a five-year national cohort study, cancer risk after a diagnosis of immune-mediated inflammatory disease was highest in the first year and fell steadily after it. The shape of that decline points at inflammation rather than at treatment.",
-  cite: "Cancers 2026;18(6):1027",
-  href: "https://doi.org/10.3390/cancers18061027",
+const EVENTO = "/eventi/vivere-piu-a-lungo";
+const ISCRIZIONE = `${EVENTO}#iscrizione`;
+// After the event the event page shows a recap: the homepage follows it.
+const CHIUSO = ARCHIVE_MODE;
+
+/** "9:00 . 16:00" -> "dalle 9:00 alle 16:00". */
+const orario = (o: string) => {
+  const [da, a] = o.split(" . ");
+  return a ? `dalle ${da} alle ${a}` : o;
 };
 
-/* ── What we are trying to find out. The six programmes below are different
-      subjects with one shape in common, and this is where that is stated. ── */
-const MOONSHOT =
-  "That the distance between a question somebody has and an answer they can defend collapses from years to days.";
+/*
+ * The faces in front: the best-known names first, then everyone else in
+ * stage order. Built on RELATORI_PUBBLICI, so a speaker who is hidden or not
+ * yet authorised on the event page never appears here either.
+ */
+const IN_PRIMO_PIANO = ["vezzali", "montano", "raffaeli", "bortuzzo", "abbagnale", "schettini", "montervino", "bianco", "siciliano", "botticelli", "loizzo", "tari"];
+const RELATORI_HOME = [
+  ...IN_PRIMO_PIANO.map((id) => RELATORI_PUBBLICI.find((r) => r.id === id)).filter((r): r is (typeof RELATORI_PUBBLICI)[number] => Boolean(r)),
+  ...RELATORI_PUBBLICI.filter((r) => !IN_PRIMO_PIANO.includes(r.id)),
+];
+const VOLTI = 11;
 
-const QUESTIONS = [
-  "Can we say, years ahead of a diagnosis, which subgroups carry which risk, and why?",
-  "Can a model stand in for an experiment that is too slow, too small or too expensive to run?",
-  "Can a group of patients too small for the statistics still be learned from?",
-  "Can an organisation act on what it already knows, inside the year it matters?",
-  "Where is the line between software that informs a clinical decision and software that makes one?",
+const PASSI_AGENTE = [
+  { icona: "fa-book-open-reader", titolo: "It reads", testo: "Papers, data and guidelines, and finds what actually matters for the question." },
+  { icona: "fa-flask-vial", titolo: "It tests", testo: "Runs the analysis or the simulation, and checks the result against the evidence." },
+  { icona: "fa-comment-dots", titolo: "It explains", testo: "Reports what it found and how sure it is, in words a doctor or a coach can use." },
 ];
 
-/* ── How we work. The mechanism, not the onboarding sequence. ── */
-const STEPS = [
-  {
-    num: "1",
-    title: "Someone brings a problem they own",
-    desc: "A clinician, a discovery scientist or a pharmacy lead who has the problem and could not solve it. Not a technology looking for an application.",
-  },
-  {
-    num: "2",
-    title: "We build the smallest thing that answers it",
-    desc: "Documented, versioned and evaluated. What was not evaluated is written down next to what was, because a reader cannot tell the difference otherwise.",
-  },
-  {
-    num: "3",
-    title: "What works goes to market",
-    desc: "A programme is completed when its question has been answered. Where the answer is useful beyond us, the route out is a publication, a tool other groups can run, or a company.",
-  },
+const PERCHE = [
+  { icona: "fa-seedling", titolo: "Students learn by building.", testo: "Not slides about AI: an agent of their own, around a real question about health, sport or longevity." },
+  { icona: "fa-user-doctor", titolo: "Experts stay close.", testo: "Mentors from research and industry are there for the teams, and a committee of experts evaluates every project." },
+  { icona: "fa-microphone-lines", titolo: "The work goes on stage.", testo: "The ten best school projects are presented in Taranto on 10 December, in front of the public and the speakers." },
 ];
 
-/* ── Badge legend for the infrastructure section ── */
-type BadgeKind = "foundation" | "community" | "coming";
-const BADGE_STYLE: Record<BadgeKind, { label: string; bg: string; color: string }> = {
-  foundation: { label: "Foundation", bg: "#E1F5EE", color: "#0F6E56" },
-  community: { label: "Community", bg: "#E6F1FB", color: "#185FA5" },
-  coming: { label: "Coming soon", bg: "#EEF1F5", color: "#5A6B7B" },
-};
-
-const BENEFITS: { icon: string; title: string; desc: string; badges: BadgeKind[] }[] = [
+const NEWS = [
   {
-    icon: "fa-hospital",
-    title: "Clinical questions to work on",
-    desc: "Real problems brought by clinicians and research centres, with the institution that posed them named.",
-    badges: ["foundation", "community"],
+    href: "/articles/news-hands-on-experience-gap-2026",
+    img: "/assets/images/Home/Automation.webp",
+    data: "July 2026",
+    titolo: "The hands-on experience gap",
+    testo: "Are digital scientists replacing the field work young researchers need? Our answer: integration, not substitution.",
   },
   {
-    icon: "fa-flask",
-    title: "Instruments and lab space",
-    desc: "Shared equipment you can apply to use, with a short statement of what you intend to do with it.",
-    badges: ["foundation", "community", "coming"],
-  },
-  {
-    icon: "fa-microchip",
-    title: "Compute",
-    desc: "Capacity for model training and biomedical data analysis.",
-    badges: ["community", "coming"],
-  },
-  {
-    icon: "fa-coins",
-    title: "Funding you can apply for together",
-    desc: "Hands-on support on NIDI, Mini-PIA, PIA, ZES and European calls.",
-    badges: ["foundation", "community"],
-  },
-  {
-    icon: "fa-user-tie",
-    title: "Regulatory and clinical advisors",
-    desc: "Guidance across regulatory strategy, clinical development, IP and commercialisation.",
-    badges: ["foundation", "community"],
-  },
-  {
-    icon: "fa-building",
-    title: "Working space",
-    desc: "Offices, meeting rooms and operational space opened up by members.",
-    badges: ["foundation", "community"],
-  },
-];
-
-/* ── Hubs — honest about the current stage of each ── */
-const HUBS = [
-  {
-    city: "Taranto",
-    status: "Operational",
-    operational: true,
-    desc: "Our founding home, with a physical Startup Hub and the Distributed Lab. A Special Economic Zone with real tax benefits.",
-    tags: ["Startup Hub", "Distributed Lab", "ZES", "Med Games 2026"],
-    href: "/taranto",
-  },
-  {
-    city: "Zurich",
-    status: "In development",
-    operational: false,
-    desc: "A strategic hub for European and international partnerships, embedded in one of the world's leading life-sciences ecosystems.",
-    tags: ["Life sciences", "EU pharma", "Partnerships"],
-    href: null,
-  },
-  {
-    city: "Riyadh",
-    status: "In development",
-    operational: false,
-    desc: "A strategic presence aligned with Vision 2030, opening access to a fast-growing Saudi healthcare market.",
-    tags: ["Vision 2030", "KSA healthcare", "Partnerships"],
-    href: null,
-  },
-];
-
-/* ── Recent updates — most recent real outputs. Update as new ones ship. ── */
-type Update = {
-  img: string;
-  date: string;
-  category: string;
-  title: string;
-  desc: string;
-  href: string;
-  cover?: "newsletter";
-};
-const UPDATES: Update[] = [
-  {
-    img: "/assets/images/Home/News/newsletter_june2026.webp",
-    date: "June 2026",
-    category: "Publication",
-    title: "Founding Edition newsletter is live",
-    desc: "Our launch, research pillars, first members and upcoming events.",
     href: "/articles/newsletter-june-2026",
-    cover: "newsletter",
+    img: "/assets/images/Home/Ecosystem.webp",
+    data: "June 2026",
+    titolo: "A foundation is born",
+    testo: "The founding edition of our newsletter: who we are, our hubs and our first two members.",
   },
   {
-    img: "/assets/images/News/Predict/predict-welcome.webp",
-    date: "May 2026",
-    category: "Project",
-    title: "Predict Healthcare joins the Foundation",
-    desc: "The Apulian leader in in-vivo diagnostics and imaging joins the ecosystem.",
-    href: "/articles/news-predict-healthcare-joins-2026",
-  },
-  {
-    img: "/assets/images/Home/News/Guido_Walter.webp",
-    date: "February 2026",
-    category: "Project",
-    title: "GenoGra closes €1M pre-seed round",
-    desc: "An Italian portfolio startup scaling toward clinical genomics.",
-    href: "/articles/news-genogra-preseed-2026",
+    href: "/articles/news-lorenzo-tarricone-2025",
+    img: "/assets/images/News/Lorenzo_Tarricone/IMG_28041.jpg",
+    data: "July 2025",
+    titolo: "Lorenzo Tarricone: science, innovation and dreams",
+    testo: "A DPhil researcher at Oxford who spoke to students at the Taranto Biotech Days, on bridging research and real-world impact.",
   },
 ];
 
-/* ── Who made it? — actual Foundation members, with their logos ── */
-const COMMUNITY = [
-  { name: "G-Gravity", logo: "/assets/images/Members/g-gravity.webp" },
-  { name: "Predict Life Care", logo: "/assets/images/Members/predict-life-care.webp" },
-  { name: "Priver", logo: "/assets/images/Members/priver.webp" },
-  { name: "SafesPro", logo: "/assets/images/Members/safespro.webp" },
-];
+/** The live numbers worth showing: only the ones the database gave, and not zero. */
+function voci(n: NumeriHome | null) {
+  if (!n) return [];
+  const v: { valore: number; etichetta: string; largo?: boolean }[] = [];
+  // Tiny counts are left out: "1 mentors" reads wrong, and next to the
+  // large ones it says nothing.
+  const add = (valore: number | null, etichetta: string, largo = false, minimo = 3) => {
+    if (valore !== null && valore >= minimo) v.push({ valore, etichetta, largo });
+  };
+  // Social proof for the event only once it is meaningful.
+  add(n.iscrittiEvento, "people already registered for Vivere più a lungo", true, 50);
+  add(n.studenti, "students enrolled in the school programme");
+  add(n.scuole, "schools taking part");
+  add(n.comuni, "towns in the province of Taranto");
+  add(n.squadre, "student teams");
+  add(n.progetti, "projects submitted so far");
+  add(n.giudici, "experts on the evaluation committee");
+  add(n.mentor, "mentors from research and industry");
+  add(n.universitari, "university students in the university track");
+  add(n.iscrittiTalk, "registrations to the talks with experts");
+  add(n.lezioni, "lessons completed in the Agentic AI course");
+  add(n.certificati, "course certificates issued", false, 5);
+  return v;
+}
 
-export default function Home() {
+export default async function Home() {
+  const talk = prossimoTalk();
+  const [giorno1, giorno2] = SESSIONS;
+  const altriVolti = Math.max(0, RELATORI_HOME.length + 1 - VOLTI);
+  const numeri = await numeriHome();
+  const elenco = voci(numeri);
+  const posti = new Map((numeri?.posti ?? []).map((p) => [p.slug, p]));
+
+  /**
+   * "300 posti"; "Restano 42 posti" when less than half is left; "Ultimi
+   * posti" near the end (the page can be up to an hour old, so no exact
+   * number there); the waiting list when full.
+   */
+  const postiLabel = (slug: string, capienza: number) => {
+    const p = posti.get(slug);
+    if (!p || CHIUSO) return `${capienza} posti`;
+    if (p.rimanenti <= 0) return "Posti esauriti, lista d'attesa";
+    if (p.rimanenti <= Math.max(10, p.capienza * 0.1)) return "Ultimi posti disponibili";
+    if (p.rimanenti < p.capienza / 2) return `Restano ${p.rimanenti} posti`;
+    return `${p.capienza} posti`;
+  };
+
   return (
-    <>
-      <style>{`
-        .course-card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-        .course-card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(46,196,182,0.18); }
-      `}</style>
+    <div className={s.page}>
       <Navbar />
 
-      <div style={SOFT_BRAND}>
       {/* ── Hero ── */}
-      <section className="hero" id="home" style={{ paddingTop: "120px" }}>
-        <div className="container mx-auto px-6 pt-8 pb-40 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1">
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-gray-800">
-                bioERGOtech builds{" "}
-                <span style={{ color: "var(--primary)" }}>digital scientists</span>
-                : software agents built inside real clinical problems.
-              </h1>
-              <p className="text-xl mb-8 text-gray-700">
-                We start from a question someone already has and could not
-                answer, build the smallest system that tests it, and publish
-                what we find.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/programmes" className="btn-primary text-center">
-                  See what we are working on →
-                </Link>
-                <Link href="#publications" className="btn-outline text-center">
-                  Read the papers
-                </Link>
+      <header className={s.hero} id="home">
+        <Image
+          src="/assets/images/eventi/vivere-piu-a-lungo/hero.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className={s.heroImage}
+        />
+        <span className={s.heroGlow} aria-hidden="true" />
+        <div className={`${s.wrap} ${s.heroInner}`}>
+          <span className={`${s.eyebrow} ${s.eyebrowLight}`}>{COPIA.heroKicker}</span>
+          <h1 className={s.heroTitle}>
+            We train students to build <em>digital scientists</em>.
+          </h1>
+          <p className={s.heroLead}>
+            Free programmes where high-school and university students learn agentic AI by building AI agents
+            for health, sport and longevity, with experts at their side.
+          </p>
+
+          <div className={s.heroEvent} lang="it">
+            <div>
+              <div className={s.heroEventLabel}>{CHIUSO ? "Il grande evento · com'è andata" : "Il grande evento · ingresso gratuito"}</div>
+              <div className={s.heroEventTitle}>{EVENT.titolo}</div>
+              <div className={s.heroEventMeta}>
+                <span>
+                  <i className="fas fa-calendar-day" aria-hidden="true" />
+                  {EVENT.dataLabel}
+                </span>
+                <span>
+                  <i className="fas fa-location-dot" aria-hidden="true" />
+                  PalaMazzola e Teatro Fusco, Taranto
+                </span>
+              </div>
+              <div className={s.heroActions}>
+                {CHIUSO ? (
+                  <Link href={EVENTO} className={s.btnGlow}>
+                    Rivivi l&apos;evento <i className="fas fa-arrow-right" aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <>
+                    <Link href={ISCRIZIONE} className={s.btnGlow}>
+                      Iscriviti gratis <i className="fas fa-arrow-right" aria-hidden="true" />
+                    </Link>
+                    <Link href="#evento" className={s.btnGhost}>
+                      Scopri l&apos;evento
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
-            <div className="order-1 md:order-2 flex justify-center">
-              <Image
-                src="/assets/images/Home/Automation.webp"
-                alt="Automated biomanufacturing inside the bioERGOtech ecosystem"
-                width={1536}
-                height={1024}
-                priority
-                sizes="(max-width: 768px) 100vw, 576px"
-                className="rounded-lg shadow-xl w-full h-auto"
-              />
+            {!CHIUSO && <Countdown inizio={EVENT.startDateISO} fine={EVENT.endDateISO} />}
+          </div>
+        </div>
+        <span className={s.scrollHint} aria-hidden="true">
+          <i className="fas fa-chevron-down" />
+        </span>
+      </header>
+
+      {/* ── The event in numbers ── */}
+      <section className={s.strip} aria-label="L'evento in numeri" lang="it">
+        <div className={`${s.wrap} ${s.stripInner}`}>
+          {STATS.map((x) => (
+            <div key={x.label} className={s.stat}>
+              <b>{x.num}</b>
+              <span>{x.label}</span>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── What a digital scientist is ── */}
+      <section className={s.band} id="digital-scientists">
+        <div className={`${s.wrap} ${s.split}`}>
+          <Reveal>
+            <span className={s.eyebrow}>What we do</span>
+            <h2 className={s.h2}>What is a digital scientist?</h2>
+            <p className={s.lead}>
+              An AI agent that does part of a scientist&apos;s work, with a person always in charge. Our students design
+              one around a real question, build it, and defend it in front of experts. The people who will use these
+              tools should learn to build them, and to question them.
+            </p>
+            <ul className={s.points}>
+              {PERCHE.map((p) => (
+                <li key={p.icona}>
+                  <i className={`fas ${p.icona}`} aria-hidden="true" />
+                  <span>
+                    <b>{p.titolo}</b> {p.testo}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+
+          <Reveal ritardo={120}>
+            <div className={s.loop} aria-label="How a digital scientist works">
+              <div className={s.loopTop}>
+                <span className={s.agentAvatar}>
+                  <i className="fas fa-robot" aria-hidden="true" />
+                </span>
+                <span>
+                  An example question: <b style={{ color: "#fff" }}>does training load predict injuries in young athletes?</b>
+                </span>
+              </div>
+              {PASSI_AGENTE.map((p) => (
+                <div key={p.titolo} className={s.loopStep}>
+                  <i className={`fas ${p.icona}`} aria-hidden="true" />
+                  <div>
+                    <h3>{p.titolo}</h3>
+                    <p>{p.testo}</p>
+                  </div>
+                </div>
+              ))}
+              <div className={s.human}>
+                <i className="fas fa-user-check" aria-hidden="true" />
+                <span>A human decides. The agent shows its sources, its doubts and its limits.</span>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── The event ── */}
+      <section className={s.eventBand} id="evento" lang="it">
+        <div className={s.wrap}>
+          <Reveal className={s.eventHead}>
+            <div>
+              <span className={`${s.eyebrow} ${s.eyebrowLight}`}>L&apos;evento · {EVENT.dataLabel} · Taranto</span>
+              <h2 className={s.eventTitle}>
+                Vivere più a lungo: <span>sport e intelligenza artificiale</span>
+              </h2>
+            </div>
+            <p className={s.eventLead}>
+              {EVENT.sottotitolo}{" "}
+              {CHIUSO
+                ? "Grazie a chi c'era: nella pagina dell'evento trovi com'è andata."
+                : "La partecipazione è gratuita, l'iscrizione è obbligatoria perché i posti sono limitati."}
+            </p>
+          </Reveal>
+
+          <div className={s.days}>
+            {[giorno1, giorno2].filter(Boolean).map((g, i) => (
+              <Reveal key={g.slug} ritardo={i * 120} as="article" className={s.day}>
+                <span className={s.dayTag}>{g.giornoLabel}</span>
+                <h3>{g.titolo.replace(/^Giorno \d\.\s*/, "")}</h3>
+                <p>{g.descrizione}</p>
+                <div className={s.dayMeta}>
+                  <span>
+                    <i className="fas fa-clock" aria-hidden="true" />
+                    {orario(g.orario)}
+                  </span>
+                  <span>
+                    <i className="fas fa-location-dot" aria-hidden="true" />
+                    {g.luogo}
+                  </span>
+                  <span>
+                    <i className="fas fa-chair" aria-hidden="true" />
+                    {postiLabel(g.slug, g.capienza)}
+                  </span>
+                </div>
+              </Reveal>
+            ))}
           </div>
 
-          {/* One published finding, in place of counters describing our own size */}
-          <div
-            className="mt-14 bg-white rounded-xl p-8 md:p-10 shadow-lg"
-            style={{ borderLeft: "4px solid var(--primary)" }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-              <div>
-                <div className="stat-number" style={{ fontSize: "3.25rem" }}>
-                  {FINDING.number}
-                </div>
-                <div className="stat-label" style={{ fontSize: "0.95rem" }}>
-                  {FINDING.unit}
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-gray-700 text-lg leading-relaxed mb-4">
-                  {FINDING.claim}
-                </p>
-                <a
-                  href={FINDING.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-sm"
-                  style={{ color: "var(--primary)" }}
-                >
-                  {FINDING.cite} ↗
-                </a>
-              </div>
+          <div className={s.speakersHead}>
+            <div>
+              <h3>Sul palco</h3>
+              <p>Campioni dello sport, medici, scienziati e istituzioni, insieme ai progetti dei ragazzi.</p>
             </div>
+            <Link href={EVENTO} className={s.btnGhost}>
+              Il programma completo <i className="fas fa-arrow-right" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className={s.speakers}>
+            <Reveal className={s.speaker}>
+              <div className={s.speakerPhoto}>
+                <Image src={MODERATRICE.img} alt={MODERATRICE.nome} fill sizes="(max-width: 560px) 45vw, 180px" />
+              </div>
+              <b>{MODERATRICE.nome}</b>
+              <span>Giornalista Rai, modera la prima giornata</span>
+            </Reveal>
+            {RELATORI_HOME.slice(0, VOLTI - 1).map((r, i) => (
+              <Reveal key={r.id} ritardo={((i + 1) % 6) * 70} className={s.speaker}>
+                <div className={s.speakerPhoto}>
+                  <Image src={r.img} alt={r.nome} fill sizes="(max-width: 560px) 45vw, 180px" />
+                </div>
+                <b>{r.nome}</b>
+                <span>{r.ruolo}</span>
+              </Reveal>
+            ))}
+            {altriVolti > 0 && (
+              <Link href={EVENTO} className={s.speaker} style={{ textDecoration: "none", color: "#fff" }}>
+                <div className={s.speakerPhoto} style={{ display: "grid", placeItems: "center", background: "rgba(46,196,182,0.12)" }}>
+                  <span style={{ fontSize: "2rem", fontWeight: 800, color: "var(--teal)", marginTop: 0 }}>+{altriVolti}</span>
+                </div>
+                <b>Altri ospiti</b>
+                <span>Tutti i relatori nella pagina dell&apos;evento</span>
+              </Link>
+            )}
+          </div>
+
+          <Reveal className={s.eventCta}>
+            <div>
+              <h3>{CHIUSO ? "Grazie a chi c'era" : "Ci vediamo a Taranto il 10 e l'11 dicembre"}</h3>
+              <p>
+                {CHIUSO
+                  ? "Il racconto delle due giornate è nella pagina dell'evento."
+                  : "Studenti, famiglie, scuole, appassionati: l'ingresso è gratuito, basta iscriversi."}
+              </p>
+            </div>
+            <Link href={CHIUSO ? EVENTO : ISCRIZIONE} className={s.btnGlow}>
+              {CHIUSO ? "Rivivi l'evento" : "Iscriviti gratis"} <i className="fas fa-arrow-right" aria-hidden="true" />
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── Programmes ── */}
+      <section className={s.bandSoft} id="programmes">
+        <div className={s.wrap}>
+          <Reveal>
+            <span className={s.eyebrow}>Our programmes</span>
+            <h2 className={s.h2}>Four ways in, all free</h2>
+            <p className={s.lead}>
+              Each programme can be followed on its own. They meet at the event in Taranto, where on 10 December the
+              best projects of the students are presented on stage.
+            </p>
+          </Reveal>
+
+          <div className={s.programmes}>
+            <Reveal className={`${s.programme} ${s.programmeFeatured}`} style={{ padding: 0 }}>
+              <Link href={`${EVENTO}/licei`} className={s.programmeLink}>
+                <span className={s.programmeIcon}>
+                  <i className="fas fa-school" aria-hidden="true" />
+                </span>
+                <div className={s.tags}>
+                  <span className={s.tag}>Free</span>
+                  <span className={s.tag}>Last three years of secondary school</span>
+                  <span className={s.tag}>Taranto and province</span>
+                </div>
+                <h3>School programme: Biotecnologie e Intelligenza Artificiale</h3>
+                <p>
+                  Teams of students build a project on health, environment or industry, with mentors from research and
+                  industry. A committee of experts evaluates every project, and the {LICEI.progettiSulPalco} best are
+                  presented on stage at the {LICEI.luogo}.
+                </p>
+                <div className={s.journey}>
+                  {[
+                    ["Learn", "online lessons and talks with experts"],
+                    ["Build", "a team project, with mentors to turn to"],
+                    ["Get evaluated", "by a committee of researchers and professionals"],
+                    ["Present", "the ten best, on stage on 10 December"],
+                  ].map(([t, d], i) => (
+                    <div key={t} className={s.journeyStep}>
+                      <span>{i + 1}</span>
+                      <div>
+                        <b>{t}</b>: {d}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <span className={s.programmeMore}>
+                  The school programme <i className="fas fa-arrow-right" aria-hidden="true" />
+                </span>
+              </Link>
+            </Reveal>
+
+            <Reveal ritardo={100} className={s.programme} style={{ padding: 0 }}>
+              <Link href="/courses/agentic-ai" className={s.programmeLink}>
+                <span className={s.programmeIcon}>
+                  <i className="fas fa-robot" aria-hidden="true" />
+                </span>
+                <div className={s.tags}>
+                  <span className={s.tag}>Free</span>
+                  <span className={s.tag}>Online</span>
+                  <span className={s.tag}>10 weeks</span>
+                </div>
+                <h3>Agentic AI High School Innovation Program</h3>
+                <p>
+                  From what an AI agent is to a working prototype, in four phases: foundation, exploration, build and
+                  showcase. No prior experience required, and what you build is yours.
+                </p>
+                <span className={s.programmeMore}>
+                  Start the course <i className="fas fa-arrow-right" aria-hidden="true" />
+                </span>
+              </Link>
+            </Reveal>
+
+            <Reveal ritardo={200} className={s.programme} style={{ padding: 0 }}>
+              <Link href={`${EVENTO}/universita`} className={s.programmeLink}>
+                <span className={s.programmeIcon}>
+                  <i className="fas fa-flask" aria-hidden="true" />
+                </span>
+                <div className={s.tags}>
+                  <span className={s.tag}>Free</span>
+                  <span className={s.tag}>University students</span>
+                </div>
+                <h3>University track</h3>
+                <p>
+                  A research project with mentors. The best project is supported towards submission to a peer-reviewed
+                  scientific journal.
+                </p>
+                <span className={s.programmeMore}>
+                  The university track <i className="fas fa-arrow-right" aria-hidden="true" />
+                </span>
+              </Link>
+            </Reveal>
+          </div>
+
+          <Reveal className={s.programme} style={{ marginTop: 22, padding: 0 }}>
+            <Link href={talk ? talkPath(talk.slug) : `${EVENTO}/talk`} className={s.programmeLink}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, alignItems: "start" }}>
+                <span className={s.programmeIcon}>
+                  <i className="fas fa-video" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 style={{ marginBottom: 6 }}>Talks with experts</h3>
+                  <p>Online meetings with experts, for the students and teachers of the programmes. Some talks are open to everyone.</p>
+                  {talk && (
+                    <div className={s.talkBox} lang="it">
+                      <span className={s.eyebrow}>Prossimo talk</span>
+                      <b>{talk.titolo}</b>
+                      {talk.relatore.nome} · {talk.dataLabel}, {talk.orarioLabel}, {luogoTalk(talk).toLowerCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── Live numbers ── */}
+      {elenco.length >= 3 && (
+        <section className={s.band} id="numbers">
+          <div className={s.wrap}>
+            <Reveal className={s.headRow}>
+              <div>
+                <span className={s.eyebrow}>In numbers</span>
+                <h2 className={s.h2}>The programmes, today</h2>
+              </div>
+              <span className={s.liveTag}>
+                <i aria-hidden="true" /> Live data, updated every hour
+              </span>
+            </Reveal>
+            <div className={s.numbers}>
+              {elenco.slice(0, 9).map((x, i) => (
+                <Reveal key={x.etichetta} ritardo={(i % 4) * 80} className={`${s.number} ${x.largo ? s.numberWide : ""}`}>
+                  <b>
+                    <CountUp valore={x.valore} />
+                  </b>
+                  <span className={s.numberLabel}>{x.etichetta}</span>
+                </Reveal>
+              ))}
+            </div>
+            <p className={s.numbersNote}>
+              Counted from the registrations of the programmes. Only totals are shown, never names.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Why a foundation ── */}
+      <section className={s.vision} id="vision">
+        <div className={`${s.wrap} ${s.visionGrid}`}>
+          <Reveal className={s.visionText}>
+            <span className={s.eyebrow}>Our vision</span>
+            <h2 className={s.visionStatement}>{COPIA.visionTitle}</h2>
+            {COPIA.visionParagraphs.map((p) => (
+              <p key={p.slice(0, 24)}>{p}</p>
+            ))}
+            <div className={s.heroActions}>
+              <Link href="/about-us" className={`${s.btnGhost} ${s.btnDark}`}>
+                About us <i className="fas fa-arrow-right" aria-hidden="true" />
+              </Link>
+            </div>
+          </Reveal>
+          <div className={s.commitments}>
+            {COPIA.commitments.map((c, i) => (
+              <Reveal key={c.title} ritardo={i * 90} className={s.commitment}>
+                <i className={`fas ${["fa-hand-holding-heart", "fa-key", "fa-user-graduate", "fa-user-check"][i % 4]}`} aria-hidden="true" />
+                <h3>{c.title}</h3>
+                <p>{c.text}</p>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── What we are trying to find out ── */}
-      <section className="section bg-light-gray" id="questions">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">What we are trying to find out</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <p className="text-lg text-gray-700 leading-relaxed mb-5">
-                In every programme below, the answer already existed in data
-                somebody already held. What was missing was the time and the
-                method to get it out.
-              </p>
-              <p className="text-lg text-gray-700 leading-relaxed mb-8">
-                A national cohort sat in hospital discharge records for five
-                years before anyone joined it up. A hospital sees a medicine it
-                should have switched a year after the window closed. A tumour
-                board&apos;s evidence is in a guideline nobody had the evening to
-                read.
-              </p>
-              <div
-                className="bg-white rounded-xl p-8"
-                style={{ borderLeft: "4px solid var(--primary)" }}
-              >
-                <p className="text-sm uppercase tracking-widest font-semibold text-gray-500 mb-3">
-                  The moonshot
-                </p>
-                <p className="text-xl md:text-2xl text-gray-800 font-semibold leading-snug">
-                  {MOONSHOT}
-                </p>
+      {/* ── The story ── */}
+      <section id="story">
+        <div className={s.storyPhoto}>
+          <Image
+            src="/assets/images/Taranto/Collaborative/IMG_2756.webp"
+            alt="A hall full of school students at the Taranto Biotech Days 2024"
+            fill
+            sizes="100vw"
+          />
+          <div className={`${s.wrap} ${s.storyPhotoInner}`}>
+            <Reveal>
+              <span className={`${s.eyebrow} ${s.eyebrowPhoto}`}>Our story</span>
+              <h2>{COPIA.storyTitle}</h2>
+            </Reveal>
+            <Reveal ritardo={120}>
+              <p>{COPIA.storyIntro}</p>
+              <div className={s.storyFacts} style={{ marginTop: 22 }}>
+                <div>
+                  <b>
+                    <CountUp valore={1200} suffisso="+" />
+                  </b>
+                  <span className={s.storyFactLabel}>participants at the Taranto Biotech Days 2024</span>
+                </div>
+                <div>
+                  <b>2025</b>
+                  <span className={s.storyFactLabel}>the Foundation is established as an ETS</span>
+                </div>
               </div>
-            </div>
-            <ol className="flex flex-col gap-5">
-              {QUESTIONS.map((q, i) => (
-                <li key={q.slice(0, 24)} className="flex items-start gap-4">
-                  <span
-                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                    style={{ background: "var(--primary-light)", color: "var(--primary-dark)" }}
-                  >
-                    {i + 1}
-                  </span>
-                  <p className="text-lg text-gray-700 leading-relaxed">{q}</p>
-                </li>
+            </Reveal>
+          </div>
+        </div>
+        <div className={s.bandSoft} style={{ paddingTop: 24 }}>
+          <div className={s.wrap}>
+            <ol className={s.timeline} style={{ listStyle: "none", margin: 0 }}>
+              {COPIA.timeline.map((m, i) => (
+                <Reveal
+                  key={m.title}
+                  as="li"
+                  ritardo={i * 70}
+                  className={`${s.milestone} ${i === COPIA.timeline.length - 1 ? s.milestoneNow : ""}`}
+                >
+                  <small>{m.when}</small>
+                  <h3>{m.title}</h3>
+                  <p>{m.text}</p>
+                </Reveal>
               ))}
             </ol>
           </div>
         </div>
       </section>
 
-      {/* ── Research ── */}
-      <section className="section" id="research">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Research</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Six programmes, each listed at the stage it has actually reached.
-            Two are complete, one is waiting on a regional approval, and three
-            are live. Every card opens a case study stating what the work does
-            not do and what has not been established.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {PROGRAMMES.map((r) => (
-              <Link
-                key={r.slug}
-                href={`/programmes/${r.slug}`}
-                className="card-sm"
-                style={{ padding: 28, textDecoration: "none", display: "block" }}
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <span className="text-xs uppercase tracking-widest font-semibold text-gray-500">
-                    {r.field}
-                  </span>
-                  <span
-                    className="badge flex-shrink-0"
-                    style={{
-                      background: STAGE_STYLE[r.stage].bg,
-                      color: STAGE_STYLE[r.stage].color,
-                    }}
-                  >
-                    {r.stage}
-                  </span>
-                </div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">{r.title}</h3>
-                <p className="text-gray-600 text-sm">{r.summary}</p>
-                <span
-                  className="text-sm font-semibold mt-4 inline-block"
-                  style={{ color: "var(--primary)" }}
-                >
-                  Read the case study →
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How we work ── */}
-      <section className="section bg-light-gray" id="how-we-work">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">How we work</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            The same three steps every time, whatever the field.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {STEPS.map((step) => (
-              <div key={step.num} className="card" style={{ borderTop: "4px solid var(--primary)" }}>
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center mb-5 font-bold text-lg"
-                  style={{ background: "var(--primary)", color: "#fff" }}
-                >
-                  {step.num}
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-800">{step.title}</h3>
-                <p className="text-gray-600">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Published work ── */}
-      <section className="section" id="publications">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Published work</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            Peer reviewed, and checkable without asking us. Every entry resolves
-            from its DOI.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PUBLICATIONS.map((pub) => (
-              <a
-                key={pub.doi}
-                href={pub.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col course-card-hover"
-              >
-                <div
-                  className="px-6 pt-6 pb-5"
-                  style={{ borderTop: "4px solid var(--primary)" }}
-                >
-                  <div
-                    style={{
-                      fontFamily: "'Sora', sans-serif",
-                      fontSize: 17,
-                      fontWeight: 800,
-                      lineHeight: 1.25,
-                      color: "var(--primary-dark)",
-                    }}
-                  >
-                    {pub.venue}
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">{pub.year}</div>
-                </div>
-                <div className="px-6 pb-6 flex flex-col flex-1">
-                  <h3 className="text-base font-semibold text-gray-800 leading-snug mb-3">
-                    {pub.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-5">
-                    {pub.authors}
-                  </p>
-                  <span
-                    className="text-xs font-semibold mt-auto"
-                    style={{ color: "var(--primary)" }}
-                  >
-                    doi:{pub.doi} ↗
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Infrastructure & benefits with badges ── */}
-      <section className="section bg-light-gray" id="infrastructure">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">What you can work with</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-8">
-            The problems come first: everything else exists to get them solved.
-            The badges indicate what the Foundation provides directly and what
-            the community makes available.
-          </p>
-
-          {/* Legend */}
-          <div className="flex flex-wrap gap-3 mb-12">
-            {(Object.keys(BADGE_STYLE) as BadgeKind[]).map((k) => (
-              <span
-                key={k}
-                className="badge"
-                style={{ background: BADGE_STYLE[k].bg, color: BADGE_STYLE[k].color }}
-              >
-                {BADGE_STYLE[k].label}
-              </span>
+      {/* ── Get involved ── */}
+      <section className={s.band} id="get-involved">
+        <div className={s.wrap}>
+          <Reveal>
+            <span className={s.eyebrow}>Get involved</span>
+            <h2 className={s.h2}>There is a place for you</h2>
+          </Reveal>
+          <div className={s.roles}>
+            {[
+              { icona: "fa-graduation-cap", titolo: "Students", testo: "Start the free Agentic AI course, join a programme with your school, and come to Taranto to meet scientists and champions.", href: "/courses/agentic-ai", cta: "Start the course" },
+              { icona: "fa-school", titolo: "Schools and teachers", testo: "Bring your classes to the event, free of charge, and follow your teams in the school programme.", href: CHIUSO ? EVENTO : ISCRIZIONE, cta: CHIUSO ? "The event" : "Register for the event" },
+              { icona: "fa-user-doctor", titolo: "Experts", testo: "Mentor a team, sit on the committee that evaluates the projects, or give a talk to the students.", href: "mailto:info@bioergotech.org?subject=I%20would%20like%20to%20help", cta: "Write to us" },
+              { icona: "fa-people-group", titolo: "Families and the public", testo: "Two days of sport, health and AI in Taranto, with a concert. Free entry, registration required.", href: CHIUSO ? EVENTO : ISCRIZIONE, cta: CHIUSO ? "The event" : "Register for free" },
+            ].map((r, i) => (
+              <Reveal key={r.titolo} ritardo={i * 90} className={s.role}>
+                <i className={`fas ${r.icona}`} aria-hidden="true" />
+                <h3>{r.titolo}</h3>
+                <p>{r.testo}</p>
+                {r.href.startsWith("mailto:") ? <a href={r.href}>{r.cta} →</a> : <Link href={r.href}>{r.cta} →</Link>}
+              </Reveal>
             ))}
           </div>
 
-          {/* Two-column grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {BENEFITS.map((b) => (
-              <div key={b.title} className="card-sm flex items-start gap-4" style={{ padding: 24 }}>
-                <span
-                  className="icon-circle icon-circle-primary"
-                  style={{ width: 48, height: 48 }}
-                >
-                  <i className={`fas ${b.icon} text-xl`} />
-                </span>
-                <div>
-                  <h3 className="text-lg font-semibold mb-1 text-gray-800">{b.title}</h3>
-                  <p className="text-gray-600 mb-3 text-sm">{b.desc}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {b.badges.map((kind) => (
-                      <span
-                        key={kind}
-                        className="badge"
-                        style={{
-                          background: BADGE_STYLE[kind].bg,
-                          color: BADGE_STYLE[kind].color,
-                          fontSize: "0.65rem",
-                        }}
-                      >
-                        {BADGE_STYLE[kind].label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Hubs ── */}
-      <section className="section" id="hubs">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Where we work</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            One operational home today, and two locations in development. Taranto
-            is where the work happens now.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {HUBS.map((hub) => (
-              <div key={hub.city} className="card">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-2xl font-semibold text-gray-800">{hub.city}</h3>
-                  <span
-                    className="badge"
-                    style={
-                      hub.operational
-                        ? { background: "#E1F5EE", color: "#0F6E56" }
-                        : { background: "#EEF1F5", color: "#5A6B7B" }
-                    }
-                  >
-                    {hub.status}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-5">{hub.desc}</p>
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {hub.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs px-3 py-1 rounded-full"
-                      style={{ background: "var(--primary-light)", color: "var(--primary-dark)" }}
-                    >
-                      {tag}
+          {PARTNER_PUBBLICI.length > 0 && (
+            <div style={{ marginTop: 72 }}>
+              <span className={s.eyebrow}>With us at the event</span>
+              <div className={s.partners}>
+                {PARTNER_PUBBLICI.map((p) => (
+                  <div key={p.id} className={s.partner}>
+                    <span className={s.partnerLogo}>
+                      <Image src={p.img} alt={p.nome} fill sizes="56px" />
                     </span>
-                  ))}
-                </div>
-                {hub.href && (
-                  <Link href={hub.href} className="font-semibold" style={{ color: "var(--primary)" }}>
-                    Learn more →
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Recent updates ── */}
-      <section className="section bg-light-gray" id="updates">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Recent updates</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            A selection of recent milestones from across the ecosystem.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {UPDATES.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="bg-white rounded-lg shadow-lg overflow-hidden block course-card-hover"
-              >
-                {item.cover === "newsletter" ? (
-                  <div
-                    className="w-full h-44 relative overflow-hidden flex flex-col items-center justify-center"
-                    style={{
-                      background:
-                        "radial-gradient(120% 120% at 100% 0%, #D8FBF1 0%, #F4FFFC 45%, #ffffff 100%)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        right: -70,
-                        top: -70,
-                        width: 200,
-                        height: 200,
-                        borderRadius: "50%",
-                        background:
-                          "radial-gradient(circle, rgba(16,216,176,0.18) 0%, rgba(16,216,176,0) 70%)",
-                      }}
-                    />
-                    <div
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        letterSpacing: "0.16em",
-                        textTransform: "uppercase",
-                        color: "#088A74",
-                        marginBottom: 16,
-                        zIndex: 1,
-                      }}
-                    >
-                      Issue #1 · Founding Edition
+                    <div lang="it">
+                      <b>{p.nome}</b>
+                      {p.ruolo && <span>{p.ruolo}</span>}
                     </div>
-                    <Image
-                      src="/assets/images/Logo/full_bioergotech.webp"
-                      alt="bioERGOtech"
-                      width={196}
-                      height={48}
-                      style={{ width: 196, maxWidth: "70%", height: "auto", zIndex: 1 }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: 4,
-                        background: "linear-gradient(90deg, #10D8B0 0%, #088A74 100%)",
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="relative w-full h-44">
-                    <Image src={item.img} alt={item.title} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" />
-                  </div>
-                )}
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-3 text-sm">
-                    <span style={{ color: "var(--text-light)" }}>{item.date}</span>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ background: "var(--primary-light)", color: "var(--primary-dark)" }}
-                    >
-                      {item.category}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-gray-800">{item.title}</h3>
-                  <p className="text-gray-600 text-sm mb-3">{item.desc}</p>
-                  <span className="font-semibold text-sm" style={{ color: "var(--primary)" }}>
-                    Read more →
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-10">
-            <Link href="/articles" className="btn-outline">
-              View all articles
-            </Link>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ── Who made it? ── */}
-      <section className="section" id="community">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Who made it?</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            The first members of the Foundation, already building alongside us.
-            More to come soon.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {COMMUNITY.map((m) => (
-              <div
-                key={m.name}
-                className="card-sm flex flex-col items-center justify-center"
-                style={{ padding: 28 }}
-              >
-                <Image
-                  src={m.logo}
-                  alt={`${m.name}, member of the bioERGOtech Foundation`}
-                  width={800}
-                  height={300}
-                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 240px"
-                  className="w-full h-auto max-w-[200px] object-contain"
-                />
-                <span
-                  className="badge mt-5"
-                  style={{ background: "#E1F5EE", color: "#0F6E56" }}
-                >
-                  Active member
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Agentic AI Course ── */}
-      <section className="section bg-light-gray" id="courses">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Learn to build AI agents</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            A free 10-week programme for high school students. Go from understanding what AI agents are to building and demonstrating a working prototype. No prior coding experience required.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            <div className="md:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden block course-card-hover">
-              <div className="w-full h-48 flex flex-col justify-end p-8" style={{ background: "linear-gradient(135deg, #00C896 0%, #1D9E75 100%)" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.78)", marginBottom: 8 }}>Free Program · Open Enrollment</div>
-                <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.2, margin: 0 }}>
-                  Agentic AI <span style={{ color: "#0A1628" }}>High School</span> Innovation Program
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="flex gap-6 mb-4">
-                  {[["10", "Weeks"], ["21+", "Lessons"], ["3", "Technical Tracks"], ["100%", "Free"]].map(([num, label]) => (
-                    <div key={label} className="text-center">
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--primary)", fontFamily: "'Sora', sans-serif" }}>{num}</div>
-                      <div style={{ fontSize: 11, color: "#718096" }}>{label}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm mb-4">Build real AI agents that solve genuine problems. Choose your track: no-code, low-code, or full-code. Earn a verified certificate on completion.</p>
-                <Link href="/courses/agentic-ai" className="btn-primary inline-block">Start learning →</Link>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {[
-                { icon: "🧠", title: "AI Foundations", desc: "Understand how LLMs and agents actually work." },
-                { icon: "🛠", title: "Build a prototype", desc: "Ship a working agent in your chosen domain." },
-                { icon: "🎓", title: "Verified certificate", desc: "Earn a certificate issued by the Foundation." },
-              ].map((item) => (
-                <div key={item.title} className="bg-white rounded-xl p-5 shadow" style={{ borderLeft: "3px solid var(--primary)" }}>
-                  <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1A2332", marginBottom: 4 }}>{item.title}</div>
-                  <div style={{ fontSize: 13, color: "#4A5568" }}>{item.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Upcoming event callout ── */}
-      <section className="section" id="event">
-        <div className="container mx-auto px-6">
-          <div
-            className="rounded-xl overflow-hidden grid grid-cols-1 md:grid-cols-2"
-            style={{ background: "#fff", boxShadow: "var(--shadow)" }}
-          >
-            <div
-              className="p-8 md:p-10 flex flex-col justify-center"
-              style={{ background: "linear-gradient(135deg, #00C896 0%, #1D9E75 100%)" }}
-            >
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", marginBottom: 10 }}>
-                Evento · Taranto · 10 e 11 dicembre 2026
-              </div>
-              <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 24, fontWeight: 800, color: "#fff", lineHeight: 1.2, margin: 0 }}>
-                Vivere più a lungo: sport e intelligenza artificiale
-              </h3>
-              <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 15, marginTop: 12, lineHeight: 1.6 }}>
-                Due giornate con scienziati, medici e campioni dello sport. Iscrizione gratuita, posti limitati.
-              </p>
-            </div>
-            <div className="p-8 md:p-10 flex flex-col justify-center">
-              <div className="flex flex-wrap gap-6 mb-6">
-                {[["7", "Panel"], ["10", "Progetti"], ["3", "Premi"]].map(([num, label]) => (
-                  <div key={label}>
-                    <div style={{ fontSize: 26, fontWeight: 800, color: "var(--primary)", fontFamily: "'Sora', sans-serif" }}>{num}</div>
-                    <div style={{ fontSize: 12, color: "#718096" }}>{label}</div>
                   </div>
                 ))}
               </div>
-              <Link
-                href="/eventi/vivere-piu-a-lungo"
-                className="btn-primary inline-block text-center"
-              >
-                Scopri il programma e iscriviti →
-              </Link>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* ── Grant & Funding Eligibility Navigator ── */}
-      <section className="section bg-light-gray" id="navigator">
-        <div className="container mx-auto px-6">
-          <h2 className="section-title">Not sure which grants you qualify for?</h2>
-          <p className="text-lg text-gray-700 max-w-3xl mb-12">
-            A free tool for institutions, startups, and companies working with us. Answer a few questions
-            about your organisation and get an instant, personalised readout of which funding and grant
-            schemes you may be eligible for.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            <div className="md:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden block course-card-hover">
-              <div className="w-full h-48 flex flex-col justify-end p-8" style={{ background: "linear-gradient(135deg, #00C896 0%, #1D9E75 100%)" }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.78)", marginBottom: 8 }}>Free Tool · Instant Results</div>
-                <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.2, margin: 0 }}>
-                  Grant &amp; Funding Eligibility Navigator
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="flex gap-6 mb-4">
-                  {[["8", "Questions"], ["6", "Funding Schemes"], ["3", "Simple Steps"], ["100%", "Free"]].map(([num, label]) => (
-                    <div key={label} className="text-center">
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "var(--primary)", fontFamily: "'Sora', sans-serif" }}>{num}</div>
-                      <div style={{ fontSize: 11, color: "#718096" }}>{label}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm mb-4">
-                  Covers NIDI, Mini-PIA, PIA, ZES, Horizon Europe, and the EIC Accelerator, including
-                  Puglia- and Taranto-specific schemes most tools miss entirely.
-                </p>
-                <Link href="/navigator" className="btn-primary inline-block">Check your eligibility →</Link>
-              </div>
+      {/* ── News ── */}
+      <section className={s.bandSoft} id="news">
+        <div className={s.wrap}>
+          <Reveal className={s.headRow}>
+            <div>
+              <span className={s.eyebrow}>News</span>
+              <h2 className={s.h2}>From the Foundation</h2>
             </div>
-            <div className="flex flex-col gap-4">
-              {[
-                { icon: "📝", title: "Answer 8 quick questions", desc: "About your organisation, stage, and interests." },
-                { icon: "⚡", title: "Get instant results", desc: "See which schemes you may qualify for, on screen and by email." },
-                { icon: "💬", title: "Talk to our team", desc: "Book a conversation to go deeper on any match." },
-              ].map((item) => (
-                <div key={item.title} className="bg-white rounded-xl p-5 shadow" style={{ borderLeft: "3px solid var(--primary)" }}>
-                  <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1A2332", marginBottom: 4 }}>{item.title}</div>
-                  <div style={{ fontSize: 13, color: "#4A5568" }}>{item.desc}</div>
-                </div>
-              ))}
-            </div>
+            <Link href="/articles" className={`${s.btnGhost} ${s.btnDark}`}>
+              All articles <i className="fas fa-arrow-right" aria-hidden="true" />
+            </Link>
+          </Reveal>
+          <div className={s.news}>
+            {NEWS.map((n, i) => (
+              <Reveal key={n.href} ritardo={i * 100} style={{ display: "flex" }}>
+                <Link href={n.href} className={s.newsCard} style={{ flex: 1 }}>
+                  <div className={s.newsImage}>
+                    <Image src={n.img} alt="" fill sizes="(max-width: 860px) 100vw, 380px" />
+                  </div>
+                  <div className={s.newsBody}>
+                    <small>{n.data}</small>
+                    <h3>{n.titolo}</h3>
+                    <p>{n.testo}</p>
+                    <span className={s.newsMore}>Read →</span>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
@@ -826,30 +687,30 @@ export default function Home() {
       {/* ── FAQ ── */}
       <FaqSection />
 
-      {/* ── Get involved ── */}
-      <section className="section" style={{ background: "var(--primary-light)" }}>
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 max-w-3xl mx-auto">
-            Five open questions, and we cannot answer them alone.
-          </h2>
-          <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-            We are looking for co-investigators, cohorts to replicate on, and
-            clinical partners who have a problem they own. If one of the
-            programmes above is close to something you work on, write to us.
+      {/* ── Closing ── */}
+      <section className={s.closing} lang="it">
+        <div className={s.wrap}>
+          <span className={`${s.eyebrow} ${s.eyebrowLight}`}>{EVENT.dataLabel} · Taranto</span>
+          <h2>Il futuro della scienza lo costruiscono i ragazzi. Vieni a vederlo.</h2>
+          <p>
+            {CHIUSO
+              ? "Due giornate con campioni, scienziati e i progetti degli studenti: rivivile nella pagina dell'evento."
+              : "Due giornate con campioni, scienziati e i progetti degli studenti. Ingresso gratuito, posti limitati."}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact" className="btn-primary">
-              Start a conversation →
+          <div className={s.closingActions}>
+            <Link href={CHIUSO ? EVENTO : ISCRIZIONE} className={s.btnGlow}>
+              {CHIUSO ? "Rivivi l'evento" : "Iscriviti gratis"} <i className="fas fa-arrow-right" aria-hidden="true" />
             </Link>
-            <Link href="/join-us" className="btn-outline">
-              Other ways to work with us
-            </Link>
+            {!CHIUSO && (
+              <Link href={EVENTO} className={s.btnGhost}>
+                Scopri il programma
+              </Link>
+            )}
           </div>
         </div>
       </section>
-      </div>
 
       <SiteFooter />
-    </>
+    </div>
   );
 }

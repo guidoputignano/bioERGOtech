@@ -5,10 +5,11 @@ import { TEAM, ADVISORS } from "@/lib/team";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { COPIA_ABOUT } from "@/lib/home/copia";
 
 export const metadata: Metadata = {
-  title: { absolute: "About bioERGOtech | A Synthetic Biology Foundation" },
-  description: "bioERGOtech is a foundation building Engineered Living Systems through synthetic biology, AI-driven automation, and human-centred design, from its operational base in Taranto, Italy.",
+  title: { absolute: COPIA_ABOUT.metaTitle },
+  description: COPIA_ABOUT.metaDescription,
   alternates: { canonical: "/about-us" },
 };
 
@@ -21,12 +22,9 @@ export default function AboutUs() {
       <section className="hero bg-light-gray" id="home" style={{ paddingTop: "70px" }}>
         <div className="container mx-auto px-6 pt-20 pb-12 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-gray-800">
-            We turn biotech&apos;s promise into care that{" "}
-            <span style={{ color: "var(--primary)" }}>reaches people</span>
+            {COPIA_ABOUT.heroTitle}
           </h1>
-          <p className="text-xl max-w-3xl mx-auto text-gray-700">
-            bioERGOtech is a foundation, and an ecosystem of researchers, founders, clinicians and partners, building Engineered Living Systems through synthetic biology and AI-driven automation that move from the lab to real patient impact.
-          </p>
+          <p className="text-xl max-w-3xl mx-auto text-gray-700">{COPIA_ABOUT.heroIntro}</p>
         </div>
       </section>
 
@@ -93,22 +91,21 @@ export default function AboutUs() {
             <div className="order-2 md:order-1">
               <h2 className="section-title">How We Work</h2>
               <p className="text-lg mb-6 text-gray-700" style={{ borderLeft: "4px solid var(--primary)", paddingLeft: "16px" }}>
-                We are a not-for-profit foundation with commercial ambition, built to serve patients, powered by innovation.
+                {COPIA_ABOUT.howWeWorkLead}
               </p>
-              <p className="text-lg mb-4 text-gray-700">bioERGOtech operates through a dual model designed to bridge the lab-to-market gap:</p>
               <ul className="space-y-4 text-lg text-gray-700">
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle mt-1 mr-3" style={{ color: "var(--primary)" }} />
-                  <span><strong>AI Development &amp; Spin-off:</strong> We partner with healthcare organizations to develop and spin-off AI algorithms that address specific medical needs.</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="fas fa-check-circle mt-1 mr-3" style={{ color: "var(--primary)" }} />
-                  <span><strong>Technology Acceleration:</strong> We accelerate existing patents and lab technologies to market through strategic partnerships.</span>
-                </li>
+                {COPIA_ABOUT.howWeWorkBullets.map((b) => (
+                  <li key={b.title} className="flex items-start">
+                    <i className="fas fa-check-circle mt-1 mr-3" style={{ color: "var(--primary)" }} />
+                    <span>
+                      <strong>{b.title}:</strong> {b.text}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </div>
             <div className="order-1 md:order-2 flex justify-center">
-              <Image src="/assets/images/About-us/2.png" alt="Scientists and founders collaborating in the bioERGOtech ecosystem" width={1920} height={1080} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
+              <Image src="/assets/images/Join-us/Community.webp" alt="Young people at the Taranto Biotech Days 2024" width={6052} height={4035} sizes="(max-width: 768px) 100vw, 448px" className="rounded-lg shadow-xl w-full h-auto max-w-md" />
             </div>
           </div>
         </div>
@@ -206,7 +203,7 @@ export default function AboutUs() {
           {/* Partners, Supporters, Donors */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             {[
-              { icon: "fa-handshake", title: "Our Partners", desc: "Strategic research partnerships, healthcare collaborators, portfolio companies, and industry partners." },
+              { icon: "fa-handshake", title: "Our Partners", desc: "Schools, universities, hospitals and companies that mentor students and evaluate their projects." },
               { icon: "fa-users", title: "Our Supporters", desc: "Advisory board members, industry mentors, institutional endorsers, and key community voices." },
               { icon: "fa-hand-holding-heart", title: "Our Donors", desc: "Founding donors, institutional funders, and individual contributors who fuel our mission." },
             ].map((item) => (
@@ -225,12 +222,12 @@ export default function AboutUs() {
         <div className="container mx-auto px-6">
           <h2 className="section-title block">Be Part of What We&apos;re Building</h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
-            Whether you&apos;re a researcher, innovator, healthcare professional, or supporter, there&apos;s a place for you in the bioERGOtech ecosystem.
+            Whether you are a student, a teacher, a researcher or a supporter, there is a place for you in our programmes.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <Link href="/join-us" className="btn-primary">Join Us</Link>
-            <Link href="/partner-with-us" className="btn-outline">Partner With Us</Link>
-            <Link href="/build-with-us" className="btn-outline">Build With Us</Link>
+            <Link href="/eventi/vivere-piu-a-lungo#iscrizione" className="btn-primary">Join the event</Link>
+            <Link href="/courses/agentic-ai" className="btn-outline">Start the course</Link>
+            <Link href="/partner-with-us" className="btn-outline">Support our work</Link>
           </div>
         </div>
       </section>
