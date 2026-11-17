@@ -859,6 +859,21 @@ export type StatoAvvisoSquadre = StatoAvviso & {
 };
 
 /**
+ * L'avviso ai docenti sul prossimo talk, una volta per talk: la chiave
+ * contiene lo slug, quindi col talk successivo il bottone torna disponibile.
+ */
+export const chiaveAvvisoTalkDocenti = (slug: string) => `avviso_talk_docenti_${slug}_inviato_at`;
+export const chiaveEsitoAvvisoTalkDocenti = (slug: string) => `avviso_talk_docenti_${slug}_esito`;
+
+/** Lo stato dell'avviso sul talk, come lo manda al pannello la rotta dello staff. */
+export type StatoAvvisoTalkDocenti = StatoAvviso & {
+  /** Docenti a cui partirebbe, un indirizzo per persona. Null: non letti. */
+  docenti: number | null;
+  /** Il testo dell'email per il prossimo talk; null se non ce n'e uno in programma. */
+  talk: { slug: string; oggetto: string; paragrafi: string[]; url: string } | null;
+};
+
+/**
  * Le notizie dal percorso agli studenti, una volta per edizione
  * (`EDIZIONE_NOTIZIE`): cambiando edizione cambiano le chiavi, e il bottone
  * torna disponibile.

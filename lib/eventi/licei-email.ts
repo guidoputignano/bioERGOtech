@@ -31,6 +31,7 @@ import {
   ruoloCommissioneLabel,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 import { SOCIAL, type PostInstagram } from "@/lib/social";
+import { luogoTalk, talkPath, type Talk } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 import { GUIDA_COMMISSIONE_SLUG, PROGETTI_MAX_PER_GIUDICE, VIDEO_GIUDICI_ANCORA } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 
 export type LiceiEmailInput = {
@@ -1034,6 +1035,59 @@ export function avvisoSquadreEmailHtml(input: AvvisoSquadreEmailInput): string {
       <ul style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 20px;padding-left:22px;">${correzioni}</ul>
       ${p(AVVISO_SQUADRE_TESTO.riscontro)}
       ${p(AVVISO_SQUADRE_TESTO.grazie)}
+      ${p(AVVISO_SQUADRE_TESTO.firma.join("<br />"), "0 0 8px")}
+      ${chiusura()}
+    </div>
+  </div>`;
+}
+
+/* ── Avviso ai docenti: il prossimo talk ─────────────────────────────── */
+
+/** Il testo dell'avviso, lo stesso nell'email e nell'anteprima del pannello. */
+export type AvvisoTalkDocenti = { slug: string; oggetto: string; paragrafi: string[]; url: string };
+
+export function avvisoTalkDocenti(t: Talk): AvvisoTalkDocenti {
+  // "Giovedì 19 novembre 2026" -> "giovedì 19 novembre"
+  const giorno = t.dataLabel.replace(/\s+\d{4}$/, "").toLowerCase();
+  return {
+    slug: t.slug,
+    oggetto: `Talk di ${giorno}: un appuntamento importante per le squadre`,
+    paragrafi: [
+      `${giorno.charAt(0).toUpperCase()}${giorno.slice(1)}, ${t.orarioLabel}, ${luogoTalk(t).toLowerCase()}, si tiene il talk «${t.titolo}» con ${t.relatore.nome}, ${t.relatore.ruolo}.`,
+      t.invitoDocenti ?? "È pensato per le squadre del percorso, e possono partecipare anche i docenti.",
+      `Le chiediamo di partecipare e di invitare le sue squadre a collegarsi.${t.apertoATutti ? " È aperto a tutti: può condividerlo anche con le classi e con i colleghi." : ""}`,
+      "Per partecipare basta iscriversi dalla pagina del talk con il proprio account: subito dopo compare il link per collegarsi. Gli studenti si iscrivono dalla stessa pagina, con il loro account del percorso.",
+      "Per qualsiasi dubbio può rispondere a questa email.",
+    ],
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+  };
+}
+
+/**
+ * Email una tantum ai docenti (referenti delle adesioni confermate e
+ * docenti del progetto) sul prossimo talk. Mai il link della riunione: lo
+ * vede chi si iscrive, dalla pagina del talk.
+ */
+export function avvisoTalkDocentiEmailHtml(a: AvvisoTalkDocenti, nome: string): string {
+  const n = nome.trim();
+  const p = (testo: string, margine = "0 0 20px") =>
+    `<p style="color:#4A5568;font-size:15px;line-height:1.7;margin:${margine};">${testo}</p>`;
+  const [primo, perche, ...resto] = a.paragrafi;
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+    ${INTESTAZIONE}
+    <div style="padding:36px 40px;background:#F8FAFB;border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;">
+      <h2 style="color:#0A1628;font-size:20px;margin:0 0 12px;font-weight:700;">${n ? `Gentile ${esc(n)},` : "Gentile docente,"}</h2>
+      ${p(esc(primo))}
+      <div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:14px 18px;margin:0 0 20px;">
+        <p style="color:#065f46;font-size:15px;line-height:1.7;margin:0;font-weight:600;">${esc(perche)}</p>
+      </div>
+      ${p(esc(resto[0]))}
+      ${p(esc(resto[1]), "0 0 16px")}
+      <div style="margin:0 0 24px;">
+        <a href="${a.url}" style="display:inline-block;background:#00C896;color:#0A1628;font-weight:700;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:8px;">La pagina del talk</a>
+      </div>
+      ${resto.slice(2).map((x) => p(esc(x))).join("")}
       ${p(AVVISO_SQUADRE_TESTO.firma.join("<br />"), "0 0 8px")}
       ${chiusura()}
     </div>
