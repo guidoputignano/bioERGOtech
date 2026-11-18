@@ -22,7 +22,7 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.bioergotech.org";
 
 export const EVENT = {
-  occhiello: "Fondazione bioERGOtech . Taranto",
+  occhiello: "Fondazione bioERGOtech, Taranto",
   titolo: "Vivere più a lungo: sport e intelligenza artificiale",
   sottotitolo:
     "Due giornate di confronto su come lo sport, la robotica e l'intelligenza artificiale possono allungare e migliorare la vita, con scienziati, medici, campioni dello sport e le nuove idee dei ragazzi e delle startup.",
@@ -32,13 +32,13 @@ export const EVENT = {
   citta: "Taranto",
   /** Etichette pronte per l'uso nei box informativi dell'hero. */
   dataLabel: "10 e 11 dicembre 2026",
-  orarioLabel: "Giorno 1: 9:00 . 16:00. Giorno 2: 9:00 . 13:00",
-  luogoLabel: "Giorno 1: PalaMazzola, Taranto. Giorno 2: Teatro Fusco, Taranto",
+  orarioLabel: "10 dicembre dalle 9:00 alle 16:00, 11 dicembre dalle 9:00 alle 13:00",
+  luogoLabel: "10 dicembre al PalaMazzola, 11 dicembre al Teatro Fusco, Taranto",
   /** Date ISO per i dati strutturati schema.org Event. */
   startDateISO: "2026-12-10T09:00:00+01:00",
   endDateISO: "2026-12-11T13:00:00+01:00",
-  /** Immagine Open Graph dedicata (riusa un asset già presente nel sito). */
-  ogImage: "/assets/images/Home/Automation.webp",
+  /** Immagine Open Graph: l'illustrazione dell'evento, la stessa dell'hero. */
+  ogImage: "/assets/images/eventi/vivere-piu-a-lungo/hero.webp",
 } as const;
 
 export type SessionSlug =
@@ -46,13 +46,38 @@ export type SessionSlug =
   | "giorno-2";
 
 export type EventSession = {
+  /**
+   * Il codice interno della giornata, quello che sta nel database
+   * (event_sessions.slug) e nei moduli. Non cambia mai: le persone non lo
+   * vedono, vedono la data.
+   */
   slug: SessionSlug;
+  /**
+   * Il nome della giornata per le persone: la data. È l'etichetta da usare
+   * ovunque (pagina, modulo, email, biglietto, pannello, export) al posto di
+   * "Giorno 1" e "Giorno 2".
+   */
+  etichetta: string;
+  /** Che cosa succede quel giorno, senza la data. */
   titolo: string;
   giorno: 1 | 2;
+  /** "Giovedì 10 dicembre". */
   giornoLabel: string;
+  /** "10 dicembre 2026". */
   dataLabel: string;
+  /** La data in formato ISO, per confrontarla con oggi (fuso di Roma). */
+  dataISO: string;
+  /** Inizio e fine con il fuso, per il calendario e i dati strutturati. */
+  inizioISO: string;
+  fineISO: string;
+  /** "dalle 9:00 alle 16:00". */
   orario: string;
+  /** "PalaMazzola, Taranto". */
   luogo: string;
+  /** "PalaMazzola". */
+  luogoBreve: string;
+  /** Ricerca su Google Maps del luogo: niente indirizzi scritti a mano. */
+  mappaUrl: string;
   /** Capienza massima. Modificabile qui, seminata nella migrazione SQL. */
   capienza: number;
   descrizione: string;
@@ -62,24 +87,36 @@ export type EventSession = {
 export const SESSIONS: EventSession[] = [
   {
     slug: "giorno-1",
-    titolo: "Giorno 1. Panel, progetti dei ragazzi e concerto",
+    etichetta: "10 dicembre",
+    titolo: "Panel, progetti dei ragazzi e concerto",
     giorno: 1,
     giornoLabel: "Giovedì 10 dicembre",
     dataLabel: "10 dicembre 2026",
-    orario: "9:00 . 16:00",
+    dataISO: "2026-12-10",
+    inizioISO: "2026-12-10T09:00:00+01:00",
+    fineISO: "2026-12-10T16:00:00+01:00",
+    orario: "dalle 9:00 alle 16:00",
     luogo: "PalaMazzola, Taranto",
+    luogoBreve: "PalaMazzola",
+    mappaUrl: "https://www.google.com/maps/search/?api=1&query=PalaMazzola%2C%20Taranto",
     capienza: 300,
     descrizione:
       "Una giornata al PalaMazzola. Sei panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi: dieci gruppi in gara presentano le loro idee davanti a una commissione. Nel pomeriggio, il concerto aperto al pubblico.",
   },
   {
     slug: "giorno-2",
-    titolo: "Giorno 2. Showcase di innovazione e premiazione",
+    etichetta: "11 dicembre",
+    titolo: "Showcase di innovazione e premiazione",
     giorno: 2,
     giornoLabel: "Venerdì 11 dicembre",
     dataLabel: "11 dicembre 2026",
-    orario: "9:00 . 13:00",
+    dataISO: "2026-12-11",
+    inizioISO: "2026-12-11T09:00:00+01:00",
+    fineISO: "2026-12-11T13:00:00+01:00",
+    orario: "dalle 9:00 alle 13:00",
     luogo: "Teatro Fusco, Taranto",
+    luogoBreve: "Teatro Fusco",
+    mappaUrl: "https://www.google.com/maps/search/?api=1&query=Teatro%20Fusco%2C%20Taranto",
     capienza: 150,
     descrizione:
       "Al Teatro Fusco, uno showcase di innovazione con startup, spin-off universitari, centri di ricerca e progetti del territorio. A seguire la premiazione con tre premi e il concerto di chiusura.",
@@ -89,14 +126,66 @@ export const SESSIONS: EventSession[] = [
 export const sessionBySlug = (slug: string): EventSession | undefined =>
   SESSIONS.find((s) => s.slug === slug);
 
+/**
+ * Il nome di una giornata per le persone ("10 dicembre"), dal suo codice.
+ * Per un codice che il sito non conosce (una sessione rimasta nel database)
+ * torna il codice stesso, così si vede che c'è qualcosa da sistemare.
+ */
+export const etichettaGiornata = (slug: string | null | undefined): string =>
+  (slug && sessionBySlug(slug)?.etichetta) || slug || "giornata sconosciuta";
+
+/** "10 dicembre", "11 dicembre", "10 e 11 dicembre": le giornate in ordine, in una frase. */
+export function elencoGiornate(slugs: readonly string[]): string {
+  const ordinate = SESSIONS.filter((s) => slugs.includes(s.slug));
+  if (ordinate.length === 0) return "";
+  if (ordinate.length === 1) return ordinate[0].etichetta;
+  // "10 e 11 dicembre" quando il mese è lo stesso, come nel resto del sito.
+  const mese = (e: string) => e.split(" ").slice(1).join(" ");
+  const stessoMese = ordinate.every((s) => mese(s.etichetta) === mese(ordinate[0].etichetta));
+  if (stessoMese) {
+    const giorni = ordinate.map((s) => s.etichetta.split(" ")[0]);
+    return `${giorni.slice(0, -1).join(", ")} e ${giorni[giorni.length - 1]} ${mese(ordinate[0].etichetta)}`;
+  }
+  return `${ordinate.slice(0, -1).map((s) => s.etichetta).join(", ")} e ${ordinate[ordinate.length - 1].etichetta}`;
+}
+
+/**
+ * Le giornate con l'articolo, come si dicono: "il 10 dicembre",
+ * "l'11 dicembre", "il 10 e l'11 dicembre".
+ */
+export function giornateConArticolo(slugs: readonly string[]): string {
+  const ordinate = SESSIONS.filter((s) => slugs.includes(s.slug));
+  if (ordinate.length === 0) return "";
+  // "l'" davanti ai numeri che si leggono con una vocale: 1, 8, 11, 18.
+  const art = (giorno: string) => (/^(1|8|11|18)$/.test(giorno) ? "l'" : "il ");
+  const giorni = ordinate.map((s) => s.etichetta.split(" ")[0]);
+  const mese = ordinate[0].etichetta.split(" ").slice(1).join(" ");
+  const stessoMese = ordinate.every((s) => s.etichetta.split(" ").slice(1).join(" ") === mese);
+  if (!stessoMese) return ordinate.map((s) => `${art(s.etichetta.split(" ")[0])}${s.etichetta}`).join(" e ");
+  const parti = giorni.map((g) => `${art(g)}${g}`);
+  const frase = parti.length === 1 ? parti[0] : `${parti.slice(0, -1).join(", ")} e ${parti[parti.length - 1]}`;
+  return `${frase} ${mese}`;
+}
+
+/**
+ * La giornata di oggi, nel fuso di Roma, se oggi è un giorno dell'evento.
+ * Serve all'ingresso: la modalità check-in parte da qui.
+ */
+export function giornataDiOggi(adesso: Date = new Date()): EventSession | undefined {
+  const oggi = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit" }).format(adesso);
+  return SESSIONS.find((s) => s.dataISO === oggi);
+}
+
 /** Categorie di iscritto. value finisce nel database, label è per la UI. */
 export const CATEGORIE = [
+  // L'ordine è quello del modulo: prima il pubblico, che è la maggior parte
+  // di chi arriva dal QR. Il value resta quello del database.
+  { value: "pubblico", label: "Pubblico" },
   { value: "studente", label: "Studente" },
-  { value: "scuola_docente", label: "Scuola / Docente referente" },
-  { value: "autorita", label: "Autorità / Istituzione" },
+  { value: "scuola_docente", label: "Docente o scuola" },
+  { value: "autorita", label: "Istituzione" },
   { value: "startup", label: "Startup" },
-  { value: "investitore_partner", label: "Investitore / Partner" },
-  { value: "pubblico", label: "Pubblico generale" },
+  { value: "investitore_partner", label: "Investitore o partner" },
 ] as const;
 
 export type CategoriaValue = (typeof CATEGORIE)[number]["value"];

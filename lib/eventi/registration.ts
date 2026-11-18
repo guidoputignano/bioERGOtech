@@ -83,3 +83,19 @@ export function generateCodice(): string {
   }
   return `VPL-${code}`;
 }
+
+/**
+ * Com'è andata un'iscrizione, giornata per giornata: tutte confermate, tutte
+ * in lista d'attesa, in parte, o nessuna giornata (non deve succedere: è il
+ * segno che una giornata non è stata salvata). Decide il titolo della
+ * schermata di conferma, l'oggetto dell'email e il biglietto.
+ */
+export type EsitoIscrizione = "confermata" | "parziale" | "attesa" | "nessuna";
+
+export function esitoIscrizione(sessions: readonly { status: SessionStatus }[]): EsitoIscrizione {
+  if (sessions.length === 0) return "nessuna";
+  const attesa = sessions.filter((s) => s.status === "lista_attesa").length;
+  if (attesa === 0) return "confermata";
+  if (attesa === sessions.length) return "attesa";
+  return "parziale";
+}

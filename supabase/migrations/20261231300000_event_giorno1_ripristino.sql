@@ -64,24 +64,26 @@ update public.event_sessions
     and not exists (select 1 from public.event_sessions where slug = 'giorno-1');
 
 -- ── 1b. 20261201000000: PalaMazzola il 10, Teatro Fusco l'11 ───────────
+-- I titoli portano la data al posto di "Giorno 1" e "Giorno 2", come il sito.
+-- Lo slug resta 'giorno-1' e 'giorno-2': è il codice interno, non si vede.
 update public.event_sessions
-  set titolo = 'Giorno 1. Panel, progetti dei ragazzi e concerto',
+  set titolo = '10 dicembre. Panel, progetti dei ragazzi e concerto',
       data   = '2026-12-10',
       luogo  = 'PalaMazzola, Taranto',
-      orario = '9:00 . 16:00'
+      orario = 'dalle 9:00 alle 16:00'
   where slug = 'giorno-1';
 
 update public.event_sessions
-  set titolo = 'Giorno 2. Showcase di innovazione e premiazione',
+  set titolo = '11 dicembre. Showcase di innovazione e premiazione',
       data   = '2026-12-11',
       luogo  = 'Teatro Fusco, Taranto',
-      orario = '9:00 . 13:00'
+      orario = 'dalle 9:00 alle 13:00'
   where slug = 'giorno-2';
 
 insert into public.event_sessions (slug, titolo, giorno, data, luogo, orario, capienza_max)
 values
-  ('giorno-1', 'Giorno 1. Panel, progetti dei ragazzi e concerto', 1, '2026-12-10', 'PalaMazzola, Taranto', '9:00 . 16:00', 300),
-  ('giorno-2', 'Giorno 2. Showcase di innovazione e premiazione',   2, '2026-12-11', 'Teatro Fusco, Taranto', '9:00 . 13:00', 150)
+  ('giorno-1', '10 dicembre. Panel, progetti dei ragazzi e concerto', 1, '2026-12-10', 'PalaMazzola, Taranto', 'dalle 9:00 alle 16:00', 300),
+  ('giorno-2', '11 dicembre. Showcase di innovazione e premiazione',  2, '2026-12-11', 'Teatro Fusco, Taranto', 'dalle 9:00 alle 13:00', 150)
 on conflict (slug) do nothing;
 
 -- ── 2. Il recupero: chi non ha nessuna giornata aveva scelto il 10 ────
