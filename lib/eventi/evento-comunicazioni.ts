@@ -18,10 +18,12 @@
  * stesso momento. Pannello e cron usano la stessa chiave. `licei_config` è
  * leggibile da chiunque: l'esito contiene solo numeri e date.
  *
- * Prima di mandare si controlla il database: se manca una giornata o ci sono
- * iscrizioni senza giornata (il file di ripristino non è stato eseguito),
- * non parte niente e si dice perché. Un'email con le giornate sbagliate non
- * si può ritirare.
+ * Prima di mandare si controlla il database: se manca una giornata (il file
+ * di ripristino non è stato eseguito) non parte niente e si dice perché.
+ * Un'email con le giornate sbagliate non si può ritirare. Dopo il ripristino
+ * un'iscrizione rimasta senza giornate non ferma più nessuno: non riceve
+ * l'email (non sapremmo che data indicarle), compare fra le non inviabili
+ * con il motivo "nessuna giornata" e la campagna parte per tutti gli altri.
  *
  * Nei log niente dati personali: le persone sono "iscrizione <id>".
  *
@@ -249,18 +251,23 @@ export type Destinatario = {
 /** Una persona che non può ricevere l'email, per il pannello (solo admin). `rif` va nei log. */
 export type NonInviabile = { rif: string; nome: string; email: string; motivo: string };
 
+/** Il motivo di chi non ha nessuna giornata: non sapremmo che data scrivergli. */
+export const MOTIVO_SENZA_GIORNATA = "nessuna giornata";
+
 /** Perché una campagna non può partire, per scegliere l'aiuto da mostrare. */
 export type TipoBlocco =
   | "configurazione"
   | "giornate_mancanti"
-  | "senza_giornata"
   | "posti_illeggibili"
   | "evento_concluso"
   | "nessun_destinatario";
 
 export type Preparazione = {
   destinatari: Destinatario[];
+  /** Indirizzi non validi e iscrizioni senza giornate (dopo il ripristino). */
   nonInviabili: NonInviabile[];
+  /** Iscrizioni senza nessuna giornata del sito: sono anche in `nonInviabili`, se il ripristino è già stato fatto. */
+  senzaGiornata: number;
   /** Chi riceverà l'invito ad aggiungere una giornata. */
   conInvito: number;
   /** Chi ha solo giornate in lista d'attesa. */
@@ -300,8 +307,16 @@ export function preparaCampagna(
 
   for (const iscr of dati.iscrizioni) {
     const giornate = giornateNote(iscr);
+    const nome = `${iscr.nome} ${iscr.cognome}`.trim();
     if (giornate.length === 0) {
       senzaGiornata += 1;
+      // Prima del ripristino la campagna è comunque ferma (giornate
+      // mancanti): il file può ancora restituire il 10 dicembre a queste
+      // iscrizioni. Dopo, sono casi singoli da controllare nella scheda
+      // Iscritti, e non fermano gli altri.
+      if (dati.mancanti.length === 0) {
+        nonInviabili.push({ rif: `iscrizione ${iscr.id}`, nome, email: iscr.email, motivo: MOTIVO_SENZA_GIORNATA });
+      }
       continue;
     }
     const email = iscr.email.trim().toLowerCase();
@@ -310,7 +325,6 @@ export function preparaCampagna(
     if (visti.has(email)) continue;
     visti.add(email);
 
-    const nome = `${iscr.nome} ${iscr.cognome}`.trim();
     if (!EMAIL_VALIDA.test(email)) {
       nonInviabili.push({ rif: `iscrizione ${iscr.id}`, nome, email: iscr.email, motivo: "indirizzo non valido" });
       continue;
@@ -354,20 +368,20 @@ export function preparaCampagna(
       };
     }
     if (dati.mancanti.length > 0) {
+      // Finché manca una giornata, anche le iscrizioni senza giornate
+      // aspettano il file: è lui a restituire loro il 10 dicembre.
       const una = dati.mancanti.length === 1;
+      const vuote =
+        senzaGiornata > 0
+          ? ` Il file restituisce la giornata anche ${
+              senzaGiornata === 1 ? "all'iscrizione che ora non ne ha nessuna" : `alle ${numero(senzaGiornata)} iscrizioni che ora non ne hanno nessuna`
+            }.`
+          : "";
       return {
         tipo: "giornate_mancanti",
         messaggio: `${una ? "La giornata" : "Le giornate"} ${delleGiornate(dati.mancanti)} ${
           una ? "non esiste" : "non esistono"
-        } nel database: il file di ripristino ${FILE_RIPRISTINO} non è ancora stato eseguito. Finché manca, le giornate delle persone non sono complete e l'email direbbe cose sbagliate. Esegui il file nell'editor SQL di Supabase, poi aggiorna questa pagina.`,
-      };
-    }
-    if (senzaGiornata > 0) {
-      return {
-        tipo: "senza_giornata",
-        messaggio: `${
-          senzaGiornata === 1 ? "1 iscrizione non ha" : `${numero(senzaGiornata)} iscrizioni non hanno`
-        } nessuna giornata: a ${senzaGiornata === 1 ? "questa persona" : "queste persone"} non sapremmo che data indicare. Di solito vuol dire che il file di ripristino ${FILE_RIPRISTINO} non è stato eseguito: eseguilo (si può rieseguire senza rischi), oppure controlla queste iscrizioni nella scheda Iscritti. Poi aggiorna questa pagina.`,
+        } nel database: il file di ripristino ${FILE_RIPRISTINO} non è ancora stato eseguito. Finché manca, le giornate delle persone non sono complete e l'email direbbe cose sbagliate. Esegui il file nell'editor SQL di Supabase una volta sola, poi aggiorna questa pagina.${vuote}`,
       };
     }
     if (oggiRoma(adesso) > ULTIMO_GIORNO) {
@@ -388,7 +402,7 @@ export function preparaCampagna(
     return null;
   })();
 
-  return { destinatari, nonInviabili, conInvito, soloAttesa, blocco };
+  return { destinatari, nonInviabili, senzaGiornata, conInvito, soloAttesa, blocco };
 }
 
 /* ── Esempi per l'anteprima e la prova ────────────────────────────────── */
@@ -476,6 +490,8 @@ export type VistaCampagna = {
   soloAttesa: number;
   nonInviabili: NonInviabile[];
   nonInviabiliTotale: number;
+  /** Quante delle non inviabili sono iscrizioni senza nessuna giornata. */
+  senzaGiornata: number;
   /** Perché ora non può partire. Null: può partire. */
   bloccata: string | null;
   tipoBlocco: TipoBlocco | null;
@@ -519,6 +535,7 @@ export async function vistaComunicazioni(
       soloAttesa: p.soloAttesa,
       nonInviabili: p.nonInviabili.slice(0, MAX_NON_INVIABILI),
       nonInviabiliTotale: p.nonInviabili.length,
+      senzaGiornata: p.nonInviabili.filter((x) => x.motivo === MOTIVO_SENZA_GIORNATA).length,
       bloccata: stato.inviato_at ? null : (p.blocco?.messaggio ?? null),
       tipoBlocco: stato.inviato_at ? null : (p.blocco?.tipo ?? null),
       programmata: automatico && !stato.inviato_at && fase !== "dopo" ? PROMEMORIA_AUTOMATICO.etichetta : null,
@@ -677,7 +694,11 @@ export async function inviaCampagna(
   const totale = destinatari.length + nonInviabili.length;
   let inviate = 0;
   let errori = nonInviabili.length;
-  for (const x of nonInviabili) console.warn(`${log}: ${x.rif}: indirizzo non valido, esclusa.`);
+  for (const x of nonInviabili) {
+    // Il motivo per esteso può contenere il dominio dell'indirizzo: nei log solo la categoria.
+    const perche = x.motivo === MOTIVO_SENZA_GIORNATA ? "nessuna giornata" : "indirizzo non valido";
+    console.warn(`${log}: ${x.rif}: ${perche}, esclusa.`);
+  }
   console.log(`${log}: inizio, ${destinatari.length} destinatari in ${Math.ceil(destinatari.length / BLOCCO)} blocchi.`);
 
   for (let i = 0; i < destinatari.length; i += BLOCCO) {

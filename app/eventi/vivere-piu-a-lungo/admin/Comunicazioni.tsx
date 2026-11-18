@@ -11,9 +11,11 @@
  * quante persone parte, e si fa una volta sola: la rotta prenota l'invio, e
  * un secondo clic, un collega o il cron ricevono "già inviata".
  *
- * Se il database non è a posto (manca una giornata, ci sono iscrizioni senza
- * giornata) il pulsante resta spento e la scheda dice perché e che cosa
- * fare. Il lavoro vero è in lib/eventi/evento-comunicazioni.ts.
+ * Se il database non è a posto (manca una giornata) il pulsante resta spento
+ * e la scheda dice perché e che cosa fare. Le iscrizioni rimaste senza
+ * giornate non fermano l'invio: la scheda le elenca fra chi non riceverà
+ * l'email, con il link per controllarle. Il lavoro vero è in
+ * lib/eventi/evento-comunicazioni.ts.
  */
 
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
@@ -91,7 +93,7 @@ const TESTI: Record<CampagnaId, { icona: string; descrizione: string; invia: str
 const STILE = `
 .evc-testa { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .evc-aggiornato { font-size: 12.5px; color: var(--text-mid); }
-.evc-campagna { display: grid; gap: 16px; }
+.evc-campagna { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
 .evc-campagna-testa { display: flex; gap: 14px; align-items: flex-start; }
 .evc-icona { width: 48px; height: 48px; border-radius: 14px; font-size: 19px; }
 .evc-icona i { color: var(--eva-teal-ink); }
@@ -176,12 +178,12 @@ function PillStato({ c }: { c: VistaCampagna }) {
   if (c.inviato_at) {
     return c.esito?.completato ? (
       <span className="eva-pill eva-pill-ok">
-        <i className="fas fa-check" aria-hidden="true" />
+        <i className="fas fa-check" aria-hidden="true" />{" "}
         Inviata
       </span>
     ) : (
       <span className="eva-pill eva-pill-attesa">
-        <i className="fas fa-hourglass-half" aria-hidden="true" />
+        <i className="fas fa-hourglass-half" aria-hidden="true" />{" "}
         Invio da verificare
       </span>
     );
@@ -190,7 +192,7 @@ function PillStato({ c }: { c: VistaCampagna }) {
   if (c.bloccata) {
     return (
       <span className="eva-pill eva-pill-errore">
-        <i className="fas fa-lock" aria-hidden="true" />
+        <i className="fas fa-lock" aria-hidden="true" />{" "}
         Bloccata
       </span>
     );
@@ -198,12 +200,69 @@ function PillStato({ c }: { c: VistaCampagna }) {
   if (c.programmata) {
     return (
       <span className="eva-pill eva-pill-teal">
-        <i className="fas fa-calendar-check" aria-hidden="true" />
+        <i className="fas fa-calendar-check" aria-hidden="true" />{" "}
         Programmata
       </span>
     );
   }
   return <span className="eva-pill eva-pill-neutro">Non ancora inviata</span>;
+}
+
+/** Chi non riceverà l'email: indirizzi scritti male e iscrizioni senza giornate. */
+function NonInviabili({ c }: { c: VistaCampagna }) {
+  const senza = c.senzaGiornata;
+  const indirizzi = c.nonInviabiliTotale - senza;
+  const parti: string[] = [];
+  if (indirizzi > 0) {
+    parti.push(indirizzi === 1 ? "1 indirizzo è scritto male" : `${numero(indirizzi)} indirizzi sono scritti male`);
+  }
+  if (senza > 0) {
+    parti.push(senza === 1 ? "1 iscrizione non ha nessuna giornata" : `${numero(senza)} iscrizioni non hanno nessuna giornata`);
+  }
+  const titolo = `${parti.join(" e ")}: ${
+    c.nonInviabiliTotale === 1 ? "questa persona non riceverà" : "queste persone non riceveranno"
+  } l'email.`;
+  return (
+    <div className="eva-avviso eva-avviso-attenzione">
+      <i className={`fas ${indirizzi > 0 ? "fa-at" : "fa-user-slash"}`} aria-hidden="true" />
+      <div style={{ minWidth: 0 }}>
+        <strong>{titolo}</strong> {c.nonInviabiliTotale === 1 ? "Conta" : "Contano"} fra le email non partite.{" "}
+        {indirizzi > 0 && (
+          <>
+            Conviene avvisare chi ha l&apos;indirizzo sbagliato in un altro modo: il telefono, se l&apos;ha lasciato, è
+            nella scheda Iscritti.{" "}
+          </>
+        )}
+        {senza > 0 && (
+          <>
+            Un&apos;iscrizione senza giornate non ha un posto e all&apos;ingresso non risulta: controllala nella scheda
+            Iscritti, poi elimina l&apos;iscrizione oppure aggiungi la giornata giusta dal biglietto della persona.
+          </>
+        )}
+        <details className="evc-dettagli">
+          <summary>Vedi chi</summary>
+          <ul className="evc-elenco">
+            {c.nonInviabili.map((x) => (
+              <li key={`${x.email}-${x.nome}-${x.motivo}`}>
+                <strong>{x.nome || "Senza nome"}</strong>, {x.email}: {x.motivo}.
+              </li>
+            ))}
+            {c.nonInviabiliTotale > c.nonInviabili.length && (
+              <li>e altri {numero(c.nonInviabiliTotale - c.nonInviabili.length)}.</li>
+            )}
+          </ul>
+        </details>
+        {senza > 0 && (
+          <div className="evc-avviso-azione">
+            <a className="eva-btn" href={`${PERCORSO_PANNELLO}?tab=iscritti&stato=senza`}>
+              <i className="fas fa-list" aria-hidden="true" />{" "}
+              Vedi le iscrizioni senza giornata
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function SchedaCampagna({
@@ -331,10 +390,9 @@ function SchedaCampagna({
           <div className="eva-avviso eva-avviso-ok">
             <i className="fas fa-circle-check" aria-hidden="true" />
             <div>
-              <strong>Inviata {quando(c.inviato_at)}.</strong> {descriviEsito(c.esito)}.
+              <strong>Inviata {quando(c.inviato_at)}.</strong> {descriviEsito(c.esito)}.{" "}
               {c.esito.errori > 0 && (
                 <>
-                  {" "}
                   Le email non partite sono nei log di Vercel, con il riferimento dell&apos;iscrizione: a quelle
                   persone puoi rimandare il biglietto dalla scheda Iscritti.
                 </>
@@ -365,14 +423,6 @@ function SchedaCampagna({
           <div>
             {c.tipoBlocco !== "evento_concluso" && <strong>Per ora non si può inviare. </strong>}
             {c.bloccata}
-            {c.tipoBlocco === "senza_giornata" && (
-              <div className="evc-avviso-azione">
-                <a className="eva-btn" href={`${PERCORSO_PANNELLO}?tab=iscritti&stato=senza`}>
-                  <i className="fas fa-list" aria-hidden="true" />
-                  Vedi le iscrizioni senza giornata
-                </a>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -384,9 +434,9 @@ function SchedaCampagna({
             <strong>
               Programmata per {automatico.etichetta}, verso le {automatico.ora}.
             </strong>{" "}
-            Parte da sola, a chi è iscritto quella mattina. Se la invii prima a mano, quel giorno non riparte.
+            Parte da sola, a chi è iscritto quella mattina. Se la invii prima a mano, quel giorno non riparte.{" "}
             {c.bloccata && c.tipoBlocco !== "evento_concluso" && (
-              <> Il blocco qui sopra va risolto prima: finché c&apos;è, non parte neanche da sola.</>
+              <>Il blocco qui sopra va risolto prima: finché c&apos;è, non parte neanche da sola.</>
             )}
           </div>
         </div>
@@ -423,31 +473,7 @@ function SchedaCampagna({
       )}
 
       {!inviata && c.nonInviabiliTotale > 0 && c.tipoBlocco !== "evento_concluso" && (
-        <div className="eva-avviso eva-avviso-attenzione">
-          <i className="fas fa-at" aria-hidden="true" />
-          <div style={{ minWidth: 0 }}>
-            <strong>
-              {c.nonInviabiliTotale === 1
-                ? "1 indirizzo è scritto male e non riceverà l'email."
-                : `${numero(c.nonInviabiliTotale)} indirizzi sono scritti male e non riceveranno l'email.`}
-            </strong>{" "}
-            Contano fra le email non partite. Conviene avvisare queste persone in un altro modo: il telefono, se
-            l&apos;hanno lasciato, è nella scheda Iscritti.
-            <details className="evc-dettagli">
-              <summary>Vedi chi</summary>
-              <ul className="evc-elenco">
-                {c.nonInviabili.map((x) => (
-                  <li key={`${x.email}-${x.nome}`}>
-                    <strong>{x.nome || "Senza nome"}</strong>, {x.email}: {x.motivo}.
-                  </li>
-                ))}
-                {c.nonInviabiliTotale > c.nonInviabili.length && (
-                  <li>e altri {numero(c.nonInviabiliTotale - c.nonInviabili.length)}.</li>
-                )}
-              </ul>
-            </details>
-          </div>
-        </div>
+        <NonInviabili c={c} />
       )}
 
       {/* I comandi. */}
@@ -526,13 +552,13 @@ function SchedaCampagna({
                 : `, e ${numero(c.conInvito)} anche l'invito ad aggiungere una giornata`
               : ""}
             .{" "}
-            <strong>Si può inviare una volta sola</strong>: dopo, non si potrà rimandare a tutti.
+            <strong>Si può inviare una volta sola</strong>: dopo, non si potrà rimandare a tutti.{" "}
             {automatico?.fase === "prima" &&
-              ` ${automatico.etichetta.charAt(0).toUpperCase()}${automatico.etichetta.slice(1)} non ripartirà da sola.`}
+              `${automatico.etichetta.charAt(0).toUpperCase()}${automatico.etichetta.slice(1)} non ripartirà da sola.`}
           </p>
           <div className="eva-azioni">
             <button type="button" className="eva-btn eva-btn-primario" onClick={invia}>
-              <i className="fas fa-paper-plane" aria-hidden="true" />
+              <i className="fas fa-paper-plane" aria-hidden="true" />{" "}
               Sì, invia a {persone(n)}
             </button>
             <button type="button" className="eva-btn" onClick={chiudiConferma}>
@@ -696,7 +722,7 @@ export function Comunicazioni() {
         <div className="eva-azioni" style={{ alignItems: "center" }}>
           {dati && <span className="evc-aggiornato">Aggiornato alle {ora(dati.generato_at)}</span>}
           <button type="button" className="eva-btn" onClick={() => void carica()} disabled={caricando}>
-            <i className={`fas fa-rotate${caricando ? " fa-spin" : ""}`} aria-hidden="true" />
+            <i className={`fas fa-rotate${caricando ? " fa-spin" : ""}`} aria-hidden="true" />{" "}
             Aggiorna
           </button>
         </div>

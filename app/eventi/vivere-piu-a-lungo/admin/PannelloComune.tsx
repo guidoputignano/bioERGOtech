@@ -180,9 +180,14 @@ export function leggiFiltri(p: Parametri): Filtri {
 
 export const filtriAttivi = (f: Filtri): boolean => Boolean(f.q.trim() || f.giornata || f.stato || f.categoria);
 
-/** Minuscole e senza accenti: "Nicolò" si trova anche scrivendo "nicolo". */
+/**
+ * Minuscole e senza accenti: "Nicolò" si trova anche scrivendo "nicolo".
+ * Gli apostrofi tipografici (’ di iPhone, ‘, ʼ, `, ´) diventano quello
+ * dritto: "D’Amico" si trova anche scrivendo "d'amico", e viceversa.
+ */
 export function normalizza(v: string | null | undefined): string {
   return (v ?? "")
+    .replace(/[‘’ʼ`´]/g, "'")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()

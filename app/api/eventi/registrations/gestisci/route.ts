@@ -3,13 +3,20 @@ import { Resend } from "resend";
 import type { RegistrationResult } from "@/lib/eventi/registration";
 import {
   caricaIscrizione,
+  caricaRigaCompleta,
   eventoAdminClient,
   giornateAggiungibili,
   inviaBiglietto,
+  inviaConUnNuovoTentativo,
+  parametriConDatiSalvati,
   postiPerGiornata,
+  promuoviDaListaAttesa,
   pulisciCodice,
+  type GiornataIscritto,
   type IscrizioneEvento,
+  type RigaIscrizioneCompleta,
 } from "@/lib/eventi/evento-server";
+import { EMAIL_MITTENTE, EMAIL_RISPOSTE, emailAnnullamento } from "@/lib/eventi/email";
 import { ARCHIVE_MODE, giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
 
 /**
@@ -19,7 +26,11 @@ import { ARCHIVE_MODE, giornateConArticolo, sessionBySlug } from "@/app/eventi/v
  * Corpo: { codice, azione: "annulla" | "aggiungi" | "reinvia", giornata? }
  *
  * - annulla: libera il posto di una giornata. Se non resta nessuna
- *   giornata, l'iscrizione viene cancellata ({ annullata: true }).
+ *   giornata, l'iscrizione viene cancellata ({ annullata: true }). La
+ *   risposta dice anche com'era la giornata tolta (era: "confermato" o
+ *   "lista_attesa"). Un posto confermato passa subito alla prima persona in
+ *   lista d'attesa, che riceve il biglietto; il titolare riceve un breve
+ *   avviso all'indirizzo dell'iscrizione, perché basta il codice per farlo.
  * - aggiungi: aggiunge una giornata con i dati già salvati, con il
  *   controllo dei posti dell'RPC (confermato o lista d'attesa), e manda il
  *   biglietto aggiornato.
@@ -90,27 +101,6 @@ function registraTentativo(ip: string, adesso: number) {
 const iniziata = (slug: string, adesso: number) => {
   const s = sessionBySlug(slug);
   return Boolean(s && adesso >= Date.parse(s.inizioISO));
-};
-
-/** Le colonne che l'RPC riscrive: per aggiungere una giornata si ripassano tali e quali. */
-type RigaCompleta = {
-  id: string;
-  user_id: string | null;
-  nome: string;
-  cognome: string;
-  email: string;
-  telefono: string | null;
-  categoria: string;
-  organizzazione: string | null;
-  classe: string | null;
-  startup_name: string | null;
-  startup_url: string | null;
-  startup_desc: string | null;
-  referente: string | null;
-  note: string | null;
-  consenso_marketing: boolean | null;
-  consenso_marketing_testo: string | null;
-  codice_univoco: string;
 };
 
 export async function POST(request: Request) {
@@ -201,40 +191,91 @@ async function annulla(client: Client, iscr: IscrizioneEvento, slug: string, ade
     return errore(409, `La giornata ${dellaGiornata(slug)} è già iniziata: da qui non si può più liberare il posto. ${AIUTO}`);
   }
 
-  const { error: delError } = await client
+  const { data: tolte, error: delError } = await client
     .from("event_registration_sessions")
     .delete()
     .eq("id", g.id)
-    .eq("registration_id", iscr.id);
+    .eq("registration_id", iscr.id)
+    .select("id");
   if (delError) {
     console.error(`Gestione biglietto ${iscr.id}: giornata ${slug} non liberata:`, descriviErrore(delError));
     return errore(500, ERRORE_GENERICO);
   }
+  if (!tolte || tolte.length === 0) {
+    // Tolta un attimo fa da un'altra richiesta (un doppio invio, un'altra
+    // scheda): quella ha già passato il posto e avvisato il titolare.
+    return NextResponse.json({ success: true, azione: "annulla", giornata: slug, annullata: false, invariato: true });
+  }
+  const era = g.status;
 
   // Resta qualche giornata? Si conta nel database, non in memoria: conta
   // anche una giornata che il sito non mostra, che non va cancellata da qui.
+  // Se il conteggio non riesce si usano le giornate lette prima: un'iscrizione
+  // senza giornate non deve restare (ferma le comunicazioni a tutti).
+  let rimaste: number;
   const { count, error: countError } = await client
     .from("event_registration_sessions")
     .select("id", { count: "exact", head: true })
     .eq("registration_id", iscr.id);
   if (countError) {
     console.error(`Gestione biglietto ${iscr.id}: conteggio delle giornate non riuscito:`, descriviErrore(countError));
-    // Il posto è libero: è quello che conta. L'iscrizione vuota resta, e il pannello la vede.
-    return NextResponse.json({ success: true, azione: "annulla", giornata: slug, annullata: false });
+    rimaste = iscr.giornate.filter((x) => x.id !== g.id).length;
+  } else {
+    rimaste = count ?? 0;
   }
 
-  if ((count ?? 0) === 0) {
+  let annullata = false;
+  if (rimaste === 0) {
     const { error: regError } = await client.from("event_registrations").delete().eq("id", iscr.id);
     if (regError) {
+      // Il posto è libero: è quello che conta. L'iscrizione vuota resta, e il pannello la vede.
       console.error(`Gestione biglietto ${iscr.id}: iscrizione senza giornate non cancellata:`, descriviErrore(regError));
-      return NextResponse.json({ success: true, azione: "annulla", giornata: slug, annullata: false });
+    } else {
+      annullata = true;
+      console.info(`Gestione biglietto ${iscr.id}: iscrizione annullata dalla persona (ultima giornata ${slug}, era ${era}).`);
     }
-    console.info(`Gestione biglietto ${iscr.id}: iscrizione annullata dalla persona (ultima giornata ${slug}).`);
-    return NextResponse.json({ success: true, azione: "annulla", giornata: slug, annullata: true });
+  } else {
+    console.info(`Gestione biglietto ${iscr.id}: giornata ${slug} liberata (era ${era}).`);
   }
 
-  console.info(`Gestione biglietto ${iscr.id}: giornata ${slug} liberata (era ${g.status}).`);
-  return NextResponse.json({ success: true, azione: "annulla", giornata: slug, annullata: false });
+  // Dopo la cancellazione, e senza mai far fallire la richiesta: il posto
+  // confermato passa a chi è in lista d'attesa da più tempo, e il titolare
+  // riceve l'avviso. Le due cose non lanciano.
+  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  await Promise.all([
+    era === "confermato" ? promuoviDaListaAttesa(client, resend, slug) : Promise.resolve(null),
+    avvisaTitolare(resend, iscr, g, annullata),
+  ]);
+
+  return NextResponse.json({ success: true, azione: "annulla", giornata: slug, annullata, era });
+}
+
+/**
+ * Il breve avviso al titolare dopo un annullamento, all'indirizzo
+ * dell'iscrizione. Con i dati in memoria: la riga può essere già cancellata.
+ * Non lancia: se l'invio non riesce, resta il log.
+ */
+async function avvisaTitolare(resend: Resend | null, iscr: IscrizioneEvento, tolta: GiornataIscritto, annullata: boolean) {
+  if (!resend) {
+    console.error(`Gestione biglietto ${iscr.id}: RESEND_API_KEY mancante, avviso di annullamento non inviato.`);
+    return;
+  }
+  try {
+    const { subject, html, text } = emailAnnullamento({
+      nome: iscr.nome,
+      codice: iscr.codice,
+      giornata: tolta.slug,
+      era: tolta.status,
+      annullata,
+      rimaste: iscr.giornate.filter((x) => x.id !== tolta.id).map((x) => ({ slug: x.slug, status: x.status })),
+    });
+    const esito = await inviaConUnNuovoTentativo(() =>
+      resend.emails.send({ from: EMAIL_MITTENTE, to: iscr.email, replyTo: EMAIL_RISPOSTE, subject, html, text }),
+    );
+    if (!esito.ok) console.error(`Gestione biglietto ${iscr.id}: avviso di annullamento non inviato:`, esito.errore);
+  } catch (err) {
+    console.error(`Gestione biglietto ${iscr.id}: avviso di annullamento non inviato:`, err instanceof Error ? err.message : err);
+  }
 }
 
 /* ── aggiungi ────────────────────────────────────────────────────────── */
@@ -260,40 +301,21 @@ async function aggiungi(client: Client, iscr: IscrizioneEvento, slug: string, ad
     return errore(503, `In questo momento non riusciamo ad aggiungere ${conArt}. Riprova tra qualche minuto o scrivi a info@bioergotech.org.`);
   }
 
-  const { data: riga, error: rigaError } = await client
-    .from("event_registrations")
-    .select(
-      "id, user_id, nome, cognome, email, telefono, categoria, organizzazione, classe, startup_name, startup_url, startup_desc, referente, note, consenso_marketing, consenso_marketing_testo, codice_univoco",
-    )
-    .eq("id", iscr.id)
-    .maybeSingle();
-  if (rigaError || !riga) {
-    console.error(`Gestione biglietto ${iscr.id}: riga completa non letta:`, descriviErrore(rigaError));
+  let r: RigaIscrizioneCompleta | null;
+  try {
+    r = await caricaRigaCompleta(client, iscr.id);
+  } catch (err) {
+    console.error(`Gestione biglietto ${iscr.id}: riga completa non letta:`, err instanceof Error ? err.message : err);
     return errore(500, ERRORE_GENERICO);
   }
-  const r = riga as RigaCompleta;
+  if (!r) {
+    console.error(`Gestione biglietto ${iscr.id}: riga completa non trovata.`);
+    return errore(500, ERRORE_GENERICO);
+  }
 
   // L'RPC riscrive tutti i campi dell'iscrizione: si ripassano quelli salvati,
   // così aggiungere una giornata non cambia nient'altro. Il codice resta.
-  const { data: rpcData, error: rpcError } = await client.rpc("event_register", {
-    p_user_id: r.user_id,
-    p_nome: r.nome,
-    p_cognome: r.cognome,
-    p_email: r.email,
-    p_telefono: r.telefono,
-    p_categoria: r.categoria,
-    p_organizzazione: r.organizzazione,
-    p_classe: r.classe,
-    p_startup_name: r.startup_name,
-    p_startup_url: r.startup_url,
-    p_startup_desc: r.startup_desc,
-    p_referente: r.referente,
-    p_note: r.note,
-    p_marketing: r.consenso_marketing === true,
-    p_marketing_testo: r.consenso_marketing_testo,
-    p_codice: r.codice_univoco,
-    p_session_slugs: [slug],
-  });
+  const { data: rpcData, error: rpcError } = await client.rpc("event_register", parametriConDatiSalvati(r, [slug]));
   if (rpcError) {
     console.error(`Gestione biglietto ${iscr.id}: event_register non riuscita per ${slug}:`, descriviErrore(rpcError));
     return errore(500, ERRORE_GENERICO);

@@ -34,7 +34,7 @@ export function PulsanteScarica({
         if (errore) onErrore(`Il file non è stato scaricato. ${errore}`);
       }}
     >
-      <i className={inCorso ? "fas fa-spinner fa-spin" : "fas fa-file-csv"} aria-hidden="true" />
+      <i className={inCorso ? "fas fa-spinner fa-spin" : "fas fa-file-csv"} aria-hidden="true" />{" "}
       {children}
     </button>
   );

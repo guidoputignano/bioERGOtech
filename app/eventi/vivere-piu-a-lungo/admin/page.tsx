@@ -3,6 +3,7 @@ import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { giornataDiOggi } from "../content";
 import { AdminPanel } from "./AdminPanel";
 import { PERCORSO_PANNELLO, leggiFiltri, schedaValida } from "./PannelloComune";
 
@@ -88,7 +89,11 @@ export default async function EventAdminPage({
       <Navbar />
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
         <div className="container mx-auto px-4 md:px-6 py-8 md:py-10">
-          <AdminPanel schedaIniziale={schedaValida(tab)} filtriIniziali={{ ...leggiFiltri(params), q: "" }} />
+          <AdminPanel
+            schedaIniziale={schedaValida(tab)}
+            filtriIniziali={{ ...leggiFiltri(params), q: "" }}
+            oggi={giornataDiOggi()?.slug ?? null}
+          />
         </div>
       </div>
       <SiteFooter />

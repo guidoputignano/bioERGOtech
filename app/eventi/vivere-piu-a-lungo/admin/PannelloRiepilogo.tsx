@@ -37,6 +37,9 @@ const plurale = (n: number, uno: string, molti: string) => `${numero(n)} ${n ===
 function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f: Partial<Filtri>) => void }) {
   const { mancanti, senzaGiornata, sconosciute } = dati;
   if (mancanti.length === 0 && senzaGiornata === 0 && sconosciute.length === 0) return null;
+  /** Il file di ripristino non è ancora stato eseguito: solo allora va suggerito. */
+  const ripristinoDaFare = mancanti.length > 0;
+  const primaGiornata = giornateConArticolo([SESSIONS[0].slug]);
   return (
     <div className="eva-griglia" role="alert">
       {mancanti.length > 0 && (
@@ -62,12 +65,24 @@ function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f
                 ? "1 iscrizione non ha nessuna giornata."
                 : `${numero(senzaGiornata)} iscrizioni non hanno nessuna giornata.`}
             </strong>{" "}
-            {senzaGiornata === 1 ? "La persona ha" : "Le persone hanno"} ricevuto la conferma ma non{" "}
-            {senzaGiornata === 1 ? "ha" : "hanno"} un posto, e all&apos;ingresso il biglietto non risulta. Se il file
-            SQL di ripristino non è ancora stato eseguito, le recupera lui; altrimenti vanno contattate.
+            {senzaGiornata === 1 ? "La persona non ha" : "Queste persone non hanno"} un posto, e all&apos;ingresso il
+            biglietto non risulta.{" "}
+            {ripristinoDaFare ? (
+              <>
+                Il file di ripristino, che va ancora eseguito,{" "}
+                {senzaGiornata === 1 ? "le restituisce" : "restituisce loro"} {primaGiornata}: per ora{" "}
+                {senzaGiornata === 1 ? "non va eliminata" : "non vanno eliminate"}.
+              </>
+            ) : (
+              <>
+                {senzaGiornata === 1 ? "Non riceve le email a tutti. Controllala" : "Non ricevono le email a tutti. Controllale una per una"}{" "}
+                nella scheda Iscritti: se la persona vuole venire, aggiungi la giornata giusta dal suo biglietto;
+                altrimenti elimina l&apos;iscrizione.
+              </>
+            )}
             <div style={{ marginTop: 10 }}>
               <button type="button" className="eva-btn" onClick={() => onApriIscritti({ stato: "senza" })}>
-                <i className="fas fa-list" aria-hidden="true" />
+                <i className="fas fa-list" aria-hidden="true" />{" "}
                 Vedi le iscrizioni senza giornata
               </button>
             </div>
@@ -84,9 +99,15 @@ function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f
                 : `${numero(sconosciute.reduce((t, s) => t + s.persone, 0))} persone sono collegate`}{" "}
               a sessioni che il sito non usa più:
             </strong>{" "}
-            {sconosciute.map((s) => `${s.slug} (${s.persone})`).join(", ")}. Non compaiono nei conteggi delle giornate.
-            Se sono le vecchie sessioni del 10 dicembre (giorno-1-mattina, giorno-1-pomeriggio), il file{" "}
-            <code>{FILE_SQL_GIORNATE}</code> le riporta sulla giornata giusta.
+            {sconosciute.map((s) => `${s.slug} (${s.persone})`).join(", ")}. Non compaiono nei conteggi delle giornate.{" "}
+            {ripristinoDaFare ? (
+              <>
+                Se sono le vecchie sessioni del 10 dicembre (giorno-1-mattina, giorno-1-pomeriggio), il file{" "}
+                <code>{FILE_SQL_GIORNATE}</code> le riporta sulla giornata giusta.
+              </>
+            ) : (
+              <>Controlla queste persone nella scheda Iscritti.</>
+            )}
           </div>
         </div>
       )}
@@ -113,14 +134,14 @@ function Richiami({ giornate, onApriIscritti }: { giornate: InfoGiornata[]; onAp
                 {g.etichetta}.
               </strong>{" "}
               {maiuscola(giornateConArticolo([g.slug]))} {g.liberi === 1 ? "c'è 1 posto libero" : `ci sono ${numero(g.liberi ?? 0)} posti liberi`}{" "}
-              e {plurale(g.attesa, "persona aspetta", "persone aspettano")}. L&apos;elenco le mostra in ordine di arrivo.
+              e {plurale(g.attesa, "persona aspetta", "persone aspettano")}. L&apos;elenco le mostra in ordine di arrivo.{" "}
               <div style={{ marginTop: 10 }}>
                 <button
                   type="button"
                   className="eva-btn eva-btn-primario"
                   onClick={() => onApriIscritti({ giornata: g.slug, stato: "attesa" })}
                 >
-                  <i className="fas fa-arrow-right" aria-hidden="true" />
+                  <i className="fas fa-arrow-right" aria-hidden="true" />{" "}
                   Apri la lista d&apos;attesa
                 </button>
               </div>
@@ -231,11 +252,11 @@ function SchedaGiornata({ g, onApriIscritti }: { g: InfoGiornata; onApriIscritti
 
       <div className="eva-azioni" style={{ marginTop: 16 }}>
         <button type="button" className="eva-btn" onClick={() => onApriIscritti({ giornata: g.slug })}>
-          <i className="fas fa-users" aria-hidden="true" />
+          <i className="fas fa-users" aria-hidden="true" />{" "}
           Vedi gli iscritti
         </button>
         <a className="eva-btn" href={urlStampa(g.slug)} target="_blank" rel="noopener noreferrer">
-          <i className="fas fa-print" aria-hidden="true" />
+          <i className="fas fa-print" aria-hidden="true" />{" "}
           Lista per la porta
         </a>
         <PulsanteScarica url={urlExport(FILTRI_VUOTI, g.slug)} onErrore={setErroreFile}>
@@ -273,7 +294,7 @@ function Andamento({ serie }: { serie: Riepilogo["nuove"]["serie"] }) {
         Nuove iscrizioni al giorno negli ultimi 21 giorni: {numero(totale)} in tutto, al massimo {numero(max)} in un
         giorno.
       </figcaption>
-      <div style={{ position: "relative" }} aria-hidden="true">
+      <div className="eva-grafico-tela" aria-hidden="true">
         <div className="eva-grafico-guida" style={{ top: 20 }}>
           <span className="num">{numero(alto)}</span>
         </div>

@@ -65,18 +65,19 @@ export default async function PaginaIngresso() {
         </div>
         {isAdmin ? (
           <Link href={PANNELLO} className="ingp-link">
-            <i className="fas fa-arrow-left" aria-hidden="true" />
+            <i className="fas fa-arrow-left" aria-hidden="true" />{" "}
             Pannello
           </Link>
         ) : (
           <a href="/auth/sign-out" className="ingp-link ingp-link-tenue">
-            <i className="fas fa-right-from-bracket" aria-hidden="true" />
+            <i className="fas fa-right-from-bracket" aria-hidden="true" />{" "}
             Esci
           </a>
         )}
       </header>
       <main className="ingp-main">
-        <Ingresso />
+        {/* "Oggi" calcolato qui, sul server, e passato al lettore: lo stesso valore nei due lati. */}
+        <Ingresso oggi={oggi?.slug ?? null} />
       </main>
     </div>
   );

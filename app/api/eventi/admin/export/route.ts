@@ -17,14 +17,21 @@ export const dynamic = "force-dynamic";
 /** Il separatore di Excel in italiano: con la virgola aprirebbe tutto in una colonna. */
 const SEP = ";";
 
+/** Un valore che è solo un numero di telefono internazionale: "+39 333 123 4567", "+39 (080) 12.34". */
+const SOLO_TELEFONO = /^\+[\d\s().\/-]+$/;
+
 /**
  * Una cella CSV (RFC 4180): tra virgolette, con le virgolette raddoppiate.
  * Un testo scritto da chi si iscrive che comincia con = + - @ diventerebbe
- * una formula in Excel: gli si mette davanti un apostrofo.
+ * una formula in Excel: gli si mette davanti un apostrofo. Per un numero di
+ * telefono con il prefisso (+39) basta uno spazio: Excel e LibreOffice
+ * mostrerebbero l'apostrofo, e il numero copiato non si potrebbe chiamare.
+ * Un valore fatto solo di cifre e segni non può contenere una funzione.
  */
 function cella(valore: unknown): string {
   let s = valore == null ? "" : String(valore);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (SOLO_TELEFONO.test(s)) s = ` ${s}`;
+  else if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return `"${s.replace(/"/g, '""')}"`;
 }
 

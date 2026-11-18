@@ -4,6 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+// The tiny module, not content.ts: the navbar is on every page and must not
+// carry the whole event programme in its bundle.
+import { ARCHIVE_MODE } from "@/app/eventi/vivere-piu-a-lungo/archivio";
 
 // The Foundation trains students to build digital scientists, and the menu
 // follows the programmes: the event first, then the school programme, the
@@ -26,9 +29,13 @@ const navLinks = [
 const accesso = { href: "/auth/login", label: "Log in" };
 const account = { href: "/member-portal", label: "My account" };
 // The one call to action on every page: registering for the event. On the
-// event pages, which are in Italian, the same button speaks Italian.
-const joinCta = { href: "/eventi/vivere-piu-a-lungo#iscrizione", label: "Join the event" };
-const joinCtaEventi = { ...joinCta, label: "Iscriviti all'evento" };
+// event pages, which are in Italian, the same button speaks Italian. Once the
+// event is archived registrations are closed, so the button only leads to
+// the event page, without the #iscrizione anchor.
+const joinCta = ARCHIVE_MODE
+  ? { href: "/eventi/vivere-piu-a-lungo", label: "The event" }
+  : { href: "/eventi/vivere-piu-a-lungo#iscrizione", label: "Join the event" };
+const joinCtaEventi = { ...joinCta, label: ARCHIVE_MODE ? "L'evento" : "Iscriviti all'evento" };
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);

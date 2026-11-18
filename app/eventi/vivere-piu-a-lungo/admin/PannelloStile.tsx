@@ -63,14 +63,17 @@ export const STILE_PANNELLO = `
 /* ── Superfici ── */
 .eva-box {
   background: #fff; border: 1px solid var(--border-color); border-radius: 16px;
-  padding: 18px; box-shadow: 0 2px 8px rgba(26,35,50,.04);
+  padding: 18px; box-shadow: 0 2px 8px rgba(26,35,50,.04); min-width: 0;
 }
 @media (min-width: 768px) { .eva-box { padding: 24px; } }
 .eva-h2 { font-size: 17px; font-weight: 700; color: var(--text-dark); margin: 0; line-height: 1.35; }
 .eva-sub { font-size: 13.5px; color: var(--text-mid); margin: 4px 0 0; line-height: 1.55; }
 .eva-nota { font-size: 12.5px; color: var(--text-mid); }
-.eva-griglia { display: grid; gap: 16px; }
-@media (min-width: 900px) { .eva-griglia-2 { grid-template-columns: 1fr 1fr; } }
+/* Colonne minmax(0, 1fr): una tabella o un grafico larghi scorrono dentro la
+   loro scheda, invece di allargare la colonna e la pagina sul telefono. */
+.eva-griglia { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.eva-griglia > * { min-width: 0; }
+@media (min-width: 900px) { .eva-griglia-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 
 /* ── Pulsanti ── */
 .eva-btn {
@@ -120,9 +123,18 @@ export const STILE_PANNELLO = `
   border-radius: 8px; color: inherit; opacity: .7; cursor: pointer;
 }
 .eva-chiudi:hover { opacity: 1; background: rgba(255,255,255,.6); }
-.eva-filtri { display: grid; gap: 12px; grid-template-columns: 1fr; }
-@media (min-width: 640px) { .eva-filtri { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1024px) { .eva-filtri { grid-template-columns: 2.2fr 1fr 1fr 1fr 1fr; align-items: end; } }
+/* La ricerca su una riga sua, i quattro menu sotto: a 1280px ogni menu ha
+   spazio per la sua etichetta intera. Tutto su una riga solo da 1536px. */
+.eva-filtri { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) {
+  .eva-filtri { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eva-filtri > :first-child { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) { .eva-filtri { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; } }
+@media (min-width: 1536px) {
+  .eva-filtri { grid-template-columns: minmax(0, 2.2fr) repeat(4, minmax(0, 1fr)); }
+  .eva-filtri > :first-child { grid-column: auto; }
+}
 
 /* ── Avvisi ── */
 .eva-avviso {
@@ -177,7 +189,11 @@ export const STILE_PANNELLO = `
 .eva-pill-teal { background: var(--primary-light); color: var(--eva-teal-ink); }
 
 /* ── Grafico delle iscrizioni ── */
-.eva-grafico { position: relative; margin-top: 18px; }
+/* Sul telefono il grafico tiene una larghezza minima e scorre dentro la sua
+   scheda. Le etichette ai bordi si ancorano verso l'interno, così niente
+   esce dal grafico e non nasce uno scorrimento vuoto. */
+.eva-grafico { position: relative; margin-top: 18px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+.eva-grafico-tela { position: relative; min-width: 420px; }
 .eva-grafico-area {
   display: flex; align-items: flex-end; gap: 3px; height: 150px; padding-top: 20px;
   border-bottom: 1px solid #CBD5E1;
@@ -191,6 +207,8 @@ export const STILE_PANNELLO = `
   background: var(--text-dark); color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap;
   padding: 4px 8px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity .12s ease; z-index: 2;
 }
+.eva-col:nth-child(-n+4) .eva-col-tip { left: 0; transform: none; }
+.eva-col:nth-last-child(-n+4) .eva-col-tip { left: auto; right: 0; transform: none; }
 .eva-col:hover .eva-col-tip { opacity: 1; }
 .eva-col:hover .eva-col-barra { filter: brightness(.92); }
 .eva-grafico-asse { display: flex; gap: 3px; margin-top: 6px; }
@@ -198,6 +216,8 @@ export const STILE_PANNELLO = `
   flex: 1 1 0; min-width: 0; text-align: center; font-size: 11px; color: var(--text-mid);
   white-space: nowrap; overflow: visible;
 }
+.eva-grafico-asse span:first-child { text-align: left; }
+.eva-grafico-asse span:last-child { direction: rtl; text-align: right; }
 .eva-grafico-guida {
   position: absolute; left: 0; right: 0; border-top: 1px dashed #E2E8F0; pointer-events: none;
 }
@@ -228,7 +248,7 @@ export const STILE_PANNELLO = `
 .eva-persone { display: grid; gap: 12px; }
 .eva-persona {
   background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px;
-  box-shadow: 0 1px 4px rgba(26,35,50,.03);
+  box-shadow: 0 1px 4px rgba(26,35,50,.03); min-width: 0;
 }
 @media (min-width: 768px) { .eva-persona { padding: 20px 22px; } }
 .eva-persona-testa { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 12px; }
@@ -275,6 +295,15 @@ export const STILE_PANNELLO = `
 .eva-seg button[aria-pressed="true"][data-stato="assente"] { background: var(--eva-errore); color: #fff; }
 .eva-seg button[aria-pressed="true"][data-stato="registrato"] { background: var(--eva-neutro); color: #fff; }
 .eva-seg button[disabled] { cursor: progress; }
+/* Sul telefono i tre stati occupano la riga intera, divisi in parti uguali. */
+@media (max-width: 480px) {
+  .eva-g-comandi > .eva-seg { display: flex; width: 100%; }
+  .eva-seg button { flex: 1 1 0; min-width: 0; justify-content: center; padding: 0 6px; font-size: 13px; }
+  .eva-seg button i:not(.fa-spinner) { display: none; }
+}
+@media (max-width: 360px) {
+  .eva-seg button { padding: 0 4px; font-size: 12.5px; }
+}
 
 /* ── Conferme in linea ── */
 .eva-chiedi {

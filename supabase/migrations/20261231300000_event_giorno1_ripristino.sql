@@ -14,20 +14,39 @@
 --
 -- CHE COSA FA (in una transazione: o tutto, o niente)
 --   1. Le sessioni come le vuole il sito: le due migrazioni mancanti, nello
---      stesso ordine e con lo stesso testo. Sono idempotenti: rieseguirle non
---      cambia niente.
+--      stesso ordine. I titoli e gli orari sono già quelli del sito di oggi
+--      (la data al posto di "Giorno 1"), non quelli dei file originali, e il
+--      passo 1a non tocca niente se 'giorno-1' esiste già. Questo passo è
+--      idempotente: rieseguirlo non cambia niente.
 --   2. Il recupero del 10 dicembre. Il modulo accetta solo 'giorno-1' e
 --      'giorno-2' e ne vuole almeno uno (lib/eventi/registration.ts), quindi
---      un'iscrizione senza nessuna giornata ha scelto per forza il 10: le si
---      assegna il Giorno 1, in ordine di iscrizione, in lista d'attesa solo
---      oltre la capienza. Chi ha già l'11 potrebbe aver scelto anche il 10, e
---      da qui non si può sapere: per loro serve un'email (vedi il pannello).
+--      PRIMA DEL MERGE un'iscrizione senza nessuna giornata ha scelto per
+--      forza il 10: le si assegna il 10 dicembre, in ordine di iscrizione, in
+--      lista d'attesa solo oltre la capienza. Chi ha già l'11 potrebbe aver
+--      scelto anche il 10, e da qui non si può sapere: per loro serve
+--      un'email (vedi il pannello).
 --   3. Nient'altro: non tocca iscrizioni, consensi, codici, presenze.
 --
 -- COME SI USA
 --   Editor SQL di Supabase, progetto di produzione: incollare il file intero
---   ed eseguire. Poi la query di controllo in fondo (o VERIFICA.sql).
---   Si può rieseguire: la seconda volta non trova niente da fare.
+--   ed eseguire UNA VOLTA SOLA, PRIMA DEL MERGE (prima che il nuovo sito
+--   vada online). Poi la query di controllo in fondo (o VERIFICA.sql).
+--   Se il nuovo sito è già online e il pannello dice che il 10 dicembre
+--   manca nel database, il file non è mai stato eseguito: eseguilo subito,
+--   una volta sola.
+--
+-- NON RIESEGUIRLO DOPO IL MERGE
+--   Il passo 1 si può ripetere senza effetti, il passo 2 no: dà il 10
+--   dicembre (confermato, o in lista d'attesa oltre la capienza) a OGNI
+--   iscrizione che in quel momento non ha giornate. Prima del merge
+--   un'iscrizione vuota poteva nascere solo dal guasto; dopo il merge
+--   può essere rimasta vuota per altri motivi (una
+--   giornata tolta dallo staff o dalla persona stessa, un errore a metà).
+--   Rieseguendo il file, quella persona riceverebbe un posto il 10 dicembre
+--   che non ha mai chiesto, scalato dalla capienza del PalaMazzola.
+--   Se dopo il merge compaiono iscrizioni senza giornate, controllale una
+--   per una nella scheda Iscritti del pannello: eliminale, oppure contatta
+--   la persona.
 -- =========================================================
 
 begin;

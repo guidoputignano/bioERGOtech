@@ -12,7 +12,8 @@
  *
  * Riepilogo e Iscritti restano montati dopo la prima visita, così tornarci
  * non ricarica tutto. Ingresso si monta solo quando è aperta: usa la
- * fotocamera, che non deve restare accesa in una scheda nascosta.
+ * fotocamera, che non deve restare accesa in una scheda nascosta. La sua
+ * giornata di oggi arriva dal server (prop `oggi`).
  */
 
 import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
@@ -35,9 +36,12 @@ const CHIAVI_FILTRI = ["giornata", "stato", "categoria"] as const;
 export function AdminPanel({
   schedaIniziale = "riepilogo",
   filtriIniziali = FILTRI_VUOTI,
+  oggi = null,
 }: {
   schedaIniziale?: SchedaId;
   filtriIniziali?: Filtri;
+  /** La giornata dell'evento di oggi secondo il server, o null. */
+  oggi?: string | null;
 }) {
   const [scheda, setScheda] = useState<SchedaId>(schedaIniziale);
   const [visitate, setVisitate] = useState<ReadonlySet<SchedaId>>(() => new Set([schedaIniziale]));
@@ -128,7 +132,7 @@ export function AdminPanel({
               className="eva-scheda"
               onClick={() => apri(s.id)}
             >
-              <i className={`fas ${s.icona}`} aria-hidden="true" />
+              <i className={`fas ${s.icona}`} aria-hidden="true" />{" "}
               {s.label}
             </button>
           );
@@ -144,7 +148,7 @@ export function AdminPanel({
           } else if (s.id === "iscritti" && visitate.has(s.id)) {
             contenuto = <Iscritti attivo={attiva} filtri={filtri} onFiltri={setFiltri} />;
           } else if (s.id === "ingresso" && attiva) {
-            contenuto = <Ingresso compatto />;
+            contenuto = <Ingresso compatto oggi={oggi} />;
           } else if (s.id === "comunicazioni" && visitate.has(s.id)) {
             contenuto = <ComunicazioniFerma />;
           }

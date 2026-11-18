@@ -284,7 +284,8 @@ const CSS = `
 .ev-cta-blocco { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
 @media (min-width: 640px) { .ev-cta-blocco { align-items: flex-start; } }
 @media (min-width: 1024px) { .ev-cta-blocco { align-items: flex-end; flex-shrink: 0; } }
-.event-page .ev-cta { min-height: 50px; padding: 13px 32px; font-size: 1rem; }
+/* main.css riporta .btn-primary a inline-block: senza flex e gap la freccia resta attaccata al testo. */
+.event-page .ev-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 13px 32px; font-size: 1rem; }
 @media (min-width: 640px) { .event-page .ev-cta { padding: 14px 40px; } }
 .ev-scorciatoie { display: flex; flex-wrap: wrap; justify-content: center; column-gap: 20px; margin: 0; }
 @media (min-width: 640px) { .ev-scorciatoie { justify-content: flex-start; } }
@@ -304,7 +305,9 @@ const CSS = `
 .ev-palco-testa h2 { margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--text-dark); }
 .ev-palco-testa a { font-size: 14px; white-space: nowrap; }
 @media (min-width: 768px) { .ev-palco-testa { justify-content: center; gap: 24px; margin-bottom: 20px; } .ev-palco-testa h2 { font-size: 1.25rem; } }
-.ev-palco-lista { list-style: none; display: flex; gap: 12px; margin: 0 -24px; padding: 6px 24px 10px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: 24px; scrollbar-width: thin; }
+/* position: relative tiene dentro la striscia anche gli sr-only (assoluti) dei
+   volti fuori schermo: senza, allargavano la pagina sotto i 768px. */
+.ev-palco-lista { position: relative; list-style: none; display: flex; gap: 12px; margin: 0 -24px; padding: 6px 24px 10px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: 24px; scrollbar-width: thin; }
 .ev-palco-lista > li { flex: 0 0 68px; scroll-snap-align: start; }
 @media (min-width: 768px) {
   .ev-palco-lista { flex-wrap: wrap; justify-content: center; overflow: visible; margin: 0; padding: 6px 0 0; gap: 18px 14px; }
@@ -578,7 +581,7 @@ function VoceProgramma({ v }: { v: ProgrammaVoce }) {
             <p className="ev-desc ev-desc-ampia">{v.desc}</p>
             <details className="ev-dettagli">
               <summary>
-                Di che cosa si parla
+                Di che cosa si parla{" "}
                 <i className="fas fa-chevron-down" aria-hidden="true" />
               </summary>
               <p className="ev-desc">{v.desc}</p>
@@ -699,7 +702,7 @@ export default function EventPage() {
               <div className="min-w-0">
                 {!ARCHIVE_MODE && (
                   <p className="ev-gratis">
-                    <i className="fas fa-ticket" aria-hidden="true" />
+                    <i className="fas fa-ticket" aria-hidden="true" />{" "}
                     Ingresso gratuito, iscrizione obbligatoria
                   </p>
                 )}
@@ -715,7 +718,7 @@ export default function EventPage() {
                   {/* L'id serve alla barra fissa del telefono: compare quando
                       questo pulsante esce dallo schermo. */}
                   <a id="evento-cta-hero" href="#iscrizione" className="btn-primary ev-cta">
-                    Iscriviti gratis
+                    Iscriviti gratis{" "}
                     <i className="fas fa-arrow-down" aria-hidden="true" />
                   </a>
                   <p className="ev-scorciatoie">
@@ -799,8 +802,8 @@ export default function EventPage() {
             ) : (
               <>
                 <p className="ev-iscrizione-intro">
-                  Ci vuole un minuto: scegli le giornate e ti mandiamo il biglietto per email. I posti
-                  sono limitati.
+                  Ci vuole un minuto: scegli le giornate e ti mandiamo per email il biglietto con il QR code. I
+                  posti sono limitati.
                 </p>
                 {/* Sul telefono il modulo viene subito dopo il titolo e i passi
                     dopo; da 1024px i passi stanno accanto, fermi mentre si

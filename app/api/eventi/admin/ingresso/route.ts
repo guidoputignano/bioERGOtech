@@ -26,7 +26,10 @@ export const dynamic = "force-dynamic";
  *      { esito, persona?, ora?, altreGiornate?, bridgeId?, forzato?: "lista_attesa" | "altra_giornata" }
  *      esito: entrato | gia_entrato | lista_attesa | altra_giornata | non_trovato
  *
- * POST { annulla: bridgeId }               l'ingresso torna "registrato"
+ * POST { annulla: bridgeId, forzato? }     l'ingresso torna com'era prima:
+ *      "registrato"; con forzato "lista_attesa" anche di nuovo in lista
+ *      d'attesa; con "altra_giornata" la giornata aggiunta alla porta si toglie
+ *      { annullato, giaAnnullato?, tornaInAttesa?, giornataTolta? }
  * POST { cerca, giornata }                 biglietto dimenticato: per nome o cognome
  *
  * L'ora d'ingresso è la prima: l'aggiornamento è condizionato a
@@ -282,6 +285,9 @@ async function aggiungiGiornataEdEntra(
       is_waitlist: false,
       stato_checkin: "presente",
       checkin_ts: adesso,
+      // Lo stesso istante dell'ingresso: così l'annullamento riconosce con
+      // certezza una riga nata alla porta (vedi nataAllaPorta).
+      created_at: adesso,
     })
     .select("id, checkin_ts")
     .single();
@@ -333,7 +339,7 @@ async function ingresso(
   const ponte = iscr.giornate.find((g) => g.slug === sessione.slug);
 
   // Perché la persona è entrata senza un posto confermato per oggi, se è così.
-  let forzato: "lista_attesa" | "altra_giornata" | undefined;
+  let forzato: Forzato | undefined;
   let esito: EsitoPresenza;
   if (ponte) {
     if (ponte.stato_checkin === "presente") {
@@ -364,10 +370,73 @@ async function ingresso(
   }
 }
 
-async function annulla(client: SupabaseClient, bridgeId: string) {
+type Forzato = "lista_attesa" | "altra_giornata";
+
+/**
+ * Entro quanto la riga ponte e l'ingresso nascono insieme, se la giornata è
+ * stata aggiunta alla porta. aggiungiGiornataEdEntra scrive lo stesso
+ * istante nei due campi; il margine copre le righe scritte prima che lo
+ * facesse. Stretto apposta: chi si iscrive dal modulo alla porta e viene
+ * letto subito dopo ha una riga sua, che l'annullamento non deve cancellare.
+ */
+const NATA_ALLA_PORTA_MS = 2_000;
+
+/**
+ * La riga è nata alla porta (aggiungiGiornataEdEntra): creata e segnata
+ * presente nello stesso istante. È la rete di sicurezza per un telefono che
+ * non sa più com'era entrata la persona (per esempio dopo un ricaricamento).
+ */
+function nataAllaPorta(createdAt: string | null, checkinTs: string | null): boolean {
+  if (!createdAt || !checkinTs) return false;
+  const creata = Date.parse(createdAt);
+  const entrata = Date.parse(checkinTs);
+  if (Number.isNaN(creata) || Number.isNaN(entrata)) return false;
+  return Math.abs(entrata - creata) <= NATA_ALLA_PORTA_MS;
+}
+
+/**
+ * Annulla un ingresso e rimette le cose come prima. Un ingresso normale
+ * torna "registrato". Un ingresso forzato aveva cambiato anche altro, e si
+ * disfa anche quello: chi era in lista d'attesa ci torna, e una giornata
+ * aggiunta alla porta si toglie. Tutto solo se la riga è ancora "presente".
+ */
+async function annulla(client: SupabaseClient, bridgeId: string, forzato: Forzato | null) {
+  const { data: riga, error: erroreLettura } = await client
+    .from("event_registration_sessions")
+    .select("id, stato_checkin, checkin_ts, created_at")
+    .eq("id", bridgeId)
+    .maybeSingle();
+  if (erroreLettura) {
+    console.error("[eventi/admin/ingresso] lettura per annullamento:", erroreLettura.message);
+    return errore("L'annullamento non è stato salvato. Riprova.", 500);
+  }
+  if (!riga) return errore("Questo ingresso non esiste più: aggiorna l'elenco.", 404);
+  // Già annullato, magari da un altro telefono: va bene così.
+  if (riga.stato_checkin !== "presente") return risposta({ annullato: true, giaAnnullato: true });
+
+  if (forzato === "altra_giornata" || nataAllaPorta(riga.created_at ?? null, riga.checkin_ts ?? null)) {
+    const { data: tolte, error } = await client
+      .from("event_registration_sessions")
+      .delete()
+      .eq("id", bridgeId)
+      .eq("stato_checkin", "presente")
+      .select("id");
+    if (error) {
+      console.error("[eventi/admin/ingresso] annullamento (giornata aggiunta alla porta):", error.message);
+      return errore("L'annullamento non è stato salvato. Riprova.", 500);
+    }
+    if (!tolte || tolte.length === 0) return risposta({ annullato: true, giaAnnullato: true });
+    return risposta({ annullato: true, giornataTolta: true });
+  }
+
+  const tornaInAttesa = forzato === "lista_attesa";
   const { data, error } = await client
     .from("event_registration_sessions")
-    .update({ stato_checkin: "registrato", checkin_ts: null })
+    .update(
+      tornaInAttesa
+        ? { stato_checkin: "registrato", checkin_ts: null, is_waitlist: true }
+        : { stato_checkin: "registrato", checkin_ts: null },
+    )
     .eq("id", bridgeId)
     .eq("stato_checkin", "presente")
     .select("id")
@@ -376,18 +445,21 @@ async function annulla(client: SupabaseClient, bridgeId: string) {
     console.error("[eventi/admin/ingresso] annullamento:", error.message);
     return errore("L'annullamento non è stato salvato. Riprova.", 500);
   }
-  if (!data) {
-    const { data: esiste } = await client.from("event_registration_sessions").select("id").eq("id", bridgeId).maybeSingle();
-    if (!esiste) return errore("Questo ingresso non esiste più: aggiorna l'elenco.", 404);
-    // Era già stato annullato, magari da un altro telefono: va bene così.
-    return risposta({ annullato: true, giaAnnullato: true });
-  }
-  return risposta({ annullato: true });
+  if (!data) return risposta({ annullato: true, giaAnnullato: true });
+  return risposta({ annullato: true, ...(tornaInAttesa ? { tornaInAttesa: true } : {}) });
 }
 
-/** Normalizza per confrontare i nomi: minuscole, senza accenti. */
+/**
+ * Normalizza per confrontare i nomi: minuscole, senza accenti, e un solo
+ * apostrofo. L'iPhone scrive ’ (tipografico): "D’Amico" salvato così deve
+ * trovarsi anche scrivendo "d'amico" da un telefono Android, e viceversa.
+ */
 function piano(v: string): string {
-  return v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return v
+    .replace(/[‘’ʼ`´]/g, "'")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
 }
 
 /**
@@ -462,7 +534,9 @@ export async function POST(request: Request) {
   if ("annulla" in body) {
     const id = typeof body.annulla === "string" ? body.annulla : "";
     if (!UUID.test(id)) return errore("Ingresso da annullare non valido.", 400);
-    return annulla(client, id);
+    const forzato: Forzato | null =
+      body.forzato === "lista_attesa" || body.forzato === "altra_giornata" ? body.forzato : null;
+    return annulla(client, id, forzato);
   }
 
   const giornata = giornataValida(body.giornata);

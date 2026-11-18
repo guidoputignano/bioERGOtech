@@ -40,6 +40,8 @@ type RispostaGestisci = {
   invariato?: boolean;
   status?: SessionStatus;
   emailInviata?: boolean;
+  /** Per "annulla": com'era la giornata tolta (posto confermato o lista d'attesa). */
+  era?: SessionStatus;
 };
 
 const ENDPOINT = "/api/eventi/registrations/gestisci";
@@ -62,16 +64,32 @@ function messaggioPerStato(status: number): string {
   }
 }
 
-/** Il testo di successo per ogni azione, in base a quello che la rotta risponde. */
-function messaggioSuccesso(azione: "annulla" | "aggiungi" | "reinvia", slug: string | undefined, r: RispostaGestisci): string {
+/**
+ * Il testo di successo per ogni azione, in base a quello che la rotta
+ * risponde. Per "annulla" conta com'era la giornata: chi esce da una lista
+ * d'attesa non ha liberato nessun posto, e non lo si ringrazia per questo.
+ */
+function messaggioSuccesso(
+  azione: "annulla" | "aggiungi" | "reinvia",
+  slug: string | undefined,
+  r: RispostaGestisci,
+  era: SessionStatus | undefined,
+): string {
   const conArt = slug ? giornateConArticolo([slug]) : "";
   if (azione === "reinvia") {
     return "Fatto: ti abbiamo rimandato il biglietto all'indirizzo usato per l'iscrizione. Se non lo vedi tra qualche minuto, controlla anche nella cartella spam o Promozioni.";
   }
   if (azione === "annulla") {
     if (r.invariato) return `${maiuscola(conArt)} non è più nel tuo biglietto.`;
-    if (r.annullata) return "Il tuo biglietto è stato annullato. Grazie per aver liberato il posto.";
-    return `Fatto: ${conArt} non è più nel tuo biglietto. Grazie: il posto passa a chi è in lista d'attesa.`;
+    const daAttesa = era === "lista_attesa";
+    if (r.annullata) {
+      return daAttesa
+        ? "La tua iscrizione è stata annullata."
+        : "Il tuo biglietto è stato annullato. Grazie per aver liberato il posto.";
+    }
+    return daAttesa
+      ? `Fatto: non sei più in lista d'attesa per ${conArt}.`
+      : `Fatto: ${conArt} non è più nel tuo biglietto. Grazie: il posto passa a chi è in lista d'attesa.`;
   }
   if (r.invariato) return `${maiuscola(conArt)} è già nel tuo biglietto.`;
   const email = r.emailInviata ? " Ti abbiamo mandato il biglietto aggiornato per email." : "";
@@ -98,7 +116,12 @@ function useAzioneBiglietto(codice: string) {
   }, [annuncio]);
 
   const esegui = useCallback(
-    async (azione: "annulla" | "aggiungi" | "reinvia", giornata?: string): Promise<RispostaGestisci | null> => {
+    async (
+      azione: "annulla" | "aggiungi" | "reinvia",
+      giornata?: string,
+      /** Lo stato della giornata come lo mostra la pagina, se la rotta non dice "era". */
+      statoNoto?: SessionStatus,
+    ): Promise<RispostaGestisci | null> => {
       const chiave = `${azione}:${giornata ?? ""}`;
       setInCorso(chiave);
       setAnnuncio(null);
@@ -124,10 +147,13 @@ function useAzioneBiglietto(codice: string) {
           if (res.status === 409) router.refresh();
           return null;
         }
-        setAnnuncio({ tipo: "ok", testo: messaggioSuccesso(azione, giornata, data) });
+        const era =
+          data.era === "confermato" || data.era === "lista_attesa" ? data.era : statoNoto;
+        setAnnuncio({ tipo: "ok", testo: messaggioSuccesso(azione, giornata, data, era) });
         if (azione === "annulla" && data.annullata) {
-          // L'iscrizione non c'è più: la pagina mostra il messaggio di annullamento.
-          router.replace(`${pathname}?annullato=1`, { scroll: true });
+          // L'iscrizione non c'è più: la pagina mostra il messaggio di
+          // annullamento, senza ringraziare per un posto se era solo in attesa.
+          router.replace(`${pathname}?annullato=${era === "lista_attesa" ? "attesa" : "1"}`, { scroll: true });
         } else if (azione !== "reinvia") {
           router.refresh();
         }
@@ -312,7 +338,7 @@ export function GestisciBiglietto({
                         disabled={occupato}
                         aria-busy={inCorso === `annulla:${s.slug}` || undefined}
                         onClick={async () => {
-                          const r = await esegui("annulla", s.slug);
+                          const r = await esegui("annulla", s.slug, g.status);
                           if (r) setDaConfermare(null);
                         }}
                       >
@@ -344,21 +370,19 @@ export function GestisciBiglietto({
             const piena = posti[s.slug] !== undefined && posti[s.slug] <= 0;
             const conArt = giornateConArticolo([s.slug]);
             const chiave = `aggiungi:${s.slug}`;
+            const disponibilita = iniziata
+              ? " La giornata è iniziata."
+              : piena
+                ? " Al completo: puoi entrare in lista d'attesa."
+                : posti[s.slug] !== undefined
+                  ? " Ci sono posti liberi."
+                  : "";
             return (
               <li key={s.slug} className="vpg-riga vpg-riga-aggiungi">
                 <div className="vpg-riga-testa">
                   <div className="vpg-info">
                     <span className="vpg-data">{s.giornoLabel}</span>
-                    <span className="vpg-sotto">
-                      {s.luogoBreve}, {s.orario}.
-                      {iniziata
-                        ? " La giornata è iniziata."
-                        : piena
-                          ? " Al completo: puoi entrare in lista d'attesa."
-                          : posti[s.slug] !== undefined
-                            ? " Ci sono posti liberi."
-                            : ""}
-                    </span>
+                    <span className="vpg-sotto">{`${s.luogoBreve}, ${s.orario}.${disponibilita}`}</span>
                   </div>
                   {!iniziata && (
                     <button
@@ -390,7 +414,7 @@ export function GestisciBiglietto({
           aria-busy={inCorso === "reinvia:" || undefined}
           onClick={() => esegui("reinvia")}
         >
-          {inCorso === "reinvia:" ? <Rotella /> : <i className="fas fa-envelope" aria-hidden="true" />}
+          {inCorso === "reinvia:" ? <Rotella /> : <i className="fas fa-envelope" aria-hidden="true" />}{" "}
           Rimandami il biglietto per email
         </button>
       </div>
@@ -481,7 +505,7 @@ export function InvitoAggiungi({
 export function StampaBiglietto() {
   return (
     <button type="button" className="vpg-btn btn-outline no-print" onClick={() => window.print()}>
-      <i className="fas fa-print" aria-hidden="true" />
+      <i className="fas fa-print" aria-hidden="true" />{" "}
       Stampa o salva in PDF
     </button>
   );

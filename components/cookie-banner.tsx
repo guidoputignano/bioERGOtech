@@ -43,14 +43,35 @@ const PERCORSI_SENZA_ADS = [
   "/eventi/vivere-piu-a-lungo/universita",
   // Il pannello e l'ingresso dell'evento: pagine dello staff e dei volontari.
   "/eventi/vivere-piu-a-lungo/admin",
+  // Il biglietto online: pagina personale, spesso di uno studente.
+  "/eventi/vivere-piu-a-lungo/biglietto",
   "/member-portal",
   "/auth",
 ];
 
+/**
+ * Pagine in cui nemmeno Google Analytics si configura. L'indirizzo del
+ * biglietto online contiene il codice, che fa da chiave per gestire
+ * l'iscrizione: non deve finire nei report. Chi ci arriva lo fa sempre con un
+ * caricamento completo (il link dell'email, "Apri il biglietto"), quindi qui
+ * Analytics non parte e non registra nemmeno i cambi di indirizzo successivi.
+ */
+const PERCORSI_SENZA_ANALYTICS = ["/eventi/vivere-piu-a-lungo/biglietto"];
+
+const inPercorso = (elenco: readonly string[]) => {
+  if (typeof window === "undefined") return true;
+  const path = window.location.pathname;
+  return elenco.some((p) => path === p || path.startsWith(p + "/"));
+};
+
 function adsConsentiti(): boolean {
   if (typeof window === "undefined") return false;
-  const path = window.location.pathname;
-  return !PERCORSI_SENZA_ADS.some((p) => path === p || path.startsWith(p + "/"));
+  return !inPercorso(PERCORSI_SENZA_ADS);
+}
+
+function analyticsConsentiti(): boolean {
+  if (typeof window === "undefined") return false;
+  return !inPercorso(PERCORSI_SENZA_ANALYTICS);
 }
 
 /**
@@ -66,10 +87,11 @@ function adsConsentiti(): boolean {
 function loadGoogleTags(prefs: { analytics: boolean; marketing: boolean }) {
   if (typeof window === "undefined") return;
   const conAds = prefs.marketing && adsConsentiti();
-  if (!prefs.analytics && !conAds) return;
+  const conAnalytics = prefs.analytics && analyticsConsentiti();
+  if (!conAnalytics && !conAds) return;
 
   const configura = () => {
-    if (prefs.analytics) window.gtag?.("config", GA_ID, { anonymize_ip: true });
+    if (conAnalytics) window.gtag?.("config", GA_ID, { anonymize_ip: true });
     if (conAds) window.gtag?.("config", ADS_ID);
   };
 

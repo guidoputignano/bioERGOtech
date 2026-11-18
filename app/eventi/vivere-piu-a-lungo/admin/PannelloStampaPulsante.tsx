@@ -4,7 +4,7 @@
 export function PannelloStampaPulsante() {
   return (
     <button type="button" className="eva-btn eva-btn-primario" onClick={() => window.print()}>
-      <i className="fas fa-print" aria-hidden="true" />
+      <i className="fas fa-print" aria-hidden="true" />{" "}
       Stampa
     </button>
   );

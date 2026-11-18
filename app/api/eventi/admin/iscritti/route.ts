@@ -4,8 +4,10 @@ import { getEventAdminClient } from "@/lib/eventi/admin-guard";
 import {
   caricaIscrizione,
   giornateAggiungibili,
+  giornateMancantiNelDatabase,
   inviaBiglietto,
   postiPerGiornata,
+  promuoviDaListaAttesa,
   type IscrizioneEvento,
 } from "@/lib/eventi/evento-server";
 import { giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
@@ -84,9 +86,14 @@ const errore = (messaggio: string, status: number, extra: Record<string, unknown
  *   d'attesa per una giornata e gli manda il biglietto aggiornato. Se la
  *   giornata è al completo risponde 409 con codice "pieno", e serve una
  *   seconda richiesta con `forza: true` (lo staff lo conferma a parole).
- * - `rimuovi_giornata` { bridge_id, elimina_iscrizione? }: toglie la persona
- *   da quella giornata. Se era l'ultima e lo staff lo ha chiesto, elimina
- *   l'intera iscrizione; altrimenti l'iscrizione resta, senza giornate.
+ * - `rimuovi_giornata` { bridge_id }: toglie la persona da quella giornata.
+ *   Se era l'ultima, elimina sempre l'intera iscrizione (qualunque cosa mandi
+ *   il client): un'iscrizione senza giornate non ha un biglietto valido.
+ *   Se il posto era confermato e la giornata non è ancora conclusa, passa a
+ *   chi è in lista d'attesa da più tempo (promuoviDaListaAttesa), che riceve
+ *   il biglietto; la risposta dice a chi (`promossa`, solo il nome).
+ * - `elimina_iscrizione` { registration_id }: elimina un'iscrizione rimasta
+ *   senza giornate, ma non prima del file di ripristino.
  * - `reinvia` { registration_id }: rimanda il biglietto.
  *
  * Solo staff (requireAdmin). Ogni esito, email compresa, torna al pannello:
@@ -172,7 +179,8 @@ export async function POST(request: Request) {
     if (azione === "rimuovi_giornata") {
       const bridgeId = typeof body.bridge_id === "string" ? body.bridge_id : "";
       if (!UUID.test(bridgeId)) return errore("Parametri non validi.", 400);
-      const eliminaIscrizione = body.elimina_iscrizione === true;
+      // `elimina_iscrizione` non conta più: se è l'ultima giornata,
+      // l'iscrizione si elimina sempre.
 
       const ponte = await leggiPonte(client, bridgeId);
       if (!ponte) return errore("Questa giornata non risulta più nell'iscrizione: aggiorna l'elenco.", 404);
@@ -181,15 +189,33 @@ export async function POST(request: Request) {
       const { error: delError } = await client.from("event_registration_sessions").delete().eq("id", ponte.id);
       if (delError) throw new Error(`rimozione giornata: ${delError.message}`);
 
-      const { count: rimaste, error: restError } = await client
-        .from("event_registration_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("registration_id", ponte.registration_id);
-      if (restError) throw new Error(`giornate rimaste: ${restError.message}`);
+      // Subito dopo la cancellazione, prima di qualunque altra cosa che
+      // possa fallire: il posto confermato passa a chi aspetta da più tempo,
+      // che riceve il biglietto. Solo per le giornate del sito non ancora
+      // concluse: dopo, l'email annuncerebbe un posto per una giornata
+      // finita. Non lancia.
+      const sessioneSito = sessionBySlug(ponte.slug);
+      const giornataAperta = sessioneSito ? Date.parse(sessioneSito.fineISO) > Date.now() : false;
+      let promossa: { nome: string } | null = null;
+      if (!ponte.is_waitlist && giornataAperta) {
+        const chiave = process.env.RESEND_API_KEY;
+        const iscrPromossa = await promuoviDaListaAttesa(client, chiave ? new Resend(chiave) : null, ponte.slug);
+        if (iscrPromossa) {
+          promossa = { nome: `${iscrPromossa.nome} ${iscrPromossa.cognome}`.trim() || "una persona senza nome" };
+        }
+      }
+      const promozione = promossa
+        ? ` Posto passato a ${promossa.nome} dalla lista d'attesa. ${
+            process.env.RESEND_API_KEY
+              ? "Il biglietto aggiornato parte per email: se non arriva, puoi reinviarlo dalla sua scheda."
+              : "L'email non è partita perché sul server manca RESEND_API_KEY: avvisa la persona a mano."
+          }`
+        : "";
 
-      // Se si è liberato un posto confermato, lo staff sa subito chi aspetta.
+      // Se il posto è rimasto libero e qualcuno aspetta ancora (per esempio
+      // perché la giornata è oltre la capienza), lo staff lo sa subito.
       let inAttesa = 0;
-      if (!ponte.is_waitlist) {
+      if (!ponte.is_waitlist && !promossa && giornataAperta) {
         const { count } = await client
           .from("event_registration_sessions")
           .select("id", { count: "exact", head: true })
@@ -199,19 +225,44 @@ export async function POST(request: Request) {
       }
       const suggerimento =
         inAttesa > 0
-          ? ` Si è liberato un posto: ${inAttesa === 1 ? "c'è 1 persona" : `ci sono ${inAttesa} persone`} in lista d'attesa per ${art}.`
+          ? ` In lista d'attesa per ${art} ${inAttesa === 1 ? "c'è 1 persona" : `ci sono ${inAttesa} persone`}: se c'è posto, puoi ${inAttesa === 1 ? "confermarla" : "confermarle"} da qui.`
           : "";
 
-      if ((rimaste ?? 0) === 0 && eliminaIscrizione) {
+      const { count: rimaste, error: restError } = await client
+        .from("event_registration_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("registration_id", ponte.registration_id);
+      if (restError) {
+        console.error("[eventi/admin/iscritti] giornate rimaste:", restError.message);
+        return NextResponse.json({
+          ok: true,
+          eliminata: false,
+          attenzione: true,
+          promossa,
+          messaggio: `Tolta l'iscrizione per ${art}, ma non riesco a contare le giornate rimaste. Aggiorna l'elenco: se ora non ne ha nessuna, elimina l'iscrizione dalla sua scheda.${promozione}${suggerimento}`,
+        });
+      }
+
+      if ((rimaste ?? 0) === 0) {
+        // L'ultima giornata: l'iscrizione si elimina sempre.
         const { error: regError } = await client.from("event_registrations").delete().eq("id", ponte.registration_id);
         if (regError) {
-          throw new Error(`eliminazione iscrizione: ${regError.message}`);
+          console.error("[eventi/admin/iscritti] eliminazione iscrizione:", regError.message);
+          return NextResponse.json({
+            ok: true,
+            eliminata: false,
+            attenzione: true,
+            rimaste: 0,
+            promossa,
+            messaggio: `Giornata tolta, ma l'iscrizione non si è cancellata e ora non ha nessuna giornata. Aggiorna l'elenco ed eliminala dalla sua scheda.${promozione}${suggerimento}`,
+          });
         }
         return NextResponse.json({
           ok: true,
           eliminata: true,
           rimaste: 0,
-          messaggio: `Iscrizione eliminata: ${art} era la sua unica giornata.${suggerimento}`,
+          promossa,
+          messaggio: `Iscrizione eliminata: ${art} era la sua unica giornata.${promozione}${suggerimento}`,
         });
       }
 
@@ -219,20 +270,27 @@ export async function POST(request: Request) {
         ok: true,
         eliminata: false,
         rimaste: rimaste ?? 0,
-        messaggio:
-          (rimaste ?? 0) === 0
-            ? `Tolta l'iscrizione per ${art}. La persona resta in elenco, senza nessuna giornata.${suggerimento}`
-            : `Tolta l'iscrizione per ${art}.${suggerimento}`,
+        promossa,
+        messaggio: `Tolta l'iscrizione per ${art}.${promozione}${suggerimento}`,
       });
     }
 
     /* ── Elimina un'iscrizione rimasta senza giornate ───────────────── */
-    // Un'iscrizione senza nessuna giornata non ha un biglietto valido e ferma
-    // le comunicazioni a tutti (il segno del guasto del 10 dicembre). Si può
-    // eliminare da qui, ma solo se davvero non ha più nessuna giornata.
+    // Un'iscrizione senza nessuna giornata non ha un biglietto valido e non
+    // riceve le email a tutti. Si può eliminare da qui, ma solo se davvero
+    // non ha più nessuna giornata, e mai prima del file di ripristino: finché
+    // manca una giornata nel database, quell'iscrizione può essere una di
+    // quelle che il file riporta al 10 dicembre.
     if (azione === "elimina_iscrizione") {
       const registrationId = typeof body.registration_id === "string" ? body.registration_id : "";
       if (!UUID.test(registrationId)) return errore("Parametri non validi.", 400);
+      if ((await giornateMancantiNelDatabase(client)).length > 0) {
+        return errore(
+          "Prima va eseguito il file di ripristino: questa iscrizione potrebbe riavere il 10 dicembre.",
+          409,
+          { codice: "ripristino_mancante" },
+        );
+      }
       const { count, error: countError } = await client
         .from("event_registration_sessions")
         .select("id", { count: "exact", head: true })
@@ -255,7 +313,7 @@ export async function POST(request: Request) {
       if (!iscr) return errore("Iscrizione non trovata: forse è stata eliminata. Aggiorna l'elenco.", 404);
       if (!iscr.giornate.some((g) => sessionBySlug(g.slug))) {
         return errore(
-          "Questa iscrizione non ha nessuna giornata: il biglietto sarebbe vuoto. Prima va ripristinata la giornata.",
+          "Questa iscrizione non ha nessuna giornata: il biglietto sarebbe vuoto. Prima aggiungi la giornata giusta dal biglietto, oppure elimina l'iscrizione.",
           409,
         );
       }

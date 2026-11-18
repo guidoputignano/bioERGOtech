@@ -8,7 +8,14 @@
  */
 
 import { refusoEmail } from "@/lib/eventi/email-refusi";
-import type { SessionStatus } from "@/lib/eventi/registration";
+// registration.ts è TypeScript semplice, senza React né Supabase: la regola
+// sui nomi è la stessa della rotta, senza portare codice server nel modulo.
+import {
+  ERRORE_CARATTERI_COGNOME,
+  ERRORE_CARATTERI_NOME,
+  nomeDiPersonaValido,
+  type SessionStatus,
+} from "@/lib/eventi/registration";
 import {
   CATEGORIE,
   EVENT,
@@ -149,21 +156,26 @@ export type DatiDaValidare = {
 export function validaModulo(d: DatiDaValidare): ErroriModulo {
   const e: ErroriModulo = {};
   if (d.sessioni.length === 0) e.sessioni = "Scegli almeno una giornata.";
-  if (!d.nome.trim()) e.nome = "Scrivi il tuo nome.";
-  if (!d.cognome.trim()) e.cognome = "Scrivi il tuo cognome.";
+  const nome = d.nome.trim();
+  if (!nome) e.nome = "Scrivi il tuo nome.";
+  else if (!nomeDiPersonaValido(nome)) e.nome = ERRORE_CARATTERI_NOME;
+  const cognome = d.cognome.trim();
+  if (!cognome) e.cognome = "Scrivi il tuo cognome.";
+  else if (!nomeDiPersonaValido(cognome)) e.cognome = ERRORE_CARATTERI_COGNOME;
   const email = d.email.trim();
   if (!email) {
     e.email = "Scrivi il tuo indirizzo email.";
   } else if (!EMAIL_RE.test(email)) {
     e.email = "L'indirizzo email non è completo: deve avere la forma nome@esempio.it.";
   } else {
+    // Le stesse parole dell'avviso accanto al campo: "forse intendevi".
     const r = refusoEmail(email);
     if (r?.impossibile) {
       e.email = r.suggerimento
-        ? `L'indirizzo email finisce con «${r.dominio}», che non esiste: forse è ${r.suggerimento}?`
+        ? `L'indirizzo email finisce con «${r.dominio}», che non esiste: forse intendevi ${r.suggerimento}?`
         : `L'indirizzo email finisce con «${r.dominio}», che non esiste.`;
     } else if (r && !d.emailConfermata) {
-      e.email = `Controlla l'indirizzo email: forse è ${r.suggerimento}?`;
+      e.email = `Controlla l'indirizzo email: forse intendevi ${r.suggerimento}?`;
     }
   }
   if (!isCategoria(d.categoria)) e.categoria = "Indica chi sei.";
@@ -177,13 +189,28 @@ export function validaModulo(d: DatiDaValidare): ErroriModulo {
 export type GiornataEsito = { slug: string; status: SessionStatus };
 
 export type EsitoServer = {
-  /** Assente solo nella risposta all'honeypot: lì si ringrazia e basta. */
+  /**
+   * Assente nella risposta all'honeypot (lì si ringrazia e basta) e quando
+   * l'email era già iscritta e chi scrive non ha fatto l'accesso con quella
+   * email (giaIscritto): il codice arriva solo per email.
+   */
   codice: string | null;
   /** Tutte le giornate che la persona ha adesso, non solo quelle di oggi. */
   sessions: GiornataEsito[];
   /** Le giornate aggiunte con questo invio. null se la rotta non lo dice. */
   nuove: string[] | null;
   nuovoAccount: boolean;
+  /**
+   * Il biglietto è partito per email. True anche quando la rotta non lo dice
+   * (la risposta all'honeypot): solo un false esplicito cambia il testo.
+   */
+  emailInviata: boolean;
+  /**
+   * Con questa email c'era già un'iscrizione e chi scrive non ha fatto
+   * l'accesso con lo stesso indirizzo: niente codice né giornate a schermo,
+   * il biglietto aggiornato va solo all'indirizzo dell'iscrizione.
+   */
+  giaIscritto: boolean;
 };
 
 export type RispostaIscrizione =
@@ -238,12 +265,76 @@ export async function leggiRisposta(res: Response): Promise<RispostaIscrizione> 
       ? o.sessions.filter(isGiornataEsito).map((s) => ({ slug: s.slug, status: s.status }))
       : [];
     const nuove = Array.isArray(o.nuove) ? o.nuove.filter((s): s is string => typeof s === "string") : null;
-    const codice = typeof o.codice === "string" && o.codice.trim() ? o.codice.trim() : null;
-    return { ok: true, esito: { codice, sessions, nuove, nuovoAccount: o.nuovoAccount === true } };
+    const giaIscritto = o.giaIscritto === true;
+    // Per un'email già iscritta non si mostra nulla dell'iscrizione, anche se
+    // la risposta lo contenesse.
+    const codice = !giaIscritto && typeof o.codice === "string" && o.codice.trim() ? o.codice.trim() : null;
+    return {
+      ok: true,
+      esito: {
+        codice,
+        sessions: giaIscritto ? [] : sessions,
+        nuove: giaIscritto ? [] : nuove,
+        nuovoAccount: !giaIscritto && o.nuovoAccount === true,
+        emailInviata: o.emailInviata !== false,
+        giaIscritto,
+      },
+    };
   }
 
   const errore = typeof o.error === "string" && o.error.trim() ? o.error.trim() : messaggioPerStato(res.status);
   return { ok: false, errore, campo: isCampo(o.campo) ? o.campo : undefined };
+}
+
+/* ── Reinvio del biglietto ──────────────────────────────────────────── */
+
+function messaggioReinvio(status: number): string {
+  switch (status) {
+    case 429:
+      return "Ti abbiamo appena rimandato il biglietto. Controlla la posta, anche nella cartella spam; se non arriva, riprova tra un paio di minuti.";
+    case 503:
+      return "L'invio delle email non è disponibile in questo momento. Riprova più tardi o scrivi a info@bioergotech.org.";
+    default:
+      return "Non siamo riusciti a inviare l'email. Riprova tra qualche minuto o scrivi a info@bioergotech.org.";
+  }
+}
+
+/**
+ * Chiede di rimandare il biglietto all'indirizzo dell'iscrizione: l'azione
+ * "reinvia" di POST /api/eventi/registrations/gestisci, la stessa del
+ * biglietto online (al massimo una volta ogni due minuti per codice). Non
+ * lancia mai: torna l'esito e, se non è andata, il messaggio da mostrare.
+ */
+export async function chiediReinvio(codice: string): Promise<{ ok: true } | { ok: false; errore: string }> {
+  const controllo = new AbortController();
+  const timer = window.setTimeout(() => controllo.abort(), 25_000);
+  try {
+    const res = await fetch("/api/eventi/registrations/gestisci", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codice, azione: "reinvia" }),
+      signal: controllo.signal,
+    });
+    let data: unknown = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+    const o = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
+    if (res.ok && o.success === true) return { ok: true };
+    const errore = typeof o.error === "string" && o.error.trim() ? o.error.trim() : messaggioReinvio(res.status);
+    return { ok: false, errore };
+  } catch {
+    return {
+      ok: false,
+      errore: controllo.signal.aborted
+        ? "La risposta sta tardando. Riprova tra qualche minuto, oppure apri il biglietto e salvalo."
+        : MESSAGGIO_RETE,
+    };
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 /* ── Invito ─────────────────────────────────────────────────────────── */
@@ -308,7 +399,11 @@ const CHECK_SVG =
 
 export const STILE_MODULO = `
 .vpl-wrap { min-width: 0; container-type: inline-size; container-name: vpl; --vpl-teal-testo: #0F7F75; --vpl-bordo: #8896A6; --vpl-errore: #A61E3F; }
-.vpl-wrap .vpl-card { padding: 24px 20px; border-top: 4px solid var(--primary); scroll-margin-top: 90px; }
+/* main.css aggiunge a .card margine, bordo sinistro di 4px trasparente, fondo
+   semitrasparente e una striscia teal (::before) al passaggio del mouse: un
+   modulo non deve cambiare mentre si compila. */
+.vpl-wrap .vpl-card { margin: 0; padding: 24px 20px; background: #fff; border-left: 1px solid var(--border-color); border-top: 4px solid var(--primary); box-shadow: var(--shadow); scroll-margin-top: 90px; }
+.vpl-wrap .vpl-card::before { display: none; }
 .vpl-wrap .vpl-card, .vpl-wrap .vpl-card:hover { transform: none; }
 .vpl-wrap .vpl-card:hover { box-shadow: var(--shadow); border-color: var(--border-color); border-top-color: var(--primary); }
 @container vpl (min-width: 520px) { .vpl-wrap .vpl-card { padding: 32px; } }
@@ -317,7 +412,6 @@ export const STILE_MODULO = `
 .vpl-intro { display: flex; gap: 14px; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
 .vpl-intro .icon-circle { width: 44px; height: 44px; border-radius: 12px; font-size: 18px; }
 .vpl-intro-titolo { display: block; font-size: 17px; font-weight: 700; color: var(--text-dark); line-height: 1.3; }
-.vpl-intro-testo { display: block; font-size: 14px; color: var(--text-mid); line-height: 1.5; margin-top: 2px; }
 
 .vpl-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .vpl-legend { padding: 0; font-size: 17px; font-weight: 700; color: var(--text-dark); line-height: 1.35; }
@@ -362,6 +456,12 @@ textarea.vpl-input { min-height: 96px; resize: vertical; }
 .vpl-posti i { margin-top: 3px; font-size: 12px; }
 .vpl-posti[data-tipo="disponibili"] { color: var(--vpl-teal-testo); }
 .vpl-posti[data-tipo="ultimi"], .vpl-posti[data-tipo="completo"] { color: #8A5300; }
+.vpl-posti[data-tipo="conclusa"] { color: var(--text-mid); }
+/* Una giornata già conclusa: resta in vista, ma non si sceglie più. */
+.vpl-giorno[data-conclusa="true"] { cursor: not-allowed; background: var(--bg-light); border-color: var(--border-color); box-shadow: none; }
+.vpl-giorno[data-conclusa="true"]:hover { border-color: var(--border-color); }
+.vpl-giorno[data-conclusa="true"] .vpl-giorno-data { color: var(--text-mid); }
+.vpl-giorno[data-conclusa="true"] .vpl-check { cursor: not-allowed; background-color: var(--border-color); border-color: var(--border-color); }
 
 .vpl-check { flex: none; width: 24px; height: 24px; margin: 1px 0 0; border: 2px solid var(--vpl-bordo); border-radius: 7px; background: #fff center / 15px no-repeat; -webkit-appearance: none; appearance: none; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; scroll-margin-top: 140px; scroll-margin-bottom: 24px; }
 .vpl-check:checked { background-color: var(--primary-dark); border-color: var(--primary-dark); background-image: ${CHECK_SVG}; }
@@ -420,7 +520,9 @@ textarea.vpl-input { min-height: 96px; resize: vertical; }
 .vpl-invio > .vpl-piede { margin-top: 12px; }
 .vpl-scelte { display: flex; gap: 8px; align-items: center; margin: 0; font-size: 14px; color: var(--text-mid); }
 .vpl-scelte i { color: var(--primary-dark); }
-.vpl-wrap .vpl-invia { width: 100%; min-height: 54px; font-family: inherit; font-size: 1rem; }
+/* main.css riporta .btn-primary a inline-block: senza flex e gap icona e testo
+   restano attaccati. */
+.vpl-wrap .vpl-invia { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; font-family: inherit; font-size: 1rem; }
 .vpl-wrap .vpl-invia:focus-visible { outline: 3px solid var(--text-dark); outline-offset: 3px; }
 .vpl-wrap .vpl-invia[disabled] { opacity: .8; cursor: progress; transform: none; }
 .vpl-piede { margin: 0; font-size: 13px; color: var(--text-mid); text-align: center; line-height: 1.5; }
@@ -446,7 +548,7 @@ textarea.vpl-input { min-height: 96px; resize: vertical; }
 .vpl-codice-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vpl-teal-testo); }
 .vpl-codice-valore { margin-top: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 26px; font-size: clamp(22px, 7cqi, 30px); font-weight: 700; letter-spacing: .1em; color: var(--text-dark); overflow-wrap: anywhere; }
 .vpl-codice-nota { margin: 6px 0 0; font-size: 14px; color: var(--text-mid); }
-.vpl-wrap .vpl-ok .btn-primary { width: 100%; min-height: 52px; font-size: 1rem; }
+.vpl-wrap .vpl-ok .btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; font-size: 1rem; text-decoration: none; }
 .vpl-wrap .vpl-ok .btn-primary:focus-visible { outline: 3px solid var(--text-dark); outline-offset: 3px; }
 .vpl-sezione-titolo { margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vpl-teal-testo); }
 .vpl-azioni { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -459,6 +561,19 @@ textarea.vpl-input { min-height: 96px; resize: vertical; }
 .vpl-ok-nota i { color: var(--primary-dark); margin-top: 4px; flex: none; }
 .vpl-ok-nota strong { color: var(--text-dark); }
 .vpl-ok-piede { padding-top: 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: center; }
+/* L'email del biglietto non è partita: un avviso che non si confonde con le note. */
+.vpl-ok-avviso { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; background: #FFF8E6; border: 1px solid #F0D89B; color: #634708; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.vpl-ok-avviso > i { color: #8A5300; margin-top: 4px; flex: none; }
+.vpl-ok-avviso-corpo { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+.vpl-ok-avviso-corpo p { margin: 0; }
+.vpl-ok-avviso .vpl-azione { border-color: #E3C77E; }
+.vpl-ok-avviso .vpl-azione[disabled] { opacity: .7; cursor: progress; }
+.vpl-ok-avviso[data-esito="ok"] { background: #F3FBFA; border-color: #CDEFEA; color: var(--text-dark); }
+.vpl-ok-avviso[data-esito="ok"] > i { color: var(--primary-dark); }
+/* Vuota resta nel DOM (è la regione che annuncia l'esito), ma non occupa spazio. */
+.vpl-reinvio-esito:empty { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.vpl-reinvio-esito:focus { outline: none; }
+.vpl-reinvio-esito[data-tipo="errore"] { color: var(--vpl-errore); font-weight: 500; }
 
 @media (forced-colors: active) {
   .vpl-check { -webkit-appearance: auto; appearance: auto; }

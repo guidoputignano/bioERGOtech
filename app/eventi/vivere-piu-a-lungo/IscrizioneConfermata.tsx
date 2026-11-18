@@ -14,6 +14,7 @@ import {
 } from "./content";
 import {
   URL_INVITO,
+  chiediReinvio,
   comportamentoScroll,
   copiaTesto,
   testoInvito,
@@ -45,11 +46,17 @@ function ordina(giornate: readonly GiornataEsito[]): GiornataEsito[] {
 
 const NUOVA_SCHEDA = <span className="sr-only"> (si apre in una nuova scheda)</span>;
 
+type Reinvio = { stato: "" | "invio" | "ok" | "errore"; testo: string };
+
 /**
  * La schermata dopo l'iscrizione: com'è andata giornata per giornata, il
  * codice, il biglietto, il calendario e l'invito ad altre persone. Prende il
  * posto del modulo nella stessa card; all'arrivo scorre in vista e porta il
  * focus sul titolo, così chi usa un lettore di schermo sente subito l'esito.
+ *
+ * Se l'email era già iscritta e chi scrive non ha fatto l'accesso con quel
+ * indirizzo, la schermata non mostra né codice né giornate: il biglietto
+ * aggiornato arriva solo all'indirizzo dell'iscrizione.
  */
 export function IscrizioneConfermata({
   dati,
@@ -60,8 +67,10 @@ export function IscrizioneConfermata({
 }) {
   const radice = useRef<HTMLDivElement>(null);
   const titolo = useRef<HTMLHeadingElement>(null);
+  const esitoReinvioRef = useRef<HTMLParagraphElement>(null);
   const [puoCondividere, setPuoCondividere] = useState(false);
   const [copia, setCopia] = useState<"" | "ok" | "errore">("");
+  const [reinvio, setReinvio] = useState<Reinvio>({ stato: "", testo: "" });
 
   useEffect(() => {
     titolo.current?.focus({ preventScroll: true });
@@ -79,14 +88,120 @@ export function IscrizioneConfermata({
     return () => window.clearTimeout(t);
   }, [copia]);
 
+  // Dopo un reinvio riuscito il pulsante sparisce: il focus va sul messaggio.
+  useEffect(() => {
+    if (reinvio.stato === "ok") esitoReinvioRef.current?.focus({ preventScroll: true });
+  }, [reinvio.stato]);
+
   const altraPersona = (
     <div className="vpl-ok-piede">
       <button type="button" className="vpl-link-btn" onClick={onAltraPersona}>
-        <i className="fas fa-user-plus" aria-hidden="true" />
+        <i className="fas fa-user-plus" aria-hidden="true" />{" "}
         Iscrivi un&apos;altra persona
       </button>
     </div>
   );
+
+  const condividi = async (testo: string) => {
+    try {
+      await navigator.share({ title: EVENT.titolo, text: testo, url: URL_INVITO });
+    } catch {
+      /* condivisione annullata: niente da segnalare */
+    }
+  };
+
+  const copiaLink = async () => {
+    setCopia((await copiaTesto(URL_INVITO)) ? "ok" : "errore");
+  };
+
+  /** "Invita qualcuno": WhatsApp, la condivisione del telefono e il link da copiare. */
+  const sezioneInvito = (testo: string) => {
+    const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${testo} ${URL_INVITO}`)}`;
+    return (
+      <section aria-labelledby="vpl-ok-invita">
+        <h4 id="vpl-ok-invita" className="vpl-sezione-titolo">
+          Invita qualcuno
+        </h4>
+        <div className="vpl-azioni">
+          <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="vpl-azione">
+            <i className="fab fa-whatsapp" aria-hidden="true" />{" "}
+            WhatsApp{NUOVA_SCHEDA}
+          </a>
+          {puoCondividere && (
+            <button type="button" className="vpl-azione" onClick={() => condividi(testo)}>
+              <i className="fas fa-share-nodes" aria-hidden="true" />{" "}
+              Condividi
+            </button>
+          )}
+          <button type="button" className="vpl-azione" onClick={copiaLink}>
+            <i className={`fas ${copia === "ok" ? "fa-check" : "fa-link"}`} aria-hidden="true" />
+            {copia === "ok" ? "Link copiato" : "Copia il link"}
+          </button>
+        </div>
+        <p className="sr-only" role="status" aria-live="polite">
+          {copia === "ok" ? "Link copiato negli appunti." : ""}
+        </p>
+        {copia === "errore" && (
+          <p className="vpl-ok-nota" style={{ marginTop: 10 }}>
+            <i className="fas fa-circle-info" aria-hidden="true" />
+            <span>
+              Non riusciamo a copiare il link in automatico. Eccolo: <strong>{URL_INVITO}</strong>
+            </span>
+          </p>
+        )}
+      </section>
+    );
+  };
+
+  // Un'email già iscritta, da chi non ha fatto l'accesso con quell'indirizzo:
+  // nessun dato dell'iscrizione a schermo. Il codice e il QR sono nell'email.
+  if (dati.giaIscritto) {
+    return (
+      <div ref={radice} className="vpl-ok">
+        <div className="vpl-ok-testa">
+          <div
+            className="icon-circle icon-circle-primary"
+            aria-hidden="true"
+            style={dati.emailInviata ? undefined : { background: "#FFF1D6", color: "#8A5300" }}
+          >
+            <i className={`fas ${dati.emailInviata ? "fa-envelope-circle-check" : "fa-envelope"}`} />
+          </div>
+          <h3 ref={titolo} tabIndex={-1} className="vpl-ok-titolo">
+            {dati.emailInviata ? "Controlla la tua email" : "Iscrizione ricevuta"}
+          </h3>
+          {dati.emailInviata ? (
+            <p className="vpl-ok-intro">
+              Con questo indirizzo email c&apos;era già un&apos;iscrizione. Abbiamo aggiunto le giornate nuove che hai
+              scelto e ti abbiamo mandato il biglietto aggiornato a <strong>{dati.email}</strong>: lì trovi il codice e il
+              QR.
+            </p>
+          ) : (
+            <p className="vpl-ok-intro">
+              Con questo indirizzo email c&apos;era già un&apos;iscrizione. Abbiamo aggiunto le giornate nuove che hai
+              scelto, ma in questo momento non siamo riusciti a mandarti il biglietto aggiornato a{" "}
+              <strong>{dati.email}</strong>. Riprova tra qualche minuto iscrivendoti di nuovo con la stessa email e lo
+              stesso nome, oppure scrivi a{" "}
+              <a className="vpl-link" href="mailto:info@bioergotech.org">
+                info@bioergotech.org
+              </a>
+              .
+            </p>
+          )}
+        </div>
+
+        {dati.emailInviata && (
+          <p className="vpl-ok-nota">
+            <i className="fas fa-circle-info" aria-hidden="true" />
+            <span>Se non trovi l&apos;email entro qualche minuto, guarda nella posta indesiderata o nella scheda Promozioni.</span>
+          </p>
+        )}
+
+        {sezioneInvito(testoInvito([]))}
+
+        {altraPersona}
+      </div>
+    );
+  }
 
   // Senza codice (la risposta all'honeypot, o una risposta incompleta): un
   // ringraziamento semplice, senza nulla che possa rompersi.
@@ -130,10 +245,10 @@ export function IscrizioneConfermata({
         : saluto;
       break;
     case "parziale":
-      intro = `${saluto} Il tuo posto per ${giornateConArticolo(confermate)} è confermato. Per ${giornateConArticolo(inAttesa)} sei in lista d'attesa: se si libera un posto ti scriviamo subito.`;
+      intro = `${saluto} Il tuo posto per ${giornateConArticolo(confermate)} è confermato. Per ${giornateConArticolo(inAttesa)} sei in lista d'attesa: se si libera un posto ti scriviamo.`;
       break;
     case "attesa":
-      intro = `${saluto} Per ${giornateConArticolo(inAttesa)} i posti sono esauriti: sei in lista d'attesa e, se si libera un posto, ti scriviamo subito.`;
+      intro = `${saluto} Per ${giornateConArticolo(inAttesa)} i posti sono esauriti: sei in lista d'attesa e, se si libera un posto, ti scriviamo.`;
       break;
     default:
       intro =
@@ -154,22 +269,22 @@ export function IscrizioneConfermata({
     }
   }
 
-  const testo = testoInvito(confermate);
-  const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${testo} ${URL_INVITO}`)}`;
-
-  const condividi = async () => {
-    try {
-      await navigator.share({ title: EVENT.titolo, text: testo, url: URL_INVITO });
-    } catch {
-      /* condivisione annullata: niente da segnalare */
-    }
-  };
-
-  const copiaLink = async () => {
-    setCopia((await copiaTesto(URL_INVITO)) ? "ok" : "errore");
+  const rimanda = async () => {
+    if (reinvio.stato === "invio") return;
+    setReinvio({ stato: "invio", testo: "" });
+    const r = await chiediReinvio(codice);
+    setReinvio(
+      r.ok
+        ? {
+            stato: "ok",
+            testo: `Fatto: ti abbiamo mandato il biglietto a ${dati.email}. Se non lo trovi tra qualche minuto, guarda nello spam.`,
+          }
+        : { stato: "errore", testo: r.errore },
+    );
   };
 
   const iconaTesta = esito === "attesa" ? "fa-hourglass-half" : "fa-check";
+  const inviando = reinvio.stato === "invio";
 
   return (
     <div ref={radice} className="vpl-ok">
@@ -226,10 +341,54 @@ export function IscrizioneConfermata({
         <p className="vpl-codice-nota">Il QR code è nel biglietto: mostralo all&apos;ingresso.</p>
       </div>
 
-      <Link href={`/eventi/${EVENT_SLUG}/biglietto/${encodeURIComponent(codice)}`} className="btn-primary">
-        <i className="fas fa-ticket" aria-hidden="true" />
+      {/* Un link normale, con caricamento completo: la pagina del biglietto
+          ha il codice nell'indirizzo e lì Analytics non si configura. Un
+          cambio di pagina lato client lo registrerebbe con l'indirizzo intero. */}
+      <a href={`/eventi/${EVENT_SLUG}/biglietto/${encodeURIComponent(codice)}`} className="btn-primary">
+        <i className="fas fa-ticket" aria-hidden="true" />{" "}
         Apri il biglietto
-      </Link>
+      </a>
+
+      {/* L'email non è partita: lo diciamo subito sotto il biglietto, con la
+          possibilità di riprovare da qui. */}
+      {!dati.emailInviata && (
+        <div className="vpl-ok-avviso" data-esito={reinvio.stato || undefined}>
+          <i
+            className={`fas ${reinvio.stato === "ok" ? "fa-envelope-circle-check" : "fa-triangle-exclamation"}`}
+            aria-hidden="true"
+          />
+          <div className="vpl-ok-avviso-corpo">
+            {reinvio.stato !== "ok" && (
+              <>
+                <p>
+                  Non siamo riusciti a mandarti l&apos;email in questo momento. Apri il biglietto qui sopra e salvalo; tra
+                  qualche minuto puoi fartelo rimandare dal biglietto online.
+                </p>
+                <button
+                  type="button"
+                  className="vpl-azione"
+                  onClick={rimanda}
+                  disabled={inviando}
+                  aria-busy={inviando || undefined}
+                >
+                  <i className={`fas ${inviando ? "fa-circle-notch fa-spin" : "fa-envelope"}`} aria-hidden="true" />{" "}
+                  Rimandami il biglietto per email
+                </button>
+              </>
+            )}
+            <p
+              ref={esitoReinvioRef}
+              tabIndex={-1}
+              className="vpl-reinvio-esito"
+              data-tipo={reinvio.stato === "errore" ? "errore" : undefined}
+              role="status"
+              aria-live="polite"
+            >
+              {reinvio.testo}
+            </p>
+          </div>
+        </div>
+      )}
 
       {confermate.length > 0 && (
         <section aria-labelledby="vpl-ok-calendario">
@@ -254,53 +413,23 @@ export function IscrizioneConfermata({
               );
             })}
             <a href={icsUrl(confermate, codice, false)} className="vpl-azione">
-              <i className="fas fa-calendar-plus" aria-hidden="true" />
+              <i className="fas fa-calendar-plus" aria-hidden="true" />{" "}
               Apple, Outlook e altri
             </a>
           </div>
         </section>
       )}
 
-      <section aria-labelledby="vpl-ok-invita">
-        <h4 id="vpl-ok-invita" className="vpl-sezione-titolo">
-          Invita qualcuno
-        </h4>
-        <div className="vpl-azioni">
-          <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="vpl-azione">
-            <i className="fab fa-whatsapp" aria-hidden="true" />
-            WhatsApp
-            {NUOVA_SCHEDA}
-          </a>
-          {puoCondividere && (
-            <button type="button" className="vpl-azione" onClick={condividi}>
-              <i className="fas fa-share-nodes" aria-hidden="true" />
-              Condividi
-            </button>
-          )}
-          <button type="button" className="vpl-azione" onClick={copiaLink}>
-            <i className={`fas ${copia === "ok" ? "fa-check" : "fa-link"}`} aria-hidden="true" />
-            {copia === "ok" ? "Link copiato" : "Copia il link"}
-          </button>
-        </div>
-        <p className="sr-only" role="status" aria-live="polite">
-          {copia === "ok" ? "Link copiato negli appunti." : ""}
-        </p>
-        {copia === "errore" && (
-          <p className="vpl-ok-nota" style={{ marginTop: 10 }}>
-            <i className="fas fa-circle-info" aria-hidden="true" />
-            <span>
-              Non riusciamo a copiare il link in automatico. Eccolo: <strong>{URL_INVITO}</strong>
-            </span>
-          </p>
-        )}
-      </section>
+      {sezioneInvito(testoInvito(confermate))}
 
-      <p className="vpl-ok-nota">
-        <i className="fas fa-envelope" aria-hidden="true" />
-        <span>
-          Ti abbiamo mandato il biglietto anche a <strong>{dati.email}</strong>. Se non lo trovi, guarda nello spam.
-        </span>
-      </p>
+      {dati.emailInviata && (
+        <p className="vpl-ok-nota">
+          <i className="fas fa-envelope" aria-hidden="true" />
+          <span>
+            Ti abbiamo mandato il biglietto anche a <strong>{dati.email}</strong>. Se non lo trovi, guarda nello spam.
+          </span>
+        </p>
+      )}
 
       {dati.nuovoAccount && (
         <p className="vpl-ok-nota">

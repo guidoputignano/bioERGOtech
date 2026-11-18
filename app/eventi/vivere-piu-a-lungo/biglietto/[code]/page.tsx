@@ -11,7 +11,15 @@ import {
   type GiornataIscritto,
   type IscrizioneEvento,
 } from "@/lib/eventi/evento-server";
-import { EVENT, EVENT_SLUG, SESSIONS, categoriaLabel, sessionBySlug, type EventSession } from "../../content";
+import {
+  ARCHIVE_MODE,
+  EVENT,
+  EVENT_SLUG,
+  SESSIONS,
+  categoriaLabel,
+  sessionBySlug,
+  type EventSession,
+} from "../../content";
 import { GestisciBiglietto, InvitoAggiungi, StampaBiglietto, type GiornataGestibile } from "./GestisciBiglietto";
 
 /**
@@ -38,6 +46,9 @@ export const metadata: Metadata = {
 };
 
 const PAGINA_EVENTO = `/eventi/${EVENT_SLUG}`;
+
+/** La forma di un codice vero (VPL- e otto lettere o cifre): solo così lo si ripete a schermo. */
+const FORMA_CODICE = /^VPL-[A-Z0-9]{8}$/;
 
 const oraRoma = new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
 
@@ -87,10 +98,20 @@ export default async function TicketPage({
   }
   const codice = pulisciCodice(grezzo);
   const primo = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
-  const annullato = primo(query.annullato) === "1";
+  // "1": era stato liberato un posto confermato; "attesa": si usciva solo
+  // da una lista d'attesa, e non c'è nessun posto di cui ringraziare.
+  const annullatoDa = primo(query.annullato);
+  const annullato = annullatoDa === "1" || annullatoDa === "attesa";
   const aggiungi = sessionBySlug(primo(query.aggiungi))?.slug ?? null;
 
   const stato = await carica(codice);
+
+  // In archivio le iscrizioni sono chiuse: niente inviti a #iscrizione.
+  const linkProgramma = (principale: boolean) => (
+    <Link href={PAGINA_EVENTO} className={`${principale ? "btn-primary" : "btn-outline"} vpb-btn`}>
+      {principale && <i className="fas fa-calendar-days" aria-hidden="true" />} Il programma dell&apos;evento
+    </Link>
+  );
 
   return (
     <>
@@ -105,7 +126,9 @@ export default async function TicketPage({
               icona="fa-plug-circle-exclamation"
               titolo="Il biglietto non si carica"
               testo={
-                codice
+                // Il codice si ripete solo se ha la forma giusta: un indirizzo
+                // scritto a mano non diventa un "codice valido" a schermo.
+                FORMA_CODICE.test(codice)
                   ? `In questo momento non riusciamo a leggere il biglietto. Riprova tra qualche minuto. All'ingresso basta comunque il tuo codice: ${codice}.`
                   : "In questo momento non riusciamo a leggere il biglietto. Riprova tra qualche minuto."
               }
@@ -121,25 +144,45 @@ export default async function TicketPage({
             <Avviso
               icona="fa-circle-check"
               titolo="Iscrizione annullata"
-              testo="Hai liberato il tuo posto: grazie, così può partecipare un'altra persona. Se cambi idea puoi iscriverti di nuovo, finché ci sono posti."
+              testo={
+                annullatoDa === "attesa"
+                  ? ARCHIVE_MODE
+                    ? "Non sei più in lista d'attesa."
+                    : "Se cambi idea puoi iscriverti di nuovo."
+                  : ARCHIVE_MODE
+                    ? "Hai liberato il tuo posto: grazie."
+                    : "Hai liberato il tuo posto: grazie, così può partecipare un'altra persona. Se cambi idea puoi iscriverti di nuovo, finché ci sono posti."
+              }
               stato
             >
-              <Link href={`${PAGINA_EVENTO}#iscrizione`} className="btn-primary vpb-btn">
-                <i className="fas fa-ticket" aria-hidden="true" /> Iscriviti di nuovo
-              </Link>
-              <Link href={PAGINA_EVENTO} className="btn-outline vpb-btn">
-                Il programma dell&apos;evento
-              </Link>
+              {ARCHIVE_MODE ? (
+                linkProgramma(true)
+              ) : (
+                <>
+                  <Link href={`${PAGINA_EVENTO}#iscrizione`} className="btn-primary vpb-btn">
+                    <i className="fas fa-ticket" aria-hidden="true" /> Iscriviti di nuovo
+                  </Link>
+                  {linkProgramma(false)}
+                </>
+              )}
             </Avviso>
           ) : (
             <Avviso
               icona="fa-ticket"
               titolo="Biglietto non trovato"
-              testo="Il link potrebbe essere incompleto: apri di nuovo quello dell'email di conferma, senza modificarlo. Se non trovi l'email, iscriviti di nuovo con la stessa email e lo stesso nome: non si crea un doppione, e ti rimandiamo il biglietto con le tue giornate."
+              testo={
+                ARCHIVE_MODE
+                  ? "Il link potrebbe essere incompleto: apri di nuovo quello dell'email di conferma, senza modificarlo. Per qualsiasi necessità scrivi a info@bioergotech.org."
+                  : "Il link potrebbe essere incompleto: apri di nuovo quello dell'email di conferma, senza modificarlo. Se non trovi l'email, iscriviti di nuovo con la stessa email e lo stesso nome: non si crea un doppione, e ti rimandiamo il biglietto con le tue giornate."
+              }
             >
-              <Link href={`${PAGINA_EVENTO}#iscrizione`} className="btn-primary vpb-btn">
-                <i className="fas fa-ticket" aria-hidden="true" /> Vai all&apos;iscrizione
-              </Link>
+              {ARCHIVE_MODE ? (
+                linkProgramma(true)
+              ) : (
+                <Link href={`${PAGINA_EVENTO}#iscrizione`} className="btn-primary vpb-btn">
+                  <i className="fas fa-ticket" aria-hidden="true" /> Vai all&apos;iscrizione
+                </Link>
+              )}
               <a href="mailto:info@bioergotech.org" className="btn-outline vpb-btn">
                 <i className="fas fa-envelope" aria-hidden="true" /> Scrivi a info@bioergotech.org
               </a>
@@ -264,7 +307,7 @@ function Biglietto({
         <h2 id="vpb-gestisci-titolo" className="vpb-gestisci-titolo">
           <span className="icon-circle icon-circle-primary vpb-gestisci-icona" aria-hidden="true">
             <i className="fas fa-sliders" />
-          </span>
+          </span>{" "}
           Gestisci la tua iscrizione
         </h2>
         <p className="vpb-gestisci-testo">
@@ -307,12 +350,12 @@ function SchedaGiornata({
           </span>
         ) : attesa ? (
           <span className="vpb-stato vpb-stato-attesa">
-            <i className="fas fa-hourglass-half" aria-hidden="true" />
+            <i className="fas fa-hourglass-half" aria-hidden="true" />{" "}
             Lista d&apos;attesa
           </span>
         ) : (
           <span className="vpb-stato vpb-stato-ok">
-            <i className="fas fa-circle-check" aria-hidden="true" />
+            <i className="fas fa-circle-check" aria-hidden="true" />{" "}
             Confermato
           </span>
         )}
@@ -338,12 +381,10 @@ function SchedaGiornata({
         <div className="vpb-calendario no-print">
           <span className="vpb-calendario-etichetta">Aggiungi al calendario</span>
           <a href={googleCalendarUrl(s, codice)} target="_blank" rel="noopener noreferrer" className="vpb-pill">
-            <i className="fab fa-google" aria-hidden="true" /> Google
-            <span className="sr-only"> Calendar, {s.etichetta} (si apre in una nuova scheda)</span>
+            <i className="fab fa-google" aria-hidden="true" /> Google<span className="sr-only"> Calendar, {s.etichetta} (si apre in una nuova scheda)</span>
           </a>
           <a href={icsUrl([s.slug], codice, false)} className="vpb-pill" download>
-            <i className="fas fa-calendar-plus" aria-hidden="true" /> Apple, Outlook
-            <span className="sr-only">, file del calendario per {s.etichetta}</span>
+            <i className="fas fa-calendar-plus" aria-hidden="true" /> Apple, Outlook<span className="sr-only">, file del calendario per {s.etichetta}</span>
           </a>
         </div>
       )}
@@ -384,7 +425,9 @@ function Avviso({
 const STILE = `
 .vpb-pagina { background: var(--bg-light); padding: 96px 16px 56px; min-height: 70vh; }
 .vpb-contenitore { max-width: 600px; margin: 0 auto; }
-.vpb-btn { min-height: 44px; }
+/* main.css riporta .btn-primary e .btn-outline a inline-block: senza flex e gap
+   icona e testo restano attaccati. */
+.vpb-pagina .vpb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; text-decoration: none; }
 .vpb-pagina a:focus-visible, .vpb-pagina button:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 2px; }
 
 /* Il biglietto */
@@ -535,9 +578,13 @@ function stileGestisci(): string {
 .vpg-motivo { margin: 10px 0 0; color: var(--text-mid); font-size: 0.875rem; }
 .vpg-motivo i { color: var(--text-light); }
 
-.vpg-btn {
+/* Una sola forma per tutti i pulsanti del biglietto, anche quando sono
+   btn-primary o btn-outline (che main.css rende rettangoli inline-block):
+   la pillola del design system, con icona e testo distanziati. */
+.vpb-pagina .vpg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 44px; font-size: 0.9375rem; font-family: inherit; line-height: 1.25;
-  padding: 10px 20px; text-align: center; white-space: normal;
+  padding: 10px 20px; text-align: center; white-space: normal; border-radius: 50px;
 }
 .vpg-btn i { font-size: 0.95em; }
 .vpg-btn:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 2px; }
@@ -576,7 +623,7 @@ function stileGestisci(): string {
   border-radius: 16px; padding: 20px; box-shadow: var(--shadow); display: grid; gap: 10px; margin-bottom: 20px;
 }
 .vpg-invito-fatto { padding: 14px 16px; }
-.vpg-invito-occhiello { margin: 0; color: var(--primary-dark); font-size: 0.75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.vpg-invito-occhiello { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--primary-dark); font-size: 0.75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .vpg-invito-titolo { margin: 0; font-size: 1.25rem; line-height: 1.35; font-weight: 700; color: var(--text-dark); }
 .vpg-invito-testo { margin: 0; color: var(--text-mid); font-size: 0.9375rem; line-height: 1.6; }
 .vpg-invito-btn { justify-self: start; }

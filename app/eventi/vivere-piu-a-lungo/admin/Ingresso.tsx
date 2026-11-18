@@ -24,10 +24,17 @@
  * scanner di prima non partiva perché il video compariva solo dopo l'avvio.
  * Su iPhone serve un tocco per partire (pulsante "Avvia la fotocamera"),
  * playsInline e muted.
+ *
+ * "Oggi" arriva dal server (prop `oggi`): calcolarlo anche nel browser
+ * darebbe un errore di idratazione su un telefono con la data sbagliata.
+ *
+ * "Annulla l'ingresso" rimette le cose come prima anche dopo un ingresso
+ * forzato: la rotta riceve il tipo (`forzato`), che il telefono ricorda per
+ * gli ingressi registrati da lui.
  */
 
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { SESSIONS, giornataDiOggi, giornateConArticolo, sessionBySlug } from "../content";
+import { SESSIONS, giornateConArticolo, sessionBySlug } from "../content";
 
 /* ── Costanti ─────────────────────────────────────────────────────────── */
 
@@ -58,6 +65,9 @@ type Persona = {
 
 type Ultimo = { bridgeId: string; nome: string; cognome: string; ora: string };
 
+/** Perché una persona è entrata senza un posto confermato per oggi. */
+type Forzato = "lista_attesa" | "altra_giornata";
+
 type StatoGiornata = {
   giornata: string;
   confermati: number;
@@ -74,7 +84,7 @@ type RispostaIngresso = {
   ora?: string | null;
   altreGiornate?: string[];
   bridgeId?: string;
-  forzato?: "lista_attesa" | "altra_giornata";
+  forzato?: Forzato;
 };
 
 type Chiave = { codice: string } | { registrazione: string };
@@ -90,7 +100,7 @@ type Risultato = {
   ora?: string | null;
   altreGiornate?: string[];
   bridgeId?: string;
-  forzato?: "lista_attesa" | "altra_giornata";
+  forzato?: Forzato;
   /** Quello che si è letto o scritto, per "codice non trovato". */
   letto?: string;
   messaggio?: string;
@@ -391,9 +401,16 @@ function annuncioPer(r: Risultato): string {
 
 /* ── Componente ───────────────────────────────────────────────────────── */
 
-export function Ingresso({ compatto = false }: { compatto?: boolean }) {
+export function Ingresso({
+  compatto = false,
+  oggi: oggiDalServer,
+}: {
+  compatto?: boolean;
+  /** La giornata di oggi secondo il server (fuso di Roma), o null se oggi non c'è evento. */
+  oggi: string | null;
+}) {
   const idGruppo = useId();
-  const [oggi] = useState<string | null>(() => giornataDiOggi()?.slug ?? null);
+  const oggi = oggiDalServer && sessionBySlug(oggiDalServer) ? oggiDalServer : null;
   const [giornata, setGiornata] = useState<string>(() => oggi ?? SESSIONS[0].slug);
 
   const [stato, setStato] = useState<StatoGiornata | null>(null);
@@ -442,6 +459,8 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
   const audioRef = useRef<AudioContext | null>(null);
   const suonoRef = useRef(true);
   const letturaRef = useRef<(testo: string) => void>(() => {});
+  /** Gli ingressi forzati registrati da questo telefono: per annullarli bene anche dall'elenco. */
+  const forzatiRef = useRef(new Map<string, Forzato>());
 
   const sessione = sessionBySlug(giornata) ?? SESSIONS[0];
 
@@ -550,6 +569,7 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
           return;
         }
         const j = r.json as unknown as RispostaIngresso;
+        if (j.esito === "entrato" && j.bridgeId && j.forzato) forzatiRef.current.set(j.bridgeId, j.forzato);
         mostra({
           tipo: j.esito,
           giornata: g,
@@ -868,14 +888,16 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
 
   /* ── Annullare un ingresso ── */
 
-  const annullaIngresso = async (bridgeId: string, nome: string) => {
+  const annullaIngresso = async (bridgeId: string, nome: string, forzato?: Forzato) => {
     setAnnullando(bridgeId);
     setEsitoUltimi(null);
+    // Com'era entrata la persona: dall'esito, oppure da quello che questo telefono ricorda.
+    const tipo = forzato ?? forzatiRef.current.get(bridgeId);
     try {
       const r = await chiama(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ annulla: bridgeId }),
+        body: JSON.stringify(tipo ? { annulla: bridgeId, forzato: tipo } : { annulla: bridgeId }),
       });
       if (!montatoRef.current) return;
       if (!r.ok) {
@@ -884,7 +906,12 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
         setAnnuncio(testo);
         return;
       }
-      const testo = `Ingresso di ${nome} annullato.`;
+      forzatiRef.current.delete(bridgeId);
+      const testo = r.json?.giornataTolta
+        ? `Ingresso di ${nome} annullato: la giornata aggiunta alla porta è stata tolta.`
+        : r.json?.tornaInAttesa
+          ? `Ingresso di ${nome} annullato: torna in lista d'attesa.`
+          : `Ingresso di ${nome} annullato.`;
       setEsitoUltimi({ tono: "ok", testo });
       setAnnuncio(testo);
       setRisultato((r2) => (r2?.bridgeId === bridgeId ? null : r2));
@@ -969,7 +996,7 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
             </p>
           </div>
           <a className="ing-link" href={PAGINA_INGRESSO} target="_blank" rel="noopener">
-            <i className="fas fa-up-right-from-square" aria-hidden="true" />
+            <i className="fas fa-up-right-from-square" aria-hidden="true" />{" "}
             Apri a schermo intero
           </a>
         </div>
@@ -1146,7 +1173,7 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
                       </p>
                       <p className="ing-attesa-testo">{erroreCamera}</p>
                       <button type="button" className="ing-avvia" onClick={avviaDaTocco}>
-                        <i className="fas fa-rotate-right" aria-hidden="true" />
+                        <i className="fas fa-rotate-right" aria-hidden="true" />{" "}
                         Riprova
                       </button>
                     </>
@@ -1161,7 +1188,7 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
                         persona successiva.
                       </p>
                       <button type="button" className="ing-avvia" onClick={avviaDaTocco} disabled={supporto === null}>
-                        <i className="fas fa-camera" aria-hidden="true" />
+                        <i className="fas fa-camera" aria-hidden="true" />{" "}
                         Avvia la fotocamera
                       </button>
                     </>
@@ -1186,7 +1213,9 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
                     if (risultato.chiave) void verifica(risultato.chiave, Boolean(risultato.forza));
                   }}
                   onAnnulla={() => {
-                    if (risultato.bridgeId) void annullaIngresso(risultato.bridgeId, nomeCompleto(risultato.persona));
+                    if (risultato.bridgeId) {
+                      void annullaIngresso(risultato.bridgeId, nomeCompleto(risultato.persona), risultato.forzato);
+                    }
                   }}
                 />
               )}
@@ -1220,7 +1249,7 @@ export function Ingresso({ compatto = false }: { compatto?: boolean }) {
                   <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" />
                 ) : (
                   <i className="fas fa-arrow-right-to-bracket" aria-hidden="true" />
-                )}
+                )}{" "}
                 Verifica
               </button>
             </div>
@@ -1479,7 +1508,7 @@ function CartaEsito({
   );
   const forza = (
     <button type="button" className="ing-esito-btn ing-esito-btn-pieno" onClick={onForza} disabled={inCorso}>
-      {inCorso ? <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" /> : <i className="fas fa-door-open" aria-hidden="true" />}
+      {inCorso ? <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" /> : <i className="fas fa-door-open" aria-hidden="true" />}{" "}
       Fai entrare comunque
     </button>
   );
@@ -1542,9 +1571,9 @@ function CartaEsito({
         : "Nessuna giornata nell'iscrizione";
       corpo = (
         <p className="ing-esito-testo-grande">
-          La persona non risulta iscritta per {conArticolo(r.giornata)}.
+          La persona non risulta iscritta per {conArticolo(r.giornata)}.{" "}
           {giornoUno &&
-            ` Alcune scelte ${conArticolo(r.giornata, "di")} fatte a novembre non sono state salvate: se la persona dice di aver scelto questa giornata, può entrare.`}
+            `Alcune scelte ${conArticolo(r.giornata, "di")} fatte a novembre non sono state salvate: se la persona dice di aver scelto questa giornata, può entrare.`}
         </p>
       );
       azioni = (
@@ -1598,7 +1627,7 @@ function CartaEsito({
         <>
           {r.chiave && (
             <button type="button" className="ing-esito-btn ing-esito-btn-pieno" onClick={onRiprova} disabled={inCorso}>
-              <i className="fas fa-rotate-right" aria-hidden="true" />
+              <i className="fas fa-rotate-right" aria-hidden="true" />{" "}
               Riprova
             </button>
           )}
@@ -1889,6 +1918,15 @@ const STILE_INGRESSO = `
   letter-spacing: .06em; text-transform: uppercase; min-height: 56px;
 }
 .ing-campo-codice::placeholder { color: #B8C2CE; font-weight: 600; }
+/* Sul telefono il codice intero (VPL- e 8 caratteri) deve stare nel campo,
+   accanto a "Verifica", senza scorrere. */
+@media (max-width: 420px) {
+  .ing-campo-codice { font-size: 16px; letter-spacing: .02em; padding: 0 10px; }
+  .ing-codice .ing-btn-primario { padding: 0 14px; }
+}
+@media (max-width: 360px) {
+  .ing-codice .ing-btn-primario i { display: none; }
+}
 .ing-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
   min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1.5px solid var(--border-color);

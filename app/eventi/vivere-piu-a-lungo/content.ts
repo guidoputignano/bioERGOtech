@@ -8,11 +8,16 @@
  * che resta la fonte di verità per il conteggio dei posti a runtime.
  *
  * Per archiviare l'evento dopo la sua conclusione, imposta ARCHIVE_MODE a
- * true. I form spariscono, resta il recap, e nessun dato viene cancellato.
+ * true in archivio.ts. I form spariscono, resta il recap, e nessun dato
+ * viene cancellato.
  */
 
-/** Quando true, nasconde i form di iscrizione e mostra il riepilogo. */
-export const ARCHIVE_MODE = false;
+/**
+ * Quando true, nasconde i form di iscrizione e mostra il riepilogo. Vive in
+ * archivio.ts, un modulo minimo che legge anche la navbar; qui è riesportata
+ * perché gli import esistenti continuino a funzionare.
+ */
+export { ARCHIVE_MODE } from "./archivio";
 
 /** Slug della rotta pubblica. Usato per costruire URL assoluti e link email. */
 export const EVENT_SLUG = "vivere-piu-a-lungo";
@@ -624,7 +629,7 @@ export const FAQ: { q: string; a: string; link?: { href: string; label: string }
   },
   {
     q: "Non posso più venire: come libero il posto?",
-    a: "Apri il biglietto online dal link nell'email di conferma e, nella sezione Gestisci, annulla la giornata in cui non puoi esserci. Il posto passa a chi è in lista d'attesa. Grazie: così può partecipare un'altra persona.",
+    a: "Apri il biglietto online dal link nell'email di conferma e, per la giornata in cui non puoi esserci, usa «Libera il posto» nella sezione Gestisci la tua iscrizione. Il posto passa a chi è in lista d'attesa. Grazie: così può partecipare un'altra persona.",
   },
   {
     q: "Ho perso il biglietto o non trovo l'email: che cosa faccio?",

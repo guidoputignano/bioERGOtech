@@ -114,6 +114,72 @@ export async function caricaIscrizione(
   return data ? normalizzaIscrizione(data) : null;
 }
 
+/**
+ * Le colonne di un'iscrizione che l'RPC event_register riscrive. Per
+ * aggiungere giornate senza cambiare nient'altro si ripassano tali e quali:
+ * lo fanno il biglietto online ("Aggiungi") e la reiscrizione di chi non ha
+ * fatto l'accesso con quell'email.
+ */
+export type RigaIscrizioneCompleta = {
+  id: string;
+  user_id: string | null;
+  nome: string;
+  cognome: string;
+  email: string;
+  telefono: string | null;
+  categoria: string;
+  organizzazione: string | null;
+  classe: string | null;
+  startup_name: string | null;
+  startup_url: string | null;
+  startup_desc: string | null;
+  referente: string | null;
+  note: string | null;
+  consenso_marketing: boolean | null;
+  consenso_marketing_testo: string | null;
+  codice_univoco: string;
+};
+
+/** La riga completa di un'iscrizione, o null se non c'è. Lancia se la lettura fallisce. */
+export async function caricaRigaCompleta(client: SupabaseClient, id: string): Promise<RigaIscrizioneCompleta | null> {
+  const { data, error } = await client
+    .from("event_registrations")
+    .select(
+      "id, user_id, nome, cognome, email, telefono, categoria, organizzazione, classe, startup_name, startup_url, startup_desc, referente, note, consenso_marketing, consenso_marketing_testo, codice_univoco",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(`event_registrations: ${error.code ?? "?"} ${error.message}`);
+  return (data as RigaIscrizioneCompleta | null) ?? null;
+}
+
+/**
+ * I parametri di event_register con i dati già salvati: cambiano solo le
+ * giornate (l'RPC le aggiunge, non ne toglie). Il codice resta quello
+ * salvato: l'RPC non lo riscrive.
+ */
+export function parametriConDatiSalvati(r: RigaIscrizioneCompleta, slugs: string[]) {
+  return {
+    p_user_id: r.user_id,
+    p_nome: r.nome,
+    p_cognome: r.cognome,
+    p_email: r.email,
+    p_telefono: r.telefono,
+    p_categoria: r.categoria,
+    p_organizzazione: r.organizzazione,
+    p_classe: r.classe,
+    p_startup_name: r.startup_name,
+    p_startup_url: r.startup_url,
+    p_startup_desc: r.startup_desc,
+    p_referente: r.referente,
+    p_note: r.note,
+    p_marketing: r.consenso_marketing === true,
+    p_marketing_testo: r.consenso_marketing_testo,
+    p_codice: r.codice_univoco,
+    p_session_slugs: slugs,
+  };
+}
+
 export type PostiGiornata = { slug: string; capienza_max: number; confermati: number; rimanenti: number };
 
 /**

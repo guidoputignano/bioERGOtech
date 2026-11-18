@@ -37,7 +37,15 @@ const NOME_EVENTO = EVENT.titolo.split(":")[0];
  *
  * ?giornata=giorno-1 sceglie il giorno; &solo=confermati lascia fuori la
  * lista d'attesa. Solo staff (requireAdmin): elenca dati personali.
+ *
+ * Del codice del biglietto si stampano solo gli ultimi 4 caratteri: il
+ * codice intero apre il biglietto e la sua gestione, e il foglio resta per
+ * ore su un tavolo. Per confrontarlo con il telefono bastano quelli; il
+ * codice completo resta nel pannello e nel CSV.
  */
+
+/** "…7XQ2": la coda del codice, quanto basta a confrontarlo con il biglietto. */
+const codiceBreve = (codice: string) => (codice.length > 4 ? `…${codice.slice(-4)}` : codice);
 
 const STILE_STAMPA = `
 .stp { max-width: 1040px; margin: 0 auto; }
@@ -240,7 +248,7 @@ export default async function StampaListaPage({
     <Cornice>
       <div className="stp-barra no-print">
         <Link href={`${PERCORSO_PANNELLO}?tab=iscritti&giornata=${sessione.slug}`} className="eva-btn-link">
-          <i className="fas fa-arrow-left" aria-hidden="true" />
+          <i className="fas fa-arrow-left" aria-hidden="true" />{" "}
           Torna al pannello
         </Link>
         <nav className="stp-scelta" aria-label="Giornata e contenuto della lista">
@@ -299,7 +307,8 @@ export default async function StampaListaPage({
             {soloConfermati
               ? "Solo i posti confermati."
               : "Chi è in lista d'attesa è segnato: entra solo se ci sono posti."}{" "}
-            Stampata il {giornoStampa} alle {oraStampa}: chi si iscrive dopo non compare.
+            Del codice del biglietto ci sono solo gli ultimi 4 caratteri. Stampata il {giornoStampa} alle {oraStampa}:
+            chi si iscrive dopo non compare.
           </p>
         </header>
 
@@ -320,7 +329,7 @@ export default async function StampaListaPage({
                   <th scope="col">Cognome e nome</th>
                   <th scope="col">Categoria</th>
                   <th scope="col">Organizzazione, classe</th>
-                  <th scope="col">Codice</th>
+                  <th scope="col">Fine codice</th>
                   <th scope="col">Stato</th>
                 </tr>
               </thead>
@@ -356,7 +365,7 @@ export default async function StampaListaPage({
                           .filter(Boolean)
                           .join(", ")}
                       </td>
-                      <td className="stp-cod">{r.codice}</td>
+                      <td className="stp-cod">{codiceBreve(r.codice)}</td>
                       <td>
                         {g.status === "lista_attesa" ? (
                           <span className="stp-attesa">

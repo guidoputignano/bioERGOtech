@@ -67,7 +67,7 @@ const CSS = `
 }
 .ev-fisso-testo { margin: 0; min-width: 0; font-size: 13px; line-height: 1.35; color: var(--text-mid); }
 .ev-fisso-testo strong { display: block; font-size: 14px; font-weight: 700; color: var(--text-dark); }
-.ev-fisso .ev-fisso-cta { flex-shrink: 0; min-height: 44px; padding: 10px 22px; font-size: 0.9rem; }
+.ev-fisso .ev-fisso-cta { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: 44px; padding: 10px 22px; font-size: 0.9rem; }
 `;
 
 export function EventoIscrivitiFisso() {
@@ -141,8 +141,7 @@ export function EventoIscrivitiFisso() {
       <div className="ev-fisso-riga">
         <p className="ev-fisso-testo">
           <strong>{GIORNATE}</strong>
-          <span className="sr-only">, </span>
-          Ingresso gratuito
+          <span className="sr-only">, </span>Ingresso gratuito
         </p>
         <a href="#iscrizione" className="btn-primary ev-fisso-cta">
           Iscriviti gratis

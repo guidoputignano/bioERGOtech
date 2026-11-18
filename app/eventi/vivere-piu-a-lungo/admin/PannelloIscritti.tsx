@@ -11,6 +11,10 @@
  * Ogni azione dice com'è andata, nella scheda della persona: presenza,
  * conferma del posto dalla lista d'attesa (con l'email del biglietto),
  * rimozione da una giornata, reinvio del biglietto. Nessun esito è muto.
+ *
+ * Togliere l'ultima giornata elimina sempre l'intera iscrizione (lo fa la
+ * rotta, qualunque cosa chieda il pannello). Un posto confermato tolto passa
+ * a chi è in lista d'attesa da più tempo, e l'esito dice a chi.
  */
 
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
@@ -64,8 +68,21 @@ type RispostaAzione = {
   error?: string;
   codice?: string;
   eliminata?: boolean;
+  /** L'operazione è riuscita solo in parte: il messaggio dice che cosa resta da fare. */
+  attenzione?: boolean;
+  /** Chi ha avuto il posto liberato, dalla lista d'attesa. */
+  promossa?: { nome: string } | null;
   email?: { inviata: true; a: string } | { inviata: false; a: string; errore: string } | null;
 };
+
+/** Che cosa succede al posto quando lo staff toglie una persona da una giornata. */
+function effettoRimozione(g: GiornataRiga): string {
+  if (g.status !== "confermato") return "La persona esce dalla lista d'attesa.";
+  // Come la rotta: a giornata conclusa, o per una sessione che il sito non usa, nessuno viene confermato.
+  const s = sessionBySlug(g.slug);
+  if (!s || Date.parse(s.fineISO) <= Date.now()) return "Il posto torna libero.";
+  return "Il posto passa a chi è in lista d'attesa da più tempo, se c'è, e quella persona riceve il biglietto per email.";
+}
 
 function IconaEsito({ tipo }: { tipo: Esito["tipo"] }) {
   const icona =
@@ -83,11 +100,14 @@ type Domanda =
 
 const SchedaIscritto = memo(function SchedaIscritto({
   r,
+  ripristinoMancante,
   onGiornata,
   onCambiato,
   onEliminata,
 }: {
   r: RigaIscritto;
+  /** Manca ancora una giornata nel database: il file di ripristino non è stato eseguito. */
+  ripristinoMancante: boolean;
   onGiornata: (idIscrizione: string, g: Pick<GiornataRiga, "id" | "stato_checkin" | "checkin_ts">) => void;
   /** Dopo un'azione: la scheda resta in elenco (anche se non corrisponde più ai filtri) e i dati si rileggono. */
   onCambiato: (idIscrizione: string, posizione: number | null) => void;
@@ -156,22 +176,26 @@ const SchedaIscritto = memo(function SchedaIscritto({
     onCambiato(r.id, g.posizione_attesa);
   };
 
-  const rimuovi = async (g: GiornataRiga, eliminaIscrizione: boolean) => {
+  const rimuovi = async (g: GiornataRiga) => {
     setDomanda(null);
     setInCorso(`rimuovi:${g.id}`);
     setEsito(null);
+    // Se è l'ultima giornata la rotta elimina l'intera iscrizione.
     const res = await inviaJson<RispostaAzione>("/api/eventi/admin/iscritti", {
       azione: "rimuovi_giornata",
       bridge_id: g.id,
-      elimina_iscrizione: eliminaIscrizione,
     });
     setInCorso(null);
     if (!res.ok || !res.dati) {
-      setEsito({ tipo: "errore", testo: `Niente è stato rimosso. ${messaggioErrore(res.status, res.dati)}` });
+      setEsito({
+        tipo: "errore",
+        testo: `La giornata non è stata tolta, o non si sa se lo è stata. ${messaggioErrore(res.status, res.dati)}`,
+      });
+      onCambiato(r.id, g.posizione_attesa);
       return;
     }
     if (res.dati.eliminata) onEliminata(`${nomeCompleto}: ${res.dati.messaggio ?? "iscrizione eliminata."}`);
-    else setEsito({ tipo: "ok", testo: res.dati.messaggio ?? "Giornata rimossa." });
+    else setEsito({ tipo: res.dati.attenzione ? "attenzione" : "ok", testo: res.dati.messaggio ?? "Giornata rimossa." });
     onCambiato(r.id, g.posizione_attesa);
   };
 
@@ -271,17 +295,28 @@ const SchedaIscritto = memo(function SchedaIscritto({
             <i className="fas fa-user-slash" aria-hidden="true" />
             <div>
               <strong>Nessuna giornata.</strong> Questa iscrizione non ha un posto in nessuna giornata e
-              all&apos;ingresso il biglietto non risulta. Finché resta così, il biglietto aggiornato e il
-              promemoria non partono. Se la persona voleva venire, rimetti la giornata con il file SQL di
-              ripristino; altrimenti elimina l&apos;iscrizione.
+              all&apos;ingresso il biglietto non risulta.{" "}
+              {ripristinoMancante ? (
+                <>
+                  Il file di ripristino non è ancora stato eseguito e può restituirle{" "}
+                  {giornateConArticolo([GIORNATE[0].slug])}: fino ad allora non si può eliminare.
+                </>
+              ) : (
+                <>
+                  Non riceve le email a tutti. Controlla con la persona: se vuole venire, aggiungi la giornata giusta
+                  da «Apri il biglietto», nella sezione «Gestisci la tua iscrizione»; altrimenti elimina
+                  l&apos;iscrizione.
+                </>
+              )}
               <div className="eva-azioni" style={{ marginTop: 10 }}>
                 <button
                   type="button"
                   className="eva-btn eva-btn-pericolo"
-                  disabled={occupato}
+                  disabled={occupato || ripristinoMancante}
+                  title={ripristinoMancante ? "Prima va eseguito il file di ripristino" : undefined}
                   onClick={() => setDomanda({ tipo: "elimina" })}
                 >
-                  <i className={inCorso === "elimina" ? "fas fa-spinner fa-spin" : "fas fa-trash"} aria-hidden="true" />
+                  <i className={inCorso === "elimina" ? "fas fa-spinner fa-spin" : "fas fa-trash"} aria-hidden="true" />{" "}
                   Elimina questa iscrizione
                 </button>
               </div>
@@ -297,12 +332,12 @@ const SchedaIscritto = memo(function SchedaIscritto({
                 {!conosciuta && <span className="eva-pill eva-pill-errore">Sessione non usata dal sito</span>}
                 {g.status === "confermato" ? (
                   <span className="eva-pill eva-pill-ok">
-                    <i className="fas fa-check" aria-hidden="true" />
+                    <i className="fas fa-check" aria-hidden="true" />{" "}
                     Confermato
                   </span>
                 ) : (
                   <span className="eva-pill eva-pill-attesa">
-                    <i className="fas fa-hourglass-half" aria-hidden="true" />
+                    <i className="fas fa-hourglass-half" aria-hidden="true" />{" "}
                     Lista d&apos;attesa{g.posizione_attesa ? `, n. ${g.posizione_attesa}` : ""}
                   </span>
                 )}
@@ -345,7 +380,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
                     <i
                       className={inCorso === `conferma:${g.id}` ? "fas fa-spinner fa-spin" : "fas fa-user-check"}
                       aria-hidden="true"
-                    />
+                    />{" "}
                     Conferma il posto
                   </button>
                 )}
@@ -361,7 +396,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
                   <i
                     className={inCorso === `rimuovi:${g.id}` ? "fas fa-spinner fa-spin" : "fas fa-user-minus"}
                     aria-hidden="true"
-                  />
+                  />{" "}
                   Rimuovi da questa giornata
                 </button>
               </div>
@@ -385,7 +420,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
               </p>
               <div className="eva-azioni">
                 <button type="button" className="eva-btn eva-btn-primario" onClick={() => void conferma(domanda.g, false)}>
-                  <i className="fas fa-user-check" aria-hidden="true" />
+                  <i className="fas fa-user-check" aria-hidden="true" />{" "}
                   Conferma il posto
                 </button>
                 <button type="button" className="eva-btn" onClick={() => setDomanda(null)}>
@@ -397,8 +432,8 @@ const SchedaIscritto = memo(function SchedaIscritto({
           {domanda.tipo === "forza" && (
             <>
               <p>
-                <strong>{domanda.testo}</strong> Confermando ora, il posto di {nomeCompleto} va oltre la capienza
-                della sala. Procedi solo se hai verificato che c&apos;è spazio.
+                <strong>{domanda.testo}</strong> Confermando ora, il posto di {nomeCompleto} va oltre la capienza della
+                sala. Procedi solo se hai verificato che c&apos;è spazio.
               </p>
               <div className="eva-azioni">
                 <button
@@ -418,17 +453,10 @@ const SchedaIscritto = memo(function SchedaIscritto({
             <>
               <p>
                 Togliere l&apos;iscrizione di <strong>{nomeCompleto}</strong> per {conArticolo(domanda.g.slug)}?{" "}
-                {domanda.g.status === "confermato"
-                  ? "Il posto torna libero."
-                  : "La persona esce dalla lista d'attesa."}{" "}
-                Non parte nessuna email.
+                {effettoRimozione(domanda.g)} {nomeCompleto} non riceve nessuna email.
               </p>
               <div className="eva-azioni">
-                <button
-                  type="button"
-                  className="eva-btn eva-btn-pieno-pericolo"
-                  onClick={() => void rimuovi(domanda.g, false)}
-                >
+                <button type="button" className="eva-btn eva-btn-pieno-pericolo" onClick={() => void rimuovi(domanda.g)}>
                   Rimuovi da questa giornata
                 </button>
                 <button type="button" className="eva-btn" onClick={() => setDomanda(null)}>
@@ -445,7 +473,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
               </p>
               <div className="eva-azioni">
                 <button type="button" className="eva-btn eva-btn-pieno-pericolo" onClick={() => void elimina()}>
-                  <i className="fas fa-trash" aria-hidden="true" />
+                  <i className="fas fa-trash" aria-hidden="true" />{" "}
                   Elimina l&apos;iscrizione
                 </button>
                 <button type="button" className="eva-btn" onClick={() => setDomanda(null)}>
@@ -457,21 +485,15 @@ const SchedaIscritto = memo(function SchedaIscritto({
           {domanda.tipo === "rimuovi" && domanda.ultima && (
             <>
               <p>
-                {maiuscola(conArticolo(domanda.g.slug))} è l&apos;unica giornata di <strong>{nomeCompleto}</strong>.
-                Vuoi eliminare l&apos;intera iscrizione, oppure togliere solo la giornata e tenere i dati in elenco?
-                Non parte nessuna email.
+                {maiuscola(conArticolo(domanda.g.slug))} è l&apos;unica giornata di <strong>{nomeCompleto}</strong>:
+                toglierla <strong>elimina l&apos;intera iscrizione</strong>, con i dati e il codice del biglietto, che
+                smette di funzionare. Non si può annullare.{" "}
+                {effettoRimozione(domanda.g)} {nomeCompleto} non riceve nessuna email.
               </p>
               <div className="eva-azioni">
-                <button
-                  type="button"
-                  className="eva-btn eva-btn-pieno-pericolo"
-                  onClick={() => void rimuovi(domanda.g, true)}
-                >
-                  <i className="fas fa-trash" aria-hidden="true" />
+                <button type="button" className="eva-btn eva-btn-pieno-pericolo" onClick={() => void rimuovi(domanda.g)}>
+                  <i className="fas fa-trash" aria-hidden="true" />{" "}
                   Elimina l&apos;iscrizione
-                </button>
-                <button type="button" className="eva-btn eva-btn-pericolo" onClick={() => void rimuovi(domanda.g, false)}>
-                  Togli solo la giornata
                 </button>
                 <button type="button" className="eva-btn" onClick={() => setDomanda(null)}>
                   Annulla
@@ -496,7 +518,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
             target="_blank"
             rel="noopener noreferrer"
           >
-            Apri il biglietto
+            Apri il biglietto{" "}
             <i className="fas fa-arrow-up-right-from-square" aria-hidden="true" style={{ fontSize: 12 }} />
             <span className="sr-only"> (si apre in una nuova scheda)</span>
           </a>
@@ -640,6 +662,7 @@ export function PannelloIscritti({
 
   const visibili = filtrati.slice(0, limite);
   const totale = dati?.totale ?? 0;
+  const ripristinoMancante = Boolean(dati && dati.mancanti.length > 0);
   const conFiltri = filtriAttivi(filtri);
   const filtriPerFile = filtri.q.trim() || filtri.stato || filtri.categoria;
 
@@ -771,9 +794,9 @@ export function PannelloIscritti({
               disabled={inListaAttesa}
               onChange={(e) => setOrdine(e.target.value as Ordine)}
             >
-              {inListaAttesa && <option value="attesa">Ordine di arrivo in lista</option>}
+              {inListaAttesa && <option value="attesa">Ordine di arrivo</option>}
               <option value="recenti">Più recenti prima</option>
-              <option value="cognome">Cognome, dalla A alla Z</option>
+              <option value="cognome">Per cognome</option>
             </select>
           </div>
         </div>
@@ -792,7 +815,7 @@ export function PannelloIscritti({
           </p>
           {conFiltri && (
             <button type="button" className="eva-btn-link" onClick={() => onFiltri(FILTRI_VUOTI)}>
-              <i className="fas fa-filter-circle-xmark" aria-hidden="true" />
+              <i className="fas fa-filter-circle-xmark" aria-hidden="true" />{" "}
               Azzera i filtri
             </button>
           )}
@@ -822,7 +845,7 @@ export function PannelloIscritti({
           ))}
           {GIORNATE.map((g) => (
             <a key={g.slug} className="eva-btn" href={urlStampa(g.slug)} target="_blank" rel="noopener noreferrer">
-              <i className="fas fa-print" aria-hidden="true" />
+              <i className="fas fa-print" aria-hidden="true" />{" "}
               Stampa lista {g.etichetta}
               <span className="sr-only"> (si apre in una nuova scheda)</span>
             </a>
@@ -894,7 +917,13 @@ export function PannelloIscritti({
         <ul className="eva-persone" style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {visibili.map((r) => (
             <li key={r.id}>
-              <SchedaIscritto r={r} onGiornata={aggiornaGiornata} onCambiato={cambiato} onEliminata={eliminata} />
+              <SchedaIscritto
+                r={r}
+                ripristinoMancante={ripristinoMancante}
+                onGiornata={aggiornaGiornata}
+                onCambiato={cambiato}
+                onEliminata={eliminata}
+              />
             </li>
           ))}
         </ul>
@@ -903,7 +932,7 @@ export function PannelloIscritti({
       {filtrati.length > limite && (
         <div style={{ textAlign: "center" }}>
           <button type="button" className="eva-btn" onClick={() => setLimite((l) => l + PASSO)}>
-            <i className="fas fa-chevron-down" aria-hidden="true" />
+            <i className="fas fa-chevron-down" aria-hidden="true" />{" "}
             Mostra altri {numero(Math.min(PASSO, filtrati.length - limite))} (ne restano{" "}
             {numero(filtrati.length - limite)})
           </button>

@@ -127,6 +127,11 @@ export function RegistrationForm() {
   const [website, setWebsite] = useState(""); // honeypot
 
   const [posti, setPosti] = useState<Record<string, Posti>>({});
+  /**
+   * Le giornate già concluse, calcolate nel browser dopo il montaggio: la
+   * pagina è statica e non sa che ora è. Restano in vista ma non si scelgono.
+   */
+  const [concluse, setConcluse] = useState<readonly string[]>([]);
   const [invio, setInvio] = useState(false);
   /** Quante volte si è provato a inviare: da 1 in poi gli errori si vedono e si aggiornano dal vivo. */
   const [tentativi, setTentativi] = useState(0);
@@ -189,6 +194,22 @@ export function RegistrationForm() {
     return () => controllo.abort();
   }, [caricaPosti]);
 
+  // Una giornata finita non si sceglie più: dopo il montaggio, e poi ogni
+  // minuto per chi tiene la pagina aperta. Se era già scelta, la si toglie.
+  useEffect(() => {
+    const controlla = () => {
+      const adesso = Date.now();
+      const finite = SESSIONS.filter((s) => adesso >= Date.parse(s.fineISO)).map((s) => s.slug as string);
+      setConcluse((prima) => (prima.join(",") === finite.join(",") ? prima : finite));
+      if (finite.length > 0) {
+        setSessioni((p) => (p.some((s) => finite.includes(s)) ? p.filter((s) => !finite.includes(s)) : p));
+      }
+    };
+    controlla();
+    const timer = window.setInterval(controlla, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   /* ── Stato derivato ── */
 
   const refuso = refusoEmail(email);
@@ -246,7 +267,7 @@ export function RegistrationForm() {
   /* ── Focus ── */
 
   const elementoCampo = (c: Campo): HTMLElement | null => {
-    if (c === "sessioni") return giorniRef.current?.querySelector<HTMLInputElement>("input") ?? null;
+    if (c === "sessioni") return giorniRef.current?.querySelector<HTMLInputElement>("input:not(:disabled)") ?? null;
     if (c === "categoria") {
       return (
         chipsRef.current?.querySelector<HTMLInputElement>("input:checked") ??
@@ -267,6 +288,25 @@ export function RegistrationForm() {
 
   const alternaGiornata = (slug: SessionSlug) =>
     setSessioni((p) => (p.includes(slug) ? p.filter((s) => s !== slug) : [...p, slug]));
+
+  /**
+   * La categoria scelta a mano. Se è diversa da quella di ?cat, il parametro
+   * esce dall'indirizzo (senza ricaricare): così un nuovo clic su "Sei uno
+   * studente? Iscriviti qui" cambia di nuovo l'URL e riporta la categoria.
+   */
+  const scegliCategoria = (c: CategoriaValue) => {
+    setCategoria(c);
+    try {
+      const url = new URL(window.location.href);
+      const cat = url.searchParams.get("cat");
+      if (cat !== null && categoriaDaParametro(cat) !== c) {
+        url.searchParams.delete("cat");
+        window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      }
+    } catch {
+      /* l'indirizzo resta com'è: la scelta vale lo stesso */
+    }
+  };
 
   const usaSuggerimento = (indirizzo: string) => {
     setEmail(indirizzo);
@@ -414,11 +454,9 @@ export function RegistrationForm() {
               <span className="icon-circle icon-circle-primary" aria-hidden="true">
                 <i className="fas fa-ticket" />
               </span>
+              {/* Il "come funziona" è già nell'introduzione della sezione, sopra la card. */}
               <p style={{ margin: 0 }}>
                 <span className="vpl-intro-titolo">Iscrizione gratuita</span>
-                <span className="vpl-intro-testo">
-                  Ci vuole un minuto. Il biglietto con il QR code ti arriva per email.
-                </span>
               </p>
             </div>
 
@@ -438,19 +476,25 @@ export function RegistrationForm() {
             >
               <legend className="vpl-legend">Quali giornate?</legend>
               <p id="vpl-giorni-aiuto" className="vpl-aiuto">
-                Puoi sceglierne una o tutte e due. L&apos;ingresso è gratuito.
+                {concluse.length === SESSIONS.length
+                  ? "Le giornate si sono concluse: le iscrizioni sono chiuse."
+                  : concluse.length > 0
+                    ? "Puoi scegliere solo le giornate non ancora concluse. L'ingresso è gratuito."
+                    : "Puoi sceglierne una o tutte e due. L'ingresso è gratuito."}
               </p>
               <div ref={giorniRef} className="vpl-giorni">
                 {SESSIONS.map((s) => {
-                  const scelto = sessioni.includes(s.slug);
-                  const stato = statoPosti(posti[s.slug], s.capienza);
+                  const conclusa = concluse.includes(s.slug);
+                  const scelto = !conclusa && sessioni.includes(s.slug);
+                  const stato = conclusa ? null : statoPosti(posti[s.slug], s.capienza);
                   const base = `vpl-g-${s.slug}`;
                   return (
                     <label
                       key={s.slug}
                       className="vpl-giorno"
                       data-scelto={scelto}
-                      data-errore={Boolean(errori.sessioni)}
+                      data-conclusa={conclusa || undefined}
+                      data-errore={!conclusa && Boolean(errori.sessioni)}
                     >
                       <input
                         type="checkbox"
@@ -458,10 +502,11 @@ export function RegistrationForm() {
                         name="sessioni"
                         value={s.slug}
                         checked={scelto}
+                        disabled={conclusa}
                         onChange={() => alternaGiornata(s.slug)}
                         aria-labelledby={`${base}-data`}
                         aria-describedby={ids(`${base}-dettagli`, errori.sessioni && "vpl-giorni-errore")}
-                        aria-invalid={errori.sessioni ? true : undefined}
+                        aria-invalid={!conclusa && errori.sessioni ? true : undefined}
                       />
                       <span className="vpl-giorno-corpo">
                         <span id={`${base}-data`} className="vpl-giorno-data">
@@ -484,12 +529,19 @@ export function RegistrationForm() {
                               <span className="sr-only">.</span>
                             </span>
                           </span>
-                          <span className="vpl-posti" data-tipo={stato?.tipo}>
-                            {stato && (
+                          <span className="vpl-posti" data-tipo={conclusa ? "conclusa" : stato?.tipo}>
+                            {conclusa ? (
                               <>
-                                <i className={`fas ${stato.icona}`} aria-hidden="true" />
-                                <span>{stato.testo}</span>
+                                <i className="fas fa-flag-checkered" aria-hidden="true" />
+                                <span>Conclusa</span>
                               </>
+                            ) : (
+                              stato && (
+                                <>
+                                  <i className={`fas ${stato.icona}`} aria-hidden="true" />
+                                  <span>{stato.testo}</span>
+                                </>
+                              )
                             )}
                           </span>
                         </span>
@@ -598,16 +650,17 @@ export function RegistrationForm() {
                   >
                     <p style={{ margin: 0 }}>
                       {refuso.impossibile ? (
-                        <>
-                          L&apos;indirizzo finisce con «{refuso.dominio}», che non esiste
-                          {refuso.suggerimento ? (
-                            <>
-                              : forse intendevi <strong>{refuso.suggerimento}</strong>?
-                            </>
-                          ) : (
-                            ". Correggilo per ricevere il biglietto."
-                          )}
-                        </>
+                        refuso.suggerimento ? (
+                          <>
+                            L&apos;indirizzo finisce con «{refuso.dominio}», che non esiste: forse intendevi{" "}
+                            <strong>{refuso.suggerimento}</strong>?
+                          </>
+                        ) : (
+                          <>
+                            L&apos;indirizzo finisce con «{refuso.dominio}», che non esiste. Correggilo per ricevere il
+                            biglietto.
+                          </>
+                        )
                       ) : (
                         <>
                           Controlla l&apos;indirizzo: forse intendevi <strong>{refuso.suggerimento}</strong>?
@@ -621,7 +674,7 @@ export function RegistrationForm() {
                           className="vpl-mini-btn"
                           onClick={() => usaSuggerimento(refuso.suggerimento!)}
                         >
-                          <i className="fas fa-check" aria-hidden="true" />
+                          <i className="fas fa-check" aria-hidden="true" />{" "}
                           Usa {refuso.suggerimento}
                         </button>
                       )}
@@ -680,7 +733,7 @@ export function RegistrationForm() {
                         name="categoria"
                         value={c.value}
                         checked={scelta}
-                        onChange={() => setCategoria(c.value)}
+                        onChange={() => scegliCategoria(c.value)}
                         required
                         aria-describedby={errori.categoria ? "vpl-chi-errore" : undefined}
                       />
@@ -702,7 +755,11 @@ export function RegistrationForm() {
                 {categoria === "studente" && (
                   <p className="vpl-nota">
                     <i className="fas fa-circle-info" aria-hidden="true" />
-                    <span>Se hai meno di 14 anni, chiedi a un genitore o a un docente di iscriverti.</span>
+                    <span>
+                      Se hai meno di 14 anni, chiedi a un genitore di iscriverti. Ogni persona ha bisogno di un indirizzo
+                      email diverso: se in famiglia ne avete uno solo, scrivici a{" "}
+                      <a href="mailto:info@bioergotech.org">info@bioergotech.org</a>.
+                    </span>
                   </p>
                 )}
                 {categoria === "scuola_docente" && (
@@ -852,7 +909,7 @@ export function RegistrationForm() {
               </div>
             ) : (
               <button type="button" className="vpl-link-btn" onClick={apriNota}>
-                <i className="fas fa-plus" aria-hidden="true" />
+                <i className="fas fa-plus" aria-hidden="true" />{" "}
                 Aggiungi una nota (facoltativo)
               </button>
             )}
@@ -930,12 +987,12 @@ export function RegistrationForm() {
               <button type="submit" className="btn-primary vpl-invia" disabled={invio} aria-busy={invio || undefined}>
                 {invio ? (
                   <>
-                    <i className="fas fa-circle-notch fa-spin" aria-hidden="true" />
+                    <i className="fas fa-circle-notch fa-spin" aria-hidden="true" />{" "}
                     Invio in corso…
                   </>
                 ) : (
                   <>
-                    Conferma l&apos;iscrizione
+                    Conferma l&apos;iscrizione{" "}
                     <i className="fas fa-arrow-right" aria-hidden="true" />
                   </>
                 )}
