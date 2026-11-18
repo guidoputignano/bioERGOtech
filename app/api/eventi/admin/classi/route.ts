@@ -582,5 +582,5 @@ async function azioneReinvia(client: SupabaseClient, body: Record<string, unknow
   const email = await mandaEmail(p, "reinvio");
   if (!email.inviata) return errore(email.errore, 502);
   console.info(`${LOG} prenotazione ${p.id}: email reinviata dallo staff.`);
-  return ok({ messaggio: `Email della classe reinviata a ${email.a}.`, email });
+  return ok({ messaggio: "Email della classe reinviata.", email });
 }

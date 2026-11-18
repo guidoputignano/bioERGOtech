@@ -94,14 +94,23 @@ export function PrenotazioneConfermata({
     </div>
   );
 
-  const primaDiPartire = (
+  // Con almeno una giornata confermata: che cosa serve quel giorno. Con
+  // tutte in lista d'attesa la classe non ha ancora un posto, quindi niente
+  // istruzioni per l'ingresso (come nell'email).
+  const primaDiPartire = (conPosto: boolean) => (
     <section aria-labelledby="vpc-ok-partire">
       <h4 id="vpc-ok-partire" className="vpl-sezione-titolo">
         Il giorno dell&apos;evento
       </h4>
       <ul className="vpc-ok-elenco">
-        <li>{CLASSI_PRIMA_DI_PARTIRE}</li>
-        <li>All&apos;ingresso mostri il QR della classe: la classe entra insieme.</li>
+        {conPosto ? (
+          <>
+            <li>{CLASSI_PRIMA_DI_PARTIRE}</li>
+            <li>All&apos;ingresso mostri il QR della classe: la classe entra insieme.</li>
+          </>
+        ) : (
+          <li>Il QR vale per l&apos;ingresso solo se la classe viene confermata: in quel caso ti scriviamo noi.</li>
+        )}
         <li>Puoi dirlo agli studenti: chi viene con la classe non deve iscriversi uno per uno.</li>
       </ul>
     </section>
@@ -341,7 +350,7 @@ export function PrenotazioneConfermata({
         </span>
       </p>
 
-      {primaDiPartire}
+      {primaDiPartire(confermate.length > 0)}
 
       {dati.emailInviata && (
         <p className="vpl-ok-nota">

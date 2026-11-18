@@ -158,9 +158,10 @@ export const STILE_CLASSE = `
   .vcl-biglietto { box-shadow: none; border: 1px solid #9AA5B1; border-top: 4px solid #1A9E92; break-inside: avoid; }
   .vcl-strappo::before, .vcl-strappo::after { background: #fff; }
   .vcl-qr { border-color: #9AA5B1; width: auto; aspect-ratio: auto; padding: 3mm; }
-  .vcl-qr img { width: 62mm; max-width: none; }
-  .vcl-corpo, .vcl-giornate { padding-top: 12px; padding-bottom: 12px; }
-  .vcl-giornata { border-color: #9AA5B1; }
+  .vcl-qr img { width: 48mm; max-width: none; }
+  .vcl-corpo, .vcl-giornate { padding-top: 8px; padding-bottom: 8px; }
+  .vcl-giornata { border-color: #9AA5B1; padding: 10px 14px; }
+  .vcl-giornata-titolo { display: none; }
   .vcl-dettagli a { text-decoration: none; }
   .vcl-stato { border: 1px solid currentColor; }
   .vcl-fatti { background: #fff; border: 1px solid #9AA5B1; }

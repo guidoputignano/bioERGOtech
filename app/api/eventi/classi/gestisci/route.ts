@@ -292,22 +292,15 @@ async function aggiorna(client: SupabaseClient, p: PrenotazioneClasse, body: Rec
   }
 
   const resend = resendOppureNull();
-  const esito = await aggiornaNumeriClasse(client, resend, p, { studenti, accompagnatori }, { promuovi: false });
+  // Le giornate già iniziate non si controllano: la sera del 10 una classe
+  // può crescere per l'11 anche se il 10 era pieno.
+  const salta = p.giornate.map((g) => g.slug).filter((slug) => iniziata(slug, adesso));
+  const esito = await aggiornaNumeriClasse(client, resend, p, { studenti, accompagnatori }, { promuovi: false, salta });
   if (!esito.ok) {
     if (!esito.giornata) return errore(404, NON_TROVATA);
     const dopo = studenti + accompagnatori;
     const conArt = giornateConArticolo([esito.giornata]) || "una delle giornate";
     console.info(`Gestione classe ${p.id}: numeri non cambiati, ${dopo} posti non ci stanno (${esito.giornata}).`);
-    // L'RPC controlla tutte le giornate confermate, anche una già iniziata o
-    // conclusa (il database non conosce gli orari): in quel caso "indica meno
-    // persone" non aiuta, lo staff sì.
-    if (iniziata(esito.giornata, adesso)) {
-      return errore(
-        409,
-        `La giornata ${dellaGiornata(esito.giornata)} è già iniziata e lì i posti per le classi non bastano per ${dopo} persone: la prenotazione resta per ${p.posti} persone. Per cambiare i numeri delle altre giornate scrivi a info@bioergotech.org.`,
-        { giornata: esito.giornata },
-      );
-    }
     return errore(
       409,
       `Per ${conArt} i posti per le classi non bastano per ${dopo} persone: la prenotazione resta per ${p.posti} persone. Puoi indicare meno persone, oppure scrivi a info@bioergotech.org.`,

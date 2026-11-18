@@ -8,14 +8,20 @@
  */
 
 import { EVENT, EVENT_SLUG, SESSIONS, SITE_URL, type EventSession } from "@/app/eventi/vivere-piu-a-lungo/content";
+import { isCodiceClasse, urlClasse } from "@/lib/eventi/classi";
 
 /** 2026-12-10T09:00:00+01:00 -> 20261210T080000Z */
 function utcCompatto(iso: string): string {
   return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
-/** L'URL del biglietto online, se c'è un codice. */
+/**
+ * L'URL del biglietto online, se c'è un codice. Il codice di una classe
+ * (VPC-) porta alla pagina della classe: un biglietto personale con quel
+ * codice non esiste.
+ */
 export function urlBiglietto(codice: string): string {
+  if (isCodiceClasse(codice)) return `${SITE_URL}${urlClasse(codice)}`;
   return `${SITE_URL}/eventi/${EVENT_SLUG}/biglietto/${encodeURIComponent(codice)}`;
 }
 
@@ -28,7 +34,9 @@ function descrizione(s: EventSession, codice?: string): string {
     `${EVENT.titolo}. ${s.titolo}.`,
     `${s.giornoLabel}, ${s.orario}, ${s.luogo}.`,
   ];
-  if (codice) righe.push(`Il tuo biglietto: ${urlBiglietto(codice)}`);
+  if (codice) {
+    righe.push(`${isCodiceClasse(codice) ? "La prenotazione della classe" : "Il tuo biglietto"}: ${urlBiglietto(codice)}`);
+  }
   righe.push(`Programma: ${SITE_URL}/eventi/${EVENT_SLUG}`);
   return righe.join("\n");
 }

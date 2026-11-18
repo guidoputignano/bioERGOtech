@@ -19,7 +19,6 @@ import {
   EVENT,
   EVENT_SLUG,
   SESSIONS,
-  SITE_URL,
   sessionBySlug,
   type EventSession,
 } from "../../content";
@@ -93,21 +92,6 @@ async function carica(codice: string): Promise<Stato> {
     console.error("Pagina della classe: posti per le classi non letti:", err instanceof Error ? err.message : err);
   }
   return { tipo: "ok", p, rimanenti };
-}
-
-/** "Aggiungi a Google Calendar" con il link alla pagina della classe, non a un biglietto personale. */
-function googleCalendarClasse(s: EventSession, codice: string): string {
-  const url = new URL(googleCalendarUrl(s));
-  url.searchParams.set(
-    "details",
-    [
-      `${EVENT.titolo}. ${s.titolo}.`,
-      `${s.giornoLabel}, ${s.orario}, ${s.luogo}.`,
-      `La prenotazione della classe: ${SITE_URL}${urlClasse(codice)}`,
-      `Programma: ${SITE_URL}${PAGINA_EVENTO}`,
-    ].join("\n"),
-  );
-  return url.toString();
 }
 
 export default async function PaginaClasse({
@@ -296,8 +280,14 @@ function Classe({ p, rimanenti }: { p: PrenotazioneClasse; rimanenti: Record<str
             {p.codice}
           </p>
           <p className="vcl-aiuto">
-            <strong>Mostra questo QR all&apos;ingresso: la classe entra insieme.</strong> Dal telefono o stampato; se non
-            si legge, basta il codice.
+            {tutteInAttesa ? (
+              <strong>Il QR vale per l&apos;ingresso solo se la classe viene confermata.</strong>
+            ) : (
+              <>
+                <strong>Mostra questo QR all&apos;ingresso: la classe entra insieme.</strong> Dal telefono o stampato; se
+                non si legge, basta il codice.
+              </>
+            )}
           </p>
         </div>
 
@@ -335,10 +325,12 @@ function Classe({ p, rimanenti }: { p: PrenotazioneClasse; rimanenti: Record<str
           )}
         </section>
 
-        <p className="vcl-nota vcl-partire">
-          <i className="fas fa-bus" aria-hidden="true" />
-          <span>{CLASSI_PRIMA_DI_PARTIRE}</span>
-        </p>
+        {!tutteInAttesa && (
+          <p className="vcl-nota vcl-partire">
+            <i className="fas fa-bus" aria-hidden="true" />
+            <span>{CLASSI_PRIMA_DI_PARTIRE}</span>
+          </p>
+        )}
       </article>
 
       <div className="vcl-azioni no-print">
@@ -447,11 +439,11 @@ function SchedaGiornata({
       {!attesa && !entrata && !finita && (
         <div className="vcl-calendario no-print">
           <span className="vcl-calendario-etichetta">Aggiungi al calendario</span>
-          <a href={googleCalendarClasse(s, codice)} target="_blank" rel="noopener noreferrer" className="vcl-pill">
+          <a href={googleCalendarUrl(s, codice)} target="_blank" rel="noopener noreferrer" className="vcl-pill">
             <i className="fab fa-google" aria-hidden="true" /> Google<span className="sr-only"> Calendar, {s.etichetta} (si apre in una nuova scheda)</span>
           </a>
-          {/* Il file .ics senza codice: il calendario punta al programma, non a un biglietto personale. */}
-          <a href={icsUrl([s.slug], undefined, false)} className="vcl-pill" download>
+          {/* Con il codice: il calendario punta alla pagina della classe (lib/eventi/calendario.ts). */}
+          <a href={icsUrl([s.slug], codice, false)} className="vcl-pill" download>
             <i className="fas fa-calendar-plus" aria-hidden="true" /> Apple, Outlook<span className="sr-only">, file del calendario per {s.etichetta}</span>
           </a>
         </div>

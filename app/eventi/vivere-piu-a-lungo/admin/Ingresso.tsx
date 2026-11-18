@@ -706,17 +706,24 @@ export function Ingresso({
       setRisultato(completo);
       setAnnuncio(annuncioPer(completo));
       segnala(tonoPer(completo));
-      // Sul telefono chi ha cercato per nome può avere il palco fuori schermo:
-      // l'esito deve vedersi subito. Se è già visibile non si muove niente.
-      try {
-        const piano = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-        palcoRef.current?.scrollIntoView({ block: "nearest", behavior: piano ? "auto" : "smooth" });
-      } catch {
-        /* browser vecchi: l'esito resta dov'è */
-      }
     },
     [segnala],
   );
+
+  // Sul telefono chi ha cercato per nome può avere il palco fuori schermo:
+  // l'esito deve vedersi subito. Se è già visibile non si muove niente. Dopo
+  // il render, non in mostra(): la carta di una classe è più alta, e lo
+  // scorrimento calcolato sul palco di prima la lascerebbe mezza fuori.
+  const esitoMostrato = risultato?.n;
+  useEffect(() => {
+    if (esitoMostrato === undefined) return;
+    try {
+      const piano = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      palcoRef.current?.scrollIntoView({ block: "nearest", behavior: piano ? "auto" : "smooth" });
+    } catch {
+      /* browser vecchi: l'esito resta dov'è */
+    }
+  }, [esitoMostrato]);
 
   /* ── Ingresso ── */
 
@@ -2082,6 +2089,15 @@ function CartaClasse({
             <i className="fas fa-location-dot" aria-hidden="true" /> Settore {c.settore}
           </p>
         )}
+        {/* La nota (per esempio un posto accessibile) e la spiegazione prima dei
+            numeri e del docente: sul telefono la parte bassa della carta
+            scorre, e quello che conta deve vedersi senza scorrere. */}
+        {c.note && (
+          <p className="ing-esito-note">
+            <i className="fas fa-note-sticky" aria-hidden="true" /> {c.note}
+          </p>
+        )}
+        {spiegazione && <p className="ing-esito-testo-grande">{spiegazione}</p>}
         <p className="ing-classe-riga">
           <i className="fas fa-user-group" aria-hidden="true" /> {persone}
         </p>
@@ -2096,12 +2112,6 @@ function CartaClasse({
             </>
           )}
         </p>
-        {c.note && (
-          <p className="ing-esito-note">
-            <i className="fas fa-note-sticky" aria-hidden="true" /> {c.note}
-          </p>
-        )}
-        {spiegazione && <p className="ing-esito-testo-grande">{spiegazione}</p>}
       </div>
       <form className="ing-esito-azioni" onSubmit={invia} noValidate>
         <div className="ing-passi">
@@ -2617,6 +2627,7 @@ const STILE_INGRESSO = `
 .ing-esito-classe *:focus-visible { outline-color: var(--primary); }
 .ing-esito-classe .ing-rotella-piccola { border-color: rgba(255,255,255,.4); border-top-color: #fff; }
 .ing-esito-di-classe .ing-esito-nome { font-size: clamp(26px, 7.5vw, 36px); }
+.ing-esito-di-classe .ing-esito-dettagli { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .ing-classe-settore {
   display: inline-flex; align-items: center; gap: 8px; margin: 10px 0 0; padding: 6px 12px; border-radius: 10px;
   background: rgba(255,255,255,.95); color: var(--text-dark); font-size: 18px; font-weight: 800; overflow-wrap: anywhere;

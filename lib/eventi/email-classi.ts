@@ -12,9 +12,8 @@
  * Una giornata in lista d'attesa lo dice chiaramente: la classe non ha
  * ancora un posto, e se si libera scriviamo noi.
  *
- * I link del calendario non portano il codice della classe: calendario.ts
- * lo trasformerebbe nel link al biglietto di una persona, che per un codice
- * VPC non esiste.
+ * I link del calendario portano il codice della classe: calendario.ts lo
+ * trasforma nel link alla pagina della classe.
  *
  * Senza rete e senza database: chi invia è in lib/eventi/classi-server.ts.
  */
@@ -176,7 +175,7 @@ function testiPrincipali(
         return {
           subject: `${NOME_BREVE}: la ${cl} è ancora in lista d'attesa`,
           titolo: `la ${cl} è ancora in lista d'attesa.`,
-          intro: `${maiuscola(giornateConArticolo(inAttesa))} ${inAttesa.length > 1 ? "sono ancora al completo" : "è ancora al completo"} per le classi: la classe non ha ancora un posto. Se si liberano abbastanza posti per tutta la classe, ti scriviamo noi.`,
+          intro: `Per ${giornateConArticolo(inAttesa)} non c'è ancora posto per tutta la classe: la classe è in lista d'attesa. Se si liberano abbastanza posti, ti scriviamo noi.`,
         };
       }
       break;
@@ -234,14 +233,14 @@ function testiPrincipali(
     return {
       subject: `${Cl} in lista d'attesa: ${NOME_BREVE}${conDate(inAttesa)}`,
       titolo: `la ${cl} è in lista d'attesa per ${giornateConArticolo(inAttesa)}.`,
-      intro: `Abbiamo ricevuto la prenotazione, ma al momento i posti per le classi ${inAttesa.length > 1 ? "di queste giornate" : `${dellaGiornata(inAttesa[0])}`} sono esauriti: la classe è in lista d'attesa e non ha ancora un posto. Se si liberano abbastanza posti per tutta la classe, la confermiamo e ti scriviamo noi.`,
+      intro: `Abbiamo ricevuto la prenotazione, ma ${inAttesa.length > 1 ? "in queste giornate" : `per la giornata ${dellaGiornata(inAttesa[0])}`} al momento non ci sono abbastanza posti per tutta la classe: la classe è in lista d'attesa e non ha ancora un posto. Se si liberano abbastanza posti, la confermiamo e ti scriviamo noi.`,
     };
   }
   if (esito === "parziale") {
     return {
       subject: `${Cl} confermata ${giornateConArticolo(confermate)}, in lista d'attesa ${giornateConArticolo(inAttesa)}: ${NOME_BREVE}`,
       titolo: `la ${cl} è confermata per ${giornateConArticolo(confermate)}.`,
-      intro: `Grazie per la prenotazione. Per ${giornateConArticolo(inAttesa)} i posti per le classi sono al momento esauriti: lì la classe è in lista d'attesa e, se si liberano abbastanza posti, ti scriviamo noi.`,
+      intro: `Grazie per la prenotazione. Per ${giornateConArticolo(inAttesa)} al momento non ci sono abbastanza posti per tutta la classe: lì la classe è in lista d'attesa e, se si liberano abbastanza posti, ti scriviamo noi.`,
     };
   }
   return {
@@ -301,7 +300,7 @@ export function emailClasse(input: EmailClasseInput): EmailBiglietto {
           : "";
       const calendario =
         g.status === "confermato"
-          ? `<p style="margin:10px 0 0;"><a href="${attr(googleCalendarUrl(s))}" style="color:#008F6B;font-size:13px;font-weight:600;text-decoration:none;">Aggiungi a Google Calendar</a></p>`
+          ? `<p style="margin:10px 0 0;"><a href="${attr(googleCalendarUrl(s, codice))}" style="color:#008F6B;font-size:13px;font-weight:600;text-decoration:none;">Aggiungi a Google Calendar</a></p>`
           : "";
       return `
       <tr><td style="padding:0 0 12px;">
@@ -322,7 +321,7 @@ export function emailClasse(input: EmailClasseInput): EmailBiglietto {
     .join("");
 
   const ics = confermate.length
-    ? `<p style="margin:0 0 24px;color:#4A5568;font-size:13px;line-height:1.6;">Usi Apple Calendar o Outlook? <a href="${attr(icsUrl(confermate))}" style="color:#008F6B;font-weight:600;">Scarica il file del calendario</a>.</p>`
+    ? `<p style="margin:0 0 24px;color:#4A5568;font-size:13px;line-height:1.6;">Usi Apple Calendar o Outlook? <a href="${attr(icsUrl(confermate, codice))}" style="color:#008F6B;font-weight:600;">Scarica il file del calendario</a>.</p>`
     : "";
 
   const qr = `<div style="background:#ffffff;border:1px solid #E2E8F0;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px;">
@@ -361,9 +360,9 @@ export function emailClasse(input: EmailClasseInput): EmailBiglietto {
   // Che cosa fare se si cambia idea dopo aver tolto una giornata.
   const conArtAnnullata = giornateConArticolo([input.giornataAnnullata ?? ""]);
   const ripensamento = cancellata
-    ? "Se cambi idea, puoi prenotare di nuovo dalla pagina per le scuole: riceverai un nuovo codice. Se i posti per le classi sono esauriti, la classe entra in lista d'attesa in ordine di prenotazione."
+    ? "Se cambi idea, puoi prenotare di nuovo dalla pagina per le scuole: riceverai un nuovo codice. Se non ci sono abbastanza posti per tutta la classe, entra in lista d'attesa in ordine di prenotazione."
     : input.motivo === "annullamento" && conArtAnnullata
-      ? `Se cambi idea, puoi aggiungere di nuovo ${conArtAnnullata} dalla pagina della classe, prima che la giornata inizi. Se i posti per le classi sono esauriti, la classe entra in lista d'attesa in ordine di prenotazione.`
+      ? `Se cambi idea, puoi aggiungere di nuovo ${conArtAnnullata} dalla pagina della classe, prima che la giornata inizi. Se non ci sono abbastanza posti per tutta la classe, entra in lista d'attesa in ordine di prenotazione.`
       : "";
   const ripensamentoBox = ripensamento
     ? `<div style="background:#E1F5EE;border-radius:10px;padding:18px 20px;margin-bottom:24px;">
@@ -419,7 +418,7 @@ export function emailClasse(input: EmailClasseInput): EmailBiglietto {
           ...(soloAttesa ? [NOTA_QR_ATTESA] : []),
           `Il codice della classe: ${codice}`,
           `La pagina della classe, con il QR: ${paginaUrl}`,
-          ...(confermate.length ? [`Aggiungi al calendario (Apple, Outlook): ${icsUrl(confermate)}`] : []),
+          ...(confermate.length ? [`Aggiungi al calendario (Apple, Outlook): ${icsUrl(confermate, codice)}`] : []),
           "",
           ...elencoNote.map((t) => `- ${t}`),
           ...(ripensamento ? ["", ripensamento] : []),

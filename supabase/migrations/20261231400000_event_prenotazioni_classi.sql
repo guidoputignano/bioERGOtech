@@ -462,11 +462,18 @@ $$;
 -- confermata ci devono stare, nella capienza e nella quota; se in una non
 -- ci stanno, non cambia niente e si dice quale. Le giornate in lista
 -- d'attesa non contano: lì la classe aspetta con il numero nuovo.
+-- p_salta: le giornate da non controllare, perché già iniziate (il
+-- database non conosce gli orari, la rotta sì). La sera del 10 dicembre una
+-- classe può così crescere per l'11 anche se il 10 era pieno.
 -- Torna { ok, giornata?, posti_prima, posti_dopo }.
+-- La prima versione di questo file aveva tre parametri: si toglie, così
+-- resta una funzione sola.
+drop function if exists public.event_group_update_numbers(uuid, int, int);
 create or replace function public.event_group_update_numbers(
   p_booking_id     uuid,
   p_studenti       int,
-  p_accompagnatori int
+  p_accompagnatori int,
+  p_salta          text[] default '{}'
 )
 returns jsonb
 language plpgsql
@@ -490,6 +497,7 @@ begin
       from public.event_group_booking_sessions gs
       join public.event_sessions s on s.id = gs.session_id
       where gs.booking_id = p_booking_id and gs.is_waitlist = false
+        and not (s.slug = any (coalesce(p_salta, '{}')))
       order by s.slug
       for update of s
     loop
@@ -510,6 +518,29 @@ begin
     where id = p_booking_id;
 
   return jsonb_build_object('ok', true, 'posti_prima', v_prima, 'posti_dopo', v_dopo);
+end;
+$$;
+
+-- ── 7b. Cancellare una prenotazione rimasta senza giornate ─────────────
+-- Solo se non ha più giornate, controllato dopo aver bloccato la riga: una
+-- giornata aggiunta nello stesso istante da un'altra scheda (event_group_book
+-- blocca la stessa riga) non si perde con la cancellazione a cascata.
+-- Torna true se la prenotazione è stata cancellata.
+create or replace function public.event_group_delete_if_empty(p_booking_id uuid)
+returns boolean
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  perform 1 from public.event_group_bookings where id = p_booking_id for update;
+  if not found then
+    return false;
+  end if;
+  if exists (select 1 from public.event_group_booking_sessions where booking_id = p_booking_id) then
+    return false;
+  end if;
+  delete from public.event_group_bookings where id = p_booking_id;
+  return found;
 end;
 $$;
 
@@ -576,8 +607,10 @@ grant execute on function public.event_register(
   uuid, text, text, text, text, text, text, text, text, text, text, text,
   text, boolean, text, text, text[]
 ) to service_role;
-revoke all on function public.event_group_update_numbers(uuid, int, int) from public, anon, authenticated;
-grant execute on function public.event_group_update_numbers(uuid, int, int) to service_role;
+revoke all on function public.event_group_update_numbers(uuid, int, int, text[]) from public, anon, authenticated;
+grant execute on function public.event_group_update_numbers(uuid, int, int, text[]) to service_role;
+revoke all on function public.event_group_delete_if_empty(uuid) from public, anon, authenticated;
+grant execute on function public.event_group_delete_if_empty(uuid) to service_role;
 revoke all on function public.event_group_promote(uuid) from public, anon, authenticated;
 grant execute on function public.event_group_promote(uuid) to service_role;
 

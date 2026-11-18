@@ -310,6 +310,11 @@ type RispostaNumeri = { ok?: unknown; motivo?: unknown; giornata?: unknown; post
  * Lancia se l'RPC fallisce (anche per numeri fuori dai limiti: chi chiama li controlla prima).
  * Non manda l'email al docente: lo decide chi chiama.
  *
+ * `salta`: le giornate in cui non controllare i posti, perché già iniziate
+ * (la pagina della classe: la sera del 10 una classe può crescere per l'11
+ * anche se il 10 era pieno). Lo staff non salta niente: vede il problema e
+ * può forzare.
+ *
  * Con `promuovi: false` non passa i posti a nessuno: lo fa chi chiama, per
  * esempio dopo aver risposto (la pagina della classe non aspetta le email
  * di decine di persone confermate). Le giornate da passare sono tutte
@@ -322,12 +327,13 @@ export async function aggiornaNumeriClasse(
   resend: Resend | null,
   prenotazione: PrenotazioneClasse,
   numeri: { studenti: number; accompagnatori: number },
-  opzioni: { promuovi?: boolean } = {},
+  opzioni: { promuovi?: boolean; salta?: readonly string[] } = {},
 ): Promise<{ ok: true; posti_prima: number; posti_dopo: number } | { ok: false; giornata: string | null }> {
   const { data, error } = await client.rpc("event_group_update_numbers", {
     p_booking_id: prenotazione.id,
     p_studenti: numeri.studenti,
     p_accompagnatori: numeri.accompagnatori,
+    p_salta: [...(opzioni.salta ?? [])],
   });
   if (error) throw new Error(`event_group_update_numbers: ${descriviErrore(error)}`);
   const r = (data ?? {}) as RispostaNumeri;
@@ -420,13 +426,27 @@ export async function annullaGiornataClasse(
 
   let prenotazioneCancellata = false;
   if (rimaste === 0) {
-    const { error: bookError } = await client.from("event_group_bookings").delete().eq("id", prenotazione.id);
+    // Nel database, solo se non ha davvero più giornate: una giornata
+    // aggiunta nello stesso istante da un'altra scheda non si perde.
+    const { data: cancellata, error: bookError } = await client.rpc("event_group_delete_if_empty", {
+      p_booking_id: prenotazione.id,
+    });
     if (bookError) {
       // I posti sono liberi: è quello che conta. La prenotazione vuota resta, e il pannello la vede.
       console.error(`Prenotazione classe ${prenotazione.id}: prenotazione senza giornate non cancellata:`, descriviErrore(bookError));
-    } else {
+    } else if (cancellata === true) {
       prenotazioneCancellata = true;
       console.info(`Prenotazione classe ${prenotazione.id}: annullata (ultima giornata ${slug}, era ${era}).`);
+    } else {
+      // Un'altra richiesta ha aggiunto una giornata nel frattempo (o ha già
+      // cancellato la prenotazione): la prenotazione resta com'è.
+      const { count: ancora } = await client
+        .from("event_group_booking_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("booking_id", prenotazione.id);
+      rimaste = ancora ?? 0;
+      prenotazioneCancellata = rimaste === 0;
+      console.info(`Prenotazione classe ${prenotazione.id}: giornata ${slug} tolta (era ${era}), la prenotazione non era vuota o non c'era più.`);
     }
   } else {
     console.info(`Prenotazione classe ${prenotazione.id}: giornata ${slug} tolta (era ${era}).`);

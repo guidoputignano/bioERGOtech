@@ -548,7 +548,7 @@ textarea.vpl-input { min-height: 96px; resize: vertical; }
 .vpl-codice-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vpl-teal-testo); }
 .vpl-codice-valore { margin-top: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 26px; font-size: clamp(22px, 7cqi, 30px); font-weight: 700; letter-spacing: .1em; color: var(--text-dark); overflow-wrap: anywhere; }
 .vpl-codice-nota { margin: 6px 0 0; font-size: 14px; color: var(--text-mid); }
-.vpl-wrap .vpl-ok .btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; font-size: 1rem; text-decoration: none; }
+.vpl-wrap .vpl-ok .btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; padding-left: 16px; padding-right: 16px; font-size: 1rem; text-align: center; text-decoration: none; }
 .vpl-wrap .vpl-ok .btn-primary:focus-visible { outline: 3px solid var(--text-dark); outline-offset: 3px; }
 .vpl-sezione-titolo { margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--vpl-teal-testo); }
 .vpl-azioni { display: flex; flex-wrap: wrap; gap: 8px; }

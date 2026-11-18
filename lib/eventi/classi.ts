@@ -181,7 +181,7 @@ export function validaPrenotazioneClasse(
   }
   const accompagnatori = Number(d.accompagnatori);
   if (!Number.isInteger(accompagnatori) || accompagnatori < MIN_ACCOMPAGNATORI) {
-    return { error: "Indica quanti docenti accompagnano la classe, te compreso.", campo: "accompagnatori" };
+    return { error: "Indica quanti docenti accompagnano la classe, contando anche te.", campo: "accompagnatori" };
   }
   if (accompagnatori > MAX_ACCOMPAGNATORI) {
     return { error: `Al massimo ${MAX_ACCOMPAGNATORI} docenti per classe.`, campo: "accompagnatori" };
