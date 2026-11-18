@@ -50,7 +50,7 @@ function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f
               {maiuscola(giornateConArticolo(mancanti))} {mancanti.length === 1 ? "non esiste" : "non esistono"} nel
               database.
             </strong>{" "}
-            Chi {mancanti.length === 1 ? "sceglie questa giornata" : "sceglie queste giornate"} non viene iscritto e il
+            Chi {mancanti.length === 1 ? "sceglie questa giornata" : "sceglie queste giornate"}{" "}non viene iscritto e il
             pannello non può contare i posti. Esegui nell&apos;editor SQL di Supabase il file{" "}
             <code>{FILE_SQL_GIORNATE}</code>, come indicato nel README del modulo evento.
           </div>
@@ -65,7 +65,7 @@ function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f
                 ? "1 iscrizione non ha nessuna giornata."
                 : `${numero(senzaGiornata)} iscrizioni non hanno nessuna giornata.`}
             </strong>{" "}
-            {senzaGiornata === 1 ? "La persona non ha" : "Queste persone non hanno"} un posto, e all&apos;ingresso il
+            {senzaGiornata === 1 ? "La persona non ha" : "Queste persone non hanno"}{" "}un posto, e all&apos;ingresso il
             biglietto non risulta.{" "}
             {ripristinoDaFare ? (
               <>

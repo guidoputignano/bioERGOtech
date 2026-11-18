@@ -686,7 +686,7 @@ export default async function LiceiPage() {
                   <li>
                     <i className="fas fa-circle" aria-hidden="true" />
                     <span>
-                      <strong>Ora.</strong> Il referente trasmette l&apos;adesione dell&apos;istituto
+                      <strong>Ora.</strong>{" "}Il referente trasmette l&apos;adesione dell&apos;istituto
                       e riceve via email il codice della scuola.
                     </span>
                   </li>

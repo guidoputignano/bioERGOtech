@@ -215,7 +215,7 @@ export function ChiusuraPanel() {
             lineHeight: 1.6,
           }}
         >
-          <strong>Chiusura bloccata fino a {blocco}.</strong> Studenti, docenti, commissione e mentor lavorano
+          <strong>Chiusura bloccata fino a {blocco}.</strong>{" "}Studenti, docenti, commissione e mentor lavorano
           fino all&apos;evento del 10 e 11 dicembre: prima di allora non si possono disattivare gli accessi né
           cancellare i dati. Riattivare gli accessi resta sempre possibile.
         </div>
@@ -257,7 +257,7 @@ export function ChiusuraPanel() {
           </h2>
           <ol className="text-sm text-gray-600" style={{ lineHeight: 1.8, paddingLeft: 18, margin: "0 0 4px" }}>
             <li>
-              <strong>Disattiva gli accessi.</strong> Docenti referenti e docenti del progetto,
+              <strong>Disattiva gli accessi.</strong>{" "}Docenti referenti e docenti del progetto,
               studenti e commissari non entrano più nelle loro aree e vedono il messaggio
               &laquo;Il percorso si è concluso e l&apos;accesso è stato disattivato.&raquo; Le
               pagine pubbliche restano come sono. Si può annullare finché i dati non sono stati

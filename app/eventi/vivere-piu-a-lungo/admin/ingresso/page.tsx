@@ -127,7 +127,7 @@ function AccessoNegato({ status, email }: { status: number; email: string | null
         ) : (
           <>
             <p className="ingp-negato-testo">
-              La modalità ingresso di {NOME_EVENTO} è riservata allo staff e ai volontari dell&apos;evento. Accedi con
+              La modalità ingresso di {NOME_EVENTO}{" "}è riservata allo staff e ai volontari dell&apos;evento. Accedi con
               l&apos;email che hai comunicato alla Fondazione.
             </p>
             <div className="ingp-negato-azioni">

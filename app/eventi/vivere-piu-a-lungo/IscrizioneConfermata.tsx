@@ -172,7 +172,7 @@ export function IscrizioneConfermata({
           {dati.emailInviata ? (
             <p className="vpl-ok-intro">
               Con questo indirizzo email c&apos;era già un&apos;iscrizione. Ti abbiamo mandato a{" "}
-              <strong>{dati.email}</strong> il biglietto aggiornato, con tutte le giornate a cui sei iscritto: lì trovi
+              <strong>{dati.email}</strong> il biglietto aggiornato con tutte le tue giornate: lì trovi
               il codice e il QR.
             </p>
           ) : (
@@ -372,7 +372,7 @@ export function IscrizioneConfermata({
                   aria-busy={inviando || undefined}
                 >
                   <i className={`fas ${inviando ? "fa-circle-notch fa-spin" : "fa-envelope"}`} aria-hidden="true" />{" "}
-                  Rimandami il biglietto per email
+                  Rimandami il biglietto
                 </button>
               </>
             )}

@@ -415,7 +415,7 @@ export function GestisciBiglietto({
           onClick={() => esegui("reinvia")}
         >
           {inCorso === "reinvia:" ? <Rotella /> : <i className="fas fa-envelope" aria-hidden="true" />}{" "}
-          Rimandami il biglietto per email
+          Rimandami il biglietto
         </button>
       </div>
 
@@ -464,7 +464,7 @@ export function InvitoAggiungi({
       ) : (
         <>
           <p className="vpg-invito-occhiello">
-            <i className="fas fa-calendar-plus" aria-hidden="true" /> Un&apos;altra giornata
+            <i className="fas fa-calendar-plus" aria-hidden="true" />{" "}Un&apos;altra giornata
           </p>
           <h2 id="vpg-invito-titolo" className="vpg-invito-titolo">
             Vuoi venire anche {conArt}?

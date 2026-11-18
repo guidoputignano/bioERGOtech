@@ -109,7 +109,7 @@ export default async function TicketPage({
   // In archivio le iscrizioni sono chiuse: niente inviti a #iscrizione.
   const linkProgramma = (principale: boolean) => (
     <Link href={PAGINA_EVENTO} className={`${principale ? "btn-primary" : "btn-outline"} vpb-btn`}>
-      {principale && <i className="fas fa-calendar-days" aria-hidden="true" />} Il programma dell&apos;evento
+      {principale && <i className="fas fa-calendar-days" aria-hidden="true" />}{" "}Il programma dell&apos;evento
     </Link>
   );
 
@@ -137,7 +137,7 @@ export default async function TicketPage({
                 <i className="fas fa-rotate-right" aria-hidden="true" /> Riprova
               </a>
               <a href="mailto:info@bioergotech.org" className="btn-outline vpb-btn">
-                <i className="fas fa-envelope" aria-hidden="true" /> Scrivi a info@bioergotech.org
+                <i className="fas fa-envelope" aria-hidden="true" /> Scrivici
               </a>
             </Avviso>
           ) : annullato ? (
@@ -180,11 +180,11 @@ export default async function TicketPage({
                 linkProgramma(true)
               ) : (
                 <Link href={`${PAGINA_EVENTO}#iscrizione`} className="btn-primary vpb-btn">
-                  <i className="fas fa-ticket" aria-hidden="true" /> Vai all&apos;iscrizione
+                  <i className="fas fa-ticket" aria-hidden="true" />{" "}Vai all&apos;iscrizione
                 </Link>
               )}
               <a href="mailto:info@bioergotech.org" className="btn-outline vpb-btn">
-                <i className="fas fa-envelope" aria-hidden="true" /> Scrivi a info@bioergotech.org
+                <i className="fas fa-envelope" aria-hidden="true" /> Scrivici
               </a>
             </Avviso>
           )}

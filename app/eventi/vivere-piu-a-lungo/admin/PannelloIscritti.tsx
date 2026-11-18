@@ -294,7 +294,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
           <div className="eva-avviso eva-avviso-errore">
             <i className="fas fa-user-slash" aria-hidden="true" />
             <div>
-              <strong>Nessuna giornata.</strong> Questa iscrizione non ha un posto in nessuna giornata e
+              <strong>Nessuna giornata.</strong>{" "}Questa iscrizione non ha un posto in nessuna giornata e
               all&apos;ingresso il biglietto non risulta.{" "}
               {ripristinoMancante ? (
                 <>
@@ -432,7 +432,7 @@ const SchedaIscritto = memo(function SchedaIscritto({
           {domanda.tipo === "forza" && (
             <>
               <p>
-                <strong>{domanda.testo}</strong> Confermando ora, il posto di {nomeCompleto} va oltre la capienza della
+                <strong>{domanda.testo}</strong> Confermando ora, il posto di {nomeCompleto}{" "}va oltre la capienza della
                 sala. Procedi solo se hai verificato che c&apos;è spazio.
               </p>
               <div className="eva-azioni">
@@ -710,7 +710,7 @@ export function PannelloIscritti({
                 id="eva-q"
                 type="search"
                 className="eva-campo"
-                placeholder="Nome, email, codice, scuola, telefono"
+                placeholder="Nome, email o codice"
                 value={filtri.q}
                 onChange={(e) => cambia({ q: e.target.value })}
                 autoComplete="off"

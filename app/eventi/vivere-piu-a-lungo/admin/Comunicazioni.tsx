@@ -229,7 +229,7 @@ function NonInviabili({ c }: { c: VistaCampagna }) {
         <strong>{titolo}</strong>{" "}
         {indirizzi > 0 && (
           <>
-            {indirizzi === 1 ? "L'indirizzo sbagliato conta" : "Gli indirizzi sbagliati contano"} fra le email non
+            {indirizzi === 1 ? "L'indirizzo sbagliato conta" : "Gli indirizzi sbagliati contano"}{" "}fra le email non
             partite. Conviene avvisare chi ha l&apos;indirizzo sbagliato in un altro modo: il telefono, se l&apos;ha lasciato, è
             nella scheda Iscritti.{" "}
           </>
@@ -406,7 +406,7 @@ function SchedaCampagna({
             <i className="fas fa-hourglass-half" aria-hidden="true" />
             <div>
               <strong>Invio avviato {quando(c.inviato_at)}.</strong>{" "}
-              {c.esito ? `Finora: ${descriviEsito(c.esito)}.` : "L'esito non è ancora registrato."} Se l&apos;invio
+              {c.esito ? `Finora: ${descriviEsito(c.esito)}.` : "L'esito non è ancora registrato."}{" "}Se l&apos;invio
               è in corso, aggiorna fra qualche minuto. Se resta così, si è interrotto: controlla i log di Vercel prima
               di fare altro. Non si può rimandare a tutti.
             </div>
@@ -524,7 +524,7 @@ function SchedaCampagna({
         <p id={idNotaProva} className="eva-nota" style={{ margin: 0 }}>
           {emailProva ? (
             <>
-              La prova arriva a <strong>{emailProva}</strong> con l&apos;esempio scelto nell&apos;anteprima e un codice
+              La prova arriva a <strong>{emailProva}</strong>{" "}con l&apos;esempio scelto nell&apos;anteprima e un codice
               finto. Non conta come invio.
             </>
           ) : (
