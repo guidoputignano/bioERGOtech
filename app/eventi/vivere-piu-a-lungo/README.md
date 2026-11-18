@@ -82,6 +82,14 @@ eseguito una volta sola, a mano nello SQL editor di Supabase, prima di
 pubblicare il codice che lo presuppone. Non va rieseguito dopo: il passo 2
 darebbe il 10 dicembre a ogni iscrizione rimasta senza giornate.
 
+`supabase/migrations/20261231400000_event_prenotazioni_classi.sql` aggiunge
+le prenotazioni per classe (vedi sotto): la capienza a 3500 posti il 10
+dicembre e 400 l'11 (si alza soltanto), la quota delle scuole per giornata,
+le due tabelle delle classi e le funzioni che contano i posti di persone e
+classi insieme. Va eseguito una volta, a mano nello SQL editor, prima di
+pubblicare il codice delle classi. Si può rieseguire senza danni; in fondo
+c'è la query di controllo.
+
 Crea tre tabelle dedicate (`event_sessions`, `event_registrations`,
 `event_registration_sessions`), una RPC atomica `event_register` con controllo
 capienza (lock di riga, lista d'attesa al posto del rifiuto) e una funzione
@@ -175,7 +183,8 @@ timestamp e testo, e l'iscritto finisce anche in `newsletter_subscribers`
 
 ## Pannello, export e ingresso (staff)
 
-- Pannello `/eventi/vivere-piu-a-lungo/admin` (solo admin) con quattro schede:
+- Pannello `/eventi/vivere-piu-a-lungo/admin` (solo admin) con cinque schede
+  (la scheda **Classi** è descritta in "Prenotazioni per classe"):
   - **Riepilogo**: allarmi in rosso se una giornata manca nel database o ci
     sono iscrizioni senza giornata; per ogni giornata confermati, lista
     d'attesa, entrati e posti liberi; andamento delle iscrizioni, categorie,
@@ -207,6 +216,52 @@ timestamp e testo, e l'iscritto finisce anche in `newsletter_subscribers`
 
 Ogni iscritto ha un codice univoco e un QR in PNG (`/api/eventi/qr/<codice>`),
 inclusi nell'email e nel biglietto online (`/eventi/vivere-piu-a-lungo/biglietto/<codice>`).
+
+## Prenotazioni per classe
+
+Un docente prenota tutta la classe su `/eventi/vivere-piu-a-lungo/classi`:
+scuola, classe, quanti studenti e quanti docenti (al massimo 40 persone in
+tutto), le giornate e un telefono per il giorno dell'evento. Nessun dato
+degli studenti, che non devono iscriversi uno per uno. Più classi, una
+prenotazione per ciascuna.
+
+- Una classe non si divide mai: per ogni giornata è tutta confermata o tutta
+  in lista d'attesa. Conta la capienza della giornata e la quota delle
+  scuole (`event_sessions.quota_gruppi`, di partenza 3000 il 10 dicembre e
+  300 l'11, si cambia dal pannello), così resta posto per il pubblico.
+- Un codice per classe (`VPC-XXXXXXXX`) e un QR solo. La pagina della classe
+  `/eventi/vivere-piu-a-lungo/classe/<codice>` (noindex) mostra il QR e le
+  giornate, e permette al docente di cambiare i numeri, aggiungere o
+  annullare una giornata e farsi rimandare l'email
+  (`/api/eventi/classi/gestisci`).
+- Prenotare di nuovo la stessa classe (stesso docente, scuola e classe)
+  aggiunge giornate e non crea un doppione. Come per le persone, il codice
+  non compare a schermo: arriva solo per email.
+- Quando una classe annulla o riduce i numeri, i posti passano prima alle
+  classi in attesa che ci stanno (in ordine di prenotazione), poi alle
+  persone. Nelle giornate già iniziate non passa niente in automatico: ci
+  pensa lo staff.
+- L'invito delle scuole del percorso dei licei porta il link
+  `?scuola=LIC-...`, che compila la scuola. Il codice viene tolto dalla barra
+  degli indirizzi prima che partano Analytics e Ads.
+
+Per lo staff:
+
+- Scheda **Classi** del pannello: posti e quota per giornata, ricerca e
+  filtri, conferma di una classe in attesa (anche oltre i posti, con una
+  conferma esplicita), numeri, settore ("Tribuna B", che compare nel
+  biglietto della classe e alla porta), giornate, reinvio dell'email.
+- Il **Riepilogo** conta persone e classi insieme, e segnala le classi in
+  lista d'attesa.
+- Alla porta il QR della classe apre la sua scheda: si indica quante persone
+  entrano ("23 di 30"), e chi arriva dopo si aggiunge.
+- Lista da stampare: `stampa?giornata=giorno-1&parte=classi`. CSV:
+  `/api/eventi/admin/export?tipo=classi`.
+- **Comunicazioni**: l'invito alle scuole del percorso dei licei (una volta) e
+  il promemoria dell'8 dicembre, che va anche ai docenti delle classi.
+
+Le tabelle `licei_*` si leggono soltanto: l'invito usa le adesioni delle
+scuole, senza cambiarle.
 
 ## Bando dello Showcase (11 dicembre)
 
