@@ -8,6 +8,7 @@ import {
   inviaBiglietto,
   postiPerGiornata,
   promuoviDaListaAttesa,
+  type EsitoInvio,
   type IscrizioneEvento,
 } from "@/lib/eventi/evento-server";
 import { giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
@@ -186,8 +187,15 @@ export async function POST(request: Request) {
       if (!ponte) return errore("Questa giornata non risulta più nell'iscrizione: aggiorna l'elenco.", 404);
       const art = conArticolo(ponte.slug);
 
-      const { error: delError } = await client.from("event_registration_sessions").delete().eq("id", ponte.id);
+      const { data: tolte, error: delError } = await client
+        .from("event_registration_sessions")
+        .delete()
+        .eq("id", ponte.id)
+        .select("id");
       if (delError) throw new Error(`rimozione giornata: ${delError.message}`);
+      // Già tolta nel frattempo (dal biglietto online, da un altro pannello):
+      // il posto l'ha già liberato e passato chi l'ha tolta, non si promuove due volte.
+      const toltaOra = (tolte?.length ?? 0) > 0;
 
       // Subito dopo la cancellazione, prima di qualunque altra cosa che
       // possa fallire: il posto confermato passa a chi aspetta da più tempo,
@@ -196,21 +204,28 @@ export async function POST(request: Request) {
       // finita. Non lancia.
       const sessioneSito = sessionBySlug(ponte.slug);
       const giornataAperta = sessioneSito ? Date.parse(sessioneSito.fineISO) > Date.now() : false;
-      let promossa: { nome: string } | null = null;
-      if (!ponte.is_waitlist && giornataAperta) {
+      let promossa: { nome: string; email: EsitoInvio | null } | null = null;
+      if (!ponte.is_waitlist && giornataAperta && toltaOra) {
         const chiave = process.env.RESEND_API_KEY;
-        const iscrPromossa = await promuoviDaListaAttesa(client, chiave ? new Resend(chiave) : null, ponte.slug);
-        if (iscrPromossa) {
-          promossa = { nome: `${iscrPromossa.nome} ${iscrPromossa.cognome}`.trim() || "una persona senza nome" };
+        const esito = await promuoviDaListaAttesa(client, chiave ? new Resend(chiave) : null, ponte.slug);
+        if (esito) {
+          const p = esito.iscrizione;
+          promossa = { nome: `${p.nome} ${p.cognome}`.trim() || "una persona senza nome", email: esito.email };
         }
       }
       const promozione = promossa
         ? ` Posto passato a ${promossa.nome} dalla lista d'attesa. ${
-            process.env.RESEND_API_KEY
-              ? "Il biglietto aggiornato parte per email: se non arriva, puoi reinviarlo dalla sua scheda."
-              : "L'email non è partita perché sul server manca RESEND_API_KEY: avvisa la persona a mano."
+            promossa.email === null
+              ? "L'email non è partita perché sul server manca RESEND_API_KEY: avvisa la persona a mano."
+              : promossa.email.ok
+                ? "Il biglietto aggiornato è partito per email."
+                : "Attenzione: l'email con il biglietto non è partita. Reinviala dalla sua scheda o avvisa la persona a mano."
           }`
         : "";
+      // Al pannello solo il nome; se l'email della persona promossa non è
+      // partita, il messaggio esce come avviso e non come semplice conferma.
+      const promossaJson = promossa ? { nome: promossa.nome } : null;
+      const emailPromozioneMancata = promossa !== null && promossa.email?.ok !== true;
 
       // Se il posto è rimasto libero e qualcuno aspetta ancora (per esempio
       // perché la giornata è oltre la capienza), lo staff lo sa subito.
@@ -238,7 +253,7 @@ export async function POST(request: Request) {
           ok: true,
           eliminata: false,
           attenzione: true,
-          promossa,
+          promossa: promossaJson,
           messaggio: `Tolta l'iscrizione per ${art}, ma non riesco a contare le giornate rimaste. Aggiorna l'elenco: se ora non ne ha nessuna, elimina l'iscrizione dalla sua scheda.${promozione}${suggerimento}`,
         });
       }
@@ -253,7 +268,7 @@ export async function POST(request: Request) {
             eliminata: false,
             attenzione: true,
             rimaste: 0,
-            promossa,
+            promossa: promossaJson,
             messaggio: `Giornata tolta, ma l'iscrizione non si è cancellata e ora non ha nessuna giornata. Aggiorna l'elenco ed eliminala dalla sua scheda.${promozione}${suggerimento}`,
           });
         }
@@ -261,7 +276,8 @@ export async function POST(request: Request) {
           ok: true,
           eliminata: true,
           rimaste: 0,
-          promossa,
+          attenzione: emailPromozioneMancata || undefined,
+          promossa: promossaJson,
           messaggio: `Iscrizione eliminata: ${art} era la sua unica giornata.${promozione}${suggerimento}`,
         });
       }
@@ -270,7 +286,8 @@ export async function POST(request: Request) {
         ok: true,
         eliminata: false,
         rimaste: rimaste ?? 0,
-        promossa,
+        attenzione: emailPromozioneMancata || undefined,
+        promossa: promossaJson,
         messaggio: `Tolta l'iscrizione per ${art}.${promozione}${suggerimento}`,
       });
     }

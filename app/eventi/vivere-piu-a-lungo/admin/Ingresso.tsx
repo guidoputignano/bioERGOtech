@@ -70,6 +70,8 @@ type Forzato = "lista_attesa" | "altra_giornata";
 
 type StatoGiornata = {
   giornata: string;
+  /** La giornata di oggi secondo il server al momento della lettura. */
+  oggi?: string | null;
   confermati: number;
   lista_attesa: number;
   entrati: number;
@@ -399,6 +401,44 @@ function annuncioPer(r: Risultato): string {
   }
 }
 
+/**
+ * Gli ingressi forzati registrati da questo telefono (bridgeId -> perché),
+ * per annullarli bene anche dall'elenco degli ultimi ingressi. Sta fuori dal
+ * componente: nel pannello la scheda Ingresso si smonta a ogni cambio di
+ * scheda, e la mappa deve sopravvivere. Si copia anche in sessionStorage,
+ * così resiste a un ricaricamento della pagina.
+ */
+const FORZATI = (() => {
+  const CHIAVE = "vpl-ingressi-forzati";
+  const mappa = new Map<string, Forzato>();
+  if (typeof window !== "undefined") {
+    try {
+      const salvati = JSON.parse(window.sessionStorage.getItem(CHIAVE) ?? "[]") as [string, Forzato][];
+      for (const [k, v] of salvati) if (v === "lista_attesa" || v === "altra_giornata") mappa.set(k, v);
+    } catch {
+      /* sessionStorage non disponibile: resta la mappa in memoria */
+    }
+  }
+  const salva = () => {
+    try {
+      window.sessionStorage.setItem(CHIAVE, JSON.stringify([...mappa].slice(-200)));
+    } catch {
+      /* niente */
+    }
+  };
+  return {
+    get: (k: string) => mappa.get(k),
+    set: (k: string, v: Forzato) => {
+      mappa.set(k, v);
+      salva();
+    },
+    delete: (k: string) => {
+      mappa.delete(k);
+      salva();
+    },
+  };
+})();
+
 /* ── Componente ───────────────────────────────────────────────────────── */
 
 export function Ingresso({
@@ -410,7 +450,11 @@ export function Ingresso({
   oggi: string | null;
 }) {
   const idGruppo = useId();
-  const oggi = oggiDalServer && sessionBySlug(oggiDalServer) ? oggiDalServer : null;
+  // Il primo valore viene dalla pagina (stesso valore sul server e nel
+  // browser: niente errore di idratazione). Poi lo aggiorna ogni lettura dei
+  // numeri: un pannello lasciato aperto dalla sera prima non resta fermo a ieri.
+  const [oggiCorrente, setOggiCorrente] = useState<string | null>(oggiDalServer);
+  const oggi = oggiCorrente && sessionBySlug(oggiCorrente) ? oggiCorrente : null;
   const [giornata, setGiornata] = useState<string>(() => oggi ?? SESSIONS[0].slug);
 
   const [stato, setStato] = useState<StatoGiornata | null>(null);
@@ -459,8 +503,6 @@ export function Ingresso({
   const audioRef = useRef<AudioContext | null>(null);
   const suonoRef = useRef(true);
   const letturaRef = useRef<(testo: string) => void>(() => {});
-  /** Gli ingressi forzati registrati da questo telefono: per annullarli bene anche dall'elenco. */
-  const forzatiRef = useRef(new Map<string, Forzato>());
 
   const sessione = sessionBySlug(giornata) ?? SESSIONS[0];
 
@@ -477,7 +519,9 @@ export function Ingresso({
         setErroreStato(erroreDa(r.json, "Non riesco a leggere i numeri della giornata."));
         return;
       }
-      setStato(r.json as unknown as StatoGiornata);
+      const letto = r.json as unknown as StatoGiornata;
+      setStato(letto);
+      if (letto.oggi !== undefined) setOggiCorrente(letto.oggi && sessionBySlug(letto.oggi) ? letto.oggi : null);
       setErroreStato(null);
       setAccessoScaduto(false);
       setAggiornatoAlle(oraAdesso());
@@ -569,7 +613,7 @@ export function Ingresso({
           return;
         }
         const j = r.json as unknown as RispostaIngresso;
-        if (j.esito === "entrato" && j.bridgeId && j.forzato) forzatiRef.current.set(j.bridgeId, j.forzato);
+        if (j.esito === "entrato" && j.bridgeId && j.forzato) FORZATI.set(j.bridgeId, j.forzato);
         mostra({
           tipo: j.esito,
           giornata: g,
@@ -892,7 +936,7 @@ export function Ingresso({
     setAnnullando(bridgeId);
     setEsitoUltimi(null);
     // Com'era entrata la persona: dall'esito, oppure da quello che questo telefono ricorda.
-    const tipo = forzato ?? forzatiRef.current.get(bridgeId);
+    const tipo = forzato ?? FORZATI.get(bridgeId);
     try {
       const r = await chiama(API, {
         method: "POST",
@@ -906,7 +950,7 @@ export function Ingresso({
         setAnnuncio(testo);
         return;
       }
-      forzatiRef.current.delete(bridgeId);
+      FORZATI.delete(bridgeId);
       const testo = r.json?.giornataTolta
         ? `Ingresso di ${nome} annullato: la giornata aggiunta alla porta è stata tolta.`
         : r.json?.tornaInAttesa

@@ -5,6 +5,7 @@ import { SELECT_ISCRIZIONE, normalizzaIscrizione, pulisciCodice, type Iscrizione
 import {
   categoriaLabel,
   etichettaGiornata,
+  giornataDiOggi,
   giornateConArticolo,
   sessionBySlug,
 } from "@/app/eventi/vivere-piu-a-lungo/content";
@@ -197,6 +198,9 @@ export async function GET(request: Request) {
 
   return risposta({
     giornata,
+    // La giornata di oggi secondo il server, a ogni aggiornamento: una pagina
+    // aperta da ieri passa da sola al giorno giusto (bollino e avviso).
+    oggi: giornataDiOggi()?.slug ?? null,
     confermati: confermati.count ?? 0,
     lista_attesa: attesa.count ?? 0,
     entrati: entrati.count ?? 0,

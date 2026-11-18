@@ -230,6 +230,9 @@ export function giornateAggiungibili(
     .map((s) => s.slug);
 }
 
+/** Una persona confermata dalla lista d'attesa, e com'è andata l'email ("si è liberato un posto"). */
+export type Promozione = { iscrizione: IscrizioneEvento; email: EsitoInvio | null };
+
 /**
  * Dopo che un posto confermato si è liberato: conferma la persona che è in
  * lista d'attesa da più tempo per quella giornata, se c'è ancora posto, e
@@ -237,22 +240,31 @@ export function giornateAggiungibili(
  * dicono le pagine e le email: il posto passa a chi è in lista d'attesa,
  * prima che lo prenda un nuovo iscritto.
  *
+ * L'ordine è quello del pannello e della lista stampata (PannelloDati):
+ * prima la data della riga, poi la data dell'iscrizione, poi l'id. Il file
+ * di ripristino crea le righe del 10 dicembre tutte nello stesso istante,
+ * e fra quelle conta la data dell'iscrizione: senza, la scelta sarebbe a
+ * caso.
+ *
  * Non lancia mai: chi ha liberato il posto non deve vedere un errore per
  * questo. Ogni problema finisce nei log, e il pannello mostra comunque
  * "Puoi confermare N persone" finché il posto resta libero.
  *
  * Non c'è il lock dell'RPC: se nello stesso istante si iscrive qualcuno, la
  * giornata può superare la capienza di un posto, mai di più. L'update vale
- * solo se la riga è ancora in lista d'attesa, quindi due liberazioni
- * contemporanee non confermano due volte la stessa persona.
+ * solo se la riga è ancora in lista d'attesa: se due posti si liberano
+ * insieme e tutte e due le chiamate puntano alla stessa persona, quella
+ * che arriva seconda riprova con la successiva, così il secondo posto non
+ * resta libero.
  *
- * Torna l'iscrizione confermata, o null se nessuno è stato confermato.
+ * Torna la persona confermata e l'esito dell'email (null se manca la
+ * chiave di Resend), o null se nessuno è stato confermato.
  */
 export async function promuoviDaListaAttesa(
   client: SupabaseClient,
   resend: Resend | null,
   slug: string,
-): Promise<IscrizioneEvento | null> {
+): Promise<Promozione | null> {
   try {
     const { data: sess, error: sessError } = await client
       .from("event_sessions")
@@ -264,61 +276,88 @@ export async function promuoviDaListaAttesa(
       return null;
     }
 
-    const { count, error: countError } = await client
-      .from("event_registration_sessions")
-      .select("id", { count: "exact", head: true })
-      .eq("session_id", sess.id)
-      .eq("is_waitlist", false);
-    if (countError) {
-      console.error(`Lista d'attesa ${slug}: confermati non contati:`, countError.message);
-      return null;
-    }
-    if ((count ?? 0) >= Number(sess.capienza_max)) return null;
+    let promossaId: string | null = null;
+    for (let tentativo = 0; tentativo < 3 && !promossaId; tentativo++) {
+      const { count, error: countError } = await client
+        .from("event_registration_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", sess.id)
+        .eq("is_waitlist", false);
+      if (countError) {
+        console.error(`Lista d'attesa ${slug}: confermati non contati:`, countError.message);
+        return null;
+      }
+      if ((count ?? 0) >= Number(sess.capienza_max)) return null;
 
-    const { data: primo, error: primoError } = await client
-      .from("event_registration_sessions")
-      .select("id, registration_id")
-      .eq("session_id", sess.id)
-      .eq("is_waitlist", true)
-      .order("created_at", { ascending: true })
-      .order("id", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (primoError) {
-      console.error(`Lista d'attesa ${slug}: primo in attesa non letto:`, primoError.message);
-      return null;
-    }
-    if (!primo) return null;
+      // Al massimo qualche centinaio di righe: si ordinano qui, come nel pannello.
+      const { data: inAttesa, error: attesaError } = await client
+        .from("event_registration_sessions")
+        .select("id, registration_id, created_at, event_registrations ( created_at )")
+        .eq("session_id", sess.id)
+        .eq("is_waitlist", true)
+        .limit(1000);
+      if (attesaError) {
+        console.error(`Lista d'attesa ${slug}: lista non letta:`, attesaError.message);
+        return null;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const righe = ((inAttesa ?? []) as any[]).map((r) => {
+        const iscr = Array.isArray(r.event_registrations) ? r.event_registrations[0] : r.event_registrations;
+        const dataIscrizione = String(iscr?.created_at ?? "");
+        return {
+          id: String(r.id),
+          registrationId: String(r.registration_id),
+          dataRiga: String(r.created_at ?? dataIscrizione),
+          dataIscrizione,
+        };
+      });
+      if (righe.length === 0) return null;
+      righe.sort(
+        (a, b) =>
+          a.dataRiga.localeCompare(b.dataRiga) ||
+          a.dataIscrizione.localeCompare(b.dataIscrizione) ||
+          a.id.localeCompare(b.id),
+      );
+      const primo = righe[0];
 
-    const { data: aggiornate, error: updError } = await client
-      .from("event_registration_sessions")
-      .update({ is_waitlist: false })
-      .eq("id", primo.id)
-      .eq("is_waitlist", true)
-      .select("id");
-    if (updError) {
-      console.error(`Lista d'attesa ${slug}: conferma non riuscita:`, updError.message);
-      return null;
+      const { data: aggiornate, error: updError } = await client
+        .from("event_registration_sessions")
+        .update({ is_waitlist: false })
+        .eq("id", primo.id)
+        .eq("is_waitlist", true)
+        .select("id");
+      if (updError) {
+        console.error(`Lista d'attesa ${slug}: conferma non riuscita:`, updError.message);
+        return null;
+      }
+      // Confermata nel frattempo da un'altra chiamata: si ricontano i posti e si passa alla successiva.
+      if (aggiornate && aggiornate.length > 0) promossaId = primo.registrationId;
     }
-    if (!aggiornate || aggiornate.length === 0) return null; // confermata nel frattempo da qualcun altro
+    if (!promossaId) return null;
 
-    console.info(`Lista d'attesa ${slug}: confermata l'iscrizione ${primo.registration_id} (posto liberato).`);
-    const promossa = await caricaIscrizione(client, { id: String(primo.registration_id) });
+    console.info(`Lista d'attesa ${slug}: confermata l'iscrizione ${promossaId} (posto liberato).`);
+    const promossa = await caricaIscrizione(client, { id: promossaId });
     if (!promossa) return null;
 
-    if (resend) {
-      const posti = await postiPerGiornata(client);
-      const esito = await inviaBiglietto(resend, promossa, "posto_liberato", {
-        giornataLiberata: slug,
-        aggiungibili: giornateAggiungibili(promossa, posti),
-      });
-      if (!esito.ok) {
-        console.error(`Lista d'attesa ${slug}: biglietto non inviato all'iscrizione ${promossa.id}:`, esito.errore);
-      }
-    } else {
-      console.error(`Lista d'attesa ${slug}: RESEND_API_KEY mancante, biglietto non inviato all'iscrizione ${promossa.id}.`);
+    if (!resend) {
+      console.error(
+        `PROMOZIONE SENZA EMAIL: lista d'attesa ${slug}, iscrizione ${promossa.id} confermata, RESEND_API_KEY mancante.`,
+      );
+      return { iscrizione: promossa, email: null };
     }
-    return promossa;
+    const posti = await postiPerGiornata(client);
+    const email = await inviaBiglietto(resend, promossa, "posto_liberato", {
+      giornataLiberata: slug,
+      aggiungibili: giornateAggiungibili(promossa, posti),
+    });
+    if (!email.ok) {
+      // Prefisso fisso: la persona ha il posto ma non lo sa. Va avvisata.
+      console.error(
+        `PROMOZIONE SENZA EMAIL: lista d'attesa ${slug}, iscrizione ${promossa.id} confermata, biglietto non inviato:`,
+        email.errore,
+      );
+    }
+    return { iscrizione: promossa, email };
   } catch (err) {
     console.error(`Lista d'attesa ${slug}: errore inatteso:`, err instanceof Error ? err.message : err);
     return null;
