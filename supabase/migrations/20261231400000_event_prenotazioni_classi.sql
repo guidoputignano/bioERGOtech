@@ -604,7 +604,9 @@ begin
   select capienza_max, quota_gruppi into v_cap, v_quota
     from public.event_sessions where id = v_session for update;
 
-  select is_waitlist into v_attesa from public.event_group_booking_sessions where id = p_gs_id;
+  -- Con il lock della riga: la porta o il docente possono cambiarla senza
+  -- passare dalla prenotazione o dalla giornata.
+  select is_waitlist into v_attesa from public.event_group_booking_sessions where id = p_gs_id for update;
   if v_attesa is null or v_posti is null then
     return jsonb_build_object('ok', false, 'motivo', 'non_trovata');
   end if;
@@ -622,6 +624,9 @@ begin
 
   update public.event_group_booking_sessions set is_waitlist = false
     where id = p_gs_id and is_waitlist = true;
+  if not found then
+    return jsonb_build_object('ok', true, 'gia', true);
+  end if;
   return jsonb_build_object('ok', true, 'gia', false, 'oltre', v_oltre);
 end;
 $$;

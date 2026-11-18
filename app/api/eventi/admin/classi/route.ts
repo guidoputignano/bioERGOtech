@@ -50,6 +50,7 @@ const ok = (corpo: Record<string, unknown>) => NextResponse.json({ ok: true, ...
 
 const numero = (n: number) => n.toLocaleString("it-IT");
 const maiuscola = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+const minuscolaIniziale = (v: string) => v.charAt(0).toLowerCase() + v.slice(1);
 /** "il 10 dicembre", "l'11 dicembre"; per una sessione sconosciuta, il suo codice. */
 const conArticolo = (slug: string) => giornateConArticolo([slug]) || `la sessione "${slug || "senza nome"}"`;
 /** "4B (Liceo Archita)", senza articolo: nei messaggi allo staff ("della 4B (Liceo Archita)"). */
@@ -554,7 +555,8 @@ async function azioneNumeri(client: SupabaseClient, body: Record<string, unknown
   if (dopo < p.posti) {
     for (const slug of giornateDaRivedereDopoRiduzione(p)) {
       const promozioni = await passaIPosti(slug, client);
-      if (promozioni.testo) parti.push(`${maiuscola(conArticolo(slug))}: ${promozioni.testo}`);
+      // Dopo i due punti, minuscola: "Il 10 dicembre: confermata dalla lista d'attesa...".
+      if (promozioni.testo) parti.push(`${maiuscola(conArticolo(slug))}: ${minuscolaIniziale(promozioni.testo)}`);
       attenzione = attenzione || promozioni.attenzione;
     }
   }
@@ -657,14 +659,14 @@ async function azioneRimuovi(client: SupabaseClient, body: Record<string, unknow
   const art = conArticolo(ponte.slug);
 
   const r = await annullaGiornataClasse(client, null, p, ponte.slug, { promuovi: false });
-  if (!r.tolta) return ok({ gia: true, messaggio: `${maiuscola(art)} era già stata tolta dalla prenotazione.` });
+  if (!r.tolta) return ok({ gia: true, messaggio: `La giornata ${giornataDi(ponte.slug)} era già stata tolta dalla prenotazione.` });
   console.info(`${LOG} prenotazione ${p.id}: giornata ${ponte.slug} tolta dallo staff (era ${r.era}).`);
 
   const cancellata = r.prenotazioneCancellata || r.rimaste === 0;
   const parti = [
     cancellata
       ? `Prenotazione della ${quale(p)} annullata: ${art} era la sua unica giornata.`
-      : `Tolta ${art} dalla prenotazione della ${quale(p)}.`,
+      : `Tolta la giornata ${giornataDi(ponte.slug)} dalla prenotazione della ${quale(p)}.`,
   ];
   let attenzione = false;
   if (r.rimaste === 0 && !r.prenotazioneCancellata) {

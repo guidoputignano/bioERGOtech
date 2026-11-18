@@ -184,8 +184,8 @@ export function elencoGiornate(slugs: readonly string[]): string {
 export function giornateConArticolo(slugs: readonly string[]): string {
   const ordinate = SESSIONS.filter((s) => slugs.includes(s.slug));
   if (ordinate.length === 0) return "";
-  // "l'" davanti ai numeri che si leggono con una vocale: 1, 8, 11, 18.
-  const art = (giorno: string) => (/^(1|8|11|18)$/.test(giorno) ? "l'" : "il ");
+  // "l'" davanti ai numeri che si leggono con una vocale: 1, 8, 11 (il 18 no: diciotto).
+  const art = (giorno: string) => (/^(1|8|11)$/.test(giorno) ? "l'" : "il ");
   const giorni = ordinate.map((s) => s.etichetta.split(" ")[0]);
   const mese = ordinate[0].etichetta.split(" ").slice(1).join(" ");
   const stessoMese = ordinate.every((s) => s.etichetta.split(" ").slice(1).join(" ") === mese);

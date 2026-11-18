@@ -203,7 +203,11 @@ function testiPrincipali(
             ? `abbiamo assegnato un settore alla ${cl} per ${conArtSettore}.`
             : `abbiamo tolto il settore della ${cl} per ${conArtSettore}.`,
           intro: nome
-            ? `Abbiamo assegnato alla classe il settore «${nome}» per ${conArtSettore}: lo trovi anche qui sotto, nella scheda della giornata. Il codice e il QR non cambiano.`
+            ? `Abbiamo assegnato alla classe il settore «${nome}» per ${conArtSettore}: lo trovi anche qui sotto, nella scheda della giornata. Il codice e il QR non cambiano.${
+                inAttesa.some((slug) => slug === settore.giornata)
+                  ? ` La classe resta in lista d'attesa per ${conArtSettore}: il settore vale solo se si libera il posto, e in quel caso ti scriviamo.`
+                  : ""
+              }`
             : `Per ${conArtSettore} la classe non ha più un settore assegnato. ${comEAdesso}`,
         };
       }

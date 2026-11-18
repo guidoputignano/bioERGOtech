@@ -59,7 +59,7 @@ function parti(iso: string | null | undefined): Record<string, string> | null {
 function quando(iso: string | null | undefined): string {
   const p = parti(iso);
   if (!p) return "";
-  const art = /^(1|8|11|18)$/.test(p.day) ? "l'" : "il ";
+  const art = /^(1|8|11)$/.test(p.day) ? "l'" : "il ";
   return `${art}${p.day} ${p.month} alle ${Number(p.hour)}:${p.minute}`;
 }
 
@@ -163,7 +163,7 @@ const TESTI: Record<CampagnaId, TestiCampagna> = {
       "Un esempio con dati finti (Maria, Liceo di esempio): ogni scuola ha il proprio invito, con il suo nome e il suo link, che riempie il modulo con la scuola. Chi è referente di più scuole riceve un invito per ciascuna, con il nome della scuola anche nell'oggetto. Il link dell'esempio non riempie niente.",
     altroModo: "i contatti del referente sono nella console del percorso dei licei",
     dopoErrori:
-      "Le email non partite sono nei log di Vercel, con il riferimento «adesione» di ogni scuola. Da qui l'invito non si può rimandare: i contatti dei referenti sono nella console del percorso dei licei, scheda Adesioni e iscrizioni, e puoi scrivere loro a mano con il link al modulo delle classi seguito da ?scuola= e dal codice LIC della scuola, che riempie il modulo.",
+      "Le email non partite sono nei log di Vercel, con il riferimento «adesione» di ogni scuola. Da qui l'invito non si può rimandare: i contatti dei referenti sono nella console del percorso dei licei, scheda Adesioni e iscrizioni, e puoi scrivere loro a mano con il link www.bioergotech.org/eventi/vivere-piu-a-lungo/classi?⁠scuola= seguito dal codice LIC della scuola (per esempio …/classi?⁠scuola=LIC-AB12CD34), che riempie il modulo.",
   },
 };
 

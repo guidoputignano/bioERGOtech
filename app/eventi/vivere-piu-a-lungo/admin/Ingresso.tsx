@@ -39,7 +39,9 @@
  * quante persone mostrava già entrate: se nel frattempo il numero è
  * cambiato, non si scrive niente e la scheda si aggiorna. Mentre la scheda
  * aspetta il numero, la fotocamera non legge altri QR e il campo del codice
- * (anche dal lettore USB) non la sostituisce: lo dice sotto il campo. I
+ * (anche dal lettore USB) non la sostituisce: lo dice sotto il campo e in
+ * cima alla scheda. Un codice letto mentre il fuoco è nel campo del numero
+ * della scheda non diventa un numero: lettere e Invio si scartano. I
  * pulsanti della scheda non prendono il fuoco da soli, così un lettore USB
  * non la conferma mai con il suo Invio; sul computer il fuoco resta nel
  * campo del codice e ci torna quando una scheda si chiude (sul telefono va
@@ -48,7 +50,7 @@
  * l'ingresso di tutta la classe), anche dopo che l'esito verde è sparito.
  */
 
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { SESSIONS, giornateConArticolo, sessionBySlug } from "../content";
 import { descriviPersone } from "@/lib/eventi/classi";
@@ -172,6 +174,8 @@ type Risultato = {
   /** Quello che si è letto o scritto, per "codice non trovato". */
   letto?: string;
   messaggio?: string;
+  /** La nota sulla scheda di una classe è un avviso (per esempio una correzione non riuscita), non un esito. */
+  messaggioAttenzione?: boolean;
   accesso?: boolean;
   rete?: boolean;
   /** Per le classi: la scheda, quante persone sono appena entrate e quante ce n'erano prima. */
@@ -482,6 +486,10 @@ const MAX_PRESENTI_CLASSE = 60;
 const TESTO_SCHEDA_APERTA =
   "Prima completa la scheda della classe, oppure chiudila con Chiudi (o con Esc). Poi leggi di nuovo questo codice.";
 
+/** Un codice finito nel campo del numero della scheda (lettore USB): non registra niente. */
+const TESTO_CODICE_NEL_NUMERO =
+  "Nel campo del numero è arrivato un codice: non ho registrato niente. Scrivi il numero e conferma, oppure chiudi la scheda e leggi di nuovo il codice.";
+
 const nomeCompleto = (p?: { nome: string; cognome: string }) => (p ? `${p.nome} ${p.cognome}`.trim() : "");
 
 /** "Liceo Archita, classe 4B": organizzazione e classe in una riga. */
@@ -744,7 +752,7 @@ export function Ingresso({
   /* ── Ingresso ── */
 
   const verifica = useCallback(
-    async (chiave: Chiave, forza = false, nota?: string) => {
+    async (chiave: Chiave, forza = false, nota?: string, notaAttenzione = false) => {
       if (occupatoRef.current) return;
       occupatoRef.current = true;
       setInCorso(true);
@@ -781,6 +789,7 @@ export function Ingresso({
             classe: j.classe,
             cambiata: j.cambiata,
             messaggio: nota,
+            messaggioAttenzione: notaAttenzione,
           });
           return;
         }
@@ -1605,6 +1614,7 @@ export function Ingresso({
                   key={risultato.n}
                   r={risultato}
                   classe={risultato.classe}
+                  fermo={codiceFermo !== null && codiceFermo === risultato.n}
                   inCorso={inCorso}
                   annullando={annullando !== null && annullando === (risultato.bridgeId ?? risultato.classe.bridgeId)}
                   onChiudi={chiudiEsito}
@@ -1630,7 +1640,10 @@ export function Ingresso({
                     const c = risultato.classe;
                     if (!c?.bridgeId || c.presenti === null) return { ok: false, testo: "" };
                     const esito = await annullaIngressoClasse(c.bridgeId, classeInFrase(c.classe), c.presenti, a);
-                    if (esito.ok && montatoRef.current) await verifica({ classe: c.id }, false, esito.testo);
+                    // Anche se non è riuscita: la scheda si ricarica con il numero di adesso
+                    // (un altro telefono può averlo cambiato), e il perché resta in vista.
+                    if (montatoRef.current && esito.testo) await verifica({ classe: c.id }, false, esito.testo, !esito.ok);
+                    else if (esito.ok && montatoRef.current) await verifica({ classe: c.id }, false);
                     return esito;
                   }}
                 />
@@ -2010,6 +2023,7 @@ function StatoClasseOggi({ t, giornata }: { t: TrovataClasse; giornata: string }
 function CartaClasse({
   r,
   classe: c,
+  fermo,
   inCorso,
   annullando,
   onChiudi,
@@ -2019,6 +2033,8 @@ function CartaClasse({
 }: {
   r: Risultato;
   classe: SchedaClasse;
+  /** Un codice è stato letto mentre questa scheda aspetta il numero, e non è stato usato. */
+  fermo: boolean;
   inCorso: boolean;
   annullando: boolean;
   onChiudi: () => void;
@@ -2041,6 +2057,38 @@ function CartaClasse({
   const nomeClasse = nomeDellaClasse(c.classe);
   const tutti = c.presenti !== null && c.presenti >= c.posti;
 
+  // Il lettore USB scrive come una tastiera: se il fuoco è in un campo
+  // numerico della scheda, un codice (comincia sempre con lettere) non deve
+  // diventare un numero, e il suo Invio non deve registrare niente. Dalla
+  // prima lettera, per un attimo, si scartano tasti e Invio.
+  const bloccoFino = useRef(0);
+  const [codiceNelCampo, setCodiceNelCampo] = useState(false);
+  const bloccaCodice = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const adesso = Date.now();
+    const stampabile = e.key.length === 1;
+    if (adesso < bloccoFino.current) {
+      if (stampabile || e.key === "Enter") {
+        e.preventDefault();
+        bloccoFino.current = adesso + 800;
+      }
+      return;
+    }
+    if (stampabile && !/\d/.test(e.key)) {
+      e.preventDefault();
+      bloccoFino.current = adesso + 800;
+      setCodiceNelCampo(true);
+    }
+  };
+  const bloccato = () => Date.now() < bloccoFino.current;
+  /** Un valore con lettere (incollato, o scritto senza tasti singoli): è un codice, non un numero. */
+  const eUnCodice = (v: string) => {
+    if (!/[^\d\s]/.test(v)) return false;
+    bloccoFino.current = Date.now() + 800;
+    setCodiceNelCampo(true);
+    return true;
+  };
+
   const n = /^\d{1,2}$/.test(valore.trim()) ? Number(valore.trim()) : Number.NaN;
   const valido = Number.isInteger(n) && n >= 1 && n <= massimo;
   const cambia = (delta: number) => {
@@ -2049,13 +2097,13 @@ function CartaClasse({
   };
   const invia = (e: FormEvent) => {
     e.preventDefault();
-    if (!valido || inCorso) return;
+    if (!valido || inCorso || bloccato()) return;
     onEntra(n, c.stato !== "confermato");
   };
 
   // "Correggi il numero": solo per una classe con un ingresso registrato oggi.
-  // Il campo non scarta le lettere: un codice letto qui per errore dal
-  // lettore USB resta un numero non valido, e il suo Invio non corregge niente.
+  // Un codice letto qui per errore dal lettore USB si ferma come nel campo
+  // del numero (bloccaCodice), e il suo Invio non corregge niente.
   const puoCorreggere = c.presenti !== null && c.presenti >= 1 && Boolean(c.bridgeId);
   const massimoCorretto = giaDentro - 1;
   const m = /^\d{1,2}$/.test(corretto.trim()) ? Number(corretto.trim()) : Number.NaN;
@@ -2078,7 +2126,7 @@ function CartaClasse({
   };
   const inviaCorrezione = async (e: FormEvent) => {
     e.preventDefault();
-    if (!correzioneValida || occupato) return;
+    if (!correzioneValida || occupato || bloccato()) return;
     setErroreCorrezione(null);
     const esito = await onCorreggi(m === 0 ? null : m);
     // Se è andata bene la scheda si riapre aggiornata; altrimenti resta qui, con il perché.
@@ -2191,11 +2239,21 @@ function CartaClasse({
           <i className={`fas ${icona}`} aria-hidden="true" />
           <span>{stato}</span>
         </p>
-        {r.messaggio && (
-          <p className="ing-esito-avviso ing-esito-avviso-ok">
-            <i className="fas fa-circle-check" aria-hidden="true" /> {r.messaggio}
+        {(fermo || codiceNelCampo) && (
+          <p className="ing-esito-avviso" role="alert">
+            <i className="fas fa-hand" aria-hidden="true" /> {codiceNelCampo ? TESTO_CODICE_NEL_NUMERO : TESTO_SCHEDA_APERTA}
           </p>
         )}
+        {r.messaggio &&
+          (r.messaggioAttenzione ? (
+            <p className="ing-esito-avviso" role="alert">
+              <i className="fas fa-triangle-exclamation" aria-hidden="true" /> {r.messaggio}
+            </p>
+          ) : (
+            <p className="ing-esito-avviso ing-esito-avviso-ok">
+              <i className="fas fa-circle-check" aria-hidden="true" /> {r.messaggio}
+            </p>
+          ))}
         {r.cambiata && (
           <p className="ing-esito-avviso">
             Nel frattempo i numeri della classe sono cambiati (un altro telefono, o un ingresso già salvato): controlla
@@ -2249,7 +2307,10 @@ function CartaClasse({
                 autoComplete="off"
                 maxLength={2}
                 value={corretto}
+                onKeyDown={bloccaCodice}
                 onChange={(e) => {
+                  if (bloccato() || eUnCodice(e.target.value)) return;
+                  setCodiceNelCampo(false);
                   setCorretto(e.target.value);
                   setErroreCorrezione(null);
                 }}
@@ -2307,7 +2368,12 @@ function CartaClasse({
                 pattern="[0-9]*"
                 autoComplete="off"
                 value={valore}
-                onChange={(e) => setValore(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+                onKeyDown={bloccaCodice}
+                onChange={(e) => {
+                  if (bloccato() || eUnCodice(e.target.value)) return;
+                  setCodiceNelCampo(false);
+                  setValore(e.target.value.replace(/[^\d]/g, "").slice(0, 2));
+                }}
                 aria-invalid={!valido}
                 aria-describedby={`${idCampo}-aiuto`}
               />
@@ -2823,6 +2889,8 @@ const STILE_INGRESSO = `
 }
 .ing-esito-avviso-ok { color: var(--ing-ok); }
 .ing-esito-classe .ing-esito-avviso-ok { background: #ECFDF5; border: 1px solid #B7E4D3; }
+/* Sulla scheda bianca di una classe un avviso deve vedersi come avviso. */
+.ing-esito-di-classe .ing-esito-avviso:not(.ing-esito-avviso-ok) { background: #FFF7E6; border: 1px solid #F2D49B; color: #6E4600; }
 /* La scheda prende il fuoco solo dal codice (tabIndex -1): niente bordo. */
 .ing-esito-di-classe:focus { outline: none; }
 .ing-passi { flex: 1 1 100%; display: grid; gap: 6px; }
