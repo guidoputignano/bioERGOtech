@@ -11,6 +11,7 @@ import {
 } from "@/lib/eventi/licei-server";
 import { TABELLA_TALK } from "@/lib/eventi/talk-server";
 import { PREFISSO_RIMANDA_TUTTI } from "@/lib/eventi/licei-rimanda-accesso";
+import { CHIUSURA_SBLOCCATA_LABEL, chiusuraBloccata } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
 
 /** I ruoli dei talk che appartengono al percorso licei. */
 const RUOLI_TALK_LICEI = ["studente_licei", "docente"];
@@ -452,10 +453,11 @@ export async function GET() {
   const { client } = guard;
 
   const chiusura = await leggiChiusuraPercorso(client);
+  const blocco = { bloccata: chiusuraBloccata(), sblocco_label: CHIUSURA_SBLOCCATA_LABEL };
 
   try {
     const piano = await calcolaPiano(client);
-    return NextResponse.json({ chiusura, piano: pubblico(piano) });
+    return NextResponse.json({ chiusura, piano: pubblico(piano), ...blocco });
   } catch (err) {
     // Lo stato si mostra comunque: senza anteprima il pannello non abilita
     // la cancellazione, ma lo staff deve poter vedere a che punto e.
@@ -463,6 +465,7 @@ export async function GET() {
       chiusura,
       piano: null,
       errore_piano: err instanceof Error ? err.message : "Verifica non riuscita.",
+      ...blocco,
     });
   }
 }
@@ -488,6 +491,18 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: `Per confermare scrivi ${PAROLA_CONFERMA} nel campo di conferma.` },
       { status: 400 },
+    );
+  }
+
+  // Fino al 12 dicembre niente si spegne e niente si cancella: il percorso,
+  // la commissione e i mentor lavorano fino all'evento. Riattivare resta
+  // possibile, perche rimedia e non distrugge.
+  if ((body.azione === "disattiva" || body.azione === "cancella") && chiusuraBloccata()) {
+    return NextResponse.json(
+      {
+        error: `La chiusura del percorso è bloccata fino a ${CHIUSURA_SBLOCCATA_LABEL}: prima di allora non si possono disattivare gli accessi né cancellare i dati.`,
+      },
+      { status: 423 },
     );
   }
 

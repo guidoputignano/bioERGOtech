@@ -117,6 +117,8 @@ export function ChiusuraPanel() {
   const [avviso, setAvviso] = useState<string | null>(null);
   const [occupato, setOccupato] = useState(false);
   const [conferma, setConferma] = useState("");
+  // "sabato 12 dicembre 2026" while the closure is locked, null once it is not.
+  const [blocco, setBlocco] = useState<string | null>(null);
 
   const carica = useCallback(async () => {
     setLoading(true);
@@ -126,6 +128,7 @@ export function ChiusuraPanel() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Caricamento non riuscito.");
       setChiusura(data.chiusura ?? null);
+      setBlocco(data.bloccata ? String(data.sblocco_label ?? "") : null);
       setPiano(data.piano ?? null);
       setErrorePiano(data.errore_piano ?? null);
     } catch (err) {
@@ -138,6 +141,10 @@ export function ChiusuraPanel() {
   useEffect(() => {
     carica();
   }, [carica]);
+
+  // Il blocco lo decide la rotta (la data del server, non l'orologio di chi
+  // guarda): qui serve solo a dirlo e a spegnere i pulsanti.
+  const bloccata = blocco !== null;
 
   const esegui = async (azione: "disattiva" | "riattiva" | "cancella", messaggio: string) => {
     setOccupato(true);
@@ -195,6 +202,24 @@ export function ChiusuraPanel() {
         </div>
       )}
       {errore && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{errore}</p>}
+
+      {bloccata && !cancellato && (
+        <div
+          style={{
+            background: "#FFF8E6",
+            border: "1px solid #F0D89B",
+            borderRadius: 10,
+            padding: "12px 16px",
+            fontSize: 14,
+            color: "#75570F",
+            lineHeight: 1.6,
+          }}
+        >
+          <strong>Chiusura bloccata fino a {blocco}.</strong> Studenti, docenti, commissione e mentor lavorano
+          fino all&apos;evento del 10 e 11 dicembre: prima di allora non si possono disattivare gli accessi né
+          cancellare i dati. Riattivare gli accessi resta sempre possibile.
+        </div>
+      )}
 
       {/* ── Esito, a operazione fatta ── */}
       {cancellato && chiusura?.cancellatiAt && (
@@ -333,7 +358,7 @@ export function ChiusuraPanel() {
             {!chiuso ? (
               <Button
                 type="button"
-                disabled={occupato || !parolaOk}
+                disabled={occupato || !parolaOk || bloccata}
                 onClick={() =>
                   esegui(
                     "disattiva",
@@ -347,7 +372,7 @@ export function ChiusuraPanel() {
               <>
                 <Button
                   type="button"
-                  disabled={occupato || !parolaOk || !piano}
+                  disabled={occupato || !parolaOk || !piano || bloccata}
                   onClick={() => {
                     if (
                       !confirm(

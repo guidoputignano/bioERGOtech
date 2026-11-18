@@ -859,6 +859,19 @@ export const SQUADRA_UN_SOLO_ISTITUTO = true;
  * può ancora intervenire.
  */
 export const SCADENZA_CONSEGNA = "2026-11-25T23:59:59+01:00";
+/**
+ * La chiusura del percorso (spegnere gli accessi, cancellare i dati) resta
+ * bloccata fino a questo momento: studenti, docenti, commissione e mentor
+ * devono poter lavorare fino all'evento del 10 e 11 dicembre compreso, e un
+ * clic sbagliato nel pannello non deve poterlo impedire. Lo controlla la
+ * rotta (app/api/eventi/licei/admin/chiusura), non solo il pannello.
+ * Deciso dalla Fondazione il 18 novembre 2026.
+ */
+export const CHIUSURA_SBLOCCATA_DAL = "2026-12-12T00:00:00+01:00";
+export const CHIUSURA_SBLOCCATA_LABEL = "sabato 12 dicembre 2026";
+export const chiusuraBloccata = (adesso: Date = new Date()): boolean =>
+  adesso.getTime() < Date.parse(CHIUSURA_SBLOCCATA_DAL);
+
 export const SCADENZA_CONSEGNA_LABEL = "mercoledì 25 novembre 2026, ore 23:59";
 
 /* ── Avviso ai docenti: squadre fino a 6, e se qualcosa non va ──────── */
