@@ -28,7 +28,7 @@ export type RigaFinalita = { finalita: string; base: string };
  * periodo. Appena la Fondazione fissa i termini si scrive qui la stringa e
  * la pagina cambia da sola, in tutte e due le lingue.
  *
- * TODO: definire i termini di conservazione delle quattro categorie che oggi
+ * TODO: definire i termini di conservazione delle cinque categorie che oggi
  * hanno `periodo: null`. Sono una decisione della Fondazione, non un
  * dettaglio tecnico, e non vanno inventati.
  */
@@ -63,7 +63,7 @@ const EN: Informativa = {
   titoloPagina: "Privacy Policy",
   descrizionePagina: "Privacy Policy for the bioERGOtech Foundation website.",
   titolo: "Privacy Policy",
-  aggiornamento: "Last updated: October 2026",
+  aggiornamento: "Last updated: November 2026",
   altraLingua: { etichetta: "Leggi questa informativa in italiano", href: "/legal/informativa-privacy" },
 
   titolare: {
@@ -151,6 +151,17 @@ const EN: Informativa = {
         ],
       },
       {
+        titolo: "Registrations for Our Events",
+        voci: [
+          "Name, surname and email address, and an optional telephone number",
+          "The days chosen, the category of participant and, where relevant, the school, class, institution, organisation or startup",
+          "Any note the participant adds",
+          "A unique registration code, the ticket with its QR code, and the check-in at the entrance (whether and when attendance was recorded)",
+          "For each day, whether the place is confirmed or on the waiting list",
+          "The acceptance of the privacy notice with its timestamp and, if given, the optional consent to receive news from the Foundation, recorded with its wording and timestamp",
+        ],
+      },
+      {
         titolo: "Website Usage",
         voci: [
           "IP address and browser type (anonymised where possible)",
@@ -180,6 +191,10 @@ const EN: Informativa = {
       { finalita: "Running teams, join requests and mentor pairing", base: "Legitimate interest in running the programme" },
       { finalita: "Collecting and assessing mentor applications", base: "Consent / Pre-contractual steps" },
       { finalita: "Publishing a mentor profile on the public page", base: "Consent, optional and withdrawable" },
+      { finalita: "Managing registrations for our events: confirmation, waiting list, the ticket with QR code and check-in at the entrance", base: "Performance of the registration requested by the participant" },
+      { finalita: "Sending service messages and reminders about an event the participant has registered for", base: "Performance of the registration requested by the participant / Legitimate interest" },
+      { finalita: "Creating or linking the Member Portal account that comes with an event registration", base: "Performance of the registration requested by the participant" },
+      { finalita: "Sending news about the Foundation's initiatives to participants who ask for it when registering", base: "Consent, optional and withdrawable" },
       { finalita: "Sending platform notifications", base: "Consent / Legitimate interest" },
       { finalita: "Improving website performance", base: "Consent (analytics cookies)" },
       { finalita: "Complying with legal obligations", base: "Legal obligation" },
@@ -201,6 +216,7 @@ const EN: Informativa = {
       { categoria: "Student enrolment records", periodo: null },
       { categoria: "Course work, teams and project submissions", periodo: null },
       { categoria: "Applications to our calls", periodo: null },
+      { categoria: "Event registrations and check-in records", periodo: null },
     ],
     senzaTermine:
       "A fixed period is being defined. Until it is set, the data is kept only for as long as the purposes described above require, and is deleted on request.",
@@ -278,7 +294,7 @@ const IT: Informativa = {
   titoloPagina: "Informativa sulla privacy",
   descrizionePagina: "Informativa sul trattamento dei dati personali del sito della Fondazione bioERGOtech.",
   titolo: "Informativa sulla privacy",
-  aggiornamento: "Ultimo aggiornamento: ottobre 2026",
+  aggiornamento: "Ultimo aggiornamento: novembre 2026",
   altraLingua: { etichetta: "Read this policy in English", href: "/legal/privacy" },
 
   titolare: {
@@ -366,6 +382,17 @@ const IT: Informativa = {
         ],
       },
       {
+        titolo: "Iscrizioni ai nostri eventi",
+        voci: [
+          "Nome, cognome, indirizzo email ed eventuale numero di telefono",
+          "Le giornate scelte, la categoria di partecipante e, se pertinenti, la scuola, la classe, l'ente, l'organizzazione o la startup",
+          "L'eventuale nota aggiunta da chi si iscrive",
+          "Un codice di iscrizione univoco, il biglietto con il QR code e la registrazione dell'ingresso (se e quando la presenza è stata registrata al check-in)",
+          "Per ciascuna giornata, se il posto è confermato o in lista d'attesa",
+          "L'accettazione dell'informativa, con la data, e l'eventuale consenso facoltativo a ricevere comunicazioni della Fondazione, registrato con il suo testo e la data",
+        ],
+      },
+      {
         titolo: "Navigazione del sito",
         voci: [
           "Indirizzo IP e tipo di browser (anonimizzati dove possibile)",
@@ -395,6 +422,10 @@ const IT: Informativa = {
       { finalita: "Gestire squadre, richieste di ingresso e abbinamento con i mentor", base: "Legittimo interesse a gestire il percorso" },
       { finalita: "Raccogliere e valutare le candidature a mentor", base: "Consenso e misure precontrattuali" },
       { finalita: "Pubblicare il profilo di un mentor nella pagina pubblica", base: "Consenso, facoltativo e revocabile" },
+      { finalita: "Gestire le iscrizioni ai nostri eventi: conferma, lista d'attesa, biglietto con QR code e check-in all'ingresso", base: "Esecuzione dell'iscrizione richiesta dal partecipante" },
+      { finalita: "Inviare comunicazioni di servizio e promemoria sull'evento a cui ci si è iscritti", base: "Esecuzione dell'iscrizione richiesta dal partecipante e legittimo interesse" },
+      { finalita: "Creare o collegare l'account dell'area riservata (Member Portal) che accompagna l'iscrizione a un evento", base: "Esecuzione dell'iscrizione richiesta dal partecipante" },
+      { finalita: "Inviare notizie sulle iniziative della Fondazione a chi le chiede al momento dell'iscrizione", base: "Consenso, facoltativo e revocabile" },
       { finalita: "Inviare comunicazioni di servizio", base: "Consenso e legittimo interesse" },
       { finalita: "Migliorare le prestazioni del sito", base: "Consenso (cookie analitici)" },
       { finalita: "Adempiere a obblighi di legge", base: "Obbligo legale" },
@@ -416,6 +447,7 @@ const IT: Informativa = {
       { categoria: "Iscrizioni degli studenti", periodo: null },
       { categoria: "Lavori del corso, squadre e progetti consegnati", periodo: null },
       { categoria: "Candidature ai nostri bandi", periodo: null },
+      { categoria: "Iscrizioni agli eventi e registrazioni degli ingressi", periodo: null },
     ],
     senzaTermine:
       "Il termine è in corso di definizione. Fino ad allora i dati sono conservati per il solo tempo richiesto dalle finalità sopra descritte, e cancellati su richiesta.",

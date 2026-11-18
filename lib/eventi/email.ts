@@ -64,6 +64,12 @@ export const EMAIL_MITTENTE = "Fondazione bioERGOtech <noreply@bioergotech.org>"
 
 const NOME_BREVE = EVENT.titolo.split(":")[0]; // "Vivere più a lungo"
 
+/** ", 10 e 11 dicembre" in coda all'oggetto, o niente se non ci sono giornate. */
+const conDate = (slugs: string[]) => {
+  const elenco = elencoGiornate(slugs);
+  return elenco ? `, ${elenco}` : "";
+};
+
 /** Il testo scritto da chi si iscrive non deve diventare HTML. */
 export function escapeHtml(v: string): string {
   return v
@@ -94,10 +100,11 @@ function testiPrincipali(input: EmailBigliettoInput): { subject: string; titolo:
     case "posto_liberato": {
       const slug = input.giornataLiberata ?? confermate[0] ?? "";
       const conArt = giornateConArticolo([slug]);
+      const per = conArt ? ` per ${conArt}` : "";
       return {
-        subject: `Si è liberato un posto per ${conArt}: ${NOME_BREVE}`,
-        titolo: `si è liberato un posto per ${conArt}.`,
-        intro: `Eri in lista d'attesa: ora il tuo posto per ${conArt} è confermato. Qui sotto trovi il biglietto da mostrare all'ingresso.`,
+        subject: `Si è liberato un posto${per}: ${NOME_BREVE}`,
+        titolo: `si è liberato un posto${per}.`,
+        intro: `Eri in lista d'attesa: ora il tuo posto${per} è confermato. Qui sotto trovi il biglietto da mostrare all'ingresso.`,
       };
     }
     case "promemoria": {
@@ -115,25 +122,33 @@ function testiPrincipali(input: EmailBigliettoInput): { subject: string; titolo:
     }
     case "aggiornamento":
       return {
-        subject: `Il tuo biglietto aggiornato: ${NOME_BREVE}, ${elencoGiornate(tutte)}`,
+        subject: `Il tuo biglietto aggiornato: ${NOME_BREVE}${conDate(tutte)}`,
         titolo: "ecco il tuo biglietto aggiornato.",
         intro:
           "Abbiamo aggiornato il biglietto: ora il QR si vede in tutte le app di posta e ogni giornata riporta la data, il luogo e lo stato del tuo posto. Il codice non cambia.",
       };
     case "reinvio":
       return {
-        subject: `Il tuo biglietto: ${NOME_BREVE}, ${elencoGiornate(tutte)}`,
+        subject: `Il tuo biglietto: ${NOME_BREVE}${conDate(tutte)}`,
         titolo: "ecco il tuo biglietto.",
         intro: "Come richiesto, ti rimandiamo il biglietto con il codice e il QR da mostrare all'ingresso.",
       };
     case "iscrizione":
     default:
+      if (esito === "nessuna") {
+        // Non deve succedere: la rotta si ferma prima. Se succede, niente
+        // "confermato": si dice com'è e a chi scrivere.
+        return {
+          subject: `La tua iscrizione: ${NOME_BREVE}`,
+          titolo: "abbiamo ricevuto la tua iscrizione.",
+          intro: `Grazie per l'iscrizione. Al momento non risulta nessuna giornata collegata al tuo biglietto: scrivici a ${EMAIL_RISPOSTE} e sistemiamo subito.`,
+        };
+      }
       if (esito === "attesa") {
         return {
-          subject: `Sei in lista d'attesa: ${NOME_BREVE}, ${elencoGiornate(inAttesa)}`,
+          subject: `Sei in lista d'attesa: ${NOME_BREVE}${conDate(inAttesa)}`,
           titolo: `sei in lista d'attesa per ${giornateConArticolo(inAttesa)}.`,
-          intro:
-            "Grazie per l'iscrizione. I posti per la giornata che hai scelto sono al momento esauriti. Se si libera un posto ti scriviamo noi, e il biglietto qui sotto diventa valido.",
+          intro: `Grazie per l'iscrizione. I posti per ${inAttesa.length > 1 ? "le giornate che hai scelto" : "la giornata che hai scelto"} sono al momento esauriti. Se si libera un posto ti scriviamo noi, e il biglietto qui sotto diventa valido.`,
         };
       }
       if (esito === "parziale") {
@@ -144,7 +159,7 @@ function testiPrincipali(input: EmailBigliettoInput): { subject: string; titolo:
         };
       }
       return {
-        subject: `Iscrizione confermata: ${NOME_BREVE}, ${elencoGiornate(confermate)}`,
+        subject: `Iscrizione confermata: ${NOME_BREVE}${conDate(confermate)}`,
         titolo: `il tuo posto ${confermate.length > 1 ? "è confermato per tutte e due le giornate" : `per ${giornateConArticolo(confermate)} è confermato`}.`,
         intro: "Grazie per l'iscrizione. Qui sotto trovi il biglietto: mostralo all'ingresso, dal telefono o stampato.",
       };
@@ -157,10 +172,14 @@ function pillStato(status: SessionStatus): string {
     : `<span style="display:inline-block;background:#E1F5EE;color:#0F6E56;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;">Confermato</span>`;
 }
 
+/** Un URL dentro un attributo HTML: le "&" dei parametri diventano "&amp;". */
+const attr = (url: string) => escapeHtml(url);
+
 /** L'oggetto, l'HTML e il testo semplice dell'email del biglietto. */
 export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
   const nome = escapeHtml(input.nome.trim());
   const codice = input.codice;
+  const codiceHtml = escapeHtml(codice);
   const ticketUrl = urlBiglietto(codice);
   const qrUrl = `${SITE_URL}/api/eventi/qr/${encodeURIComponent(codice)}`;
   const note = giornateNote(input.giornate);
@@ -173,16 +192,16 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
     .map(({ g, s }) => {
       const calendario =
         g.status === "confermato"
-          ? `<a href="${googleCalendarUrl(s, codice)}" style="color:#008F6B;font-size:13px;font-weight:600;text-decoration:none;">Aggiungi a Google Calendar</a>`
+          ? `<a href="${attr(googleCalendarUrl(s, codice))}" style="color:#008F6B;font-size:13px;font-weight:600;text-decoration:none;">Aggiungi a Google Calendar</a>`
           : "";
       return `
       <tr><td style="padding:0 0 12px;">
         <div style="background:#ffffff;border:1px solid #E2E8F0;border-radius:10px;padding:16px 18px;">
-          <table style="width:100%;border-collapse:collapse;"><tr>
+          <table role="presentation" style="width:100%;border-collapse:collapse;"><tr>
             <td style="vertical-align:top;">
               <p style="margin:0;color:#0A1628;font-size:16px;font-weight:700;">${s.giornoLabel}</p>
               <p style="margin:4px 0 0;color:#4A5568;font-size:14px;line-height:1.5;">${s.orario}<br>
-                <a href="${s.mappaUrl}" style="color:#4A5568;">${s.luogo}</a></p>
+                <a href="${attr(s.mappaUrl)}" style="color:#4A5568;">${s.luogo}</a></p>
               <p style="margin:6px 0 0;color:#718096;font-size:13px;">${s.titolo}</p>
             </td>
             <td style="vertical-align:top;text-align:right;white-space:nowrap;padding-left:8px;">${pillStato(g.status)}</td>
@@ -194,8 +213,9 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
     .join("");
 
   const confermate = note.filter((x) => x.g.status === "confermato").map((x) => x.s.slug);
+  const inAttesa = note.filter((x) => x.g.status === "lista_attesa").map((x) => x.s.slug);
   const ics = confermate.length
-    ? `<p style="margin:0 0 24px;color:#4A5568;font-size:13px;line-height:1.6;">Usi Apple Calendar o Outlook? <a href="${icsUrl(confermate, codice)}" style="color:#008F6B;font-weight:600;">Scarica il file del calendario</a>.</p>`
+    ? `<p style="margin:0 0 24px;color:#4A5568;font-size:13px;line-height:1.6;">Usi Apple Calendar o Outlook? <a href="${attr(icsUrl(confermate, codice))}" style="color:#008F6B;font-weight:600;">Scarica il file del calendario</a>.</p>`
     : "";
 
   const invito = aggiungibili.length
@@ -203,11 +223,11 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
         <p style="margin:0 0 6px;color:#0F6E56;font-size:15px;font-weight:700;">Vuoi venire anche ${giornateConArticolo(aggiungibili.map((s) => s.slug))}?</p>
         <p style="margin:0 0 12px;color:#065f46;font-size:14px;line-height:1.6;">${aggiungibili
           .map((s) => `${s.giornoLabel}, ${s.orario}, ${s.luogo}: ${s.titolo.toLowerCase()}.`)
-          .join("<br>")}</p>
+          .join("<br>")} Ci sono ancora posti liberi.</p>
         ${aggiungibili
           .map(
             (s) =>
-              `<a href="${ticketUrl}?aggiungi=${encodeURIComponent(s.slug)}" style="display:inline-block;background:#0F6E56;color:#ffffff;font-size:14px;font-weight:700;padding:10px 18px;border-radius:8px;text-decoration:none;margin:0 8px 6px 0;">Aggiungi ${s.etichetta}</a>`,
+              `<a href="${attr(`${ticketUrl}?aggiungi=${encodeURIComponent(s.slug)}`)}" style="display:inline-block;background:#0F6E56;color:#ffffff;font-size:14px;font-weight:700;padding:11px 18px;border-radius:8px;text-decoration:none;margin:0 8px 6px 0;">Aggiungi ${giornateConArticolo([s.slug])}</a>`,
           )
           .join("")}
       </div>`
@@ -215,15 +235,31 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
 
   const account = input.nuovoAccount
     ? `<div style="background:#f0fdf9;border-left:3px solid #00C896;border-radius:0 6px 6px 0;padding:14px 18px;margin-bottom:24px;">
-        <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0;">Con l'iscrizione abbiamo creato anche il tuo account gratuito nel Member Portal della Fondazione. Per scegliere la password, <a href="${SITE_URL}/auth/forgot-password" style="color:#008F6B;font-weight:700;">apri questa pagina</a> e scrivi il tuo indirizzo email.</p>
+        <p style="color:#065f46;font-size:14px;line-height:1.6;margin:0;">Con l'iscrizione abbiamo creato anche il tuo account gratuito nel Member Portal della Fondazione. Per scegliere la password, <a href="${attr(`${SITE_URL}/auth/forgot-password`)}" style="color:#008F6B;font-weight:700;">apri questa pagina</a> e scrivi il tuo indirizzo email.</p>
       </div>`
     : "";
 
+  const gestisciUrl = attr(`${ticketUrl}#gestisci`);
   const libera = confermate.length
-    ? `<p style="color:#718096;font-size:13px;line-height:1.6;margin:0 0 8px;">Se cambi programma, <a href="${ticketUrl}#gestisci" style="color:#008F6B;font-weight:600;">libera il posto dal biglietto online</a>: lo diamo a chi è in lista d'attesa.</p>`
-    : "";
+    ? `<p style="color:#718096;font-size:13px;line-height:1.6;margin:0 0 8px;">Se cambi programma, <a href="${gestisciUrl}" style="color:#008F6B;font-weight:600;">libera il posto dal biglietto online</a>: lo diamo a chi è in lista d'attesa.</p>`
+    : inAttesa.length
+      ? `<p style="color:#718096;font-size:13px;line-height:1.6;margin:0 0 8px;">Se non ti interessa più, <a href="${gestisciUrl}" style="color:#008F6B;font-weight:600;">esci dalla lista d'attesa dal biglietto online</a>.</p>`
+      : "";
 
-  const html = `
+  // La riga di anteprima che le app di posta mostrano accanto all'oggetto.
+  const anteprima = escapeHtml(intro);
+
+  const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${escapeHtml(subject)}</title>
+</head>
+<body style="margin:0;padding:16px 8px;background:#ffffff;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px;">${anteprima}</div>
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
     <div style="background:#0A1628;padding:28px 36px;border-radius:12px 12px 0 0;">
       <p style="color:#00C896;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin:0;">Fondazione bioERGOtech</p>
@@ -235,15 +271,15 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
       <h1 style="color:#0A1628;font-size:20px;line-height:1.4;margin:0 0 10px;font-weight:700;">Ciao ${nome}, ${titolo}</h1>
       <p style="color:#4A5568;font-size:15px;line-height:1.7;margin:0 0 24px;">${intro}</p>
 
-      <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${schede}</table>
+      <table role="presentation" style="width:100%;border-collapse:collapse;margin-bottom:12px;">${schede}</table>
       ${ics}
 
       <div style="background:#ffffff;border:1px solid #E2E8F0;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px;">
         <p style="color:#718096;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 12px;">Il tuo biglietto</p>
-        <img src="${qrUrl}" width="200" height="200" alt="QR code del biglietto, codice ${codice}" style="display:block;margin:0 auto;border:1px solid #E2E8F0;border-radius:8px;" />
-        <p style="color:#0A1628;font-size:24px;font-weight:800;letter-spacing:0.12em;font-family:monospace;margin:14px 0 4px;">${codice}</p>
+        <img src="${attr(qrUrl)}" width="220" height="220" alt="QR code del biglietto, codice ${codiceHtml}" style="display:block;margin:0 auto;width:220px;height:220px;border:1px solid #E2E8F0;border-radius:8px;" />
+        <p style="color:#0A1628;font-size:24px;font-weight:800;letter-spacing:0.12em;font-family:'SFMono-Regular',Menlo,Consolas,monospace;margin:14px 0 4px;">${codiceHtml}</p>
         <p style="color:#718096;font-size:13px;margin:0 0 16px;">Se il QR non si vede, all'ingresso basta questo codice.</p>
-        <a href="${ticketUrl}" style="display:inline-block;background:#0A1628;color:#ffffff;font-size:14px;font-weight:700;padding:11px 20px;border-radius:8px;text-decoration:none;">Apri il biglietto online</a>
+        <a href="${attr(ticketUrl)}" style="display:inline-block;background:#0A1628;color:#ffffff;font-size:14px;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none;">Apri il biglietto online</a>
       </div>
 
       ${invito}
@@ -251,12 +287,14 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
       ${libera}
 
       <hr style="border:none;border-top:1px solid #E2E8F0;margin:28px 0 20px;" />
-      <p style="color:#A0AEC0;font-size:12px;margin:0;line-height:1.6;">
+      <p style="color:#718096;font-size:12px;margin:0;line-height:1.6;">
         Per qualsiasi domanda rispondi a questa email o scrivi a <a href="mailto:${EMAIL_RISPOSTE}" style="color:#008F6B;">${EMAIL_RISPOSTE}</a>.<br>
-        Fondazione bioERGOtech, Taranto. <a href="${SITE_URL}/eventi/${EVENT_SLUG}" style="color:#008F6B;">Il programma dell'evento</a>
+        Fondazione bioERGOtech, Taranto. <a href="${attr(`${SITE_URL}/eventi/${EVENT_SLUG}`)}" style="color:#008F6B;">Il programma dell'evento</a>
       </p>
     </div>
-  </div>`;
+  </div>
+</body>
+</html>`;
 
   const righeGiornate = note
     .map(
@@ -268,18 +306,27 @@ export function emailBiglietto(input: EmailBigliettoInput): EmailBiglietto {
     `Ciao ${input.nome.trim()}, ${titolo}`,
     "",
     intro,
-    "",
-    righeGiornate,
+    ...(righeGiornate ? ["", righeGiornate] : []),
     "",
     `Il tuo codice: ${codice}`,
     `Il biglietto online, con il QR: ${ticketUrl}`,
+    ...(confermate.length ? [`Aggiungi al calendario (Apple, Outlook): ${icsUrl(confermate, codice)}`] : []),
     ...(aggiungibili.length
-      ? ["", ...aggiungibili.map((s) => `Vuoi venire anche ${giornateConArticolo([s.slug])}? Aggiungilo qui: ${ticketUrl}?aggiungi=${encodeURIComponent(s.slug)}`)]
+      ? [
+          "",
+          ...aggiungibili.map(
+            (s) => `Vuoi venire anche ${giornateConArticolo([s.slug])}? Aggiungi la giornata qui: ${ticketUrl}?aggiungi=${encodeURIComponent(s.slug)}`,
+          ),
+        ]
       : []),
     ...(input.nuovoAccount
       ? ["", `Abbiamo creato anche il tuo account nel Member Portal. Per scegliere la password: ${SITE_URL}/auth/forgot-password`]
       : []),
-    ...(confermate.length ? ["", `Se cambi programma, libera il posto dal biglietto online: ${ticketUrl}#gestisci`] : []),
+    ...(confermate.length
+      ? ["", `Se cambi programma, libera il posto dal biglietto online: ${ticketUrl}#gestisci`]
+      : inAttesa.length
+        ? ["", `Se non ti interessa più, esci dalla lista d'attesa dal biglietto online: ${ticketUrl}#gestisci`]
+        : []),
     "",
     `Per qualsiasi domanda rispondi a questa email o scrivi a ${EMAIL_RISPOSTE}.`,
     "Fondazione bioERGOtech, Taranto",

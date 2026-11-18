@@ -1,75 +1,162 @@
-import { getEventAdminClient } from "@/lib/eventi/admin-guard";
 import { NextResponse } from "next/server";
-import { categoriaLabel } from "@/app/eventi/vivere-piu-a-lungo/content";
+import { getEventAdminClient } from "@/lib/eventi/admin-guard";
+import { SESSIONS, categoriaLabel, giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
+import { caricaDatiPannello } from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloDati";
+import {
+  confrontaPerCognome,
+  dataOraRoma,
+  filtraIscritti,
+  giornoRoma,
+  leggiFiltri,
+  type GiornataRiga,
+  type RigaIscritto,
+} from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloComune";
 
-/** Cella CSV con escaping RFC 4180. */
-function csvCell(value: unknown): string {
-  const s = value == null ? "" : String(value);
+export const dynamic = "force-dynamic";
+
+/** Il separatore di Excel in italiano: con la virgola aprirebbe tutto in una colonna. */
+const SEP = ";";
+
+/**
+ * Una cella CSV (RFC 4180): tra virgolette, con le virgolette raddoppiate.
+ * Un testo scritto da chi si iscrive che comincia con = + - @ diventerebbe
+ * una formula in Excel: gli si mette davanti un apostrofo.
+ */
+function cella(valore: unknown): string {
+  let s = valore == null ? "" : String(valore);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return `"${s.replace(/"/g, '""')}"`;
 }
 
+const riga = (valori: unknown[]) => valori.map(cella).join(SEP);
+
+const statoGiornata = (g: GiornataRiga | undefined) =>
+  !g ? "" : g.status === "lista_attesa" ? "Lista d'attesa" : "Confermato";
+
+const presenza = (g: GiornataRiga | undefined) =>
+  !g ? "" : g.stato_checkin === "presente" ? "Presente" : g.stato_checkin === "assente" ? "Assente" : "";
+
+/** "10 dicembre" -> "10-dicembre", per il nome del file. */
+const perFile = (v: string) =>
+  v
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/** La lista di una giornata: chi c'è quel giorno, con presenza e ora d'ingresso. */
+function csvGiornata(righe: RigaIscritto[], slug: string): string[] {
+  const out = [
+    riga([
+      "Cognome", "Nome", "Categoria", "Organizzazione", "Classe", "Stato", "Presenza",
+      "Ora ingresso", "Codice", "Email", "Telefono", "Note", "Iscritto il",
+    ]),
+  ];
+  for (const r of righe) {
+    const g = r.giornate.find((x) => x.slug === slug);
+    if (!g) continue;
+    out.push(
+      riga([
+        r.cognome, r.nome, categoriaLabel(r.categoria), r.organizzazione ?? r.startup_name, r.classe,
+        statoGiornata(g), presenza(g), dataOraRoma(g.checkin_ts), r.codice, r.email, r.telefono,
+        r.note, dataOraRoma(r.created_at),
+      ]),
+    );
+  }
+  return out;
+}
+
+/** L'elenco completo: una riga per persona, una colonna per giornata. */
+function csvCompleto(righe: RigaIscritto[]): string[] {
+  // Le sessioni che il sito non usa più compaiono solo se qualcuno ci è collegato.
+  const sconosciute = righe.some((r) => r.giornate.some((g) => !sessionBySlug(g.slug)));
+  const out = [
+    riga([
+      "Cognome", "Nome", "Categoria", "Organizzazione", "Classe",
+      ...SESSIONS.map((s) => s.etichetta),
+      ...SESSIONS.map((s) => `Presenza ${s.etichetta}`),
+      ...(sconosciute ? ["Sessioni non riconosciute"] : []),
+      "Email", "Telefono", "Startup", "Sito startup", "Note", "Codice",
+      "Consenso comunicazioni", "Data consenso comunicazioni", "Iscritto il",
+    ]),
+  ];
+  for (const r of righe) {
+    const perSlug = (slug: string) => r.giornate.find((g) => g.slug === slug);
+    out.push(
+      riga([
+        r.cognome, r.nome, categoriaLabel(r.categoria), r.organizzazione, r.classe,
+        ...SESSIONS.map((s) => statoGiornata(perSlug(s.slug))),
+        ...SESSIONS.map((s) => presenza(perSlug(s.slug))),
+        ...(sconosciute
+          ? [r.giornate.filter((g) => !sessionBySlug(g.slug)).map((g) => g.slug || "senza nome").join(", ")]
+          : []),
+        r.email, r.telefono, r.startup_name, r.startup_url, r.note, r.codice,
+        r.consenso_marketing ? "Sì" : "No", dataOraRoma(r.consenso_marketing_ts), dataOraRoma(r.created_at),
+      ]),
+    );
+  }
+  return out;
+}
+
 /**
- * Export CSV completo per le campagne post evento: anagrafica, categoria,
- * sessioni con stato di presenza, e flag consenso marketing. Questo e il
- * dato che alimenta le campagne (solo chi ha dato il consenso).
+ * Export CSV degli iscritti, per Excel in italiano: separatore ";", BOM
+ * UTF-8, righe CRLF, celle tra virgolette.
+ *
+ * - ?giornata=giorno-1: la lista di quel giorno, una riga per persona, in
+ *   ordine di cognome, con stato, presenza e ora d'ingresso.
+ * - senza giornata: tutti, una colonna per giornata, con i consensi.
+ *
+ * Accetta gli stessi filtri dell'elenco (q, categoria, stato): quello che si
+ * vede nel pannello è quello che si scarica. Solo staff (requireAdmin).
  */
-export async function GET() {
+export async function GET(request: Request) {
   const { error, status, client } = await getEventAdminClient();
   if (error || !client) return NextResponse.json({ error }, { status });
 
-  const { data, error: fetchError } = await client
-    .from("event_registrations")
-    .select(
-      `nome, cognome, email, telefono, categoria, organizzazione, classe,
-       startup_name, startup_url, note, codice_univoco, created_at,
-       consenso_marketing, consenso_marketing_ts,
-       event_registration_sessions (
-         is_waitlist, stato_checkin,
-         event_sessions ( titolo )
-       )`,
-    )
-    .order("created_at", { ascending: true });
+  const params = new URL(request.url).searchParams;
+  const slug = params.get("giornata") ?? "";
+  const sessione = slug ? sessionBySlug(slug) : undefined;
+  if (slug && !sessione) {
+    return NextResponse.json({ error: "Giornata sconosciuta." }, { status: 400 });
+  }
+  // Il filtro per giornata dell'elenco non si applica qui: la giornata la
+  // sceglie il pulsante ("Scarica 10 dicembre"), oppure si scarica tutto.
+  const filtri = { ...leggiFiltri(params), giornata: sessione ? sessione.slug : "" };
+  if (sessione && filtri.stato === "senza") filtri.stato = "";
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
-
-  const headers = [
-    "Nome", "Cognome", "Email", "Telefono", "Categoria", "Organizzazione",
-    "Classe", "Startup", "Sito startup", "Sessioni", "Presenze", "Note",
-    "Codice", "Consenso marketing", "Data consenso marketing", "Iscritto il",
-  ];
-
-  const lines = [headers.map(csvCell).join(",")];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const r of (data ?? []) as any[]) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bridges = (r.event_registration_sessions ?? []) as any[];
-    const sessioni = bridges
-      .map((b) => `${b.event_sessions?.titolo ?? ""}${b.is_waitlist ? " (lista attesa)" : ""}`)
-      .join(" | ");
-    const presenze = bridges
-      .map((b) => `${b.event_sessions?.titolo ?? ""}: ${b.stato_checkin}`)
-      .join(" | ");
-
-    lines.push(
-      [
-        r.nome, r.cognome, r.email, r.telefono, categoriaLabel(r.categoria),
-        r.organizzazione, r.classe, r.startup_name, r.startup_url,
-        sessioni, presenze, r.note, r.codice_univoco,
-        r.consenso_marketing ? "SI" : "NO", r.consenso_marketing_ts ?? "", r.created_at,
-      ]
-        .map(csvCell)
-        .join(","),
+  let righe: RigaIscritto[];
+  try {
+    const dati = await caricaDatiPannello(client);
+    if (sessione && dati.mancanti.includes(sessione.slug)) {
+      return NextResponse.json(
+        {
+          error: `${giornateConArticolo([sessione.slug]).replace(/^./, (c) => c.toUpperCase())} non esiste nel database: non c'è niente da scaricare.`,
+        },
+        { status: 409 },
+      );
+    }
+    righe = filtraIscritti(dati.iscritti, filtri).sort(confrontaPerCognome);
+  } catch (err) {
+    console.error("[eventi/admin/export]", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "Non riesco a leggere le iscrizioni dal database. Riprova tra poco." },
+      { status: 500 },
     );
   }
 
-  const csv = "﻿" + lines.join("\r\n");
-  const date = new Date().toISOString().slice(0, 10);
+  const linee = sessione ? csvGiornata(righe, sessione.slug) : csvCompleto(righe);
+  const csv = "\uFEFF" + linee.join("\r\n") + "\r\n";
+
+  const oggi = giornoRoma(new Date());
+  const filtrato = filtri.q.trim() || filtri.categoria || filtri.stato ? "-filtrati" : "";
+  const nome = `iscritti-${sessione ? perFile(sessione.etichetta) : "tutti"}${filtrato}-${oggi}.csv`;
 
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="iscritti-evento-${date}.csv"`,
+      "Content-Disposition": `attachment; filename="${nome}"`,
+      "Cache-Control": "no-store",
     },
   });
 }

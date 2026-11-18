@@ -1,447 +1,956 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { refusoEmail } from "@/lib/eventi/email-refusi";
 import {
   SESSIONS,
   CATEGORIE,
   CONSENSO_PRIVACY_TESTO,
   CONSENSO_MARKETING_TESTO,
-  EVENT_SLUG,
+  giornateConArticolo,
+  type CategoriaValue,
   type SessionSlug,
 } from "./content";
-import type { SessionStatus } from "@/lib/eventi/registration";
+import { IscrizioneConfermata, type DatiConferma } from "./IscrizioneConfermata";
+import {
+  CAMPI,
+  ICONA_CATEGORIA,
+  MESSAGGIO_RETE,
+  MESSAGGIO_TEMPO,
+  STILE_MODULO,
+  categoriaDaParametro,
+  comportamentoScroll,
+  etichettaOrganizzazione,
+  ids,
+  leggiPosti,
+  leggiRisposta,
+  mostraClasse,
+  statoPosti,
+  validaModulo,
+  type Campo,
+  type ErroriModulo,
+  type Posti,
+} from "./modulo-utils";
 
-type Seat = { slug: string; capienza_max: number; confermati: number; rimanenti: number };
+const INFORMATIVA_HREF = "/legal/informativa-privacy";
+/** Oltre questo tempo si smette di aspettare e si propone di riprovare. */
+const TEMPO_MASSIMO_MS = 30_000;
 
-const inputStyle: React.CSSProperties = {};
+/**
+ * Legge ?cat dall'indirizzo e lo porta nel modulo, all'arrivo e a ogni
+ * cambio: i link dell'hero ("?cat=studente#iscrizione") cambiano l'URL senza
+ * rimontare la pagina. È l'unico pezzo che usa useSearchParams, dentro un
+ * Suspense senza fallback: il modulo vero si disegna subito, anche lato
+ * server, senza aspettare i parametri.
+ */
+function SincronizzaCategoria({ onCategoria }: { onCategoria: (c: CategoriaValue) => void }) {
+  const cat = useSearchParams()?.get("cat") ?? null;
+  useEffect(() => {
+    const c = categoriaDaParametro(cat);
+    if (c) onCategoria(c);
+  }, [cat, onCategoria]);
+  return null;
+}
 
-function FieldLabel({ children, htmlFor }: { children: React.ReactNode; htmlFor: string }) {
+const NUOVA_SCHEDA = <span className="sr-only"> (si apre in una nuova scheda)</span>;
+
+/** Il testo del consenso, con "l'informativa" che porta all'informativa. */
+function TestoConsensoPrivacy() {
+  const chiave = "l'informativa";
+  const i = CONSENSO_PRIVACY_TESTO.indexOf(chiave);
+  const link = (testo: string) => (
+    <a href={INFORMATIVA_HREF} target="_blank" rel="noopener noreferrer">
+      {testo}
+      {NUOVA_SCHEDA}
+    </a>
+  );
+  if (i === -1) {
+    return (
+      <>
+        {CONSENSO_PRIVACY_TESTO} {link("Leggi l'informativa")}
+      </>
+    );
+  }
   return (
-    <Label htmlFor={htmlFor} style={{ fontWeight: 600, color: "#1A2332" }}>
-      {children}
-    </Label>
+    <>
+      {CONSENSO_PRIVACY_TESTO.slice(0, i)}
+      {link(chiave)}
+      {CONSENSO_PRIVACY_TESTO.slice(i + chiave.length)}
+    </>
   );
 }
 
-function RegistrationFormInner() {
-  const searchParams = useSearchParams();
-  const initialCat = searchParams.get("cat") ?? "";
+function ErroreCampo({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <p id={id} className="vpl-errore">
+      <i className="fas fa-circle-exclamation" aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  );
+}
 
+/** Invio sulla tastiera: al campo di testo successivo, invece di inviare a metà. */
+function avanti(e: React.KeyboardEvent<HTMLInputElement>) {
+  if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+  e.preventDefault();
+  const form = e.currentTarget.form;
+  if (!form) return;
+  const campi = Array.from(form.querySelectorAll<HTMLInputElement>("input.vpl-input"));
+  const prossimo = campi[campi.indexOf(e.currentTarget) + 1];
+  if (prossimo) prossimo.focus();
+  else e.currentTarget.blur();
+}
+
+type ErroreServer = { campo?: Campo; messaggio: string; valore?: string };
+
+export function RegistrationForm() {
+  const [sessioni, setSessioni] = useState<SessionSlug[]>([]);
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [email, setEmail] = useState("");
+  const [emailUscita, setEmailUscita] = useState(false);
+  /** L'indirizzo per cui si è scelto "È giusto così". */
+  const [emailConfermata, setEmailConfermata] = useState<string | null>(null);
   const [telefono, setTelefono] = useState("");
-  const [categoria, setCategoria] = useState(initialCat);
+  const [categoria, setCategoria] = useState<CategoriaValue | "">("");
   const [organizzazione, setOrganizzazione] = useState("");
   const [classe, setClasse] = useState("");
   const [startupName, setStartupName] = useState("");
   const [startupUrl, setStartupUrl] = useState("");
   const [startupDesc, setStartupDesc] = useState("");
-  const [referente, setReferente] = useState("");
   const [note, setNote] = useState("");
-  const [sessioni, setSessioni] = useState<SessionSlug[]>([]);
+  const [notaAperta, setNotaAperta] = useState(false);
   const [consensoPrivacy, setConsensoPrivacy] = useState(false);
   const [consensoMarketing, setConsensoMarketing] = useState(false);
   const [website, setWebsite] = useState(""); // honeypot
 
-  const [seats, setSeats] = useState<Record<string, Seat>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<
-    { codice: string; sessions: { slug: string; status: SessionStatus }[] } | null
-  >(null);
+  const [posti, setPosti] = useState<Record<string, Posti>>({});
+  const [invio, setInvio] = useState(false);
+  /** Quante volte si è provato a inviare: da 1 in poi gli errori si vedono e si aggiornano dal vivo. */
+  const [tentativi, setTentativi] = useState(0);
+  const [erroreServer, setErroreServer] = useState<ErroreServer | null>(null);
+  const [esito, setEsito] = useState<DatiConferma | null>(null);
+  /** Dopo "Iscrivi un'altra persona": si dice che giornate e categoria sono rimaste. */
+  const [altraPersona, setAltraPersona] = useState(false);
 
-  // Precompila i dati se l'utente è già loggato nel Member Portal.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const giorniRef = useRef<HTMLDivElement>(null);
+  const chipsRef = useRef<HTMLDivElement>(null);
+  const riepilogoRef = useRef<HTMLDivElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const campiRef = useRef<Partial<Record<Campo, HTMLInputElement | null>>>({});
+  const registra = (c: Campo) => (el: HTMLInputElement | null) => {
+    campiRef.current[c] = el;
+  };
+
+  // Chi è già entrato nel Member Portal trova nome ed email già scritti.
+  // Non sovrascrive quello che la persona ha già digitato.
   useEffect(() => {
+    let attivo = true;
     (async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        if (user.email) setEmail(user.email);
-        const fullName = (user.user_metadata?.full_name as string) ?? "";
-        const parts = fullName.split(" ");
-        if (parts[0]) setNome(parts[0]);
-        if (parts.length > 1) setCognome(parts.slice(1).join(" "));
+      try {
+        const {
+          data: { user },
+        } = await createClient().auth.getUser();
+        if (!attivo || !user) return;
+        const indirizzo = user.email;
+        if (indirizzo) setEmail((v) => v || indirizzo);
+        const completo = String(user.user_metadata?.full_name ?? "").trim();
+        if (completo) {
+          const [primo, ...resto] = completo.split(/\s+/);
+          setNome((v) => v || primo);
+          if (resto.length) setCognome((v) => v || resto.join(" "));
+        }
+      } catch {
+        /* senza sessione il modulo resta vuoto */
       }
     })();
+    return () => {
+      attivo = false;
+    };
   }, []);
 
-  // Posti rimanenti live.
-  const loadSeats = async () => {
+  // I posti sono un di più: se la rotta non risponde, il modulo funziona lo stesso.
+  const caricaPosti = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch("/api/eventi/seats", { cache: "no-store" });
-      const data = await res.json();
-      const map: Record<string, Seat> = {};
-      for (const s of data.seats ?? []) map[s.slug] = s;
-      setSeats(map);
+      const res = await fetch("/api/eventi/seats", { cache: "no-store", signal });
+      if (!res.ok) return;
+      setPosti(leggiPosti(await res.json()));
     } catch {
-      /* il contatore e un di piu, non blocca l'iscrizione */
+      /* il contatore non blocca l'iscrizione */
+    }
+  }, []);
+
+  useEffect(() => {
+    const controllo = new AbortController();
+    caricaPosti(controllo.signal);
+    return () => controllo.abort();
+  }, [caricaPosti]);
+
+  /* ── Stato derivato ── */
+
+  const refuso = refusoEmail(email);
+  const confermata = emailConfermata !== null && emailConfermata === email.trim();
+  const mostraRefuso = refuso !== null && (emailUscita || tentativi > 0) && !(confermata && !refuso.impossibile);
+  const etichettaOrg = etichettaOrganizzazione(categoria);
+  const conClasse = mostraClasse(categoria);
+  const conStartup = categoria === "startup";
+  const giornateScelte = SESSIONS.map((s) => s.slug).filter((s) => sessioni.includes(s));
+
+  const datiDaValidare = {
+    sessioni,
+    nome,
+    cognome,
+    email,
+    emailConfermata: confermata,
+    categoria,
+    startupName,
+    consensoPrivacy,
+  };
+  const erroriClient: ErroriModulo = tentativi > 0 ? validaModulo(datiDaValidare) : {};
+
+  /** Il valore di un campo, per sapere se un errore della rotta vale ancora. */
+  const valoreCampo = (c: Campo): string => {
+    switch (c) {
+      case "sessioni":
+        return [...sessioni].sort().join(",");
+      case "nome":
+        return nome;
+      case "cognome":
+        return cognome;
+      case "email":
+        return email.trim();
+      case "categoria":
+        return categoria;
+      case "startup_name":
+        return startupName;
+      case "consenso_privacy":
+        return String(consensoPrivacy);
     }
   };
-  useEffect(() => {
-    loadSeats();
-  }, []);
 
-  const showClasse = categoria === "studente" || categoria === "scuola_docente";
-  const showStartup = categoria === "startup" || categoria === "investitore_partner";
+  // L'errore della rotta su un campo resta finché quel campo non cambia.
+  const erroreCampoServer =
+    erroreServer?.campo && valoreCampo(erroreServer.campo) === erroreServer.valore ? erroreServer : null;
+  const errori: ErroriModulo = {
+    ...(erroreCampoServer?.campo ? { [erroreCampoServer.campo]: erroreCampoServer.messaggio } : {}),
+    ...erroriClient,
+  };
+  const erroreGenerale = erroreServer && !erroreServer.campo ? erroreServer.messaggio : null;
+  const elencoErrori = CAMPI.filter((c) => errori[c]);
+  const mostraRiepilogo = tentativi > 0 && (elencoErrori.length > 0 || Boolean(erroreGenerale));
+  const emailNonValida = Boolean(errori.email) || Boolean(mostraRefuso && refuso?.impossibile);
 
-  const toggleSessione = (slug: SessionSlug) => {
-    setSessioni((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
+  /* ── Focus ── */
+
+  const elementoCampo = (c: Campo): HTMLElement | null => {
+    if (c === "sessioni") return giorniRef.current?.querySelector<HTMLInputElement>("input") ?? null;
+    if (c === "categoria") {
+      return (
+        chipsRef.current?.querySelector<HTMLInputElement>("input:checked") ??
+        chipsRef.current?.querySelector<HTMLInputElement>("input") ??
+        null
+      );
+    }
+    return campiRef.current[c] ?? null;
   };
 
-  const canSubmit = useMemo(
-    () =>
-      nome.trim() &&
-      cognome.trim() &&
-      email.trim() &&
-      categoria &&
-      sessioni.length > 0 &&
-      consensoPrivacy &&
-      !loading,
-    [nome, cognome, email, categoria, sessioni, consensoPrivacy, loading],
-  );
+  const focalizza = (c: Campo) => {
+    const el = elementoCampo(c);
+    if (el) el.focus();
+    else riepilogoRef.current?.focus();
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /* ── Azioni ── */
+
+  const alternaGiornata = (slug: SessionSlug) =>
+    setSessioni((p) => (p.includes(slug) ? p.filter((s) => s !== slug) : [...p, slug]));
+
+  const usaSuggerimento = (indirizzo: string) => {
+    setEmail(indirizzo);
+    setEmailConfermata(null);
+    requestAnimationFrame(() => campiRef.current.email?.focus());
+  };
+
+  const confermaEmail = () => {
+    setEmailConfermata(email.trim());
+    requestAnimationFrame(() => campiRef.current.email?.focus());
+  };
+
+  const apriNota = () => {
+    setNotaAperta(true);
+    requestAnimationFrame(() => noteRef.current?.focus());
+  };
+
+  const invia = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+    if (invio) return;
+    setEmailUscita(true);
+    setErroreServer(null);
+    setTentativi((n) => n + 1);
+
+    const erroriOra = validaModulo(datiDaValidare);
+    const primo = CAMPI.find((c) => erroriOra[c]);
+    if (primo) {
+      requestAnimationFrame(() => focalizza(primo));
+      return;
+    }
+
+    // Si mandano solo i campi che la categoria mostra: niente classe rimasta
+    // da una scelta precedente.
+    const payload = {
+      nome: nome.trim(),
+      cognome: cognome.trim(),
+      email: email.trim(),
+      telefono: telefono.trim(),
+      categoria,
+      // Per una startup l'organizzazione è la startup stessa.
+      organizzazione: conStartup ? startupName.trim() : etichettaOrg ? organizzazione.trim() : "",
+      classe: conClasse ? classe.trim() : "",
+      startup_name: conStartup ? startupName.trim() : "",
+      startup_url: conStartup ? startupUrl.trim() : "",
+      startup_desc: conStartup ? startupDesc.trim() : "",
+      referente: "",
+      note: note.trim(),
+      sessioni: giornateScelte,
+      consenso_privacy: consensoPrivacy,
+      consenso_marketing: consensoMarketing,
+      website,
+      email_confermata: confermata,
+    };
+
+    setInvio(true);
+    const controllo = new AbortController();
+    const timer = window.setTimeout(() => controllo.abort(), TEMPO_MASSIMO_MS);
     try {
       const res = await fetch("/api/eventi/registrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome,
-          cognome,
-          email,
-          telefono,
-          categoria,
-          organizzazione,
-          classe,
-          startup_name: startupName,
-          startup_url: startupUrl,
-          startup_desc: startupDesc,
-          referente,
-          note,
-          sessioni,
-          consenso_privacy: consensoPrivacy,
-          consenso_marketing: consensoMarketing,
-          website,
-        }),
+        body: JSON.stringify(payload),
+        signal: controllo.signal,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Iscrizione non riuscita.");
-      setSuccess({ codice: data.codice, sessions: data.sessions ?? [] });
-      loadSeats();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Iscrizione non riuscita.");
+      const risposta = await leggiRisposta(res);
+      if (!risposta.ok) {
+        const { campo, errore } = risposta;
+        setErroreServer({ campo, messaggio: errore, valore: campo ? valoreCampo(campo) : undefined });
+        requestAnimationFrame(() => (campo ? focalizza(campo) : riepilogoRef.current?.focus()));
+        return;
+      }
+      setAltraPersona(false);
+      setEsito({ ...risposta.esito, email: payload.email.toLowerCase(), nome: payload.nome });
+      caricaPosti();
+    } catch {
+      setErroreServer({ messaggio: controllo.signal.aborted ? MESSAGGIO_TEMPO : MESSAGGIO_RETE });
+      requestAnimationFrame(() => riepilogoRef.current?.focus());
     } finally {
-      setLoading(false);
+      window.clearTimeout(timer);
+      setInvio(false);
     }
   };
 
-  if (success) {
-    const hasWaitlist = success.sessions.some((s) => s.status === "lista_attesa");
-    return (
-      <div className="card" style={{ borderTop: "4px solid var(--primary)" }}>
-        <div
-          className="icon-circle icon-circle-primary"
-          style={{ width: 56, height: 56, marginBottom: 16 }}
-        >
-          <i className="fas fa-check text-2xl" />
-        </div>
-        <h3 className="text-2xl font-bold mb-2 text-gray-800">Iscrizione confermata</h3>
-        <p className="text-gray-600 mb-6">
-          Ti abbiamo inviato un&apos;email di conferma con il codice e il QR per il check-in.
-          {hasWaitlist
-            ? " Alcune sessioni erano al completo: sei in lista d'attesa e ti avviseremo se si libera un posto."
-            : ""}
-        </p>
-        <div
-          style={{
-            background: "var(--primary-light)",
-            borderRadius: 12,
-            padding: 20,
-            textAlign: "center",
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--primary-dark)", marginBottom: 6 }}>
-            Il tuo codice di check-in
-          </div>
-          <div
-            style={{
-              fontSize: 26,
-              fontWeight: 800,
-              letterSpacing: "0.12em",
-              fontFamily: "monospace",
-              color: "#1A2332",
-            }}
-          >
-            {success.codice}
-          </div>
-        </div>
-        <Link
-          href={`/eventi/${EVENT_SLUG}/biglietto/${success.codice}`}
-          className="btn-primary inline-block"
-        >
-          Apri il tuo biglietto →
-        </Link>
-      </div>
-    );
-  }
+  /**
+   * "Iscrivi un'altra persona": via i dati personali e i consensi, che ognuno
+   * dà per sé. Restano giornate, categoria, scuola o organizzazione, che
+   * spesso sono le stesse (un genitore con il figlio, un docente con la
+   * classe), e un avviso lo dice.
+   */
+  const nuovaIscrizione = () => {
+    setNome("");
+    setCognome("");
+    setEmail("");
+    setTelefono("");
+    setNote("");
+    setNotaAperta(false);
+    setConsensoPrivacy(false);
+    setConsensoMarketing(false);
+    setEmailUscita(false);
+    setEmailConfermata(null);
+    setErroreServer(null);
+    setTentativi(0);
+    setAltraPersona(true);
+    setEsito(null);
+    requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({ block: "start", behavior: comportamentoScroll() });
+      campiRef.current.nome?.focus({ preventScroll: true });
+    });
+  };
+
+  /* ── Markup ── */
 
   return (
-    <form onSubmit={handleSubmit} className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Honeypot: invisibile agli umani, riempito dai bot. */}
-      <div style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
-        <label htmlFor="website">Sito web</label>
-        <input
-          id="website"
-          type="text"
-          tabIndex={-1}
-          autoComplete="off"
-          value={website}
-          onChange={(e) => setWebsite(e.target.value)}
-        />
-      </div>
+    <div className="vpl-wrap">
+      <style>{STILE_MODULO}</style>
+      <Suspense fallback={null}>
+        <SincronizzaCategoria onCategoria={setCategoria} />
+      </Suspense>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <FieldLabel htmlFor="nome">Nome *</FieldLabel>
-          <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} style={inputStyle} />
-        </div>
-        <div className="grid gap-2">
-          <FieldLabel htmlFor="cognome">Cognome *</FieldLabel>
-          <Input id="cognome" required value={cognome} onChange={(e) => setCognome(e.target.value)} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <FieldLabel htmlFor="email">Email *</FieldLabel>
-          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <FieldLabel htmlFor="telefono">Telefono</FieldLabel>
-          <Input id="telefono" type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-        </div>
-      </div>
-
-      <div className="grid gap-2">
-        <FieldLabel htmlFor="categoria">Categoria *</FieldLabel>
-        <select
-          id="categoria"
-          required
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
-          style={{
-            height: 40,
-            borderRadius: 8,
-            border: "1px solid var(--border-color)",
-            padding: "0 12px",
-            background: "#fff",
-            color: "#1A2332",
-            fontSize: 14,
-          }}
-        >
-          <option value="">Seleziona…</option>
-          {CATEGORIE.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {(showClasse || categoria) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <FieldLabel htmlFor="organizzazione">Scuola / Organizzazione</FieldLabel>
-            <Input id="organizzazione" value={organizzazione} onChange={(e) => setOrganizzazione(e.target.value)} />
-          </div>
-          {showClasse && (
-            <div className="grid gap-2">
-              <FieldLabel htmlFor="classe">Classe</FieldLabel>
-              <Input id="classe" value={classe} onChange={(e) => setClasse(e.target.value)} placeholder="Es. 4A" />
+      <div ref={cardRef} className="card vpl-card">
+        {esito ? (
+          <IscrizioneConfermata dati={esito} onAltraPersona={nuovaIscrizione} />
+        ) : (
+          <form
+            onSubmit={invia}
+            noValidate
+            className="vpl-form"
+            aria-label="Iscrizione all'evento"
+            aria-busy={invio || undefined}
+          >
+            {/* Honeypot: invisibile agli umani, riempito dai bot. */}
+            <div style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
+              <label htmlFor="website">Sito web</label>
+              <input
+                id="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
             </div>
-          )}
-        </div>
-      )}
 
-      {showStartup && (
-        <div
-          style={{
-            background: "var(--bg-light)",
-            borderRadius: 12,
-            padding: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-          }}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <FieldLabel htmlFor="startup_name">Nome startup *</FieldLabel>
-              <Input id="startup_name" value={startupName} onChange={(e) => setStartupName(e.target.value)} />
+            <div className="vpl-intro">
+              <span className="icon-circle icon-circle-primary" aria-hidden="true">
+                <i className="fas fa-ticket" />
+              </span>
+              <p style={{ margin: 0 }}>
+                <span className="vpl-intro-titolo">Iscrizione gratuita</span>
+                <span className="vpl-intro-testo">
+                  Ci vuole un minuto. Il biglietto con il QR code ti arriva per email.
+                </span>
+              </p>
             </div>
-            <div className="grid gap-2">
-              <FieldLabel htmlFor="startup_url">Sito / pitch</FieldLabel>
-              <Input id="startup_url" value={startupUrl} onChange={(e) => setStartupUrl(e.target.value)} placeholder="https://" />
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <FieldLabel htmlFor="startup_desc">Breve descrizione</FieldLabel>
-            <textarea
-              id="startup_desc"
-              value={startupDesc}
-              onChange={(e) => setStartupDesc(e.target.value)}
-              rows={3}
-              style={{ borderRadius: 8, border: "1px solid var(--border-color)", padding: 10, fontSize: 14 }}
-            />
-          </div>
-          <div className="grid gap-2">
-            <FieldLabel htmlFor="referente">Referente</FieldLabel>
-            <Input id="referente" value={referente} onChange={(e) => setReferente(e.target.value)} />
-          </div>
-        </div>
-      )}
 
-      {/* Sessioni iscrivibili con posti rimanenti. */}
-      <div className="grid gap-3">
-        <FieldLabel htmlFor="sessioni">Sessioni *</FieldLabel>
-        <p style={{ fontSize: 13, color: "var(--text-light)", margin: 0 }}>
-          Seleziona una o più sessioni a cui vuoi partecipare.
-        </p>
-        {SESSIONS.map((s) => {
-          const seat = seats[s.slug];
-          const remaining = seat?.rimanenti;
-          const full = remaining !== undefined && remaining <= 0;
-          const selected = sessioni.includes(s.slug);
-          return (
-            <div
-              key={s.slug}
-              onClick={() => toggleSessione(s.slug)}
-              role="checkbox"
-              aria-checked={selected}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === " " || e.key === "Enter") {
-                  e.preventDefault();
-                  toggleSessione(s.slug);
-                }
-              }}
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                border: `1.5px solid ${selected ? "var(--primary)" : "var(--border-color)"}`,
-                background: selected ? "var(--primary-light)" : "#fff",
-                cursor: "pointer",
-                display: "flex",
-                gap: 12,
-                alignItems: "flex-start",
-                transition: "all 0.2s",
-              }}
+            {altraPersona && (
+              <p className="vpl-avviso-nuova">
+                <i className="fas fa-user-plus" aria-hidden="true" />
+                <span>
+                  Nuova iscrizione. Abbiamo tenuto le giornate e la categoria scelte prima: cambiale se servono.
+                </span>
+              </p>
+            )}
+
+            {/* ── Quali giornate? ── */}
+            <fieldset
+              className="vpl-fieldset"
+              aria-describedby={ids("vpl-giorni-aiuto", errori.sessioni && "vpl-giorni-errore")}
             >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 5,
-                  border: `2px solid ${selected ? "var(--primary)" : "#CBD5E0"}`,
-                  background: selected ? "var(--primary)" : "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  marginTop: 2,
-                }}
-              >
-                {selected && (
-                  <svg width="11" height="9" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+              <legend className="vpl-legend">Quali giornate?</legend>
+              <p id="vpl-giorni-aiuto" className="vpl-aiuto">
+                Puoi sceglierne una o tutte e due. L&apos;ingresso è gratuito.
+              </p>
+              <div ref={giorniRef} className="vpl-giorni">
+                {SESSIONS.map((s) => {
+                  const scelto = sessioni.includes(s.slug);
+                  const stato = statoPosti(posti[s.slug], s.capienza);
+                  const base = `vpl-g-${s.slug}`;
+                  return (
+                    <label
+                      key={s.slug}
+                      className="vpl-giorno"
+                      data-scelto={scelto}
+                      data-errore={Boolean(errori.sessioni)}
+                    >
+                      <input
+                        type="checkbox"
+                        className="vpl-check"
+                        name="sessioni"
+                        value={s.slug}
+                        checked={scelto}
+                        onChange={() => alternaGiornata(s.slug)}
+                        aria-labelledby={`${base}-data`}
+                        aria-describedby={ids(`${base}-dettagli`, errori.sessioni && "vpl-giorni-errore")}
+                        aria-invalid={errori.sessioni ? true : undefined}
+                      />
+                      <span className="vpl-giorno-corpo">
+                        <span id={`${base}-data`} className="vpl-giorno-data">
+                          {s.giornoLabel}
+                        </span>
+                        <span id={`${base}-dettagli`} className="vpl-giorno-dettagli">
+                          <span className="vpl-giorno-titolo">
+                            {s.titolo}
+                            <span className="sr-only">.</span>
+                          </span>
+                          <span className="vpl-giorno-meta">
+                            <span>
+                              <i className="fas fa-location-dot" aria-hidden="true" />
+                              {s.luogoBreve}
+                              <span className="sr-only">,</span>
+                            </span>
+                            <span>
+                              <i className="far fa-clock" aria-hidden="true" />
+                              {s.orario}
+                              <span className="sr-only">.</span>
+                            </span>
+                          </span>
+                          <span className="vpl-posti" data-tipo={stato?.tipo}>
+                            {stato && (
+                              <>
+                                <i className={`fas ${stato.icona}`} aria-hidden="true" />
+                                <span>{stato.testo}</span>
+                              </>
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              {errori.sessioni && (
+                <div style={{ marginTop: 10 }}>
+                  <ErroreCampo id="vpl-giorni-errore">{errori.sessioni}</ErroreCampo>
+                </div>
+              )}
+            </fieldset>
+
+            {/* ── Dati personali ── */}
+            <div className="vpl-gruppo">
+              <div className="vpl-griglia2">
+                <div className="vpl-campo">
+                  <label htmlFor="vpl-nome" className="vpl-label">
+                    Nome
+                  </label>
+                  <input
+                    ref={registra("nome")}
+                    id="vpl-nome"
+                    name="nome"
+                    type="text"
+                    className="vpl-input"
+                    autoComplete="given-name"
+                    autoCapitalize="words"
+                    enterKeyHint="next"
+                    maxLength={80}
+                    required
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    onKeyDown={avanti}
+                    aria-invalid={errori.nome ? true : undefined}
+                    aria-describedby={errori.nome ? "vpl-nome-errore" : undefined}
+                  />
+                  {errori.nome && <ErroreCampo id="vpl-nome-errore">{errori.nome}</ErroreCampo>}
+                </div>
+                <div className="vpl-campo">
+                  <label htmlFor="vpl-cognome" className="vpl-label">
+                    Cognome
+                  </label>
+                  <input
+                    ref={registra("cognome")}
+                    id="vpl-cognome"
+                    name="cognome"
+                    type="text"
+                    className="vpl-input"
+                    autoComplete="family-name"
+                    autoCapitalize="words"
+                    enterKeyHint="next"
+                    maxLength={80}
+                    required
+                    value={cognome}
+                    onChange={(e) => setCognome(e.target.value)}
+                    onKeyDown={avanti}
+                    aria-invalid={errori.cognome ? true : undefined}
+                    aria-describedby={errori.cognome ? "vpl-cognome-errore" : undefined}
+                  />
+                  {errori.cognome && <ErroreCampo id="vpl-cognome-errore">{errori.cognome}</ErroreCampo>}
+                </div>
+              </div>
+
+              <div className="vpl-campo">
+                <label htmlFor="vpl-email" className="vpl-label">
+                  Email
+                </label>
+                <p id="vpl-email-aiuto" className="vpl-aiuto">
+                  Ti mandiamo qui il biglietto con il QR code.
+                </p>
+                <input
+                  ref={registra("email")}
+                  id="vpl-email"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  className="vpl-input"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  maxLength={254}
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailUscita(true)}
+                  onKeyDown={avanti}
+                  aria-invalid={emailNonValida || undefined}
+                  aria-describedby={ids(
+                    "vpl-email-aiuto",
+                    mostraRefuso ? "vpl-email-refuso" : errori.email && "vpl-email-errore",
+                  )}
+                />
+                {/* Un refuso nel dominio non si nota scrivendo, e il biglietto
+                    non arriverebbe mai. */}
+                {mostraRefuso && refuso ? (
+                  <div
+                    id="vpl-email-refuso"
+                    className="vpl-refuso"
+                    data-tipo={refuso.impossibile || errori.email ? "errore" : "avviso"}
+                    role="status"
+                  >
+                    <p style={{ margin: 0 }}>
+                      {refuso.impossibile ? (
+                        <>
+                          L&apos;indirizzo finisce con «{refuso.dominio}», che non esiste
+                          {refuso.suggerimento ? (
+                            <>
+                              : forse intendevi <strong>{refuso.suggerimento}</strong>?
+                            </>
+                          ) : (
+                            ". Correggilo per ricevere il biglietto."
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          Controlla l&apos;indirizzo: forse intendevi <strong>{refuso.suggerimento}</strong>?
+                        </>
+                      )}
+                    </p>
+                    <div className="vpl-refuso-azioni">
+                      {refuso.suggerimento && (
+                        <button
+                          type="button"
+                          className="vpl-mini-btn"
+                          onClick={() => usaSuggerimento(refuso.suggerimento!)}
+                        >
+                          <i className="fas fa-check" aria-hidden="true" />
+                          Usa {refuso.suggerimento}
+                        </button>
+                      )}
+                      {!refuso.impossibile && (
+                        <button type="button" className="vpl-mini-btn vpl-mini-btn-neutro" onClick={confermaEmail}>
+                          È giusto così
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  errori.email && <ErroreCampo id="vpl-email-errore">{errori.email}</ErroreCampo>
                 )}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, color: "#1A2332", fontSize: 14 }}>{s.titolo}</div>
-                <div style={{ fontSize: 13, color: "var(--text-mid)", marginTop: 2 }}>
-                  {s.giornoLabel}, {s.orario} . {s.luogo}
-                </div>
-                <div style={{ fontSize: 12, marginTop: 6, fontWeight: 600 }}>
-                  {remaining === undefined ? (
-                    <span style={{ color: "var(--text-light)" }}>Posti disponibili</span>
-                  ) : full ? (
-                    <span style={{ color: "#B7791F" }}>
-                      Al completo . iscriviti in lista d&apos;attesa
-                    </span>
-                  ) : (
-                    <span style={{ color: "var(--primary-dark)" }}>{remaining} posti rimanenti</span>
-                  )}
-                </div>
+
+              <div className="vpl-campo">
+                <label htmlFor="vpl-telefono" className="vpl-label">
+                  Telefono <span className="vpl-opz">(facoltativo)</span>
+                </label>
+                <p id="vpl-telefono-aiuto" className="vpl-aiuto">
+                  Solo per comunicazioni urgenti sull&apos;evento.
+                </p>
+                <input
+                  id="vpl-telefono"
+                  name="telefono"
+                  type="tel"
+                  inputMode="tel"
+                  className="vpl-input"
+                  autoComplete="tel"
+                  enterKeyHint="next"
+                  maxLength={30}
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  onKeyDown={avanti}
+                  aria-describedby="vpl-telefono-aiuto"
+                />
               </div>
             </div>
-          );
-        })}
+
+            {/* ── Chi sei? ── */}
+            <fieldset
+              className="vpl-fieldset"
+              aria-describedby={ids("vpl-chi-aiuto", errori.categoria && "vpl-chi-errore")}
+            >
+              <legend className="vpl-legend">Chi sei?</legend>
+              <p id="vpl-chi-aiuto" className="vpl-aiuto">
+                Ci aiuta a organizzare l&apos;accoglienza.
+              </p>
+              <div ref={chipsRef} className="vpl-chips" data-errore={Boolean(errori.categoria)}>
+                {CATEGORIE.map((c) => {
+                  const scelta = categoria === c.value;
+                  return (
+                    <label key={c.value} className="vpl-chip" data-scelto={scelta}>
+                      <input
+                        type="radio"
+                        name="categoria"
+                        value={c.value}
+                        checked={scelta}
+                        onChange={() => setCategoria(c.value)}
+                        required
+                        aria-describedby={errori.categoria ? "vpl-chi-errore" : undefined}
+                      />
+                      <i className={`fas ${scelta ? "fa-circle-check" : ICONA_CATEGORIA[c.value]}`} aria-hidden="true" />
+                      {c.label}
+                    </label>
+                  );
+                })}
+              </div>
+              {errori.categoria && (
+                <div style={{ marginTop: 10 }}>
+                  <ErroreCampo id="vpl-chi-errore">{errori.categoria}</ErroreCampo>
+                </div>
+              )}
+            </fieldset>
+
+            {categoria && categoria !== "pubblico" && (
+              <div className="vpl-pannello" key={categoria}>
+                {categoria === "studente" && (
+                  <p className="vpl-nota">
+                    <i className="fas fa-circle-info" aria-hidden="true" />
+                    <span>Se hai meno di 14 anni, chiedi a un genitore o a un docente di iscriverti.</span>
+                  </p>
+                )}
+                {categoria === "scuola_docente" && (
+                  <p className="vpl-nota">
+                    <i className="fas fa-circle-info" aria-hidden="true" />
+                    <span>
+                      Ogni studente si iscrive con il proprio indirizzo email. Per un gruppo classe numeroso scrivici
+                      a <a href="mailto:info@bioergotech.org">info@bioergotech.org</a>.
+                    </span>
+                  </p>
+                )}
+
+                {etichettaOrg && (
+                  <div className={conClasse ? "vpl-griglia-scuola" : undefined}>
+                    <div className="vpl-campo">
+                      <label htmlFor="vpl-organizzazione" className="vpl-label">
+                        {etichettaOrg} <span className="vpl-opz">(facoltativo)</span>
+                      </label>
+                      <input
+                        id="vpl-organizzazione"
+                        name="organizzazione"
+                        type="text"
+                        className="vpl-input"
+                        autoComplete="organization"
+                        enterKeyHint="next"
+                        maxLength={160}
+                        value={organizzazione}
+                        onChange={(e) => setOrganizzazione(e.target.value)}
+                        onKeyDown={avanti}
+                      />
+                    </div>
+                    {conClasse && (
+                      <div className="vpl-campo">
+                        <label htmlFor="vpl-classe" className="vpl-label">
+                          Classe <span className="vpl-opz">(facoltativo)</span>
+                        </label>
+                        <input
+                          id="vpl-classe"
+                          name="classe"
+                          type="text"
+                          className="vpl-input"
+                          autoComplete="off"
+                          autoCapitalize="characters"
+                          enterKeyHint="next"
+                          maxLength={20}
+                          placeholder="Es. 4A"
+                          value={classe}
+                          onChange={(e) => setClasse(e.target.value)}
+                          onKeyDown={avanti}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {conStartup && (
+                  <>
+                    <div className="vpl-campo">
+                      <label htmlFor="vpl-startup-nome" className="vpl-label">
+                        Nome della startup
+                      </label>
+                      <input
+                        ref={registra("startup_name")}
+                        id="vpl-startup-nome"
+                        name="startup_name"
+                        type="text"
+                        className="vpl-input"
+                        autoComplete="organization"
+                        enterKeyHint="next"
+                        maxLength={120}
+                        required
+                        value={startupName}
+                        onChange={(e) => setStartupName(e.target.value)}
+                        onKeyDown={avanti}
+                        aria-invalid={errori.startup_name ? true : undefined}
+                        aria-describedby={errori.startup_name ? "vpl-startup-nome-errore" : undefined}
+                      />
+                      {errori.startup_name && (
+                        <ErroreCampo id="vpl-startup-nome-errore">{errori.startup_name}</ErroreCampo>
+                      )}
+                    </div>
+                    <div className="vpl-campo">
+                      <label htmlFor="vpl-startup-url" className="vpl-label">
+                        Sito web <span className="vpl-opz">(facoltativo)</span>
+                      </label>
+                      <input
+                        id="vpl-startup-url"
+                        name="startup_url"
+                        type="url"
+                        inputMode="url"
+                        className="vpl-input"
+                        autoComplete="url"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        enterKeyHint="next"
+                        maxLength={300}
+                        placeholder="https://"
+                        value={startupUrl}
+                        onChange={(e) => setStartupUrl(e.target.value)}
+                        onKeyDown={avanti}
+                      />
+                    </div>
+                    <div className="vpl-campo">
+                      <label htmlFor="vpl-startup-desc" className="vpl-label">
+                        Di che cosa si occupa <span className="vpl-opz">(facoltativo)</span>
+                      </label>
+                      <p id="vpl-startup-desc-aiuto" className="vpl-aiuto">
+                        Due righe bastano.
+                      </p>
+                      <textarea
+                        id="vpl-startup-desc"
+                        name="startup_desc"
+                        className="vpl-input"
+                        rows={3}
+                        maxLength={1000}
+                        value={startupDesc}
+                        onChange={(e) => setStartupDesc(e.target.value)}
+                        aria-describedby="vpl-startup-desc-aiuto"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Nota ── */}
+            {notaAperta ? (
+              <div className="vpl-campo">
+                <label htmlFor="vpl-note" className="vpl-label">
+                  Nota <span className="vpl-opz">(facoltativo)</span>
+                </label>
+                <p id="vpl-note-aiuto" className="vpl-aiuto">
+                  Per esempio un&apos;esigenza di accessibilità.
+                </p>
+                <textarea
+                  ref={noteRef}
+                  id="vpl-note"
+                  name="note"
+                  className="vpl-input"
+                  rows={3}
+                  maxLength={1000}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  aria-describedby="vpl-note-aiuto"
+                />
+              </div>
+            ) : (
+              <button type="button" className="vpl-link-btn" onClick={apriNota}>
+                <i className="fas fa-plus" aria-hidden="true" />
+                Aggiungi una nota (facoltativo)
+              </button>
+            )}
+
+            {/* ── Consensi ── */}
+            <div className="vpl-consensi">
+              <label className="vpl-consenso">
+                <input
+                  ref={registra("consenso_privacy")}
+                  type="checkbox"
+                  className="vpl-check"
+                  name="consenso_privacy"
+                  checked={consensoPrivacy}
+                  onChange={(e) => setConsensoPrivacy(e.target.checked)}
+                  required
+                  aria-invalid={errori.consenso_privacy ? true : undefined}
+                  aria-describedby={errori.consenso_privacy ? "vpl-privacy-errore" : undefined}
+                />
+                <span>
+                  <TestoConsensoPrivacy />
+                </span>
+              </label>
+              {errori.consenso_privacy && (
+                <ErroreCampo id="vpl-privacy-errore">{errori.consenso_privacy}</ErroreCampo>
+              )}
+              <label className="vpl-consenso">
+                <input
+                  type="checkbox"
+                  className="vpl-check"
+                  name="consenso_marketing"
+                  checked={consensoMarketing}
+                  onChange={(e) => setConsensoMarketing(e.target.checked)}
+                />
+                <span>
+                  {CONSENSO_MARKETING_TESTO}
+                  <span className="vpl-tag">Facoltativo</span>
+                </span>
+              </label>
+            </div>
+
+            {/* ── Invio ── */}
+            <div className="vpl-invio">
+              <div role="alert" className="vpl-riepilogo-slot">
+                {mostraRiepilogo && (
+                  <div key={tentativi} ref={riepilogoRef} tabIndex={-1} className="vpl-riepilogo">
+                    <p className="vpl-riepilogo-titolo">
+                      <i className="fas fa-circle-exclamation" aria-hidden="true" />
+                      {elencoErrori.length > 0 ? "Prima di inviare, completa questi punti:" : "L'iscrizione non è partita"}
+                    </p>
+                    <ul>
+                      {elencoErrori.map((c) => (
+                        <li key={c}>
+                          <button type="button" onClick={() => focalizza(c)}>
+                            {errori[c]}
+                          </button>
+                        </li>
+                      ))}
+                      {erroreGenerale && (
+                        <li>
+                          <p>{erroreGenerale}</p>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {giornateScelte.length > 0 && (
+                <p className="vpl-scelte">
+                  <i className="fas fa-calendar-check" aria-hidden="true" />
+                  <span>Ti iscrivi per {giornateConArticolo(giornateScelte)}.</span>
+                </p>
+              )}
+
+              <button type="submit" className="btn-primary vpl-invia" disabled={invio} aria-busy={invio || undefined}>
+                {invio ? (
+                  <>
+                    <i className="fas fa-circle-notch fa-spin" aria-hidden="true" />
+                    Invio in corso…
+                  </>
+                ) : (
+                  <>
+                    Conferma l&apos;iscrizione
+                    <i className="fas fa-arrow-right" aria-hidden="true" />
+                  </>
+                )}
+              </button>
+              <p className="sr-only" aria-live="polite">
+                {invio ? "Invio dell'iscrizione in corso." : ""}
+              </p>
+
+              <p className="vpl-piede">
+                Con l&apos;iscrizione attivi anche un account gratuito nel Member Portal della Fondazione.
+              </p>
+            </div>
+          </form>
+        )}
       </div>
-
-      <div className="grid gap-2">
-        <FieldLabel htmlFor="note">Note</FieldLabel>
-        <textarea
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-          style={{ borderRadius: 8, border: "1px solid var(--border-color)", padding: 10, fontSize: 14 }}
-        />
-      </div>
-
-      {/* Consensi */}
-      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", fontSize: 13, color: "var(--text-mid)" }}>
-        <input
-          type="checkbox"
-          checked={consensoPrivacy}
-          onChange={(e) => setConsensoPrivacy(e.target.checked)}
-          style={{ marginTop: 3, accentColor: "var(--primary)" }}
-          required
-        />
-        <span>{CONSENSO_PRIVACY_TESTO} *</span>
-      </label>
-      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", fontSize: 13, color: "var(--text-mid)" }}>
-        <input
-          type="checkbox"
-          checked={consensoMarketing}
-          onChange={(e) => setConsensoMarketing(e.target.checked)}
-          style={{ marginTop: 3, accentColor: "var(--primary)" }}
-        />
-        <span>{CONSENSO_MARKETING_TESTO}</span>
-      </label>
-
-      {error && <p style={{ color: "#E74C6F", fontSize: 14, margin: 0 }}>{error}</p>}
-
-      <Button type="submit" className="w-full" disabled={!canSubmit}>
-        {loading ? "Invio in corso…" : "Conferma iscrizione"}
-      </Button>
-      <p style={{ fontSize: 12, color: "var(--text-light)", margin: 0, textAlign: "center" }}>
-        Iscrivendoti crei (o colleghi) un account nel Member Portal della Fondazione.
-      </p>
-    </form>
-  );
-}
-
-export function RegistrationForm() {
-  return (
-    <Suspense fallback={<div className="card">Caricamento…</div>}>
-      <RegistrationFormInner />
-    </Suspense>
+    </div>
   );
 }

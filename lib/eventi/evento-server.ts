@@ -116,7 +116,11 @@ export async function caricaIscrizione(
 
 export type PostiGiornata = { slug: string; capienza_max: number; confermati: number; rimanenti: number };
 
-/** I posti per giornata dal database (event_seats_remaining). Vuoto se la lettura fallisce. */
+/**
+ * I posti per giornata dal database (event_seats_remaining). Vuoto se la
+ * lettura fallisce: serve solo agli inviti "vieni anche il..." e ai numeri
+ * mostrati, mai a decidere un'iscrizione (quella la decide l'RPC).
+ */
 export async function postiPerGiornata(client: SupabaseClient): Promise<PostiGiornata[]> {
   const { data, error } = await client.rpc("event_seats_remaining");
   if (error || !Array.isArray(data)) return [];
@@ -135,7 +139,9 @@ export async function postiPerGiornata(client: SupabaseClient): Promise<PostiGio
  */
 export async function giornateMancantiNelDatabase(client: SupabaseClient): Promise<string[]> {
   const { data, error } = await client.from("event_sessions").select("slug");
-  if (error || !data) return [];
+  // Una lettura fallita non vuol dire "non manca niente": si lancia, e chi
+  // chiama si ferma invece di andare avanti alla cieca.
+  if (error || !data) throw new Error(`event_sessions: ${error?.message ?? "nessun dato"}`);
   const presenti = new Set((data as { slug: string }[]).map((r) => r.slug));
   return SESSIONS.map((s) => s.slug as string).filter((slug) => !presenti.has(slug));
 }

@@ -26,6 +26,19 @@ export const EVENT = {
   titolo: "Vivere più a lungo: sport e intelligenza artificiale",
   sottotitolo:
     "Due giornate di confronto su come lo sport, la robotica e l'intelligenza artificiale possono allungare e migliorare la vita, con scienziati, medici, campioni dello sport e le nuove idee dei ragazzi e delle startup.",
+  /**
+   * La riga sotto il titolo nell'hero della pagina evento. Una frase sola:
+   * sul telefono deve stare nella prima schermata insieme a date, luoghi e
+   * pulsante di iscrizione. Il sottotitolo lungo resta per la homepage.
+   */
+  sottotitoloBreve: "Campioni, medici e ricercatori a confronto, insieme ai progetti dei ragazzi.",
+  /**
+   * La descrizione per i motori di ricerca e per le anteprime social. Sotto
+   * i 160 caratteri, con date, città e gratuità, che sono le tre cose che
+   * decidono il clic.
+   */
+  metaDescrizione:
+    "Il 10 e l'11 dicembre 2026 a Taranto: campioni, medici e ricercatori su sport, salute e intelligenza artificiale. Ingresso gratuito, iscrizione obbligatoria.",
   tagline:
     "Due giornate, un unico obiettivo: mettere insieme scienza, sport, giovani e impresa per vivere più a lungo e meglio.",
   organizzatore: "Fondazione bioERGOtech",
@@ -39,6 +52,12 @@ export const EVENT = {
   endDateISO: "2026-12-11T13:00:00+01:00",
   /** Immagine Open Graph: l'illustrazione dell'evento, la stessa dell'hero. */
   ogImage: "/assets/images/eventi/vivere-piu-a-lungo/hero.webp",
+  /** Misure reali del file, per le anteprime social (1600x694). */
+  ogImageLarghezza: 1600,
+  ogImageAltezza: 694,
+  /** Testo alternativo dell'illustrazione, nell'hero e nelle anteprime. */
+  ogImageAlt:
+    "Illustrazione: un'atleta corre sul lungomare di Taranto davanti al Castello Aragonese, affiancata dalla figura luminosa di un corpo umano digitale e da una doppia elica del DNA",
 } as const;
 
 export type SessionSlug =
@@ -101,7 +120,7 @@ export const SESSIONS: EventSession[] = [
     mappaUrl: "https://www.google.com/maps/search/?api=1&query=PalaMazzola%2C%20Taranto",
     capienza: 300,
     descrizione:
-      "Una giornata al PalaMazzola. Sei panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi: dieci gruppi in gara presentano le loro idee davanti a una commissione. Nel pomeriggio, il concerto aperto al pubblico.",
+      "Una giornata al PalaMazzola. Sei panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi: dieci gruppi in gara presentano le loro idee davanti a una commissione. In chiusura, il concerto aperto al pubblico.",
   },
   {
     slug: "giorno-2",
@@ -270,12 +289,17 @@ export const RELATORI: Relatore[] = [
 ];
 
 /**
- * Il programma della mattina del giorno 1, come sequenza. Sei panel di
- * dialogo sul tema, senza slide, si alternano ai blocchi di presentazione dei
- * ragazzi, al coffee break, alla chiusura con la squadra della città e alla
- * proclamazione, fino al concerto. I panel durano circa 25 minuti; il 5 e il
- * 6 circa 30, con il tempo liberato dal vecchio panel 7. Qui pubblichiamo temi, protagonisti e ritmo, non gli orari
- * puntuali: la fonte di verità resta il piano interno.
+ * Il programma del 10 dicembre al PalaMazzola (slug giorno-1), come sequenza:
+ * una giornata unica, dalle 9:00 alle 16:00, senza turni separati. Sei panel
+ * di dialogo sul tema, senza slide, si alternano ai blocchi di presentazione
+ * dei ragazzi, al coffee break, alla chiusura con la squadra della città e
+ * alla proclamazione, fino al concerto. I panel durano circa 25 minuti; il 5
+ * e il 6 circa 30, con il tempo liberato dal vecchio panel 7. Qui
+ * pubblichiamo temi, protagonisti e ritmo, non gli orari puntuali: la fonte
+ * di verità resta il piano interno.
+ *
+ * La pagina dà a ogni panel l'ancora `#panel-<n>`: la striscia "Sul palco"
+ * in cima porta lì chi clicca su un volto. Cambiare `n` sposta l'ancora.
  *
  * `tipo` distingue i panel (nodo numerato) dalle voci di raccordo (nodo con
  * icona). `relatori` elenca gli `id` di RELATORI che salgono sul palco in
@@ -376,7 +400,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     tipo: "chiusura",
     icona: "fa-futbol",
     titolo: "La squadra della città",
-    desc: "L'S.S. Taranto sale sul palco per chiudere la mattinata: lo sport come impegno di ogni giorno, per chi gioca e per chi tifa.",
+    desc: "L'S.S. Taranto sale sul palco a chiusura dei panel: lo sport come impegno di ogni giorno, per chi gioca e per chi tifa.",
     partner: ["taranto"],
   },
   {
@@ -436,10 +460,10 @@ export const nomiVoce = (v: ProgrammaVoce): string[] => [
   ...(v.ospiti ?? []),
 ];
 
-/** Moderatrice del giorno 1 al PalaMazzola. Foto nella stessa cartella dei relatori. */
+/** Moderatrice del 10 dicembre al PalaMazzola. Foto nella stessa cartella dei relatori. */
 export const MODERATRICE = {
   nome: "Simona Rolandi",
-  ruolo: "Giornalista Rai. Modera la prima giornata al PalaMazzola.",
+  ruolo: "Giornalista Rai. Modera la giornata del 10 dicembre al PalaMazzola.",
   img: `${SPEAKER_IMG}/simona-rolandi.webp`,
 };
 
@@ -523,26 +547,35 @@ export const STATS = [
   { num: "3", label: "Premi" },
 ];
 
+/**
+ * Sei schede, una per chi arriva sulla pagina. Il pubblico è la maggior parte
+ * di chi si iscrive dal QR, quindi viene per primo, come nel modulo.
+ */
 export const PERCHE_PARTECIPARE = [
+  {
+    icona: "fa-heart-pulse",
+    titolo: "Per chi ama sport e salute",
+    desc: "Ascolti dal vivo campioni olimpici, medici e ricercatori su come allenamento, prevenzione e tecnologia aiutano a vivere meglio e più a lungo.",
+  },
   {
     icona: "fa-graduation-cap",
     titolo: "Per gli studenti",
-    desc: "Incontri scienziati e campioni e presenti il tuo progetto davanti a una commissione e al pubblico.",
+    desc: "Incontri da vicino campioni e scienziati, e vedi i progetti dei tuoi coetanei in gara davanti a una commissione.",
   },
   {
     icona: "fa-school",
     titolo: "Per le scuole",
-    desc: "Porti la tua classe a contatto con ricerca, robotica e IA applicate alla vita reale.",
+    desc: "Porti la classe a contatto con ricerca, robotica e intelligenza artificiale applicate alla vita di tutti i giorni.",
   },
   {
     icona: "fa-flask",
     titolo: "Per gli universitari",
-    desc: "Sviluppi un progetto di ricerca con il supporto di mentor e puoi essere accompagnato verso la sottomissione a una rivista scientifica.",
+    desc: "Sviluppi un progetto di ricerca con il supporto di mentor, con un accompagnamento verso la sottomissione a una rivista scientifica.",
   },
   {
     icona: "fa-rocket",
     titolo: "Per le startup",
-    desc: "Porti la tua startup, spin-off o progetto nello showcase di innovazione, davanti a investitori, partner e istituzioni.",
+    desc: "Allo Showcase dell'11 dicembre incontri investitori, partner e istituzioni, e conosci le realtà innovative del territorio.",
   },
   {
     icona: "fa-landmark",
@@ -551,34 +584,74 @@ export const PERCHE_PARTECIPARE = [
   },
 ];
 
+/**
+ * Le due giornate per i testi delle FAQ, prese da SESSIONS così orari e luoghi
+ * non divergono. Se una giornata manca la build si ferma qui con un messaggio
+ * chiaro: meglio che pubblicare una risposta sbagliata.
+ */
+function giornataFaq(slug: SessionSlug): EventSession {
+  const s = sessionBySlug(slug);
+  if (!s) throw new Error(`content.ts: la giornata "${slug}" non è in SESSIONS.`);
+  return s;
+}
+const FAQ_10 = giornataFaq("giorno-1");
+const FAQ_11 = giornataFaq("giorno-2");
+const faqQuando = (s: EventSession) =>
+  `${s.giornoLabel} ${s.dataISO.slice(0, 4)} al ${s.luogoBreve}, ${s.orario}.`;
+
+/**
+ * Domande frequenti. Le prime sono quelle pratiche (date, costo, giornate,
+ * ingresso, disdetta, biglietto perso, classi), poi chi può partecipare e i
+ * percorsi dedicati. `link` aggiunge un collegamento in fondo alla risposta:
+ * un percorso interno ("/...") o un indirizzo email ("mailto:...").
+ */
 export const FAQ: { q: string; a: string; link?: { href: string; label: string } }[] = [
   {
     q: "Quando e dove si svolge l'evento?",
-    a: "L'evento si tiene il 10 e l'11 dicembre 2026 a Taranto. Il giorno 1 al PalaMazzola, il giorno 2 al Teatro Fusco.",
+    a: `A Taranto, in due giornate. ${faqQuando(FAQ_10)} ${faqQuando(FAQ_11)}`,
   },
   {
     q: "Quanto costa partecipare?",
-    a: "La partecipazione è gratuita. L'iscrizione è obbligatoria perché i posti sono limitati.",
-  },
-  {
-    q: "A chi è rivolto?",
-    a: "A studenti, scuole, autorità, startup, investitori, partner e al pubblico generale interessato a sport, salute e intelligenza artificiale.",
+    a: "Niente: la partecipazione è gratuita. L'iscrizione però è obbligatoria, perché i posti sono limitati.",
   },
   {
     q: "Posso iscrivermi a una sola giornata?",
-    a: "Sì. Puoi scegliere una o più sessioni. Per ciascuna sessione vale la capienza disponibile.",
+    a: `Sì. Puoi venire il ${FAQ_10.etichetta}, l'${FAQ_11.etichetta} o tutte e due le giornate: lo scegli nel modulo. Ogni giornata ha i suoi posti; se una è al completo puoi entrare in lista d'attesa, e ti scriviamo se si libera un posto.`,
   },
   {
-    q: "Come funziona il check-in in loco?",
-    a: "Dopo l'iscrizione ricevi un'email di conferma con un codice e un QR code. Al desk lo mostri allo staff per il check-in della sessione.",
+    q: "Come si entra il giorno dell'evento?",
+    a: "Dopo l'iscrizione ti arriva per email il biglietto, con un QR code personale. All'ingresso mostri il QR dal telefono o stampato; in alternativa basta il codice scritto sul biglietto. Il biglietto vale per le giornate che hai scelto.",
+  },
+  {
+    q: "Non posso più venire: come libero il posto?",
+    a: "Apri il biglietto online dal link nell'email di conferma e, nella sezione Gestisci, annulla la giornata in cui non puoi esserci. Il posto passa a chi è in lista d'attesa. Grazie: così può partecipare un'altra persona.",
+  },
+  {
+    q: "Ho perso il biglietto o non trovo l'email: che cosa faccio?",
+    a: "Controlla prima nella posta indesiderata o nella scheda Promozioni. Se non c'è, iscriviti di nuovo con la stessa email e lo stesso nome: non si crea un doppione, ti rimandiamo il biglietto con tutte le tue giornate.",
+  },
+  {
+    q: "Sono un docente: come iscrivo la classe?",
+    a: "Ogni partecipante si iscrive con la propria email, così riceve il suo biglietto con il QR per l'ingresso. Per un gruppo classe numeroso scrivici: concordiamo insieme le modalità di ingresso.",
+    link: { href: "mailto:info@bioergotech.org", label: "info@bioergotech.org" },
+  },
+  {
+    q: "Posso iscrivere anche un'altra persona?",
+    a: "Sì, con un'iscrizione separata e il suo indirizzo email. Il biglietto è personale: ogni email riceve il proprio, con il proprio QR.",
+  },
+  {
+    q: "A chi è rivolto?",
+    a: "A tutte le persone interessate a sport, salute e intelligenza artificiale: famiglie, studenti, docenti e scuole, istituzioni, startup, investitori e partner.",
   },
   {
     q: "Possono partecipare gli studenti universitari?",
-    a: "Sì, con un bando dedicato. Il percorso “Biotecnologie e Intelligenza Artificiale” è gratuito ed è aperto agli studenti iscritti a corsi di laurea triennale, magistrale, a ciclo unico, dottorato di ricerca o altri percorsi post-universitari, presso università italiane o straniere. Ci si candida individualmente e i team di lavoro si costituiscono in un secondo momento. I dettagli e il modulo sono nella pagina del bando per gli studenti universitari.",
+    a: "Sì, come pubblico e, in più, con un bando dedicato. Il percorso “Biotecnologie e Intelligenza Artificiale” è gratuito ed è aperto agli studenti iscritti a corsi di laurea triennale, magistrale, a ciclo unico, dottorato di ricerca o altri percorsi post-universitari, presso università italiane o straniere. Ci si candida individualmente e i team di lavoro si costituiscono in un secondo momento.",
+    link: { href: `/eventi/${EVENT_SLUG}/universita`, label: "Leggi il bando per gli universitari" },
   },
   {
-    q: "Come faccio a presentare la mia startup nello Showcase del giorno 2?",
-    a: "Con il bando di partecipazione, una selezione pubblica aperta a team di ricerca, spin-off universitari, startup, PMI innovative e imprese. Ci sono tre categorie, un premio per ciascuna e fino a 15 progetti ammessi al palco. La candidatura è gratuita e si presenta dalla pagina del bando. Iscriversi all'evento e candidarsi al bando sono due cose distinte: chi si candida deve comunque iscriversi alla giornata.",
+    q: "Come faccio a presentare la mia startup nello Showcase dell'11 dicembre?",
+    a: "Lo Showcase ha un bando di partecipazione dedicato: una selezione pubblica aperta a team di ricerca, spin-off universitari, startup, PMI innovative e imprese, con tre categorie, un premio per ciascuna e fino a 15 progetti sul palco. Termini, requisiti e criteri sono nella pagina del bando. Iscriversi all'evento e candidarsi al bando sono due cose distinte: chi presenta un progetto si iscrive comunque alla giornata dell'11 dicembre.",
+    link: { href: `/eventi/${EVENT_SLUG}/bando`, label: "Leggi il bando dello Showcase" },
   },
   {
     q: "Durante l'evento si fanno foto e video?",

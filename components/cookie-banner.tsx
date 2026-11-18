@@ -41,6 +41,8 @@ const PERCORSI_SENZA_ADS = [
   "/courses",
   "/eventi/vivere-piu-a-lungo/licei",
   "/eventi/vivere-piu-a-lungo/universita",
+  // Il pannello e l'ingresso dell'evento: pagine dello staff e dei volontari.
+  "/eventi/vivere-piu-a-lungo/admin",
   "/member-portal",
   "/auth",
 ];
@@ -231,6 +233,8 @@ export default function CookieBanner() {
   return (
     <div
       className="no-print"
+      // Lo cerca la barra "Iscriviti gratis" della pagina evento, per non coprirlo.
+      data-cookie-banner=""
       style={{
         position: "fixed",
         bottom: 24,

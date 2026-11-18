@@ -173,7 +173,7 @@ export default async function StaffPage() {
                 con l&apos;indirizzo email a cui e associato il suo profilo.
               </p>
               <div className="flex flex-col gap-3">
-                <Link href="/auth/login" className="btn-primary">
+                <Link href={`/auth/login?returnTo=${encodeURIComponent(STAFF_PATH)}`} className="btn-primary">
                   Accedi
                 </Link>
                 <Link href="/eventi/vivere-piu-a-lungo" className="btn-outline">

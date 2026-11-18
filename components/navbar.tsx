@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // The Foundation trains students to build digital scientists, and the menu
@@ -24,11 +25,15 @@ const navLinks = [
 // already signed in, and their own area when they have one.
 const accesso = { href: "/auth/login", label: "Log in" };
 const account = { href: "/member-portal", label: "My account" };
-// The one call to action on every page: registering for the event.
+// The one call to action on every page: registering for the event. On the
+// event pages, which are in Italian, the same button speaks Italian.
 const joinCta = { href: "/eventi/vivere-piu-a-lungo#iscrizione", label: "Join the event" };
+const joinCtaEventi = { ...joinCta, label: "Iscriviti all'evento" };
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname() ?? "";
+  const cta = pathname === "/eventi" || pathname.startsWith("/eventi/") ? joinCtaEventi : joinCta;
   // Students of the programmes do not use the portal: they see "Student
   // area", pointing to their area. Asked only when a Supabase session cookie
   // is there, so visitors make no request; the server decides from the
@@ -131,8 +136,8 @@ export function Navbar() {
 
             {/* Primary CTA: register for the event */}
             <Link
-              key={joinCta.href}
-              href={joinCta.href}
+              key={cta.href}
+              href={cta.href}
               style={{
                 padding: "9px 20px",
                 borderRadius: "8px",
@@ -147,7 +152,7 @@ export function Navbar() {
               onMouseOver={(e) => (e.currentTarget.style.opacity = "0.85")}
               onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              {joinCta.label} →
+              {cta.label} →
             </Link>
           </div>
 
@@ -207,7 +212,7 @@ export function Navbar() {
             </Link>
 
             <Link
-              href={joinCta.href}
+              href={cta.href}
               onClick={() => setMobileOpen(false)}
               style={{
                 display: "block",
@@ -222,7 +227,7 @@ export function Navbar() {
                 borderRadius: "8px",
               }}
             >
-              {joinCta.label} →
+              {cta.label} →
             </Link>
           </div>
         )}
