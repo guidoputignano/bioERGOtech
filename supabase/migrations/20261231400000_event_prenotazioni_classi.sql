@@ -3,8 +3,9 @@
 --
 -- CHE COSA FA (in una transazione: o tutto, o niente)
 --   1. La nuova capienza: 3500 posti il 10 dicembre (PalaMazzola), 400
---      l'11 dicembre (Teatro Fusco). Chi era in lista d'attesa e ora ci
---      sta viene confermato, in ordine di iscrizione.
+--      l'11 dicembre (Teatro Fusco). Chi era in lista d'attesa non viene
+--      confermato da qui (non riceverebbe l'email): lo dice la query di
+--      controllo in fondo, e si conferma dal pannello.
 --   2. Una quota per le scuole, giornata per giornata (quota_gruppi): i
 --      posti che le classi possono occupare, così ne resta una parte per
 --      il pubblico. Si cambia dal pannello. Null vuol dire: nessun limite
@@ -25,8 +26,8 @@
 --   Editor SQL di Supabase, progetto di produzione: incollare il file intero
 --   ed eseguire, PRIMA del merge del codice che lo usa. Si può rieseguire:
 --   ogni passo controlla quello che c'è già (la capienza si alza fino a 3500
---   e 400, mai si abbassa; la quota delle scuole non si tocca se è già
---   stata decisa). In fondo, la query di controllo.
+--   e 400, mai si abbassa; la quota delle scuole si imposta solo la prima
+--   volta, poi la decide il pannello). In fondo, la query di controllo.
 -- =========================================================
 
 begin;
@@ -36,17 +37,25 @@ update public.event_sessions set capienza_max = 3500 where slug = 'giorno-1' and
 update public.event_sessions set capienza_max = 400  where slug = 'giorno-2' and capienza_max < 400;
 
 -- ── 2. La quota per le scuole ──────────────────────────────────────────
-alter table public.event_sessions
-  add column if not exists quota_gruppi int check (quota_gruppi is null or quota_gruppi >= 0);
+-- Valori di partenza: 500 posti per il pubblico il 10, 100 l'11. Solo alla
+-- prima esecuzione, quando la colonna nasce: dopo la quota si decide dal
+-- pannello, e "nessun limite" (null) è una scelta da rispettare.
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'event_sessions' and column_name = 'quota_gruppi'
+  ) then
+    alter table public.event_sessions
+      add column quota_gruppi int check (quota_gruppi is null or quota_gruppi >= 0);
+    update public.event_sessions set quota_gruppi = 3000 where slug = 'giorno-1';
+    update public.event_sessions set quota_gruppi = 300  where slug = 'giorno-2';
+  end if;
+end;
+$$;
 
 comment on column public.event_sessions.quota_gruppi is
   'Posti che le prenotazioni di classe possono occupare in questa giornata. Null: nessun limite oltre la capienza.';
-
--- Valori di partenza: 500 posti per il pubblico il 10, 100 l'11. Solo se
--- la quota non è ancora stata decisa (dal pannello o da un'esecuzione
--- precedente di questo file).
-update public.event_sessions set quota_gruppi = 3000 where slug = 'giorno-1' and quota_gruppi is null;
-update public.event_sessions set quota_gruppi = 300  where slug = 'giorno-2' and quota_gruppi is null;
 
 -- ── 3. Le prenotazioni di gruppo ───────────────────────────────────────
 create table if not exists public.event_group_bookings (
@@ -460,12 +469,17 @@ $$;
 -- ── 7. Cambiare il numero di persone di una classe ─────────────────────
 -- Meno persone: sempre possibile. Più persone: per ogni giornata
 -- confermata ci devono stare, nella capienza e nella quota; se in una non
--- ci stanno, non cambia niente e si dice quale. Le giornate in lista
--- d'attesa non contano: lì la classe aspetta con il numero nuovo.
--- p_salta: le giornate da non controllare, perché già iniziate (il
--- database non conosce gli orari, la rotta sì). La sera del 10 dicembre una
--- classe può così crescere per l'11 anche se il 10 era pieno.
--- Torna { ok, giornata?, posti_prima, posti_dopo }.
+-- ci stanno, non cambia niente e si dicono tutte le giornate in cui non ci
+-- stanno. Le giornate in lista d'attesa non contano: lì la classe aspetta
+-- con il numero nuovo.
+-- p_salta: le giornate da non controllare, perché già iniziate o concluse
+-- (il database non conosce gli orari, la rotta sì). La sera del 10 dicembre
+-- una classe può così crescere per l'11 anche se il 10 era pieno.
+-- Si bloccano la prenotazione e poi tutte le sue giornate, confermate o in
+-- attesa, nello stesso ordine di event_group_book: una conferma dalla lista
+-- d'attesa nello stesso istante (event_group_promote) aspetta, oppure è già
+-- vista come confermata.
+-- Torna { ok, giornata?, giornate?, posti_prima, posti_dopo }.
 -- La prima versione di questo file aveva tre parametri: si toglie, così
 -- resta una funzione sola.
 drop function if exists public.event_group_update_numbers(uuid, int, int);
@@ -485,6 +499,7 @@ declare
   r            record;
   v_occupati   int;
   v_classi     int;
+  v_pieni      text[] := '{}';
 begin
   select posti into v_prima from public.event_group_bookings where id = p_booking_id for update;
   if v_prima is null then
@@ -492,6 +507,14 @@ begin
   end if;
 
   if v_dopo > v_prima then
+    perform 1
+      from public.event_sessions s
+      join public.event_group_booking_sessions gs on gs.session_id = s.id
+      where gs.booking_id = p_booking_id
+      order by s.slug
+      for update of s;
+
+    -- Una nuova istruzione: vede le conferme arrivate mentre aspettava i lock.
     for r in
       select s.id, s.slug, s.capienza_max, s.quota_gruppi
       from public.event_group_booking_sessions gs
@@ -499,16 +522,19 @@ begin
       where gs.booking_id = p_booking_id and gs.is_waitlist = false
         and not (s.slug = any (coalesce(p_salta, '{}')))
       order by s.slug
-      for update of s
     loop
       select o.persone, o.posti_classi into v_occupati, v_classi
         from public.event_posti_occupati(r.id) o;
       if v_occupati - v_prima + v_dopo > r.capienza_max
          or (r.quota_gruppi is not null and v_classi - v_prima + v_dopo > r.quota_gruppi) then
-        return jsonb_build_object('ok', false, 'motivo', 'posti', 'giornata', r.slug,
-                                  'posti_prima', v_prima, 'posti_dopo', v_dopo);
+        v_pieni := v_pieni || r.slug;
       end if;
     end loop;
+
+    if cardinality(v_pieni) > 0 then
+      return jsonb_build_object('ok', false, 'motivo', 'posti', 'giornata', v_pieni[1], 'giornate', to_jsonb(v_pieni),
+                                'posti_prima', v_prima, 'posti_dopo', v_dopo);
+    end if;
   end if;
 
   -- I check della tabella (1 a 40 studenti, 1 a 10 docenti, 40 in tutto)
@@ -541,6 +567,62 @@ begin
   end if;
   delete from public.event_group_bookings where id = p_booking_id;
   return found;
+end;
+$$;
+
+-- ── 7c. Lo staff conferma una classe in lista d'attesa ─────────────────
+-- In una transazione sola, con il lock della prenotazione e poi della
+-- giornata (lo stesso ordine di event_group_book): il controllo dei posti e
+-- la conferma non si separano, quindi un'iscrizione arrivata nello stesso
+-- istante non porta la giornata oltre i posti senza che lo staff lo sappia.
+-- p_forza: conferma anche oltre la capienza o la quota (lo staff l'ha
+-- chiesto esplicitamente).
+-- Torna { ok, motivo?, gia?, oltre?, persone?, posti_classi? }.
+create or replace function public.event_group_confirm(p_gs_id uuid, p_forza boolean default false)
+returns jsonb
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  v_session  uuid;
+  v_booking  uuid;
+  v_attesa   boolean;
+  v_cap      int;
+  v_quota    int;
+  v_posti    int;
+  v_occupati int;
+  v_classi   int;
+  v_oltre    boolean;
+begin
+  select session_id, booking_id into v_session, v_booking
+    from public.event_group_booking_sessions where id = p_gs_id;
+  if v_session is null then
+    return jsonb_build_object('ok', false, 'motivo', 'non_trovata');
+  end if;
+
+  select posti into v_posti from public.event_group_bookings where id = v_booking for update;
+  select capienza_max, quota_gruppi into v_cap, v_quota
+    from public.event_sessions where id = v_session for update;
+
+  select is_waitlist into v_attesa from public.event_group_booking_sessions where id = p_gs_id;
+  if v_attesa is null or v_posti is null then
+    return jsonb_build_object('ok', false, 'motivo', 'non_trovata');
+  end if;
+  if not v_attesa then
+    return jsonb_build_object('ok', true, 'gia', true);
+  end if;
+
+  select o.persone, o.posti_classi into v_occupati, v_classi
+    from public.event_posti_occupati(v_session) o;
+  v_oltre := v_occupati + v_posti > v_cap
+             or (v_quota is not null and v_classi + v_posti > v_quota);
+  if v_oltre and not coalesce(p_forza, false) then
+    return jsonb_build_object('ok', false, 'motivo', 'posti', 'persone', v_occupati, 'posti_classi', v_classi);
+  end if;
+
+  update public.event_group_booking_sessions set is_waitlist = false
+    where id = p_gs_id and is_waitlist = true;
+  return jsonb_build_object('ok', true, 'gia', false, 'oltre', v_oltre);
 end;
 $$;
 
@@ -611,36 +693,25 @@ revoke all on function public.event_group_update_numbers(uuid, int, int, text[])
 grant execute on function public.event_group_update_numbers(uuid, int, int, text[]) to service_role;
 revoke all on function public.event_group_delete_if_empty(uuid) from public, anon, authenticated;
 grant execute on function public.event_group_delete_if_empty(uuid) to service_role;
+revoke all on function public.event_group_confirm(uuid, boolean) from public, anon, authenticated;
+grant execute on function public.event_group_confirm(uuid, boolean) to service_role;
 revoke all on function public.event_group_promote(uuid) from public, anon, authenticated;
 grant execute on function public.event_group_promote(uuid) to service_role;
-
--- ── 9. Con la capienza nuova, chi era in lista d'attesa ora ci sta ─────
--- In ordine di iscrizione, finché ci sono posti. Le classi ancora non ci
--- sono, quindi contano solo le iscrizioni singole.
-with sessioni as (
-  select s.id, s.capienza_max, (select o.persone from public.event_posti_occupati(s.id) o) as occupati
-  from public.event_sessions s
-),
-in_attesa as (
-  select ers.id, ers.session_id,
-         row_number() over (partition by ers.session_id order by ers.created_at, r.created_at, ers.id) as posizione
-  from public.event_registration_sessions ers
-  join public.event_registrations r on r.id = ers.registration_id
-  where ers.is_waitlist = true
-)
-update public.event_registration_sessions ers
-  set is_waitlist = false
-  from in_attesa a
-  join sessioni s on s.id = a.session_id
-  where ers.id = a.id
-    and s.occupati + a.posizione <= s.capienza_max;
 
 commit;
 
 -- ── Controllo (solo lettura) ───────────────────────────────────────────
 -- Atteso: giorno-1 con capienza 3500 e quota 3000, giorno-2 con capienza
 -- 400 e quota 300; le classi a zero finché nessuno prenota.
-select slug, capienza_max, quota_gruppi, posti_classi, classi_confermate, classi_in_attesa,
-       rimanenti, rimanenti_classi
-from public.event_group_seats()
-order by slug;
+-- persone_in_attesa: chi era in lista d'attesa con la capienza di prima. Il
+-- file non le conferma da solo (non manderebbe l'email): se non è 0, si
+-- confermano dalla scheda Iscritti del pannello, che manda a ciascuna
+-- l'email "si è liberato un posto".
+select g.slug, g.capienza_max, g.quota_gruppi, g.posti_classi, g.classi_confermate, g.classi_in_attesa,
+       g.rimanenti, g.rimanenti_classi,
+       (select count(*)
+          from public.event_registration_sessions ers
+          join public.event_sessions s on s.id = ers.session_id
+          where s.slug = g.slug and ers.is_waitlist) as persone_in_attesa
+from public.event_group_seats() g
+order by g.slug;

@@ -25,7 +25,7 @@ import {
   type PostiClassi,
   type PrenotazioneClasse,
 } from "@/lib/eventi/classi";
-import { emailClasse, type MotivoEmailClasse } from "@/lib/eventi/email-classi";
+import { emailClasse, type EmailClasseInput, type MotivoEmailClasse } from "@/lib/eventi/email-classi";
 import { CODICE_RE as CODICE_ADESIONE_RE, normalizzaCodice as normalizzaCodiceAdesione } from "@/lib/eventi/licei-iscrizioni";
 
 /** La select di una prenotazione con le sue giornate. */
@@ -300,13 +300,21 @@ export async function prenotaClasse(
   return { prenotazione, nuova, giornate };
 }
 
-type RispostaNumeri = { ok?: unknown; motivo?: unknown; giornata?: unknown; posti_prima?: unknown; posti_dopo?: unknown };
+type RispostaNumeri = {
+  ok?: unknown;
+  motivo?: unknown;
+  giornata?: unknown;
+  giornate?: unknown;
+  posti_prima?: unknown;
+  posti_dopo?: unknown;
+};
 
 /**
  * Cambia il numero di studenti e docenti (RPC event_group_update_numbers).
  * Se diminuisce, i posti liberati passano a chi aspetta (promuoviDopoPostiLiberati).
- * `{ ok: false, giornata }`: in quella giornata confermata il numero nuovo non ci sta.
- * `{ ok: false, giornata: null }`: la prenotazione non c'è più.
+ * `{ ok: false, giornata, giornate }`: nelle giornate confermate `giornate`
+ * (tutte, nell'ordine degli slug; `giornata` è la prima) il numero nuovo non ci sta.
+ * `{ ok: false, giornata: null, giornate: [] }`: la prenotazione non c'è più.
  * Lancia se l'RPC fallisce (anche per numeri fuori dai limiti: chi chiama li controlla prima).
  * Non manda l'email al docente: lo decide chi chiama.
  *
@@ -328,7 +336,9 @@ export async function aggiornaNumeriClasse(
   prenotazione: PrenotazioneClasse,
   numeri: { studenti: number; accompagnatori: number },
   opzioni: { promuovi?: boolean; salta?: readonly string[] } = {},
-): Promise<{ ok: true; posti_prima: number; posti_dopo: number } | { ok: false; giornata: string | null }> {
+): Promise<
+  { ok: true; posti_prima: number; posti_dopo: number } | { ok: false; giornata: string | null; giornate: string[] }
+> {
   const { data, error } = await client.rpc("event_group_update_numbers", {
     p_booking_id: prenotazione.id,
     p_studenti: numeri.studenti,
@@ -338,8 +348,10 @@ export async function aggiornaNumeriClasse(
   if (error) throw new Error(`event_group_update_numbers: ${descriviErrore(error)}`);
   const r = (data ?? {}) as RispostaNumeri;
   if (r.ok !== true) {
-    if (r.motivo === "non_trovata") return { ok: false, giornata: null };
-    return { ok: false, giornata: typeof r.giornata === "string" ? r.giornata : null };
+    if (r.motivo === "non_trovata") return { ok: false, giornata: null, giornate: [] };
+    const giornata = typeof r.giornata === "string" ? r.giornata : null;
+    const giornate = Array.isArray(r.giornate) ? r.giornate.filter((g): g is string => typeof g === "string") : [];
+    return { ok: false, giornata, giornate: giornate.length ? giornate : giornata ? [giornata] : [] };
   }
   const prima = numero(r.posti_prima, prenotazione.posti);
   const dopo = numero(r.posti_dopo, numeri.studenti + numeri.accompagnatori);
@@ -456,6 +468,34 @@ export async function annullaGiornataClasse(
   return { tolta: true, prenotazioneCancellata, era, rimaste };
 }
 
+/**
+ * Lo staff conferma una classe in lista d'attesa per una giornata (RPC
+ * event_group_confirm): controllo dei posti e conferma nella stessa
+ * transazione, con il lock della giornata. `forza`: anche oltre la capienza
+ * o la quota. Non manda email. Lancia se l'RPC fallisce.
+ * - "confermata": fatto (`oltre`: oltre i posti, solo con forza);
+ * - "gia": era già confermata (da un collega o dalla lista d'attesa automatica);
+ * - "posti": non ci sta (solo senza forza), con i posti occupati al momento;
+ * - "non_trovata": la giornata non è più nella prenotazione.
+ */
+export async function confermaGiornataClasse(
+  client: SupabaseClient,
+  bridgeId: string,
+  forza: boolean,
+): Promise<
+  | { esito: "confermata"; oltre: boolean }
+  | { esito: "gia" }
+  | { esito: "posti"; persone: number; posti_classi: number }
+  | { esito: "non_trovata" }
+> {
+  const { data, error } = await client.rpc("event_group_confirm", { p_gs_id: bridgeId, p_forza: forza });
+  if (error) throw new Error(`event_group_confirm: ${descriviErrore(error)}`);
+  const r = (data ?? {}) as { ok?: unknown; motivo?: unknown; gia?: unknown; oltre?: unknown; persone?: unknown; posti_classi?: unknown };
+  if (r.ok === true) return r.gia === true ? { esito: "gia" } : { esito: "confermata", oltre: r.oltre === true };
+  if (r.motivo === "posti") return { esito: "posti", persone: numero(r.persone, 0), posti_classi: numero(r.posti_classi, 0) };
+  return { esito: "non_trovata" };
+}
+
 /** Al massimo tante persone confermate per chiamata: oltre, ci pensa il pannello. */
 const MAX_PERSONE_PER_PROMOZIONE = 50;
 
@@ -463,8 +503,9 @@ const MAX_PERSONE_PER_PROMOZIONE = 50;
  * Dopo che in una giornata si sono liberati posti (una classe annullata o
  * ridotta, una persona che ha liberato il posto): conferma prima le classi in
  * attesa che ci stanno (RPC event_group_promote, con email "posto_liberato"
- * a ciascuna), poi le persone singole in attesa (promuoviDaListaAttesa, finché
- * ce n'è posto, al massimo 50 per chiamata). Solo per giornate non concluse.
+ * a ciascuna; solo prima dell'inizio della giornata), poi le persone singole
+ * in attesa (promuoviDaListaAttesa, finché ce n'è posto, al massimo 50 per
+ * chiamata). Solo per giornate non concluse.
  * Non lancia mai: ogni problema finisce nei log.
  * Torna le classi e il numero di persone confermate.
  */
@@ -488,8 +529,16 @@ export async function promuoviDopoPostiLiberati(
     if (Date.now() > Date.parse(sessione.fineISO)) return esito;
 
     // ── 1. Le classi in attesa, in ordine di prenotazione, se ci stanno tutte ──
-    const { data: sess, error: sessError } = await client.from("event_sessions").select("id").eq("slug", slug).maybeSingle();
-    if (sessError || !sess) {
+    // Solo prima dell'inizio: a giornata in corso una classe in attesa non
+    // può più organizzare il viaggio, e un'email "arrivate con un po' di
+    // anticipo" a metà mattina confonde. Lì decide lo staff, dal pannello.
+    const iniziata = Date.now() >= Date.parse(sessione.inizioISO);
+    const { data: sess, error: sessError } = iniziata
+      ? { data: null, error: null }
+      : await client.from("event_sessions").select("id").eq("slug", slug).maybeSingle();
+    if (iniziata) {
+      console.info(`Posti liberati ${slug}: giornata iniziata, le classi in attesa non si confermano in automatico.`);
+    } else if (sessError || !sess) {
       console.error(`Posti liberati ${slug}: giornata non letta:`, sessError ? descriviErrore(sessError) : "non trovata");
     } else {
       const { data: promosse, error: promError } = await client.rpc("event_group_promote", { p_session_id: sess.id });
@@ -556,7 +605,7 @@ export async function inviaEmailClasse(
   resend: Resend,
   prenotazione: PrenotazioneClasse,
   motivo: MotivoEmailClasse,
-  opzioni?: { giornataLiberata?: string; giornataAnnullata?: string; prenotazioneCancellata?: boolean },
+  opzioni?: Omit<EmailClasseInput, "prenotazione" | "motivo">,
 ): Promise<EsitoInvio> {
   try {
     const { subject, html, text } = emailClasse({ prenotazione, motivo, ...opzioni });
