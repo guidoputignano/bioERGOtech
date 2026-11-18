@@ -91,6 +91,8 @@ type TestiCampagna = {
   anteprima: (codiceEsempio: string, codiceClasseEsempio: string) => string;
   /** Come avvisare chi ha l'indirizzo sbagliato. */
   altroModo: string;
+  /** Dopo un invio con email non partite: dove trovarle nei log e come rimediare. */
+  dopoErrori: string;
   /** A chi parte da sola, per le campagne programmate. */
   quellaMattina?: string;
 };
@@ -109,6 +111,8 @@ const TESTI_ISCRITTI = {
   anteprima: (codice: string) =>
     `Un esempio con dati finti (Maria, codice ${codice}): ognuno riceve le proprie giornate e il proprio codice. L'invito ad aggiungere una giornata compare solo se ci sono posti liberi, come adesso.`,
   altroModo: "il telefono, se l'ha lasciato, è nella scheda Iscritti",
+  dopoErrori:
+    "Le email non partite sono nei log di Vercel, con il riferimento dell'iscrizione: a quelle persone puoi rimandare il biglietto dalla scheda Iscritti.",
 };
 
 const TESTI: Record<CampagnaId, TestiCampagna> = {
@@ -140,22 +144,26 @@ const TESTI: Record<CampagnaId, TestiCampagna> = {
     anteprima: (_codice, codiceClasse) =>
       `Un esempio con dati finti (la 4B del Liceo di esempio, codice ${codiceClasse}): ogni docente riceve la propria classe, le proprie giornate, il settore se c'è e il proprio QR.`,
     altroModo: "il telefono del docente è nella scheda Classi",
+    dopoErrori:
+      "Le email non partite sono nei log di Vercel, con il riferimento «prenotazione» di ogni classe: ai docenti di quelle classi puoi rimandare l'email dalla scheda Classi, con «Reinvia l'email».",
     quellaMattina: "ai docenti delle classi prenotate quella mattina",
   },
   invito_scuole: {
     icona: "fa-envelope-open-text",
     descrizione:
-      "Una volta sola, al referente di ogni scuola del percorso dei licei con l'adesione confermata o attiva che non ha ancora prenotato una classe: il programma, come funziona la prenotazione per classe e il link al modulo con il nome della scuola già scritto, da inoltrare ai colleghi. Una scuola ha già prenotato se una classe è arrivata dal suo link, se il referente ha prenotato, o se una prenotazione ha lo stesso nome della scuola.",
+      "Una volta sola, al referente di ogni scuola del percorso dei licei con l'adesione confermata o attiva che non ha ancora prenotato una classe: il programma, come funziona la prenotazione per classe e il link al modulo con il nome della scuola già scritto, da inoltrare ai colleghi. Una email per scuola: chi è referente di due scuole riceve due inviti, ognuno con il suo link. Una scuola ha già prenotato se una classe è arrivata dal suo link, se una prenotazione ha lo stesso nome della scuola, o se ha prenotato il referente e segue solo quella scuola.",
     invia: "Invia a",
     chi: scuole,
     riceverebbero: (n) => (n === 1 ? "scuola: il referente la riceverebbe adesso" : "scuole: i referenti la riceverebbero adesso"),
     ognuno: (n) =>
       n === 1
         ? "Il referente riceve l'invito con il link che riempie il nome della scuola."
-        : "Ogni referente riceve l'invito con il link che riempie il nome della propria scuola.",
+        : "Per ogni scuola il referente riceve un invito, con il link che riempie il nome di quella scuola: chi segue più scuole ne riceve uno per ciascuna.",
     anteprima: () =>
-      "Un esempio con dati finti (Maria, Liceo di esempio): ogni referente riceve il nome della propria scuola e il proprio link, che riempie il modulo con la scuola. Il link dell'esempio non riempie niente.",
+      "Un esempio con dati finti (Maria, Liceo di esempio): ogni scuola ha il proprio invito, con il suo nome e il suo link, che riempie il modulo con la scuola. Chi è referente di più scuole riceve un invito per ciascuna, con il nome della scuola anche nell'oggetto. Il link dell'esempio non riempie niente.",
     altroModo: "i contatti del referente sono nella console del percorso dei licei",
+    dopoErrori:
+      "Le email non partite sono nei log di Vercel, con il riferimento «adesione» di ogni scuola. Da qui l'invito non si può rimandare: i contatti dei referenti sono nella console del percorso dei licei, scheda Adesioni e iscrizioni, e puoi scrivere loro a mano con il link al modulo delle classi seguito da ?scuola= e dal codice LIC della scuola, che riempie il modulo.",
   },
 };
 
@@ -315,7 +323,7 @@ function NonInviabili({ c }: { c: VistaCampagna }) {
           <summary>Vedi chi</summary>
           <ul className="evc-elenco">
             {c.nonInviabili.map((x) => (
-              <li key={`${x.email}-${x.nome}-${x.motivo}`}>
+              <li key={x.rif}>
                 <strong>{x.nome || "Senza nome"}</strong>, {x.email}: {x.motivo}.
               </li>
             ))}
@@ -465,12 +473,7 @@ function SchedaCampagna({
             <i className="fas fa-circle-check" aria-hidden="true" />
             <div>
               <strong>Inviata {quando(c.inviato_at)}.</strong> {descriviEsito(c.esito)}.{" "}
-              {c.esito.errori > 0 && (
-                <>
-                  Le email non partite sono nei log di Vercel, con il riferimento dell&apos;iscrizione: a quelle
-                  persone puoi rimandare il biglietto dalla scheda Iscritti.
-                </>
-              )}
+              {c.esito.errori > 0 && testi.dopoErrori}
             </div>
           </div>
         ) : (

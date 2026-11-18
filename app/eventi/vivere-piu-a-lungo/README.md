@@ -258,7 +258,12 @@ Per lo staff:
 - Il **Riepilogo** conta persone e classi insieme, e segnala le classi in
   lista d'attesa.
 - Alla porta il QR della classe apre la sua scheda: si indica quante persone
-  entrano ("23 di 30"), e chi arriva dopo si aggiunge.
+  entrano ("23 di 30"), e chi arriva dopo si aggiunge. "Correggi il numero"
+  abbassa il conteggio (0 annulla l'ingresso della classe). Finché la scheda
+  aspetta il numero, un altro codice (scritto o dal lettore USB) non viene
+  letto: prima si completa o si chiude la scheda.
+- Quando una giornata è iniziata, i posti liberati da una classe non passano
+  in automatico a chi aspetta: il pannello lo dice, e si conferma a mano.
 - Lista da stampare: `stampa?giornata=giorno-1&parte=classi`. CSV:
   `/api/eventi/admin/export?tipo=classi`.
 - **Comunicazioni**: l'invito alle scuole del percorso dei licei (una volta) e

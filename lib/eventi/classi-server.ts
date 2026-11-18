@@ -320,8 +320,8 @@ type RispostaNumeri = {
  *
  * `salta`: le giornate in cui non controllare i posti, perché già iniziate
  * (la pagina della classe: la sera del 10 una classe può crescere per l'11
- * anche se il 10 era pieno). Lo staff non salta niente: vede il problema e
- * può forzare.
+ * anche se il 10 era pieno). Lo staff salta le giornate concluse e quelle
+ * che ha accettato di superare ("Salva comunque"): le altre si controllano.
  *
  * Con `promuovi: false` non passa i posti a nessuno: lo fa chi chiama, per
  * esempio dopo aver risposto (la pagina della classe non aspetta le email

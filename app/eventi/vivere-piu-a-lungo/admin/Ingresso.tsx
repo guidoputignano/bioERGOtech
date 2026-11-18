@@ -38,10 +38,18 @@
  * aggiunge i ritardatari ("23 di 30 entrati"). La scheda manda alla rotta
  * quante persone mostrava già entrate: se nel frattempo il numero è
  * cambiato, non si scrive niente e la scheda si aggiorna. Mentre la scheda
- * aspetta il numero, la fotocamera non legge altri QR.
+ * aspetta il numero, la fotocamera non legge altri QR e il campo del codice
+ * (anche dal lettore USB) non la sostituisce: lo dice sotto il campo. I
+ * pulsanti della scheda non prendono il fuoco da soli, così un lettore USB
+ * non la conferma mai con il suo Invio; sul computer il fuoco resta nel
+ * campo del codice e ci torna quando una scheda si chiude (sul telefono va
+ * sulla scheda stessa, dove un Invio non fa niente). Se una classe risulta già entrata,
+ * "Correggi il numero" abbassa quante persone risultano entrate (0 annulla
+ * l'ingresso di tutta la classe), anche dopo che l'esito verde è sparito.
  */
 
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { SESSIONS, giornateConArticolo, sessionBySlug } from "../content";
 import { descriviPersone } from "@/lib/eventi/classi";
 
@@ -470,6 +478,10 @@ function entranoPredefinite(c: SchedaClasse): number {
 /** Quante persone di una classe possono ancora entrare: la tabella ne accetta al massimo 60. */
 const MAX_PRESENTI_CLASSE = 60;
 
+/** Un codice arrivato mentre la scheda di una classe aspetta il numero: non la sostituisce. */
+const TESTO_SCHEDA_APERTA =
+  "Prima completa la scheda della classe, oppure chiudila con Chiudi (o con Esc). Poi leggi di nuovo questo codice.";
+
 const nomeCompleto = (p?: { nome: string; cognome: string }) => (p ? `${p.nome} ${p.cognome}`.trim() : "");
 
 /** "Liceo Archita, classe 4B": organizzazione e classe in una riga. */
@@ -519,6 +531,8 @@ function annuncioPer(r: Risultato): string {
     case "classe": {
       const c = r.classe;
       if (!c) return "Classe trovata.";
+      // La scheda riaperta dopo "Correggi il numero": prima di tutto, com'è andata.
+      if (r.messaggio) return r.messaggio;
       const chi = `${nomeDellaClasse(c.classe)}, ${c.istituto}`;
       if (r.cambiata) return `${chi}: i numeri sono cambiati nel frattempo, controlla e conferma di nuovo.`;
       if (c.stato === "lista_attesa") return `${chi}: in lista d'attesa per oggi.`;
@@ -603,6 +617,8 @@ export function Ingresso({
   const [risultato, setRisultato] = useState<Risultato | null>(null);
   const [inCorso, setInCorso] = useState(false);
   const [codice, setCodice] = useState("");
+  /** La scheda di classe (il suo `n`) aperta quando un codice è stato fermato: il messaggio vale finché resta lei. */
+  const [codiceFermo, setCodiceFermo] = useState<number | null>(null);
   const [annuncio, setAnnuncio] = useState("");
   const [suono, setSuono] = useState(true);
   const [online, setOnline] = useState(true);
@@ -728,7 +744,7 @@ export function Ingresso({
   /* ── Ingresso ── */
 
   const verifica = useCallback(
-    async (chiave: Chiave, forza = false) => {
+    async (chiave: Chiave, forza = false, nota?: string) => {
       if (occupatoRef.current) return;
       occupatoRef.current = true;
       setInCorso(true);
@@ -758,7 +774,14 @@ export function Ingresso({
         const j = r.json as unknown as RispostaIngresso;
         if (j.esito === "classe" && j.classe) {
           // La scheda della classe: si scrive solo quando il volontario dice quante persone entrano.
-          mostra({ tipo: "classe", giornata: g, chiave: { classe: j.classe.id }, classe: j.classe, cambiata: j.cambiata });
+          mostra({
+            tipo: "classe",
+            giornata: g,
+            chiave: { classe: j.classe.id },
+            classe: j.classe,
+            cambiata: j.cambiata,
+            messaggio: nota,
+          });
           return;
         }
         if (j.esito === "entrato" && j.bridgeId && j.forzato) FORZATI.set(j.bridgeId, j.forzato);
@@ -1114,6 +1137,23 @@ export function Ingresso({
     return () => window.clearTimeout(timer);
   }, [risultato]);
 
+  // Il fuoco dopo ogni esito. Quando una carta cambia o si chiude, il
+  // pulsante premuto sparisce con lei e il fuoco finirebbe sulla pagina.
+  // Sul computer torna al campo del codice, così il lettore USB legge subito
+  // il biglietto dopo (se il fuoco è altrove, per esempio nella ricerca per
+  // nome, resta lì). Sul telefono la scheda di una classe prende il fuoco
+  // lei, non il suo pulsante: la tastiera si chiude e lo screen reader la
+  // legge per prima, ma un Invio non la conferma.
+  useEffect(() => {
+    const attivo = document.activeElement;
+    const perso = !attivo || attivo === document.body;
+    if (window.matchMedia?.("(hover: hover) and (pointer: fine)").matches) {
+      if (perso) campoRef.current?.focus({ preventScroll: true });
+    } else if (perso || risultato?.tipo === "classe") {
+      palcoRef.current?.querySelector<HTMLElement>(".ing-esito-di-classe")?.focus({ preventScroll: true });
+    }
+  }, [risultato]);
+
   useEffect(() => {
     if (!risultato) return;
     const tasto = (e: KeyboardEvent) => {
@@ -1153,7 +1193,20 @@ export function Ingresso({
   const inviaCodice = (e: FormEvent) => {
     e.preventDefault();
     const testo = codice.trim();
-    if (!testo || inCorso) return;
+    if (!testo) return;
+    // La scheda di una classe aspetta il numero: un codice scritto o letto dal
+    // lettore USB non la sostituisce (come per la fotocamera). Il campo si
+    // svuota, così il codice dopo non si attacca a questo.
+    if (schedaApertaRef.current) {
+      sbloccaAudio();
+      setCodice("");
+      setCodiceFermo(risultato?.n ?? null);
+      setAnnuncio(TESTO_SCHEDA_APERTA);
+      segnala("attenzione");
+      campoRef.current?.focus({ preventScroll: true });
+      return;
+    }
+    if (inCorso) return;
     sbloccaAudio();
     setCodice("");
     // Il codice scritto a mano vale sempre, anche se è lo stesso di prima.
@@ -1207,9 +1260,16 @@ export function Ingresso({
   /**
    * Annulla l'ingresso di una classe, o solo gli ultimi entrati: le persone
    * tornano da `da` ad `a` (null: nessuna). Se nel frattempo il numero è
-   * cambiato, la rotta non tocca niente e lo dice.
+   * cambiato, la rotta non tocca niente e lo dice. Restituisce com'è andata,
+   * per la scheda della classe che l'ha chiesto ("Correggi il numero").
    */
-  const annullaIngressoClasse = async (bridgeId: string, nome: string, da: number, a: number | null, forzato?: Forzato) => {
+  const annullaIngressoClasse = async (
+    bridgeId: string,
+    nome: string,
+    da: number,
+    a: number | null,
+    forzato?: Forzato,
+  ): Promise<{ ok: boolean; testo: string }> => {
     setAnnullando(bridgeId);
     setEsitoUltimi(null);
     const tipo = forzato ?? FORZATI.get(chiaveClasse(bridgeId));
@@ -1219,13 +1279,13 @@ export function Ingresso({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ annullaClasse: bridgeId, da, a, ...(tipo ? { forzato: tipo } : {}) }),
       });
-      if (!montatoRef.current) return;
+      if (!montatoRef.current) return { ok: false, testo: "" };
       if (!r.ok) {
         const testo = erroreDa(r.json, "L'annullamento non è riuscito. Riprova.");
         setEsitoUltimi({ tono: "errore", testo });
         setAnnuncio(testo);
         if (r.status === 409) void aggiornaStato();
-        return;
+        return { ok: false, testo };
       }
       if (a === null) FORZATI.delete(chiaveClasse(bridgeId));
       const testo = r.json?.giornataTolta
@@ -1240,8 +1300,11 @@ export function Ingresso({
       setRisultato((r2) => (r2?.bridgeId === bridgeId ? null : r2));
       ultimoLettoRef.current = null;
       void aggiornaStato();
+      return { ok: true, testo };
     } catch (err) {
-      if (montatoRef.current) setEsitoUltimi({ tono: "errore", testo: messaggioRete(err) });
+      const testo = messaggioRete(err);
+      if (montatoRef.current) setEsitoUltimi({ tono: "errore", testo });
+      return { ok: false, testo };
     } finally {
       if (montatoRef.current) {
         setAnnullando(null);
@@ -1543,7 +1606,7 @@ export function Ingresso({
                   r={risultato}
                   classe={risultato.classe}
                   inCorso={inCorso}
-                  annullando={annullando !== null && annullando === risultato.bridgeId}
+                  annullando={annullando !== null && annullando === (risultato.bridgeId ?? risultato.classe.bridgeId)}
                   onChiudi={chiudiEsito}
                   onEntra={(n, forza) => {
                     sbloccaAudio();
@@ -1560,6 +1623,15 @@ export function Ingresso({
                         risultato.forzato,
                       );
                     }
+                  }}
+                  onCorreggi={async (a) => {
+                    // La scheda di una classe già entrata: le persone tornano al numero giusto
+                    // (null: nessuna), poi la scheda si riapre com'è adesso, con l'esito.
+                    const c = risultato.classe;
+                    if (!c?.bridgeId || c.presenti === null) return { ok: false, testo: "" };
+                    const esito = await annullaIngressoClasse(c.bridgeId, classeInFrase(c.classe), c.presenti, a);
+                    if (esito.ok && montatoRef.current) await verifica({ classe: c.id }, false, esito.testo);
+                    return esito;
                   }}
                 />
               )}
@@ -1624,6 +1696,9 @@ export function Ingresso({
               È scritto sotto il QR, nell&apos;email e sul biglietto stampato. Bastano le 8 lettere e cifre dopo VPL-
               (VPC- per le classi).
             </p>
+            {codiceFermo !== null && risultato?.tipo === "classe" && risultato.n === codiceFermo && (
+              <p className="ing-msg ing-msg-errore">{TESTO_SCHEDA_APERTA}</p>
+            )}
           </form>
 
           {/* ── Biglietto dimenticato ── */}
@@ -1926,6 +2001,11 @@ function StatoClasseOggi({ t, giornata }: { t: TrovataClasse; giornata: string }
  * entrano adesso) e, dopo, l'esito verde ("23 di 30 entrati") con
  * l'annullamento. Il numero parte da quello prenotato, o da quelli che
  * mancano se una parte della classe è già entrata.
+ *
+ * Il pulsante principale non prende il fuoco da solo: con un lettore USB
+ * l'Invio del biglietto dopo registrerebbe la classe senza che nessuno
+ * l'abbia deciso. Per una classe già entrata, "Correggi il numero" porta le
+ * persone entrate a un numero più basso (0: nessuna).
  */
 function CartaClasse({
   r,
@@ -1935,6 +2015,7 @@ function CartaClasse({
   onChiudi,
   onEntra,
   onAnnulla,
+  onCorreggi,
 }: {
   r: Risultato;
   classe: SchedaClasse;
@@ -1943,21 +2024,22 @@ function CartaClasse({
   onChiudi: () => void;
   onEntra: (entrano: number, forza: boolean) => void;
   onAnnulla: () => void;
+  /** Le persone entrate tornano ad `a` (null: nessuna). */
+  onCorreggi: (a: number | null) => Promise<{ ok: boolean; testo: string }>;
 }) {
   const idCampo = useId();
+  const idCorrezione = useId();
   const giaDentro = c.presenti ?? 0;
   const massimo = Math.max(1, MAX_PRESENTI_CLASSE - giaDentro);
   const [valore, setValore] = useState(() => String(Math.min(entranoPredefinite(c), massimo)));
-  const principale = useRef<HTMLButtonElement>(null);
+  const [correggi, setCorreggi] = useState(false);
+  const [corretto, setCorretto] = useState("");
+  const [erroreCorrezione, setErroreCorrezione] = useState<string | null>(null);
+  const campoCorrezione = useRef<HTMLInputElement>(null);
+  const apriCorrezione = useRef<HTMLButtonElement>(null);
   const entrata = r.tipo === "classe_entrata";
   const nomeClasse = nomeDellaClasse(c.classe);
   const tutti = c.presenti !== null && c.presenti >= c.posti;
-
-  // La scheda chiede una decisione: il pulsante principale prende il fuoco
-  // (senza aprire la tastiera del telefono), così da computer basta Invio.
-  useEffect(() => {
-    if (!entrata) principale.current?.focus({ preventScroll: true });
-  }, [entrata]);
 
   const n = /^\d{1,2}$/.test(valore.trim()) ? Number(valore.trim()) : Number.NaN;
   const valido = Number.isInteger(n) && n >= 1 && n <= massimo;
@@ -1969,6 +2051,38 @@ function CartaClasse({
     e.preventDefault();
     if (!valido || inCorso) return;
     onEntra(n, c.stato !== "confermato");
+  };
+
+  // "Correggi il numero": solo per una classe con un ingresso registrato oggi.
+  // Il campo non scarta le lettere: un codice letto qui per errore dal
+  // lettore USB resta un numero non valido, e il suo Invio non corregge niente.
+  const puoCorreggere = c.presenti !== null && c.presenti >= 1 && Boolean(c.bridgeId);
+  const massimoCorretto = giaDentro - 1;
+  const m = /^\d{1,2}$/.test(corretto.trim()) ? Number(corretto.trim()) : Number.NaN;
+  const correzioneValida = Number.isInteger(m) && m >= 0 && m <= massimoCorretto;
+  const occupato = inCorso || annullando;
+  const etichettaCorrezione = !correzioneValida
+    ? "Correggi il numero"
+    : m === 0
+      ? "Annulla l'ingresso della classe"
+      : `Correggi: ${m} di ${c.posti} entrati`;
+  const mostraCorrezione = (si: boolean) => {
+    // Subito, dentro il tocco: su iPhone la tastiera si apre solo così.
+    flushSync(() => {
+      setCorreggi(si);
+      setErroreCorrezione(null);
+      if (si) setCorretto("");
+    });
+    if (si) campoCorrezione.current?.focus();
+    else apriCorrezione.current?.focus({ preventScroll: true });
+  };
+  const inviaCorrezione = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!correzioneValida || occupato) return;
+    setErroreCorrezione(null);
+    const esito = await onCorreggi(m === 0 ? null : m);
+    // Se è andata bene la scheda si riapre aggiornata; altrimenti resta qui, con il perché.
+    if (!esito.ok) setErroreCorrezione(esito.testo || "La correzione non è riuscita. Riprova.");
   };
 
   const persone = `${descriviPersone(c.studenti, c.accompagnatori)}, ${c.posti} in tutto`;
@@ -1986,7 +2100,7 @@ function CartaClasse({
             ? "Altre persone entrate"
             : "Classe entrata";
     return (
-      <div className="ing-esito ing-esito-ok ing-esito-di-classe" data-esito={r.tipo}>
+      <div className="ing-esito ing-esito-ok ing-esito-di-classe" data-esito={r.tipo} tabIndex={-1}>
         <div className="ing-esito-scorre">
           <p className="ing-esito-stato">
             <i className="fas fa-circle-check" aria-hidden="true" />
@@ -2070,12 +2184,18 @@ function CartaClasse({
       data-esito={r.tipo}
       role="group"
       aria-label={`Scheda della ${classeInFrase(c.classe)}, ${c.istituto}`}
+      tabIndex={-1}
     >
       <div className="ing-esito-scorre">
         <p className="ing-esito-stato">
           <i className={`fas ${icona}`} aria-hidden="true" />
           <span>{stato}</span>
         </p>
+        {r.messaggio && (
+          <p className="ing-esito-avviso ing-esito-avviso-ok">
+            <i className="fas fa-circle-check" aria-hidden="true" /> {r.messaggio}
+          </p>
+        )}
         {r.cambiata && (
           <p className="ing-esito-avviso">
             Nel frattempo i numeri della classe sono cambiati (un altro telefono, o un ingresso già salvato): controlla
@@ -2113,69 +2233,129 @@ function CartaClasse({
           )}
         </p>
       </div>
-      <form className="ing-esito-azioni" onSubmit={invia} noValidate>
-        <div className="ing-passi">
-          <label htmlFor={idCampo} className="ing-passi-label">
-            {c.presenti !== null ? "Quante altre persone entrano?" : "Quante persone entrano adesso?"}
-          </label>
-          <div className="ing-passi-riga">
-            <button
-              type="button"
-              className="ing-passi-btn"
-              onClick={() => cambia(-1)}
-              disabled={inCorso || (Number.isInteger(n) && n <= 1)}
-              aria-label="Una persona in meno"
-            >
-              <i className="fas fa-minus" aria-hidden="true" />
-            </button>
-            <input
-              id={idCampo}
-              className="ing-passi-campo"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="off"
-              value={valore}
-              onChange={(e) => setValore(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
-              aria-invalid={!valido}
-              aria-describedby={`${idCampo}-aiuto`}
-            />
-            <button
-              type="button"
-              className="ing-passi-btn"
-              onClick={() => cambia(1)}
-              disabled={inCorso || (Number.isInteger(n) && n >= massimo)}
-              aria-label="Una persona in più"
-            >
-              <i className="fas fa-plus" aria-hidden="true" />
-            </button>
+      {correggi ? (
+        <form className="ing-esito-azioni" onSubmit={inviaCorrezione} noValidate>
+          <div className="ing-passi">
+            <label htmlFor={idCorrezione} className="ing-passi-label">
+              Quante persone della classe sono entrate davvero?
+            </label>
+            <div className="ing-passi-riga">
+              <input
+                ref={campoCorrezione}
+                id={idCorrezione}
+                className="ing-passi-campo"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                maxLength={2}
+                value={corretto}
+                onChange={(e) => {
+                  setCorretto(e.target.value);
+                  setErroreCorrezione(null);
+                }}
+                aria-invalid={corretto.trim() !== "" && !correzioneValida}
+                aria-describedby={`${idCorrezione}-aiuto`}
+              />
+            </div>
+            <p id={`${idCorrezione}-aiuto`} className="ing-passi-aiuto">
+              {!correzioneValida
+                ? massimoCorretto > 0
+                  ? `Ora ne risultano ${giaDentro}. Scrivi un numero da 0 a ${massimoCorretto}: con 0 si annulla l'ingresso di tutta la classe.`
+                  : "Ora ne risulta 1. Scrivi 0 per annullare l'ingresso della classe."
+                : m === 0
+                  ? "Si annulla l'ingresso di tutta la classe."
+                  : `Risulteranno entrate ${m} di ${c.posti} persone, ${giaDentro - m} in meno di adesso.`}
+            </p>
+            {erroreCorrezione && (
+              <p className="ing-esito-avviso" role="alert">
+                {erroreCorrezione}
+              </p>
+            )}
           </div>
-          <p id={`${idCampo}-aiuto`} className="ing-passi-aiuto">
-            {!valido
-              ? `Scrivi un numero da 1 a ${massimo}.`
-              : giaDentro + n > c.posti
-                ? `${giaDentro + n - c.posti} in più della prenotazione (${c.posti}).`
-                : c.presenti !== null
-                  ? `In tutto saranno ${giaDentro + n} di ${c.posti}.`
-                  : `Prenotate ${c.posti} persone.`}
-          </p>
-        </div>
-        <button
-          ref={principale}
-          type="submit"
-          className="ing-esito-btn ing-esito-btn-pieno"
-          disabled={inCorso || !valido}
-        >
-          {inCorso ? (
-            <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" />
-          ) : (
-            <i className="fas fa-door-open" aria-hidden="true" />
-          )}{" "}
-          {etichetta}
-        </button>
-        <button type="button" className="ing-esito-btn" onClick={onChiudi}>
-          Chiudi
-        </button>
-      </form>
+          <button type="submit" className="ing-esito-btn ing-esito-btn-pieno" disabled={occupato || !correzioneValida}>
+            {occupato ? (
+              <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" />
+            ) : (
+              <i className="fas fa-pen" aria-hidden="true" />
+            )}{" "}
+            {etichettaCorrezione}
+          </button>
+          <button type="button" className="ing-esito-btn" onClick={() => mostraCorrezione(false)} disabled={occupato}>
+            Lascia com&apos;è
+          </button>
+        </form>
+      ) : (
+        <form className="ing-esito-azioni" onSubmit={invia} noValidate>
+          <div className="ing-passi">
+            <label htmlFor={idCampo} className="ing-passi-label">
+              {c.presenti !== null ? "Quante altre persone entrano?" : "Quante persone entrano adesso?"}
+            </label>
+            <div className="ing-passi-riga">
+              <button
+                type="button"
+                className="ing-passi-btn"
+                onClick={() => cambia(-1)}
+                disabled={inCorso || (Number.isInteger(n) && n <= 1)}
+                aria-label="Una persona in meno"
+              >
+                <i className="fas fa-minus" aria-hidden="true" />
+              </button>
+              <input
+                id={idCampo}
+                className="ing-passi-campo"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                value={valore}
+                onChange={(e) => setValore(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+                aria-invalid={!valido}
+                aria-describedby={`${idCampo}-aiuto`}
+              />
+              <button
+                type="button"
+                className="ing-passi-btn"
+                onClick={() => cambia(1)}
+                disabled={inCorso || (Number.isInteger(n) && n >= massimo)}
+                aria-label="Una persona in più"
+              >
+                <i className="fas fa-plus" aria-hidden="true" />
+              </button>
+            </div>
+            <p id={`${idCampo}-aiuto`} className="ing-passi-aiuto">
+              {!valido
+                ? `Scrivi un numero da 1 a ${massimo}.`
+                : giaDentro + n > c.posti
+                  ? `${giaDentro + n - c.posti} in più della prenotazione (${c.posti}).`
+                  : c.presenti !== null
+                    ? `In tutto saranno ${giaDentro + n} di ${c.posti}.`
+                    : `Prenotate ${c.posti} persone.`}
+            </p>
+          </div>
+          <button type="submit" className="ing-esito-btn ing-esito-btn-pieno" disabled={inCorso || !valido}>
+            {inCorso ? (
+              <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" />
+            ) : (
+              <i className="fas fa-door-open" aria-hidden="true" />
+            )}{" "}
+            {etichetta}
+          </button>
+          <button type="button" className="ing-esito-btn" onClick={onChiudi}>
+            Chiudi
+          </button>
+          {puoCorreggere && (
+            <button
+              ref={apriCorrezione}
+              type="button"
+              className="ing-esito-btn"
+              onClick={() => mostraCorrezione(true)}
+              disabled={inCorso}
+            >
+              <i className="fas fa-pen" aria-hidden="true" />{" "}
+              Correggi il numero
+            </button>
+          )}
+        </form>
+      )}
     </div>
   );
 }
@@ -2641,6 +2821,10 @@ const STILE_INGRESSO = `
   margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.95); color: #3D2A05;
   font-size: 15px; line-height: 1.45; font-weight: 600;
 }
+.ing-esito-avviso-ok { color: var(--ing-ok); }
+.ing-esito-classe .ing-esito-avviso-ok { background: #ECFDF5; border: 1px solid #B7E4D3; }
+/* La scheda prende il fuoco solo dal codice (tabIndex -1): niente bordo. */
+.ing-esito-di-classe:focus { outline: none; }
 .ing-passi { flex: 1 1 100%; display: grid; gap: 6px; }
 .ing-passi-label { font-size: 14px; font-weight: 700; }
 .ing-passi-riga { display: flex; align-items: center; gap: 10px; }

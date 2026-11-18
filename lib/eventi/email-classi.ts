@@ -65,6 +65,17 @@ export type EmailClasseInput = {
   giornataAnnullata?: string;
   /** Per annullamento: non resta nessuna giornata, la prenotazione è cancellata. */
   prenotazioneCancellata?: boolean;
+  /**
+   * La modifica l'hanno fatta gli organizzatori dal pannello, non il docente
+   * (aggiornamento, annullamento): l'email dice che cosa abbiamo cambiato,
+   * senza "Grazie per averci avvisato" e senza l'avviso "se non riconosci
+   * questa modifica".
+   */
+  daStaff?: boolean;
+  /** Con daStaff, per aggiornamento: il settore assegnato in una giornata (null: tolto). */
+  settoreAssegnato?: { giornata: string; settore: string | null };
+  /** Con daStaff, per aggiornamento: le persone della prenotazione prima del cambio dei numeri. */
+  postiPrima?: number;
 };
 
 /** "Vivere più a lungo": c'è in ogni oggetto. */
@@ -180,12 +191,34 @@ function testiPrincipali(
       }
       break;
     }
-    case "aggiornamento":
+    case "aggiornamento": {
+      const comEAdesso = "Qui sotto trovi la prenotazione com'è adesso, giornata per giornata. Il codice e il QR non cambiano.";
+      const settore = input.daStaff ? input.settoreAssegnato : undefined;
+      const conArtSettore = settore ? giornateConArticolo([settore.giornata]) : "";
+      if (settore && conArtSettore) {
+        const nome = settore.settore ? suUnaRiga(settore.settore) : "";
+        return {
+          subject: `Settore della ${cl} per ${conArtSettore}: ${NOME_BREVE}`,
+          titolo: nome
+            ? `abbiamo assegnato un settore alla ${cl} per ${conArtSettore}.`
+            : `abbiamo tolto il settore della ${cl} per ${conArtSettore}.`,
+          intro: nome
+            ? `Abbiamo assegnato alla classe il settore «${nome}» per ${conArtSettore}: lo trovi anche qui sotto, nella scheda della giornata. Il codice e il QR non cambiano.`
+            : `Per ${conArtSettore} la classe non ha più un settore assegnato. ${comEAdesso}`,
+        };
+      }
+      const intro =
+        input.daStaff && typeof input.postiPrima === "number" && input.postiPrima !== p.posti
+          ? `Abbiamo aggiornato i numeri della classe: ora sono ${descriviPersone(p.studenti, p.accompagnatori)}, ${p.posti} persone in tutto (prima ${input.postiPrima}). ${comEAdesso}`
+          : input.daStaff
+            ? `Abbiamo aggiornato la prenotazione della classe. ${comEAdesso}`
+            : comEAdesso;
       return {
         subject: `Prenotazione aggiornata, ${cl}: ${NOME_BREVE}${conDate(tutte)}`,
         titolo: `la prenotazione della ${cl} è aggiornata.`,
-        intro: "Qui sotto trovi la prenotazione com'è adesso, giornata per giornata. Il codice e il QR non cambiano.",
+        intro,
       };
+    }
     case "reinvio":
       return {
         subject: `La prenotazione della ${cl}: ${NOME_BREVE}${conDate(tutte)}`,
@@ -196,11 +229,13 @@ function testiPrincipali(
     case "annullamento": {
       const slug = input.giornataAnnullata ?? "";
       const conArt = giornateConArticolo([slug]);
+      // Se l'ha chiesto il docente, lo ringraziamo; se l'hanno fatto gli organizzatori, no.
+      const grazie = input.daStaff ? "" : " Grazie per averci avvisato.";
       if (input.prenotazioneCancellata) {
         return {
           subject: `Prenotazione annullata, ${cl}: ${NOME_BREVE}`,
           titolo: `la prenotazione della ${cl} è annullata.`,
-          intro: `${conArt ? `Abbiamo tolto ${conArt} dalla prenotazione` : "Abbiamo tolto l'ultima giornata dalla prenotazione"}. Non c'erano altre giornate, quindi la prenotazione è annullata e il codice ${p.codice} non vale più per l'ingresso. Grazie per averci avvisato.`,
+          intro: `${conArt ? `Abbiamo tolto ${conArt} dalla prenotazione` : "Abbiamo tolto l'ultima giornata dalla prenotazione"}. Non c'erano altre giornate, quindi la prenotazione è annullata e il codice ${p.codice} non vale più per l'ingresso.${grazie}`,
         };
       }
       const della = dellaGiornata(slug);
@@ -211,7 +246,7 @@ function testiPrincipali(
       return {
         subject: `${della ? `Tolta la giornata ${della}` : "Tolta una giornata"}, ${cl}: ${NOME_BREVE}`,
         titolo: `${della ? `la giornata ${della}` : "una giornata"} è stata tolta dalla prenotazione della ${cl}.`,
-        intro: `${resta ? `La classe ${resta}: qui sotto` : "Qui sotto"} trovi la prenotazione aggiornata. Il codice e il QR non cambiano. Grazie per averci avvisato.`,
+        intro: `${input.daStaff && conArt ? `Abbiamo tolto ${conArt} dalla prenotazione. ` : ""}${resta ? `La classe ${resta}: qui sotto` : "Qui sotto"} trovi la prenotazione aggiornata. Il codice e il QR non cambiano.${grazie}`,
       };
     }
     case "prenotazione":
@@ -348,20 +383,27 @@ export function emailClasse(input: EmailClasseInput): EmailBiglietto {
       ? `<p style="color:#718096;font-size:13px;line-height:1.6;margin:0 0 8px;">Per un'altra classe serve una prenotazione a parte, una per classe e fino a ${MAX_PERSONE_CLASSE} persone docenti compresi: <a href="${attr(prenotaUrl)}" style="color:#008F6B;font-weight:600;">prenota un'altra classe</a>.</p>`
       : "";
 
+  // Solo per le modifiche fatte dalla pagina della classe: quelle dello staff le ha fatte lo staff.
+  const avvisoNonSeiTu =
+    input.daStaff || (input.motivo !== "annullamento" && input.motivo !== "aggiornamento")
+      ? ""
+      : input.motivo === "annullamento"
+        ? "Se non sei tu ad averlo chiesto"
+        : "Se non riconosci questa modifica";
   const nonSeiTu =
-    input.motivo === "annullamento" || input.motivo === "aggiornamento"
+    avvisoNonSeiTu
       ? `<div style="background:#FEF6E7;border-left:3px solid #B7791F;border-radius:0 6px 6px 0;padding:14px 18px;margin:16px 0 8px;">
-        <p style="color:#7A4B00;font-size:14px;line-height:1.6;margin:0;">${
-          input.motivo === "annullamento" ? "Se non sei tu ad averlo chiesto" : "Se non riconosci questa modifica"
-        }, scrivi a <a href="mailto:${EMAIL_RISPOSTE}" style="color:#7A4B00;font-weight:700;">${EMAIL_RISPOSTE}</a>.</p>
+        <p style="color:#7A4B00;font-size:14px;line-height:1.6;margin:0;">${avvisoNonSeiTu}, scrivi a <a href="mailto:${EMAIL_RISPOSTE}" style="color:#7A4B00;font-weight:700;">${EMAIL_RISPOSTE}</a>.</p>
       </div>`
       : "";
 
-  // Che cosa fare se si cambia idea dopo aver tolto una giornata.
+  // Che cosa fare se si cambia idea dopo aver tolto una giornata. Se l'ha
+  // tolta lo staff il docente non ha cambiato idea: solo come prenotare di
+  // nuovo, se la prenotazione non c'è più.
   const conArtAnnullata = giornateConArticolo([input.giornataAnnullata ?? ""]);
   const ripensamento = cancellata
-    ? "Se cambi idea, puoi prenotare di nuovo dalla pagina per le scuole: riceverai un nuovo codice. Se non ci sono abbastanza posti per tutta la classe, entra in lista d'attesa in ordine di prenotazione."
-    : input.motivo === "annullamento" && conArtAnnullata
+    ? `${input.daStaff ? "Per prenotare di nuovo la classe, usa la pagina per le scuole" : "Se cambi idea, puoi prenotare di nuovo dalla pagina per le scuole"}: riceverai un nuovo codice. Se non ci sono abbastanza posti per tutta la classe, entra in lista d'attesa in ordine di prenotazione.`
+    : input.motivo === "annullamento" && conArtAnnullata && !input.daStaff
       ? `Se cambi idea, puoi aggiungere di nuovo ${conArtAnnullata} dalla pagina della classe, prima che la giornata inizi. Se non ci sono abbastanza posti per tutta la classe, entra in lista d'attesa in ordine di prenotazione.`
       : "";
   const ripensamentoBox = ripensamento
@@ -428,11 +470,7 @@ export function emailClasse(input: EmailClasseInput): EmailBiglietto {
             ? [`Per un'altra classe serve una prenotazione a parte: ${prenotaUrl}`]
             : []),
         ]),
-    ...(input.motivo === "annullamento"
-      ? ["", `Se non sei tu ad averlo chiesto, scrivi a ${EMAIL_RISPOSTE}.`]
-      : input.motivo === "aggiornamento"
-        ? ["", `Se non riconosci questa modifica, scrivi a ${EMAIL_RISPOSTE}.`]
-        : []),
+    ...(avvisoNonSeiTu ? ["", `${avvisoNonSeiTu}, scrivi a ${EMAIL_RISPOSTE}.`] : []),
     ...PIEDE_TESTO,
   ].join("\n");
 

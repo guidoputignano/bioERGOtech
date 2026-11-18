@@ -12,11 +12,13 @@ import {
   aggiornaNumeriClasse,
   annullaGiornataClasse,
   caricaClasse,
+  confermaGiornataClasse,
   giornateDaRivedereDopoRiduzione,
   inviaEmailClasse,
+  ordineGiornate,
   promuoviDopoPostiLiberati,
 } from "@/lib/eventi/classi-server";
-import type { MotivoEmailClasse } from "@/lib/eventi/email-classi";
+import type { EmailClasseInput, MotivoEmailClasse } from "@/lib/eventi/email-classi";
 import type { EsitoInvio } from "@/lib/eventi/evento-server";
 import { giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
 import {
@@ -50,13 +52,21 @@ const numero = (n: number) => n.toLocaleString("it-IT");
 const maiuscola = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 /** "il 10 dicembre", "l'11 dicembre"; per una sessione sconosciuta, il suo codice. */
 const conArticolo = (slug: string) => giornateConArticolo([slug]) || `la sessione "${slug || "senza nome"}"`;
-/** "la 4B del Liceo Archita": nei messaggi allo staff. */
-const laClasse = (p: Pick<PrenotazioneClasse, "classe" | "istituto">) => `la ${p.classe.trim()} (${p.istituto.trim()})`;
+/** "4B (Liceo Archita)", senza articolo: nei messaggi allo staff ("della 4B (Liceo Archita)"). */
+const quale = (p: Pick<PrenotazioneClasse, "classe" | "istituto">) => `${p.classe.trim()} (${p.istituto.trim()})`;
 
 const giornataConclusa = (slug: string) => {
   const s = sessionBySlug(slug);
   return !s || Date.now() > Date.parse(s.fineISO);
 };
+
+/** Dall'inizio della giornata i posti liberati non passano più da soli a chi aspetta: decide lo staff. */
+const giornataIniziata = (slug: string) => {
+  const s = sessionBySlug(slug);
+  return !s || Date.now() >= Date.parse(s.inizioISO);
+};
+
+const plurale = (n: number, uno: string, molti: string) => `${numero(n)} ${n === 1 ? uno : molti}`;
 
 const resendOppureNull = () => (process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null);
 
@@ -71,7 +81,7 @@ const intero = (v: unknown): number => {
 async function mandaEmail(
   p: PrenotazioneClasse,
   motivo: MotivoEmailClasse,
-  opzioni?: { giornataLiberata?: string; giornataAnnullata?: string; prenotazioneCancellata?: boolean },
+  opzioni?: Omit<EmailClasseInput, "prenotazione" | "motivo">,
 ): Promise<EsitoEmail> {
   const resend = resendOppureNull();
   if (!resend) return { inviata: false, a: p.docente_email, errore: MANCA_RESEND };
@@ -105,7 +115,11 @@ function testoPromozioni(r: {
         }. Reinviala dalla scheda della classe o avvisa il docente a mano.`,
       );
     } else {
-      parti.push(r.classi.length === 1 ? "Il docente ha ricevuto l'email." : "Ogni docente ha ricevuto l'email.");
+      parti.push(
+        r.classi.length === 1
+          ? `Il docente della ${quale(r.classi[0].prenotazione)} ha ricevuto l'email.`
+          : "Il docente di ogni classe confermata ha ricevuto l'email.",
+      );
     }
   }
   if (r.persone > 0) {
@@ -116,11 +130,56 @@ function testoPromozioni(r: {
   return { testo: parti.join(" "), attenzione };
 }
 
-/** Dopo che una giornata ha liberato posti: prima le classi, poi le persone. Non lancia. */
-async function passaIPosti(slug: string, client: SupabaseClient) {
+/**
+ * Dopo che una giornata ha liberato posti: prima le classi, poi le persone.
+ * Solo prima dell'inizio della giornata: dopo, nessuno è confermato in
+ * automatico (un'email "posto confermato, arrivate con un po' di anticipo" a
+ * metà mattina confonde, e chi aspetta probabilmente non viene più); se
+ * qualcuno aspetta, lo staff lo sa e conferma a mano. Non lancia.
+ */
+async function passaIPosti(slug: string, client: SupabaseClient): Promise<{ testo: string; attenzione: boolean }> {
   if (giornataConclusa(slug)) return { testo: "", attenzione: false };
+  if (giornataIniziata(slug)) return chiAspettaAGiornataIniziata(slug, client);
   const esito = await promuoviDopoPostiLiberati(client, resendOppureNull(), slug);
   return testoPromozioni(esito);
+}
+
+/** A giornata iniziata: chi è ancora in lista d'attesa, in una frase per lo staff. Vuota se non aspetta nessuno. Non lancia. */
+async function chiAspettaAGiornataIniziata(slug: string, client: SupabaseClient): Promise<{ testo: string; attenzione: boolean }> {
+  const inizio = "La giornata è iniziata, quindi i posti non passano in automatico a chi è in lista d'attesa";
+  try {
+    const { data: s, error } = await client.from("event_sessions").select("id").eq("slug", slug).maybeSingle();
+    if (error || !s) throw new Error(error ? `event_sessions: ${error.message}` : "giornata non trovata");
+    const [classi, persone] = await Promise.all([
+      client
+        .from("event_group_booking_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", s.id)
+        .eq("is_waitlist", true),
+      client
+        .from("event_registration_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", s.id)
+        .eq("is_waitlist", true),
+    ]);
+    if (classi.error || persone.error) throw new Error((classi.error ?? persone.error)?.message ?? "conteggio");
+    const nClassi = classi.count ?? 0;
+    const nPersone = persone.count ?? 0;
+    if (nClassi === 0 && nPersone === 0) return { testo: "", attenzione: false };
+    const chi = [
+      ...(nClassi > 0 ? [plurale(nClassi, "classe", "classi")] : []),
+      ...(nPersone > 0 ? [plurale(nPersone, "persona", "persone")] : []),
+    ].join(" e ");
+    const dove =
+      nClassi > 0 && nPersone > 0 ? "dalle schede Classi e Iscritti" : nClassi > 0 ? "dalla scheda Classi" : "dalla scheda Iscritti";
+    return { testo: `${inizio} (${chi}). Se c'è posto, puoi confermare a mano ${dove}.`, attenzione: true };
+  } catch (err) {
+    console.error(`${LOG} lista d'attesa ${slug} non letta:`, err instanceof Error ? err.message : err);
+    return {
+      testo: `${inizio}. Non riesco a leggere chi aspetta: controlla la lista d'attesa e, se c'è posto, conferma a mano.`,
+      attenzione: true,
+    };
+  }
 }
 
 type Ponte = {
@@ -169,15 +228,18 @@ async function leggiPonte(client: SupabaseClient, id: string): Promise<Ponte | n
  * Se una classe di `posti` persone ci sta in una giornata: nella capienza
  * (event_posti_occupati, persone e classi) e nella quota delle scuole.
  * `giaDentro` sono i posti che la classe occupa già (per un cambio di numeri).
- * Torna null se ci sta, altrimenti il motivo in parole.
+ * `occupazione`: i posti occupati già letti (da event_group_confirm), senza
+ * rileggerli. Torna null se ci sta, altrimenti il motivo in parole. Serve
+ * solo a spiegare: la decisione la prende il database.
  */
 async function nonCiSta(
   client: SupabaseClient,
   sessione: { id: string; slug: string; capienza: number | null; quota: number | null },
   posti: number,
   giaDentro = 0,
+  occupazione?: { occupati: number; postiClassi: number },
 ): Promise<string | null> {
-  const { occupati, postiClassi } = await postiOccupatiGiornata(client, sessione.id);
+  const { occupati, postiClassi } = occupazione ?? (await postiOccupatiGiornata(client, sessione.id));
   const art = conArticolo(sessione.slug);
   if (sessione.capienza !== null && occupati - giaDentro + posti > sessione.capienza) {
     return `${maiuscola(art)} è al completo: ${numero(occupati)} posti occupati su ${numero(sessione.capienza)}, e la classe ne occupa ${numero(posti)}.`;
@@ -225,14 +287,20 @@ export async function GET() {
  * - `quota` { giornata, quota: numero | null }: i posti per le classi di una
  *   giornata. Se la quota sale, le classi in lista d'attesa che ora ci stanno
  *   vengono confermate (in ordine di prenotazione) e ricevono l'email.
+ *   Questo e gli altri passaggi automatici dei posti valgono solo prima
+ *   dell'inizio della giornata: dopo, il messaggio dice chi aspetta e lo
+ *   staff conferma a mano (passaIPosti).
  * - `settore` { bridge_id, settore, avvisa }: il settore di una classe in
  *   una giornata ("" lo toglie). Con `avvisa` il docente riceve l'email aggiornata.
- * - `numeri` { booking_id, studenti, accompagnatori, avvisa, forza? }: se
- *   aumentano e in una giornata confermata non ci stanno, 409 "pieno"; con
- *   `forza` si salvano lo stesso. Se diminuiscono, i posti passano a chi aspetta.
- * - `conferma` { bridge_id, forza? }: conferma una classe in lista d'attesa.
- *   Oltre la capienza o la quota, 409 "pieno"; con `forza` si conferma lo
- *   stesso. Il docente riceve sempre l'email.
+ * - `numeri` { booking_id, studenti, accompagnatori, avvisa, forza?, accetta? }:
+ *   se aumentano e in giornate confermate non ancora concluse non ci stanno,
+ *   409 "pieno" con tutte quelle giornate (`giornate`). Con `forza` e
+ *   `accetta` (le giornate della domanda che lo staff ha visto) si salvano
+ *   senza il controllo in quelle giornate; le altre si controllano lo stesso.
+ *   Se diminuiscono, i posti passano a chi aspetta (non a giornata iniziata).
+ * - `conferma` { bridge_id, forza? }: conferma una classe in lista d'attesa
+ *   (event_group_confirm). Oltre la capienza o la quota, 409 "pieno"; con
+ *   `forza` si conferma lo stesso. Il docente riceve sempre l'email.
  * - `rimuovi_giornata` { bridge_id, avvisa }: toglie la giornata; se era
  *   l'ultima, la prenotazione è cancellata. I posti passano a chi aspetta.
  * - `reinvia` { booking_id }: rimanda l'email della classe al docente.
@@ -384,7 +452,10 @@ async function azioneSettore(client: SupabaseClient, body: Record<string, unknow
 
   const p = await caricaClasse(client, { id: ponte.booking_id });
   if (!p) return ok({ messaggio: `${base} La prenotazione non si rilegge più: l'email non è partita.`, attenzione: true, email: null });
-  const email = await mandaEmail(p, "aggiornamento");
+  const email = await mandaEmail(p, "aggiornamento", {
+    daStaff: true,
+    settoreAssegnato: { giornata: ponte.slug, settore: settore || null },
+  });
   return ok({ messaggio: base, email });
 }
 
@@ -412,39 +483,49 @@ async function azioneNumeri(client: SupabaseClient, body: Record<string, unknown
   }
 
   const dopo = studenti + accompagnatori;
-  let forzato = false;
-  const r = await aggiornaNumeriClasse(client, null, p, { studenti, accompagnatori }, { promuovi: false });
+  // Le giornate concluse non contano: la sera del 10 una classe può crescere
+  // per l'11 anche se il 10 era pieno.
+  const giornateClasse = p.giornate.map((g) => g.slug);
+  const concluse = giornateClasse.filter(giornataConclusa);
+  // Con `forza`, le giornate in cui lo staff ha accettato di andare oltre i
+  // posti: quelle della domanda che ha visto. Le altre si controllano lo stesso.
+  const accettate =
+    forza && Array.isArray(body.accetta)
+      ? ordineGiornate(body.accetta.filter((s): s is string => typeof s === "string" && giornateClasse.includes(s)))
+      : [];
+  // I limiti della tabella (1 a 40 studenti, 1 a 10 docenti, 40 in tutto) valgono sempre.
+  const r = await aggiornaNumeriClasse(
+    client,
+    null,
+    p,
+    { studenti, accompagnatori },
+    { promuovi: false, salta: [...concluse, ...accettate] },
+  );
   if (!r.ok) {
     if (r.giornata === null) return errore("Prenotazione non trovata: forse è stata annullata. Aggiorna l'elenco.", 404);
-    // Il motivo preciso, con i numeri della giornata che non basta.
-    const { data: s } = await client
-      .from("event_sessions")
-      .select("id, slug, capienza_max, quota_gruppi")
-      .eq("slug", r.giornata)
-      .maybeSingle();
-    const motivo = s
-      ? await nonCiSta(
-          client,
-          { id: String(s.id), slug: String(s.slug), capienza: Number(s.capienza_max), quota: s.quota_gruppi == null ? null : Number(s.quota_gruppi) },
-          dopo,
-          p.posti,
-        )
-      : null;
-    const testo = `Con ${numero(dopo)} persone la classe non ci sta ${conArticolo(r.giornata)}.${motivo ? ` ${motivo}` : ""}`;
-    if (!forza) return errore(testo, 409, { codice: "pieno", giornata: r.giornata });
-
-    // Lo staff ha verificato che c'è spazio: si salva senza il controllo dei
-    // posti. I limiti della tabella (1 a 40 studenti, 1 a 10 docenti, 40 in
-    // tutto) valgono comunque.
-    const { data: salvate, error: erroreScrittura } = await client
-      .from("event_group_bookings")
-      .update({ studenti, accompagnatori, updated_at: new Date().toISOString() })
-      .eq("id", p.id)
-      .select("id");
-    if (erroreScrittura) throw new Error(`numeri forzati: ${erroreScrittura.message}`);
-    if (!salvate || salvate.length === 0) return errore("Prenotazione non trovata: forse è stata annullata. Aggiorna l'elenco.", 404);
-    forzato = true;
-    console.warn(`${LOG} prenotazione ${p.id}: numeri forzati oltre i posti, da ${p.posti} a ${dopo}.`);
+    // Ogni giornata che non basta, con il suo motivo.
+    const piene = r.giornate;
+    const motivi: string[] = [];
+    try {
+      for (const s of await sessioniDa(client, piene)) {
+        const motivo = await nonCiSta(client, s, dopo, p.posti);
+        if (motivo) motivi.push(motivo);
+      }
+    } catch (err) {
+      // Senza i numeri la domanda resta giusta: dice comunque in quali giornate non ci sta.
+      console.error(`${LOG} prenotazione ${p.id}: posti non letti per il messaggio:`, err instanceof Error ? err.message : err);
+    }
+    const testo = [
+      `Con ${numero(dopo)} persone la classe non ci sta ${nomiGiornate(piene)}.`,
+      ...motivi,
+      ...(accettate.length ? [`Per ${nomiGiornate(accettate)} avevi già accettato di andare oltre i posti.`] : []),
+    ].join(" ");
+    // Le giornate della domanda: "Salva comunque" le rimanda tutte in `accetta`.
+    const giornate = ordineGiornate([...accettate, ...piene]);
+    return errore(testo, 409, { codice: "pieno", giornata: r.giornata, giornate });
+  }
+  if (accettate.length) {
+    console.warn(`${LOG} prenotazione ${p.id}: numeri da ${p.posti} a ${dopo}, senza il controllo dei posti per ${accettate.join(", ")}.`);
   } else {
     console.info(`${LOG} prenotazione ${p.id}: numeri cambiati, da ${p.posti} a ${dopo}.`);
   }
@@ -452,7 +533,19 @@ async function azioneNumeri(client: SupabaseClient, body: Record<string, unknown
   const parti = [
     `Numeri salvati: ${studenti} ${studenti === 1 ? "studente" : "studenti"} e ${accompagnatori} ${accompagnatori === 1 ? "docente" : "docenti"}, ${numero(dopo)} persone in tutto (prima ${numero(p.posti)}).`,
   ];
-  if (forzato) parti.push("Salvati oltre i posti disponibili, come hai confermato.");
+  // Dove lo staff ha accettato di andare oltre: lo si dice solo se è davvero oltre.
+  if (accettate.length) {
+    try {
+      const oltre: string[] = [];
+      for (const s of await sessioniDa(client, accettate)) {
+        if (await nonCiSta(client, s, dopo, dopo)) oltre.push(s.slug);
+      }
+      if (oltre.length) parti.push(`Salvati oltre i posti disponibili ${nomiGiornate(oltre)}, come hai confermato.`);
+    } catch (err) {
+      console.error(`${LOG} prenotazione ${p.id}: posti dopo il salvataggio non letti:`, err instanceof Error ? err.message : err);
+      parti.push(`Per ${nomiGiornate(accettate)} i posti non sono stati controllati, come hai confermato.`);
+    }
+  }
   let attenzione = false;
 
   // Meno persone: i posti liberati, giornata per giornata, a chi aspetta.
@@ -467,16 +560,40 @@ async function azioneNumeri(client: SupabaseClient, body: Record<string, unknown
   }
 
   if (!avvisa) {
-    parti.push("Il docente non è stato avvisato.");
+    parti.push(`Il docente della ${quale(p)} non è stato avvisato.`);
     return ok({ messaggio: parti.join(" "), attenzione: attenzione || undefined, email: null });
   }
   const aggiornata = await caricaClasse(client, { id: p.id });
   if (!aggiornata) {
-    parti.push("La prenotazione non si rilegge più: l'email non è partita.");
+    parti.push(`La prenotazione della ${quale(p)} non si rilegge più: l'email al suo docente non è partita.`);
     return ok({ messaggio: parti.join(" "), attenzione: true, email: null });
   }
-  const email = await mandaEmail(aggiornata, "aggiornamento");
+  const email = await mandaEmail(aggiornata, "aggiornamento", { daStaff: true, postiPrima: p.posti });
   return ok({ messaggio: parti.join(" "), attenzione: attenzione || undefined, email });
+}
+
+/** "il 10 e l'11 dicembre"; per sessioni sconosciute al sito, i loro codici. */
+const nomiGiornate = (slugs: string[]) => giornateConArticolo(slugs) || slugs.map(conArticolo).join(" e ");
+
+/** Le giornate (event_sessions) con questi slug, nell'ordine dell'evento, per spiegare i posti. Lancia se la lettura fallisce. */
+async function sessioniDa(
+  client: SupabaseClient,
+  slugs: string[],
+): Promise<{ id: string; slug: string; capienza: number | null; quota: number | null }[]> {
+  if (slugs.length === 0) return [];
+  const { data, error } = await client
+    .from("event_sessions")
+    .select("id, slug, capienza_max, quota_gruppi")
+    .in("slug", slugs);
+  if (error) throw new Error(`event_sessions: ${error.message}`);
+  const righe = ((data ?? []) as { id: unknown; slug: unknown; capienza_max: unknown; quota_gruppi: unknown }[]).map((s) => ({
+    id: String(s.id),
+    slug: String(s.slug),
+    capienza: s.capienza_max == null ? null : Number(s.capienza_max),
+    quota: s.quota_gruppi == null ? null : Number(s.quota_gruppi),
+  }));
+  const ordine = ordineGiornate(righe.map((s) => s.slug));
+  return righe.sort((a, b) => ordine.indexOf(a.slug) - ordine.indexOf(b.slug));
 }
 
 /* ── Conferma dalla lista d'attesa ── */
@@ -495,28 +612,30 @@ async function azioneConferma(client: SupabaseClient, body: Record<string, unkno
   if (!ponte.is_waitlist) return ok({ gia: true, messaggio: `La classe era già confermata per ${art}.` });
   if (giornataConclusa(ponte.slug)) return errore(`${maiuscola(art)} è conclusa: non c'è più un posto da confermare.`, 409);
 
-  const motivo = await nonCiSta(
-    client,
-    { id: ponte.session_id, slug: ponte.slug, capienza: ponte.capienza, quota: ponte.quota },
-    ponte.posti,
-  );
-  if (motivo && !forza) return errore(motivo, 409, { codice: "pieno" });
-
-  const { data: aggiornate, error: erroreScrittura } = await client
-    .from("event_group_booking_sessions")
-    .update({ is_waitlist: false })
-    .eq("id", ponte.id)
-    .eq("is_waitlist", true)
-    .select("id");
-  if (erroreScrittura) throw new Error(`conferma: ${erroreScrittura.message}`);
-  if (!aggiornate || aggiornate.length === 0) {
+  // Controllo dei posti e conferma in una transazione sola, con il lock della
+  // giornata (event_group_confirm): un'iscrizione nello stesso istante non
+  // porta la giornata oltre i posti senza che lo staff lo sappia.
+  const r = await confermaGiornataClasse(client, ponte.id, forza);
+  if (r.esito === "non_trovata") return errore("Questa giornata non risulta più nella prenotazione: aggiorna l'elenco.", 404);
+  if (r.esito === "gia") {
     // Confermata un attimo prima (dalla lista d'attesa automatica, da un collega): nessuna seconda email.
     return ok({ gia: true, messaggio: `La classe era già confermata per ${art}.` });
   }
-  console.info(`${LOG} prenotazione ${ponte.booking_id}: confermata dalla lista d'attesa per ${ponte.slug}${motivo ? ", oltre i posti" : ""}.`);
+  if (r.esito === "posti") {
+    // Il motivo in parole, con i posti contati dal database al momento del controllo.
+    const motivo = await nonCiSta(
+      client,
+      { id: ponte.session_id, slug: ponte.slug, capienza: ponte.capienza, quota: ponte.quota },
+      ponte.posti,
+      0,
+      { occupati: r.persone, postiClassi: r.posti_classi },
+    );
+    return errore(motivo ?? `${maiuscola(art)} non ha abbastanza posti per la classe in questo momento.`, 409, { codice: "pieno" });
+  }
+  console.info(`${LOG} prenotazione ${ponte.booking_id}: confermata dalla lista d'attesa per ${ponte.slug}${r.oltre ? ", oltre i posti" : ""}.`);
 
   const p = await caricaClasse(client, { id: ponte.booking_id });
-  const base = motivo
+  const base = r.oltre
     ? `Classe confermata per ${art}, oltre i posti disponibili, come hai confermato.`
     : `Classe confermata per ${art}.`;
   if (!p) return ok({ messaggio: `${base} La prenotazione non si rilegge più: l'email non è partita.`, attenzione: true, email: null });
@@ -544,8 +663,8 @@ async function azioneRimuovi(client: SupabaseClient, body: Record<string, unknow
   const cancellata = r.prenotazioneCancellata || r.rimaste === 0;
   const parti = [
     cancellata
-      ? `Prenotazione di ${laClasse(p)} annullata: ${art} era la sua unica giornata.`
-      : `Tolta ${art} dalla prenotazione di ${laClasse(p)}.`,
+      ? `Prenotazione della ${quale(p)} annullata: ${art} era la sua unica giornata.`
+      : `Tolta ${art} dalla prenotazione della ${quale(p)}.`,
   ];
   let attenzione = false;
   if (r.rimaste === 0 && !r.prenotazioneCancellata) {
@@ -561,10 +680,14 @@ async function azioneRimuovi(client: SupabaseClient, body: Record<string, unknow
   }
 
   if (!avvisa) {
-    parti.push("Il docente non è stato avvisato.");
+    parti.push(`Il docente della ${quale(p)} non è stato avvisato.`);
     return ok({ messaggio: parti.join(" "), eliminata: cancellata, attenzione: attenzione || undefined, email: null });
   }
-  const email = await mandaEmail(p, "annullamento", { giornataAnnullata: ponte.slug, prenotazioneCancellata: cancellata });
+  const email = await mandaEmail(p, "annullamento", {
+    giornataAnnullata: ponte.slug,
+    prenotazioneCancellata: cancellata,
+    daStaff: true,
+  });
   return ok({ messaggio: parti.join(" "), eliminata: cancellata, attenzione: attenzione || undefined, email });
 }
 

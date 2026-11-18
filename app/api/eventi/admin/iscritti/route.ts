@@ -97,7 +97,8 @@ const errore = (messaggio: string, status: number, extra: Record<string, unknown
  *   chi è in lista d'attesa da più tempo (promuoviDaListaAttesa), che riceve
  *   il biglietto; la risposta dice a chi (`promossa`, solo il nome). Se
  *   nessuna persona aspetta, il posto può completare quelli che servono a una
- *   classe in lista d'attesa (promuoviDopoPostiLiberati).
+ *   classe in lista d'attesa (promuoviDopoPostiLiberati), ma solo prima
+ *   dell'inizio della giornata: dopo, le classi le conferma lo staff a mano.
  * - `elimina_iscrizione` { registration_id }: elimina un'iscrizione rimasta
  *   senza giornate, ma non prima del file di ripristino.
  * - `reinvia` { registration_id }: rimanda il biglietto.
@@ -229,7 +230,9 @@ export async function POST(request: Request) {
               .join(", ")}. ${
               classiSenzaEmail.length > 0
                 ? "Attenzione: l'email al docente non è partita per tutte: reinviala dalla scheda Classi o avvisa a mano."
-                : "Il docente ha ricevuto l'email."
+                : classiPromosse.length === 1
+                  ? "Il docente ha ricevuto l'email."
+                  : "Il docente di ogni classe ha ricevuto l'email."
             }`
           : "";
       const promozione = promossa

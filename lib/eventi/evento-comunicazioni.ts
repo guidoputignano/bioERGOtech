@@ -35,7 +35,8 @@
  * - l'INVITO ALLE SCUOLE DEL PERCORSO (a mano, una volta): al referente di
  *   ogni scuola del percorso dei licei con l'adesione confermata o attiva
  *   che non ha ancora prenotato una classe, il link al modulo delle classi
- *   con la scuola già scritta. Legge licei_adesioni e basta: non la cambia.
+ *   con la scuola già scritta. Una email per scuola, anche quando due scuole
+ *   hanno lo stesso referente. Legge licei_adesioni e basta: non la cambia.
  *
  * Nei log niente dati personali: le persone sono "iscrizione <id>", le
  * classi "prenotazione <id>", le scuole "adesione <id>".
@@ -551,7 +552,9 @@ const testoErrore = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /** Tutte le prenotazioni per classe, o null se le tabelle non ci sono. Lancia per ogni altro errore. */
 async function leggiClassi(client: SupabaseClient): Promise<PrenotazioneClasse[] | null> {
-  const { error } = await client.from("event_group_bookings").select("id", { count: "exact", head: true }).limit(1);
+  // Una GET e non una HEAD: a una HEAD PostgREST risponde senza corpo, e
+  // supabase-js trasforma il 404 di una tabella che non c'è in un successo.
+  const { error } = await client.from("event_group_bookings").select("id").limit(1);
   if (error) {
     if (mancaNelDatabase(error)) return null;
     throw new Error(`event_group_bookings: ${error.code ?? "?"} ${error.message}`);
@@ -671,7 +674,13 @@ export function preparaPromemoriaClassi(dati: DatiScuole, adesso: Date = new Dat
       return { tipo: "evento_concluso", messaggio: "L'evento è concluso: questa email non serve più." };
     }
     if (destinatari.length === 0) {
-      return { tipo: "nessun_destinatario", messaggio: "Non c'è ancora nessuna classe prenotata per le prossime giornate." };
+      return {
+        tipo: "nessun_destinatario",
+        messaggio:
+          nonInviabili.length > 0
+            ? "Le classi prenotate per le prossime giornate hanno tutte l'indirizzo del docente scritto male: nessuna email partirebbe."
+            : "Non c'è ancora nessuna classe prenotata per le prossime giornate.",
+      };
     }
     return null;
   })();
@@ -690,29 +699,38 @@ export function preparaPromemoriaClassi(dati: DatiScuole, adesso: Date = new Dat
 /**
  * L'invito alle scuole del percorso: al referente di ogni scuola con
  * l'adesione confermata o attiva che non ha ancora prenotato una classe.
- * Una scuola ha già prenotato se una classe è arrivata dal suo link, se il
- * referente ha prenotato una classe, o se una prenotazione ha lo stesso nome
- * della scuola (a meno di maiuscole, accenti e spazi). Un indirizzo, un'email.
+ * Una scuola ha già prenotato se una classe è arrivata dal suo link, se una
+ * prenotazione ha lo stesso nome della scuola (a meno di maiuscole, accenti e
+ * spazi) o se il referente ha prenotato una classe e segue solo quella
+ * scuola. Una email per scuola, ognuna con il suo link: chi è referente di
+ * due scuole riceve due inviti, con il nome della scuola nell'oggetto.
  */
 export function preparaInvitoScuole(dati: DatiScuole, adesso: Date = new Date()): PreparazioneScuole {
   const destinatari: DaSpedire[] = [];
   const nonInviabili: NonInviabile[] = [];
   const classi = dati.classi.ok ? (dati.classi.valore ?? []) : [];
-  const adesioni = dati.adesioni.ok ? dati.adesioni.valore : [];
+  // La stessa adesione una volta sola; due adesioni sono due scuole, anche con lo stesso referente.
+  const adesioni = [...new Map((dati.adesioni.ok ? dati.adesioni.valore : []).map((a) => [a.id, a])).values()];
+  const emailDi = (a: AdesioneInvito) => a.email.trim().toLowerCase();
+  const conta = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
+  const scuoleDelReferente = new Map<string, number>();
+  for (const a of adesioni) conta(scuoleDelReferente, emailDi(a));
+  /** Quanti inviti riceve ogni indirizzo, contati dopo il giro. */
+  const inviti = new Map<string, number>();
   const perAdesione = new Set(classi.map((c) => c.licei_adesione_id).filter((x): x is string => Boolean(x)));
   const perEmail = new Set(classi.map((c) => c.docente_email.trim().toLowerCase()));
   const perScuola = new Set(classi.map((c) => nomeScuola(c.istituto)).filter(Boolean));
-  const visti = new Set<string>();
   let giaPrenotate = 0;
 
   for (const a of adesioni) {
-    const email = a.email.toLowerCase();
-    if (perAdesione.has(a.id) || perEmail.has(email) || (a.istituto && perScuola.has(nomeScuola(a.istituto)))) {
+    const email = emailDi(a);
+    // Se il referente segue più scuole, la sua prenotazione non dice quale
+    // scuola ha prenotato: lì contano solo il link e il nome della scuola.
+    const prenotataDalReferente = perEmail.has(email) && scuoleDelReferente.get(email) === 1;
+    if (perAdesione.has(a.id) || prenotataDalReferente || (a.istituto && perScuola.has(nomeScuola(a.istituto)))) {
       giaPrenotate += 1;
       continue;
     }
-    if (visti.has(email)) continue;
-    visti.add(email);
     const chi = `${a.nome || "Referente"} (${a.istituto || "scuola senza nome"})`;
     const motivo = indirizzoNonValido(a.email);
     if (motivo) {
@@ -722,9 +740,15 @@ export function preparaInvitoScuole(dati: DatiScuole, adesso: Date = new Date())
     destinatari.push({
       rif: `adesione ${a.id}`,
       email,
-      componi: () => emailInvitoScuola({ nome: a.nome, istituto: a.istituto, codiceAdesione: a.codice }),
+      componi: () => {
+        const invito = emailInvitoScuola({ nome: a.nome, istituto: a.istituto, codiceAdesione: a.codice });
+        // Due inviti con lo stesso oggetto finirebbero nella stessa conversazione e sembrerebbero un doppione.
+        const scuola = a.istituto.replace(/\s+/g, " ");
+        return (inviti.get(email) ?? 0) > 1 && scuola ? { ...invito, subject: `${invito.subject} (${scuola})` } : invito;
+      },
     });
   }
+  for (const d of destinatari) conta(inviti, d.email);
 
   const blocco = ((): PreparazioneScuole["blocco"] => {
     if (!process.env.RESEND_API_KEY) return { tipo: "configurazione", messaggio: MESSAGGIO_SENZA_RESEND };
@@ -748,7 +772,9 @@ export function preparaInvitoScuole(dati: DatiScuole, adesso: Date = new Date())
         messaggio:
           adesioni.length === 0
             ? "Non c'è nessuna scuola del percorso con l'adesione confermata o attiva."
-            : "Tutte le scuole del percorso hanno già prenotato almeno una classe.",
+            : nonInviabili.length > 0
+              ? "Le scuole che non hanno ancora prenotato una classe hanno tutte l'indirizzo del referente scritto male: nessun invito partirebbe."
+              : "Tutte le scuole del percorso hanno già prenotato almeno una classe.",
       };
     }
     return null;

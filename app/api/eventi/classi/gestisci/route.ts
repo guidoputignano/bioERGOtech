@@ -40,7 +40,9 @@ import {
  *   posti (confermata o lista d'attesa). Non dopo l'inizio della giornata.
  *   200 { success: true, status, emailInviata }.
  * - reinvia: rimanda l'email della classe all'indirizzo della prenotazione,
- *   al massimo una volta ogni due minuti per codice (429). 200 { success: true }.
+ *   al massimo una volta ogni due minuti dopo un invio riuscito (429). Un
+ *   clic mentre l'email sta ancora partendo aspetta quell'invio e ne riporta
+ *   l'esito. 200 { success: true }, oppure 500 se l'email non è partita.
  *
  * Ogni cambiamento manda al docente l'email aggiornata (o l'avviso di
  * annullamento): basta il codice per farlo, quindi il docente deve saperlo.
@@ -85,7 +87,14 @@ const intero = (v: unknown): number => {
 /* ── Limiti in memoria (best effort: valgono per istanza del server) ── */
 
 const ATTESA_REINVIO_MS = 2 * 60 * 1000;
+/** Quando Resend ha accettato l'ultimo reinvio, per prenotazione. Solo gli invii riusciti. */
 const ultimoReinvio = new Map<string, number>();
+/**
+ * I reinvii in corso, per prenotazione: un secondo clic mentre l'email sta
+ * ancora partendo aspetta quell'invio e ne riporta l'esito, senza mandarne
+ * un secondo. Ogni voce si toglie appena l'invio finisce.
+ */
+const reinvioInCorso = new Map<string, Promise<boolean>>();
 
 /** Tentativi con un codice inesistente, per indirizzo: frena chi prova codici a caso. */
 const FINESTRA_TENTATIVI_MS = 10 * 60 * 1000;
@@ -299,12 +308,15 @@ async function aggiorna(client: SupabaseClient, p: PrenotazioneClasse, body: Rec
   if (!esito.ok) {
     if (!esito.giornata) return errore(404, NON_TROVATA);
     const dopo = studenti + accompagnatori;
-    const conArt = giornateConArticolo([esito.giornata]) || "una delle giornate";
-    console.info(`Gestione classe ${p.id}: numeri non cambiati, ${dopo} posti non ci stanno (${esito.giornata}).`);
+    // Tutte le giornate in cui non ci sta: abbassando i numeri per una sola,
+    // il docente verrebbe poi fermato dall'altra.
+    const piene = esito.giornate.length ? esito.giornate : [esito.giornata];
+    const conArt = giornateConArticolo(piene) || "una delle giornate";
+    console.info(`Gestione classe ${p.id}: numeri non cambiati, ${dopo} posti non ci stanno (${piene.join(", ")}).`);
     return errore(
       409,
       `Per ${conArt} i posti per le classi non bastano per ${dopo} persone: la prenotazione resta per ${p.posti} persone. Puoi indicare meno persone, oppure scrivi a info@bioergotech.org.`,
-      { giornata: esito.giornata },
+      { giornata: esito.giornata, giornate: piene },
     );
   }
 
@@ -438,8 +450,22 @@ async function aggiungi(client: SupabaseClient, p: PrenotazioneClasse, slug: str
 
 /* ── reinvia ─────────────────────────────────────────────────────────── */
 
+const rispostaReinvio = (inviata: boolean) =>
+  inviata
+    ? NextResponse.json({ success: true })
+    : errore(500, "Non siamo riusciti a inviare l'email. Riprova tra qualche minuto o scrivi a info@bioergotech.org.");
+
 async function reinvia(p: PrenotazioneClasse, adesso: number) {
-  const ultimo = ultimoReinvio.get(p.codice);
+  // Un clic di pochi istanti fa sta ancora mandando l'email: si aspetta
+  // quell'invio e se ne riporta l'esito vero.
+  const inCorso = reinvioInCorso.get(p.id);
+  if (inCorso) {
+    const inviata = await inCorso;
+    console.info(`Gestione classe ${p.id}: reinvio già in partenza, non ripartito (${inviata ? "inviato" : "non inviato"}).`);
+    return rispostaReinvio(inviata);
+  }
+
+  const ultimo = ultimoReinvio.get(p.id);
   if (ultimo && adesso - ultimo < ATTESA_REINVIO_MS) {
     const secondi = Math.ceil((ATTESA_REINVIO_MS - (adesso - ultimo)) / 1000);
     return errore(
@@ -454,13 +480,24 @@ async function reinvia(p: PrenotazioneClasse, adesso: number) {
     return errore(503, "L'invio delle email non è disponibile in questo momento. Riprova più tardi o scrivi a info@bioergotech.org.");
   }
 
-  // Si segna subito, così due clic ravvicinati non mandano due email.
-  ultimoReinvio.set(p.codice, adesso);
-  const esito = await inviaEmailClasse(resend, p, "reinvio");
-  if (!esito.ok) {
-    ultimoReinvio.delete(p.codice);
-    console.error(`Gestione classe ${p.id}: reinvio non riuscito:`, esito.errore);
-    return errore(500, "Non siamo riusciti a inviare l'email. Riprova tra qualche minuto o scrivi a info@bioergotech.org.");
-  }
-  return NextResponse.json({ success: true });
+  // L'invio si segna in corso subito, così due clic ravvicinati non mandano
+  // due email; l'attesa di due minuti parte solo da un invio riuscito.
+  const invio: Promise<boolean> = inviaEmailClasse(resend, p, "reinvio")
+    .then((esito) => {
+      if (esito.ok) {
+        ultimoReinvio.set(p.id, Date.now());
+        return true;
+      }
+      console.error(`Gestione classe ${p.id}: reinvio non riuscito:`, esito.errore);
+      return false;
+    })
+    .catch((err: unknown) => {
+      console.error(`Gestione classe ${p.id}: reinvio non riuscito:`, err instanceof Error ? err.message : err);
+      return false;
+    })
+    .finally(() => {
+      if (reinvioInCorso.get(p.id) === invio) reinvioInCorso.delete(p.id);
+    });
+  reinvioInCorso.set(p.id, invio);
+  return rispostaReinvio(await invio);
 }

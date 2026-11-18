@@ -5,6 +5,7 @@ import {
   type CampoClasse,
   type DatiPrenotazioneClasse,
   type ErroreClasse,
+  type PrenotazioneClasse,
 } from "@/lib/eventi/classi";
 import {
   adesioneDaCodice,
@@ -116,7 +117,36 @@ const richiestePerIp = new Map<string, { n: number; da: number }>();
 
 /** L'email di una prenotazione che c'è già non riparte più di una volta ogni due minuti. */
 const ATTESA_EMAIL_MS = 2 * 60 * 1000;
+/** Quando Resend ha accettato l'ultima email, per prenotazione. Solo gli invii riusciti. */
 const ultimaEmail = new Map<string, number>();
+/**
+ * Gli invii in corso, per prenotazione. Chi ripete la prenotazione mentre
+ * l'email sta ancora partendo aspetta quell'invio e ne riporta l'esito vero,
+ * senza mandarne un secondo. Ogni voce si toglie appena l'invio finisce.
+ */
+const invioInCorso = new Map<string, Promise<boolean>>();
+
+/** Manda l'email della prenotazione, segnandola in corso fino alla fine. Non lancia. */
+function inviaEmailPrenotazione(resend: Resend, p: PrenotazioneClasse): Promise<boolean> {
+  const invio: Promise<boolean> = inviaEmailClasse(resend, p, "prenotazione")
+    .then((esito) => {
+      if (esito.ok) {
+        ultimaEmail.set(p.id, Date.now());
+        return true;
+      }
+      console.error(`Prenotazione classe ${p.id}: email non inviata:`, esito.errore);
+      return false;
+    })
+    .catch((err: unknown) => {
+      console.error(`Prenotazione classe ${p.id}: email non inviata:`, err instanceof Error ? err.message : err);
+      return false;
+    })
+    .finally(() => {
+      if (invioInCorso.get(p.id) === invio) invioInCorso.delete(p.id);
+    });
+  invioInCorso.set(p.id, invio);
+  return invio;
+}
 
 function pulisciMappe(adesso: number) {
   if (richiestePerIp.size > 1000) {
@@ -267,24 +297,22 @@ export async function POST(request: Request) {
     // ── 4. L'email con il QR, all'indirizzo della prenotazione ──
     // Chi ripete la stessa prenotazione senza aggiungere niente non la fa
     // ripartire più di una volta ogni due minuti: è già nella sua casella.
+    // Se l'email sta ancora partendo, si aspetta quell'invio e se ne riporta
+    // l'esito: "inviata" solo se Resend l'ha accettata davvero.
     let emailInviata = false;
+    const ripetuta = !esito.nuova && aggiunte.length === 0;
+    const inCorso = ripetuta ? invioInCorso.get(p.id) : undefined;
     const ultima = ultimaEmail.get(p.id);
-    const appenaInviata = !esito.nuova && aggiunte.length === 0 && ultima !== undefined && Date.now() - ultima < ATTESA_EMAIL_MS;
-    if (appenaInviata) {
+    if (inCorso) {
+      emailInviata = await inCorso;
+      console.info(`Prenotazione classe ${p.id}: email già in partenza, non ripartita (${emailInviata ? "inviata" : "non inviata"}).`);
+    } else if (ripetuta && ultima !== undefined && Date.now() - ultima < ATTESA_EMAIL_MS) {
       emailInviata = true;
       console.info(`Prenotazione classe ${p.id}: email già inviata da poco, non ripartita.`);
     } else if (!process.env.RESEND_API_KEY) {
       console.error(`Prenotazione classe ${p.id}: RESEND_API_KEY mancante, email non inviata.`);
     } else {
-      // Si segna subito, così due invii ravvicinati non mandano due email.
-      ultimaEmail.set(p.id, Date.now());
-      const invio = await inviaEmailClasse(new Resend(process.env.RESEND_API_KEY), p, "prenotazione");
-      if (invio.ok) {
-        emailInviata = true;
-      } else {
-        ultimaEmail.delete(p.id);
-        console.error(`Prenotazione classe ${p.id}: email non inviata:`, invio.errore);
-      }
+      emailInviata = await inviaEmailPrenotazione(new Resend(process.env.RESEND_API_KEY), p);
     }
 
     if (!esito.nuova) {

@@ -42,7 +42,8 @@ const NOME_EVENTO = EVENT.titolo.split(":")[0];
  * lista d'attesa; &parte=persone o &parte=classi stampa una sola delle due
  * parti (per esempio per il banco delle scuole). Le classi hanno una sezione
  * loro, in ordine di scuola, con il docente, il telefono, le persone e il
- * settore. Solo staff (requireAdmin): elenca dati personali.
+ * settore, se c'è (la colonna compare solo quando almeno una classe della
+ * giornata ne ha uno). Solo staff (requireAdmin): elenca dati personali.
  *
  * Del codice del biglietto si stampano solo gli ultimi 4 caratteri: il
  * codice intero apre il biglietto e la sua gestione, e il foglio resta per
@@ -470,7 +471,11 @@ export default async function StampaListaPage({
 
 type Parte = "" | "persone" | "classi";
 
-/** Le classi della giornata: una riga per classe, con il docente, il telefono e il settore. */
+/**
+ * Le classi della giornata: una riga per classe, con il docente, il telefono
+ * e il settore. I settori non si assegnano per forza: senza nessun settore
+ * la colonna non c'è, e una classe senza settore ha la casella vuota.
+ */
 function SezioneClassi({
   classi,
   disponibili,
@@ -483,6 +488,7 @@ function SezioneClassi({
   nuovaPagina: boolean;
 }) {
   const persone = classi.reduce((t, x) => t + x.c.posti, 0);
+  const conSettore = classi.some((x) => Boolean(x.g.settore));
   return (
     <section className={`stp-sezione${nuovaPagina ? " stp-sezione-nuova-pagina" : ""}`} aria-labelledby="stp-classi">
       <h2 id="stp-classi" className="stp-sezione-titolo">
@@ -514,7 +520,7 @@ function SezioneClassi({
                 <th scope="col" style={{ textAlign: "right" }}>
                   Persone
                 </th>
-                <th scope="col">Settore</th>
+                {conSettore && <th scope="col">Settore</th>}
                 <th scope="col">Fine codice</th>
                 <th scope="col">Stato</th>
               </tr>
@@ -548,7 +554,7 @@ function SezioneClassi({
                         {entrata ? `, entrati ${g.presenti}` : ""}
                       </span>
                     </td>
-                    <td>{g.settore ? <span className="stp-settore">{g.settore}</span> : <span className="stp-min">da assegnare</span>}</td>
+                    {conSettore && <td>{g.settore ? <span className="stp-settore">{g.settore}</span> : null}</td>}
                     <td className="stp-cod">{codiceBreve(c.codice)}</td>
                     <td>
                       {g.status === "lista_attesa" ? (

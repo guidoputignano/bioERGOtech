@@ -57,6 +57,16 @@ const maiuscola = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 const plurale = (n: number, uno: string, molti: string) => `${numero(n)} ${n === 1 ? uno : molti}`;
 /** "il 10 dicembre", "l'11 dicembre"; per una sessione sconosciuta, il codice. */
 const conArticolo = (slug: string) => giornateConArticolo([slug]) || `la sessione ${slug || "senza nome"}`;
+/** Dall'inizio di una giornata i posti liberati non passano più da soli a chi aspetta: li conferma lo staff. */
+const iniziata = (slug: string) => {
+  const s = sessionBySlug(slug);
+  return s ? Date.now() >= Date.parse(s.inizioISO) : false;
+};
+/** Dalla fine di una giornata nessuno si conferma più, nemmeno a mano (come la rotta). */
+const conclusa = (slug: string) => {
+  const s = sessionBySlug(slug);
+  return s ? Date.now() > Date.parse(s.fineISO) : false;
+};
 
 type Ordine = "recenti" | "scuola";
 type Esito = { tipo: "ok" | "errore" | "attenzione"; testo: string };
@@ -71,6 +81,8 @@ type RispostaAzione = {
   campo?: string;
   eliminata?: boolean;
   attenzione?: boolean;
+  /** Nel 409 "pieno" dei numeri: le giornate in cui non ci stanno. */
+  giornate?: string[];
   email?: { inviata: true; a: string } | { inviata: false; a: string; errore: string } | null;
 };
 
@@ -331,8 +343,12 @@ function SchedaGiornataClassi({
             <span>Nessun limite: le classi possono occupare tutta la capienza ({numero(g.capienza)})</span>
           </label>
           <p id={`${id}-quota-aiuto`} className="eva-nota" style={{ margin: 0 }}>
-            Ora le classi confermate occupano {numero(g.postiClassi)}{" "}posti. Se alzi la quota, le classi in lista
-            d&apos;attesa che ci stanno vengono confermate subito, in ordine di prenotazione, e ricevono l&apos;email.
+            Ora le classi confermate occupano {numero(g.postiClassi)}{" "}posti.{" "}
+            {conclusa(g.slug)
+              ? "La giornata è conclusa: se alzi la quota, nessuna classe in lista d'attesa viene confermata."
+              : iniziata(g.slug)
+                ? "La giornata è iniziata: se alzi la quota, le classi in lista d'attesa non vengono confermate in automatico, e puoi confermarle a mano dall'elenco."
+                : "Se alzi la quota, le classi in lista d'attesa che ci stanno vengono confermate subito, in ordine di prenotazione, e ricevono l'email."}{" "}
             Se la abbassi, nessuna classe confermata perde il posto: semplicemente non se ne confermano altre.
           </p>
           <div className="eva-azioni">
@@ -363,7 +379,8 @@ type Domanda =
   | { tipo: "conferma"; g: GiornataRigaClasse }
   | { tipo: "forza"; g: GiornataRigaClasse; testo: string }
   | { tipo: "rimuovi"; g: GiornataRigaClasse; ultima: boolean }
-  | { tipo: "forza_numeri"; testo: string; studenti: number; accompagnatori: number };
+  /** `giornate`: quelle della domanda, che "Salva comunque" accetta (e solo quelle). */
+  | { tipo: "forza_numeri"; testo: string; studenti: number; accompagnatori: number; giornate: string[] };
 
 /** Il settore di una classe in una giornata, con la modifica in linea. */
 function SettoreGiornata({
@@ -544,7 +561,7 @@ function ModuloNumeri({
         </p>
       ) : (
         <p className="eva-nota" style={{ margin: 0 }}>
-          {`${totale !== null ? `${numero(totale)} persone in tutto (prima ${numero(r.posti)}). ` : ""}Se aumentano, il sistema controlla che ci stiano in ogni giornata confermata. Se diminuiscono, i posti liberati passano a chi è in lista d'attesa.`}
+          {`${totale !== null ? `${numero(totale)} persone in tutto (prima ${numero(r.posti)}). ` : ""}Se aumentano, il sistema controlla che ci stiano in ogni giornata confermata. Se diminuiscono, i posti liberati passano a chi è in lista d'attesa, nelle giornate non ancora iniziate.`}
         </p>
       )}
       <CasellaAvvisa valore={avvisa} onCambia={setAvvisa} />
@@ -577,8 +594,8 @@ const SchedaClasse = memo(function SchedaClasse({
   const [numeriAperti, setNumeriAperti] = useState(false);
   const [esito, setEsito] = useState<Esito | null>(null);
   const boxDomanda = useRef<HTMLDivElement | null>(null);
-  // La domanda "salva comunque" ricorda anche se avvisare il docente.
-  const avvisaNumeri = useRef(true);
+  // Nella domanda "salva comunque", la casella dell'email al docente (parte com'era nel modulo).
+  const [avvisaNumeri, setAvvisaNumeri] = useState(true);
   const occupato = inCorso !== null;
   const titolo = nomeClasse(r);
   const valide = r.giornate.filter((g) => sessionBySlug(g.slug));
@@ -641,15 +658,26 @@ const SchedaClasse = memo(function SchedaClasse({
     return true;
   };
 
-  const salvaNumeri = async (studenti: number, accompagnatori: number, avvisa: boolean, forza = false) => {
+  /** `accetta`: le giornate della domanda "salva comunque", in cui lo staff accetta di andare oltre i posti. */
+  const salvaNumeri = async (studenti: number, accompagnatori: number, avvisa: boolean, accetta?: string[]) => {
     setDomanda(null);
     const res = await chiedi(
       "numeri",
-      { booking_id: r.id, studenti, accompagnatori, avvisa, forza },
+      { booking_id: r.id, studenti, accompagnatori, avvisa, ...(accetta ? { forza: true, accetta } : {}) },
       "numeri",
     );
     if (res.status === 409 && res.dati?.codice === "pieno") {
-      setDomanda({ tipo: "forza_numeri", testo: res.dati.error ?? "Non ci stanno.", studenti, accompagnatori });
+      // Il modulo si chiude: la domanda dice che cosa si salva, e "Salva
+      // comunque" salva proprio quello, con la casella dell'email che si vede.
+      setNumeriAperti(false);
+      setAvvisaNumeri(avvisa);
+      setDomanda({
+        tipo: "forza_numeri",
+        testo: res.dati.error ?? "Non ci stanno.",
+        studenti,
+        accompagnatori,
+        giornate: Array.isArray(res.dati.giornate) ? res.dati.giornate.filter((g) => typeof g === "string") : [],
+      });
       return;
     }
     if (!res.ok || !res.dati) {
@@ -805,10 +833,7 @@ const SchedaClasse = memo(function SchedaClasse({
         <ModuloNumeri
           r={r}
           occupato={occupato}
-          onSalva={(s, d, avvisa) => {
-            avvisaNumeri.current = avvisa;
-            void salvaNumeri(s, d, avvisa);
-          }}
+          onSalva={(s, d, avvisa) => void salvaNumeri(s, d, avvisa)}
           onAnnulla={() => setNumeriAperti(false)}
         />
       )}
@@ -856,14 +881,19 @@ const SchedaClasse = memo(function SchedaClasse({
           {domanda.tipo === "forza_numeri" && (
             <>
               <p>
-                <strong>{domanda.testo}</strong>{" "}Salvando comunque, la classe occupa più posti di quelli disponibili.
-                Procedi solo se hai verificato che c&apos;è spazio in sala.
+                <strong>{domanda.testo}</strong>{" "}
+                {`Salvando comunque ${descriviPersone(domanda.studenti, domanda.accompagnatori)}, la classe occupa più posti di quelli disponibili${
+                  domanda.giornate.length ? ` ${giornateConArticolo(domanda.giornate)}` : ""
+                }. Procedi solo se hai verificato che c'è spazio in sala.`}
               </p>
+              <CasellaAvvisa valore={avvisaNumeri} onCambia={setAvvisaNumeri} />
               <div className="eva-azioni">
                 <button
                   type="button"
                   className="eva-btn eva-btn-pieno-pericolo"
-                  onClick={() => void salvaNumeri(domanda.studenti, domanda.accompagnatori, avvisaNumeri.current, true)}
+                  onClick={() =>
+                    void salvaNumeri(domanda.studenti, domanda.accompagnatori, avvisaNumeri, domanda.giornate)
+                  }
                 >
                   Salva comunque
                 </button>
@@ -887,9 +917,13 @@ const SchedaClasse = memo(function SchedaClasse({
                     Togliere {conArticolo(domanda.g.slug)} dalla prenotazione della <strong>{titolo}</strong>?
                   </>
                 )}{" "}
-                {domanda.g.status === "confermato"
-                  ? "I posti passano a chi è in lista d'attesa (prima le classi che ci stanno, poi le persone), che riceve l'email."
-                  : "La classe esce dalla lista d'attesa."}{" "}
+                {domanda.g.status !== "confermato"
+                  ? "La classe esce dalla lista d'attesa."
+                  : conclusa(domanda.g.slug)
+                    ? "La giornata è conclusa: i posti tornano liberi."
+                    : iniziata(domanda.g.slug)
+                    ? "La giornata è iniziata: i posti non passano in automatico a chi è in lista d'attesa. Se c'è posto, puoi confermare a mano."
+                    : "I posti passano a chi è in lista d'attesa (prima le classi che ci stanno, poi le persone), che riceve l'email."}{" "}
                 {domanda.g.presenti !== null && "La classe risulta già entrata: l'ingresso registrato si perde."}
               </p>
               <CasellaAvvisa valore={avvisaRimozione} onCambia={setAvvisaRimozione} />
