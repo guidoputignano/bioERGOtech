@@ -132,6 +132,13 @@ export function RegistrationForm() {
    * pagina è statica e non sa che ora è. Restano in vista ma non si scelgono.
    */
   const [concluse, setConcluse] = useState<readonly string[]>([]);
+  /**
+   * Quanto l'orologio del server è avanti (o indietro) rispetto a quello del
+   * telefono, letto dall'intestazione Date della risposta dei posti. Un
+   * telefono con la data sbagliata non deve vedere le giornate "concluse"
+   * prima del tempo (e non poter più iscriversi).
+   */
+  const [scartoOrologio, setScartoOrologio] = useState(0);
   const [invio, setInvio] = useState(false);
   /** Quante volte si è provato a inviare: da 1 in poi gli errori si vedono e si aggiornano dal vivo. */
   const [tentativi, setTentativi] = useState(0);
@@ -181,6 +188,8 @@ export function RegistrationForm() {
   const caricaPosti = useCallback(async (signal?: AbortSignal) => {
     try {
       const res = await fetch("/api/eventi/seats", { cache: "no-store", signal });
+      const oraServer = Date.parse(res.headers.get("date") ?? "");
+      if (!Number.isNaN(oraServer)) setScartoOrologio(oraServer - Date.now());
       if (!res.ok) return;
       setPosti(leggiPosti(await res.json()));
     } catch {
@@ -198,7 +207,7 @@ export function RegistrationForm() {
   // minuto per chi tiene la pagina aperta. Se era già scelta, la si toglie.
   useEffect(() => {
     const controlla = () => {
-      const adesso = Date.now();
+      const adesso = Date.now() + scartoOrologio;
       const finite = SESSIONS.filter((s) => adesso >= Date.parse(s.fineISO)).map((s) => s.slug as string);
       setConcluse((prima) => (prima.join(",") === finite.join(",") ? prima : finite));
       if (finite.length > 0) {
@@ -208,7 +217,7 @@ export function RegistrationForm() {
     controlla();
     const timer = window.setInterval(controlla, 60_000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [scartoOrologio]);
 
   /* ── Stato derivato ── */
 

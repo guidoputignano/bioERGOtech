@@ -124,10 +124,14 @@ const descriviErrore = (e: { code?: string; message?: string } | null | undefine
 
 /**
  * Richieste per indirizzo IP. Il limite è largo di proposito: una classe
- * intera si iscrive dalla rete della scuola, con un solo indirizzo.
+ * intera si iscrive dalla rete della scuola, e il 10 e l'11 dicembre chi
+ * arriva senza iscrizione si iscrive dal QR con il Wi-Fi della sala o con la
+ * rete del telefono, che spesso condivide un solo indirizzo fra molti. Ferma
+ * uno script, non una sala piena. Il limite vero fra tutte le istanze è una
+ * regola nel Vercel Firewall (vedi README).
  */
 const FINESTRA_IP_MS = 10 * 60 * 1000;
-const MAX_PER_IP = 60;
+const MAX_PER_IP = 200;
 const richiestePerIp = new Map<string, { n: number; da: number }>();
 
 /** Il biglietto di un'iscrizione che c'è già non riparte più di una volta ogni due minuti. */
@@ -376,8 +380,9 @@ export async function POST(request: Request) {
         ? {
             ...parametriConDatiSalvati(salvata, richieste),
             p_user_id: salvata.user_id ?? userId,
-            // Il consenso marketing si può solo dare, mai togliere (lo garantisce l'RPC).
-            p_marketing: marketing,
+            // Chi non ha fatto l'accesso non decide il consenso marketing di un
+            // altro: false lascia quello salvato com'è (l'RPC lo può solo dare).
+            p_marketing: false,
             p_marketing_testo: CONSENSO_MARKETING_TESTO,
             p_codice: codice,
           }
@@ -434,7 +439,9 @@ export async function POST(request: Request) {
     const nuovoAccount = userId ? false : await creaAccount(client, result.registration_id, email, `${nome} ${cognome}`.trim());
 
     // ── 8. Bacino marketing unificato: stesso pool del resto del sito ──
-    if (marketing) {
+    // Solo per un'iscrizione nuova o per il titolare: bastano email e nome per
+    // arrivare fin qui, e non devono bastare a iscrivere qualcuno alla newsletter.
+    if (marketing && !soloAggiunta) {
       const { error: nlError } = await client.from("newsletter_subscribers").upsert(
         {
           email,

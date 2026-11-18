@@ -30,7 +30,13 @@ const SOLO_TELEFONO = /^\+[\d\s().\/-]+$/;
  */
 function cella(valore: unknown): string {
   let s = valore == null ? "" : String(valore);
-  if (SOLO_TELEFONO.test(s)) s = ` ${s}`;
+  if (SOLO_TELEFONO.test(s)) {
+    // Tutto attaccato ("+393331234567") Excel lo legge come numero: toglie il
+    // + e lo mostra come 3,93E+11. Uno spazio dopo il prefisso lo tiene testo;
+    // le cifre non cambiano, quindi il numero si chiama lo stesso.
+    if (/^\+\d+$/.test(s)) s = `${s.slice(0, 3)} ${s.slice(3)}`;
+    s = ` ${s}`;
+  }
   else if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return `"${s.replace(/"/g, '""')}"`;
 }

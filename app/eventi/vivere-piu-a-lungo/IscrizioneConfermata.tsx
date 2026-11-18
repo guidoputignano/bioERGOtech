@@ -171,14 +171,14 @@ export function IscrizioneConfermata({
           </h3>
           {dati.emailInviata ? (
             <p className="vpl-ok-intro">
-              Con questo indirizzo email c&apos;era già un&apos;iscrizione. Abbiamo aggiunto le giornate nuove che hai
-              scelto e ti abbiamo mandato il biglietto aggiornato a <strong>{dati.email}</strong>: lì trovi il codice e il
-              QR.
+              Con questo indirizzo email c&apos;era già un&apos;iscrizione. Ti abbiamo mandato a{" "}
+              <strong>{dati.email}</strong> il biglietto aggiornato, con tutte le giornate a cui sei iscritto: lì trovi
+              il codice e il QR.
             </p>
           ) : (
             <p className="vpl-ok-intro">
-              Con questo indirizzo email c&apos;era già un&apos;iscrizione. Abbiamo aggiunto le giornate nuove che hai
-              scelto, ma in questo momento non siamo riusciti a mandarti il biglietto aggiornato a{" "}
+              Con questo indirizzo email c&apos;era già un&apos;iscrizione, ma in questo momento non siamo riusciti a
+              mandarti il biglietto aggiornato a{" "}
               <strong>{dati.email}</strong>. Riprova tra qualche minuto iscrivendoti di nuovo con la stessa email e lo
               stesso nome, oppure scrivi a{" "}
               <a className="vpl-link" href="mailto:info@bioergotech.org">
@@ -361,8 +361,8 @@ export function IscrizioneConfermata({
             {reinvio.stato !== "ok" && (
               <>
                 <p>
-                  Non siamo riusciti a mandarti l&apos;email in questo momento. Apri il biglietto qui sopra e salvalo; tra
-                  qualche minuto puoi fartelo rimandare dal biglietto online.
+                  Non siamo riusciti a mandarti l&apos;email in questo momento. Apri il biglietto qui sopra e salvalo,
+                  oppure prova a fartelo rimandare.
                 </p>
                 <button
                   type="button"

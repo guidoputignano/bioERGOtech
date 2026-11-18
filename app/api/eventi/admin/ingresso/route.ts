@@ -28,7 +28,8 @@ export const dynamic = "force-dynamic";
  *
  * POST { annulla: bridgeId, forzato? }     l'ingresso torna com'era prima:
  *      "registrato"; con forzato "lista_attesa" anche di nuovo in lista
- *      d'attesa; con "altra_giornata" la giornata aggiunta alla porta si toglie
+ *      d'attesa; una giornata aggiunta alla porta (riga nata nello stesso
+ *      istante dell'ingresso) si toglie
  *      { annullato, giaAnnullato?, tornaInAttesa?, giornataTolta? }
  * POST { cerca, giornata }                 biglietto dimenticato: per nome o cognome
  *
@@ -414,7 +415,16 @@ async function annulla(client: SupabaseClient, bridgeId: string, forzato: Forzat
   // Già annullato, magari da un altro telefono: va bene così.
   if (riga.stato_checkin !== "presente") return risposta({ annullato: true, giaAnnullato: true });
 
-  if (forzato === "altra_giornata" || nataAllaPorta(riga.created_at ?? null, riga.checkin_ts ?? null)) {
+  // Si cancella solo una riga nata davvero alla porta: aggiungiGiornataEdEntra
+  // scrive lo stesso istante in created_at e checkin_ts. Il "forzato" che
+  // manda il telefono non basta da solo: non deve poter togliere una giornata
+  // che la persona aveva già (per esempio nella rara gara 23505, in cui la
+  // riga esisteva già e l'ingresso è stato registrato su quella).
+  const nata = nataAllaPorta(riga.created_at ?? null, riga.checkin_ts ?? null);
+  if (forzato === "altra_giornata" && !nata) {
+    console.warn(`[eventi/admin/ingresso] annullamento ${bridgeId}: giornata non nata alla porta, torna solo "registrato".`);
+  }
+  if (nata) {
     const { data: tolte, error } = await client
       .from("event_registration_sessions")
       .delete()

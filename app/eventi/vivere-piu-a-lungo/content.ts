@@ -629,7 +629,7 @@ export const FAQ: { q: string; a: string; link?: { href: string; label: string }
   },
   {
     q: "Non posso più venire: come libero il posto?",
-    a: "Apri il biglietto online dal link nell'email di conferma e, per la giornata in cui non puoi esserci, usa «Libera il posto» nella sezione Gestisci la tua iscrizione. Il posto passa a chi è in lista d'attesa. Grazie: così può partecipare un'altra persona.",
+    a: "Apri il biglietto online dal link nell'email di conferma e, per la giornata in cui non puoi esserci, usa «Libera il posto» nella sezione Gestisci la tua iscrizione. Il posto passa a chi è in lista d'attesa, oppure torna disponibile per chi si iscrive. Grazie: così può partecipare un'altra persona.",
   },
   {
     q: "Ho perso il biglietto o non trovo l'email: che cosa faccio?",

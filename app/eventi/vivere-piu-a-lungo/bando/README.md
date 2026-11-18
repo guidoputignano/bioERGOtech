@@ -204,5 +204,5 @@ Le stesse gia in uso nel progetto: `NEXT_PUBLIC_SUPABASE_URL`,
 
 Non serve cancellare nulla. Passata la scadenza il form sparisce da solo e la
 pagina resta consultabile come documentazione della procedura. Per archiviare
-tutto insieme all'evento basta `ARCHIVE_MODE = true` nel `content.ts` del
+tutto insieme all'evento basta `ARCHIVE_MODE = true` nell'`archivio.ts` del
 modulo evento.

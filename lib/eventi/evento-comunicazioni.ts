@@ -691,9 +691,12 @@ export async function inviaCampagna(
   }
 
   const { destinatari, nonInviabili } = prep;
-  const totale = destinatari.length + nonInviabili.length;
+  // Un'iscrizione senza giornate non ha niente da ricevere: non è un
+  // destinatario e non è un'email non partita. Un indirizzo scritto male sì.
+  const indirizziSbagliati = nonInviabili.filter((x) => x.motivo !== MOTIVO_SENZA_GIORNATA).length;
+  const totale = destinatari.length + indirizziSbagliati;
   let inviate = 0;
-  let errori = nonInviabili.length;
+  let errori = indirizziSbagliati;
   for (const x of nonInviabili) {
     // Il motivo per esteso può contenere il dominio dell'indirizzo: nei log solo la categoria.
     const perche = x.motivo === MOTIVO_SENZA_GIORNATA ? "nessuna giornata" : "indirizzo non valido";

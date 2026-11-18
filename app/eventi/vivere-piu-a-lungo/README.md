@@ -7,11 +7,12 @@ perdere le iscrizioni.
 
 ## Configurazione (un solo punto)
 
-Tutto cio che cambia tra edizioni sta in `content.ts`:
+Tutto cio che cambia tra edizioni sta in `content.ts`, tranne la modalità
+archivio, che sta in `archivio.ts` (la legge anche la navbar):
 
-- `ARCHIVE_MODE`: metti a `true` a evento concluso. Nasconde i form e mostra
-  il recap. Nessun dato viene cancellato. Le API di iscrizione rifiutano
-  nuove richieste.
+- `ARCHIVE_MODE` in `archivio.ts`: metti a `true` a evento concluso. Nasconde
+  i form e mostra il recap. Nessun dato viene cancellato. Le API di
+  iscrizione rifiutano nuove richieste. `content.ts` la riesporta.
 - `EVENT`: occhiello, titolo, sottotitolo, date e orari (etichette + ISO per
   i dati strutturati), luoghi, immagine Open Graph.
 - `SESSIONS`: le due sessioni iscrivibili (una per giornata), con `capienza`. Le stesse capienze
@@ -161,9 +162,10 @@ posto passa da solo a chi è in lista d'attesa da più tempo per quel giorno,
 che riceve l'email "si è liberato un posto". La persona che ha liberato il
 posto riceve un avviso per email.
 
-Limiti contro gli abusi: un limite in memoria per IP (60 iscrizioni ogni 10
-minuti, alto perché una classe si iscrive dalla stessa rete della scuola) e
-l'honeypot. Il limite in memoria vale per singola istanza: per un limite vero
+Limiti contro gli abusi: un limite in memoria per IP (200 richieste ogni 10
+minuti, alto perché una classe si iscrive dalla stessa rete della scuola e,
+il giorno dell'evento, la sala dallo stesso Wi-Fi) e l'honeypot. Chi non ha
+fatto l'accesso non cambia il consenso marketing di un'iscrizione esistente. Il limite in memoria vale per singola istanza: per un limite vero
 fra tutte le istanze serve una regola nel Vercel Firewall su
 `POST /api/eventi/registrations`.
 
@@ -219,7 +221,7 @@ evento archiviato le candidature risultano chiuse.
 
 ## Archiviare o rimuovere
 
-- Archiviare: `ARCHIVE_MODE = true` in `content.ts`.
+- Archiviare: `ARCHIVE_MODE = true` in `archivio.ts`.
 - Rimuovere il modulo conservando i dati: elimina questa cartella,
   `app/api/eventi/`, `lib/eventi/`, la voce "Eventi" in `components/navbar.tsx`
   e il blocco evento in `app/page.tsx`. Le tabelle restano nel database.

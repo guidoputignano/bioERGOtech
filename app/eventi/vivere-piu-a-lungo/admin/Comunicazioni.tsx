@@ -226,17 +226,19 @@ function NonInviabili({ c }: { c: VistaCampagna }) {
     <div className="eva-avviso eva-avviso-attenzione">
       <i className={`fas ${indirizzi > 0 ? "fa-at" : "fa-user-slash"}`} aria-hidden="true" />
       <div style={{ minWidth: 0 }}>
-        <strong>{titolo}</strong> {c.nonInviabiliTotale === 1 ? "Conta" : "Contano"} fra le email non partite.{" "}
+        <strong>{titolo}</strong>{" "}
         {indirizzi > 0 && (
           <>
-            Conviene avvisare chi ha l&apos;indirizzo sbagliato in un altro modo: il telefono, se l&apos;ha lasciato, è
+            {indirizzi === 1 ? "L'indirizzo sbagliato conta" : "Gli indirizzi sbagliati contano"} fra le email non
+            partite. Conviene avvisare chi ha l&apos;indirizzo sbagliato in un altro modo: il telefono, se l&apos;ha lasciato, è
             nella scheda Iscritti.{" "}
           </>
         )}
         {senza > 0 && (
           <>
-            Un&apos;iscrizione senza giornate non ha un posto e all&apos;ingresso non risulta: controllala nella scheda
-            Iscritti, poi elimina l&apos;iscrizione oppure aggiungi la giornata giusta dal biglietto della persona.
+            Un&apos;iscrizione senza giornate non ha un posto, all&apos;ingresso non risulta e non conta fra le email
+            non partite: controllala nella scheda Iscritti, poi elimina l&apos;iscrizione oppure aggiungi la giornata
+            giusta dal biglietto della persona.
           </>
         )}
         <details className="evc-dettagli">
