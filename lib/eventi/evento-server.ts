@@ -147,14 +147,116 @@ export async function giornateMancantiNelDatabase(client: SupabaseClient): Promi
 }
 
 /**
- * Le giornate che una persona non ha e che hanno ancora posti: l'email la
- * invita a venire anche quel giorno.
+ * Le giornate che una persona non ha, che non sono ancora iniziate e che
+ * hanno ancora posti: l'email la invita a venire anche quel giorno. Una
+ * giornata già iniziata non si offre più: il link porterebbe a "non si può
+ * più aggiungere".
  */
-export function giornateAggiungibili(iscr: IscrizioneEvento, posti: PostiGiornata[]): string[] {
+export function giornateAggiungibili(
+  iscr: IscrizioneEvento,
+  posti: PostiGiornata[],
+  adesso: number = Date.now(),
+): string[] {
   const ha = new Set(iscr.giornate.map((g) => g.slug));
   return SESSIONS.filter((s) => !ha.has(s.slug))
+    .filter((s) => Date.parse(s.inizioISO) > adesso)
     .filter((s) => (posti.find((p) => p.slug === s.slug)?.rimanenti ?? 0) > 0)
     .map((s) => s.slug);
+}
+
+/**
+ * Dopo che un posto confermato si è liberato: conferma la persona che è in
+ * lista d'attesa da più tempo per quella giornata, se c'è ancora posto, e
+ * le manda il biglietto ("si è liberato un posto"). Così è vero quello che
+ * dicono le pagine e le email: il posto passa a chi è in lista d'attesa,
+ * prima che lo prenda un nuovo iscritto.
+ *
+ * Non lancia mai: chi ha liberato il posto non deve vedere un errore per
+ * questo. Ogni problema finisce nei log, e il pannello mostra comunque
+ * "Puoi confermare N persone" finché il posto resta libero.
+ *
+ * Non c'è il lock dell'RPC: se nello stesso istante si iscrive qualcuno, la
+ * giornata può superare la capienza di un posto, mai di più. L'update vale
+ * solo se la riga è ancora in lista d'attesa, quindi due liberazioni
+ * contemporanee non confermano due volte la stessa persona.
+ *
+ * Torna l'iscrizione confermata, o null se nessuno è stato confermato.
+ */
+export async function promuoviDaListaAttesa(
+  client: SupabaseClient,
+  resend: Resend | null,
+  slug: string,
+): Promise<IscrizioneEvento | null> {
+  try {
+    const { data: sess, error: sessError } = await client
+      .from("event_sessions")
+      .select("id, capienza_max")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (sessError || !sess) {
+      if (sessError) console.error(`Lista d'attesa ${slug}: giornata non letta:`, sessError.message);
+      return null;
+    }
+
+    const { count, error: countError } = await client
+      .from("event_registration_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sess.id)
+      .eq("is_waitlist", false);
+    if (countError) {
+      console.error(`Lista d'attesa ${slug}: confermati non contati:`, countError.message);
+      return null;
+    }
+    if ((count ?? 0) >= Number(sess.capienza_max)) return null;
+
+    const { data: primo, error: primoError } = await client
+      .from("event_registration_sessions")
+      .select("id, registration_id")
+      .eq("session_id", sess.id)
+      .eq("is_waitlist", true)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (primoError) {
+      console.error(`Lista d'attesa ${slug}: primo in attesa non letto:`, primoError.message);
+      return null;
+    }
+    if (!primo) return null;
+
+    const { data: aggiornate, error: updError } = await client
+      .from("event_registration_sessions")
+      .update({ is_waitlist: false })
+      .eq("id", primo.id)
+      .eq("is_waitlist", true)
+      .select("id");
+    if (updError) {
+      console.error(`Lista d'attesa ${slug}: conferma non riuscita:`, updError.message);
+      return null;
+    }
+    if (!aggiornate || aggiornate.length === 0) return null; // confermata nel frattempo da qualcun altro
+
+    console.info(`Lista d'attesa ${slug}: confermata l'iscrizione ${primo.registration_id} (posto liberato).`);
+    const promossa = await caricaIscrizione(client, { id: String(primo.registration_id) });
+    if (!promossa) return null;
+
+    if (resend) {
+      const posti = await postiPerGiornata(client);
+      const esito = await inviaBiglietto(resend, promossa, "posto_liberato", {
+        giornataLiberata: slug,
+        aggiungibili: giornateAggiungibili(promossa, posti),
+      });
+      if (!esito.ok) {
+        console.error(`Lista d'attesa ${slug}: biglietto non inviato all'iscrizione ${promossa.id}:`, esito.errore);
+      }
+    } else {
+      console.error(`Lista d'attesa ${slug}: RESEND_API_KEY mancante, biglietto non inviato all'iscrizione ${promossa.id}.`);
+    }
+    return promossa;
+  } catch (err) {
+    console.error(`Lista d'attesa ${slug}: errore inatteso:`, err instanceof Error ? err.message : err);
+    return null;
+  }
 }
 
 export type EsitoInvio = { ok: true; id: string | null } | { ok: false; errore: string };
@@ -178,18 +280,36 @@ export async function inviaBiglietto(
     motivo,
     ...opzioni,
   });
-  try {
-    const { data, error } = await resend.emails.send({
-      from: EMAIL_MITTENTE,
-      to: iscr.email,
-      replyTo: EMAIL_RISPOSTE,
-      subject,
-      html,
-      text,
-    });
-    if (error) return { ok: false, errore: `${error.name}: ${error.message}` };
-    return { ok: true, id: data?.id ?? null };
-  } catch (err) {
-    return { ok: false, errore: err instanceof Error ? err.message : String(err) };
+  const messaggio = { from: EMAIL_MITTENTE, to: iscr.email, replyTo: EMAIL_RISPOSTE, subject, html, text };
+  return inviaConUnNuovoTentativo(() => resend.emails.send(messaggio));
+}
+
+/** Gli errori di Resend per cui ha senso riprovare: troppe richieste, server, rete. */
+function erroreTemporaneo(e: { name?: string; statusCode?: number | null }): boolean {
+  if (e.name === "rate_limit_exceeded" || e.name === "internal_server_error" || e.name === "application_error") return true;
+  return e.statusCode == null || e.statusCode === 429 || e.statusCode >= 500;
+}
+
+/**
+ * Un invio con un secondo tentativo dopo un secondo, solo per gli errori
+ * temporanei: una classe che si iscrive dallo stesso QR nello stesso minuto
+ * può superare per un attimo il limite di Resend. Le quote esaurite e gli
+ * indirizzi rifiutati non si riprovano.
+ */
+export async function inviaConUnNuovoTentativo(
+  invia: () => Promise<{ data: { id: string } | null; error: { name?: string; message: string; statusCode?: number | null } | null }>,
+): Promise<EsitoInvio> {
+  let ultimo = "";
+  for (let tentativo = 0; tentativo < 2; tentativo++) {
+    if (tentativo > 0) await new Promise((r) => setTimeout(r, 1000));
+    try {
+      const { data, error } = await invia();
+      if (!error) return { ok: true, id: data?.id ?? null };
+      ultimo = `${error.name}: ${error.message}`;
+      if (!erroreTemporaneo(error)) break;
+    } catch (err) {
+      ultimo = err instanceof Error ? err.message : String(err);
+    }
   }
+  return { ok: false, errore: ultimo };
 }

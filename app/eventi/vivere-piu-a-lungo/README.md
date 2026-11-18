@@ -76,9 +76,10 @@ innovazione con premiazione e concerto).
 
 In produzione queste due migrazioni di dati non erano state eseguite, e le
 scelte del 10 dicembre andavano perse. `supabase/migrations/20261231300000_event_giorno1_ripristino.sql`
-le applica (si può rieseguire senza effetti) e ridà il 10 dicembre a chi non
-aveva nessuna giornata. Va eseguito a mano nello SQL editor di Supabase prima
-di pubblicare il codice che lo presuppone.
+le applica e ridà il 10 dicembre a chi non aveva nessuna giornata. Va
+eseguito una volta sola, a mano nello SQL editor di Supabase, prima di
+pubblicare il codice che lo presuppone. Non va rieseguito dopo: il passo 2
+darebbe il 10 dicembre a ogni iscrizione rimasta senza giornate.
 
 Crea tre tabelle dedicate (`event_sessions`, `event_registrations`,
 `event_registration_sessions`), una RPC atomica `event_register` con controllo
@@ -141,12 +142,30 @@ Controlli che fermano l'iscrizione invece di perderla in silenzio:
   email);
 - la stessa email usata per un'altra persona (409: ogni partecipante si
   iscrive con la propria email);
-- un refuso evidente nel dominio dell'email.
+- un refuso evidente nel dominio dell'email;
+- una giornata già conclusa (400);
+- nome o cognome con cifre, simboli o indirizzi web (400): il nome finisce
+  nell'email del biglietto.
 
-Reiscriversi con la stessa email e lo stesso nome aggiunge le giornate e
-rimanda il biglietto con tutte le giornate. Dal biglietto online (sezione
-"Gestisci") la persona libera il posto di una giornata, ne aggiunge un'altra o
-si fa rimandare il biglietto (`/api/eventi/registrations/gestisci`).
+Reiscriversi con la stessa email e lo stesso nome aggiunge le giornate nuove
+e rimanda il biglietto, con tutte le giornate, all'indirizzo dell'iscrizione.
+Chi non ha fatto l'accesso con quell'email non vede il codice a schermo e non
+cambia i dati salvati: il codice serve anche a liberare il posto, quindi
+arriva solo per email. Lo stesso biglietto non si rimanda più di una volta
+ogni 2 minuti.
+
+Dal biglietto online (sezione "Gestisci") la persona libera il posto di una
+giornata, ne aggiunge un'altra o si fa rimandare il biglietto
+(`/api/eventi/registrations/gestisci`). Quando libera un posto confermato, il
+posto passa da solo a chi è in lista d'attesa da più tempo per quel giorno,
+che riceve l'email "si è liberato un posto". La persona che ha liberato il
+posto riceve un avviso per email.
+
+Limiti contro gli abusi: un limite in memoria per IP (60 iscrizioni ogni 10
+minuti, alto perché una classe si iscrive dalla stessa rete della scuola) e
+l'honeypot. Il limite in memoria vale per singola istanza: per un limite vero
+fra tutte le istanze serve una regola nel Vercel Firewall su
+`POST /api/eventi/registrations`.
 
 Il consenso marketing (opt-in separato, non preselezionato) viene salvato con
 timestamp e testo, e l'iscritto finisce anche in `newsletter_subscribers`
@@ -161,19 +180,27 @@ timestamp e testo, e l'iscritto finisce anche in `newsletter_subscribers`
     scuole e organizzazioni. Si aggiorna ogni minuto.
   - **Iscritti**: ricerca, filtri per giornata, stato e categoria; presenza;
     conferma dalla lista d'attesa (con email "si è liberato un posto");
-    rimozione da una giornata; reinvio del biglietto; eliminazione delle
-    iscrizioni rimaste senza giornata.
+    rimozione da una giornata (se era un posto confermato, passa da solo al
+    primo in lista d'attesa; togliere l'ultima giornata elimina
+    l'iscrizione); reinvio del biglietto; eliminazione delle iscrizioni
+    rimaste senza giornata.
   - **Ingresso**: il check-in alla porta (vedi sotto).
   - **Comunicazioni**: il biglietto aggiornato (una volta, a tutti) e il
-    promemoria (automatico l'8 dicembre, dal cron `/api/cron/evento`).
+    promemoria (automatico l'8 dicembre, dal cron `/api/cron/evento`). Le
+    iscrizioni senza giornata non ricevono nulla e sono elencate a parte;
+    fermano gli invii solo finché il file di ripristino non è stato eseguito.
 - Link diretti: `?tab=iscritti&giornata=giorno-1&stato=attesa`.
 - Export CSV per Excel (separatore `;`): `/api/eventi/admin/export` (tutti,
   una colonna per giornata) e `?giornata=giorno-1` (la lista del giorno).
 - Lista da stampare per la porta: `/eventi/vivere-piu-a-lungo/admin/stampa?giornata=giorno-1`.
+  Mostra solo le ultime 4 cifre del codice: il codice intero apre il
+  biglietto e permette di liberare il posto.
 - Check-in alla porta: `/eventi/vivere-piu-a-lungo/admin/ingresso`, a schermo
   intero sul telefono. Scansione continua del QR (anche su iPhone, con jsQR),
   codice a mano, "già entrato alle...", lista d'attesa e altra giornata con
-  "Fai entrare comunque", ultimi ingressi con "Annulla". Vale il primo orario
+  "Fai entrare comunque", ultimi ingressi con "Annulla" (che dopo un ingresso
+  forzato rimette la persona in lista d'attesa o toglie la giornata aggiunta
+  alla porta). Vale il primo orario
   d'ingresso. Accesso: admin, oppure le email in `EVENT_CHECKIN_EMAILS`.
 
 Ogni iscritto ha un codice univoco e un QR in PNG (`/api/eventi/qr/<codice>`),

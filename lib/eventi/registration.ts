@@ -93,6 +93,22 @@ export type CampoIscrizione =
 
 export type ErroreIscrizione = { error: string; campo?: CampoIscrizione };
 
+/**
+ * Un nome o un cognome di persona: lettere (accenti compresi), spazi,
+ * apostrofi dritti e tipografici, trattini e punti ("J. R."). Niente cifre,
+ * simboli o indirizzi web: il nome finisce nell'email del biglietto, e così
+ * non ci entra un link.
+ * La stessa regola vale nel modulo (modulo-utils.ts) e nella rotta.
+ */
+export function nomeDiPersonaValido(v: string): boolean {
+  const t = v.trim();
+  // Un punto seguito da due lettere ("bit.ly", "www.sito.it") è un indirizzo, non un nome.
+  return /^[\p{L}\p{M}][\p{L}\p{M}\s'’ʼ.\-]*$/u.test(t) && !/\.\p{L}{2,}/u.test(t);
+}
+
+export const ERRORE_CARATTERI_NOME = "Nel nome usa solo lettere, spazi, apostrofi e trattini.";
+export const ERRORE_CARATTERI_COGNOME = "Nel cognome usa solo lettere, spazi, apostrofi e trattini.";
+
 /** Lunghezze massime: oltre, un nome o un indirizzo non è plausibile. */
 export const LUNGHEZZE_MASSIME = {
   nome: 80,
@@ -125,10 +141,12 @@ export function validaIscrizione(
   const nome = testo(input.nome);
   if (!nome) return { error: "Scrivi il tuo nome.", campo: "nome" };
   if (nome.length > LUNGHEZZE_MASSIME.nome) return { error: "Il nome è troppo lungo.", campo: "nome" };
+  if (!nomeDiPersonaValido(nome)) return { error: ERRORE_CARATTERI_NOME, campo: "nome" };
 
   const cognome = testo(input.cognome);
   if (!cognome) return { error: "Scrivi il tuo cognome.", campo: "cognome" };
   if (cognome.length > LUNGHEZZE_MASSIME.cognome) return { error: "Il cognome è troppo lungo.", campo: "cognome" };
+  if (!nomeDiPersonaValido(cognome)) return { error: ERRORE_CARATTERI_COGNOME, campo: "cognome" };
 
   const email = testo(input.email);
   if (!email) return { error: "Scrivi il tuo indirizzo email.", campo: "email" };
