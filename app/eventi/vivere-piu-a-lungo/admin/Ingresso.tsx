@@ -31,10 +31,19 @@
  * "Annulla l'ingresso" rimette le cose come prima anche dopo un ingresso
  * forzato: la rotta riceve il tipo (`forzato`), che il telefono ricorda per
  * gli ingressi registrati da lui.
+ *
+ * Le classi hanno un QR solo (VPC-XXXXXXXX): leggerlo apre la scheda della
+ * classe (scuola, classe, docente con il telefono, quante persone, settore)
+ * e il volontario dice quante persone entrano adesso. Un secondo ingresso
+ * aggiunge i ritardatari ("23 di 30 entrati"). La scheda manda alla rotta
+ * quante persone mostrava già entrate: se nel frattempo il numero è
+ * cambiato, non si scrive niente e la scheda si aggiorna. Mentre la scheda
+ * aspetta il numero, la fotocamera non legge altri QR.
  */
 
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { SESSIONS, giornateConArticolo, sessionBySlug } from "../content";
+import { descriviPersone } from "@/lib/eventi/classi";
 
 /* ── Costanti ─────────────────────────────────────────────────────────── */
 
@@ -63,22 +72,67 @@ type Persona = {
   note: string | null;
 };
 
-type Ultimo = { bridgeId: string; nome: string; cognome: string; ora: string };
+type UltimoPersona = { tipo?: "persona"; bridgeId: string; nome: string; cognome: string; ora: string };
+type UltimoClasse = {
+  tipo: "classe";
+  bridgeId: string;
+  classe: string;
+  istituto: string;
+  presenti: number;
+  posti: number;
+  ora: string;
+};
+type Ultimo = UltimoPersona | UltimoClasse;
 
-/** Perché una persona è entrata senza un posto confermato per oggi. */
+/** Perché una persona (o una classe) è entrata senza un posto confermato per oggi. */
 type Forzato = "lista_attesa" | "altra_giornata";
+
+type NumeriClassi = { confermate: number; in_attesa: number; entrate: number; presenti: number };
 
 type StatoGiornata = {
   giornata: string;
   /** La giornata di oggi secondo il server al momento della lettura. */
   oggi?: string | null;
+  /** I posti occupati: persone e classi confermate. */
   confermati: number;
   lista_attesa: number;
+  /** Tutti gli ingressi: persone e persone delle classi. */
   entrati: number;
+  /** Null se le prenotazioni per classe non sono nel database. */
+  classi?: NumeriClassi | null;
   ultimi: Ultimo[];
 };
 
-type EsitoIngresso = "entrato" | "gia_entrato" | "lista_attesa" | "altra_giornata" | "non_trovato";
+/** Una classe come la vede la porta. */
+type SchedaClasse = {
+  id: string;
+  bridgeId: string | null;
+  istituto: string;
+  comune: string | null;
+  classe: string;
+  docente: string;
+  telefono: string | null;
+  studenti: number;
+  accompagnatori: number;
+  posti: number;
+  note: string | null;
+  stato: "confermato" | "lista_attesa" | "altra_giornata";
+  settore: string | null;
+  /** Le persone della classe già entrate oggi (null: nessuna). */
+  presenti: number | null;
+  /** L'ora del primo ingresso. */
+  ora: string | null;
+  altreGiornate: string[];
+};
+
+type EsitoIngresso =
+  | "entrato"
+  | "gia_entrato"
+  | "lista_attesa"
+  | "altra_giornata"
+  | "non_trovato"
+  | "classe"
+  | "classe_entrata";
 
 type RispostaIngresso = {
   esito: EsitoIngresso;
@@ -87,9 +141,13 @@ type RispostaIngresso = {
   altreGiornate?: string[];
   bridgeId?: string;
   forzato?: Forzato;
+  classe?: SchedaClasse;
+  entrati?: number;
+  prima?: number | null;
+  cambiata?: boolean;
 };
 
-type Chiave = { codice: string } | { registrazione: string };
+type Chiave = { codice: string } | { registrazione: string } | { classe: string };
 
 type Risultato = {
   /** Progressivo: distingue due esiti uguali uno dopo l'altro. */
@@ -108,11 +166,31 @@ type Risultato = {
   messaggio?: string;
   accesso?: boolean;
   rete?: boolean;
+  /** Per le classi: la scheda, quante persone sono appena entrate e quante ce n'erano prima. */
+  classe?: SchedaClasse;
+  entrati?: number;
+  prima?: number | null;
+  /** La scheda è cambiata nel frattempo: niente è stato scritto. */
+  cambiata?: boolean;
 };
 
 type Trovato = Persona & {
   rif: string;
   oggi: "entrato" | "confermato" | "lista_attesa" | "non_iscritto";
+  ora: string | null;
+  altreGiornate: string[];
+};
+
+type TrovataClasse = {
+  rif: string;
+  classe: string;
+  istituto: string;
+  comune: string | null;
+  docente: string;
+  posti: number;
+  settore: string | null;
+  oggi: "entrata" | "confermato" | "lista_attesa" | "altra_giornata";
+  presenti: number | null;
   ora: string | null;
   altreGiornate: string[];
 };
@@ -163,9 +241,9 @@ function oraAdesso(): string {
 function sembraBiglietto(testo: string): boolean {
   const t = testo.trim();
   if (!t || t.length > 300) return false;
-  if (/biglietto\/[A-Za-z0-9-]+/.test(t)) return true;
+  if (/(biglietto|classe)\/[A-Za-z0-9-]+/.test(t)) return true;
   const compatto = t.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  return /^VPL[A-Z0-9]{8}$/.test(compatto) || /^[A-Z0-9]{8}$/.test(compatto);
+  return /^VP[LC][A-Z0-9]{8}$/.test(compatto) || /^[A-Z0-9]{8}$/.test(compatto);
 }
 
 async function chiama(
@@ -350,7 +428,47 @@ const TONO: Record<Risultato["tipo"], Tono> = {
   non_trovato: "errore",
   non_biglietto: "errore",
   errore: "errore",
+  classe: "ok",
+  classe_entrata: "ok",
 };
+
+/** La scheda di una classe è in ambra quando c'è qualcosa da decidere. */
+function classeDaControllare(r: Risultato): boolean {
+  const c = r.classe;
+  if (!c) return true;
+  return Boolean(r.cambiata) || c.stato !== "confermato" || (c.presenti !== null && c.presenti >= c.posti);
+}
+
+/** Il segnale di un esito: per la scheda di una classe dipende da com'è messa. */
+function tonoPer(r: Risultato): Tono {
+  if (r.tipo === "classe") return classeDaControllare(r) ? "attenzione" : "ok";
+  return TONO[r.tipo];
+}
+
+/** La chiave degli ingressi forzati di una classe: le righe delle classi sono un'altra tabella. */
+const chiaveClasse = (bridgeId: string) => `classe:${bridgeId}`;
+
+/** "Classe 4B", anche se nel modulo è stato scritto "classe 4B". */
+const nomeDellaClasse = (classe: string) => {
+  const t = classe.trim();
+  return /^classe\b/i.test(t) ? `Classe${t.slice(6)}` : `Classe ${t}`;
+};
+
+/** "classe 4B", dentro una frase ("l'ingresso della classe 4B"): la sezione resta maiuscola. */
+const classeInFrase = (classe: string) => `c${nomeDellaClasse(classe).slice(1)}`;
+
+/** "Liceo Archita, Taranto". */
+const scuolaConComune = (c: { istituto: string; comune: string | null }) =>
+  `${c.istituto.trim()}${c.comune ? `, ${c.comune.trim()}` : ""}`;
+
+/** Le persone della classe che entrano adesso, se nessuno le cambia. */
+function entranoPredefinite(c: SchedaClasse): number {
+  if (c.presenti === null) return c.posti;
+  return c.presenti < c.posti ? c.posti - c.presenti : 1;
+}
+
+/** Quante persone di una classe possono ancora entrare: la tabella ne accetta al massimo 60. */
+const MAX_PRESENTI_CLASSE = 60;
 
 const nomeCompleto = (p?: { nome: string; cognome: string }) => (p ? `${p.nome} ${p.cognome}`.trim() : "");
 
@@ -398,6 +516,20 @@ function annuncioPer(r: Risultato): string {
       return "Questo QR non è un biglietto dell'evento.";
     case "errore":
       return r.messaggio ?? "Ingresso non registrato.";
+    case "classe": {
+      const c = r.classe;
+      if (!c) return "Classe trovata.";
+      const chi = `${nomeDellaClasse(c.classe)}, ${c.istituto}`;
+      if (r.cambiata) return `${chi}: i numeri sono cambiati nel frattempo, controlla e conferma di nuovo.`;
+      if (c.stato === "lista_attesa") return `${chi}: in lista d'attesa per oggi.`;
+      if (c.stato === "altra_giornata") return `${chi}: nessuna prenotazione per oggi.`;
+      if (c.presenti !== null) return `${chi}: già entrate ${c.presenti} persone su ${c.posti}.`;
+      return `${chi}: confermata, ${c.posti} persone. Indica quante entrano.`;
+    }
+    case "classe_entrata": {
+      const c = r.classe;
+      return c ? `Ingresso registrato: ${nomeDellaClasse(c.classe)}, ${c.presenti ?? 0} di ${c.posti} entrati.` : "Ingresso registrato.";
+    }
   }
 }
 
@@ -481,6 +613,8 @@ export function Ingresso({
 
   const [ricerca, setRicerca] = useState("");
   const [trovati, setTrovati] = useState<Trovato[] | null>(null);
+  const [trovateClassi, setTrovateClassi] = useState<TrovataClasse[]>([]);
+  const [classiNonLette, setClassiNonLette] = useState(false);
   const [troppi, setTroppi] = useState(false);
   const [cercando, setCercando] = useState(false);
   const [erroreRicerca, setErroreRicerca] = useState<string | null>(null);
@@ -503,6 +637,8 @@ export function Ingresso({
   const audioRef = useRef<AudioContext | null>(null);
   const suonoRef = useRef(true);
   const letturaRef = useRef<(testo: string) => void>(() => {});
+  /** La scheda di una classe aspetta il numero: intanto la fotocamera non legge altri QR. */
+  const schedaApertaRef = useRef(false);
 
   const sessione = sessionBySlug(giornata) ?? SESSIONS[0];
 
@@ -569,7 +705,7 @@ export function Ingresso({
       const completo: Risultato = { ...r, n: ++progressivoRef.current };
       setRisultato(completo);
       setAnnuncio(annuncioPer(completo));
-      segnala(TONO[completo.tipo]);
+      segnala(tonoPer(completo));
       // Sul telefono chi ha cercato per nome può avere il palco fuori schermo:
       // l'esito deve vedersi subito. Se è già visibile non si muove niente.
       try {
@@ -613,6 +749,11 @@ export function Ingresso({
           return;
         }
         const j = r.json as unknown as RispostaIngresso;
+        if (j.esito === "classe" && j.classe) {
+          // La scheda della classe: si scrive solo quando il volontario dice quante persone entrano.
+          mostra({ tipo: "classe", giornata: g, chiave: { classe: j.classe.id }, classe: j.classe, cambiata: j.cambiata });
+          return;
+        }
         if (j.esito === "entrato" && j.bridgeId && j.forzato) FORZATI.set(j.bridgeId, j.forzato);
         mostra({
           tipo: j.esito,
@@ -639,11 +780,85 @@ export function Ingresso({
     [aggiornaStato, mostra],
   );
 
+  /**
+   * Le persone di una classe che entrano adesso. `prima` è quante ne mostrava
+   * la scheda: se nel frattempo è cambiato, la rotta non scrive niente e
+   * rimanda la scheda aggiornata. Se la risposta si perde, "Riprova" riapre
+   * la scheda com'è adesso, invece di registrare di nuovo.
+   */
+  const entraClasse = useCallback(
+    async (c: SchedaClasse, entrano: number, forza: boolean) => {
+      if (occupatoRef.current) return;
+      occupatoRef.current = true;
+      setInCorso(true);
+      const g = giornataRef.current;
+      const chiave: Chiave = { classe: c.id };
+      try {
+        const r = await chiama(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ classe: c.id, giornata: g, entrano, prima: c.presenti, forza }),
+        });
+        if (!montatoRef.current || g !== giornataRef.current) return;
+        if (!r.ok) {
+          const accesso = r.status === 401 || r.status === 403;
+          if (accesso) setAccessoScaduto(true);
+          mostra({
+            tipo: "errore",
+            giornata: g,
+            chiave,
+            accesso,
+            messaggio: erroreDa(r.json, "L'ingresso della classe non è stato registrato. Riprova."),
+          });
+          return;
+        }
+        const j = r.json as unknown as RispostaIngresso;
+        if (j.esito === "classe_entrata" && j.classe) {
+          if (j.bridgeId && j.forzato) FORZATI.set(chiaveClasse(j.bridgeId), j.forzato);
+          mostra({
+            tipo: "classe_entrata",
+            giornata: g,
+            chiave,
+            classe: j.classe,
+            entrati: j.entrati ?? entrano,
+            prima: j.prima ?? null,
+            bridgeId: j.bridgeId ?? j.classe.bridgeId ?? undefined,
+            forzato: j.forzato,
+          });
+          void aggiornaStato();
+        } else if (j.esito === "classe" && j.classe) {
+          mostra({ tipo: "classe", giornata: g, chiave, classe: j.classe, cambiata: j.cambiata });
+        } else {
+          mostra({ tipo: j.esito === "non_trovato" ? "non_trovato" : "errore", giornata: g, chiave, messaggio: "La classe non risulta più." });
+        }
+      } catch (err) {
+        if (montatoRef.current && g === giornataRef.current) {
+          mostra({
+            tipo: "errore",
+            giornata: g,
+            chiave,
+            rete: true,
+            messaggio: `${messaggioRete(err)} L'ingresso della classe potrebbe essere stato salvato: tocca Riprova per vedere quante persone risultano entrate, prima di registrarle di nuovo.`,
+          });
+        }
+      } finally {
+        occupatoRef.current = false;
+        if (montatoRef.current) setInCorso(false);
+      }
+    },
+    [aggiornaStato, mostra],
+  );
+
+  // Mentre la scheda di una classe aspetta il numero, la fotocamera non la sostituisce con un altro QR.
+  useEffect(() => {
+    schedaApertaRef.current = risultato?.tipo === "classe";
+  }, [risultato]);
+
   // Il giro della fotocamera chiama sempre la versione aggiornata.
   useEffect(() => {
     letturaRef.current = (grezzo: string) => {
       const testo = grezzo.trim();
-      if (!testo) return;
+      if (!testo || schedaApertaRef.current) return;
       const adesso = Date.now();
       const ultimo = ultimoLettoRef.current;
       if (ultimo && ultimo.testo === testo && adesso - ultimo.t < PAUSA_STESSO_CODICE) {
@@ -884,7 +1099,7 @@ export function Ingresso({
 
   // L'esito verde torna da solo alla fotocamera; gli altri aspettano lo staff.
   useEffect(() => {
-    if (risultato?.tipo !== "entrato") return;
+    if (risultato?.tipo !== "entrato" && risultato?.tipo !== "classe_entrata") return;
     const n = risultato.n;
     const timer = window.setTimeout(() => {
       setRisultato((r) => (r?.n === n ? null : r));
@@ -910,11 +1125,21 @@ export function Ingresso({
     setErroreStato(null);
     setRisultato(null);
     setTrovati(null);
+    setTrovateClassi([]);
+    setClassiNonLette(false);
     setTroppi(false);
     setErroreRicerca(null);
     setDaAnnullare(null);
     setEsitoUltimi(null);
   };
+
+  /** Chiude l'esito; sul computer il campo del codice torna pronto (lettore USB). */
+  const chiudiEsito = useCallback(() => {
+    setRisultato(null);
+    if (window.matchMedia?.("(hover: hover) and (pointer: fine)").matches) {
+      campoRef.current?.focus({ preventScroll: true });
+    }
+  }, []);
 
   /* ── Codice scritto a mano ── */
 
@@ -972,6 +1197,52 @@ export function Ingresso({
     }
   };
 
+  /**
+   * Annulla l'ingresso di una classe, o solo gli ultimi entrati: le persone
+   * tornano da `da` ad `a` (null: nessuna). Se nel frattempo il numero è
+   * cambiato, la rotta non tocca niente e lo dice.
+   */
+  const annullaIngressoClasse = async (bridgeId: string, nome: string, da: number, a: number | null, forzato?: Forzato) => {
+    setAnnullando(bridgeId);
+    setEsitoUltimi(null);
+    const tipo = forzato ?? FORZATI.get(chiaveClasse(bridgeId));
+    try {
+      const r = await chiama(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ annullaClasse: bridgeId, da, a, ...(tipo ? { forzato: tipo } : {}) }),
+      });
+      if (!montatoRef.current) return;
+      if (!r.ok) {
+        const testo = erroreDa(r.json, "L'annullamento non è riuscito. Riprova.");
+        setEsitoUltimi({ tono: "errore", testo });
+        setAnnuncio(testo);
+        if (r.status === 409) void aggiornaStato();
+        return;
+      }
+      if (a === null) FORZATI.delete(chiaveClasse(bridgeId));
+      const testo = r.json?.giornataTolta
+        ? `Ingresso della ${nome} annullato: la giornata aggiunta alla porta è stata tolta.`
+        : r.json?.tornaInAttesa
+          ? `Ingresso della ${nome} annullato: torna in lista d'attesa.`
+          : a === null
+            ? `Ingresso della ${nome} annullato.`
+            : `Annullati gli ultimi ${da - a} ingressi della ${nome}: ora ne risultano ${a}.`;
+      setEsitoUltimi({ tono: "ok", testo });
+      setAnnuncio(testo);
+      setRisultato((r2) => (r2?.bridgeId === bridgeId ? null : r2));
+      ultimoLettoRef.current = null;
+      void aggiornaStato();
+    } catch (err) {
+      if (montatoRef.current) setEsitoUltimi({ tono: "errore", testo: messaggioRete(err) });
+    } finally {
+      if (montatoRef.current) {
+        setAnnullando(null);
+        setDaAnnullare(null);
+      }
+    }
+  };
+
   /* ── Biglietto dimenticato: ricerca per nome ── */
 
   useEffect(() => {
@@ -979,6 +1250,8 @@ export function Ingresso({
     if (testo.replace(/[^\p{L}]/gu, "").length < 3) {
       richiestaRicercaRef.current++;
       setTrovati(null);
+      setTrovateClassi([]);
+      setClassiNonLette(false);
       setTroppi(false);
       setErroreRicerca(null);
       setCercando(false);
@@ -997,10 +1270,13 @@ export function Ingresso({
         if (!r.ok) {
           setErroreRicerca(erroreDa(r.json, "La ricerca non è riuscita. Riprova."));
           setTrovati(null);
+          setTrovateClassi([]);
           return;
         }
         setErroreRicerca(null);
         setTrovati((r.json?.risultati as Trovato[]) ?? []);
+        setTrovateClassi((r.json?.classi as TrovataClasse[] | undefined) ?? []);
+        setClassiNonLette(Boolean(r.json?.classiNonLette));
         setTroppi(Boolean(r.json?.troppi));
       } catch (err) {
         if (montatoRef.current && n === richiestaRicercaRef.current) setErroreRicerca(messaggioRete(err));
@@ -1019,10 +1295,19 @@ export function Ingresso({
     });
   };
 
+  /** Una classe trovata per nome: si apre la sua scheda, come leggendo il QR. */
+  const apriClasseDaRicerca = (t: TrovataClasse) => {
+    sbloccaAudio();
+    void verifica({ classe: t.rif }).then(() => setRicerca(""));
+  };
+
   /* ── Disegno ── */
 
   const percentuale =
     stato && stato.confermati > 0 ? Math.min(100, Math.round((stato.entrati / stato.confermati) * 100)) : 0;
+  const classiOggi = stato?.classi ?? null;
+  const conClassi = Boolean(classiOggi && classiOggi.confermate + classiOggi.in_attesa > 0);
+  const nessunTrovato = Boolean(trovati && trovati.length === 0 && trovateClassi.length === 0);
   const oggiSessione = oggi ? sessionBySlug(oggi) : undefined;
   const radioName = `ing-giornata-${idGruppo}`;
 
@@ -1036,7 +1321,7 @@ export function Ingresso({
             <h2 className="ing-h2">Ingresso alla porta</h2>
             <p className="ing-sub">
               Leggi il QR del biglietto o scrivi il codice: l&apos;ingresso si registra subito, anche da più
-              telefoni insieme.
+              telefoni insieme. Per una classe, il QR apre la sua scheda e indichi quante persone entrano.
             </p>
           </div>
           <a className="ing-link" href={PAGINA_INGRESSO} target="_blank" rel="noopener">
@@ -1122,7 +1407,12 @@ export function Ingresso({
         <div className="ing-sx">
           {/* ── Il palco: fotocamera ed esito ── */}
           <section ref={palcoRef} className="ing-palco-box" aria-label="Lettura dei biglietti">
-            <div className="ing-palco" data-camera={camera} aria-busy={inCorso}>
+            <div
+              className="ing-palco"
+              data-camera={camera}
+              data-classe={risultato?.tipo === "classe" || risultato?.tipo === "classe_entrata" ? "" : undefined}
+              aria-busy={inCorso}
+            >
               <video ref={videoRef} className="ing-video" playsInline muted autoPlay aria-hidden="true" />
 
               {camera === "attiva" && (
@@ -1136,7 +1426,7 @@ export function Ingresso({
                   </div>
                   <div className="ing-chip">
                     <span className={`ing-chip-punto${inCorso ? " ing-chip-punto-lavoro" : ""}`} aria-hidden="true" />
-                    {inCorso ? "Verifica in corso" : "Inquadra il QR del biglietto"}
+                    {inCorso ? "Verifica in corso" : "Inquadra il QR del biglietto o della classe"}
                   </div>
                   <div className="ing-comandi">
                     {torcia.disponibile && (
@@ -1240,7 +1530,33 @@ export function Ingresso({
                 </div>
               )}
 
-              {risultato && (
+              {risultato && (risultato.tipo === "classe" || risultato.tipo === "classe_entrata") && risultato.classe && (
+                <CartaClasse
+                  key={risultato.n}
+                  r={risultato}
+                  classe={risultato.classe}
+                  inCorso={inCorso}
+                  annullando={annullando !== null && annullando === risultato.bridgeId}
+                  onChiudi={chiudiEsito}
+                  onEntra={(n, forza) => {
+                    sbloccaAudio();
+                    if (risultato.classe) void entraClasse(risultato.classe, n, forza);
+                  }}
+                  onAnnulla={() => {
+                    const c = risultato.classe;
+                    if (risultato.bridgeId && c && c.presenti !== null) {
+                      void annullaIngressoClasse(
+                        risultato.bridgeId,
+                        classeInFrase(c.classe),
+                        c.presenti,
+                        risultato.prima ?? null,
+                        risultato.forzato,
+                      );
+                    }
+                  }}
+                />
+              )}
+              {risultato && risultato.tipo !== "classe" && risultato.tipo !== "classe_entrata" && (
                 <CartaEsito
                   key={risultato.n}
                   r={risultato}
@@ -1269,7 +1585,7 @@ export function Ingresso({
           {/* ── Il codice scritto a mano ── */}
           <form className="ing-box ing-codice" onSubmit={inviaCodice} noValidate>
             <label htmlFor={`${radioName}-codice`} className="ing-label">
-              Codice del biglietto
+              Codice del biglietto o della classe
             </label>
             <div className="ing-riga">
               <input
@@ -1298,7 +1614,8 @@ export function Ingresso({
               </button>
             </div>
             <p id={`${radioName}-codice-aiuto`} className="ing-aiuto">
-              È scritto sotto il QR, nell&apos;email e sul biglietto stampato. Bastano le 8 lettere e cifre dopo VPL-.
+              È scritto sotto il QR, nell&apos;email e sul biglietto stampato. Bastano le 8 lettere e cifre dopo VPL-
+              (VPC- per le classi).
             </p>
           </form>
 
@@ -1308,7 +1625,7 @@ export function Ingresso({
               Biglietto dimenticato?
             </h3>
             <label htmlFor={`${radioName}-cerca`} className="ing-label">
-              Cerca per nome o cognome
+              Cerca per nome o cognome, o la classe per scuola o docente
             </label>
             <div className="ing-cerca-campo">
               <i className="fas fa-magnifying-glass" aria-hidden="true" />
@@ -1318,7 +1635,7 @@ export function Ingresso({
                 className="ing-campo"
                 value={ricerca}
                 onChange={(e) => setRicerca(e.target.value)}
-                placeholder="Es. Rossi"
+                placeholder="Es. Rossi, o Archita 4B"
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
@@ -1329,8 +1646,40 @@ export function Ingresso({
             <div aria-live="polite" className="ing-cerca-esiti">
               {cercando && <p className="ing-aiuto">Ricerca in corso…</p>}
               {!cercando && erroreRicerca && <p className="ing-msg ing-msg-errore">{erroreRicerca}</p>}
-              {!cercando && trovati && trovati.length === 0 && (
-                <p className="ing-aiuto">Nessuna persona trovata con questo nome. Controlla l&apos;ortografia.</p>
+              {!cercando && nessunTrovato && (
+                <p className="ing-aiuto">Nessuna persona o classe trovata con questo nome. Controlla l&apos;ortografia.</p>
+              )}
+              {!cercando && classiNonLette && (
+                <p className="ing-msg ing-msg-errore">Le classi non si sono potute cercare: riprova tra poco.</p>
+              )}
+              {trovateClassi.length > 0 && (
+                <ul className="ing-trovati" aria-label="Classi trovate">
+                  {trovateClassi.map((t) => (
+                    <li key={t.rif} className="ing-trovato ing-trovato-classe">
+                      <div className="ing-trovato-testo">
+                        <span className="ing-trovato-nome">
+                          <i className="fas fa-users" aria-hidden="true" />{" "}
+                          {nomeDellaClasse(t.classe)}, {t.istituto}
+                        </span>
+                        <span className="ing-trovato-dettagli">
+                          {[t.comune, `docente ${t.docente}`, `${t.posti} persone`, t.settore ? `settore ${t.settore}` : null]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </span>
+                        <StatoClasseOggi t={t} giornata={sessione.slug} />
+                      </div>
+                      <button
+                        type="button"
+                        className="ing-btn"
+                        onClick={() => apriClasseDaRicerca(t)}
+                        disabled={inCorso}
+                        aria-label={`Apri la scheda della ${classeInFrase(t.classe)}, ${t.istituto}`}
+                      >
+                        Apri
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
               {trovati && trovati.length > 0 && (
                 <>
@@ -1364,7 +1713,7 @@ export function Ingresso({
             </div>
             <p className="ing-aiuto">
               Prima di far entrare una persona trovata per nome, chiedi un documento o l&apos;email usata per
-              l&apos;iscrizione.
+              l&apos;iscrizione. Per una classe senza QR, chiedi il nome del docente che l&apos;ha prenotata.
             </p>
           </section>
         </div>
@@ -1410,7 +1759,19 @@ export function Ingresso({
                 <div className="ing-numeri-piede">
                   <span>
                     In lista d&apos;attesa <strong className="ing-num">{stato.lista_attesa}</strong>
+                    {classiOggi && classiOggi.in_attesa > 0 && (
+                      <>
+                        {" "}e <strong className="ing-num">{classiOggi.in_attesa}</strong>{" "}
+                        {classiOggi.in_attesa === 1 ? "classe" : "classi"}
+                      </>
+                    )}
                   </span>
+                  {classiOggi && conClassi && (
+                    <span>
+                      Classi entrate <strong className="ing-num">{classiOggi.entrate}</strong> di {classiOggi.confermate}
+                      {classiOggi.presenti > 0 && <>, {classiOggi.presenti} persone</>}
+                    </span>
+                  )}
                   {aggiornatoAlle && <span>Aggiornato alle {aggiornatoAlle}</span>}
                 </div>
               </>
@@ -1448,20 +1809,37 @@ export function Ingresso({
             ) : (
               <ul className="ing-lista">
                 {stato.ultimi.map((u) => {
-                  const nome = nomeCompleto(u);
+                  const classe = u.tipo === "classe" ? u : null;
+                  const nome = classe ? `${nomeDellaClasse(classe.classe)}, ${classe.istituto}` : nomeCompleto(u as UltimoPersona);
                   const chiede = daAnnullare === u.bridgeId;
+                  const annulla = () =>
+                    classe
+                      ? void annullaIngressoClasse(classe.bridgeId, classeInFrase(classe.classe), classe.presenti, null)
+                      : void annullaIngresso(u.bridgeId, nome);
                   return (
                     <li key={u.bridgeId} className="ing-voce">
                       <span className="ing-voce-ora ing-num">{oraBreve(u.ora)}</span>
-                      <span className="ing-voce-nome">{nome}</span>
+                      <span className="ing-voce-nome">
+                        {classe && <i className="fas fa-users ing-voce-icona" aria-hidden="true" />}
+                        {nome}
+                        {classe && (
+                          <span className="ing-voce-sotto ing-num">
+                            {classe.presenti} di {classe.posti} entrati
+                          </span>
+                        )}
+                      </span>
                       {chiede ? (
                         <span className="ing-voce-conferma">
                           <button
                             type="button"
                             className="ing-btn ing-btn-pericolo"
-                            onClick={() => void annullaIngresso(u.bridgeId, nome)}
+                            onClick={annulla}
                             disabled={annullando === u.bridgeId}
-                            aria-label={`Conferma: annulla l'ingresso di ${nome}`}
+                            aria-label={
+                              classe
+                                ? `Conferma: annulla l'ingresso di tutta la classe, ${nome}`
+                                : `Conferma: annulla l'ingresso di ${nome}`
+                            }
                           >
                             {annullando === u.bridgeId ? "Annullo…" : "Sì, annulla"}
                           </button>
@@ -1512,6 +1890,283 @@ function StatoOggi({ t, giornata }: { t: Trovato; giornata: string }) {
     <span className="ing-pill ing-pill-errore">
       {t.altreGiornate.length ? `Solo per ${altreConArticolo(t.altreGiornate)}` : `Nessuna iscrizione per ${conArticolo(giornata)}`}
     </span>
+  );
+}
+
+/** Lo stato di una classe trovata per nome. */
+function StatoClasseOggi({ t, giornata }: { t: TrovataClasse; giornata: string }) {
+  if (t.oggi === "entrata") {
+    return (
+      <span className="ing-pill ing-pill-attenzione">
+        Entrati {t.presenti ?? 0} di {t.posti}
+        {t.ora ? `, dalle ${oraBreve(t.ora)}` : ""}
+      </span>
+    );
+  }
+  if (t.oggi === "confermato") return <span className="ing-pill ing-pill-ok">Classe confermata</span>;
+  if (t.oggi === "lista_attesa") return <span className="ing-pill ing-pill-attenzione">In lista d&apos;attesa</span>;
+  return (
+    <span className="ing-pill ing-pill-errore">
+      {t.altreGiornate.length ? `Solo per ${altreConArticolo(t.altreGiornate)}` : `Nessuna prenotazione per ${conArticolo(giornata)}`}
+    </span>
+  );
+}
+
+/* ── La scheda di una classe, sopra la fotocamera ─────────────────────── */
+
+/**
+ * Due momenti: la scheda (chi è la classe, com'è messa oggi, quante persone
+ * entrano adesso) e, dopo, l'esito verde ("23 di 30 entrati") con
+ * l'annullamento. Il numero parte da quello prenotato, o da quelli che
+ * mancano se una parte della classe è già entrata.
+ */
+function CartaClasse({
+  r,
+  classe: c,
+  inCorso,
+  annullando,
+  onChiudi,
+  onEntra,
+  onAnnulla,
+}: {
+  r: Risultato;
+  classe: SchedaClasse;
+  inCorso: boolean;
+  annullando: boolean;
+  onChiudi: () => void;
+  onEntra: (entrano: number, forza: boolean) => void;
+  onAnnulla: () => void;
+}) {
+  const idCampo = useId();
+  const giaDentro = c.presenti ?? 0;
+  const massimo = Math.max(1, MAX_PRESENTI_CLASSE - giaDentro);
+  const [valore, setValore] = useState(() => String(Math.min(entranoPredefinite(c), massimo)));
+  const principale = useRef<HTMLButtonElement>(null);
+  const entrata = r.tipo === "classe_entrata";
+  const nomeClasse = nomeDellaClasse(c.classe);
+  const tutti = c.presenti !== null && c.presenti >= c.posti;
+
+  // La scheda chiede una decisione: il pulsante principale prende il fuoco
+  // (senza aprire la tastiera del telefono), così da computer basta Invio.
+  useEffect(() => {
+    if (!entrata) principale.current?.focus({ preventScroll: true });
+  }, [entrata]);
+
+  const n = /^\d{1,2}$/.test(valore.trim()) ? Number(valore.trim()) : Number.NaN;
+  const valido = Number.isInteger(n) && n >= 1 && n <= massimo;
+  const cambia = (delta: number) => {
+    const base = Number.isInteger(n) ? n : entranoPredefinite(c);
+    setValore(String(Math.min(massimo, Math.max(1, base + delta))));
+  };
+  const invia = (e: FormEvent) => {
+    e.preventDefault();
+    if (!valido || inCorso) return;
+    onEntra(n, c.stato !== "confermato");
+  };
+
+  const persone = `${descriviPersone(c.studenti, c.accompagnatori)}, ${c.posti} in tutto`;
+  const scuola = scuolaConComune(c);
+
+  if (entrata) {
+    const presenti = c.presenti ?? 0;
+    const mancano = c.posti - presenti;
+    const stato =
+      r.forzato === "lista_attesa"
+        ? "Classe entrata, dalla lista d'attesa"
+        : r.forzato === "altra_giornata"
+          ? "Classe entrata, giornata aggiunta"
+          : r.prima !== null && r.prima !== undefined
+            ? "Altre persone entrate"
+            : "Classe entrata";
+    return (
+      <div className="ing-esito ing-esito-ok ing-esito-di-classe" data-esito={r.tipo}>
+        <div className="ing-esito-scorre">
+          <p className="ing-esito-stato">
+            <i className="fas fa-circle-check" aria-hidden="true" />
+            <span>{stato}</span>
+          </p>
+          <p className="ing-esito-nome">
+            {presenti} di {c.posti} entrati
+          </p>
+          <p className="ing-esito-dettagli">
+            {nomeClasse}, {scuola}
+          </p>
+          {c.settore && (
+            <p className="ing-classe-settore">
+              <i className="fas fa-location-dot" aria-hidden="true" /> Settore {c.settore}
+            </p>
+          )}
+          {r.entrati !== undefined && r.prima !== null && r.prima !== undefined && (
+            <p className="ing-esito-ora">
+              Adesso {r.entrati} {r.entrati === 1 ? "persona" : "persone"}, prima {r.prima}.
+            </p>
+          )}
+          {mancano > 0 && (
+            <p className="ing-esito-testo-grande">
+              {mancano === 1 ? "Manca 1 persona" : `Mancano ${mancano} persone`}: quando arrivano, leggi di nuovo il QR
+              della classe.
+            </p>
+          )}
+          {mancano < 0 && (
+            <p className="ing-esito-testo-grande">
+              {-mancano === 1 ? "1 persona in più" : `${-mancano} persone in più`} della prenotazione.
+            </p>
+          )}
+        </div>
+        <div className="ing-esito-azioni">
+          <button type="button" className="ing-esito-btn ing-esito-btn-pieno" onClick={onChiudi}>
+            Avanti
+          </button>
+          {r.bridgeId && (
+            <button type="button" className="ing-esito-btn" onClick={onAnnulla} disabled={annullando}>
+              {annullando ? "Annullo…" : r.prima ? "Annulla questi ingressi" : "Annulla l'ingresso"}
+            </button>
+          )}
+        </div>
+        <span className="ing-esito-tempo" aria-hidden="true" />
+      </div>
+    );
+  }
+
+  const daControllare = classeDaControllare(r);
+  let icona = "fa-users";
+  let stato: string;
+  let spiegazione: ReactNode = null;
+  if (c.stato === "lista_attesa") {
+    icona = "fa-hourglass-half";
+    stato = "In lista d'attesa per oggi";
+    spiegazione = "La classe non ha un posto confermato per oggi. Se c'è posto in sala, puoi farla entrare.";
+  } else if (c.stato === "altra_giornata") {
+    icona = "fa-calendar-xmark";
+    stato = c.altreGiornate.length ? `Prenotata solo per ${altreConArticolo(c.altreGiornate)}` : "Nessuna giornata nella prenotazione";
+    spiegazione = `La classe non ha una prenotazione per ${conArticolo(r.giornata)}. Se c'è posto in sala, puoi farla entrare.`;
+  } else if (tutti) {
+    icona = "fa-clock-rotate-left";
+    stato = `Già entrati ${c.presenti} di ${c.posti}${c.ora ? `, dalle ${oraBreve(c.ora)}` : ""}`;
+    spiegazione = "Tutta la classe risulta già entrata. Se arriva qualcun altro della classe, indica quanti sono.";
+  } else if (c.presenti !== null) {
+    icona = "fa-user-clock";
+    stato = `Già entrati ${c.presenti} di ${c.posti}${c.ora ? `, dalle ${oraBreve(c.ora)}` : ""}`;
+  } else {
+    stato = "Classe confermata per oggi";
+  }
+  const etichetta =
+    c.stato !== "confermato"
+      ? `Fai entrare comunque ${valido ? n : ""}`.trim()
+      : c.presenti !== null
+        ? `Registra ${valido ? n : ""} in più`.replace("  ", " ")
+        : `Fai entrare ${valido ? n : ""}`.trim();
+
+  return (
+    <div
+      className={`ing-esito ${daControllare ? "ing-esito-attenzione" : "ing-esito-classe"} ing-esito-di-classe`}
+      data-esito={r.tipo}
+      role="group"
+      aria-label={`Scheda della ${classeInFrase(c.classe)}, ${c.istituto}`}
+    >
+      <div className="ing-esito-scorre">
+        <p className="ing-esito-stato">
+          <i className={`fas ${icona}`} aria-hidden="true" />
+          <span>{stato}</span>
+        </p>
+        {r.cambiata && (
+          <p className="ing-esito-avviso">
+            Nel frattempo i numeri della classe sono cambiati (un altro telefono, o un ingresso già salvato): controlla
+            quante persone risultano entrate e conferma di nuovo.
+          </p>
+        )}
+        <p className="ing-esito-nome">{nomeClasse}</p>
+        <p className="ing-esito-dettagli">{scuola}</p>
+        {c.settore && (
+          <p className="ing-classe-settore">
+            <i className="fas fa-location-dot" aria-hidden="true" /> Settore {c.settore}
+          </p>
+        )}
+        <p className="ing-classe-riga">
+          <i className="fas fa-user-group" aria-hidden="true" /> {persone}
+        </p>
+        <p className="ing-classe-riga">
+          <i className="fas fa-chalkboard-user" aria-hidden="true" /> {c.docente}
+          {c.telefono && (
+            <>
+              {", "}
+              <a className="ing-classe-tel" href={`tel:${c.telefono.replace(/[^\d+]/g, "")}`}>
+                {c.telefono}
+              </a>
+            </>
+          )}
+        </p>
+        {c.note && (
+          <p className="ing-esito-note">
+            <i className="fas fa-note-sticky" aria-hidden="true" /> {c.note}
+          </p>
+        )}
+        {spiegazione && <p className="ing-esito-testo-grande">{spiegazione}</p>}
+      </div>
+      <form className="ing-esito-azioni" onSubmit={invia} noValidate>
+        <div className="ing-passi">
+          <label htmlFor={idCampo} className="ing-passi-label">
+            {c.presenti !== null ? "Quante altre persone entrano?" : "Quante persone entrano adesso?"}
+          </label>
+          <div className="ing-passi-riga">
+            <button
+              type="button"
+              className="ing-passi-btn"
+              onClick={() => cambia(-1)}
+              disabled={inCorso || (Number.isInteger(n) && n <= 1)}
+              aria-label="Una persona in meno"
+            >
+              <i className="fas fa-minus" aria-hidden="true" />
+            </button>
+            <input
+              id={idCampo}
+              className="ing-passi-campo"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              value={valore}
+              onChange={(e) => setValore(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+              aria-invalid={!valido}
+              aria-describedby={`${idCampo}-aiuto`}
+            />
+            <button
+              type="button"
+              className="ing-passi-btn"
+              onClick={() => cambia(1)}
+              disabled={inCorso || (Number.isInteger(n) && n >= massimo)}
+              aria-label="Una persona in più"
+            >
+              <i className="fas fa-plus" aria-hidden="true" />
+            </button>
+          </div>
+          <p id={`${idCampo}-aiuto`} className="ing-passi-aiuto">
+            {!valido
+              ? `Scrivi un numero da 1 a ${massimo}.`
+              : giaDentro + n > c.posti
+                ? `${giaDentro + n - c.posti} in più della prenotazione (${c.posti}).`
+                : c.presenti !== null
+                  ? `In tutto saranno ${giaDentro + n} di ${c.posti}.`
+                  : `Prenotate ${c.posti} persone.`}
+          </p>
+        </div>
+        <button
+          ref={principale}
+          type="submit"
+          className="ing-esito-btn ing-esito-btn-pieno"
+          disabled={inCorso || !valido}
+        >
+          {inCorso ? (
+            <span className="ing-rotella ing-rotella-piccola" aria-hidden="true" />
+          ) : (
+            <i className="fas fa-door-open" aria-hidden="true" />
+          )}{" "}
+          {etichetta}
+        </button>
+        <button type="button" className="ing-esito-btn" onClick={onChiudi}>
+          Chiudi
+        </button>
+      </form>
+    </div>
   );
 }
 
@@ -1647,7 +2302,7 @@ function CartaEsito({
       corpo = (
         <p className="ing-esito-testo-grande">
           Il QR letto non è quello del biglietto. Chiedi di aprire l&apos;email di conferma dell&apos;iscrizione, o
-          di mostrare il codice che inizia con VPL.
+          di mostrare il codice che inizia con VPL (VPC per una classe).
         </p>
       );
       azioni = chiudi;
@@ -1949,6 +2604,50 @@ const STILE_INGRESSO = `
 }
 @keyframes ing-tempo { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
+/* ── La scheda di una classe ── */
+/* Più alta del palco normale: la scheda ha più righe e il numero da scegliere. */
+.ing-palco[data-classe] { height: clamp(420px, 78vh, 640px); height: clamp(420px, 78svh, 640px); }
+.ing-esito-classe { background: #fff; color: var(--text-dark); }
+.ing-esito-classe .ing-esito-stato i { color: var(--ing-ink); }
+.ing-esito-classe .ing-esito-note { background: #FFFBEB; border: 1px solid #F6E7B5; }
+.ing-esito-classe .ing-esito-btn { border-color: var(--border-color); color: var(--text-dark); }
+.ing-esito-classe .ing-esito-btn:hover { background: var(--bg-light); color: var(--text-dark); }
+.ing-esito-classe .ing-esito-btn-pieno { background: var(--ing-ink); border-color: var(--ing-ink); color: #fff; }
+.ing-esito-classe .ing-esito-btn-pieno:hover { background: var(--ing-ink-hover); color: #fff; }
+.ing-esito-classe *:focus-visible { outline-color: var(--primary); }
+.ing-esito-classe .ing-rotella-piccola { border-color: rgba(255,255,255,.4); border-top-color: #fff; }
+.ing-esito-di-classe .ing-esito-nome { font-size: clamp(26px, 7.5vw, 36px); }
+.ing-classe-settore {
+  display: inline-flex; align-items: center; gap: 8px; margin: 10px 0 0; padding: 6px 12px; border-radius: 10px;
+  background: rgba(255,255,255,.95); color: var(--text-dark); font-size: 18px; font-weight: 800; overflow-wrap: anywhere;
+}
+.ing-esito-classe .ing-classe-settore { background: var(--primary-light); }
+.ing-classe-settore i { color: var(--ing-ink); }
+.ing-classe-riga { margin: 8px 0 0; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.ing-classe-riga i { width: 20px; opacity: .8; }
+.ing-classe-tel { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.ing-esito-avviso {
+  margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.95); color: #3D2A05;
+  font-size: 15px; line-height: 1.45; font-weight: 600;
+}
+.ing-passi { flex: 1 1 100%; display: grid; gap: 6px; }
+.ing-passi-label { font-size: 14px; font-weight: 700; }
+.ing-passi-riga { display: flex; align-items: center; gap: 10px; }
+.ing-passi-btn {
+  width: 52px; height: 52px; flex-shrink: 0; border-radius: 12px; border: 2px solid rgba(255,255,255,.85);
+  background: rgba(255,255,255,.12); color: inherit; font-size: 18px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ing-esito-classe .ing-passi-btn { border-color: var(--border-color); background: var(--bg-light); color: var(--text-dark); }
+.ing-passi-btn[disabled] { opacity: .45; cursor: not-allowed; }
+.ing-passi-campo {
+  width: 88px; min-width: 0; height: 52px; border-radius: 12px; border: 2px solid var(--border-color); background: #fff;
+  color: var(--text-dark); font: inherit; font-size: 26px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums;
+}
+.ing-passi-campo:focus { outline: 3px solid var(--primary); outline-offset: 1px; }
+.ing-passi-campo[aria-invalid="true"] { border-color: var(--ing-errore); }
+.ing-passi-aiuto { margin: 0; font-size: 13.5px; font-weight: 600; opacity: .92; }
+
 /* ── Campi e pulsanti ── */
 .ing-riga { display: flex; gap: 8px; }
 .ing-campo {
@@ -2015,6 +2714,9 @@ const STILE_INGRESSO = `
 .ing-voce:last-child { border-bottom: 0; }
 .ing-voce-ora { width: 44px; flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--ing-ink); }
 .ing-voce-nome { flex: 1 1 auto; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ing-voce-icona { color: var(--ing-ink); margin-right: 6px; font-size: 13px; }
+.ing-voce-sotto { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-mid); }
+.ing-trovato-nome i { color: var(--ing-ink); font-size: 13px; }
 .ing-voce-conferma { display: inline-flex; gap: 6px; flex-shrink: 0; }
 
 /* ── Scheletri ── */

@@ -187,7 +187,7 @@ function pillStato(status: SessionStatus): string {
 const attr = (url: string) => escapeHtml(url);
 
 /** Il piede del testo semplice, uguale in tutte le email dell'evento. */
-const PIEDE_TESTO = [
+export const PIEDE_TESTO = [
   "",
   `Per qualsiasi domanda rispondi a questa email o scrivi a ${EMAIL_RISPOSTE}.`,
   "Fondazione bioERGOtech, Taranto",
@@ -197,9 +197,10 @@ const PIEDE_TESTO = [
  * La cornice comune delle email dell'evento: intestazione scura con il nome
  * dell'evento, saluto, prima riga e piede con i contatti. intro è testo
  * semplice (diventa anche l'anteprima); saluto e corpo sono già HTML, con il
- * testo di chi si iscrive passato da escapeHtml.
+ * testo di chi si iscrive passato da escapeHtml. La usano anche le email
+ * delle prenotazioni per classe (lib/eventi/email-classi.ts).
  */
-function involucroHtml(o: { subject: string; saluto: string; intro: string; corpo: string }): string {
+export function involucroHtml(o: { subject: string; saluto: string; intro: string; corpo: string }): string {
   // La riga di anteprima che le app di posta mostrano accanto all'oggetto.
   const intro = escapeHtml(o.intro);
   return `<!DOCTYPE html>

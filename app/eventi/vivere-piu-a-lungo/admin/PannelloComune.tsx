@@ -8,6 +8,7 @@
  */
 
 import { CATEGORIE, EVENT_SLUG, SESSIONS, sessionBySlug } from "../content";
+import type { GiornataClasse, PrenotazioneClasse } from "@/lib/eventi/classi";
 
 /* ── Tipi ─────────────────────────────────────────────────────────────── */
 
@@ -48,6 +49,48 @@ export type RigaIscritto = {
   giornate: GiornataRiga[];
 };
 
+/** Una giornata di una classe, come la vede il pannello. */
+export type GiornataRigaClasse = GiornataClasse & {
+  /** La posizione fra le classi in lista d'attesa per quella giornata (1 = la prima). Null se confermata. */
+  posizione_attesa: number | null;
+};
+
+/** Una prenotazione di classe con tutto quello che serve a elenco, export e stampa. */
+export type RigaClasse = Omit<PrenotazioneClasse, "giornate"> & { giornate: GiornataRigaClasse[] };
+
+/**
+ * Le classi di una giornata: i posti vengono da event_group_seats (la regola
+ * del database), gli ingressi dalle righe delle classi.
+ */
+export type GiornataClassi = {
+  slug: string;
+  etichetta: string;
+  giornoLabel: string;
+  luogo: string;
+  orario: string;
+  /** False se la riga di event_sessions manca. */
+  nelDatabase: boolean;
+  capienza: number | null;
+  /** I posti che le classi possono occupare; null: nessun limite oltre la capienza. */
+  quota: number | null;
+  /** I posti delle classi confermate. */
+  postiClassi: number;
+  classiConfermate: number;
+  classiAttesa: number;
+  /** Le persone delle classi in lista d'attesa. */
+  postiAttesa: number;
+  /** La classe più piccola in lista d'attesa (persone), o null se non aspetta nessuna. */
+  minimoAttesa: number | null;
+  /** Posti liberi nella giornata, per tutti. */
+  rimanenti: number | null;
+  /** Posti ancora prenotabili da una classe: il minimo fra capienza e quota. */
+  rimanentiClassi: number | null;
+  /** Classi con almeno un ingresso registrato. */
+  classiEntrate: number;
+  /** Le persone delle classi entrate. */
+  presenti: number;
+};
+
 /** Una giornata dell'evento con i suoi numeri, letti dal database. */
 export type InfoGiornata = {
   slug: string;
@@ -59,14 +102,36 @@ export type InfoGiornata = {
   nelDatabase: boolean;
   /** La capienza del database (mai quella di content.ts). Null se la giornata non c'è. */
   capienza: number | null;
+  /** I posti occupati: le persone confermate più i posti delle classi confermate. */
   confermati: number;
+  /** Le sole persone iscritte una per una, confermate. */
+  persone: number;
+  /** Le persone iscritte una per una in lista d'attesa. */
   attesa: number;
+  /** Tutti gli ingressi: le persone più le persone delle classi. */
   entrati: number;
+  /** Gli ingressi delle sole persone iscritte una per una. */
+  entratiPersone: number;
   assenti: number;
-  /** Posti liberi: capienza meno confermati, mai sotto zero. Null se la giornata non c'è. */
+  /** Posti liberi: capienza meno posti occupati, mai sotto zero. Null se la giornata non c'è. */
   liberi: number | null;
-  /** Confermati oltre la capienza (conferme forzate dallo staff). */
+  /** Posti occupati oltre la capienza (conferme forzate dallo staff). */
   oltre: number;
+  /** Le classi della giornata. Null se le prenotazioni per classe non sono nel database. */
+  classi: GiornataClassi | null;
+};
+
+/** Le classi nel riepilogo. */
+export type RiepilogoClassi = {
+  /** False: le tabelle delle classi non sono nel database. */
+  disponibili: boolean;
+  prenotazioni: number;
+  /** Le persone di tutte le prenotazioni (studenti e docenti). */
+  persone: number;
+  /** Scuole diverse, a meno di maiuscole e spazi. */
+  scuole: number;
+  /** Prenotazioni arrivate dal link del percorso dei licei. */
+  dalPercorso: number;
 };
 
 /** Una sessione del database che il sito non usa più, con quante persone ci sono sopra. */
@@ -96,7 +161,20 @@ export type Riepilogo = {
   organizzazioni: { nome: string; persone: number; perGiornata: Record<string, number> }[];
   /** Quante organizzazioni o scuole diverse in tutto. */
   organizzazioniDiverse: number;
+  classi: RiepilogoClassi;
 };
+
+/** La risposta di GET /api/eventi/admin/classi. */
+export type RispostaClassi = {
+  /** False: le tabelle delle classi non sono nel database (il file non è stato eseguito). */
+  disponibili: boolean;
+  classi: RigaClasse[];
+  giornate: GiornataClassi[];
+  generato_at: string;
+};
+
+/** Il file SQL che crea le prenotazioni per classe, citato negli allarmi. */
+export const FILE_SQL_CLASSI = "supabase/migrations/20261231400000_event_prenotazioni_classi.sql";
 
 /** La risposta di GET /api/eventi/admin/registrations. */
 export type RispostaIscritti = {
@@ -110,11 +188,13 @@ export type RispostaIscritti = {
 
 /* ── Schede del pannello ──────────────────────────────────────────────── */
 
+/** `breve` è l'etichetta sul telefono, dove le cinque schede stanno in una riga. */
 export const SCHEDE = [
-  { id: "riepilogo", label: "Riepilogo", icona: "fa-chart-simple" },
-  { id: "iscritti", label: "Iscritti", icona: "fa-users" },
-  { id: "ingresso", label: "Ingresso", icona: "fa-qrcode" },
-  { id: "comunicazioni", label: "Comunicazioni", icona: "fa-envelope" },
+  { id: "riepilogo", label: "Riepilogo", breve: "Riepilogo", icona: "fa-chart-simple" },
+  { id: "iscritti", label: "Iscritti", breve: "Iscritti", icona: "fa-users" },
+  { id: "classi", label: "Classi", breve: "Classi", icona: "fa-school" },
+  { id: "ingresso", label: "Ingresso", breve: "Ingresso", icona: "fa-qrcode" },
+  { id: "comunicazioni", label: "Comunicazioni", breve: "Email", icona: "fa-envelope" },
 ] as const;
 
 export type SchedaId = (typeof SCHEDE)[number]["id"];
@@ -264,6 +344,104 @@ export function confrontaPerData(a: RigaIscritto, b: RigaIscritto): number {
   return b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id);
 }
 
+/* ── Filtri delle classi ──────────────────────────────────────────────── */
+
+export type FiltroStatoClasse = "" | "confermato" | "attesa" | "entrata" | "senza_settore";
+
+export type FiltriClassi = {
+  /** Testo libero: scuola, comune, classe, docente, email, telefono, codice. */
+  q: string;
+  giornata: string;
+  stato: FiltroStatoClasse;
+};
+
+export const FILTRI_CLASSI_VUOTI: FiltriClassi = { q: "", giornata: "", stato: "" };
+
+export const STATI_FILTRO_CLASSI: { value: FiltroStatoClasse; label: string }[] = [
+  { value: "", label: "Tutti gli stati" },
+  { value: "confermato", label: "Confermata" },
+  { value: "attesa", label: "Lista d'attesa" },
+  { value: "entrata", label: "Entrata" },
+  { value: "senza_settore", label: "Confermata, senza settore" },
+];
+
+/** I filtri delle classi da una query string, con i valori ripuliti. */
+export function leggiFiltriClassi(p: Parametri): FiltriClassi {
+  const giornata = leggi(p, "giornata");
+  const stato = leggi(p, "stato");
+  return {
+    q: leggi(p, "q").slice(0, 120),
+    giornata: sessionBySlug(giornata) ? giornata : "",
+    stato: (STATI_FILTRO_CLASSI.some((s) => s.value === stato) ? stato : "") as FiltroStatoClasse,
+  };
+}
+
+export const filtriClassiAttivi = (f: FiltriClassi): boolean => Boolean(f.q.trim() || f.giornata || f.stato);
+
+/** Le giornate del sito che una classe ha. */
+export const giornateValideClasse = (r: RigaClasse): GiornataRigaClasse[] =>
+  r.giornate.filter((g) => Boolean(sessionBySlug(g.slug)));
+
+function classeCorrispondeTesto(r: RigaClasse, q: string): boolean {
+  const ago = normalizza(q);
+  if (!ago) return true;
+  const pagliaio = [
+    r.istituto,
+    r.comune,
+    `classe ${r.classe}`,
+    `${r.docente_nome} ${r.docente_cognome}`,
+    `${r.docente_cognome} ${r.docente_nome}`,
+    r.docente_email,
+    r.codice,
+    r.docente_telefono,
+  ]
+    .map(normalizza)
+    .join(" | ");
+  // Ogni parola deve esserci, in qualunque ordine: "archita 4b" trova la 4B del Liceo Archita.
+  const parole = ago.split(" ").filter(Boolean);
+  if (parole.every((p) => pagliaio.includes(p))) return true;
+  const cifre = soloCifre(q);
+  if (cifre.length >= 4 && cifre.length === q.replace(/[\s+().-]/g, "").length) {
+    return soloCifre(r.docente_telefono).includes(cifre);
+  }
+  return false;
+}
+
+function classeCorrispondeStato(r: RigaClasse, f: FiltriClassi): boolean {
+  if (!f.stato) return true;
+  const valide = giornateValideClasse(r);
+  const considerate = f.giornata ? valide.filter((g) => g.slug === f.giornata) : valide;
+  if (f.stato === "confermato") return considerate.some((g) => g.status === "confermato");
+  if (f.stato === "attesa") return considerate.some((g) => g.status === "lista_attesa");
+  if (f.stato === "entrata") return considerate.some((g) => g.presenti !== null);
+  if (f.stato === "senza_settore") return considerate.some((g) => g.status === "confermato" && !g.settore);
+  return true;
+}
+
+/** Il filtro unico delle classi: scheda, export e stampa. */
+export function filtraClassi(righe: readonly RigaClasse[], f: FiltriClassi): RigaClasse[] {
+  return righe.filter((r) => {
+    if (f.giornata && !r.giornate.some((g) => g.slug === f.giornata)) return false;
+    if (!classeCorrispondeStato(r, f)) return false;
+    return classeCorrispondeTesto(r, f.q);
+  });
+}
+
+/** Per scuola, poi per classe, come in un registro. */
+export function confrontaClassiPerScuola(a: RigaClasse, b: RigaClasse): number {
+  const opz: Intl.CollatorOptions = { sensitivity: "base", numeric: true };
+  return (
+    a.istituto.trim().localeCompare(b.istituto.trim(), "it", opz) ||
+    a.classe.trim().localeCompare(b.classe.trim(), "it", opz) ||
+    a.codice.localeCompare(b.codice)
+  );
+}
+
+/** Le più recenti in cima. */
+export function confrontaClassiPerData(a: RigaClasse, b: RigaClasse): number {
+  return b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id);
+}
+
 /* ── Link del pannello ────────────────────────────────────────────────── */
 
 /**
@@ -284,6 +462,22 @@ export function urlExport(f: Filtri, giornata?: string): string {
 
 export const urlStampa = (giornata: string): string =>
   `${PERCORSO_STAMPA}?giornata=${encodeURIComponent(giornata)}`;
+
+/** La lista per la porta delle sole classi di una giornata. */
+export const urlStampaClassi = (giornata: string): string => `${urlStampa(giornata)}&parte=classi`;
+
+/**
+ * L'export CSV delle classi con i filtri della scheda. Con `giornata` è
+ * l'elenco di quel giorno (stato, settore, ingressi); senza, tutte le
+ * prenotazioni con una colonna per giornata.
+ */
+export function urlExportClassi(f: FiltriClassi, giornata?: string): string {
+  const p = new URLSearchParams({ tipo: "classi" });
+  if (giornata) p.set("giornata", giornata);
+  if (f.q.trim()) p.set("q", f.q.trim());
+  if (f.stato) p.set("stato", f.stato);
+  return `/api/eventi/admin/export?${p.toString()}`;
+}
 
 export const urlBigliettoRelativo = (codice: string): string =>
   `${PERCORSO_BIGLIETTO}/${encodeURIComponent(codice)}`;

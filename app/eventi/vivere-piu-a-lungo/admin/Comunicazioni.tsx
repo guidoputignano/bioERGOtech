@@ -1,8 +1,10 @@
 "use client";
 
 /**
- * Comunicazioni: le due email a tutti gli iscritti, il biglietto aggiornato
- * e il promemoria prima dell'evento.
+ * Comunicazioni: le email a tutti. Agli iscritti il biglietto aggiornato e il
+ * promemoria prima dell'evento; alle scuole il promemoria alle classi (parte
+ * con quello degli iscritti, ma per conto suo) e l'invito alle scuole del
+ * percorso dei licei che non hanno ancora prenotato una classe.
  *
  * Ogni scheda dice che cosa contiene l'email, a quante persone partirebbe
  * adesso, se è già partita (quando e con che esito) o se è programmata.
@@ -32,6 +34,8 @@ import { PERCORSO_PANNELLO, inviaJson, leggiJson, messaggioErrore } from "./Pann
 
 const numero = (n: number) => n.toLocaleString("it-IT");
 const persone = (n: number) => `${numero(n)} ${n === 1 ? "persona" : "persone"}`;
+const classi = (n: number) => `${numero(n)} ${n === 1 ? "classe" : "classi"}`;
+const scuole = (n: number) => `${numero(n)} ${n === 1 ? "scuola" : "scuole"}`;
 
 const FMT_QUANDO = new Intl.DateTimeFormat("it-IT", {
   timeZone: "Europe/Rome",
@@ -73,18 +77,85 @@ function descriviEsito(e: EsitoCampagna): string {
 
 /* ── Testi delle campagne ─────────────────────────────────────────────── */
 
-const TESTI: Record<CampagnaId, { icona: string; descrizione: string; invia: string }> = {
+type TestiCampagna = {
+  icona: string;
+  descrizione: string;
+  invia: string;
+  /** "342 persone", "34 classi", "9 scuole": a chi parte. */
+  chi: (n: number) => string;
+  /** La riga dei destinatari nei numeri: "persone la riceverebbero adesso". */
+  riceverebbero: (n: number) => string;
+  /** Che cosa riceve ognuno, nella domanda di conferma. */
+  ognuno: (n: number, c: VistaCampagna) => string;
+  /** La nota sotto l'anteprima. */
+  anteprima: (codiceEsempio: string, codiceClasseEsempio: string) => string;
+  /** Come avvisare chi ha l'indirizzo sbagliato. */
+  altroModo: string;
+  /** A chi parte da sola, per le campagne programmate. */
+  quellaMattina?: string;
+};
+
+const TESTI_ISCRITTI = {
+  chi: persone,
+  riceverebbero: (n: number) => (n === 1 ? "persona la riceverebbe adesso" : "persone la riceverebbero adesso"),
+  ognuno: (n: number, c: VistaCampagna) =>
+    `${n === 1 ? "Riceve il proprio biglietto" : "Ognuna riceve il proprio biglietto al proprio indirizzo"}${
+      c.conInvito > 0
+        ? n === 1
+          ? ", con l'invito ad aggiungere una giornata"
+          : `, e ${numero(c.conInvito)} anche l'invito ad aggiungere una giornata`
+        : ""
+    }.`,
+  anteprima: (codice: string) =>
+    `Un esempio con dati finti (Maria, codice ${codice}): ognuno riceve le proprie giornate e il proprio codice. L'invito ad aggiungere una giornata compare solo se ci sono posti liberi, come adesso.`,
+  altroModo: "il telefono, se l'ha lasciato, è nella scheda Iscritti",
+};
+
+const TESTI: Record<CampagnaId, TestiCampagna> = {
   biglietto_aggiornato: {
+    ...TESTI_ISCRITTI,
     icona: "fa-ticket",
     descrizione:
       "Il biglietto di nuovo a ogni iscritto, con il QR che ora si vede anche in Gmail e, per ogni giornata, la data, il luogo e lo stato del posto. Il codice non cambia. Chi ha una giornata sola e può ancora aggiungere l'altra trova l'invito a farlo, con un pulsante.",
     invia: "Invia a",
   },
   promemoria: {
+    ...TESTI_ISCRITTI,
     icona: "fa-bell",
     descrizione:
       "Pochi giorni prima dell'evento: dove e quando, con il biglietto da mostrare all'ingresso e il link per liberare il posto se non si può più venire. Chi è solo in lista d'attesa riceve una versione che glielo ricorda.",
     invia: "Invia ora a",
+  },
+  promemoria_classi: {
+    icona: "fa-school",
+    descrizione:
+      "Pochi giorni prima dell'evento, al docente di ogni classe prenotata per una giornata che deve ancora iniziare: dove e quando, il QR della classe da mostrare all'ingresso, il settore se è assegnato e il link per cambiare i numeri. Una email per classe. Le classi solo in lista d'attesa ricevono una versione che glielo ricorda.",
+    invia: "Invia ora ai docenti di",
+    chi: classi,
+    riceverebbero: (n) => (n === 1 ? "classe: il suo docente la riceverebbe adesso" : "classi: i loro docenti la riceverebbero adesso"),
+    ognuno: (n) =>
+      n === 1
+        ? "Il docente riceve la prenotazione della classe con il QR."
+        : "Ogni docente riceve la prenotazione della propria classe con il QR, una email per classe.",
+    anteprima: (_codice, codiceClasse) =>
+      `Un esempio con dati finti (la 4B del Liceo di esempio, codice ${codiceClasse}): ogni docente riceve la propria classe, le proprie giornate, il settore se c'è e il proprio QR.`,
+    altroModo: "il telefono del docente è nella scheda Classi",
+    quellaMattina: "ai docenti delle classi prenotate quella mattina",
+  },
+  invito_scuole: {
+    icona: "fa-envelope-open-text",
+    descrizione:
+      "Una volta sola, al referente di ogni scuola del percorso dei licei con l'adesione confermata o attiva che non ha ancora prenotato una classe: il programma, come funziona la prenotazione per classe e il link al modulo con il nome della scuola già scritto, da inoltrare ai colleghi. Una scuola ha già prenotato se una classe è arrivata dal suo link, se il referente ha prenotato, o se una prenotazione ha lo stesso nome della scuola.",
+    invia: "Invia a",
+    chi: scuole,
+    riceverebbero: (n) => (n === 1 ? "scuola: il referente la riceverebbe adesso" : "scuole: i referenti la riceverebbero adesso"),
+    ognuno: (n) =>
+      n === 1
+        ? "Il referente riceve l'invito con il link che riempie il nome della scuola."
+        : "Ogni referente riceve l'invito con il link che riempie il nome della propria scuola.",
+    anteprima: () =>
+      "Un esempio con dati finti (Maria, Liceo di esempio): ogni referente riceve il nome della propria scuola e il proprio link, che riempie il modulo con la scuola. Il link dell'esempio non riempie niente.",
+    altroModo: "i contatti del referente sono nella console del percorso dei licei",
   },
 };
 
@@ -210,6 +281,7 @@ function PillStato({ c }: { c: VistaCampagna }) {
 
 /** Chi non riceverà l'email: indirizzi scritti male e iscrizioni senza giornate. */
 function NonInviabili({ c }: { c: VistaCampagna }) {
+  const testi = TESTI[c.id];
   const senza = c.senzaGiornata;
   const indirizzi = c.nonInviabiliTotale - senza;
   const parti: string[] = [];
@@ -229,9 +301,7 @@ function NonInviabili({ c }: { c: VistaCampagna }) {
         <strong>{titolo}</strong>{" "}
         {indirizzi > 0 && (
           <>
-            {indirizzi === 1 ? "L'indirizzo sbagliato conta" : "Gli indirizzi sbagliati contano"}{" "}fra le email non
-            partite. Conviene avvisare chi ha l&apos;indirizzo sbagliato in un altro modo: il telefono, se l&apos;ha lasciato, è
-            nella scheda Iscritti.{" "}
+            {`${indirizzi === 1 ? "L'indirizzo sbagliato conta" : "Gli indirizzi sbagliati contano"} fra le email non partite. Conviene avvisare chi ha l'indirizzo sbagliato in un altro modo: ${testi.altroModo}.`}{" "}
           </>
         )}
         {senza > 0 && (
@@ -271,11 +341,13 @@ function SchedaCampagna({
   c,
   emailProva,
   codiceEsempio,
+  codiceClasseEsempio,
   onAggiorna,
 }: {
   c: VistaCampagna;
   emailProva: string | null;
   codiceEsempio: string;
+  codiceClasseEsempio: string;
   onAggiorna: () => Promise<void>;
 }) {
   const id = useId();
@@ -366,7 +438,7 @@ function SchedaCampagna({
   const idDomanda = `${id}-domanda`;
   const idNotaProva = `${id}-nota-prova`;
 
-  const etichettaInvia = `${testi.invia} ${persone(n)}`;
+  const etichettaInvia = `${testi.invia} ${testi.chi(n)}`;
   const automatico = c.automatico;
 
   return (
@@ -436,7 +508,7 @@ function SchedaCampagna({
             <strong>
               Programmata per {automatico.etichetta}, verso le {automatico.ora}.
             </strong>{" "}
-            Parte da sola, a chi è iscritto quella mattina. Se la invii prima a mano, quel giorno non riparte.{" "}
+            Parte da sola, {testi.quellaMattina ?? "a chi è iscritto quella mattina"}. Se la invii prima a mano, quel giorno non riparte.{" "}
             {c.bloccata && c.tipoBlocco !== "evento_concluso" && (
               <>Il blocco qui sopra va risolto prima: finché c&apos;è, non parte neanche da sola.</>
             )}
@@ -454,23 +526,21 @@ function SchedaCampagna({
       )}
 
       {/* Chi la riceve. */}
-      {!inviata && c.tipoBlocco !== "evento_concluso" && (
+      {!inviata && c.tipoBlocco !== "evento_concluso" && c.tipoBlocco !== "lettura" && (
         <div className="eva-stats evc-stats">
           <div className="eva-stat">
             <div className="eva-stat-n">{numero(n)}</div>
             <div className="eva-stat-l">
               <span className="eva-dot" style={{ background: "var(--primary)" }} aria-hidden="true" />
-              {n === 1 ? "persona la riceverebbe adesso" : "persone la riceverebbero adesso"}
+              {testi.riceverebbero(n)}
             </div>
           </div>
-          <div className="eva-stat">
-            <div className="eva-stat-n">{numero(c.conInvito)}</div>
-            <div className="eva-stat-l">con l&apos;invito ad aggiungere una giornata</div>
-          </div>
-          <div className="eva-stat">
-            <div className="eva-stat-n">{numero(c.soloAttesa)}</div>
-            <div className="eva-stat-l">solo in lista d&apos;attesa</div>
-          </div>
+          {c.statistiche.map((x) => (
+            <div key={x.etichetta} className="eva-stat">
+              <div className="eva-stat-n">{numero(x.valore)}</div>
+              <div className="eva-stat-l">{x.etichetta}</div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -545,15 +615,9 @@ function SchedaCampagna({
         >
           <p id={idDomanda}>
             <strong>
-              Inviare «{c.nome}» a {persone(n)}?
+              Inviare «{c.nome}» a {testi.chi(n)}?
             </strong>{" "}
-            {n === 1 ? "Riceve il proprio biglietto" : "Ognuna riceve il proprio biglietto al proprio indirizzo"}
-            {c.conInvito > 0
-              ? n === 1
-                ? ", con l'invito ad aggiungere una giornata"
-                : `, e ${numero(c.conInvito)} anche l'invito ad aggiungere una giornata`
-              : ""}
-            .{" "}
+            {testi.ognuno(n, c)}{" "}
             <strong>Si può inviare una volta sola</strong>: dopo, non si potrà rimandare a tutti.{" "}
             {automatico?.fase === "prima" &&
               `${automatico.etichetta.charAt(0).toUpperCase()}${automatico.etichetta.slice(1)} non ripartirà da sola.`}
@@ -561,7 +625,7 @@ function SchedaCampagna({
           <div className="eva-azioni">
             <button type="button" className="eva-btn eva-btn-primario" onClick={invia}>
               <i className="fas fa-paper-plane" aria-hidden="true" />{" "}
-              Sì, invia a {persone(n)}
+              Sì, invia a {testi.chi(n)}
             </button>
             <button type="button" className="eva-btn" onClick={chiudiConferma}>
               Annulla
@@ -576,7 +640,7 @@ function SchedaCampagna({
           <p className="eva-esito" style={{ margin: 0, color: "var(--text-dark)" }}>
             <i className="fas fa-circle-notch fa-spin" aria-hidden="true" style={{ color: "var(--eva-teal-ink)" }} />
             <span>
-              Invio in corso a {persone(n)}. Può richiedere qualche minuto: tieni aperta questa pagina.
+              Invio in corso a {testi.chi(n)}. Può richiedere qualche minuto: tieni aperta questa pagina.
             </span>
           </p>
         )}
@@ -667,8 +731,7 @@ function SchedaCampagna({
               />
             </div>
             <p className="eva-nota" style={{ margin: 0 }}>
-              Un esempio con dati finti (Maria, codice {codiceEsempio}): ognuno riceve le proprie giornate e il proprio
-              codice. L&apos;invito ad aggiungere una giornata compare solo se ci sono posti liberi, come adesso.
+              {testi.anteprima(codiceEsempio, codiceClasseEsempio)}
             </p>
           </div>
         )}
@@ -715,10 +778,10 @@ export function Comunicazioni() {
 
       <div className="evc-testa">
         <div style={{ maxWidth: 680 }}>
-          <h2 className="eva-h2">Email a tutti gli iscritti</h2>
+          <h2 className="eva-h2">Email agli iscritti e alle scuole</h2>
           <p className="eva-sub">
-            Due comunicazioni, ognuna si invia una volta sola. Prima di inviare guarda l&apos;anteprima e manda una
-            prova a te.
+            Ogni comunicazione si invia una volta sola. Prima di inviare guarda l&apos;anteprima e manda una prova a
+            te.
           </p>
         </div>
         <div className="eva-azioni" style={{ alignItems: "center" }}>
@@ -756,6 +819,7 @@ export function Comunicazioni() {
           c={c}
           emailProva={dati.emailProva}
           codiceEsempio={dati.codiceEsempio}
+          codiceClasseEsempio={dati.codiceClasseEsempio ?? ""}
           onAggiorna={carica}
         />
       ))}

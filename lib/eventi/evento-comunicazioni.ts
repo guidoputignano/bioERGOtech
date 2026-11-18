@@ -1,6 +1,6 @@
 /**
- * Le due email a tutti gli iscritti all'evento, dalla scheda Comunicazioni
- * del pannello e dal cron:
+ * Le email a tutti dell'evento, dalla scheda Comunicazioni del pannello e dal
+ * cron. Due agli iscritti uno per uno:
  *
  * - il BIGLIETTO AGGIORNATO (a mano): il biglietto con il QR in PNG, che
  *   Gmail mostra, e ogni giornata con data, luogo e stato. Chi ha una
@@ -25,7 +25,20 @@
  * l'email (non sapremmo che data indicarle), compare fra le non inviabili
  * con il motivo "nessuna giornata" e la campagna parte per tutti gli altri.
  *
- * Nei log niente dati personali: le persone sono "iscrizione <id>".
+ * E due alle scuole:
+ *
+ * - il PROMEMORIA ALLE CLASSI (automatico, con quello degli iscritti): a
+ *   ogni docente che ha prenotato una classe per una giornata che deve
+ *   ancora iniziare, l'email della classe con il QR, le giornate e il
+ *   settore (lib/eventi/email-classi.ts). Ha una sua chiave: parte e si
+ *   riprova per conto suo, e un problema degli iscritti non lo ferma;
+ * - l'INVITO ALLE SCUOLE DEL PERCORSO (a mano, una volta): al referente di
+ *   ogni scuola del percorso dei licei con l'adesione confermata o attiva
+ *   che non ha ancora prenotato una classe, il link al modulo delle classi
+ *   con la scuola già scritta. Legge licei_adesioni e basta: non la cambia.
+ *
+ * Nei log niente dati personali: le persone sono "iscrizione <id>", le
+ * classi "prenotazione <id>", le scuole "adesione <id>".
  *
  * Solo server.
  */
@@ -51,18 +64,29 @@ import {
   type PostiGiornata,
 } from "@/lib/eventi/evento-server";
 import type { SessionStatus } from "@/lib/eventi/registration";
+import type { PrenotazioneClasse } from "@/lib/eventi/classi";
+import { elencoClassi } from "@/lib/eventi/classi-server";
+import { emailClasse, emailInvitoScuola } from "@/lib/eventi/email-classi";
 
 /* ── Le campagne ──────────────────────────────────────────────────────── */
 
-export const CAMPAGNE_ID = ["biglietto_aggiornato", "promemoria"] as const;
+/** Le campagne agli iscritti uno per uno. */
+export const CAMPAGNE_ISCRITTI_ID = ["biglietto_aggiornato", "promemoria"] as const;
+/** Le campagne alle scuole: i docenti delle classi prenotate e i referenti del percorso. */
+export const CAMPAGNE_SCUOLE_ID = ["promemoria_classi", "invito_scuole"] as const;
+export const CAMPAGNE_ID = [...CAMPAGNE_ISCRITTI_ID, ...CAMPAGNE_SCUOLE_ID] as const;
+export type CampagnaIscrittiId = (typeof CAMPAGNE_ISCRITTI_ID)[number];
+export type CampagnaScuoleId = (typeof CAMPAGNE_SCUOLE_ID)[number];
 export type CampagnaId = (typeof CAMPAGNE_ID)[number];
 
 export const campagnaValida = (v: unknown): v is CampagnaId =>
   typeof v === "string" && (CAMPAGNE_ID as readonly string[]).includes(v);
 
+const perIscritti = (id: CampagnaId): id is CampagnaIscrittiId =>
+  (CAMPAGNE_ISCRITTI_ID as readonly string[]).includes(id);
+
 type DefinizioneCampagna = {
   nome: string;
-  motivo: MotivoEmail;
   /** La data dell'invio: è anche la prenotazione. */
   chiave: string;
   /** L'esito, in soli numeri. */
@@ -74,18 +98,34 @@ type DefinizioneCampagna = {
 export const CAMPAGNE: Record<CampagnaId, DefinizioneCampagna> = {
   biglietto_aggiornato: {
     nome: "Biglietto aggiornato",
-    motivo: "aggiornamento",
     chiave: "evento_biglietto_aggiornato_inviato_at",
     chiaveEsito: "evento_biglietto_aggiornato_esito",
     etichetta: "biglietto-aggiornato",
   },
   promemoria: {
     nome: "Promemoria prima dell'evento",
-    motivo: "promemoria",
     chiave: "evento_promemoria_inviato_at",
     chiaveEsito: "evento_promemoria_esito",
     etichetta: "promemoria",
   },
+  promemoria_classi: {
+    nome: "Promemoria alle classi",
+    chiave: "evento_promemoria_classi_inviato_at",
+    chiaveEsito: "evento_promemoria_classi_esito",
+    etichetta: "promemoria-classi",
+  },
+  invito_scuole: {
+    nome: "Invita le scuole del percorso",
+    chiave: "evento_invito_scuole_inviato_at",
+    chiaveEsito: "evento_invito_scuole_esito",
+    etichetta: "invito-scuole",
+  },
+};
+
+/** Il modello dell'email del biglietto per le campagne agli iscritti. */
+const MOTIVO: Record<CampagnaIscrittiId, MotivoEmail> = {
+  biglietto_aggiornato: "aggiornamento",
+  promemoria: "promemoria",
 };
 
 /**
@@ -151,7 +191,7 @@ function leggiEsito(grezzo: string | null | undefined): EsitoCampagna | null {
   }
 }
 
-/** Lo stato di tutte e due le campagne, da `licei_config`. Lancia se la lettura fallisce. */
+/** Lo stato di tutte le campagne, da `licei_config`. Lancia se la lettura fallisce. */
 export async function leggiStatiInvio(client: SupabaseClient): Promise<Record<CampagnaId, StatoInvio>> {
   const chiavi = CAMPAGNE_ID.flatMap((id) => [CAMPAGNE[id].chiave, CAMPAGNE[id].chiaveEsito]);
   const { data, error } = await client.from("licei_config").select("chiave, valore").in("chiave", chiavi);
@@ -215,7 +255,7 @@ async function giornateMancanti(client: SupabaseClient): Promise<string[]> {
   return SESSIONS.map((s) => s.slug as string).filter((slug) => !presenti.has(slug));
 }
 
-/** Quello che serve a tutte e due le campagne, letto una volta. */
+/** Quello che serve alle campagne agli iscritti, letto una volta. */
 export type DatiComunicazioni = {
   iscrizioni: IscrizioneEvento[];
   mancanti: string[];
@@ -260,7 +300,11 @@ export type TipoBlocco =
   | "giornate_mancanti"
   | "posti_illeggibili"
   | "evento_concluso"
-  | "nessun_destinatario";
+  | "nessun_destinatario"
+  /** Le prenotazioni per classe non sono nel database. */
+  | "classi_assenti"
+  /** Il database non ha risposto: non si sa a chi scrivere. */
+  | "lettura";
 
 export type Preparazione = {
   destinatari: Destinatario[];
@@ -294,7 +338,7 @@ const giornateNote = (iscr: IscrizioneEvento): GiornataEmail[] =>
  * letti, così il pannello mostra esattamente quello che l'invio farebbe.
  */
 export function preparaCampagna(
-  campagna: CampagnaId,
+  campagna: CampagnaIscrittiId,
   dati: DatiComunicazioni,
   adesso: Date = new Date(),
 ): Preparazione {
@@ -408,13 +452,17 @@ export function preparaCampagna(
 /* ── Esempi per l'anteprima e la prova ────────────────────────────────── */
 
 export type EsempioId = "solo_11" | "entrambe" | "solo_10" | "attesa";
+/** Gli esempi delle campagne alle scuole hanno i loro nomi. */
+export type EsempioScuoleId = "classe_confermata" | "classe_solo_primo" | "classe_attesa" | "scuola";
 
 /** Un codice che non può essere vero: "O", "I" e "1" non stanno nell'alfabeto dei codici. */
 export const CODICE_ESEMPIO = "VPL-ESEMPIO1";
 const NOME_ESEMPIO = "Maria";
 
 /** Le persone di esempio, dalle giornate del sito. Il primo è il caso che conta di più. */
-function definizioniEsempi(campagna: CampagnaId): { id: EsempioId; etichetta: string; giornate: GiornataEmail[] }[] {
+function definizioniEsempi(
+  campagna: CampagnaIscrittiId,
+): { id: EsempioId; etichetta: string; giornate: GiornataEmail[] }[] {
   const [primo, secondo] = SESSIONS;
   const conferma = (slug: string, status: SessionStatus = "confermato"): GiornataEmail => ({ slug, status });
   const tutti: Record<EsempioId, { etichetta: string; giornate: GiornataEmail[] }> = {
@@ -455,21 +503,331 @@ function iscrizioneEsempio(giornate: GiornataEmail[]): IscrizioneEvento {
   };
 }
 
-export type EsempioEmail = { id: EsempioId; etichetta: string } & EmailBiglietto;
+export type EsempioEmail = { id: EsempioId | EsempioScuoleId; etichetta: string } & EmailBiglietto;
 
 /** Gli esempi di una campagna, con i posti liberi di adesso: l'anteprima è quello che partirebbe. */
-export function esempiCampagna(campagna: CampagnaId, dati: Pick<DatiComunicazioni, "posti" | "postiCompleti">): EsempioEmail[] {
+export function esempiCampagna(
+  campagna: CampagnaIscrittiId,
+  dati: Pick<DatiComunicazioni, "posti" | "postiCompleti">,
+): EsempioEmail[] {
   return definizioniEsempi(campagna).map(({ id, etichetta, giornate }) => {
     const aggiungibili = dati.postiCompleti ? giornateAggiungibili(iscrizioneEsempio(giornate), dati.posti) : [];
     const email = emailBiglietto({
       nome: NOME_ESEMPIO,
       codice: CODICE_ESEMPIO,
       giornate,
-      motivo: CAMPAGNE[campagna].motivo,
+      motivo: MOTIVO[campagna],
       aggiungibili,
     });
     return { id, etichetta, ...email };
   });
+}
+
+/* ── Le scuole: i docenti delle classi e i referenti del percorso ──── */
+
+type Lettura<T> = { ok: true; valore: T } | { ok: false; errore: string };
+
+/** Il referente di una scuola del percorso dei licei, per l'invito. */
+export type AdesioneInvito = {
+  id: string;
+  codice: string;
+  istituto: string;
+  nome: string;
+  email: string;
+};
+
+/** Quello che serve alle campagne alle scuole. Le due letture sono separate: una non ferma l'altra. */
+export type DatiScuole = {
+  /** Null: le tabelle delle classi non sono nel database. */
+  classi: Lettura<PrenotazioneClasse[] | null>;
+  adesioni: Lettura<AdesioneInvito[]>;
+};
+
+/** Una tabella o una funzione che non c'è (il file delle classi non è stato eseguito). */
+const mancaNelDatabase = (e: { code?: string | null } | null | undefined) =>
+  Boolean(e && ["PGRST202", "42883", "PGRST205", "42P01"].includes(e.code ?? ""));
+
+const testoErrore = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/** Tutte le prenotazioni per classe, o null se le tabelle non ci sono. Lancia per ogni altro errore. */
+async function leggiClassi(client: SupabaseClient): Promise<PrenotazioneClasse[] | null> {
+  const { error } = await client.from("event_group_bookings").select("id", { count: "exact", head: true }).limit(1);
+  if (error) {
+    if (mancaNelDatabase(error)) return null;
+    throw new Error(`event_group_bookings: ${error.code ?? "?"} ${error.message}`);
+  }
+  return elencoClassi(client);
+}
+
+/** I referenti delle scuole del percorso con l'adesione confermata o attiva. Solo lettura. */
+async function leggiAdesioni(client: SupabaseClient): Promise<AdesioneInvito[]> {
+  const { data, error } = await client
+    .from("licei_adesioni")
+    .select("id, codice, istituto_denominazione, referente_nome, referente_email, stato")
+    .in("stato", ["confermata", "attiva"])
+    .order("codice", { ascending: true })
+    .limit(2000);
+  if (error) throw new Error(`licei_adesioni: ${error.message}`);
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: String(r.id),
+    codice: String(r.codice ?? ""),
+    istituto: String(r.istituto_denominazione ?? "").trim(),
+    nome: String(r.referente_nome ?? "").trim(),
+    email: String(r.referente_email ?? "").trim(),
+  }));
+}
+
+/** Le classi e i referenti, ognuno con il suo esito: non lancia mai. */
+export async function leggiDatiScuole(client: SupabaseClient): Promise<DatiScuole> {
+  const [classi, adesioni] = await Promise.allSettled([leggiClassi(client), leggiAdesioni(client)]);
+  return {
+    classi: classi.status === "fulfilled" ? { ok: true, valore: classi.value } : { ok: false, errore: testoErrore(classi.reason) },
+    adesioni:
+      adesioni.status === "fulfilled" ? { ok: true, valore: adesioni.value } : { ok: false, errore: testoErrore(adesioni.reason) },
+  };
+}
+
+/** Un'email da mandare, già pronta da comporre. */
+type DaSpedire = { rif: string; email: string; componi: () => EmailBiglietto };
+
+export type PreparazioneScuole = {
+  destinatari: DaSpedire[];
+  nonInviabili: NonInviabile[];
+  /** I numeri da mostrare accanto ai destinatari. */
+  statistiche: { valore: number; etichetta: string }[];
+  blocco: { tipo: TipoBlocco; messaggio: string } | null;
+};
+
+/** Perché un indirizzo non può ricevere l'email, o null se va bene. */
+function indirizzoNonValido(email: string): string | null {
+  const e = email.trim().toLowerCase();
+  if (!EMAIL_VALIDA.test(e)) return "indirizzo non valido";
+  const refuso = refusoEmail(e);
+  if (refuso?.impossibile) {
+    return refuso.suggerimento
+      ? `il dominio «${refuso.dominio}» non esiste, forse è ${refuso.suggerimento}`
+      : `il dominio «${refuso.dominio}» non esiste`;
+  }
+  return null;
+}
+
+/** "Liceo Archita" e "liceo  archita" sono la stessa scuola. */
+const nomeScuola = (v: string) =>
+  v
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const MESSAGGIO_SENZA_RESEND =
+  "L'invio delle email non è configurato su questo ambiente: manca la variabile RESEND_API_KEY. Va aggiunta su Vercel, poi serve un nuovo deploy.";
+const MESSAGGIO_CLASSI_ASSENTI =
+  "Le prenotazioni per classe non sono nel database: va eseguito nell'editor SQL di Supabase il file supabase/migrations/20261231400000_event_prenotazioni_classi.sql.";
+
+/**
+ * Il promemoria alle classi: a ogni docente che ha una classe prenotata per
+ * una giornata che deve ancora iniziare, una email per classe (ogni classe
+ * ha il suo QR). Le giornate già iniziate non compaiono. Una classe solo in
+ * lista d'attesa riceve la variante che glielo dice.
+ */
+export function preparaPromemoriaClassi(dati: DatiScuole, adesso: Date = new Date()): PreparazioneScuole {
+  const destinatari: DaSpedire[] = [];
+  const nonInviabili: NonInviabile[] = [];
+  let confermate = 0;
+  let soloAttesa = 0;
+  const classi = dati.classi.ok ? dati.classi.valore : null;
+
+  for (const p of classi ?? []) {
+    const future = p.giornate.filter((g) => {
+      const s = sessionBySlug(g.slug);
+      return s && Date.parse(s.inizioISO) > adesso.getTime();
+    });
+    if (future.length === 0) continue;
+    const docente = `${p.docente_nome} ${p.docente_cognome}`.trim();
+    const chi = `${docente} (${p.classe}, ${p.istituto})`;
+    const motivo = indirizzoNonValido(p.docente_email);
+    if (motivo) {
+      nonInviabili.push({ rif: `prenotazione ${p.id}`, nome: chi, email: p.docente_email, motivo });
+      continue;
+    }
+    if (future.some((g) => g.status === "confermato")) confermate += 1;
+    else soloAttesa += 1;
+    const prenotazione: PrenotazioneClasse = { ...p, giornate: future };
+    destinatari.push({
+      rif: `prenotazione ${p.id}`,
+      email: p.docente_email.trim().toLowerCase(),
+      componi: () => emailClasse({ prenotazione, motivo: "promemoria" }),
+    });
+  }
+
+  const blocco = ((): PreparazioneScuole["blocco"] => {
+    if (!process.env.RESEND_API_KEY) return { tipo: "configurazione", messaggio: MESSAGGIO_SENZA_RESEND };
+    if (!dati.classi.ok) {
+      return { tipo: "lettura", messaggio: "Non riesco a leggere le classi dal database: non si sa a chi scrivere. Riprova tra poco." };
+    }
+    if (dati.classi.valore === null) return { tipo: "classi_assenti", messaggio: MESSAGGIO_CLASSI_ASSENTI };
+    if (oggiRoma(adesso) > ULTIMO_GIORNO) {
+      return { tipo: "evento_concluso", messaggio: "L'evento è concluso: questa email non serve più." };
+    }
+    if (destinatari.length === 0) {
+      return { tipo: "nessun_destinatario", messaggio: "Non c'è ancora nessuna classe prenotata per le prossime giornate." };
+    }
+    return null;
+  })();
+
+  return {
+    destinatari,
+    nonInviabili,
+    statistiche: [
+      { valore: confermate, etichetta: "con un posto confermato" },
+      { valore: soloAttesa, etichetta: "solo in lista d'attesa" },
+    ],
+    blocco,
+  };
+}
+
+/**
+ * L'invito alle scuole del percorso: al referente di ogni scuola con
+ * l'adesione confermata o attiva che non ha ancora prenotato una classe.
+ * Una scuola ha già prenotato se una classe è arrivata dal suo link, se il
+ * referente ha prenotato una classe, o se una prenotazione ha lo stesso nome
+ * della scuola (a meno di maiuscole, accenti e spazi). Un indirizzo, un'email.
+ */
+export function preparaInvitoScuole(dati: DatiScuole, adesso: Date = new Date()): PreparazioneScuole {
+  const destinatari: DaSpedire[] = [];
+  const nonInviabili: NonInviabile[] = [];
+  const classi = dati.classi.ok ? (dati.classi.valore ?? []) : [];
+  const adesioni = dati.adesioni.ok ? dati.adesioni.valore : [];
+  const perAdesione = new Set(classi.map((c) => c.licei_adesione_id).filter((x): x is string => Boolean(x)));
+  const perEmail = new Set(classi.map((c) => c.docente_email.trim().toLowerCase()));
+  const perScuola = new Set(classi.map((c) => nomeScuola(c.istituto)).filter(Boolean));
+  const visti = new Set<string>();
+  let giaPrenotate = 0;
+
+  for (const a of adesioni) {
+    const email = a.email.toLowerCase();
+    if (perAdesione.has(a.id) || perEmail.has(email) || (a.istituto && perScuola.has(nomeScuola(a.istituto)))) {
+      giaPrenotate += 1;
+      continue;
+    }
+    if (visti.has(email)) continue;
+    visti.add(email);
+    const chi = `${a.nome || "Referente"} (${a.istituto || "scuola senza nome"})`;
+    const motivo = indirizzoNonValido(a.email);
+    if (motivo) {
+      nonInviabili.push({ rif: `adesione ${a.id}`, nome: chi, email: a.email, motivo });
+      continue;
+    }
+    destinatari.push({
+      rif: `adesione ${a.id}`,
+      email,
+      componi: () => emailInvitoScuola({ nome: a.nome, istituto: a.istituto, codiceAdesione: a.codice }),
+    });
+  }
+
+  const blocco = ((): PreparazioneScuole["blocco"] => {
+    if (!process.env.RESEND_API_KEY) return { tipo: "configurazione", messaggio: MESSAGGIO_SENZA_RESEND };
+    if (!dati.adesioni.ok) {
+      return { tipo: "lettura", messaggio: "Non riesco a leggere le scuole del percorso dal database. Riprova tra poco." };
+    }
+    if (!dati.classi.ok) {
+      return {
+        tipo: "lettura",
+        messaggio: "Non riesco a leggere le classi dal database: non si sa quali scuole hanno già prenotato. Riprova tra poco.",
+      };
+    }
+    // Senza le tabelle delle classi il link porterebbe a un modulo che non funziona.
+    if (dati.classi.valore === null) return { tipo: "classi_assenti", messaggio: MESSAGGIO_CLASSI_ASSENTI };
+    if (SESSIONS.every((s) => Date.parse(s.inizioISO) <= adesso.getTime())) {
+      return { tipo: "evento_concluso", messaggio: "Le giornate dell'evento sono iniziate: l'invito non serve più." };
+    }
+    if (destinatari.length === 0) {
+      return {
+        tipo: "nessun_destinatario",
+        messaggio:
+          adesioni.length === 0
+            ? "Non c'è nessuna scuola del percorso con l'adesione confermata o attiva."
+            : "Tutte le scuole del percorso hanno già prenotato almeno una classe.",
+      };
+    }
+    return null;
+  })();
+
+  return {
+    destinatari,
+    nonInviabili,
+    statistiche: [
+      { valore: adesioni.length, etichetta: "scuole del percorso, confermate o attive" },
+      { valore: giaPrenotate, etichetta: "hanno già prenotato una classe" },
+    ],
+    blocco,
+  };
+}
+
+const preparaScuole = (id: CampagnaScuoleId, dati: DatiScuole, adesso?: Date) =>
+  id === "promemoria_classi" ? preparaPromemoriaClassi(dati, adesso) : preparaInvitoScuole(dati, adesso);
+
+/** Un codice di classe che non può essere vero, come quello degli esempi del biglietto. */
+export const CODICE_CLASSE_ESEMPIO = "VPC-ESEMPIO1";
+/** "I", "O" e "1" non stanno nell'alfabeto dei codici del percorso: il link dell'esempio non riempie niente. */
+const CODICE_ADESIONE_ESEMPIO = "LIC-ESEMPIO1";
+
+/** La classe finta degli esempi. */
+function classeEsempio(giornate: { slug: string; status: SessionStatus; settore?: string }[]): PrenotazioneClasse {
+  return {
+    id: "esempio",
+    codice: CODICE_CLASSE_ESEMPIO,
+    istituto: "Liceo di esempio",
+    comune: "Taranto",
+    classe: "4B",
+    docente_nome: NOME_ESEMPIO,
+    docente_cognome: "Rossi",
+    docente_email: "",
+    docente_telefono: "",
+    studenti: 26,
+    accompagnatori: 2,
+    posti: 28,
+    note: null,
+    licei_adesione_id: null,
+    created_at: "",
+    updated_at: "",
+    giornate: giornate.map((g, i) => ({
+      id: `esempio-${i}`,
+      slug: g.slug,
+      status: g.status,
+      settore: g.settore ?? null,
+      presenti: null,
+      checkin_ts: null,
+      created_at: null,
+    })),
+  };
+}
+
+/** Gli esempi delle campagne alle scuole, con dati finti. */
+export function esempiScuole(campagna: CampagnaScuoleId): EsempioEmail[] {
+  if (campagna === "invito_scuole") {
+    const email = emailInvitoScuola({ nome: NOME_ESEMPIO, istituto: "Liceo di esempio", codiceAdesione: CODICE_ADESIONE_ESEMPIO });
+    return [{ id: "scuola", etichetta: "Una scuola del percorso", ...email }];
+  }
+  const [primo, secondo] = SESSIONS;
+  const esempi: { id: EsempioScuoleId; etichetta: string; giornate: { slug: string; status: SessionStatus; settore?: string }[] }[] = [
+    {
+      id: "classe_confermata",
+      etichetta: "Confermata, con il settore",
+      giornate: [
+        { slug: primo.slug, status: "confermato", settore: "Tribuna B" },
+        ...(secondo ? [{ slug: secondo.slug, status: "confermato" as SessionStatus }] : []),
+      ],
+    },
+    { id: "classe_solo_primo", etichetta: `Solo ${giornateConArticolo([primo.slug])}`, giornate: [{ slug: primo.slug, status: "confermato" }] },
+    { id: "classe_attesa", etichetta: "In lista d'attesa", giornate: [{ slug: primo.slug, status: "lista_attesa" }] },
+  ];
+  return esempi.map(({ id, etichetta, giornate }) => ({
+    id,
+    etichetta,
+    ...emailClasse({ prenotazione: classeEsempio(giornate), motivo: "promemoria" }),
+  }));
 }
 
 /* ── La vista per il pannello ─────────────────────────────────────────── */
@@ -482,12 +840,16 @@ export type FaseAutomatico = "prima" | "in_corso" | "dopo";
 export type VistaCampagna = {
   id: CampagnaId;
   nome: string;
+  /** A chi scrive: le persone iscritte, i docenti delle classi o i referenti delle scuole. */
+  pubblico: "iscritti" | "classi" | "scuole";
   inviato_at: string | null;
   esito: EsitoCampagna | null;
-  /** A quante persone partirebbe adesso, un'email per indirizzo. */
+  /** A quanti partirebbe adesso: persone, classi o scuole, un'email per destinatario. */
   destinatari: number;
+  /** Gli altri numeri da mostrare accanto ai destinatari. */
+  statistiche: { valore: number; etichetta: string }[];
+  /** Solo per le campagne agli iscritti: chi riceverà l'invito ad aggiungere una giornata. */
   conInvito: number;
-  soloAttesa: number;
   nonInviabili: NonInviabile[];
   nonInviabiliTotale: number;
   /** Quante delle non inviabili sono iscrizioni senza nessuna giornata. */
@@ -495,7 +857,7 @@ export type VistaCampagna = {
   /** Perché ora non può partire. Null: può partire. */
   bloccata: string | null;
   tipoBlocco: TipoBlocco | null;
-  /** Solo per il promemoria non ancora inviato: "martedì 8 dicembre". */
+  /** Solo per i promemoria non ancora inviati: "martedì 8 dicembre". */
   programmata: string | null;
   automatico: { dal: string; al: string; etichetta: string; ora: string; fase: FaseAutomatico } | null;
   esempi: EsempioEmail[];
@@ -507,32 +869,58 @@ export type RispostaComunicazioni = {
   emailProva: string | null;
   /** Il codice finto degli esempi, per dirlo sotto l'anteprima. */
   codiceEsempio: string;
+  /** Il codice finto degli esempi delle classi. */
+  codiceClasseEsempio: string;
   generato_at: string;
 };
 
-/** La scheda Comunicazioni: stato, destinatari, blocchi e anteprime. Lancia se il database non risponde. */
+/**
+ * La scheda Comunicazioni: stato, destinatari, blocchi e anteprime.
+ * Gli iscritti e le scuole si leggono separatamente: se una delle due letture
+ * non riesce, le sue campagne risultano bloccate e le altre restano
+ * utilizzabili. Lancia solo se non si riesce a sapere che cosa è già partito.
+ */
 export async function vistaComunicazioni(
   client: SupabaseClient,
   opzioni: { emailProva: string | null; adesso?: Date },
 ): Promise<RispostaComunicazioni> {
   const adesso = opzioni.adesso ?? new Date();
-  const dati = await leggiDatiComunicazioni(client);
+  const [iscritti, scuole] = await Promise.all([
+    leggiDatiComunicazioni(client).then(
+      (valore) => ({ ok: true as const, valore }),
+      (err: unknown) => ({ ok: false as const, errore: testoErrore(err) }),
+    ),
+    leggiDatiScuole(client),
+  ]);
+  if (!iscritti.ok) console.error("[eventi/comunicazioni] iscritti non letti:", iscritti.errore);
+  if (!scuole.classi.ok) console.error("[eventi/comunicazioni] classi non lette:", scuole.classi.errore);
+  if (!scuole.adesioni.ok) console.error("[eventi/comunicazioni] adesioni non lette:", scuole.adesioni.errore);
+  // Lo stato degli invii serve sempre: senza, non si sa che cosa è già partito.
+  const stati = iscritti.ok ? iscritti.valore.stati : await leggiStatiInvio(client);
   const oggi = oggiRoma(adesso);
+  const fase: FaseAutomatico =
+    oggi < PROMEMORIA_AUTOMATICO.dal ? "prima" : oggi > PROMEMORIA_AUTOMATICO.al ? "dopo" : "in_corso";
 
-  const campagne = CAMPAGNE_ID.map((id): VistaCampagna => {
-    const p = preparaCampagna(id, dati, adesso);
-    const stato = dati.stati[id];
-    const fase: FaseAutomatico =
-      oggi < PROMEMORIA_AUTOMATICO.dal ? "prima" : oggi > PROMEMORIA_AUTOMATICO.al ? "dopo" : "in_corso";
-    const automatico = id === "promemoria" ? { ...PROMEMORIA_AUTOMATICO, fase } : null;
+  const automaticoPer = (id: CampagnaId) =>
+    id === "promemoria" || id === "promemoria_classi" ? { ...PROMEMORIA_AUTOMATICO, fase } : null;
+
+  const vista = (
+    id: CampagnaId,
+    pubblico: VistaCampagna["pubblico"],
+    p: { destinatari: number; statistiche: VistaCampagna["statistiche"]; conInvito: number; nonInviabili: NonInviabile[]; blocco: { tipo: TipoBlocco; messaggio: string } | null },
+    esempi: EsempioEmail[],
+  ): VistaCampagna => {
+    const stato = stati[id];
+    const automatico = automaticoPer(id);
     return {
       id,
       nome: CAMPAGNE[id].nome,
+      pubblico,
       inviato_at: stato.inviato_at,
       esito: stato.esito,
-      destinatari: p.destinatari.length,
+      destinatari: p.destinatari,
+      statistiche: p.statistiche,
       conInvito: p.conInvito,
-      soloAttesa: p.soloAttesa,
       nonInviabili: p.nonInviabili.slice(0, MAX_NON_INVIABILI),
       nonInviabiliTotale: p.nonInviabili.length,
       senzaGiornata: p.nonInviabili.filter((x) => x.motivo === MOTIVO_SENZA_GIORNATA).length,
@@ -540,18 +928,74 @@ export async function vistaComunicazioni(
       tipoBlocco: stato.inviato_at ? null : (p.blocco?.tipo ?? null),
       programmata: automatico && !stato.inviato_at && fase !== "dopo" ? PROMEMORIA_AUTOMATICO.etichetta : null,
       automatico,
-      esempi: esempiCampagna(id, dati),
+      esempi,
     };
-  });
+  };
 
-  return { campagne, emailProva: opzioni.emailProva, codiceEsempio: CODICE_ESEMPIO, generato_at: adesso.toISOString() };
+  const campagne: VistaCampagna[] = [];
+  for (const id of CAMPAGNE_ISCRITTI_ID) {
+    if (iscritti.ok) {
+      const p = preparaCampagna(id, iscritti.valore, adesso);
+      campagne.push(
+        vista(
+          id,
+          "iscritti",
+          {
+            destinatari: p.destinatari.length,
+            statistiche: [
+              { valore: p.conInvito, etichetta: "con l'invito ad aggiungere una giornata" },
+              { valore: p.soloAttesa, etichetta: "solo in lista d'attesa" },
+            ],
+            conInvito: p.conInvito,
+            nonInviabili: p.nonInviabili,
+            blocco: p.blocco,
+          },
+          esempiCampagna(id, iscritti.valore),
+        ),
+      );
+    } else {
+      campagne.push(
+        vista(
+          id,
+          "iscritti",
+          {
+            destinatari: 0,
+            statistiche: [],
+            conInvito: 0,
+            nonInviabili: [],
+            blocco: { tipo: "lettura", messaggio: "Non riesco a leggere gli iscritti dal database: non si sa a chi scrivere. Riprova tra poco." },
+          },
+          esempiCampagna(id, { posti: [], postiCompleti: false }),
+        ),
+      );
+    }
+  }
+  for (const id of CAMPAGNE_SCUOLE_ID) {
+    const p = preparaScuole(id, scuole, adesso);
+    campagne.push(
+      vista(
+        id,
+        id === "promemoria_classi" ? "classi" : "scuole",
+        { destinatari: p.destinatari.length, statistiche: p.statistiche, conInvito: 0, nonInviabili: p.nonInviabili, blocco: p.blocco },
+        esempiScuole(id),
+      ),
+    );
+  }
+
+  return {
+    campagne,
+    emailProva: opzioni.emailProva,
+    codiceEsempio: CODICE_ESEMPIO,
+    codiceClasseEsempio: CODICE_CLASSE_ESEMPIO,
+    generato_at: adesso.toISOString(),
+  };
 }
 
 /* ── La prova ─────────────────────────────────────────────────────────── */
 
 /**
- * L'email di prova: la campagna con la persona di esempio, all'indirizzo
- * di chi la chiede. Non tocca la chiave: non conta come invio.
+ * L'email di prova: la campagna con l'esempio scelto, all'indirizzo di chi
+ * la chiede. Non tocca la chiave: non conta come invio.
  */
 export async function inviaProva(
   client: SupabaseClient,
@@ -559,10 +1003,15 @@ export async function inviaProva(
   campagna: CampagnaId,
   opzioni: { a: string; esempio?: string },
 ): Promise<{ ok: true; esempio: string } | { ok: false; errore: string }> {
-  // Solo i posti: l'esempio non ha bisogno degli iscritti.
-  const posti = await postiPerGiornata(client);
-  const postiCompleti = SESSIONS.every((s) => posti.some((p) => p.slug === s.slug));
-  const esempi = esempiCampagna(campagna, { posti, postiCompleti });
+  let esempi: EsempioEmail[];
+  if (perIscritti(campagna)) {
+    // Solo i posti: l'esempio non ha bisogno degli iscritti.
+    const posti = await postiPerGiornata(client);
+    const postiCompleti = SESSIONS.every((s) => posti.some((p) => p.slug === s.slug));
+    esempi = esempiCampagna(campagna, { posti, postiCompleti });
+  } else {
+    esempi = esempiScuole(campagna);
+  }
   const scelto = esempi.find((e) => e.id === opzioni.esempio) ?? esempi[0];
   try {
     const { error } = await resend.emails.send({
@@ -668,16 +1117,36 @@ export async function inviaCampagna(
   const gia = (await leggiStatiInvio(client))[campagna].inviato_at;
   if (gia) return { stato: "gia_inviata", inviato_at: gia };
 
-  const dati = await leggiDatiComunicazioni(client);
-
-  const prep = preparaCampagna(campagna, dati);
-  if (prep.blocco) {
-    console.error(`${log}: non inviata, ${prep.blocco.tipo}.`);
-    return { stato: "bloccata", tipo: prep.blocco.tipo, messaggio: prep.blocco.messaggio };
-  }
-  if (!dati.postiCompleti) {
-    // Solo il promemoria arriva qui: parte lo stesso, senza l'invito.
-    console.warn(`${log}: posti liberi non leggibili, il promemoria parte senza l'invito ad aggiungere una giornata.`);
+  let daSpedire: DaSpedire[];
+  let nonInviabili: NonInviabile[];
+  if (perIscritti(campagna)) {
+    const dati = await leggiDatiComunicazioni(client);
+    const prep = preparaCampagna(campagna, dati);
+    if (prep.blocco) {
+      console.error(`${log}: non inviata, ${prep.blocco.tipo}.`);
+      return { stato: "bloccata", tipo: prep.blocco.tipo, messaggio: prep.blocco.messaggio };
+    }
+    if (!dati.postiCompleti) {
+      // Solo il promemoria arriva qui: parte lo stesso, senza l'invito.
+      console.warn(`${log}: posti liberi non leggibili, il promemoria parte senza l'invito ad aggiungere una giornata.`);
+    }
+    const motivo = MOTIVO[campagna];
+    daSpedire = prep.destinatari.map((d) => ({
+      rif: d.rif,
+      email: d.email,
+      componi: () =>
+        emailBiglietto({ nome: d.nome, codice: d.codice, giornate: d.giornate, motivo, aggiungibili: d.aggiungibili }),
+    }));
+    nonInviabili = prep.nonInviabili;
+  } else {
+    const dati = await leggiDatiScuole(client);
+    const prep = preparaScuole(campagna, dati);
+    if (prep.blocco) {
+      console.error(`${log}: non inviata, ${prep.blocco.tipo}.`);
+      return { stato: "bloccata", tipo: prep.blocco.tipo, messaggio: prep.blocco.messaggio };
+    }
+    daSpedire = prep.destinatari;
+    nonInviabili = prep.nonInviabili;
   }
 
   const adesso = new Date().toISOString();
@@ -690,18 +1159,36 @@ export async function inviaCampagna(
     return { stato: "prenotazione_fallita" };
   }
 
-  const { destinatari, nonInviabili } = prep;
   // Un'iscrizione senza giornate non ha niente da ricevere: non è un
   // destinatario e non è un'email non partita. Un indirizzo scritto male sì.
   const indirizziSbagliati = nonInviabili.filter((x) => x.motivo !== MOTIVO_SENZA_GIORNATA).length;
-  const totale = destinatari.length + indirizziSbagliati;
-  let inviate = 0;
-  let errori = indirizziSbagliati;
   for (const x of nonInviabili) {
     // Il motivo per esteso può contenere il dominio dell'indirizzo: nei log solo la categoria.
     const perche = x.motivo === MOTIVO_SENZA_GIORNATA ? "nessuna giornata" : "indirizzo non valido";
     console.warn(`${log}: ${x.rif}: ${perche}, esclusa.`);
   }
+  return spedisci(client, resend, def, daSpedire, indirizziSbagliati, adesso, opzioni.autore, log);
+}
+
+/**
+ * L'invio vero, già prenotato: a blocchi da 100 con l'API batch di Resend,
+ * un secondo tentativo per un rifiuto passeggero, l'esito scritto a ogni
+ * blocco. Se non parte niente la prenotazione si toglie, così si può
+ * riprovare quando il problema è risolto.
+ */
+async function spedisci(
+  client: SupabaseClient,
+  resend: Pick<Resend, "batch">,
+  def: DefinizioneCampagna,
+  destinatari: DaSpedire[],
+  scartati: number,
+  adesso: string,
+  autore: string | null,
+  log: string,
+): Promise<RisultatoCampagna> {
+  const totale = destinatari.length + scartati;
+  let inviate = 0;
+  let errori = scartati;
   console.log(`${log}: inizio, ${destinatari.length} destinatari in ${Math.ceil(destinatari.length / BLOCCO)} blocchi.`);
 
   for (let i = 0; i < destinatari.length; i += BLOCCO) {
@@ -710,19 +1197,10 @@ export async function inviaCampagna(
     if (i > 0) await pausa(PAUSA_MS);
 
     // Un'email che non si riesce a comporre non ferma le altre.
-    const pronti: { d: Destinatario; email: EmailBiglietto }[] = [];
+    const pronti: { d: DaSpedire; email: EmailBiglietto }[] = [];
     for (const d of blocco) {
       try {
-        pronti.push({
-          d,
-          email: emailBiglietto({
-            nome: d.nome,
-            codice: d.codice,
-            giornate: d.giornate,
-            motivo: def.motivo,
-            aggiungibili: d.aggiungibili,
-          }),
-        });
+        pronti.push({ d, email: d.componi() });
       } catch (err) {
         errori += 1;
         console.error(`${log}: ${d.rif}: email non composta (${err instanceof Error ? err.message : String(err)}).`);
@@ -792,7 +1270,7 @@ export async function inviaCampagna(
         client,
         def.chiaveEsito,
         { destinatari: totale, inviate, errori, at: new Date().toISOString(), completato: false },
-        opzioni.autore,
+        autore,
         log,
       );
     }
@@ -810,7 +1288,7 @@ export async function inviaCampagna(
     return { stato: "nessuna_partita", esito };
   }
 
-  await scriviEsito(client, def.chiaveEsito, esito, opzioni.autore, log);
+  await scriviEsito(client, def.chiaveEsito, esito, autore, log);
   return { stato: "inviata", inviato_at: adesso, esito };
 }
 

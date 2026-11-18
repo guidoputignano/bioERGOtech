@@ -15,6 +15,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
     { path: "/", priority: 1.0, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo", priority: 0.9, changeFrequency: "weekly" },
+    // La prenotazione per le classi. La pagina di ogni classe (/classe/<codice>)
+    // resta fuori: il codice fa da chiave ed è noindex.
+    { path: "/eventi/vivere-piu-a-lungo/classi", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/bando", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei", priority: 0.8, changeFrequency: "weekly" },
     { path: "/eventi/vivere-piu-a-lungo/licei/iscrizione", priority: 0.7, changeFrequency: "weekly" },

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { SiteFooter } from "@/components/site-footer";
+import { MAX_PERSONE_CLASSE, PAGINA_CLASSI } from "@/lib/eventi/classi";
 import { RegistrationForm } from "./RegistrationForm";
 import { EventoIscrivitiFisso } from "./EventoIscrivitiFisso";
 import {
@@ -341,6 +342,18 @@ const CSS = `
 .ev-passo h4 { margin: 4px 0 2px; font-size: 15px; font-weight: 600; color: var(--text-dark); }
 .ev-passo p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-mid); }
 .ev-aiuto { margin: 20px 0 0; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 14px; line-height: 1.6; color: var(--text-mid); }
+/* L'ingresso per le classi: una riga sobria fra l'introduzione e il modulo. */
+.ev-classi { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; max-width: 48rem; margin: 0 0 20px; padding: 12px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--border-color); transition: border-color .2s ease; }
+.ev-classi:hover, .ev-classi:focus-within { border-color: var(--primary); }
+.ev-classi-icona { flex: none; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--primary-light); color: var(--ev-link); font-size: 15px; }
+.ev-classi p { flex: 1 1 12rem; min-width: 0; margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-mid); }
+.ev-classi strong { color: var(--text-dark); }
+.ev-classi-cta { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; white-space: nowrap; }
+/* Tutta la riga si clicca, ma per chi usa un lettore di schermo il link resta uno solo. */
+.ev-classi-cta::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
+@media (max-width: 479px) { .ev-classi-icona { display: none; } }
+@media (min-width: 768px) { .ev-classi { margin-bottom: 28px; } }
+@media (prefers-reduced-motion: reduce) { .ev-classi { transition: none; } }
 
 /* Giornate */
 .ev-meta { list-style: none; margin: -4px 0 18px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 10px; }
@@ -725,7 +738,7 @@ export default function EventPage() {
                     <Link href="?cat=studente#iscrizione" prefetch={false} className="ev-link">
                       Sei uno studente? Iscriviti qui
                     </Link>
-                    <Link href="?cat=scuola_docente#iscrizione" prefetch={false} className="ev-link">
+                    <Link href={PAGINA_CLASSI} className="ev-link">
                       Porti una classe?
                     </Link>
                   </p>
@@ -805,6 +818,21 @@ export default function EventPage() {
                   Ci vuole un minuto: scegli le giornate e ti mandiamo per email il biglietto con il QR code. I
                   posti sono limitati.
                 </p>
+                {/* I docenti che portano una classe: una prenotazione sola, su
+                    una pagina a parte. Visibile, ma più discreta del modulo. */}
+                <div className="ev-classi">
+                  <span className="ev-classi-icona" aria-hidden="true">
+                    <i className="fas fa-school" />
+                  </span>
+                  <p>
+                    <strong>Vieni con la classe?</strong> Una sola prenotazione per tutto il gruppo, fino a{" "}
+                    {MAX_PERSONE_CLASSE} persone, e un QR per entrare insieme.
+                  </p>
+                  <Link href={PAGINA_CLASSI} className="ev-link ev-classi-cta">
+                    Prenota per la classe{" "}
+                    <i className="fas fa-arrow-right" aria-hidden="true" style={{ fontSize: 12 }} />
+                  </Link>
+                </div>
                 {/* Sul telefono il modulo viene subito dopo il titolo e i passi
                     dopo; da 1024px i passi stanno accanto, fermi mentre si
                     compila. */}

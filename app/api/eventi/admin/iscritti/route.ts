@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getEventAdminClient } from "@/lib/eventi/admin-guard";
+import { promuoviDopoPostiLiberati } from "@/lib/eventi/classi-server";
+import { postiOccupatiGiornata } from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloDati";
 import {
   caricaIscrizione,
   giornateAggiungibili,
@@ -85,14 +87,17 @@ const errore = (messaggio: string, status: number, extra: Record<string, unknown
  *
  * - `conferma` { bridge_id, forza? }: conferma il posto a chi è in lista
  *   d'attesa per una giornata e gli manda il biglietto aggiornato. Se la
- *   giornata è al completo risponde 409 con codice "pieno", e serve una
- *   seconda richiesta con `forza: true` (lo staff lo conferma a parole).
+ *   giornata è al completo (persone e classi confermate, event_posti_occupati)
+ *   risponde 409 con codice "pieno", e serve una seconda richiesta con
+ *   `forza: true` (lo staff lo conferma a parole).
  * - `rimuovi_giornata` { bridge_id }: toglie la persona da quella giornata.
  *   Se era l'ultima, elimina sempre l'intera iscrizione (qualunque cosa mandi
  *   il client): un'iscrizione senza giornate non ha un biglietto valido.
  *   Se il posto era confermato e la giornata non è ancora conclusa, passa a
  *   chi è in lista d'attesa da più tempo (promuoviDaListaAttesa), che riceve
- *   il biglietto; la risposta dice a chi (`promossa`, solo il nome).
+ *   il biglietto; la risposta dice a chi (`promossa`, solo il nome). Se
+ *   nessuna persona aspetta, il posto può completare quelli che servono a una
+ *   classe in lista d'attesa (promuoviDopoPostiLiberati).
  * - `elimina_iscrizione` { registration_id }: elimina un'iscrizione rimasta
  *   senza giornate, ma non prima del file di ripristino.
  * - `reinvia` { registration_id }: rimanda il biglietto.
@@ -129,17 +134,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true, gia: true, messaggio: `Il posto per ${art} era già confermato.` });
       }
 
-      const { count, error: countError } = await client
-        .from("event_registration_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("session_id", ponte.session_id)
-        .eq("is_waitlist", false);
-      if (countError) throw new Error(`conteggio confermati: ${countError.message}`);
-      const confermati = count ?? 0;
+      // I posti occupati contano anche le classi confermate (event_posti_occupati).
+      const { occupati: confermati, postiClassi } = await postiOccupatiGiornata(client, ponte.session_id);
       const capienza = ponte.capienza_max;
       if (capienza !== null && confermati >= capienza && !forza) {
+        const diCuiClassi = postiClassi > 0 ? ` (di cui ${postiClassi} delle classi)` : "";
         return errore(
-          `${maiuscola(art)} è al completo: ${confermati} posti confermati su ${capienza}.`,
+          `${maiuscola(art)} è al completo: ${confermati} posti occupati su ${capienza}${diCuiClassi}.`,
           409,
           { codice: "pieno", confermati, capienza },
         );
@@ -205,14 +206,32 @@ export async function POST(request: Request) {
       const sessioneSito = sessionBySlug(ponte.slug);
       const giornataAperta = sessioneSito ? Date.parse(sessioneSito.fineISO) > Date.now() : false;
       let promossa: { nome: string; email: EsitoInvio | null } | null = null;
+      let classiPromosse: Awaited<ReturnType<typeof promuoviDopoPostiLiberati>>["classi"] = [];
       if (!ponte.is_waitlist && giornataAperta && toltaOra) {
         const chiave = process.env.RESEND_API_KEY;
-        const esito = await promuoviDaListaAttesa(client, chiave ? new Resend(chiave) : null, ponte.slug);
+        const resend = chiave ? new Resend(chiave) : null;
+        const esito = await promuoviDaListaAttesa(client, resend, ponte.slug);
         if (esito) {
           const p = esito.iscrizione;
           promossa = { nome: `${p.nome} ${p.cognome}`.trim() || "una persona senza nome", email: esito.email };
+        } else {
+          // Nessuna persona in attesa che ci stia: il posto può servire a una
+          // classe in lista d'attesa, se con questo ora ci sta (prima le
+          // classi, poi le persone, come quando una classe libera posti).
+          classiPromosse = (await promuoviDopoPostiLiberati(client, resend, ponte.slug)).classi;
         }
       }
+      const classiSenzaEmail = classiPromosse.filter((c) => c.email?.ok !== true);
+      const promozioneClassi =
+        classiPromosse.length > 0
+          ? ` Posto passato dalla lista d'attesa ${classiPromosse.length === 1 ? "alla classe" : "alle classi"} ${classiPromosse
+              .map((c) => `${c.prenotazione.classe} (${c.prenotazione.istituto})`)
+              .join(", ")}. ${
+              classiSenzaEmail.length > 0
+                ? "Attenzione: l'email al docente non è partita per tutte: reinviala dalla scheda Classi o avvisa a mano."
+                : "Il docente ha ricevuto l'email."
+            }`
+          : "";
       const promozione = promossa
         ? ` Posto passato a ${promossa.nome} dalla lista d'attesa. ${
             promossa.email === null
@@ -221,11 +240,12 @@ export async function POST(request: Request) {
                 ? "Il biglietto aggiornato è partito per email."
                 : "Attenzione: l'email con il biglietto non è partita. Reinviala dalla sua scheda o avvisa la persona a mano."
           }`
-        : "";
+        : promozioneClassi;
       // Al pannello solo il nome; se l'email della persona promossa non è
       // partita, il messaggio esce come avviso e non come semplice conferma.
       const promossaJson = promossa ? { nome: promossa.nome } : null;
-      const emailPromozioneMancata = promossa !== null && promossa.email?.ok !== true;
+      const emailPromozioneMancata =
+        (promossa !== null && promossa.email?.ok !== true) || classiSenzaEmail.length > 0;
 
       // Se il posto è rimasto libero e qualcuno aspetta ancora (per esempio
       // perché la giornata è oltre la capienza), lo staff lo sa subito.

@@ -53,11 +53,18 @@ export const STILE_PANNELLO = `
 .eva-scheda:hover { background: var(--bg-light); color: var(--text-dark); }
 .eva-scheda[aria-selected="true"] { background: var(--primary-light); color: var(--text-dark); }
 .eva-scheda[aria-selected="true"] i { color: var(--eva-teal-ink); }
-/* Sul telefono le quattro schede stanno in una riga: icona sopra, testo sotto. */
+/* Sul telefono le cinque schede stanno in una riga: icona sopra, testo sotto,
+   con l'etichetta breve dove quella intera non ci sta. */
+.eva-scheda-breve { display: none; }
 @media (max-width: 520px) {
   .eva-schede { gap: 2px; padding: 4px; }
   .eva-scheda { flex: 1 1 0; flex-direction: column; gap: 3px; min-height: 52px; padding: 6px 4px; font-size: 12px; }
   .eva-scheda i { font-size: 15px; }
+  .eva-scheda-lunga { display: none; }
+  .eva-scheda-breve { display: inline; }
+}
+@media (max-width: 360px) {
+  .eva-scheda { font-size: 11.5px; padding: 6px 2px; }
 }
 
 /* ── Superfici ── */
@@ -135,6 +142,32 @@ export const STILE_PANNELLO = `
   .eva-filtri { grid-template-columns: minmax(0, 2.2fr) repeat(4, minmax(0, 1fr)); }
   .eva-filtri > :first-child { grid-column: auto; }
 }
+
+/* Le classi: la ricerca su una riga sua, poi tre menu. */
+@media (min-width: 1024px) { .eva-filtri-classi { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1536px) { .eva-filtri-classi { grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)); } }
+
+/* ── Moduli in linea (quota, settore, numeri) ── */
+.eva-modulo {
+  margin-top: 12px; padding: 14px; border-radius: 12px; border: 1.5px solid #BEE7E1; background: #F3FBFA;
+  display: grid; gap: 10px; min-width: 0;
+}
+.eva-modulo .eva-campo:disabled { background: var(--bg-light); color: var(--text-mid); }
+.eva-modulo-righe { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.eva-check {
+  display: flex; gap: 10px; align-items: flex-start; min-height: 44px; padding: 10px 0;
+  font-size: 14px; line-height: 1.45; color: var(--text-dark); cursor: pointer;
+}
+.eva-check input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--eva-teal-ink); }
+.eva-errore-campo { margin: 6px 0 0; font-size: 13px; font-weight: 600; color: var(--eva-errore); }
+.eva-stat-nota { margin-top: 2px; font-size: 12px; color: var(--text-mid); }
+
+/* ── La barra dei posti: persone e classi ── */
+.eva-barra-doppia { display: flex; }
+.eva-barra-doppia > span { border-radius: 0; flex: none; }
+.eva-barra-doppia > span.eva-barra-classi { background: var(--eva-teal-ink); }
+.eva-legenda { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-size: 12.5px; color: var(--text-mid); }
+.eva-legenda span { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ── Avvisi ── */
 .eva-avviso {

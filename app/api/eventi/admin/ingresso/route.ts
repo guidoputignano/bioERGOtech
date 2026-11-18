@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireCheckinStaff } from "@/lib/eventi/admin-guard";
 import { SELECT_ISCRIZIONE, normalizzaIscrizione, pulisciCodice, type IscrizioneEvento } from "@/lib/eventi/evento-server";
+import { caricaClasse, elencoClassi, pulisciCodiceClasse } from "@/lib/eventi/classi-server";
+import type { PrenotazioneClasse } from "@/lib/eventi/classi";
 import {
   categoriaLabel,
   etichettaGiornata,
@@ -9,6 +11,7 @@ import {
   giornateConArticolo,
   sessionBySlug,
 } from "@/app/eventi/vivere-piu-a-lungo/content";
+import { mancaNelDatabase, postiOccupatiGiornata } from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloDati";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +20,16 @@ export const dynamic = "force-dynamic";
  *
  * Aperta agli admin e ai volontari in EVENT_CHECKIN_EMAILS (vedi
  * lib/eventi/admin-guard.ts). Risponde solo con quello che serve alla porta:
- * nome, categoria, organizzazione o classe, note. Mai email né telefono.
+ * nome, categoria, organizzazione o classe, note. Mai email; il telefono solo
+ * del docente di una classe, per rintracciarlo se la classe arriva a gruppi.
  *
  * GET  ?giornata=giorno-1
- *      { giornata, confermati, lista_attesa, entrati, ultimi: [{ bridgeId, nome, cognome, ora }] }
+ *      { giornata, oggi, confermati, persone, lista_attesa, entrati, classi, ultimi }
+ *      confermati: i posti occupati, persone e classi (event_posti_occupati);
+ *      entrati: le persone entrate più le persone delle classi entrate;
+ *      classi: { confermate, posti, in_attesa, entrate, presenti } o null;
+ *      ultimi: [{ tipo: "persona", bridgeId, nome, cognome, ora }
+ *              | { tipo: "classe", bridgeId, classe, istituto, presenti, posti, ora }]
  *
  * POST { codice, giornata, forza? }        il QR o il codice scritto a mano
  * POST { registrazione, giornata, forza? } una persona trovata per nome
@@ -32,7 +41,24 @@ export const dynamic = "force-dynamic";
  *      d'attesa; una giornata aggiunta alla porta (riga nata nello stesso
  *      istante dell'ingresso) si toglie
  *      { annullato, giaAnnullato?, tornaInAttesa?, giornataTolta? }
- * POST { cerca, giornata }                 biglietto dimenticato: per nome o cognome
+ * POST { cerca, giornata }                 biglietto dimenticato: per nome o cognome,
+ *      { risultati, classi, troppi }        e le classi per scuola, classe o docente
+ *
+ * Le classi (codice VPC-XXXXXXXX, un QR per tutta la classe) entrano in due
+ * passi: il QR mostra la scheda della classe, il volontario dice quante
+ * persone entrano adesso.
+ * POST { codice: "VPC-…", giornata } o { classe: bookingId, giornata }
+ *      { esito: "classe", classe }          la scheda, senza scrivere niente
+ * POST { classe, giornata, entrano, prima, forza? }
+ *      { esito: "classe_entrata", classe, entrati, prima, bridgeId, forzato? }
+ *      `prima` è quante persone la scheda mostrava già entrate: se nel
+ *      frattempo il numero è cambiato (un altro telefono, una risposta persa
+ *      e un nuovo tentativo) non si scrive niente e torna la scheda
+ *      aggiornata con `cambiata: true`. Così un ingresso non si conta due volte.
+ * POST { annullaClasse: bridgeId, da, a, forzato? }
+ *      le persone entrate tornano da `da` ad `a` (null: nessuna); se nel
+ *      frattempo il numero non è più `da`, 409 senza toccare niente.
+ *      { annullato, presenti, giaAnnullato?, tornaInAttesa?, giornataTolta? }
  *
  * L'ora d'ingresso è la prima: l'aggiornamento è condizionato a
  * stato_checkin diverso da "presente", quindi se due telefoni leggono lo
@@ -131,6 +157,32 @@ function codiciCandidati(grezzo: string): string[] {
   return [...candidati].slice(0, 3);
 }
 
+/**
+ * Il codice di una classe in quello che si è letto: "VPC-XXXXXXXX" (con o
+ * senza trattino, spazi, minuscole) o il link alla pagina della classe
+ * (/classe/VPC-…). Null se non è una classe.
+ */
+function codiceClasseDa(grezzo: string): string | null {
+  let testo = grezzo.trim().slice(0, 300);
+  const link = testo.match(/classe\/([^/?#\s]+)/i);
+  if (link) {
+    try {
+      testo = decodeURIComponent(link[1]);
+    } catch {
+      testo = link[1];
+    }
+  }
+  const compatto = testo.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!/^VPC[A-Z0-9]{8}$/.test(compatto)) return null;
+  return pulisciCodiceClasse(compatto) || null;
+}
+
+/** Le sole 8 lettere e cifre, senza prefisso: possono essere di un biglietto o di una classe. */
+function codiceNudo(grezzo: string): string | null {
+  const compatto = grezzo.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return /^[A-Z0-9]{8}$/.test(compatto) ? compatto : null;
+}
+
 function testoONull(v: string | null | undefined): string | null {
   const t = (v ?? "").trim();
   return t ? t : null;
@@ -146,6 +198,70 @@ function persona(iscr: IscrizioneEvento) {
     classe: testoONull(iscr.classe),
     note: testoONull(iscr.note),
   };
+}
+
+/** Lo stato di una classe per la giornata scelta. */
+type StatoClasseOggi = "confermato" | "lista_attesa" | "altra_giornata";
+
+/**
+ * Quello che la porta vede di una classe: scuola, classe, docente con il
+ * telefono, quante persone, il settore e com'è messa per la giornata.
+ * Niente email del docente.
+ */
+function cartaClasse(p: PrenotazioneClasse, slug: string) {
+  const g = p.giornate.find((x) => x.slug === slug);
+  const stato: StatoClasseOggi = g ? g.status : "altra_giornata";
+  return {
+    id: p.id,
+    bridgeId: g?.id ?? null,
+    istituto: p.istituto,
+    comune: testoONull(p.comune),
+    classe: p.classe,
+    docente: `${p.docente_nome} ${p.docente_cognome}`.trim(),
+    telefono: testoONull(p.docente_telefono),
+    studenti: p.studenti,
+    accompagnatori: p.accompagnatori,
+    posti: p.posti,
+    note: testoONull(p.note),
+    stato,
+    settore: testoONull(g?.settore),
+    presenti: g?.presenti ?? null,
+    ora: ora(g?.checkin_ts),
+    altreGiornate: p.giornate
+      .filter((x) => x.slug !== slug && sessionBySlug(x.slug))
+      .map((x) => etichettaGiornata(x.slug)),
+  };
+}
+
+/** Il massimo che la tabella accetta per le persone entrate di una classe. */
+const MAX_PRESENTI_CLASSE = 60;
+
+/** Il tetto di righe di una select su Supabase: oltre, si legge a pagine. */
+const PAGINA_RIGHE = 1000;
+
+/**
+ * Le righe delle classi di una giornata, con la classe e i suoi posti. Tutte,
+ * a pagine da 1000: una select sola si fermerebbe lì senza dirlo, e i numeri
+ * della porta sarebbero più bassi del vero.
+ */
+async function classiDellaGiornata(
+  client: SupabaseClient,
+  sessionId: string,
+): Promise<{ data: unknown[]; error: { code?: string; message: string } | null }> {
+  const righe: unknown[] = [];
+  for (let da = 0; ; da += PAGINA_RIGHE) {
+    const { data, error } = await client
+      .from("event_group_booking_sessions")
+      .select("id, is_waitlist, presenti, checkin_ts, event_group_bookings ( classe, istituto, posti )")
+      .eq("session_id", sessionId)
+      .order("id", { ascending: true })
+      .range(da, da + PAGINA_RIGHE - 1);
+    if (error) return { data: [], error };
+    const pagina = (data ?? []) as unknown[];
+    righe.push(...pagina);
+    if (pagina.length < PAGINA_RIGHE) break;
+  }
+  return { data: righe, error: null };
 }
 
 /* ── GET: i numeri della giornata e gli ultimi ingressi ─────────────────── */
@@ -170,7 +286,7 @@ export async function GET(request: Request) {
       .select("id", { count: "exact", head: true })
       .eq("session_id", sessione.id);
 
-  const [confermati, attesa, entrati, ultimi] = await Promise.all([
+  const [confermati, attesa, entrati, ultimi, classi] = await Promise.all([
     conta().eq("is_waitlist", false),
     conta().eq("is_waitlist", true),
     conta().eq("stato_checkin", "presente"),
@@ -182,11 +298,29 @@ export async function GET(request: Request) {
       .not("checkin_ts", "is", null)
       .order("checkin_ts", { ascending: false })
       .limit(10),
+    // Le classi della giornata, tutte: a pagine, perché una select si ferma a 1000 righe.
+    classiDellaGiornata(client, sessione.id),
   ]);
 
   const fallita = [confermati, attesa, entrati, ultimi].find((r) => r.error);
   if (fallita?.error) {
     console.error("[eventi/admin/ingresso] conteggi:", fallita.error.message);
+    return errore("Non riesco a leggere i numeri della giornata. Riprova tra qualche secondo.", 500);
+  }
+  // Le classi non ci sono se il loro file non è stato eseguito: allora contano
+  // solo le persone. Ogni altro errore ferma i numeri, che sarebbero falsi.
+  const classiDisponibili = !classi.error;
+  if (classi.error && !mancaNelDatabase(classi.error)) {
+    console.error("[eventi/admin/ingresso] classi:", classi.error.message);
+    return errore("Non riesco a leggere i numeri delle classi. Riprova tra qualche secondo.", 500);
+  }
+
+  // I posti occupati, persone e classi, con la regola del database.
+  let occupati: number;
+  try {
+    occupati = (await postiOccupatiGiornata(client, sessione.id)).occupati;
+  } catch (err) {
+    console.error("[eventi/admin/ingresso] posti occupati:", err instanceof Error ? err.message : err);
     return errore("Non riesco a leggere i numeri della giornata. Riprova tra qualche secondo.", 500);
   }
 
@@ -195,24 +329,69 @@ export async function GET(request: Request) {
     checkin_ts: string | null;
     event_registrations: { nome: string | null; cognome: string | null } | { nome: string | null; cognome: string | null }[] | null;
   };
+  type Prenotazione = { classe: string | null; istituto: string | null; posti: number | null };
+  type RigaClasse = {
+    id: string;
+    is_waitlist: boolean;
+    presenti: number | null;
+    checkin_ts: string | null;
+    event_group_bookings: Prenotazione | Prenotazione[] | null;
+  };
+
+  const righeClassi = (classiDisponibili ? (classi.data ?? []) : []) as RigaClasse[];
+  let classiConfermate = 0;
+  let classiAttesa = 0;
+  let classiEntrate = 0;
+  let presentiClassi = 0;
+  for (const r of righeClassi) {
+    if (r.is_waitlist) classiAttesa++;
+    else classiConfermate++;
+    if (r.presenti !== null) {
+      classiEntrate++;
+      presentiClassi += Number(r.presenti) || 0;
+    }
+  }
+
+  // Gli ultimi ingressi, persone e classi insieme, dal più recente.
+  const voci: { ts: string; voce: Record<string, unknown> }[] = [];
+  for (const r of (ultimi.data ?? []) as RigaUltimo[]) {
+    const reg = Array.isArray(r.event_registrations) ? r.event_registrations[0] : r.event_registrations;
+    voci.push({
+      ts: r.checkin_ts ?? "",
+      voce: { tipo: "persona", bridgeId: String(r.id), nome: reg?.nome ?? "", cognome: reg?.cognome ?? "", ora: ora(r.checkin_ts) ?? "" },
+    });
+  }
+  for (const r of righeClassi) {
+    if (r.presenti === null || !r.checkin_ts) continue;
+    const b = Array.isArray(r.event_group_bookings) ? r.event_group_bookings[0] : r.event_group_bookings;
+    voci.push({
+      ts: r.checkin_ts,
+      voce: {
+        tipo: "classe",
+        bridgeId: String(r.id),
+        classe: b?.classe ?? "",
+        istituto: b?.istituto ?? "",
+        presenti: Number(r.presenti),
+        posti: Number(b?.posti ?? 0),
+        ora: ora(r.checkin_ts) ?? "",
+      },
+    });
+  }
+  voci.sort((a, b) => Date.parse(b.ts) - Date.parse(a.ts));
 
   return risposta({
     giornata,
     // La giornata di oggi secondo il server, a ogni aggiornamento: una pagina
     // aperta da ieri passa da sola al giorno giusto (bollino e avviso).
     oggi: giornataDiOggi()?.slug ?? null,
-    confermati: confermati.count ?? 0,
+    confermati: occupati,
+    persone: confermati.count ?? 0,
     lista_attesa: attesa.count ?? 0,
-    entrati: entrati.count ?? 0,
-    ultimi: ((ultimi.data ?? []) as RigaUltimo[]).map((r) => {
-      const reg = Array.isArray(r.event_registrations) ? r.event_registrations[0] : r.event_registrations;
-      return {
-        bridgeId: String(r.id),
-        nome: reg?.nome ?? "",
-        cognome: reg?.cognome ?? "",
-        ora: ora(r.checkin_ts) ?? "",
-      };
-    }),
+    entrati: (entrati.count ?? 0) + presentiClassi,
+    classi: classiDisponibili
+      ? { confermate: classiConfermate, in_attesa: classiAttesa, entrate: classiEntrate, presenti: presentiClassi }
+      : null,
+    ultimi: voci.slice(0, 10).map((v) => v.voce),
   });
 }
 
@@ -463,6 +642,190 @@ async function annulla(client: SupabaseClient, bridgeId: string, forzato: Forzat
   return risposta({ annullato: true, ...(tornaInAttesa ? { tornaInAttesa: true } : {}) });
 }
 
+/* ── Le classi ─────────────────────────────────────────────────────────── */
+
+/** La scheda di una classe, letta di nuovo: dopo una scrittura, o se nel frattempo è cambiata. */
+async function schedaClasse(client: SupabaseClient, bookingId: string, slug: string, extra: Record<string, unknown> = {}) {
+  const p = await caricaClasse(client, { id: bookingId });
+  if (!p) return risposta({ esito: "non_trovato" });
+  return risposta({ esito: "classe", classe: cartaClasse(p, slug), ...extra });
+}
+
+/**
+ * Registra le persone di una classe che entrano adesso. `prima` è quante ne
+ * mostrava la scheda (null: nessuna): l'aggiornamento vale solo se il
+ * database dice ancora così, altrimenti torna la scheda aggiornata e non si
+ * scrive niente. Due telefoni o un nuovo tentativo dopo una risposta persa
+ * non contano mai due volte lo stesso gruppo.
+ *
+ * Una classe in lista d'attesa, o senza questa giornata, entra solo con
+ * `forza` (la porta decide): la giornata diventa confermata, o si aggiunge
+ * con lo stesso istante per la creazione e l'ingresso, come per le persone.
+ */
+async function entraClasse(
+  client: SupabaseClient,
+  bookingId: string,
+  sessione: Sessione,
+  entrano: number,
+  prima: number | null,
+  forza: boolean,
+) {
+  const p = await caricaClasse(client, { id: bookingId });
+  if (!p) return risposta({ esito: "non_trovato" });
+  const g = p.giornate.find((x) => x.slug === sessione.slug);
+  const adesso = new Date().toISOString();
+  const totale = (prima ?? 0) + entrano;
+  if (totale > MAX_PRESENTI_CLASSE) {
+    return errore(
+      `Al massimo ${MAX_PRESENTI_CLASSE} persone per classe: ne risultano già entrate ${prima ?? 0}. Se arrivano altre persone, registrale una per una o avvisa lo staff.`,
+      400,
+    );
+  }
+
+  if (!g) {
+    if (!forza) return risposta({ esito: "classe", classe: cartaClasse(p, sessione.slug) });
+    if (prima !== null) return schedaClasse(client, bookingId, sessione.slug, { cambiata: true });
+    const { data, error } = await client
+      .from("event_group_booking_sessions")
+      .insert({
+        booking_id: p.id,
+        session_id: sessione.id,
+        is_waitlist: false,
+        presenti: entrano,
+        checkin_ts: adesso,
+        // Lo stesso istante dell'ingresso: l'annullamento riconosce così una giornata nata alla porta.
+        created_at: adesso,
+      })
+      .select("id")
+      .single();
+    if (error?.code === "23505") return schedaClasse(client, bookingId, sessione.slug, { cambiata: true });
+    if (error || !data) {
+      console.error("[eventi/admin/ingresso] classe, giornata aggiunta alla porta:", error?.message ?? "nessuna riga");
+      return errore("L'ingresso della classe non è stato salvato. Riprova.", 500);
+    }
+    console.info(`[eventi/admin/ingresso] prenotazione ${p.id}: ${sessione.slug} aggiunta alla porta, entrate ${entrano}.`);
+    const dopo = await caricaClasse(client, { id: p.id });
+    return risposta({
+      esito: "classe_entrata",
+      classe: dopo ? cartaClasse(dopo, sessione.slug) : { ...cartaClasse(p, sessione.slug), bridgeId: String(data.id), stato: "confermato", presenti: entrano, ora: ora(adesso) },
+      entrati: entrano,
+      prima: null,
+      bridgeId: String(data.id),
+      forzato: "altra_giornata",
+    });
+  }
+
+  if (g.status === "lista_attesa" && !forza) return risposta({ esito: "classe", classe: cartaClasse(p, sessione.slug) });
+  if (g.presenti !== prima) return risposta({ esito: "classe", classe: cartaClasse(p, sessione.slug), cambiata: true });
+
+  const dallAttesa = g.status === "lista_attesa";
+  let aggiorna = client
+    .from("event_group_booking_sessions")
+    .update({
+      presenti: totale,
+      // L'ora del primo ingresso resta quella: i ritardatari non la spostano.
+      ...(prima === null ? { checkin_ts: adesso } : {}),
+      ...(dallAttesa ? { is_waitlist: false } : {}),
+    })
+    .eq("id", g.id);
+  aggiorna = prima === null ? aggiorna.is("presenti", null) : aggiorna.eq("presenti", prima);
+  if (!dallAttesa) aggiorna = aggiorna.eq("is_waitlist", false);
+  const { data, error } = await aggiorna.select("id");
+  if (error) {
+    console.error("[eventi/admin/ingresso] classe, ingresso:", error.message);
+    return errore("L'ingresso della classe non è stato salvato. Riprova.", 500);
+  }
+  if (!data || data.length === 0) return schedaClasse(client, bookingId, sessione.slug, { cambiata: true });
+  console.info(`[eventi/admin/ingresso] prenotazione ${p.id}: ${sessione.slug}, entrate ${entrano} (in tutto ${totale}).`);
+
+  const dopo = await caricaClasse(client, { id: p.id });
+  return risposta({
+    esito: "classe_entrata",
+    classe: dopo
+      ? cartaClasse(dopo, sessione.slug)
+      : { ...cartaClasse(p, sessione.slug), stato: "confermato", presenti: totale, ora: ora(prima === null ? adesso : g.checkin_ts) },
+    entrati: entrano,
+    prima,
+    bridgeId: g.id,
+    ...(dallAttesa ? { forzato: "lista_attesa" } : {}),
+  });
+}
+
+/**
+ * Annulla l'ingresso di una classe, o solo gli ultimi entrati: le persone
+ * tornano da `da` ad `a` (null: nessuna, e l'ora d'ingresso si cancella).
+ * Se il numero nel database non è più `da` non si tocca niente: qualcun
+ * altro ha registrato altre persone nel frattempo. Quando non resta nessuno,
+ * un ingresso forzato si disfa del tutto, come per le persone: la classe
+ * torna in lista d'attesa, o la giornata aggiunta alla porta si toglie.
+ */
+async function annullaClasse(
+  client: SupabaseClient,
+  bridgeId: string,
+  da: number,
+  a: number | null,
+  forzato: Forzato | null,
+) {
+  const { data: riga, error: erroreLettura } = await client
+    .from("event_group_booking_sessions")
+    .select("id, presenti, checkin_ts, created_at")
+    .eq("id", bridgeId)
+    .maybeSingle();
+  if (erroreLettura) {
+    console.error("[eventi/admin/ingresso] classe, lettura per annullamento:", erroreLettura.message);
+    return errore("L'annullamento non è stato salvato. Riprova.", 500);
+  }
+  if (!riga) return errore("Questo ingresso non esiste più: aggiorna l'elenco.", 404);
+  const presenti = riga.presenti === null ? null : Number(riga.presenti);
+  if (presenti === a) return risposta({ annullato: true, giaAnnullato: true, presenti });
+  if (presenti !== da) {
+    return risposta(
+      {
+        error: `Nel frattempo l'ingresso della classe è cambiato: ora ${
+          presenti === null ? "non risulta entrato nessuno" : `risultano entrate ${presenti} persone`
+        }. Non ho annullato niente: controlla dal QR della classe.`,
+        presenti,
+      },
+      409,
+    );
+  }
+
+  if (a === null && nataAllaPorta(riga.created_at ?? null, riga.checkin_ts ?? null)) {
+    const { data: tolte, error } = await client
+      .from("event_group_booking_sessions")
+      .delete()
+      .eq("id", bridgeId)
+      .eq("presenti", da)
+      .select("id");
+    if (error) {
+      console.error("[eventi/admin/ingresso] classe, annullamento (giornata aggiunta alla porta):", error.message);
+      return errore("L'annullamento non è stato salvato. Riprova.", 500);
+    }
+    if (!tolte || tolte.length === 0) return errore("Nel frattempo l'ingresso della classe è cambiato: aggiorna e riprova.", 409);
+    console.info(`[eventi/admin/ingresso] classe, ingresso ${bridgeId} annullato: giornata aggiunta alla porta tolta.`);
+    return risposta({ annullato: true, presenti: null, giornataTolta: true });
+  }
+
+  const tornaInAttesa = a === null && forzato === "lista_attesa";
+  const { data, error } = await client
+    .from("event_group_booking_sessions")
+    .update({
+      presenti: a,
+      ...(a === null ? { checkin_ts: null } : {}),
+      ...(tornaInAttesa ? { is_waitlist: true } : {}),
+    })
+    .eq("id", bridgeId)
+    .eq("presenti", da)
+    .select("id");
+  if (error) {
+    console.error("[eventi/admin/ingresso] classe, annullamento:", error.message);
+    return errore("L'annullamento non è stato salvato. Riprova.", 500);
+  }
+  if (!data || data.length === 0) return errore("Nel frattempo l'ingresso della classe è cambiato: aggiorna e riprova.", 409);
+  console.info(`[eventi/admin/ingresso] classe, ingresso ${bridgeId} annullato: da ${da} a ${a ?? "nessuno"}.`);
+  return risposta({ annullato: true, presenti: a, ...(tornaInAttesa ? { tornaInAttesa: true } : {}) });
+}
+
 /**
  * Normalizza per confrontare i nomi: minuscole, senza accenti, e un solo
  * apostrofo. L'iPhone scrive ’ (tipografico): "D’Amico" salvato così deve
@@ -495,18 +858,57 @@ async function cerca(client: SupabaseClient, testo: string, sessione: Sessione) 
   // "_" di ilike, perché il database distingue gli accenti e qui no:
   // "nicolo" deve trovare anche Nicolò.
   const chiave = [...parole].sort((a, b) => b.length - a.length)[0].replace(/[aeiou']/g, "_");
-  const { data, error } = await client
-    .from("event_registrations")
-    .select(SELECT_ISCRIZIONE)
-    .or(`cognome.ilike.%${chiave}%,nome.ilike.%${chiave}%`)
-    .order("cognome", { ascending: true })
-    .limit(60);
-  if (error) {
-    console.error("[eventi/admin/ingresso] ricerca:", error.message);
+  const [persone, classi] = await Promise.all([
+    client
+      .from("event_registrations")
+      .select(SELECT_ISCRIZIONE)
+      .or(`cognome.ilike.%${chiave}%,nome.ilike.%${chiave}%`)
+      .order("cognome", { ascending: true })
+      .limit(60),
+    // Le classi sono poche (qualche centinaio): si leggono tutte (a pagine,
+    // elencoClassi) e si filtrano qui, senza badare ad accenti e apostrofi.
+    elencoClassi(client).then(
+      (data) => ({ data, error: null as string | null }),
+      (err: unknown) => ({ data: [] as PrenotazioneClasse[], error: err instanceof Error ? err.message : String(err) }),
+    ),
+  ]);
+  if (persone.error) {
+    console.error("[eventi/admin/ingresso] ricerca:", persone.error.message);
     return errore("La ricerca non è riuscita. Riprova.", 500);
   }
+  // Una ricerca delle classi non riuscita non ferma quella delle persone: si
+  // dice e basta. Senza le tabelle delle classi (PGRST205, 42P01) non c'è
+  // niente da cercare, e non è un errore.
+  const classiNonLette = Boolean(classi.error && !/PGRST205|42P01/.test(classi.error));
+  if (classiNonLette) console.error("[eventi/admin/ingresso] ricerca classi:", classi.error);
+  const paroleClassi = piano(testo)
+    .replace(/[^a-z0-9' -]/g, " ")
+    .split(/\s+/)
+    .filter((p) => p.length >= 2 || /\d/.test(p));
+  const classiTrovate = classi.data
+    .filter((c) => {
+      const testoClasse = piano(`classe ${c.classe} ${c.istituto} ${c.comune ?? ""} ${c.docente_nome} ${c.docente_cognome}`);
+      return paroleClassi.length > 0 && paroleClassi.every((p) => testoClasse.includes(p));
+    })
+    .sort((a, b) => a.istituto.localeCompare(b.istituto, "it") || a.classe.localeCompare(b.classe, "it", { numeric: true }));
+  const risultatiClassi = classiTrovate.slice(0, 8).map((c) => {
+    const carta = cartaClasse(c, sessione.slug);
+    return {
+      rif: c.id,
+      classe: carta.classe,
+      istituto: carta.istituto,
+      comune: carta.comune,
+      docente: carta.docente,
+      posti: carta.posti,
+      settore: carta.settore,
+      oggi: carta.presenti !== null ? "entrata" : carta.stato,
+      presenti: carta.presenti,
+      ora: carta.ora,
+      altreGiornate: carta.altreGiornate,
+    };
+  });
 
-  const righe = data ?? [];
+  const righe = persone.data ?? [];
   const risultati = righe
     .map(normalizzaIscrizione)
     .filter((i) => {
@@ -528,7 +930,12 @@ async function cerca(client: SupabaseClient, testo: string, sessione: Sessione) 
     });
 
   // Con 60 righe lette la lista può essere incompleta: si chiede di scrivere di più.
-  return risposta({ risultati, troppi: righe.length >= 60 || risultati.length >= 8 });
+  return risposta({
+    risultati,
+    classi: risultatiClassi,
+    classiNonLette,
+    troppi: righe.length >= 60 || risultati.length >= 8 || classiTrovate.length > 8,
+  });
 }
 
 export async function POST(request: Request) {
@@ -543,6 +950,19 @@ export async function POST(request: Request) {
     body = letto as Record<string, unknown>;
   } catch {
     return errore("Richiesta non valida.", 400);
+  }
+
+  if ("annullaClasse" in body) {
+    const id = typeof body.annullaClasse === "string" ? body.annullaClasse : "";
+    if (!UUID.test(id)) return errore("Ingresso da annullare non valido.", 400);
+    const da = typeof body.da === "number" && Number.isInteger(body.da) ? body.da : Number.NaN;
+    const a = body.a === null ? null : typeof body.a === "number" && Number.isInteger(body.a) ? body.a : Number.NaN;
+    if (!(da >= 1 && da <= MAX_PRESENTI_CLASSE) || (a !== null && !(a >= 1 && a < da))) {
+      return errore("Annullamento non valido.", 400);
+    }
+    const forzato: Forzato | null =
+      body.forzato === "lista_attesa" || body.forzato === "altra_giornata" ? body.forzato : null;
+    return annullaClasse(client, id, da, a, forzato);
   }
 
   if ("annulla" in body) {
@@ -562,13 +982,54 @@ export async function POST(request: Request) {
   if (typeof body.cerca === "string") return cerca(client, body.cerca.slice(0, 80), sessione);
 
   const forza = body.forza === true;
+
+  // ── Una classe: la scheda, oppure l'ingresso di quante persone entrano adesso ──
+  if (typeof body.classe === "string") {
+    if (!UUID.test(body.classe)) return errore("Classe non valida.", 400);
+    try {
+      if (!("entrano" in body)) return await schedaClasse(client, body.classe, sessione.slug);
+      const entrano = typeof body.entrano === "number" && Number.isInteger(body.entrano) ? body.entrano : Number.NaN;
+      if (!(entrano >= 1 && entrano <= MAX_PRESENTI_CLASSE)) {
+        return errore(`Scrivi quante persone entrano adesso, da 1 a ${MAX_PRESENTI_CLASSE}.`, 400);
+      }
+      const prima =
+        body.prima === null || body.prima === undefined
+          ? null
+          : typeof body.prima === "number" && Number.isInteger(body.prima) && body.prima >= 0
+            ? body.prima
+            : Number.NaN;
+      if (prima !== null && Number.isNaN(prima)) return errore("Richiesta non valida.", 400);
+      return await entraClasse(client, body.classe, sessione, entrano, prima, forza);
+    } catch (err) {
+      console.error("[eventi/admin/ingresso] classe:", err instanceof Error ? err.message : err);
+      return errore("Non riesco a leggere la classe dal database. Riprova.", 500);
+    }
+  }
+
   let iscr: IscrizioneEvento | null;
   try {
     if (typeof body.registrazione === "string") {
       if (!UUID.test(body.registrazione)) return errore("Persona non valida.", 400);
       iscr = await caricaPerId(client, body.registrazione);
     } else if (typeof body.codice === "string" && body.codice.trim()) {
+      // Il QR o il codice di una classe: la sua scheda.
+      const codiceClasse = codiceClasseDa(body.codice);
+      if (codiceClasse) {
+        const p = await caricaClasse(client, { codice: codiceClasse });
+        if (!p) return risposta({ esito: "non_trovato" });
+        return risposta({ esito: "classe", classe: cartaClasse(p, sessione.slug) });
+      }
       iscr = await caricaPerCodice(client, body.codice);
+      // Le sole 8 lettere e cifre: se non sono di un biglietto, possono essere di una classe.
+      const nudo = iscr ? null : codiceNudo(body.codice);
+      if (nudo) {
+        const p = await caricaClasse(client, { codice: `VPC-${nudo}` }).catch((err) => {
+          // Senza le tabelle delle classi resta "non trovato", come prima.
+          if (!/PGRST205|42P01/.test(err instanceof Error ? err.message : "")) throw err;
+          return null;
+        });
+        if (p) return risposta({ esito: "classe", classe: cartaClasse(p, sessione.slug) });
+      }
     } else {
       return errore("Manca il codice del biglietto.", 400);
     }

@@ -5,7 +5,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { giornataDiOggi } from "../content";
 import { AdminPanel } from "./AdminPanel";
-import { PERCORSO_PANNELLO, leggiFiltri, schedaValida } from "./PannelloComune";
+import {
+  FILTRI_CLASSI_VUOTI,
+  FILTRI_VUOTI,
+  PERCORSO_PANNELLO,
+  leggiFiltri,
+  leggiFiltriClassi,
+  schedaValida,
+} from "./PannelloComune";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +27,9 @@ export const metadata: Metadata = {
  * admin; questa pagina si limita a non mostrare il pannello agli altri.
  *
  * La scheda e i filtri iniziali arrivano dall'indirizzo (?tab=iscritti&
- * giornata=giorno-1&stato=attesa), così il pannello si apre già nel punto
- * giusto, senza un passaggio dalla scheda predefinita.
+ * giornata=giorno-1&stato=attesa, o ?tab=classi&giornata=giorno-1), così il
+ * pannello si apre già nel punto giusto, senza un passaggio dalla scheda
+ * predefinita. I filtri vanno alla scheda nominata in `tab`.
  */
 export default async function EventAdminPage({
   searchParams,
@@ -83,6 +91,7 @@ export default async function EventAdminPage({
 
   const params = await searchParams;
   const tab = typeof params.tab === "string" ? params.tab : Array.isArray(params.tab) ? params.tab[0] : "";
+  const scheda = schedaValida(tab);
 
   return (
     <>
@@ -90,8 +99,9 @@ export default async function EventAdminPage({
       <div style={{ paddingTop: "90px", minHeight: "80vh" }} className="bg-light-gray">
         <div className="container mx-auto px-4 md:px-6 py-8 md:py-10">
           <AdminPanel
-            schedaIniziale={schedaValida(tab)}
-            filtriIniziali={{ ...leggiFiltri(params), q: "" }}
+            schedaIniziale={scheda}
+            filtriIniziali={scheda === "classi" ? FILTRI_VUOTI : { ...leggiFiltri(params), q: "" }}
+            filtriClassiIniziali={scheda === "classi" ? { ...leggiFiltriClassi(params), q: "" } : FILTRI_CLASSI_VUOTI}
             oggi={giornataDiOggi()?.slug ?? null}
           />
         </div>

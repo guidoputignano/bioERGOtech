@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getEventAdminClient } from "@/lib/eventi/admin-guard";
 import { SESSIONS, categoriaLabel, giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
-import { caricaDatiPannello } from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloDati";
+import { caricaDatiClassi, caricaDatiPannello } from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloDati";
 import {
+  confrontaClassiPerScuola,
   confrontaPerCognome,
   dataOraRoma,
+  filtraClassi,
   filtraIscritti,
   giornoRoma,
   leggiFiltri,
+  leggiFiltriClassi,
   type GiornataRiga,
+  type GiornataRigaClasse,
+  type RigaClasse,
   type RigaIscritto,
 } from "@/app/eventi/vivere-piu-a-lungo/admin/PannelloComune";
 
@@ -112,6 +118,109 @@ function csvCompleto(righe: RigaIscritto[]): string[] {
   return out;
 }
 
+/* ── Le classi ────────────────────────────────────────────────────────── */
+
+const statoClasse = (g: GiornataRigaClasse | undefined) =>
+  !g ? "" : g.status === "lista_attesa" ? "Lista d'attesa" : "Confermata";
+
+const giornataClasse = (r: RigaClasse, slug: string) => r.giornate.find((g) => g.slug === slug);
+
+/** Le classi di una giornata: stato, settore e ingressi di quel giorno. */
+function csvClassiGiornata(righe: RigaClasse[], slug: string): string[] {
+  const out = [
+    riga([
+      "Scuola", "Comune", "Classe", "Docente nome", "Docente cognome", "Telefono", "Email",
+      "Studenti", "Docenti", "Persone", "Stato", "Posizione in attesa", "Settore", "Entrati",
+      "Ora primo ingresso", "Codice", "Note", "Percorso dei licei", "Prenotata il",
+    ]),
+  ];
+  for (const r of righe) {
+    const g = giornataClasse(r, slug);
+    if (!g) continue;
+    out.push(
+      riga([
+        r.istituto, r.comune, r.classe, r.docente_nome, r.docente_cognome, r.docente_telefono, r.docente_email,
+        r.studenti, r.accompagnatori, r.posti, statoClasse(g), g.posizione_attesa ?? "", g.settore,
+        g.presenti ?? "", dataOraRoma(g.checkin_ts), r.codice, r.note, r.licei_adesione_id ? "Sì" : "No",
+        dataOraRoma(r.created_at),
+      ]),
+    );
+  }
+  return out;
+}
+
+/** Tutte le prenotazioni per classe, una colonna per giornata. */
+function csvClassiComplete(righe: RigaClasse[]): string[] {
+  const out = [
+    riga([
+      "Scuola", "Comune", "Classe", "Docente nome", "Docente cognome", "Telefono", "Email",
+      "Studenti", "Docenti", "Persone",
+      ...SESSIONS.flatMap((s) => [s.etichetta, `Settore ${s.etichetta}`, `Entrati ${s.etichetta}`]),
+      "Codice", "Note", "Percorso dei licei", "Prenotata il", "Ultima modifica",
+    ]),
+  ];
+  for (const r of righe) {
+    out.push(
+      riga([
+        r.istituto, r.comune, r.classe, r.docente_nome, r.docente_cognome, r.docente_telefono, r.docente_email,
+        r.studenti, r.accompagnatori, r.posti,
+        ...SESSIONS.flatMap((s) => {
+          const g = giornataClasse(r, s.slug);
+          return [statoClasse(g), g?.settore ?? "", g?.presenti ?? ""];
+        }),
+        r.codice, r.note, r.licei_adesione_id ? "Sì" : "No", dataOraRoma(r.created_at), dataOraRoma(r.updated_at),
+      ]),
+    );
+  }
+  return out;
+}
+
+/** Il file CSV pronto per Excel: BOM, righe CRLF. */
+function rispostaCsv(linee: string[], nome: string) {
+  const csv = "\uFEFF" + linee.join("\r\n") + "\r\n";
+  return new NextResponse(csv, {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${nome}"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+/**
+ * ?tipo=classi: le prenotazioni per classe, con gli stessi filtri della
+ * scheda Classi (q, stato) e, con ?giornata=, l'elenco di quel giorno.
+ */
+async function exportClassi(client: SupabaseClient, params: URLSearchParams) {
+  const slug = params.get("giornata") ?? "";
+  const sessione = slug ? sessionBySlug(slug) : undefined;
+  if (slug && !sessione) return NextResponse.json({ error: "Giornata sconosciuta." }, { status: 400 });
+  const filtri = { ...leggiFiltriClassi(params), giornata: sessione ? sessione.slug : "" };
+
+  let righe: RigaClasse[];
+  try {
+    const dati = await caricaDatiClassi(client);
+    if (!dati.disponibili) {
+      return NextResponse.json(
+        { error: "Le prenotazioni per classe non sono nel database: non c'è niente da scaricare." },
+        { status: 409 },
+      );
+    }
+    righe = filtraClassi(dati.classi, filtri).sort(confrontaClassiPerScuola);
+  } catch (err) {
+    console.error("[eventi/admin/export] classi:", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "Non riesco a leggere le classi dal database. Riprova tra poco." },
+      { status: 500 },
+    );
+  }
+
+  const linee = sessione ? csvClassiGiornata(righe, sessione.slug) : csvClassiComplete(righe);
+  const filtrato = filtri.q.trim() || filtri.stato ? "-filtrate" : "";
+  const nome = `classi-${sessione ? perFile(sessione.etichetta) : "tutte"}${filtrato}-${giornoRoma(new Date())}.csv`;
+  return rispostaCsv(linee, nome);
+}
+
 /**
  * Export CSV degli iscritti, per Excel in italiano: separatore ";", BOM
  * UTF-8, righe CRLF, celle tra virgolette.
@@ -122,12 +231,15 @@ function csvCompleto(righe: RigaIscritto[]): string[] {
  *
  * Accetta gli stessi filtri dell'elenco (q, categoria, stato): quello che si
  * vede nel pannello è quello che si scarica. Solo staff (requireAdmin).
+ *
+ * Con ?tipo=classi scarica le prenotazioni per classe (vedi exportClassi).
  */
 export async function GET(request: Request) {
   const { error, status, client } = await getEventAdminClient();
   if (error || !client) return NextResponse.json({ error }, { status });
 
   const params = new URL(request.url).searchParams;
+  if (params.get("tipo") === "classi") return exportClassi(client, params);
   const slug = params.get("giornata") ?? "";
   const sessione = slug ? sessionBySlug(slug) : undefined;
   if (slug && !sessione) {
@@ -159,17 +271,8 @@ export async function GET(request: Request) {
   }
 
   const linee = sessione ? csvGiornata(righe, sessione.slug) : csvCompleto(righe);
-  const csv = "\uFEFF" + linee.join("\r\n") + "\r\n";
-
   const oggi = giornoRoma(new Date());
   const filtrato = filtri.q.trim() || filtri.categoria || filtri.stato ? "-filtrati" : "";
   const nome = `iscritti-${sessione ? perFile(sessione.etichetta) : "tutti"}${filtrato}-${oggi}.csv`;
-
-  return new NextResponse(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${nome}"`,
-      "Cache-Control": "no-store",
-    },
-  });
+  return rispostaCsv(linee, nome);
 }

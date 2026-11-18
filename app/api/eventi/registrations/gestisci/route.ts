@@ -10,13 +10,13 @@ import {
   inviaConUnNuovoTentativo,
   parametriConDatiSalvati,
   postiPerGiornata,
-  promuoviDaListaAttesa,
   pulisciCodice,
   type GiornataIscritto,
   type IscrizioneEvento,
   type RigaIscrizioneCompleta,
 } from "@/lib/eventi/evento-server";
 import { EMAIL_MITTENTE, EMAIL_RISPOSTE, emailAnnullamento } from "@/lib/eventi/email";
+import { promuoviDopoPostiLiberati } from "@/lib/eventi/classi-server";
 import { ARCHIVE_MODE, giornateConArticolo, sessionBySlug } from "@/app/eventi/vivere-piu-a-lungo/content";
 
 /**
@@ -28,9 +28,10 @@ import { ARCHIVE_MODE, giornateConArticolo, sessionBySlug } from "@/app/eventi/v
  * - annulla: libera il posto di una giornata. Se non resta nessuna
  *   giornata, l'iscrizione viene cancellata ({ annullata: true }). La
  *   risposta dice anche com'era la giornata tolta (era: "confermato" o
- *   "lista_attesa"). Un posto confermato passa subito alla prima persona in
- *   lista d'attesa, che riceve il biglietto; il titolare riceve un breve
- *   avviso all'indirizzo dell'iscrizione, perché basta il codice per farlo.
+ *   "lista_attesa"). Un posto confermato passa subito a chi è in lista
+ *   d'attesa (prima alle classi che ci stanno, poi alle persone), che riceve
+ *   l'email; il titolare riceve un breve avviso all'indirizzo
+ *   dell'iscrizione, perché basta il codice per farlo.
  * - aggiungi: aggiunge una giornata con i dati già salvati, con il
  *   controllo dei posti dell'RPC (confermato o lista d'attesa), e manda il
  *   biglietto aggiornato.
@@ -239,11 +240,12 @@ async function annulla(client: Client, iscr: IscrizioneEvento, slug: string, ade
   }
 
   // Dopo la cancellazione, e senza mai far fallire la richiesta: il posto
-  // confermato passa a chi è in lista d'attesa da più tempo, e il titolare
-  // riceve l'avviso. Le due cose non lanciano.
+  // confermato passa a chi è in lista d'attesa (una classe in attesa che ora
+  // ci sta, se c'è, poi le persone), e il titolare riceve l'avviso. Le due
+  // cose non lanciano.
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
   await Promise.all([
-    era === "confermato" ? promuoviDaListaAttesa(client, resend, slug) : Promise.resolve(null),
+    era === "confermato" ? promuoviDopoPostiLiberati(client, resend, slug) : Promise.resolve(null),
     avvisaTitolare(resend, iscr, g, annullata),
   ]);
 

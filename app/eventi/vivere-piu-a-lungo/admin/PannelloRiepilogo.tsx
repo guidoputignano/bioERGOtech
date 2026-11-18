@@ -3,8 +3,13 @@
 /**
  * Riepilogo: tutto quello che serve sapere in un colpo d'occhio, dal
  * telefono. Prima gli allarmi (giornate che mancano nel database, iscrizioni
- * senza giornata), poi una scheda per giornata con posti, lista d'attesa e
- * ingressi, poi l'andamento delle iscrizioni, le categorie e le scuole.
+ * senza giornata, classi che non sono nel database), poi una scheda per
+ * giornata con posti, lista d'attesa e ingressi, poi l'andamento delle
+ * iscrizioni, le categorie e le scuole.
+ *
+ * I posti di ogni giornata sono le persone iscritte più i posti delle classi
+ * confermate, con la divisione fra le due; le classi in lista d'attesa
+ * compaiono fra gli avvisi, come le persone.
  *
  * I conti li fa il server su tutte le iscrizioni (/api/eventi/admin/riepilogo).
  * Si aggiorna da solo ogni minuto mentre la scheda è aperta e visibile; se
@@ -14,6 +19,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { categoriaLabel, giornateConArticolo, SESSIONS } from "../content";
 import {
+  FILE_SQL_CLASSI,
   FILE_SQL_GIORNATE,
   FILTRI_VUOTI,
   leggiJson,
@@ -22,6 +28,7 @@ import {
   urlExport,
   urlStampa,
   type Filtri,
+  type FiltriClassi,
   type InfoGiornata,
   type Riepilogo,
 } from "./PannelloComune";
@@ -36,12 +43,22 @@ const plurale = (n: number, uno: string, molti: string) => `${numero(n)} ${n ===
 
 function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f: Partial<Filtri>) => void }) {
   const { mancanti, senzaGiornata, sconosciute } = dati;
-  if (mancanti.length === 0 && senzaGiornata === 0 && sconosciute.length === 0) return null;
+  const classiAssenti = !dati.classi.disponibili;
+  if (mancanti.length === 0 && senzaGiornata === 0 && sconosciute.length === 0 && !classiAssenti) return null;
   /** Il file di ripristino non è ancora stato eseguito: solo allora va suggerito. */
   const ripristinoDaFare = mancanti.length > 0;
   const primaGiornata = giornateConArticolo([SESSIONS[0].slug]);
   return (
     <div className="eva-griglia" role="alert">
+      {classiAssenti && (
+        <div className="eva-avviso eva-avviso-errore">
+          <i className="fas fa-school-circle-xmark" aria-hidden="true" />
+          <div>
+            <strong>Le prenotazioni per classe non sono nel database.</strong>{" "}Le scuole non possono prenotare e i
+            posti contano solo le persone. Esegui nell&apos;editor SQL di Supabase il file <code>{FILE_SQL_CLASSI}</code>.
+          </div>
+        </div>
+      )}
       {mancanti.length > 0 && (
         <div className="eva-avviso eva-avviso-errore">
           <i className="fas fa-triangle-exclamation" aria-hidden="true" />
@@ -117,11 +134,51 @@ function Allarmi({ dati, onApriIscritti }: { dati: Riepilogo; onApriIscritti: (f
 
 /* ── Lista d'attesa da smaltire ───────────────────────────────────────── */
 
-function Richiami({ giornate, onApriIscritti }: { giornate: InfoGiornata[]; onApriIscritti: (f: Partial<Filtri>) => void }) {
+function Richiami({
+  giornate,
+  onApriIscritti,
+  onApriClassi,
+}: {
+  giornate: InfoGiornata[];
+  onApriIscritti: (f: Partial<Filtri>) => void;
+  onApriClassi: (f: Partial<FiltriClassi>) => void;
+}) {
   const daConfermare = giornate.filter((g) => g.nelDatabase && (g.liberi ?? 0) > 0 && g.attesa > 0);
-  if (daConfermare.length === 0) return null;
+  const classiInAttesa = giornate.filter((g) => g.nelDatabase && g.classi && g.classi.classiAttesa > 0);
+  if (daConfermare.length === 0 && classiInAttesa.length === 0) return null;
   return (
     <div className="eva-griglia">
+      {classiInAttesa.map((g) => {
+        const c = g.classi!;
+        const ciSta = c.minimoAttesa !== null && c.minimoAttesa <= (c.rimanentiClassi ?? 0);
+        // Che cosa ferma le classi: la quota delle scuole o la giornata piena.
+        const quotaPiena = c.quota !== null && c.quota - c.postiClassi <= (c.rimanenti ?? 0);
+        return (
+          <div key={`classi-${g.slug}`} className="eva-avviso eva-avviso-info">
+            <i className="fas fa-school" aria-hidden="true" />
+            <div style={{ flex: 1 }}>
+              <strong>
+                {`${c.classiAttesa === 1 ? "1 classe è" : `${numero(c.classiAttesa)} classi sono`} in lista d'attesa per ${giornateConArticolo([g.slug])} (${plurale(c.postiAttesa, "persona", "persone")}).`}
+              </strong>{" "}
+              {ciSta
+                ? `Almeno una ci sta: per le classi restano ${plurale(c.rimanentiClassi ?? 0, "posto", "posti")}. Puoi confermarla dalla scheda Classi.`
+                : quotaPiena
+                  ? "I posti per le classi sono esauriti: se la sala lo permette, puoi alzare la quota delle scuole dalla scheda Classi."
+                  : "La giornata è al completo: le classi entrano solo se si liberano posti."}
+              <div style={{ marginTop: 10 }}>
+                <button
+                  type="button"
+                  className={`eva-btn${ciSta ? " eva-btn-primario" : ""}`}
+                  onClick={() => onApriClassi({ giornata: g.slug, stato: "attesa" })}
+                >
+                  <i className="fas fa-arrow-right" aria-hidden="true" />{" "}
+                  Apri le classi in attesa
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
       {daConfermare.map((g) => {
         const n = Math.min(g.liberi ?? 0, g.attesa);
         return (
@@ -155,7 +212,19 @@ function Richiami({ giornate, onApriIscritti }: { giornate: InfoGiornata[]; onAp
 
 /* ── Una giornata ─────────────────────────────────────────────────────── */
 
-function Stat({ n, label, colore, su }: { n: number | string; label: string; colore: string; su?: number | null }) {
+function Stat({
+  n,
+  label,
+  colore,
+  su,
+  nota,
+}: {
+  n: number | string;
+  label: string;
+  colore: string;
+  su?: number | null;
+  nota?: string;
+}) {
   return (
     <div className="eva-stat">
       <div className="eva-stat-n">
@@ -166,11 +235,20 @@ function Stat({ n, label, colore, su }: { n: number | string; label: string; col
         <span className="eva-dot" style={{ background: colore }} aria-hidden="true" />
         {label}
       </div>
+      {nota && <div className="eva-stat-nota">{nota}</div>}
     </div>
   );
 }
 
-function SchedaGiornata({ g, onApriIscritti }: { g: InfoGiornata; onApriIscritti: (f: Partial<Filtri>) => void }) {
+function SchedaGiornata({
+  g,
+  onApriIscritti,
+  onApriClassi,
+}: {
+  g: InfoGiornata;
+  onApriIscritti: (f: Partial<Filtri>) => void;
+  onApriClassi: (f: Partial<FiltriClassi>) => void;
+}) {
   const [erroreFile, setErroreFile] = useState<string | null>(null);
   const titolo = (
     <div>
@@ -208,6 +286,10 @@ function SchedaGiornata({ g, onApriIscritti }: { g: InfoGiornata; onApriIscritti
   const cap = g.capienza;
   const pct = cap > 0 ? Math.min(100, Math.round((g.confermati / cap) * 100)) : 100;
   const pieno = (g.liberi ?? 0) === 0;
+  const c = g.classi;
+  // La barra in due parti: le persone iscritte una per una e i posti delle classi.
+  const quotaPersone = cap > 0 ? Math.min(100, (g.persone / cap) * 100) : 0;
+  const quotaClassi = cap > 0 && c ? Math.min(100 - quotaPersone, (c.postiClassi / cap) * 100) : 0;
   return (
     <article className="eva-box" aria-label={g.giornoLabel}>
       <div className="eva-giornata-testa">
@@ -220,15 +302,16 @@ function SchedaGiornata({ g, onApriIscritti }: { g: InfoGiornata; onApriIscritti
       </div>
 
       <div
-        className={`eva-barra${pieno ? " eva-barra-piena" : ""}`}
+        className={`eva-barra eva-barra-doppia${pieno ? " eva-barra-piena" : ""}`}
         role="progressbar"
         aria-label={`Posti confermati ${giornateConArticolo([g.slug])}`}
         aria-valuemin={0}
         aria-valuemax={cap}
         aria-valuenow={Math.min(g.confermati, cap)}
-        aria-valuetext={`${numero(g.confermati)} posti confermati su ${numero(cap)}`}
+        aria-valuetext={`${numero(g.confermati)} posti confermati su ${numero(cap)}${c ? `: ${numero(g.persone)} persone e ${numero(c.postiClassi)} posti delle classi` : ""}`}
       >
-        <span style={{ width: `${pct}%` }} />
+        <span style={{ width: `${quotaPersone}%` }} />
+        {c && <span className="eva-barra-classi" style={{ width: `${quotaClassi}%` }} />}
       </div>
       <div className="eva-barra-legenda">
         <span>
@@ -236,6 +319,18 @@ function SchedaGiornata({ g, onApriIscritti }: { g: InfoGiornata; onApriIscritti
         </span>
         <span className="num">{pct}%</span>
       </div>
+      {c && (
+        <div className="eva-legenda" aria-hidden="true">
+          <span>
+            <span className="eva-dot" style={{ background: "var(--primary)" }} />
+            {plurale(g.persone, "persona iscritta", "persone iscritte")}
+          </span>
+          <span>
+            <span className="eva-dot" style={{ background: "var(--eva-teal-ink)" }} />
+            {plurale(c.postiClassi, "posto", "posti")} delle classi ({plurale(c.classiConfermate, "classe", "classi")})
+          </span>
+        </div>
+      )}
       {g.oltre > 0 && (
         <p className="eva-nota" style={{ color: "#92400E", fontWeight: 600, marginTop: 6 }}>
           <i className="fas fa-circle-exclamation" aria-hidden="true" style={{ marginRight: 6 }} />
@@ -244,17 +339,45 @@ function SchedaGiornata({ g, onApriIscritti }: { g: InfoGiornata; onApriIscritti
       )}
 
       <div className="eva-stats eva-stats-4" style={{ marginTop: 16 }}>
-        <Stat n={g.confermati} label="Confermati" colore="var(--primary)" />
-        <Stat n={g.attesa} label="Lista d'attesa" colore="#D97706" />
-        <Stat n={g.entrati} label="Entrati" colore="#0F6E56" />
+        <Stat
+          n={g.confermati}
+          label="Confermati"
+          colore="var(--primary)"
+          nota={c && c.postiClassi > 0 ? `di cui ${numero(c.postiClassi)} con le classi` : undefined}
+        />
+        <Stat
+          n={g.attesa}
+          label="Lista d'attesa"
+          colore="#D97706"
+          nota={c && c.classiAttesa > 0 ? `e ${plurale(c.classiAttesa, "classe", "classi")} (${numero(c.postiAttesa)} persone)` : undefined}
+        />
+        <Stat
+          n={g.entrati}
+          label="Entrati"
+          colore="#0F6E56"
+          nota={c && c.presenti > 0 ? `di cui ${numero(c.presenti)} con le classi` : undefined}
+        />
         <Stat n={g.liberi ?? 0} su={cap} label="Posti liberi" colore="#CBD5E1" />
       </div>
+      {c && (
+        <p className="eva-nota" style={{ marginTop: 12 }}>
+          {`Classi: ${plurale(c.classiConfermate, "confermata", "confermate")}, ${numero(c.postiClassi)} posti su ${
+            c.quota === null ? "nessuna quota" : `una quota di ${numero(c.quota)}`
+          }. Ancora prenotabili dalle classi: ${numero(c.rimanentiClassi ?? 0)}.`}
+        </p>
+      )}
 
       <div className="eva-azioni" style={{ marginTop: 16 }}>
         <button type="button" className="eva-btn" onClick={() => onApriIscritti({ giornata: g.slug })}>
           <i className="fas fa-users" aria-hidden="true" />{" "}
           Vedi gli iscritti
         </button>
+        {c && (
+          <button type="button" className="eva-btn" onClick={() => onApriClassi({ giornata: g.slug })}>
+            <i className="fas fa-school" aria-hidden="true" />{" "}
+            Vedi le classi
+          </button>
+        )}
         <a className="eva-btn" href={urlStampa(g.slug)} target="_blank" rel="noopener noreferrer">
           <i className="fas fa-print" aria-hidden="true" />{" "}
           Lista per la porta
@@ -365,9 +488,11 @@ function Scheletro() {
 export function PannelloRiepilogo({
   attivo,
   onApriIscritti,
+  onApriClassi,
 }: {
   attivo: boolean;
   onApriIscritti: (f: Partial<Filtri>) => void;
+  onApriClassi: (f: Partial<FiltriClassi>) => void;
 }) {
   const [dati, setDati] = useState<Riepilogo | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
@@ -442,11 +567,11 @@ export function PannelloRiepilogo({
       {dati && (
         <>
           <Allarmi dati={dati} onApriIscritti={onApriIscritti} />
-          <Richiami giornate={dati.giornate} onApriIscritti={onApriIscritti} />
+          <Richiami giornate={dati.giornate} onApriIscritti={onApriIscritti} onApriClassi={onApriClassi} />
 
           <div className="eva-griglia eva-griglia-2">
             {dati.giornate.map((g) => (
-              <SchedaGiornata key={g.slug} g={g} onApriIscritti={onApriIscritti} />
+              <SchedaGiornata key={g.slug} g={g} onApriIscritti={onApriIscritti} onApriClassi={onApriClassi} />
             ))}
           </div>
 
@@ -465,6 +590,31 @@ export function PannelloRiepilogo({
               comunicazioni della Fondazione.
             </p>
           </section>
+
+          {dati.classi.disponibili && (
+            <section className="eva-box" aria-labelledby="eva-classi">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 id="eva-classi" className="eva-h2">
+                  Le classi
+                </h3>
+                <button type="button" className="eva-btn" onClick={() => onApriClassi({})}>
+                  <i className="fas fa-school" aria-hidden="true" />{" "}
+                  Apri la scheda Classi
+                </button>
+              </div>
+              <div className="eva-stats eva-stats-4" style={{ marginTop: 14 }}>
+                <Stat n={dati.classi.prenotazioni} label="Classi prenotate" colore="var(--eva-teal-ink)" />
+                <Stat n={dati.classi.persone} label="Persone con le classi" colore="var(--eva-teal-ink)" />
+                <Stat n={dati.classi.scuole} label="Scuole diverse" colore="#0F766E" />
+                <Stat n={dati.classi.dalPercorso} label="Dal percorso dei licei" colore="#0F766E" />
+              </div>
+              <p className="eva-nota" style={{ marginTop: 12 }}>
+                Una prenotazione è una classe, con un solo QR. Le persone sono gli studenti e i docenti di tutte le
+                prenotazioni, lista d&apos;attesa compresa, contati una volta anche se vengono tutte e due le giornate. I
+                posti di ogni giornata sono nelle schede qui sopra.
+              </p>
+            </section>
+          )}
 
           <section className="eva-box" aria-labelledby="eva-andamento">
             <h3 id="eva-andamento" className="eva-h2">

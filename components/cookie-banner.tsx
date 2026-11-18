@@ -45,21 +45,25 @@ const PERCORSI_SENZA_ADS = [
   "/eventi/vivere-piu-a-lungo/admin",
   // Il biglietto online: pagina personale, spesso di uno studente.
   "/eventi/vivere-piu-a-lungo/biglietto",
+  // La pagina di una classe prenotata: il codice nell'indirizzo gestisce la
+  // prenotazione. La pagina per prenotare (/classi) resta una pagina normale.
+  "/eventi/vivere-piu-a-lungo/classe",
   "/member-portal",
   "/auth",
 ];
 
 /**
  * Pagine in cui Google Analytics non registra nulla. L'indirizzo del
- * biglietto online contiene il codice, che fa da chiave per gestire
- * l'iscrizione: non deve finire nei report. Due difese: su queste pagine
+ * biglietto online e quello della pagina di una classe contengono il
+ * codice, che fa da chiave per gestire l'iscrizione o la prenotazione: non
+ * deve finire nei report. Due difese: su queste pagine
  * Analytics non si configura (loadGoogleTags), e se è già stato configurato
  * su un'altra pagina della stessa visita (per esempio il consenso dato sulla
  * pagina dell'evento, poi Indietro fino al biglietto) il flag
  * ga-disable-<ID>, che gtag.js legge prima di ogni invio, lo ferma. Il flag
  * segue l'indirizzo: vedi aggiornaBloccoGA.
  */
-const PERCORSI_SENZA_ANALYTICS = ["/eventi/vivere-piu-a-lungo/biglietto"];
+const PERCORSI_SENZA_ANALYTICS = ["/eventi/vivere-piu-a-lungo/biglietto", "/eventi/vivere-piu-a-lungo/classe"];
 
 const inPercorso = (elenco: readonly string[]) => {
   if (typeof window === "undefined") return true;
@@ -213,10 +217,10 @@ export default function CookieBanner() {
     marketing: false,
   });
 
-  // Il blocco di Analytics sulle pagine del biglietto. Va prima dell'effetto
-  // del consenso: il suo ascoltatore di popstate si registra prima che gtag.js
-  // possa caricarsi, quindi con Indietro e Avanti il flag è già giusto quando
-  // gtag registra il cambio di pagina.
+  // Il blocco di Analytics sulle pagine del biglietto e delle classi. Va
+  // prima dell'effetto del consenso: il suo ascoltatore di popstate si
+  // registra prima che gtag.js possa caricarsi, quindi con Indietro e Avanti
+  // il flag è già giusto quando gtag registra il cambio di pagina.
   useEffect(() => {
     aggiornaBloccoGA();
     window.addEventListener("popstate", aggiornaBloccoGA);

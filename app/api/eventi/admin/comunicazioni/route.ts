@@ -20,11 +20,14 @@ const errore = (messaggio: string, status: number, extra: Record<string, unknown
   NextResponse.json({ error: messaggio, ...extra }, { status, headers: NESSUNA_CACHE });
 
 /**
- * Le email a tutti gli iscritti, per la scheda Comunicazioni del pannello.
+ * Le email a tutti, per la scheda Comunicazioni del pannello: agli iscritti
+ * (biglietto aggiornato, promemoria) e alle scuole (promemoria alle classi,
+ * invito alle scuole del percorso).
  *
  * GET: per ogni campagna lo stato (inviata quando e con che esito, oppure
- * programmata), a quante persone partirebbe adesso, se è bloccata e perché,
- * e le anteprime con una persona di esempio. Solo admin.
+ * programmata), a quanti partirebbe adesso, se è bloccata e perché, e le
+ * anteprime con un esempio. Se gli iscritti o le scuole non si leggono, le
+ * loro campagne risultano bloccate e le altre restano utilizzabili. Solo admin.
  */
 export async function GET() {
   const guard = await requireAdmin();
@@ -40,7 +43,8 @@ export async function GET() {
 }
 
 /**
- * POST { campagna: "biglietto_aggiornato" | "promemoria", azione: "prova" | "invia", esempio? }
+ * POST { campagna: "biglietto_aggiornato" | "promemoria" | "promemoria_classi" | "invito_scuole",
+ *        azione: "prova" | "invia", esempio? }
  *
  * - prova: la campagna con la persona di esempio scelta, all'indirizzo
  *   dell'admin collegato. Non conta come invio.
@@ -108,6 +112,6 @@ export async function POST(request: Request) {
     // Arriva qui solo se il database non risponde prima della prenotazione:
     // non è partita nessuna email.
     console.error("[eventi/admin/comunicazioni] invio:", err instanceof Error ? err.message : err);
-    return errore("Non riesco a leggere gli iscritti dal database: non è partita nessuna email. Riprova tra poco.", 500);
+    return errore("Non riesco a leggere i dati dal database: non è partita nessuna email. Riprova tra poco.", 500);
   }
 }

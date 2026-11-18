@@ -28,7 +28,7 @@ export type RigaFinalita = { finalita: string; base: string };
  * periodo. Appena la Fondazione fissa i termini si scrive qui la stringa e
  * la pagina cambia da sola, in tutte e due le lingue.
  *
- * TODO: definire i termini di conservazione delle cinque categorie che oggi
+ * TODO: definire i termini di conservazione delle sei categorie che oggi
  * hanno `periodo: null`. Sono una decisione della Fondazione, non un
  * dettaglio tecnico, e non vanno inventati.
  */
@@ -162,6 +162,18 @@ const EN: Informativa = {
         ],
       },
       {
+        titolo: "Class Bookings for Our Events",
+        voci: [
+          "For the teacher who books: name, surname, email address and a telephone number to be reached on the day of the event",
+          "The school, its municipality and the class, and the number of students and accompanying teachers. We collect no data about the students: only how many they are",
+          "The days chosen and, for each day, whether the class is confirmed or on the waiting list, any seating area assigned by our staff, and how many people of the class were recorded at the entrance",
+          "Any note the teacher adds",
+          "A unique booking code with its QR code, which the teacher shows at the entrance",
+          "For schools taking part in our secondary school programme, the link between the booking and the school's participation",
+          "The acceptance of the privacy notice, with its wording and timestamp",
+        ],
+      },
+      {
         titolo: "Website Usage",
         voci: [
           "IP address and browser type (anonymised where possible)",
@@ -194,6 +206,9 @@ const EN: Informativa = {
       { finalita: "Managing registrations for our events: confirmation, waiting list, the ticket with QR code and check-in at the entrance", base: "Performance of the registration requested by the participant" },
       { finalita: "Sending service messages and reminders about an event the participant has registered for", base: "Performance of the registration requested by the participant / Legitimate interest" },
       { finalita: "Creating or linking the Member Portal account that comes with an event registration", base: "Performance of the registration requested by the participant" },
+      { finalita: "Managing class bookings for our events: confirmation, waiting list, the class QR code and check-in at the entrance", base: "Performance of the booking requested by the teacher" },
+      { finalita: "Sending the teacher service messages and reminders about the class booking", base: "Performance of the booking requested by the teacher / Legitimate interest" },
+      { finalita: "Inviting the referring teachers of the schools in our secondary school programme to book their classes for the event", base: "Legitimate interest" },
       { finalita: "Sending news about the Foundation's initiatives to participants who ask for it when registering", base: "Consent, optional and withdrawable" },
       { finalita: "Sending platform notifications", base: "Consent / Legitimate interest" },
       { finalita: "Improving website performance", base: "Consent (analytics cookies)" },
@@ -217,6 +232,7 @@ const EN: Informativa = {
       { categoria: "Course work, teams and project submissions", periodo: null },
       { categoria: "Applications to our calls", periodo: null },
       { categoria: "Event registrations and check-in records", periodo: null },
+      { categoria: "Class bookings for events and their check-in records", periodo: null },
     ],
     senzaTermine:
       "A fixed period is being defined. Until it is set, the data is kept only for as long as the purposes described above require, and is deleted on request.",
@@ -393,6 +409,18 @@ const IT: Informativa = {
         ],
       },
       {
+        titolo: "Prenotazioni per classe ai nostri eventi",
+        voci: [
+          "Per il docente che prenota: nome, cognome, indirizzo email e un numero di telefono a cui raggiungerlo il giorno dell'evento",
+          "La scuola, il suo comune e la classe, e il numero di studenti e di docenti accompagnatori. Non raccogliamo alcun dato degli studenti: solo quanti sono",
+          "Le giornate scelte e, per ciascuna, se la classe è confermata o in lista d'attesa, l'eventuale settore assegnato dal nostro staff e quante persone della classe sono state registrate all'ingresso",
+          "L'eventuale nota aggiunta dal docente",
+          "Un codice di prenotazione univoco con il suo QR code, che il docente mostra all'ingresso",
+          "Per le scuole che partecipano al nostro percorso per le scuole superiori, il collegamento fra la prenotazione e l'adesione dell'istituto",
+          "L'accettazione dell'informativa, con il suo testo e la data",
+        ],
+      },
+      {
         titolo: "Navigazione del sito",
         voci: [
           "Indirizzo IP e tipo di browser (anonimizzati dove possibile)",
@@ -425,6 +453,9 @@ const IT: Informativa = {
       { finalita: "Gestire le iscrizioni ai nostri eventi: conferma, lista d'attesa, biglietto con QR code e check-in all'ingresso", base: "Esecuzione dell'iscrizione richiesta dal partecipante" },
       { finalita: "Inviare comunicazioni di servizio e promemoria sull'evento a cui ci si è iscritti", base: "Esecuzione dell'iscrizione richiesta dal partecipante e legittimo interesse" },
       { finalita: "Creare o collegare l'account dell'area riservata (Member Portal) che accompagna l'iscrizione a un evento", base: "Esecuzione dell'iscrizione richiesta dal partecipante" },
+      { finalita: "Gestire le prenotazioni per classe ai nostri eventi: conferma, lista d'attesa, QR code della classe e check-in all'ingresso", base: "Esecuzione della prenotazione richiesta dal docente" },
+      { finalita: "Inviare al docente comunicazioni di servizio e promemoria sulla prenotazione della classe", base: "Esecuzione della prenotazione richiesta dal docente e legittimo interesse" },
+      { finalita: "Invitare i docenti referenti delle scuole del nostro percorso a prenotare le loro classi per l'evento", base: "Legittimo interesse" },
       { finalita: "Inviare notizie sulle iniziative della Fondazione a chi le chiede al momento dell'iscrizione", base: "Consenso, facoltativo e revocabile" },
       { finalita: "Inviare comunicazioni di servizio", base: "Consenso e legittimo interesse" },
       { finalita: "Migliorare le prestazioni del sito", base: "Consenso (cookie analitici)" },
@@ -448,6 +479,7 @@ const IT: Informativa = {
       { categoria: "Lavori del corso, squadre e progetti consegnati", periodo: null },
       { categoria: "Candidature ai nostri bandi", periodo: null },
       { categoria: "Iscrizioni agli eventi e registrazioni degli ingressi", periodo: null },
+      { categoria: "Prenotazioni per classe agli eventi e relative registrazioni degli ingressi", periodo: null },
     ],
     senzaTermine:
       "Il termine è in corso di definizione. Fino ad allora i dati sono conservati per il solo tempo richiesto dalle finalità sopra descritte, e cancellati su richiesta.",

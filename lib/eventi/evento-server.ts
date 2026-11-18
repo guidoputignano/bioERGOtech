@@ -234,11 +234,55 @@ export function giornateAggiungibili(
 export type Promozione = { iscrizione: IscrizioneEvento; email: EsitoInvio | null };
 
 /**
+ * I posti occupati di una giornata: le persone confermate più i posti delle
+ * classi confermate (event_posti_occupati, la regola unica della capienza).
+ * Null se la lettura non riesce: chi chiama non conferma nessuno.
+ *
+ * Se la funzione non c'è ancora nel database (il file delle prenotazioni per
+ * classe non è stato eseguito) non ci sono nemmeno le classi: si contano le
+ * sole persone confermate, come prima.
+ */
+async function postiOccupati(client: SupabaseClient, sessionId: string, slug: string): Promise<number | null> {
+  const { data, error } = await client.rpc("event_posti_occupati", { p_session_id: sessionId });
+  if (!error) {
+    const riga = (Array.isArray(data) ? data[0] : data) as { persone?: number | string } | null | undefined;
+    const persone = Number(riga?.persone);
+    if (Number.isFinite(persone)) return persone;
+    console.error(`Lista d'attesa ${slug}: event_posti_occupati senza il numero dei posti occupati.`);
+    return null;
+  }
+  // PGRST202: PostgREST non trova la funzione; 42883: Postgres non la trova.
+  if (error.code === "PGRST202" || error.code === "42883") {
+    console.warn(
+      `Lista d'attesa ${slug}: event_posti_occupati non c'è nel database, si contano le sole persone. ` +
+        "Esegui supabase/migrations/20261231400000_event_prenotazioni_classi.sql.",
+    );
+    const { count, error: countError } = await client
+      .from("event_registration_sessions")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId)
+      .eq("is_waitlist", false);
+    if (countError) {
+      console.error(`Lista d'attesa ${slug}: confermati non contati:`, countError.message);
+      return null;
+    }
+    return count ?? 0;
+  }
+  console.error(`Lista d'attesa ${slug}: posti occupati non letti:`, `${error.code ?? "?"} ${error.message ?? ""}`.trim());
+  return null;
+}
+
+/**
  * Dopo che un posto confermato si è liberato: conferma la persona che è in
  * lista d'attesa da più tempo per quella giornata, se c'è ancora posto, e
  * le manda il biglietto ("si è liberato un posto"). Così è vero quello che
  * dicono le pagine e le email: il posto passa a chi è in lista d'attesa,
  * prima che lo prenda un nuovo iscritto.
+ *
+ * I posti occupati contano anche le classi confermate (event_posti_occupati):
+ * una persona non entra in un posto che ha già una classe. Chi libera posti
+ * chiama di solito promuoviDopoPostiLiberati (lib/eventi/classi-server.ts),
+ * che passa prima alle classi in attesa e poi qui, una persona alla volta.
  *
  * L'ordine è quello del pannello e della lista stampata (PannelloDati):
  * prima la data della riga, poi la data dell'iscrizione, poi l'id. Il file
@@ -278,16 +322,9 @@ export async function promuoviDaListaAttesa(
 
     let promossaId: string | null = null;
     for (let tentativo = 0; tentativo < 3 && !promossaId; tentativo++) {
-      const { count, error: countError } = await client
-        .from("event_registration_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("session_id", sess.id)
-        .eq("is_waitlist", false);
-      if (countError) {
-        console.error(`Lista d'attesa ${slug}: confermati non contati:`, countError.message);
-        return null;
-      }
-      if ((count ?? 0) >= Number(sess.capienza_max)) return null;
+      const occupati = await postiOccupati(client, String(sess.id), slug);
+      if (occupati === null) return null;
+      if (occupati >= Number(sess.capienza_max)) return null;
 
       // Al massimo qualche centinaio di righe: si ordinano qui, come nel pannello.
       const { data: inAttesa, error: attesaError } = await client

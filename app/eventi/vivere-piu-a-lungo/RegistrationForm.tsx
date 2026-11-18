@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { refusoEmail } from "@/lib/eventi/email-refusi";
+import { MAX_PERSONE_CLASSE, PAGINA_CLASSI } from "@/lib/eventi/classi";
 import {
   SESSIONS,
   CATEGORIE,
@@ -762,21 +763,32 @@ export function RegistrationForm() {
             {categoria && categoria !== "pubblico" && (
               <div className="vpl-pannello" key={categoria}>
                 {categoria === "studente" && (
-                  <p className="vpl-nota">
-                    <i className="fas fa-circle-info" aria-hidden="true" />
-                    <span>
-                      Se hai meno di 14 anni, chiedi a un genitore di iscriverti. Ogni persona ha bisogno di un indirizzo
-                      email diverso: se in famiglia ne avete uno solo, scrivici a{" "}
-                      <a href="mailto:info@bioergotech.org">info@bioergotech.org</a>.
-                    </span>
-                  </p>
+                  <>
+                    <p className="vpl-nota">
+                      <i className="fas fa-circle-info" aria-hidden="true" />
+                      <span>
+                        Se hai meno di 14 anni, chiedi a un genitore di iscriverti. Ogni persona ha bisogno di un indirizzo
+                        email diverso: se in famiglia ne avete uno solo, scrivici a{" "}
+                        <a href="mailto:info@bioergotech.org">info@bioergotech.org</a>.
+                      </span>
+                    </p>
+                    {/* Più leggera: chi viene con la classe prenotata non ha bisogno del biglietto personale. */}
+                    <p className="vpl-aiuto" style={{ margin: 0 }}>
+                      Vieni con la tua classe? Se un docente l&apos;ha già iscritta con la{" "}
+                      <a href={PAGINA_CLASSI} className="vpl-link">
+                        prenotazione per le classi
+                      </a>
+                      , non serve che ti iscriva anche tu.
+                    </p>
+                  </>
                 )}
                 {categoria === "scuola_docente" && (
                   <p className="vpl-nota">
-                    <i className="fas fa-circle-info" aria-hidden="true" />
+                    <i className="fas fa-school" aria-hidden="true" />
                     <span>
-                      Ogni studente si iscrive con il proprio indirizzo email. Per un gruppo classe numeroso scrivici
-                      a <a href="mailto:info@bioergotech.org">info@bioergotech.org</a>.
+                      Porti una classe? Con la{" "}
+                      <a href={PAGINA_CLASSI}>prenotazione per la classe</a>{" "}
+                      {`basta una sola prenotazione per tutto il gruppo, fino a ${MAX_PERSONE_CLASSE} persone con i docenti, e un QR per entrare insieme: gli studenti non si iscrivono uno per uno. Questo modulo è per un'iscrizione personale.`}
                     </span>
                   </p>
                 )}

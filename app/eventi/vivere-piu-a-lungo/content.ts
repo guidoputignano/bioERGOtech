@@ -12,6 +12,10 @@
  * viene cancellato.
  */
 
+// Le prenotazioni per classe: solo costanti, senza codice server (content.ts
+// lo importano anche le pagine statiche e il browser).
+import { MAX_PERSONE_CLASSE, PAGINA_CLASSI } from "@/lib/eventi/classi";
+
 /**
  * Quando true, nasconde i form di iscrizione e mostra il riepilogo. Vive in
  * archivio.ts, un modulo minimo che legge anche la navbar; qui è riesportata
@@ -123,7 +127,7 @@ export const SESSIONS: EventSession[] = [
     luogo: "PalaMazzola, Taranto",
     luogoBreve: "PalaMazzola",
     mappaUrl: "https://www.google.com/maps/search/?api=1&query=PalaMazzola%2C%20Taranto",
-    capienza: 300,
+    capienza: 3500,
     descrizione:
       "Una giornata al PalaMazzola. Sei panel su sport, salute, robotica e intelligenza artificiale si alternano ai progetti dei ragazzi: dieci gruppi in gara presentano le loro idee davanti a una commissione. In chiusura, il concerto aperto al pubblico.",
   },
@@ -141,7 +145,7 @@ export const SESSIONS: EventSession[] = [
     luogo: "Teatro Fusco, Taranto",
     luogoBreve: "Teatro Fusco",
     mappaUrl: "https://www.google.com/maps/search/?api=1&query=Teatro%20Fusco%2C%20Taranto",
-    capienza: 150,
+    capienza: 400,
     descrizione:
       "Al Teatro Fusco, uno showcase di innovazione con startup, spin-off universitari, centri di ricerca e progetti del territorio. A seguire la premiazione con tre premi e il concerto di chiusura.",
   },
@@ -223,6 +227,23 @@ export const CONSENSO_MARKETING_TESTO =
 
 export const CONSENSO_PRIVACY_TESTO =
   "Ho letto l'informativa e acconsento al trattamento dei miei dati personali per la gestione dell'iscrizione e dell'evento.";
+
+/* ── Prenotazioni per classe ── */
+
+/**
+ * Il consenso del modulo delle scuole: lo spunta il docente che prenota, per
+ * i suoi dati. Degli studenti non si raccoglie niente, solo quanti sono. La
+ * rotta lo salva con la prenotazione (consenso_privacy_testo).
+ */
+export const CONSENSO_PRIVACY_CLASSI_TESTO =
+  "Ho letto l'informativa e acconsento al trattamento dei miei dati personali per la gestione della prenotazione della classe e dell'evento.";
+
+/**
+ * Le sole indicazioni pratiche per le classi: nient'altro su orari di arrivo
+ * o documenti, finché l'organizzazione non lo decide.
+ */
+export const CLASSI_PRIMA_DI_PARTIRE =
+  "Porta con te l'elenco della classe, come per ogni uscita didattica, e arrivate con un po' di anticipo.";
 
 /* ── Contenuti di sola presentazione (programma, stats, perché, FAQ) ── */
 
@@ -637,8 +658,8 @@ export const FAQ: { q: string; a: string; link?: { href: string; label: string }
   },
   {
     q: "Sono un docente: come iscrivo la classe?",
-    a: "Ogni partecipante si iscrive con la propria email, così riceve il suo biglietto con il QR per l'ingresso. Per un gruppo classe numeroso scrivici: concordiamo insieme le modalità di ingresso.",
-    link: { href: "mailto:info@bioergotech.org", label: "info@bioergotech.org" },
+    a: `Con la prenotazione per classe: una sola prenotazione per tutta la classe, fino a ${MAX_PERSONE_CLASSE} persone docenti compresi, senza dati degli studenti. Ti mandiamo per email un QR unico: all'ingresso lo mostri e la classe entra insieme. Gli studenti che vengono con la classe non devono iscriversi uno per uno. Per più classi fai una prenotazione per ciascuna; dal link nell'email puoi cambiare il numero di persone o annullare una giornata.`,
+    link: { href: PAGINA_CLASSI, label: "Prenota per la classe" },
   },
   {
     q: "Posso iscrivere anche un'altra persona?",

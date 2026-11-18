@@ -9,11 +9,14 @@ import { caricaDatiPannello, type DatiPannello } from "../PannelloDati";
 import {
   PERCORSO_PANNELLO,
   PERCORSO_STAMPA,
+  confrontaClassiPerScuola,
   confrontaPerCognome,
   dataOraRoma,
   normalizza,
   oraRoma,
   urlStampa,
+  type GiornataRigaClasse,
+  type RigaClasse,
   type RigaIscritto,
 } from "../PannelloComune";
 import { STILE_PANNELLO } from "../PannelloStile";
@@ -36,7 +39,10 @@ const NOME_EVENTO = EVENT.titolo.split(":")[0];
  * lista si può ristampare a evento iniziato.
  *
  * ?giornata=giorno-1 sceglie il giorno; &solo=confermati lascia fuori la
- * lista d'attesa. Solo staff (requireAdmin): elenca dati personali.
+ * lista d'attesa; &parte=persone o &parte=classi stampa una sola delle due
+ * parti (per esempio per il banco delle scuole). Le classi hanno una sezione
+ * loro, in ordine di scuola, con il docente, il telefono, le persone e il
+ * settore. Solo staff (requireAdmin): elenca dati personali.
  *
  * Del codice del biglietto si stampano solo gli ultimi 4 caratteri: il
  * codice intero apre il biglietto e la sua gestione, e il foglio resta per
@@ -89,6 +95,12 @@ const STILE_STAMPA = `
   text-align: left; font-size: 13px; font-weight: 800; color: #0F766E; padding: 12px 8px 4px; border-bottom: 1px solid var(--border-color);
 }
 .stp-piede { margin-top: 18px; font-size: 11.5px; color: var(--text-light); }
+.stp-sezione { margin-top: 28px; }
+.stp-sezione-titolo { font-size: 19px; font-weight: 800; color: var(--text-dark); margin: 4px 0 8px; }
+.stp-tabella .stp-sotto { display: block; font-size: 12px; font-weight: 500; color: var(--text-mid); }
+.stp-tabella .stp-tel { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stp-tabella .stp-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
+.stp-settore { font-weight: 700; color: var(--text-dark); }
 .stp-vuoto { padding: 28px 0; text-align: center; color: var(--text-mid); }
 
 @media print {
@@ -117,6 +129,10 @@ const STILE_STAMPA = `
   .stp-attesa { background: none; border-color: #000; color: #000; }
   .stp-casella { width: 12pt; height: 12pt; border-color: #000; }
   .stp-piede { font-size: 7.5pt; }
+  .stp-sezione { margin-top: 0; }
+  .stp-sezione-nuova-pagina { break-before: page; page-break-before: always; }
+  .stp-sezione-titolo { font-size: 14pt; }
+  .stp-tabella .stp-sotto { font-size: 8pt; }
   a { color: inherit !important; text-decoration: none !important; }
 }
 `;
@@ -164,8 +180,17 @@ export default async function StampaListaPage({
   const primo = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
   const slug = primo(params.giornata);
   const soloConfermati = primo(params.solo) === "confermati";
+  const parteLetta = primo(params.parte);
+  const parte: Parte = parteLetta === "persone" || parteLetta === "classi" ? parteLetta : "";
   const sessione = sessionBySlug(slug);
   const qui = sessione ? urlStampa(sessione.slug) : PERCORSO_STAMPA;
+  /** L'indirizzo di questa lista con una scelta cambiata. */
+  const link = (o: { slug?: string; solo?: boolean; parte?: Parte }) => {
+    const s2 = o.slug ?? sessione?.slug ?? "";
+    const solo = o.solo ?? soloConfermati;
+    const p2 = o.parte ?? parte;
+    return `${urlStampa(s2)}${solo ? "&solo=confermati" : ""}${p2 ? `&parte=${p2}` : ""}`;
+  };
 
   const guardia = await requireAdmin();
   if (guardia.error !== null) {
@@ -239,6 +264,15 @@ export default async function StampaListaPage({
     .filter((x) => !soloConfermati || x.g.status === "confermato")
     .sort((a, b) => confrontaPerCognome(a.r, b.r));
 
+  const classi: { c: RigaClasse; g: GiornataRigaClasse }[] = dati.classi.classi
+    .map((c) => ({ c, g: c.giornate.find((x) => x.slug === sessione.slug) }))
+    .filter((x): x is { c: RigaClasse; g: GiornataRigaClasse } => Boolean(x.g))
+    .filter((x) => !soloConfermati || x.g.status === "confermato")
+    .sort((a, b) => confrontaClassiPerScuola(a.c, b.c));
+  const gc = info.classi;
+  const conPersone = parte !== "classi";
+  const conClassi = parte !== "persone";
+
   const iniziale = (r: RigaIscritto) => normalizza(r.cognome).charAt(0).toUpperCase() || "#";
   const adesso = new Date();
   const giornoStampa = dataOraRoma(adesso).split(" ")[0];
@@ -247,25 +281,33 @@ export default async function StampaListaPage({
   return (
     <Cornice>
       <div className="stp-barra no-print">
-        <Link href={`${PERCORSO_PANNELLO}?tab=iscritti&giornata=${sessione.slug}`} className="eva-btn-link">
+        <Link
+          href={`${PERCORSO_PANNELLO}?tab=${parte === "classi" ? "classi" : "iscritti"}&giornata=${sessione.slug}`}
+          className="eva-btn-link"
+        >
           <i className="fas fa-arrow-left" aria-hidden="true" />{" "}
           Torna al pannello
         </Link>
         <nav className="stp-scelta" aria-label="Giornata e contenuto della lista">
           {SESSIONS.map((s) => (
-            <Link
-              key={s.slug}
-              href={`${urlStampa(s.slug)}${soloConfermati ? "&solo=confermati" : ""}`}
-              aria-current={s.slug === sessione.slug ? "true" : undefined}
-            >
+            <Link key={s.slug} href={link({ slug: s.slug })} aria-current={s.slug === sessione.slug ? "true" : undefined}>
               {s.etichetta}
             </Link>
           ))}
-          <Link href={urlStampa(sessione.slug)} aria-current={!soloConfermati ? "true" : undefined}>
+          <Link href={link({ solo: false })} aria-current={!soloConfermati ? "true" : undefined}>
             Con la lista d&apos;attesa
           </Link>
-          <Link href={`${urlStampa(sessione.slug)}&solo=confermati`} aria-current={soloConfermati ? "true" : undefined}>
+          <Link href={link({ solo: true })} aria-current={soloConfermati ? "true" : undefined}>
             Solo confermati
+          </Link>
+          <Link href={link({ parte: "" })} aria-current={parte === "" ? "true" : undefined}>
+            Persone e classi
+          </Link>
+          <Link href={link({ parte: "persone" })} aria-current={parte === "persone" ? "true" : undefined}>
+            Solo persone
+          </Link>
+          <Link href={link({ parte: "classi" })} aria-current={parte === "classi" ? "true" : undefined}>
+            Solo classi
           </Link>
         </nav>
         <PannelloStampaPulsante />
@@ -273,7 +315,9 @@ export default async function StampaListaPage({
 
       <article className="stp-foglio">
         <header>
-          <p className="stp-kicker">{NOME_EVENTO}, lista per la porta</p>
+          <p className="stp-kicker">
+            {NOME_EVENTO}, {parte === "classi" ? "classi per la porta" : "lista per la porta"}
+          </p>
           <h1 className="stp-titolo">
             {sessione.giornoLabel} {sessione.dataISO.slice(0, 4)}
           </h1>
@@ -282,37 +326,59 @@ export default async function StampaListaPage({
           </p>
           <dl className="stp-conti">
             <div>
-              <dt>Confermati</dt>
+              <dt>Posti occupati</dt>
               <dd>{info.confermati}</dd>
-            </div>
-            <div>
-              <dt>Lista d&apos;attesa</dt>
-              <dd>{info.attesa}</dd>
             </div>
             <div>
               <dt>Capienza</dt>
               <dd>{info.capienza ?? "non nel database"}</dd>
             </div>
+            {conPersone && (
+              <>
+                <div>
+                  <dt>Persone confermate</dt>
+                  <dd>{info.persone}</dd>
+                </div>
+                <div>
+                  <dt>Persone in attesa</dt>
+                  <dd>{info.attesa}</dd>
+                </div>
+              </>
+            )}
+            {conClassi && gc && (
+              <>
+                <div>
+                  <dt>Classi confermate</dt>
+                  <dd>
+                    {gc.classiConfermate} <small style={{ fontSize: "0.6em", fontWeight: 600 }}>({gc.postiClassi} persone)</small>
+                  </dd>
+                </div>
+                {gc.classiAttesa > 0 && (
+                  <div>
+                    <dt>Classi in attesa</dt>
+                    <dd>{gc.classiAttesa}</dd>
+                  </div>
+                )}
+              </>
+            )}
             <div>
               <dt>Già entrati</dt>
-              <dd>{info.entrati}</dd>
-            </div>
-            <div>
-              <dt>In questa lista</dt>
-              <dd>{righe.length}</dd>
+              <dd>{parte === "persone" ? info.entratiPersone : parte === "classi" ? (gc?.presenti ?? 0) : info.entrati}</dd>
             </div>
           </dl>
           <p className="stp-nota">
-            In ordine di cognome.{" "}
+            {conPersone && "Le persone in ordine di cognome. "}
+            {conClassi && "Le classi in ordine di scuola. "}
             {soloConfermati
               ? "Solo i posti confermati."
               : "Chi è in lista d'attesa è segnato: entra solo se ci sono posti."}{" "}
-            Del codice del biglietto ci sono solo gli ultimi 4 caratteri. Stampata il {giornoStampa} alle {oraStampa}:
-            chi si iscrive dopo non compare.
+            Dei codici ci sono solo gli ultimi 4 caratteri. Stampata il {giornoStampa} alle {oraStampa}: chi si
+            iscrive o prenota dopo non compare.
           </p>
         </header>
 
-        {righe.length === 0 ? (
+        {conPersone && <h2 className="stp-sezione-titolo">Persone ({righe.length})</h2>}
+        {!conPersone ? null : righe.length === 0 ? (
           <p className="stp-vuoto">Nessuna persona iscritta {art}.</p>
         ) : (
           <div className="stp-scorri">
@@ -384,11 +450,122 @@ export default async function StampaListaPage({
           </div>
         )}
 
+        {conClassi && (
+          <SezioneClassi
+            classi={classi}
+            disponibili={dati.classi.disponibili}
+            art={art}
+            nuovaPagina={conPersone && righe.length > 0}
+          />
+        )}
+
         <p className="stp-piede">
           {EVENT.organizzatore}. Documento interno con dati personali: non lasciarlo incustodito e distruggilo dopo
           l&apos;evento.
         </p>
       </article>
     </Cornice>
+  );
+}
+
+type Parte = "" | "persone" | "classi";
+
+/** Le classi della giornata: una riga per classe, con il docente, il telefono e il settore. */
+function SezioneClassi({
+  classi,
+  disponibili,
+  art,
+  nuovaPagina,
+}: {
+  classi: { c: RigaClasse; g: GiornataRigaClasse }[];
+  disponibili: boolean;
+  art: string;
+  nuovaPagina: boolean;
+}) {
+  const persone = classi.reduce((t, x) => t + x.c.posti, 0);
+  return (
+    <section className={`stp-sezione${nuovaPagina ? " stp-sezione-nuova-pagina" : ""}`} aria-labelledby="stp-classi">
+      <h2 id="stp-classi" className="stp-sezione-titolo">
+        Classi ({classi.length}
+        {classi.length > 0 ? `, ${persone} persone` : ""})
+      </h2>
+      <p className="stp-nota">
+        Ogni classe entra con un solo QR: segna quante persone entrano. Il docente di riferimento ha il telefono
+        accanto al nome.
+      </p>
+      {!disponibili ? (
+        <p className="stp-vuoto">Le prenotazioni per classe non sono nel database.</p>
+      ) : classi.length === 0 ? (
+        <p className="stp-vuoto">Nessuna classe prenotata {art}.</p>
+      ) : (
+        <div className="stp-scorri">
+          <table className="stp-tabella">
+            <thead>
+              <tr>
+                <th scope="col" style={{ width: 1 }}>
+                  <span className="sr-only">Entrata</span>
+                  <span aria-hidden="true">
+                    <i className="fas fa-check" />
+                  </span>
+                </th>
+                <th scope="col">N.</th>
+                <th scope="col">Classe e scuola</th>
+                <th scope="col">Docente e telefono</th>
+                <th scope="col" style={{ textAlign: "right" }}>
+                  Persone
+                </th>
+                <th scope="col">Settore</th>
+                <th scope="col">Fine codice</th>
+                <th scope="col">Stato</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classi.map(({ c, g }, i) => {
+                const entrata = g.presenti !== null;
+                return (
+                  <tr key={g.id} className={g.status === "lista_attesa" ? "stp-riga-attesa" : undefined}>
+                    <td>
+                      <span className="stp-casella" aria-label={entrata ? "Ingresso già registrato" : "Da spuntare"}>
+                        {entrata ? <i className="fas fa-check" aria-hidden="true" /> : null}
+                      </span>
+                    </td>
+                    <td className="stp-n">{i + 1}</td>
+                    <td className="stp-chi">
+                      <strong>{c.classe.trim()}</strong>
+                      <span className="stp-sotto">
+                        {c.istituto.trim()}
+                        {c.comune ? `, ${c.comune.trim()}` : ""}
+                      </span>
+                    </td>
+                    <td className="stp-min">
+                      {`${c.docente_cognome.trim()} ${c.docente_nome.trim()}`}
+                      <span className="stp-sotto stp-tel">{c.docente_telefono}</span>
+                    </td>
+                    <td className="stp-num">
+                      {c.posti}
+                      <span className="stp-sotto">
+                        {c.studenti}+{c.accompagnatori}
+                        {entrata ? `, entrati ${g.presenti}` : ""}
+                      </span>
+                    </td>
+                    <td>{g.settore ? <span className="stp-settore">{g.settore}</span> : <span className="stp-min">da assegnare</span>}</td>
+                    <td className="stp-cod">{codiceBreve(c.codice)}</td>
+                    <td>
+                      {g.status === "lista_attesa" ? (
+                        <span className="stp-attesa">
+                          Lista d&apos;attesa{g.posizione_attesa ? `, n. ${g.posizione_attesa}` : ""}
+                        </span>
+                      ) : (
+                        <span className="stp-min">Confermata</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
