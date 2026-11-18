@@ -87,8 +87,11 @@ le prenotazioni per classe (vedi sotto): la capienza a 3500 posti il 10
 dicembre e 400 l'11 (si alza soltanto), la quota delle scuole per giornata,
 le due tabelle delle classi e le funzioni che contano i posti di persone e
 classi insieme. Va eseguito una volta, a mano nello SQL editor, prima di
-pubblicare il codice delle classi. Si può rieseguire senza danni; in fondo
-c'è la query di controllo.
+pubblicare il codice delle classi. Si può rieseguire senza danni (la quota
+si imposta solo la prima volta, poi la decide il pannello). In fondo c'è la
+query di controllo: se `persone_in_attesa` non è 0, quelle persone si
+confermano dalla scheda Iscritti, che manda a ciascuna l'email "si è
+liberato un posto" (il file non le conferma da solo).
 
 Crea tre tabelle dedicate (`event_sessions`, `event_registrations`,
 `event_registration_sessions`), una RPC atomica `event_register` con controllo
@@ -175,7 +178,8 @@ minuti, alto perché una classe si iscrive dalla stessa rete della scuola e,
 il giorno dell'evento, la sala dallo stesso Wi-Fi) e l'honeypot. Chi non ha
 fatto l'accesso non cambia il consenso marketing di un'iscrizione esistente. Il limite in memoria vale per singola istanza: per un limite vero
 fra tutte le istanze serve una regola nel Vercel Firewall su
-`POST /api/eventi/registrations`.
+`POST /api/eventi/registrations` e `POST /api/eventi/classi` (una
+prenotazione di classe occupa fino a 40 posti con una richiesta sola).
 
 Il consenso marketing (opt-in separato, non preselezionato) viene salvato con
 timestamp e testo, e l'iscritto finisce anche in `newsletter_subscribers`
