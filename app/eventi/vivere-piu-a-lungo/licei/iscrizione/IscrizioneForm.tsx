@@ -202,7 +202,7 @@ export function IscrizioneForm({
             lineHeight: 1.65,
           }}
         >
-          <strong>Adesso.</strong> Imposta la password con il link che ti abbiamo mandato per email,
+          <strong>Adesso.</strong>{" "}Imposta la password con il link che ti abbiamo mandato per email,
           poi aspetta che il tuo docente referente confermi l&apos;iscrizione: te lo diciamo per
           email.
         </div>

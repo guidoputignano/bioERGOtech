@@ -233,7 +233,7 @@ export const GRUPPI: Gruppo[] = [
         titolo: "Pannello iscrizioni all'evento",
         href: EVENTO_ADMIN_PATH,
         accesso: "staff",
-        desc: "Chi si e iscritto alla giornata, il check-in e le esportazioni.",
+        desc: "Le iscrizioni del 10 e dell'11 dicembre: riepilogo, elenco con le azioni, export CSV, lista per la porta e check-in.",
         riservata: true,
       },
       {

@@ -465,7 +465,7 @@ export function SquadrePanel({
       {vista === "classifica" && classifica.length > 0 && (
         <div style={NOTA_ATTESA}>
           <strong>Il vincitore e le posizioni si leggono qui, ma non si assegnano.</strong> Le
-          colonne <code>vincitore</code> e <code>posizione</code> dei progetti esistono a
+          colonne <code>vincitore</code> e <code>posizione</code>{" "}dei progetti esistono a
           database e compaiono in questa classifica e nell&apos;export, ma non esiste ancora una
           rotta dello staff che le scriva: finché non c&apos;è, l&apos;esito va impostato dal
           database. Il resto della schermata funziona senza.

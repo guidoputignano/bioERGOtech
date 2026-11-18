@@ -141,7 +141,7 @@ export default function GitHubGuidePage() {
             <><strong>Tracks B and C</strong>: upload your code, or push it from VS Code. The Course Closing lesson has a video for each method.</>,
           ]} />
           <Note tone="warning">
-            Never upload your <code>.env</code> file or any API key. Anything in a public repository can be read by anyone. If a key was uploaded by mistake, delete it in your provider&apos;s dashboard and create a new one.
+            Never upload your <code>.env</code>{" "}file or any API key. Anything in a public repository can be read by anyone. If a key was uploaded by mistake, delete it in your provider&apos;s dashboard and create a new one.
           </Note>
           <div style={{ margin: "20px 0 0" }}>
             <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: SHADOW }}>

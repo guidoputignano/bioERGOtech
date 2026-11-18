@@ -1,262 +1,170 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CATEGORIE, SESSIONS, categoriaLabel } from "../content";
+/**
+ * Il pannello iscrizioni dell'evento, per lo staff.
+ *
+ * Quattro schede: Riepilogo (i numeri e gli allarmi), Iscritti (l'elenco con
+ * le azioni, l'export e la stampa), Ingresso (il check-in alla porta) e
+ * Comunicazioni (le email a tutti). La scheda aperta sta nell'indirizzo
+ * (?tab=), così un link porta dritto a quella giusta e il tasto indietro non
+ * perde il punto; per Iscritti ci stanno anche i filtri (non la ricerca, che
+ * può contenere un nome).
+ *
+ * Riepilogo e Iscritti restano montati dopo la prima visita, così tornarci
+ * non ricarica tutto. Ingresso si monta solo quando è aperta: usa la
+ * fotocamera, che non deve restare accesa in una scheda nascosta. La sua
+ * giornata di oggi arriva dal server (prop `oggi`).
+ */
 
-type Bridge = {
-  id: string;
-  is_waitlist: boolean;
-  stato_checkin: "registrato" | "presente" | "assente";
-  checkin_ts: string | null;
-  event_sessions: { slug: string; titolo: string } | null;
-};
+import { memo, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { EVENT } from "../content";
+import { Comunicazioni } from "./Comunicazioni";
+import { Ingresso } from "./Ingresso";
+import { PannelloIscritti } from "./PannelloIscritti";
+import { PannelloRiepilogo } from "./PannelloRiepilogo";
+import { STILE_PANNELLO } from "./PannelloStile";
+import { FILTRI_VUOTI, SCHEDE, type Filtri, type SchedaId } from "./PannelloComune";
 
-type Registration = {
-  id: string;
-  nome: string;
-  cognome: string;
-  email: string;
-  telefono: string | null;
-  categoria: string;
-  organizzazione: string | null;
-  codice_univoco: string;
-  consenso_marketing: boolean;
-  event_registration_sessions: Bridge[];
-};
+const NOME_EVENTO = EVENT.titolo.split(":")[0];
 
-type Seat = { slug: string; capienza_max: number; confermati: number; rimanenti: number };
+// Le schede nascoste non si ridisegnano a ogni lettera scritta nella ricerca.
+const Riepilogo = memo(PannelloRiepilogo);
+const Iscritti = memo(PannelloIscritti);
+const ComunicazioniFerma = memo(Comunicazioni);
+const CHIAVI_FILTRI = ["giornata", "stato", "categoria"] as const;
 
-const STATE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  presente: { bg: "#E1F5EE", color: "#0F6E56", label: "Presente" },
-  assente: { bg: "#FDECEF", color: "#C0344E", label: "Assente" },
-  registrato: { bg: "#EEF1F5", color: "#5A6B7B", label: "Registrato" },
-};
+export function AdminPanel({
+  schedaIniziale = "riepilogo",
+  filtriIniziali = FILTRI_VUOTI,
+  oggi = null,
+}: {
+  schedaIniziale?: SchedaId;
+  filtriIniziali?: Filtri;
+  /** La giornata dell'evento di oggi secondo il server, o null. */
+  oggi?: string | null;
+}) {
+  const [scheda, setScheda] = useState<SchedaId>(schedaIniziale);
+  const [visitate, setVisitate] = useState<ReadonlySet<SchedaId>>(() => new Set([schedaIniziale]));
+  const [filtri, setFiltri] = useState<Filtri>(filtriIniziali);
+  const linguette = useRef<Partial<Record<SchedaId, HTMLButtonElement | null>>>({});
+  const schedaPrecedente = useRef<SchedaId>(schedaIniziale);
 
-export function AdminPanel() {
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [seats, setSeats] = useState<Seat[]>([]);
-  const [q, setQ] = useState("");
-  const [session, setSession] = useState("");
-  const [categoria, setCategoria] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (session) params.set("session", session);
-    if (categoria) params.set("categoria", categoria);
-    const res = await fetch(`/api/eventi/admin/registrations?${params.toString()}`, { cache: "no-store" });
-    const data = await res.json();
-    setRegistrations(data.registrations ?? []);
-    setSeats(data.seats ?? []);
-    setLoading(false);
-  }, [q, session, categoria]);
-
-  useEffect(() => {
-    const t = setTimeout(load, 250);
-    return () => clearTimeout(t);
-  }, [load]);
-
-  const setStato = async (bridgeId: string, stato: string) => {
-    await fetch("/api/eventi/admin/checkin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ registration_session_id: bridgeId, stato }),
-    });
-    load();
-  };
-
-  // ── Scanner QR tramite fotocamera (BarcodeDetector dove disponibile) ──
-  const stopScan = useCallback(() => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    setScanning(false);
+  const apri = useCallback((id: SchedaId, focus = false) => {
+    setScheda(id);
+    setVisitate((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    if (focus) linguette.current[id]?.focus();
   }, []);
 
-  const startScan = async () => {
-    setScanError(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Detector = (window as any).BarcodeDetector;
-    if (!Detector) {
-      setScanError("Lo scanner non è supportato da questo browser. Cerca il codice manualmente.");
-      return;
+  // La scheda (e i filtri di Iscritti) nell'indirizzo, senza aggiungere voci
+  // alla cronologia. I filtri si toccano solo entrando o uscendo da Iscritti:
+  // le altre schede possono avere parametri loro.
+  const { giornata, stato, categoria } = filtri;
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", scheda);
+    const valori = { giornata, stato, categoria };
+    if (scheda === "iscritti") {
+      for (const k of CHIAVI_FILTRI) {
+        if (valori[k]) url.searchParams.set(k, valori[k]);
+        else url.searchParams.delete(k);
+      }
+      url.searchParams.delete("session");
+    } else if (schedaPrecedente.current === "iscritti") {
+      for (const k of CHIAVI_FILTRI) url.searchParams.delete(k);
     }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      streamRef.current = stream;
-      setScanning(true);
-      const detector = new Detector({ formats: ["qr_code"] });
-      const video = videoRef.current!;
-      video.srcObject = stream;
-      await video.play();
-      const tick = async () => {
-        if (!streamRef.current) return;
-        try {
-          const codes = await detector.detect(video);
-          if (codes.length > 0 && codes[0].rawValue) {
-            setQ(codes[0].rawValue.trim());
-            stopScan();
-            return;
-          }
-        } catch {
-          /* frame ignorato */
-        }
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    } catch {
-      setScanError("Impossibile accedere alla fotocamera.");
-      stopScan();
-    }
+    schedaPrecedente.current = scheda;
+    const nuovo = `${url.pathname}${url.search}${url.hash}`;
+    const attuale = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nuovo !== attuale) window.history.replaceState(window.history.state, "", nuovo);
+  }, [scheda, giornata, stato, categoria]);
+
+  // Tastiera sulle schede, come da pattern ARIA: frecce, Home e Fine.
+  const tasti = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = SCHEDE.findIndex((s) => s.id === scheda);
+    const n = SCHEDE.length;
+    let j = -1;
+    if (e.key === "ArrowRight") j = (i + 1) % n;
+    else if (e.key === "ArrowLeft") j = (i - 1 + n) % n;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = n - 1;
+    if (j < 0) return;
+    e.preventDefault();
+    apri(SCHEDE[j].id, true);
   };
 
-  useEffect(() => () => stopScan(), [stopScan]);
-
-  const seatBySlug = (slug: string) => seats.find((s) => s.slug === slug);
+  /** Dal riepilogo all'elenco già filtrato (per esempio: lista d'attesa del 10 dicembre). */
+  const apriIscritti = useCallback(
+    (f: Partial<Filtri>) => {
+      setFiltri({ ...FILTRI_VUOTI, ...f });
+      apri("iscritti");
+      window.scrollTo({ top: 0 });
+    },
+    [apri],
+  );
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Check-in evento</h1>
-        <a href="/api/eventi/admin/export" className="btn-outline">
-          <i className="fas fa-download mr-2" /> Export CSV
-        </a>
-      </div>
+    <div className="eva">
+      <style>{STILE_PANNELLO}</style>
 
-      {/* Conteggi live per sessione */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {SESSIONS.map((s) => {
-          const seat = seatBySlug(s.slug);
+      <header style={{ marginBottom: 18 }}>
+        <span className="eva-kicker">Area staff</span>
+        <h1 className="eva-h1">Iscrizioni evento</h1>
+        <p className="eva-intro">
+          {NOME_EVENTO}, {EVENT.dataLabel}, {EVENT.citta}
+        </p>
+      </header>
+
+      <div role="tablist" aria-label="Sezioni del pannello" className="eva-schede" onKeyDown={tasti}>
+        {SCHEDE.map((s) => {
+          const attiva = s.id === scheda;
           return (
-            <div key={s.slug} className="card-sm" style={{ padding: 20 }}>
-              <div className="text-sm font-semibold text-gray-800 mb-2">{s.titolo}</div>
-              <div className="flex gap-4">
-                <div>
-                  <div className="stat-number" style={{ fontSize: 28 }}>{seat?.confermati ?? 0}</div>
-                  <div className="stat-label">Iscritti</div>
-                </div>
-                <div>
-                  <div className="stat-number" style={{ fontSize: 28 }}>{seat?.rimanenti ?? s.capienza}</div>
-                  <div className="stat-label">Posti liberi</div>
-                </div>
-                <div>
-                  <div className="stat-number" style={{ fontSize: 28 }}>{seat?.capienza_max ?? s.capienza}</div>
-                  <div className="stat-label">Capienza</div>
-                </div>
-              </div>
-            </div>
+            <button
+              key={s.id}
+              ref={(el) => {
+                linguette.current[s.id] = el;
+              }}
+              type="button"
+              role="tab"
+              id={`eva-tab-${s.id}`}
+              aria-selected={attiva}
+              aria-controls={`eva-pannello-${s.id}`}
+              tabIndex={attiva ? 0 : -1}
+              className="eva-scheda"
+              onClick={() => apri(s.id)}
+            >
+              <i className={`fas ${s.icona}`} aria-hidden="true" />{" "}
+              {s.label}
+            </button>
           );
         })}
       </div>
 
-      {/* Filtri + scanner */}
-      <div className="card mb-6" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-        <input
-          placeholder="Cerca per nome, email o codice…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          style={{ flex: "1 1 240px", height: 40, borderRadius: 8, border: "1px solid var(--border-color)", padding: "0 12px", fontSize: 14 }}
-        />
-        <select value={session} onChange={(e) => setSession(e.target.value)} style={{ height: 40, borderRadius: 8, border: "1px solid var(--border-color)", padding: "0 10px", fontSize: 14 }}>
-          <option value="">Tutte le sessioni</option>
-          {SESSIONS.map((s) => (
-            <option key={s.slug} value={s.slug}>{s.titolo}</option>
-          ))}
-        </select>
-        <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={{ height: 40, borderRadius: 8, border: "1px solid var(--border-color)", padding: "0 10px", fontSize: 14 }}>
-          <option value="">Tutte le categorie</option>
-          {CATEGORIE.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
-          ))}
-        </select>
-        <button type="button" onClick={scanning ? stopScan : startScan} className="btn-primary" style={{ padding: "9px 16px" }}>
-          <i className="fas fa-qrcode mr-2" /> {scanning ? "Ferma scanner" : "Scansiona QR"}
-        </button>
+      <div style={{ marginTop: 20 }}>
+        {SCHEDE.map((s) => {
+          const attiva = s.id === scheda;
+          let contenuto: ReactNode = null;
+          if (s.id === "riepilogo" && visitate.has(s.id)) {
+            contenuto = <Riepilogo attivo={attiva} onApriIscritti={apriIscritti} />;
+          } else if (s.id === "iscritti" && visitate.has(s.id)) {
+            contenuto = <Iscritti attivo={attiva} filtri={filtri} onFiltri={setFiltri} />;
+          } else if (s.id === "ingresso" && attiva) {
+            contenuto = <Ingresso compatto oggi={oggi} />;
+          } else if (s.id === "comunicazioni" && visitate.has(s.id)) {
+            contenuto = <ComunicazioniFerma />;
+          }
+          return (
+            <section
+              key={s.id}
+              role="tabpanel"
+              id={`eva-pannello-${s.id}`}
+              aria-labelledby={`eva-tab-${s.id}`}
+              hidden={!attiva}
+            >
+              {contenuto}
+            </section>
+          );
+        })}
       </div>
-
-      {scanError && <p style={{ color: "#C0344E", fontSize: 14, marginBottom: 12 }}>{scanError}</p>}
-      {scanning && (
-        <div className="card mb-6" style={{ textAlign: "center" }}>
-          <video ref={videoRef} style={{ width: "100%", maxWidth: 380, borderRadius: 12, margin: "0 auto" }} muted playsInline />
-          <p style={{ fontSize: 13, color: "var(--text-light)", marginTop: 8 }}>Inquadra il QR del biglietto.</p>
-        </div>
-      )}
-
-      {/* Lista iscritti */}
-      {loading ? (
-        <p className="text-gray-600">Caricamento…</p>
-      ) : registrations.length === 0 ? (
-        <p className="text-gray-600">Nessun iscritto trovato.</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {registrations.map((r) => (
-            <div key={r.id} className="card">
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-800">
-                    {r.nome} {r.cognome}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {r.email}
-                    {r.telefono ? ` . ${r.telefono}` : ""} . {categoriaLabel(r.categoria)}
-                    {r.organizzazione ? ` . ${r.organizzazione}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {r.consenso_marketing && (
-                    <span className="badge" style={{ background: "#E1F5EE", color: "#0F6E56", fontSize: "0.65rem" }}>
-                      Marketing OK
-                    </span>
-                  )}
-                  <span style={{ fontFamily: "monospace", fontSize: 13, color: "var(--text-light)" }}>{r.codice_univoco}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {r.event_registration_sessions.map((b) => {
-                  const st = STATE_STYLE[b.stato_checkin];
-                  return (
-                    <div
-                      key={b.id}
-                      className="flex flex-wrap items-center justify-between gap-2"
-                      style={{ background: "var(--bg-light)", borderRadius: 10, padding: "10px 14px" }}
-                    >
-                      <div className="text-sm text-gray-800">
-                        {b.event_sessions?.titolo}
-                        {b.is_waitlist && <span style={{ color: "#B7791F", fontWeight: 600 }}> . lista d&apos;attesa</span>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="badge" style={{ background: st.bg, color: st.color, fontSize: "0.65rem" }}>
-                          {st.label}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setStato(b.id, "presente")}
-                          style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #0F6E56", background: b.stato_checkin === "presente" ? "#0F6E56" : "#fff", color: b.stato_checkin === "presente" ? "#fff" : "#0F6E56", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                        >
-                          Presente
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setStato(b.id, "assente")}
-                          style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #C0344E", background: b.stato_checkin === "assente" ? "#C0344E" : "#fff", color: b.stato_checkin === "assente" ? "#fff" : "#C0344E", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                        >
-                          Assente
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+
+/**
+ * The event pages have their own call to action (registering for the event):
+ * a second popup on top of it would only get in the way, and on the phone it
+ * would cover the registration bar. There the popup never opens, and the
+ * "already shown" flag is not spent, so it can still appear elsewhere later.
+ */
+const suPagineEvento = (path: string) => path === "/eventi" || path.startsWith("/eventi/");
 
 export default function NewsletterPopup() {
+  const pathname = usePathname() ?? "";
+  const nascosto = suPagineEvento(pathname);
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -11,6 +22,7 @@ export default function NewsletterPopup() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (nascosto) return;
     const shown = localStorage.getItem("newsletter_popup_shown");
 
     if (!shown) {
@@ -21,7 +33,7 @@ export default function NewsletterPopup() {
 
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [nascosto]);
 
   const closePopup = () => {
     setIsOpen(false);
@@ -74,7 +86,7 @@ export default function NewsletterPopup() {
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || nascosto) return null;
 
   return (
     <div

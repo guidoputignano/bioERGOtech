@@ -41,14 +41,46 @@ const PERCORSI_SENZA_ADS = [
   "/courses",
   "/eventi/vivere-piu-a-lungo/licei",
   "/eventi/vivere-piu-a-lungo/universita",
+  // Il pannello e l'ingresso dell'evento: pagine dello staff e dei volontari.
+  "/eventi/vivere-piu-a-lungo/admin",
+  // Il biglietto online: pagina personale, spesso di uno studente.
+  "/eventi/vivere-piu-a-lungo/biglietto",
   "/member-portal",
   "/auth",
 ];
 
+/**
+ * Pagine in cui Google Analytics non registra nulla. L'indirizzo del
+ * biglietto online contiene il codice, che fa da chiave per gestire
+ * l'iscrizione: non deve finire nei report. Due difese: su queste pagine
+ * Analytics non si configura (loadGoogleTags), e se è già stato configurato
+ * su un'altra pagina della stessa visita (per esempio il consenso dato sulla
+ * pagina dell'evento, poi Indietro fino al biglietto) il flag
+ * ga-disable-<ID>, che gtag.js legge prima di ogni invio, lo ferma. Il flag
+ * segue l'indirizzo: vedi aggiornaBloccoGA.
+ */
+const PERCORSI_SENZA_ANALYTICS = ["/eventi/vivere-piu-a-lungo/biglietto"];
+
+const inPercorso = (elenco: readonly string[]) => {
+  if (typeof window === "undefined") return true;
+  const path = window.location.pathname;
+  return elenco.some((p) => path === p || path.startsWith(p + "/"));
+};
+
+/** Accende o spegne il blocco di Analytics in base all'indirizzo attuale. */
+function aggiornaBloccoGA() {
+  if (typeof window === "undefined") return;
+  (window as unknown as Record<string, unknown>)[`ga-disable-${GA_ID}`] = inPercorso(PERCORSI_SENZA_ANALYTICS);
+}
+
 function adsConsentiti(): boolean {
   if (typeof window === "undefined") return false;
-  const path = window.location.pathname;
-  return !PERCORSI_SENZA_ADS.some((p) => path === p || path.startsWith(p + "/"));
+  return !inPercorso(PERCORSI_SENZA_ADS);
+}
+
+function analyticsConsentiti(): boolean {
+  if (typeof window === "undefined") return false;
+  return !inPercorso(PERCORSI_SENZA_ANALYTICS);
 }
 
 /**
@@ -64,10 +96,11 @@ function adsConsentiti(): boolean {
 function loadGoogleTags(prefs: { analytics: boolean; marketing: boolean }) {
   if (typeof window === "undefined") return;
   const conAds = prefs.marketing && adsConsentiti();
-  if (!prefs.analytics && !conAds) return;
+  const conAnalytics = prefs.analytics && analyticsConsentiti();
+  if (!conAnalytics && !conAds) return;
 
   const configura = () => {
-    if (prefs.analytics) window.gtag?.("config", GA_ID, { anonymize_ip: true });
+    if (conAnalytics) window.gtag?.("config", GA_ID, { anonymize_ip: true });
     if (conAds) window.gtag?.("config", ADS_ID);
   };
 
@@ -180,6 +213,20 @@ export default function CookieBanner() {
     marketing: false,
   });
 
+  // Il blocco di Analytics sulle pagine del biglietto. Va prima dell'effetto
+  // del consenso: il suo ascoltatore di popstate si registra prima che gtag.js
+  // possa caricarsi, quindi con Indietro e Avanti il flag è già giusto quando
+  // gtag registra il cambio di pagina.
+  useEffect(() => {
+    aggiornaBloccoGA();
+    window.addEventListener("popstate", aggiornaBloccoGA);
+    return () => window.removeEventListener("popstate", aggiornaBloccoGA);
+  }, []);
+  // Dopo ogni navigazione con un link (pushState), il flag segue la pagina nuova.
+  useEffect(() => {
+    aggiornaBloccoGA();
+  }, [pathname]);
+
   useEffect(() => {
     const stored = getStoredPreferences();
     if (!stored) {
@@ -231,6 +278,8 @@ export default function CookieBanner() {
   return (
     <div
       className="no-print"
+      // Lo cerca la barra "Iscriviti gratis" della pagina evento, per non coprirlo.
+      data-cookie-banner=""
       style={{
         position: "fixed",
         bottom: 24,

@@ -246,7 +246,7 @@ export default function BuildWithUs() {
         <div className="container mx-auto px-6">
           <h2 className="section-title block">Ready to Build?</h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-700 mb-8">
-            Email us at <a href="mailto:build@bioergotech.org" className="font-semibold" style={{ color: "var(--primary)" }}>build@bioergotech.org</a> with your background, the problem you&apos;re solving, your current stage, and why you want to build this breakthrough. We review every submission personally.
+            Email us at <a href="mailto:build@bioergotech.org" className="font-semibold" style={{ color: "var(--primary)" }}>build@bioergotech.org</a>{" "}with your background, the problem you&apos;re solving, your current stage, and why you want to build this breakthrough. We review every submission personally.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <a href="mailto:build@bioergotech.org" className="btn-primary">Apply Now</a>
