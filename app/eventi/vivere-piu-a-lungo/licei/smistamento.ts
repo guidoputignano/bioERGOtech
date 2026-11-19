@@ -203,12 +203,13 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
   },
   {
     id: "talk_oggi",
-    // Deciso il 19 novembre, alle 7: parte da solo alle 13 con il cron
-    // /api/cron/licei-talk-oggi (o prima, con "Esegui ora i passi dovuti" dal
-    // pannello, dentro la finestra). Fino alle 14:30: dopo non serve più.
+    // Deciso il 19 novembre, alle 7: parte con "Esegui ora i passi dovuti"
+    // dal pannello, dentro la finestra, o da solo alle 14 con il cron
+    // /api/cron/licei-talk-oggi. Fino alle 14:55: dopo non serve più, e alle
+    // 15 il passo stesso non manda niente.
     da: "2026-11-19T11:00:00+01:00",
-    fino: "2026-11-19T14:30:00+01:00",
-    quando: "Giovedì 19 novembre, ore 13",
+    fino: "2026-11-19T14:55:00+01:00",
+    quando: "Giovedì 19 novembre, entro le 14",
     titolo: "Talk di oggi: promemoria a studenti e iscritti",
     descrizione:
       "Agli studenti dei licei e agli universitari che non sono ancora iscritti al talk delle 15, l'invito a iscriversi; a chi è iscritto, il promemoria con il link alla pagina del talk. Una email per persona.",
