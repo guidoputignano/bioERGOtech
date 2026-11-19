@@ -4,7 +4,7 @@ import { liceiAdminClient } from "@/lib/eventi/licei-server";
 import { eseguiCalendario } from "@/lib/eventi/licei-commissione-auto";
 
 /**
- * Il cron del promemoria del giorno del talk, ogni giorno alle 10 UTC (le 11
+ * Il cron del promemoria del giorno del talk, ogni giorno alle 12 UTC (le 13
  * in Italia d'inverno). Esegue solo il passo `talk_oggi` del calendario dei
  * licei: fuori dalla sua finestra (il 19 novembre, dalle 11 alle 14:30) non
  * fa niente, e il passo si fa una volta sola. Il giro del mattino
