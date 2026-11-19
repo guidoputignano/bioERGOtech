@@ -1115,7 +1115,7 @@ export function promemoriaTalkNonIscritti(t: Talk, percorso: "licei" | "universi
       percorso === "licei"
         ? t.invitoStudenti ?? "È pensato per le squadre del percorso: ti aspettiamo."
         : t.sottotitolo,
-      "Ti scriviamo perché la tua iscrizione al talk non risulta ancora. Bastano pochi secondi, anche all'ultimo momento: è un'ora che serve davvero al tuo progetto.",
+      "Ti scriviamo perché la tua iscrizione al talk non risulta ancora. Iscriversi richiede un attimo e si può fare anche all'ultimo momento: è un'ora che serve davvero al tuo progetto.",
       "Iscriviti dalla pagina del talk con il tuo account del percorso: subito dopo trovi il link per collegarti.",
       "Se hai dubbi, rispondi a questa email.",
     ],
@@ -1133,7 +1133,7 @@ export function promemoriaTalkIscritti(t: Talk): AvvisoTalk {
     paragrafi: [
       `Ti ricordiamo il talk di ${oggiTalk(t)}: ${conChi(t)}. La tua iscrizione è confermata.`,
       `Il link per collegarti è nella pagina del talk: entra con il tuo account qualche minuto prima${ora ? ` delle ${ora}` : ""}.`,
-      "Se conosci qualcuno a cui può servire, può ancora iscriversi dalla stessa pagina, anche all'ultimo momento.",
+      "Se conosci qualcuno a cui può servire, condividi la pagina: ci si può ancora iscrivere, anche all'ultimo momento.",
       "Ti aspettiamo.",
       "Se hai dubbi, rispondi a questa email.",
     ],
@@ -1151,7 +1151,7 @@ export function promemoriaTalkIscrittiDocenti(t: Talk): AvvisoTalk {
     paragrafi: [
       `Le ricordiamo il talk di ${oggiTalk(t)}: ${conChi(t)}. La sua iscrizione è confermata.`,
       `Il link per collegarsi è nella pagina del talk: basta entrare con il proprio account qualche minuto prima${ora ? ` delle ${ora}` : ""}.`,
-      "Se può, lo ricordi anche alle sue squadre: gli studenti possono iscriversi dalla stessa pagina, anche all'ultimo momento.",
+      "Se può, lo ricordi anche alle sue squadre: chi ne fa parte può iscriversi dalla stessa pagina, anche all'ultimo momento.",
       "La aspettiamo.",
       "Per qualsiasi dubbio può rispondere a questa email.",
     ],

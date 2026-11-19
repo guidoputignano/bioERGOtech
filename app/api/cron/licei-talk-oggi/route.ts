@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const risultato = await eseguiCalendario(db, new Resend(process.env.RESEND_API_KEY), new Date(), ["talk_oggi"]);
+    if (risultato.occupato) {
+      console.warn("Licei talk di oggi: un altro giro del calendario è in corso, passo non eseguito. Dal pannello: Esegui ora i passi dovuti, entro le 14:30.");
+    }
     for (const e of risultato.esiti) {
       if (e.stato === "eseguito" || e.stato === "da_rifare") console.log(`Licei talk di oggi: ${e.id}: ${e.stato}: ${e.dettagli.join(" | ")}`);
     }
