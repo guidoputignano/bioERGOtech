@@ -268,10 +268,14 @@ export const RELATORI: Relatore[] = [
   { id: "abbagnale", nome: "Agostino Abbagnale", ruolo: "Campione olimpico di canottaggio", img: `${SPEAKER_IMG}/agostino-abbagnale.webp` },
   // Ruolo ripreso dalla sua scheda giocatrice sul sito del BSL San Lazzaro.
   { id: "botticelli", nome: "Olivia Botticelli", ruolo: "Cestista, cresciuta nel vivaio del BSL San Lazzaro", img: `${SPEAKER_IMG}/olivia-botticelli.webp` },
-  // Andrea Mandelli non riesce più a partecipare: il panel 2 resta con
-  // Simona Loizzo. La scheda resta qui, nascosta, nel caso torni.
+  // Andrea Mandelli non riesce più a partecipare: il panel 2 è con Simona
+  // Loizzo e Francesco Settembrini. La scheda resta qui, nascosta, nel caso torni.
   { id: "mandelli", nome: "Andrea Mandelli", ruolo: "Presidente FOFI, Ordine dei Farmacisti", img: `${SPEAKER_IMG}/andrea-mandelli.webp`, nascosto: true },
   { id: "loizzo", nome: "On. Simona Loizzo", ruolo: "Camera dei Deputati", img: `${SPEAKER_IMG}/simona-loizzo.webp` },
+  // Aggiunto il 19 novembre, nel panel 2 con Simona Loizzo. Ruolo confermato
+  // dall'elezione dell'Ordine di ottobre 2024; foto inviata dagli
+  // organizzatori, scontornata sul fondo grigio come gli altri ritratti.
+  { id: "settembrini", nome: "Francesco Settembrini", ruolo: "Presidente Ordine dei Farmacisti di Taranto", img: `${SPEAKER_IMG}/francesco-settembrini.webp` },
   { id: "montervino", nome: "Francesco Montervino", ruolo: "Ex capitano del Napoli", img: `${SPEAKER_IMG}/francesco-montervino.webp` },
   { id: "siciliano", nome: "Bruno Siciliano", ruolo: "Robotica, Università Federico II", img: `${SPEAKER_IMG}/bruno-siciliano.webp` },
   { id: "tari", nome: "Mariangela Tarì", ruolo: "Scrittrice, presidente de La casa di Sofia", img: `${SPEAKER_IMG}/mariangela-tari.webp` },
@@ -346,7 +350,7 @@ export const PROGRAMMA_GIORNO1: ProgrammaVoce[] = [
     n: 2,
     titolo: "Chi costruisce la salute di domani",
     desc: "Chi custodisce i dati sanitari, chi scrive le regole e come sta cambiando il lavoro di chi sta accanto al paziente. Lo sguardo del legislatore su ciò che serve perché innovazione e tutela della persona procedano insieme.",
-    relatori: ["loizzo"],
+    relatori: ["loizzo", "settembrini"],
   },
   {
     tipo: "ragazzi",
