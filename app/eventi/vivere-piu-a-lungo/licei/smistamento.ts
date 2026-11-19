@@ -151,6 +151,7 @@ export type IdPasso =
   | "aggiornamento"
   | "invito_mentor"
   | "avviso_talk"
+  | "talk_oggi"
   | "invito_mentor_promemoria"
   | "consegna_tre_giorni"
   | "giudici_temi"
@@ -199,6 +200,18 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
     titolo: "Talk del 19 novembre: avviso a docenti e studenti",
     descrizione:
       "Perché è importante partecipare (come presentare il progetto e come verrà valutato) e come iscriversi, a ogni docente e a ogni studente iscritto. Sono le stesse email dei due avvisi sul talk nella scheda dei licei: se le hai già mandate da lì, non partono di nuovo.",
+  },
+  {
+    id: "talk_oggi",
+    // Deciso il 19 novembre, alle 7: parte da solo alle 11 con il cron
+    // /api/cron/licei-talk-oggi (o con "Esegui ora i passi dovuti" dal
+    // pannello, dentro la finestra). Fino alle 14:30: dopo non serve più.
+    da: "2026-11-19T11:00:00+01:00",
+    fino: "2026-11-19T14:30:00+01:00",
+    quando: "Giovedì 19 novembre, ore 11",
+    titolo: "Talk di oggi: promemoria a studenti e iscritti",
+    descrizione:
+      "Agli studenti dei licei e agli universitari che non sono ancora iscritti al talk delle 15, l'invito a iscriversi; a chi è iscritto, il promemoria con il link alla pagina del talk. Una email per persona.",
   },
   {
     id: "invito_mentor_promemoria",

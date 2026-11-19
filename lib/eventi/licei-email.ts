@@ -1048,7 +1048,14 @@ export function avvisoSquadreEmailHtml(input: AvvisoSquadreEmailInput): string {
  * pannello. `paragrafi`: [quando e chi, perche esserci (in evidenza), che
  * cosa chiediamo, come iscriversi (poi il bottone), i dubbi].
  */
-export type AvvisoTalk = { slug: string; oggetto: string; paragrafi: string[]; url: string };
+export type AvvisoTalk = {
+  slug: string;
+  oggetto: string;
+  paragrafi: string[];
+  url: string;
+  /** Il testo del bottone, se non è quello dell'avviso ("Iscriviti al talk", "La pagina del talk"). */
+  pulsante?: string;
+};
 
 const giornoTalk = (t: Talk) => t.dataLabel.replace(/\s+\d{4}$/, "").toLowerCase(); // "giovedì 19 novembre"
 const quandoTalk = (t: Talk) => {
@@ -1086,6 +1093,73 @@ export function avvisoTalkStudenti(t: Talk): AvvisoTalk {
   };
 }
 
+/* ── Il giorno del talk: promemoria ───────────────────────────────────── */
+
+/** "oggi, giovedì 19 novembre, dalle 15:00 alle 16:00, online". */
+const oggiTalk = (t: Talk) => `oggi, ${giornoTalk(t)}, ${t.orarioLabel}, ${luogoTalk(t).toLowerCase()}`;
+const conChi = (t: Talk) => `«${t.titolo}» con ${t.relatore.nome}, ${t.relatore.ruolo}`;
+const orarioInizio = (t: Talk) => t.orarioLabel.match(/\d{1,2}:\d{2}/)?.[0] ?? "";
+
+/**
+ * Il giorno del talk, a chi studia nel percorso e non si è ancora iscritto.
+ * `percorso`: ai licei il talk serve alla consegna del 25 novembre; agli
+ * universitari, che hanno le loro scadenze, si dice solo a che cosa serve.
+ */
+export function promemoriaTalkNonIscritti(t: Talk, percorso: "licei" | "universita"): AvvisoTalk {
+  const ora = orarioInizio(t);
+  return {
+    slug: t.slug,
+    oggetto: `Oggi${ora ? ` alle ${ora.replace(":00", "")}` : ""}: il talk con ${t.relatore.nome}, puoi ancora iscriverti`,
+    paragrafi: [
+      `${oggiTalk(t).charAt(0).toUpperCase()}${oggiTalk(t).slice(1)}, c'è il talk ${conChi(t)}.`,
+      percorso === "licei"
+        ? t.invitoStudenti ?? "È pensato per le squadre del percorso: ti aspettiamo."
+        : t.sottotitolo,
+      "Ti scriviamo perché la tua iscrizione al talk non risulta ancora. Bastano pochi secondi, anche all'ultimo momento: è un'ora che serve davvero al tuo progetto.",
+      "Iscriviti dalla pagina del talk con il tuo account del percorso: subito dopo trovi il link per collegarti.",
+      "Se hai dubbi, rispondi a questa email.",
+    ],
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+    pulsante: "Iscriviti al talk",
+  };
+}
+
+/** Il giorno del talk, a chi è iscritto (studenti, universitari e ospiti). */
+export function promemoriaTalkIscritti(t: Talk): AvvisoTalk {
+  const ora = orarioInizio(t);
+  return {
+    slug: t.slug,
+    oggetto: `Ci vediamo oggi${ora ? ` alle ${ora.replace(":00", "")}` : ""}: il talk con ${t.relatore.nome}`,
+    paragrafi: [
+      `Ti ricordiamo il talk di ${oggiTalk(t)}: ${conChi(t)}. La tua iscrizione è confermata.`,
+      `Il link per collegarti è nella pagina del talk: entra con il tuo account qualche minuto prima${ora ? ` delle ${ora}` : ""}.`,
+      "Se conosci qualcuno a cui può servire, può ancora iscriversi dalla stessa pagina, anche all'ultimo momento.",
+      "Ti aspettiamo.",
+      "Se hai dubbi, rispondi a questa email.",
+    ],
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+    pulsante: "Vai alla pagina del talk",
+  };
+}
+
+/** Il giorno del talk, ai docenti iscritti. */
+export function promemoriaTalkIscrittiDocenti(t: Talk): AvvisoTalk {
+  const ora = orarioInizio(t);
+  return {
+    slug: t.slug,
+    oggetto: `Oggi${ora ? ` alle ${ora.replace(":00", "")}` : ""}: il talk con ${t.relatore.nome}`,
+    paragrafi: [
+      `Le ricordiamo il talk di ${oggiTalk(t)}: ${conChi(t)}. La sua iscrizione è confermata.`,
+      `Il link per collegarsi è nella pagina del talk: basta entrare con il proprio account qualche minuto prima${ora ? ` delle ${ora}` : ""}.`,
+      "Se può, lo ricordi anche alle sue squadre: gli studenti possono iscriversi dalla stessa pagina, anche all'ultimo momento.",
+      "La aspettiamo.",
+      "Per qualsiasi dubbio può rispondere a questa email.",
+    ],
+    url: `${SITE_URL}${talkPath(t.slug)}`,
+    pulsante: "La pagina del talk",
+  };
+}
+
 /**
  * Email una tantum sul prossimo talk, ai docenti (referenti delle adesioni
  * confermate e docenti del progetto) o agli studenti iscritti. Mai il link
@@ -1110,7 +1184,7 @@ export function avvisoTalkEmailHtml(a: AvvisoTalk, nome: string, chi: "docenti" 
       ${p(esc(resto[0]))}
       ${p(esc(resto[1]), "0 0 16px")}
       <div style="margin:0 0 24px;">
-        <a href="${a.url}" style="display:inline-block;background:#00C896;color:#0A1628;font-weight:700;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:8px;">${chi === "studenti" ? "Iscriviti al talk" : "La pagina del talk"}</a>
+        <a href="${a.url}" style="display:inline-block;background:#00C896;color:#0A1628;font-weight:700;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:8px;">${esc(a.pulsante ?? (chi === "studenti" ? "Iscriviti al talk" : "La pagina del talk"))}</a>
       </div>
       ${resto.slice(2).map((x) => p(esc(x))).join("")}
       ${p(firma.join("<br />"), "0 0 8px")}

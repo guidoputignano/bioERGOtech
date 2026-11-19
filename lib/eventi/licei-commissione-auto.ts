@@ -56,7 +56,15 @@ import {
 import * as E from "@/lib/eventi/licei-commissione-email";
 import { linkDiventaGiudice, mentorDaInvitare } from "@/lib/eventi/licei-mentor-giudici";
 import { accessiGiudici, promemoriaAccessoGiudici } from "@/lib/eventi/licei-commissari";
-import { avvisoTalkDocenti, avvisoTalkEmailHtml, avvisoTalkStudenti } from "@/lib/eventi/licei-email";
+import {
+  avvisoTalkDocenti,
+  avvisoTalkEmailHtml,
+  avvisoTalkStudenti,
+  promemoriaTalkIscritti,
+  promemoriaTalkIscrittiDocenti,
+  promemoriaTalkNonIscritti,
+} from "@/lib/eventi/licei-email";
+import { destinatariPromemoriaTalk } from "@/lib/eventi/talk-promemoria";
 import { TALKS, talkConcluso } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -646,6 +654,35 @@ async function passoAvvisoTalk(db: Db, resend: Invio, adesso: Date): Promise<Ris
   return { fatto: d.ok && s.ok, dettagli: [d.testo, s.testo] };
 }
 
+/**
+ * Il giorno del talk: a chi studia nel percorso (licei e universita) e non
+ * si e ancora iscritto, l'invito a farlo; a chi e iscritto, il promemoria
+ * con il link alla pagina (mai il link della riunione). Una email per
+ * persona, una volta: ogni gruppo ha la sua prenotazione.
+ */
+async function passoTalkOggi(db: Db, resend: Invio, adesso: Date): Promise<RisultatoPasso> {
+  const t = TALKS.find((x) => x.slug === TALK_AVVISO);
+  if (!t || talkConcluso(t, adesso)) return { fatto: true, dettagli: ["Il talk è già passato."] };
+  if (adesso.getTime() >= Date.parse(t.inizio)) return { fatto: true, dettagli: ["Il talk è già iniziato."] };
+  const dest = await destinatariPromemoriaTalk(db, t);
+  if (!dest.presente) return { fatto: false, dettagli: ["Manca la tabella delle iscrizioni ai talk (migrazione 20261216000000)."] };
+
+  const licei = promemoriaTalkNonIscritti(t, "licei");
+  const universita = promemoriaTalkNonIscritti(t, "universita");
+  const iscritti = promemoriaTalkIscritti(t);
+  const docenti = promemoriaTalkIscrittiDocenti(t);
+  const base = `auto_talk_oggi_${t.slug}`;
+  const a = await invia(db, resend, `${base}_licei`, "Studenti dei licei non iscritti", dest.nonIscrittiLicei,
+    licei.oggetto, (x) => avvisoTalkEmailHtml(licei, x.nome, "studenti"));
+  const u = await invia(db, resend, `${base}_universita`, "Universitari non iscritti", dest.nonIscrittiUniversita,
+    universita.oggetto, (x) => avvisoTalkEmailHtml(universita, x.nome, "studenti"));
+  const i = await invia(db, resend, `${base}_iscritti`, "Iscritti", dest.iscritti,
+    iscritti.oggetto, (x) => avvisoTalkEmailHtml(iscritti, x.nome, "studenti"));
+  const d = await invia(db, resend, `${base}_iscritti_docenti`, "Docenti iscritti", dest.iscrittiDocenti,
+    docenti.oggetto, (x) => avvisoTalkEmailHtml(docenti, x.nome, "docenti"));
+  return { fatto: a.ok && u.ok && i.ok && d.ok, dettagli: [a.testo, u.testo, i.testo, d.testo] };
+}
+
 /** Un giorno: chi ha ricevuto un'email di accesso da meno di cosi, oggi non ne riceve un'altra. */
 const GIORNO_MS = 24 * 60 * 60 * 1000;
 
@@ -964,6 +1001,7 @@ const ESEGUI: Record<IdPasso, (db: Db, resend: Invio, adesso: Date) => Promise<R
   aggiornamento: passoAggiornamento,
   invito_mentor: (db, r) => passoInvitoMentor(db, r, false),
   avviso_talk: passoAvvisoTalk,
+  talk_oggi: passoTalkOggi,
   invito_mentor_promemoria: (db, r) => passoInvitoMentor(db, r, true),
   consegna_tre_giorni: (db, r) => passoConsegna(db, r, false),
   giudici_temi: passoGiudiciTemi,
@@ -1037,6 +1075,12 @@ export async function eseguiCalendario(
   db: Db,
   resend: Invio,
   adesso: Date = new Date(),
+  /**
+   * Solo questi passi, e niente promemoria di accesso ne manutenzione: per
+   * un cron in piu nella giornata (`/api/cron/licei-talk-oggi`), che non deve
+   * rifare il giro del mattino.
+   */
+  soli?: readonly IdPasso[],
 ): Promise<{ occupato: boolean; esiti: EsitoPasso[] }> {
   const t = adesso.getTime();
   const marca = adesso.toISOString();
@@ -1049,6 +1093,7 @@ export async function eseguiCalendario(
     const smistamentoGiaFatto = fatto.has(chiavePasso("smistamento"));
 
     for (const p of PASSI_AUTOMATICI) {
+      if (soli && !soli.includes(p.id)) continue;
       if (fatto.has(chiavePasso(p.id))) {
         esiti.push({ id: p.id, stato: "gia_fatto", dettagli: [] });
         continue;
@@ -1076,7 +1121,7 @@ export async function eseguiCalendario(
 
     // Chi e in Commissione da un giorno e non e ancora entrato nell'area: un
     // promemoria con le istruzioni di accesso, una volta per giudice.
-    if (t >= Date.parse(PASSI_AUTOMATICI[0].da) && t <= Date.parse(SCADENZA_GIUDICI)) {
+    if (!soli && t >= Date.parse(PASSI_AUTOMATICI[0].da) && t <= Date.parse(SCADENZA_GIUDICI)) {
       try {
         const r = await promemoriaAccessoGiudici(db, adesso);
         esiti.push({
@@ -1091,7 +1136,7 @@ export async function eseguiCalendario(
       }
     }
 
-    if (smistamentoGiaFatto && t <= Date.parse(SCADENZA_GIUDICI)) {
+    if (!soli && smistamentoGiaFatto && t <= Date.parse(SCADENZA_GIUDICI)) {
       try {
         const q = await leggiQuadro(db);
         const nuove = await assicuraSmistamento(db, q, "smistamento");
