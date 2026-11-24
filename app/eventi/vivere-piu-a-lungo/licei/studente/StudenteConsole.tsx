@@ -565,6 +565,24 @@ export function StudenteConsole({
                     </div>
                   </div>
                 ))}
+                {/* Il link consegnato con il progetto: la Commissione lo vede,
+                    e la squadra deve poterlo ritrovare qui. */}
+                {progetto.link_materiali && (
+                  <div style={{ padding: "12px 0", borderTop: "1px solid var(--border-color)" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-light)", marginBottom: 4 }}>
+                      Link ai materiali
+                    </div>
+                    <a
+                      href={progetto.link_materiali}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 13.5, color: "var(--primary-dark)", fontWeight: 600, overflowWrap: "anywhere" }}
+                    >
+                      {progetto.link_materiali}
+                      <span className="sr-only"> (si apre in una nuova scheda)</span>
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
