@@ -19,10 +19,6 @@
     {
       "path": "/api/cron/evento",
       "schedule": "30 7 * * *"
-    },
-    {
-      "path": "/api/cron/licei-talk-oggi",
-      "schedule": "0 13 * * *"
     }
   ]
 }
