@@ -1305,7 +1305,10 @@ fuori da Analytics (`components/cookie-banner.tsx`).
 se ha risposto, senza la data della risposta. `licei_questionario_risposte`
 ha solo ruolo, versione delle domande e risposte: niente nome, account,
 data o riferimento all'invito, e l'id e casuale. Le due righe si scrivono
-insieme in `licei_questionario_rispondi()`, una volta sola per invito.
+insieme in `licei_questionario_rispondi()`, una volta sola per invito; ogni
+chiamata riscrive anche tutti gli inviti gia risposti e tutte le risposte,
+in ordine casuale, cosi nemmeno le colonne di sistema (`xmin`) o l'ordine
+fisico delle righe dicono quale risposta e di chi, a chi legge il database.
 Nessuna domanda chiede scuola, classe o squadra: con pochi studenti per
 istituto basterebbero a riconoscere qualcuno. Il pannello non divide per
 scuola e non mostra date; i log non contengono token, email o risposte.

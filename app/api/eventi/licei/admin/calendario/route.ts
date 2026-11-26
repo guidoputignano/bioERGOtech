@@ -94,9 +94,6 @@ const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => 
     html: () => E.studenteDopoConsegnaHtml({ nome: "Giulia", squadra: "BioTeam", titolo: "Un sensore per l'acqua" }),
   },
   giudice_meta: { subject: E.giudiceMetaSubject(), html: () => E.giudiceMetaHtml({ nome: "Mario Bianchi", assegnati: 20, chiusi: 0, nonIniziato: true }) },
-  giudice_tolti: { subject: E.giudiceTolteSubject(), html: () => E.giudiceTolteHtml({ nome: "Mario Bianchi", n: 20 }) },
-  giudice_nuovi: { subject: E.giudiceNuoviSubject(), html: () => E.giudiceNuoviHtml({ nome: "Mario Bianchi", n: 3, entro: E.ENTRO_RISERVA }) },
-  giudice_ultimo: { subject: E.giudiceUltimoGiornoSubject(), html: () => E.giudiceUltimoGiornoHtml({ nome: "Mario Bianchi", mancano: 4, assegnati: 20 }) },
   // Il link delle anteprime apre le domande in anteprima: un link vero non
   // si crea qui, e una prova non deve poter rispondere al posto di nessuno.
   questionario_studenti: {
@@ -107,6 +104,7 @@ const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => 
     subject: E.questionarioSubject(true, false),
     html: () => E.questionarioHtml({ nome: "Maria Rossi", url: ANTEPRIMA_DOCENTI, docente: true, promemoria: false }),
   },
+  giudice_tolti: { subject: E.giudiceTolteSubject(), html: () => E.giudiceTolteHtml({ nome: "Mario Bianchi", n: 20 }) },
   questionario_promemoria_studenti: {
     subject: E.questionarioSubject(false, true),
     html: () => E.questionarioHtml({ nome: "Giulia", url: ANTEPRIMA_STUDENTI, docente: false, promemoria: true }),
@@ -115,6 +113,8 @@ const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => 
     subject: E.questionarioSubject(true, true),
     html: () => E.questionarioHtml({ nome: "Maria Rossi", url: ANTEPRIMA_DOCENTI, docente: true, promemoria: true }),
   },
+  giudice_nuovi: { subject: E.giudiceNuoviSubject(), html: () => E.giudiceNuoviHtml({ nome: "Mario Bianchi", n: 3, entro: E.ENTRO_RISERVA }) },
+  giudice_ultimo: { subject: E.giudiceUltimoGiornoSubject(), html: () => E.giudiceUltimoGiornoHtml({ nome: "Mario Bianchi", mancano: 4, assegnati: 20 }) },
 };
 
 const oggettoDi = (a: { subject: string | (() => string) }) => (typeof a.subject === "function" ? a.subject() : a.subject);

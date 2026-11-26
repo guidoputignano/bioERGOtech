@@ -16,7 +16,9 @@ import { LICEI, SCADENZA_CONSEGNA, SCADENZA_CONSEGNA_LABEL } from "./content";
 import {
   QUESTIONARIO_CHIUDE_LABEL,
   QUESTIONARIO_INVIO,
+  QUESTIONARIO_INVIO_FINO,
   QUESTIONARIO_PROMEMORIA,
+  QUESTIONARIO_PROMEMORIA_FINO,
 } from "./questionario/domande";
 
 /* ── Temi ─────────────────────────────────────────────────────────────── */
@@ -276,7 +278,7 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
     id: "questionario",
     da: QUESTIONARIO_INVIO,
     // Un giorno in piu: se il primo giro non riesce, il cron di domani riprova.
-    fino: "2026-12-01T23:59:59+01:00",
+    fino: QUESTIONARIO_INVIO_FINO,
     quando: "Lunedì 30 novembre, ore 8",
     titolo: "Questionario di fine percorso",
     descrizione: `A studenti confermati e docenti, ognuno con il suo link: poche domande anonime sul percorso e, agli studenti, su che cosa si aspettano dall'evento. Si risponde fino a ${QUESTIONARIO_CHIUDE_LABEL}. I risultati sono nella scheda Questionari; allo staff un riepilogo con i numeri.`,
@@ -293,8 +295,7 @@ export const PASSI_AUTOMATICI: readonly Passo[] = [
   {
     id: "questionario_promemoria",
     da: QUESTIONARIO_PROMEMORIA,
-    // Non oltre la mattina dopo: un promemoria a ridosso della chiusura non serve.
-    fino: "2026-12-03T12:00:00+01:00",
+    fino: QUESTIONARIO_PROMEMORIA_FINO,
     quando: "Mercoledì 2 dicembre, ore 8",
     titolo: "Promemoria del questionario",
     descrizione: "Solo a chi non ha ancora risposto, con lo stesso link, e almeno un giorno dopo l'invito.",

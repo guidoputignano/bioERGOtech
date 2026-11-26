@@ -16,9 +16,13 @@
 --   2. licei_questionario_risposte: le risposte, senza alcun legame con la
 --      persona. Solo il ruolo (studente o docente), la versione delle
 --      domande e le risposte: nessun nome, account, data o riferimento
---      all'invito. L'id e casuale, quindi neanche l'ordine dice qualcosa.
+--      all'invito. L'id e casuale.
 --   3. public.licei_questionario_rispondi(): segna l'invito come risposto e
 --      salva le risposte nello stesso momento, una volta sola per invito.
+--      Riscrive ogni volta tutti gli inviti risposti e tutte le risposte, in
+--      ordine casuale: cosi nemmeno le colonne di sistema (xmin, la
+--      transazione che ha scritto la riga) o l'ordine fisico delle righe
+--      dicono quale risposta viene da quale invito.
 --
 -- Solo le rotte del sito, con la service role: RLS attiva, nessuna policy
 -- per anon e authenticated. Gli inviti si cancellano con la chiusura del
@@ -96,6 +100,16 @@ grant all on table public.licei_questionario_risposte to service_role;
 -- Il sito controlla il link e le risposte prima di chiamarla. Qui si
 -- decide solo se l'invito puo ancora rispondere: la riga si blocca, cosi
 -- due invii contemporanei dallo stesso link ne salvano uno.
+--
+-- L'anonimato anche per chi legge il database. Invito e risposta scritti
+-- nella stessa transazione avrebbero lo stesso xmin, e una join su xmin
+-- direbbe chi ha scritto che cosa; l'ordine fisico delle risposte
+-- direbbe in che ordine sono arrivate. Per questo ogni chiamata riscrive
+-- tutti gli inviti gia risposti e tutte le risposte (cancellate e
+-- reinserite in ordine casuale, con id nuovi): alla fine di ogni chiamata
+-- tutte le righe hanno la stessa transazione, e l'ordine non dice niente.
+-- Sono poche centinaia di righe; due chiamate insieme si mettono in fila
+-- sui blocchi delle righe.
 create or replace function public.licei_questionario_rispondi(
   p_invito   uuid,
   p_risposte jsonb,
@@ -128,9 +142,20 @@ begin
     return 'non_trovato';
   end if;
 
-  update public.licei_questionario_inviti set risposto = true where id = p_invito;
+  update public.licei_questionario_inviti
+    set risposto = true
+    where risposto or id = p_invito;
+
   insert into public.licei_questionario_risposte (ruolo, versione, risposte)
     values (v_ruolo, p_versione::smallint, p_risposte);
+
+  with tolte as (
+    delete from public.licei_questionario_risposte
+    returning ruolo, versione, risposte
+  )
+  insert into public.licei_questionario_risposte (ruolo, versione, risposte)
+    select t.ruolo, t.versione, t.risposte from tolte t order by random();
+
   return 'ok';
 end;
 $$;

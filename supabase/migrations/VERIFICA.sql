@@ -461,7 +461,8 @@ select 'licei questionario: inviti, risposte e funzione',
            or has_function_privilege('anon', 'public.licei_questionario_rispondi(uuid, jsonb, integer)', 'EXECUTE')
            or has_function_privilege('authenticated', 'public.licei_questionario_rispondi(uuid, jsonb, integer)', 'EXECUTE')
            then 'NO: RLS o privilegi del questionario troppo larghi, rieseguire 20261231500000'
-         when not has_table_privilege('service_role', 'public.licei_questionario_inviti', 'SELECT,INSERT,UPDATE')
+         when not has_table_privilege('service_role', 'public.licei_questionario_inviti', 'SELECT,INSERT,UPDATE,DELETE')
+           or not has_table_privilege('service_role', 'public.licei_questionario_risposte', 'SELECT,DELETE')
            or not has_function_privilege('service_role', 'public.licei_questionario_rispondi(uuid, jsonb, integer)', 'EXECUTE')
            then 'NO: service_role non scrive, il questionario non funzionera'
          else 'OK'

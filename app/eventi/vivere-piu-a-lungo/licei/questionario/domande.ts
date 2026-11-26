@@ -25,8 +25,13 @@ export const QUESTIONARIO_PATH = `${LICEI_PATH}/questionario`;
 
 /** Quando parte l'email (il passo "questionario" del calendario). */
 export const QUESTIONARIO_INVIO = "2026-11-30T08:00:00+01:00";
+/** Fin quando il calendario ci riprova, se il primo giro non riesce. */
+export const QUESTIONARIO_INVIO_FINO = "2026-12-01T23:59:59+01:00";
+export const QUESTIONARIO_INVIO_FINO_LABEL = "martedì 1 dicembre";
 /** Il promemoria, solo a chi non ha risposto. */
 export const QUESTIONARIO_PROMEMORIA = "2026-12-02T08:00:00+01:00";
+/** Non oltre la mattina dopo: un promemoria a ridosso della chiusura non serve. */
+export const QUESTIONARIO_PROMEMORIA_FINO = "2026-12-03T12:00:00+01:00";
 /**
  * L'ultimo momento per rispondere: prima dell'annuncio dei finalisti, che
  * cambierebbe lo stato d'animo di chi risponde.
@@ -212,6 +217,15 @@ export const DOMANDE: Record<RuoloQuestionario, readonly Domanda[]> = {
 
 /** Il tempo che diciamo nelle email e sulla pagina. */
 export const MINUTI_QUESTIONARIO: Record<RuoloQuestionario, number> = { studente: 3, docente: 2 };
+
+/**
+ * Quante domande, come lo diciamo: "al massimo 10" se qualcuna compare solo
+ * per alcuni (chi non era in una squadra ne vede 9).
+ */
+export const quanteDomande = (r: RuoloQuestionario): string => {
+  const d = DOMANDE[r];
+  return d.some((x) => x.mostraSe) ? `al massimo ${d.length}` : String(d.length);
+};
 
 /** Nelle risposte aperte, il nome di qualcuno renderebbe il questionario meno anonimo. */
 export const AVVISO_TESTI: Record<RuoloQuestionario, string> = {

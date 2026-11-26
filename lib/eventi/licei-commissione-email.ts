@@ -43,9 +43,9 @@ import {
   TEMI_PROGETTO,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
 import {
-  DOMANDE,
   MINUTI_QUESTIONARIO,
   QUESTIONARIO_CHIUDE_LABEL,
+  quanteDomande,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/questionario/domande";
 
 /* ── Pezzi comuni ─────────────────────────────────────────────────────── */
@@ -508,7 +508,7 @@ export const questionarioSubject = (docente: boolean, promemoria: boolean) => {
 export function questionarioHtml(i: InvitoQuestionario): string {
   const percorso = `«${esc(LICEI.titolo)}»`;
   const durata = (r: "studente" | "docente") =>
-    `${DOMANDE[r].length} domande, circa ${MINUTI_QUESTIONARIO[r]} minuti`;
+    `${quanteDomande(r)} domande, circa ${MINUTI_QUESTIONARIO[r]} minuti`;
 
   if (i.docente) {
     const apertura = i.promemoria

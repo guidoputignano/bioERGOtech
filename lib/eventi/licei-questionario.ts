@@ -13,7 +13,8 @@
  * docente), la versione delle domande e le risposte: niente nome, account,
  * data o riferimento all'invito. Le due righe si scrivono insieme, in una
  * funzione del database (`licei_questionario_rispondi`), una volta sola per
- * invito. Nei log, mai il token, l'email o il contenuto delle risposte.
+ * invito; la funzione riscrive ogni volta tutte le risposte in ordine
+ * casuale, perche neanche chi legge il database possa accoppiarle. Nei log, mai il token, l'email o il contenuto delle risposte.
  *
  * Solo server: usa il client con service role.
  */

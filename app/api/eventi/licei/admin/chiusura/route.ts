@@ -405,8 +405,10 @@ async function calcolaPiano(client: Db): Promise<Piano> {
   // Il questionario di fine percorso: gli inviti (chi l'ha ricevuto) e le
   // risposte, anonime ma scritte dai partecipanti. Prima della migrazione
   // 20261231500000 le tabelle non ci sono e contano come vuote.
+  // Con una GET e non una HEAD: la HEAD su una tabella che non c'e torna
+  // senza corpo, e l'errore che dice "tabella assente" si perde.
   const contaQuestionario = async (tabella: string): Promise<number> => {
-    const { count, error } = await client.from(tabella).select("id", { count: "exact", head: true });
+    const { count, error } = await client.from(tabella).select("id", { count: "exact" }).limit(1);
     if (tabellaAssente(error)) {
       tabelleAssenti.add(tabella);
       return 0;

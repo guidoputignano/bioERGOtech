@@ -20,7 +20,11 @@ export const STILE_QUESTIONARIO = `
 .vpq-domanda { scroll-margin-top: 110px; }
 .vpq-domanda .vpl-chips { margin-top: 12px; }
 .vpq-scala .vpl-chip { min-width: 48px; justify-content: center; padding: 9px 12px; font-variant-numeric: tabular-nums; }
-.vpq-scala-10 .vpl-chip { min-width: 44px; padding: 9px 0; }
+/* La scala da 0 a 10 in griglia: 6 e 5 sul telefono, 11 su una riga sullo
+   schermo largo. A capo con il flex, il 10 restava da solo su una terza riga. */
+.vpl-chips.vpq-scala-10 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.vpq-scala-10 .vpl-chip { min-width: 0; padding: 9px 0; }
+@container vpl (min-width: 560px) { .vpl-chips.vpq-scala-10 { grid-template-columns: repeat(11, minmax(0, 1fr)); } }
 .vpq-estremi { display: flex; justify-content: space-between; gap: 12px; margin: 8px 0 0; font-size: 13px; color: var(--text-mid); }
 .vpq-contatore { margin: 0; font-size: 12.5px; color: var(--text-mid); text-align: right; font-variant-numeric: tabular-nums; }
 .vpq-contatore[data-pieno="true"] { color: #8A6100; font-weight: 600; }

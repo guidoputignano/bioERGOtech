@@ -114,7 +114,11 @@ function Avviso({ stato }: { stato: Exclude<Stato, { tipo: "modulo" }> }) {
   } else if (stato.tipo === "errore") {
     icona = "fa-triangle-exclamation";
     titolo = "Non riusciamo ad aprire il questionario";
-    testo = "Riprova tra qualche minuto, con lo stesso link. Se il problema resta, scrivi a info@bioergotech.org.";
+    testo = (
+      <>
+        Si può riprovare tra qualche minuto con lo stesso link. Se il problema resta, scrivere a {CONTATTO}.
+      </>
+    );
   }
   return (
     <div className="vpq-avviso">

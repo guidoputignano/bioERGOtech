@@ -17,6 +17,7 @@ import {
   MINUTI_QUESTIONARIO,
   QUESTIONARIO_CHIUDE_LABEL,
   domandaVisibile,
+  quanteDomande,
   validaRisposte,
   type Bozza,
   type Domanda,
@@ -30,21 +31,25 @@ type Esito =
 const TESTI = {
   studente: {
     titolo: "Com'è andato il percorso?",
-    intro: (n: number) =>
-      `Sono ${n} domande, circa ${MINUTI_QUESTIONARIO.studente} minuti. Il questionario è anonimo: le risposte non sono collegate al tuo nome e i tuoi docenti non le vedono. È facoltativo e non ha alcun effetto sulla valutazione dei progetti.`,
+    intro: `Sono ${quanteDomande("studente")} domande, circa ${MINUTI_QUESTIONARIO.studente} minuti. Il questionario è anonimo: le risposte non sono collegate al tuo nome e i tuoi docenti non le vedono. È facoltativo e non ha alcun effetto sulla valutazione dei progetti.`,
     entro: `Puoi rispondere fino a ${QUESTIONARIO_CHIUDE_LABEL}.`,
     grazie: "Grazie!",
     grazieTesto: "Le tue risposte sono arrivate. Ci aiutano a migliorare il percorso per chi verrà dopo di te.",
     riepilogo: "Prima di inviare, controlla queste risposte:",
+    nonRiuscito: "Invio non riuscito. Riprova tra qualche minuto.",
+    lenta: "La connessione è troppo lenta: le risposte non sono partite. Riprova.",
+    offline: "Sembra che non ci sia connessione: le risposte non sono partite. Riprova.",
   },
   docente: {
     titolo: "Il suo parere sul percorso",
-    intro: (n: number) =>
-      `Sono ${n} domande, circa ${MINUTI_QUESTIONARIO.docente} minuti. Il questionario è anonimo e facoltativo: le risposte non sono collegate al suo nome.`,
+    intro: `Sono ${quanteDomande("docente")} domande, circa ${MINUTI_QUESTIONARIO.docente} minuti. Il questionario è anonimo e facoltativo: le risposte non sono collegate al suo nome.`,
     entro: `Può rispondere fino a ${QUESTIONARIO_CHIUDE_LABEL}.`,
     grazie: "Grazie",
     grazieTesto: "Le sue risposte sono arrivate e ci aiuteranno a preparare la prossima edizione.",
     riepilogo: "Prima di inviare, controlli queste risposte:",
+    nonRiuscito: "Invio non riuscito. Riprovi tra qualche minuto.",
+    lenta: "La connessione è troppo lenta: le risposte non sono partite. Riprovi.",
+    offline: "Sembra che non ci sia connessione: le risposte non sono partite. Riprovi.",
   },
 } as const;
 
@@ -144,13 +149,9 @@ export function QuestionarioForm({
         requestAnimationFrame(() => riepilogoRef.current?.focus());
         return;
       }
-      setMessaggio(data.error ?? "Invio non riuscito. Riprova tra qualche minuto.");
+      setMessaggio(data.error ?? t.nonRiuscito);
     } catch {
-      setMessaggio(
-        ctrl.signal.aborted
-          ? "La connessione è troppo lenta: le risposte non sono partite. Riprova."
-          : "Sembra che non ci sia connessione: le risposte non sono partite. Riprova.",
-      );
+      setMessaggio(ctrl.signal.aborted ? t.lenta : t.offline);
     } finally {
       clearTimeout(timer);
       setInvio(false);
@@ -181,7 +182,7 @@ export function QuestionarioForm({
         <p className="vpq-occhiello">Questionario di fine percorso</p>
         <h1 className="vpq-titolo">{t.titolo}</h1>
         <p className="vpq-intro">
-          {t.intro(tutte.length)} {t.entro}
+          {t.intro} {t.entro}
         </p>
       </header>
 

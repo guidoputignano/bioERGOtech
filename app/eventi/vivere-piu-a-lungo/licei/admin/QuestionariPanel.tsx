@@ -13,7 +13,10 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   QUESTIONARIO_CHIUDE_LABEL,
+  QUESTIONARIO_INVIO_FINO,
+  QUESTIONARIO_INVIO_FINO_LABEL,
   QUESTIONARIO_PATH,
+  QUESTIONARIO_PROMEMORIA_FINO,
   type RuoloQuestionario,
 } from "../questionario/domande";
 
@@ -51,6 +54,15 @@ const pct = (n: number, tot: number) => (tot > 0 ? Math.round((n / tot) * 100) :
 
 const OK = { background: "#0A7A661A", color: "#0A7A66" };
 const ATTESA = { background: "#F1F5F9", color: "var(--text-dark)" };
+const MANCATO = { background: "#8A61001A", color: "#8A6100" };
+
+/** Lo stato di un invio: fatto, in programma, o non partito (finestra del calendario chiusa). */
+const statoInvio = (fattoAt: string | null, fino: string) =>
+  fattoAt
+    ? { testo: "Inviato", stile: OK }
+    : Date.now() > Date.parse(fino)
+      ? { testo: "Non partito", stile: MANCATO }
+      : { testo: "In programma", stile: ATTESA };
 
 export function QuestionariPanel() {
   const [dati, setDati] = useState<Qualsiasi>(null);
@@ -82,6 +94,8 @@ export function QuestionariPanel() {
   const r: Ruolo | null = dati?.disponibile ? dati[ruolo] : null;
   const inviato = quando(dati?.inviato_at ?? null);
   const promemoria = quando(dati?.promemoria_at ?? null);
+  const statoInvito = statoInvio(dati?.inviato_at ?? null, QUESTIONARIO_INVIO_FINO);
+  const statoPromemoria = statoInvio(dati?.promemoria_at ?? null, QUESTIONARIO_PROMEMORIA_FINO);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -117,7 +131,8 @@ export function QuestionariPanel() {
           style={{ background: "#FFF8E6", border: "1px solid #F0D89B", color: "#75570F", borderRadius: 10, padding: "10px 14px", fontSize: 13.5, lineHeight: 1.6 }}
         >
           Manca la migrazione <code>{dati.migrazione}</code>: finché non viene applicata nell&apos;editor SQL di Supabase,
-          il questionario non parte (il calendario riprova ogni mattina) e qui non c&apos;è niente da mostrare.
+          il questionario non parte e qui non c&apos;è niente da mostrare. Il calendario riprova ogni mattina fino a{" "}
+          {QUESTIONARIO_INVIO_FINO_LABEL}; dopo, il questionario non parte più.
         </div>
       )}
 
@@ -131,13 +146,13 @@ export function QuestionariPanel() {
         </p>
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8, fontSize: 14 }}>
           <li className="flex flex-wrap items-center gap-2">
-            <span className="badge" style={inviato ? OK : ATTESA}>{inviato ? "Inviato" : "In programma"}</span>
+            <span className="badge" style={statoInvito.stile}>{statoInvito.testo}</span>
             <span>
               Invito a studenti e docenti: {inviato ? inviato : "lunedì 30 novembre, ore 8"}
             </span>
           </li>
           <li className="flex flex-wrap items-center gap-2">
-            <span className="badge" style={promemoria ? OK : ATTESA}>{promemoria ? "Inviato" : "In programma"}</span>
+            <span className="badge" style={statoPromemoria.stile}>{statoPromemoria.testo}</span>
             <span>
               Promemoria a chi non ha risposto: {promemoria ? promemoria : "mercoledì 2 dicembre, ore 8"}
             </span>

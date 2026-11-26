@@ -24,7 +24,9 @@ const NO_CACHE = { "Cache-Control": "private, no-store" };
 const risposta = (status: number, corpo: Record<string, unknown>) =>
   NextResponse.json(corpo, { status, headers: NO_CACHE });
 
+// Senza "tu" ne "Lei": alcune risposte partono prima di sapere chi scrive.
 const NON_VALIDO = "Il link non è valido. Il questionario si apre dal pulsante dell'email ricevuta.";
+const NON_PRONTO = "Il questionario non è ancora disponibile: si può riprovare più tardi.";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as unknown;
@@ -39,7 +41,7 @@ export async function POST(request: Request) {
 
   try {
     const letto = await leggiInvito(db, id);
-    if (!letto.presente) return risposta(503, { error: "Il questionario non è ancora disponibile. Riprova più tardi." });
+    if (!letto.presente) return risposta(503, { error: NON_PRONTO });
     const invito = letto.invito;
     if (!invito) return risposta(404, { error: NON_VALIDO });
     const tu = invito.ruolo === "studente";
@@ -63,10 +65,10 @@ export async function POST(request: Request) {
     const esito = await registraRisposta(db, invito.id, v.risposte);
     if (esito === "ok") return risposta(200, { ok: true });
     if (esito === "gia_risposto") return risposta(409, { error: giaRisposto });
-    if (esito === "assente") return risposta(503, { error: "Il questionario non è ancora disponibile. Riprova più tardi." });
+    if (esito === "assente") return risposta(503, { error: NON_PRONTO });
     return risposta(404, { error: NON_VALIDO });
   } catch (err) {
     console.error("Questionario licei: risposta non salvata:", err instanceof Error ? err.message : String(err));
-    return risposta(500, { error: "Non siamo riusciti a salvare le risposte. Riprova tra qualche minuto." });
+    return risposta(500, { error: "Non è stato possibile salvare le risposte: si può riprovare tra qualche minuto." });
   }
 }

@@ -199,7 +199,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
         "il numero di studenti e classi che l'istituto prevede di coinvolgere;",
         "la registrazione dell'accettazione delle istruzioni per i docenti, con data e versione;",
         "le iscrizioni ai talk con gli esperti, se il docente si iscrive;",
-        "per il questionario di fine percorso, facoltativo e anonimo, soltanto se il docente ha risposto: le risposte sono conservate senza nome, senza account e senza data;",
+        "per il questionario di fine percorso, facoltativo e anonimo: l'invio del questionario e se il docente ha risposto o no; le risposte sono conservate senza nome, senza account e senza data;",
         "le credenziali di accesso e i dati tecnici connessi al login.",
       ],
     },
