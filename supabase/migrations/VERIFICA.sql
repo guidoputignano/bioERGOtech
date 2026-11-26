@@ -443,6 +443,32 @@ select 'licei smistamento: temi, riserva e assegnazioni',
 
 union all
 
+-- Il questionario di fine percorso (migrazione 20261231500000): senza, il
+-- passo del 30 novembre non parte e riprova ogni mattina. Le risposte sono
+-- anonime e solo le rotte del sito (service_role) le leggono.
+select 'licei questionario: inviti, risposte e funzione',
+       case
+         when to_regclass('public.licei_questionario_inviti') is null
+           or to_regclass('public.licei_questionario_risposte') is null
+           or to_regprocedure('public.licei_questionario_rispondi(uuid, jsonb, integer)') is null
+           then 'DA ESEGUIRE: 20261231500000_licei_questionario, il questionario del 30 novembre non parte senza'
+         when not (select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.licei_questionario_inviti'))
+           or not (select c.relrowsecurity from pg_class c where c.oid = to_regclass('public.licei_questionario_risposte'))
+           or has_table_privilege('anon', 'public.licei_questionario_inviti', 'SELECT,INSERT,UPDATE,DELETE')
+           or has_table_privilege('anon', 'public.licei_questionario_risposte', 'SELECT,INSERT,UPDATE,DELETE')
+           or has_table_privilege('authenticated', 'public.licei_questionario_inviti', 'SELECT,INSERT,UPDATE,DELETE')
+           or has_table_privilege('authenticated', 'public.licei_questionario_risposte', 'SELECT,INSERT,UPDATE,DELETE')
+           or has_function_privilege('anon', 'public.licei_questionario_rispondi(uuid, jsonb, integer)', 'EXECUTE')
+           or has_function_privilege('authenticated', 'public.licei_questionario_rispondi(uuid, jsonb, integer)', 'EXECUTE')
+           then 'NO: RLS o privilegi del questionario troppo larghi, rieseguire 20261231500000'
+         when not has_table_privilege('service_role', 'public.licei_questionario_inviti', 'SELECT,INSERT,UPDATE')
+           or not has_function_privilege('service_role', 'public.licei_questionario_rispondi(uuid, jsonb, integer)', 'EXECUTE')
+           then 'NO: service_role non scrive, il questionario non funzionera'
+         else 'OK'
+       end
+
+union all
+
 -- I talk aperti a tutti iscrivono chi non segue il percorso come `ospite`
 -- (migrazione 20261231000000): senza, la loro iscrizione risponde 503.
 select 'talk iscrizioni: il ruolo ospite e ammesso',

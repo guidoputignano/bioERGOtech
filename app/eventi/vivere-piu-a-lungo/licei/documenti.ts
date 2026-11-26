@@ -103,7 +103,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
   titolo: "Informativa privacy per studenti",
   intro:
     "Percorso online «Biotecnologie e Intelligenza Artificiale». Questa informativa spiega in modo semplice come Fondazione bioERGOtech ETS usa i dati degli studenti che partecipano al corso.",
-  aggiornato: "2026-10-26",
+  aggiornato: "2026-11-26",
   sezioni: [
     {
       h: "Chi usa i dati",
@@ -130,6 +130,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
         "La password la scegli tu, con il link che ricevi per email: la Fondazione non la vede.",
         "Durante il corso registriamo le lezioni completate, le riflessioni, le domande e i commenti che invii nelle lezioni, la squadra di cui fai parte con il tuo ruolo, il progetto della squadra (titolo, ambito, testi ed eventuale link ai materiali), le tue iscrizioni ai talk con gli esperti e alcuni dati tecnici di accesso, come la data dell'ultimo accesso.",
         "Nei testi del progetto e nelle riflessioni non inserire informazioni sulla salute o altri dati personali tuoi o di persone reali: non servono al percorso.",
+        "Alla fine del corso ti mandiamo per email un questionario facoltativo e anonimo sul percorso, con un solo promemoria. Registriamo soltanto se hai risposto, per non scriverti di nuovo: le risposte sono conservate senza il tuo nome, senza il tuo account e senza data, e i tuoi docenti non le vedono.",
       ],
     },
     {
@@ -137,6 +138,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
       p: [
         "Per creare il tuo account, farti seguire le 21 lezioni del corso, gestire squadre e progetti, far valutare i progetti dalla Commissione e selezionare i finalisti, rispondere alle tue domande, darti assistenza e mantenere sicura la piattaforma.",
         "La base giuridica è il consenso che esprimi con l'iscrizione, che a partire dai 14 anni puoi dare da solo per i servizi online (art. 2-quinquies del Codice privacy). Puoi ritirarlo in qualsiasi momento, con la conseguente chiusura dell'account. Per la sicurezza della piattaforma e la gestione degli accessi la base è il legittimo interesse della Fondazione.",
+        "Il questionario di fine corso serve a valutare e migliorare il percorso: la base è il legittimo interesse della Fondazione, e rispondere è facoltativo.",
         "Puoi scegliere separatamente di ricevere la newsletter e informazioni su future iniziative: è facoltativo, non è mai preselezionato e non incide sulla partecipazione.",
         "Nessuna decisione che ti riguarda è presa in modo automatico: i progetti sono valutati da persone.",
       ],
@@ -171,7 +173,7 @@ export const INFORMATIVA_STUDENTI: Documento = {
     {
       h: "Per quanto tempo conserviamo i dati",
       p: [
-        "Account, iscrizione, squadra, progetto, valutazioni, riflessioni e dati di avanzamento vengono cancellati o resi anonimi entro un mese dalla conclusione del corso.",
+        "Account, iscrizione, squadra, progetto, valutazioni, riflessioni, dati di avanzamento e questionario di fine corso (invito e risposte) vengono cancellati o resi anonimi entro un mese dalla conclusione del corso.",
         "Se scegli la newsletter conserviamo solo email e prova della scelta per 24 mesi, salvo revoca anticipata. L'iscrizione all'evento dei finalisti segue i tempi dell'evento.",
       ],
     },
@@ -186,7 +188,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
   occhiello: "Privacy",
   titolo: "Informativa privacy per scuole e docenti referenti",
   intro: `Percorso online «Biotecnologie e Intelligenza Artificiale». Il titolare del trattamento è ${TITOLARE} Tratta i dati delle scuole e dei docenti referenti per gestire l'adesione al percorso.`,
-  aggiornato: "2026-10-13",
+  aggiornato: "2026-11-26",
   sezioni: [
     {
       h: "Dati trattati",
@@ -197,6 +199,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
         "il numero di studenti e classi che l'istituto prevede di coinvolgere;",
         "la registrazione dell'accettazione delle istruzioni per i docenti, con data e versione;",
         "le iscrizioni ai talk con gli esperti, se il docente si iscrive;",
+        "per il questionario di fine percorso, facoltativo e anonimo, soltanto se il docente ha risposto: le risposte sono conservate senza nome, senza account e senza data;",
         "le credenziali di accesso e i dati tecnici connessi al login.",
       ],
     },
@@ -204,6 +207,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
       h: "Perché li trattiamo",
       p: [
         "Per verificare l'adesione dell'istituto, creare e gestire l'accesso personale del docente, comunicare informazioni organizzative e dare assistenza. La base giuridica è l'esecuzione delle attività richieste con l'adesione dell'istituto e il legittimo interesse della Fondazione a gestire in sicurezza il percorso.",
+        "Il questionario di fine percorso serve a valutare e migliorare il percorso: la base è il legittimo interesse della Fondazione, e rispondere è facoltativo.",
         "Se il docente sceglie di ricevere comunicazioni sulle iniziative per le scuole, la base è il suo consenso, facoltativo e revocabile.",
       ],
     },
@@ -225,7 +229,7 @@ export const INFORMATIVA_SCUOLE: Documento = {
     {
       h: "Per quanto tempo",
       p: [
-        "Dati e credenziali operativi sono cancellati o resi inutilizzabili entro un mese dalla conclusione del corso. Se il docente sceglie di ricevere newsletter e future iniziative, email e prova della scelta sono conservate per 24 mesi, salvo revoca anticipata.",
+        "Dati e credenziali operativi, compresi invito e risposte del questionario di fine percorso, sono cancellati o resi inutilizzabili entro un mese dalla conclusione del corso. Se il docente sceglie di ricevere newsletter e future iniziative, email e prova della scelta sono conservate per 24 mesi, salvo revoca anticipata.",
       ],
     },
     { h: "Diritti e contatti", p: DIRITTI },

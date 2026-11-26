@@ -6,8 +6,9 @@
  * L'ordine non e alfabetico ma cronologico, ed e lo stesso in cui il
  * percorso accade: prima gli istituti aderiscono, poi le squadre lavorano,
  * infine la Commissione valuta. Chi apre il pannello a meta percorso trova
- * per prima la fase in cui e entrato. La chiusura sta in fondo perche e
- * l'ultima cosa che il percorso fa.
+ * per prima la fase in cui e entrato. I questionari di fine percorso
+ * vengono dopo la Commissione; la chiusura sta in fondo perche e l'ultima
+ * cosa che il percorso fa.
  */
 
 import { useState } from "react";
@@ -15,11 +16,13 @@ import { LiceiAdminPanel } from "./LiceiAdminPanel";
 import { ProgettiPanel } from "./ProgettiPanel";
 import { CommissariPanel } from "./CommissariPanel";
 import { ChiusuraPanel } from "./ChiusuraPanel";
+import { QuestionariPanel } from "./QuestionariPanel";
 
 const SCHERMATE = [
   { id: "adesioni", label: "Adesioni e iscrizioni" },
   { id: "progetti", label: "Squadre e progetti" },
   { id: "commissione", label: "Commissione" },
+  { id: "questionari", label: "Questionari" },
   { id: "chiusura", label: "Chiusura" },
 ] as const;
 
@@ -58,6 +61,7 @@ export function LiceiAdminTabs() {
       {attiva === "adesioni" && <LiceiAdminPanel />}
       {attiva === "progetti" && <ProgettiPanel />}
       {attiva === "commissione" && <CommissariPanel />}
+      {attiva === "questionari" && <QuestionariPanel />}
       {attiva === "chiusura" && <ChiusuraPanel />}
     </div>
   );

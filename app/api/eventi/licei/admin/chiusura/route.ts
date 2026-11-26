@@ -227,6 +227,9 @@ type Piano = {
     riflessioni: number;
     /** Iscrizioni ai talk di studenti e docenti dei licei. */
     talk: number;
+    /** Questionario di fine percorso: a chi e stato mandato, e le risposte (anonime). */
+    questionario_inviti: number;
+    questionario_risposte: number;
   };
   account: {
     totali: number;
@@ -399,6 +402,21 @@ async function calcolaPiano(client: Db): Promise<Piano> {
     else talk = count ?? 0;
   }
 
+  // Il questionario di fine percorso: gli inviti (chi l'ha ricevuto) e le
+  // risposte, anonime ma scritte dai partecipanti. Prima della migrazione
+  // 20261231500000 le tabelle non ci sono e contano come vuote.
+  const contaQuestionario = async (tabella: string): Promise<number> => {
+    const { count, error } = await client.from(tabella).select("id", { count: "exact", head: true });
+    if (tabellaAssente(error)) {
+      tabelleAssenti.add(tabella);
+      return 0;
+    }
+    if (error) throw new Error(`${tabella}: ${error.message}`);
+    return count ?? 0;
+  };
+  const questionario_inviti = await contaQuestionario("licei_questionario_inviti");
+  const questionario_risposte = await contaQuestionario("licei_questionario_risposte");
+
   return {
     conteggi: {
       adesioni: adesioni.length,
@@ -410,6 +428,8 @@ async function calcolaPiano(client: Db): Promise<Piano> {
       docenti: docenti.length,
       riflessioni,
       talk,
+      questionario_inviti,
+      questionario_risposte,
     },
     account: {
       totali: persone.size,
@@ -604,6 +624,10 @@ export async function POST(request: Request) {
       "licei_valutazioni",
       "licei_commissari",
       "licei_accettazioni",
+      // Prima delle iscrizioni, delle adesioni e dei docenti a cui gli
+      // inviti puntano (la cascata li toglierebbe comunque).
+      "licei_questionario_inviti",
+      "licei_questionario_risposte",
       "licei_docenti",
       "licei_adesioni",
       "licei_progetti",

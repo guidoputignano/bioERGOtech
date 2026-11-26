@@ -87,6 +87,7 @@ trascrizione, resta possibile: basta che lo staff tenga gli account.
 | Elenco dei mentor nell'area dello studente e in quella dei docenti | `app/eventi/vivere-piu-a-lungo/mentor/MentorElenco.tsx` (`percorso="docenti"` nella console dei docenti), rotta `app/api/eventi/mentor/route.ts` |
 | Linee guida per i mentor | `app/eventi/vivere-piu-a-lungo/linee-guida-mentor/` |
 | Talk con gli esperti | `app/eventi/vivere-piu-a-lungo/talk/` (README nella cartella): scheda nell'area dello studente e del docente, riga nella pagina pubblica, scheda nel pannello staff; migrazione `20261216000000_talk_iscrizioni.sql`, da applicare a mano |
+| Questionario di fine percorso | `questionario/domande.ts` (domande, date, validazione: le stesse per pagina, rotta e pannello), `questionario/page.tsx` e `QuestionarioForm.tsx` (la pagina del link personale, `?anteprima=studente|docente` per lo staff), `lib/eventi/licei-questionario.ts` (link firmato, salvataggio, numeri), rotte `app/api/eventi/licei/questionario` e `app/api/eventi/licei/admin/questionari` (+ `/export`), scheda `admin/QuestionariPanel.tsx`; invii nei passi `questionario` e `questionario_promemoria` del calendario. Vedi "Questionario di fine percorso" |
 | Migrazioni | `supabase/migrations/20261204000000_create_licei_adesioni.sql`, `20261205000000_create_licei_iscrizioni.sql`, `20261206000000_create_licei_squadre_progetti.sql`, `20261208000000_licei_visibilita_iscrizioni.sql`, `20261209000000_licei_accesso_coerente.sql`, `20261215000000_licei_docenti_accettazioni_riflessioni.sql` (da applicare a mano, vedi sotto) |
 
 ## Migrazione da applicare a mano: 20261215000000
@@ -1212,7 +1213,9 @@ Italia) esegue i passi di `PASSI_AUTOMATICI`, ognuno una volta sola:
 | mercoledi 25 novembre | ultimo giorno, agli studenti delle squadre in bozza |
 | giovedi 26 novembre | smistamento, apertura delle schede, email a giudici, riserva, scuole, studenti, staff |
 | lunedi 30 novembre | promemoria ai giudici indietro; chi non ha iniziato e avvisato |
+| lunedi 30 novembre | questionario di fine percorso a studenti confermati e docenti, ognuno con il suo link; allo staff i numeri |
 | mercoledi 2 dicembre | i progetti di chi non ha salvato nemmeno una scheda passano alla riserva |
+| mercoledi 2 dicembre | promemoria del questionario a chi non ha risposto (almeno 20 ore dopo l'invito) |
 | giovedi 3 dicembre | ultimo giorno per i giudici |
 | venerdi 4 dicembre | i progetti con meno di due schede chiuse alla riserva; allo staff l'8°-13° posto da rivedere |
 
@@ -1276,6 +1279,51 @@ Serve la migrazione `20261231100000_licei_smistamento.sql`: senza, il
 modulo non chiede i temi, l'area dei giudici resta com'era e il cron salta
 aggiornamento e smistamento, dicendolo nel pannello. Senza `CRON_SECRET`
 il cron non parte, e il pannello lo segnala.
+
+## Questionario di fine percorso
+
+Un questionario breve, anonimo e facoltativo: 10 domande agli studenti
+(come e andato il percorso, che cosa cambierebbero, che cosa si aspettano
+dall'evento), 6 ai docenti. Parte da solo lunedi 30 novembre alle 8 con il
+calendario (passo `questionario`), il promemoria mercoledi 2 dicembre a chi
+non ha risposto (`questionario_promemoria`); si risponde fino a giovedi 3
+dicembre alle 23:59 (`QUESTIONARIO_CHIUDE`), prima dell'annuncio dei
+finalisti.
+
+**A chi.** Gli studenti con l'iscrizione confermata nelle scuole che
+partecipano, e i loro docenti (referente e docenti del progetto). Una
+email per indirizzo: chi e referente di due scuole ne riceve una.
+
+**Il link.** Ognuno ha il suo: `questionario?t=<id dell'invito>.<firma>`,
+firmato con una chiave derivata da `SUPABASE_SERVICE_ROLE_KEY` (come i link
+dei mentor). Nel database non c'e nessun token; il promemoria ricostruisce
+lo stesso link. Niente accesso: chi apre il link vede solo il ruolo, mai un
+nome. La pagina non si indicizza, non passa l'indirizzo ad altri siti ed e
+fuori da Analytics (`components/cookie-banner.tsx`).
+
+**L'anonimato.** `licei_questionario_inviti` dice a chi e stato mandato e
+se ha risposto, senza la data della risposta. `licei_questionario_risposte`
+ha solo ruolo, versione delle domande e risposte: niente nome, account,
+data o riferimento all'invito, e l'id e casuale. Le due righe si scrivono
+insieme in `licei_questionario_rispondi()`, una volta sola per invito.
+Nessuna domanda chiede scuola, classe o squadra: con pochi studenti per
+istituto basterebbero a riconoscere qualcuno. Il pannello non divide per
+scuola e non mostra date; i log non contengono token, email o risposte.
+
+**Il pannello.** Scheda "Questionari": invitati, risposte, tasso; le
+risposte chiuse contate (media e indice di raccomandazione sulle scale), le
+aperte in ordine casuale; il CSV per ruolo (con la protezione dalle
+formule); l'anteprima delle domande. Le email si vedono e si provano dal
+calendario, scheda "Commissione".
+
+**Cambiare le domande.** Gli id e i valori finiscono nel database: non si
+rinominano. Una domanda nuova o tolta vuol dire `VERSIONE_QUESTIONARIO`
+nuova; il pannello conta solo la versione corrente.
+
+Serve la migrazione `20261231500000_licei_questionario.sql`: senza, il
+passo non parte (riprova ogni mattina fino al 1 dicembre) e il pannello lo
+dice. Gli inviti e le risposte si cancellano con la chiusura del percorso:
+prima, esportare il CSV.
 
 ## Finalisti: designare e iscrivere sono due comandi
 
@@ -1545,6 +1593,10 @@ per un'altra via (staff, portale, percorso universitario). Se una qualsiasi
 di queste verifiche va in errore, la cancellazione si rifiuta: una tabella
 assente conta come vuota, una query fallita no.
 
+Fra le tabelle cancellate ci sono anche `licei_questionario_inviti` e
+`licei_questionario_risposte` (il questionario di fine percorso): le
+risposte vanno esportate prima, dalla scheda "Questionari".
+
 **Che cosa resta.** `event_registrations` (i finalisti iscritti all'evento
 seguono la conservazione dell'evento) e `newsletter_subscribers` (consenso a
 parte).
@@ -1553,7 +1605,7 @@ parte).
 soli conteggi: `licei_config` e leggibile da chiunque, quindi niente email
 ne id). Il pannello mostra "Dati cancellati il ..." con i numeri.
 
-Nessuna migrazione: tutto vive in `licei_config`, che e gia chiave/valore.
+Nessuna migrazione per la chiusura: le chiavi vivono in `licei_config`, che e gia chiave/valore.
 Le tre chiavi non stanno in `CONFIG_CHIAVI`, quindi la rotta generica della
 configurazione non le puo scrivere. Per una nuova edizione del percorso le
 tre righe vanno tolte a mano:

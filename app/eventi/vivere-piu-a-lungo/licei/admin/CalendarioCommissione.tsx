@@ -31,7 +31,11 @@ const NOMI_ANTEPRIME: Record<string, string> = {
   scuola_consegne: "26 nov . Riepilogo alle scuole",
   studente_dopo: "26 nov . Agli studenti che hanno consegnato",
   giudice_meta: "30 nov . A metà strada, ai giudici",
+  questionario_studenti: "30 nov . Questionario, agli studenti",
+  questionario_docenti: "30 nov . Questionario, ai docenti",
   giudice_tolti: "2 dic . A chi non ha iniziato",
+  questionario_promemoria_studenti: "2 dic . Promemoria del questionario, agli studenti",
+  questionario_promemoria_docenti: "2 dic . Promemoria del questionario, ai docenti",
   giudice_nuovi: "2 e 4 dic . A chi riceve progetti",
   giudice_ultimo: "3 dic . Ultimo giorno, ai giudici",
 };

@@ -35,6 +35,9 @@ type Conteggi = {
   riflessioni: number;
   /** Assente negli esiti registrati prima dei talk con gli esperti. */
   talk?: number;
+  /** Assenti negli esiti registrati prima del questionario di fine percorso. */
+  questionario_inviti?: number;
+  questionario_risposte?: number;
 };
 
 type Piano = {
@@ -66,6 +69,8 @@ const VOCI: { chiave: keyof Conteggi; label: string }[] = [
   { chiave: "docenti", label: "Docenti del progetto" },
   { chiave: "riflessioni", label: "Riflessioni delle lezioni" },
   { chiave: "talk", label: "Iscrizioni ai talk" },
+  { chiave: "questionario_inviti", label: "Inviti al questionario" },
+  { chiave: "questionario_risposte", label: "Risposte al questionario" },
 ];
 
 function dataOra(iso: string): string {
@@ -268,8 +273,9 @@ export function ChiusuraPanel() {
               squadre, progetti, schede di valutazione, commissari, docenti del progetto con le
               accettazioni delle istruzioni, le riflessioni delle lezioni degli studenti con le
               loro scelte di condivisione, le iscrizioni di studenti e docenti ai talk con gli
-              esperti e gli account creati solo per il percorso. Non si può annullare: prima esporta
-              classifica, progetti ed elenchi che servono ancora.
+              esperti, inviti e risposte del questionario di fine percorso e gli account creati solo
+              per il percorso. Non si può annullare: prima esporta classifica, progetti, elenchi e
+              risposte ai questionari (scheda «Questionari») che servono ancora.
             </li>
           </ol>
           <p className="text-sm text-gray-600" style={{ lineHeight: 1.7, margin: "10px 0 0" }}>

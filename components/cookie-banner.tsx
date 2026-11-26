@@ -54,16 +54,21 @@ const PERCORSI_SENZA_ADS = [
 
 /**
  * Pagine in cui Google Analytics non registra nulla. L'indirizzo del
- * biglietto online e quello della pagina di una classe contengono il
- * codice, che fa da chiave per gestire l'iscrizione o la prenotazione: non
- * deve finire nei report. Due difese: su queste pagine
+ * biglietto online, quello della pagina di una classe e il link del
+ * questionario dei licei contengono un codice che fa da chiave (per gestire
+ * l'iscrizione, la prenotazione o rispondere): non deve finire nei report. Due difese: su queste pagine
  * Analytics non si configura (loadGoogleTags), e se è già stato configurato
  * su un'altra pagina della stessa visita (per esempio il consenso dato sulla
  * pagina dell'evento, poi Indietro fino al biglietto) il flag
  * ga-disable-<ID>, che gtag.js legge prima di ogni invio, lo ferma. Il flag
  * segue l'indirizzo: vedi aggiornaBloccoGA.
  */
-const PERCORSI_SENZA_ANALYTICS = ["/eventi/vivere-piu-a-lungo/biglietto", "/eventi/vivere-piu-a-lungo/classe"];
+const PERCORSI_SENZA_ANALYTICS = [
+  "/eventi/vivere-piu-a-lungo/biglietto",
+  "/eventi/vivere-piu-a-lungo/classe",
+  // Il link personale del questionario porta il token nell'indirizzo.
+  "/eventi/vivere-piu-a-lungo/licei/questionario",
+];
 
 const inPercorso = (elenco: readonly string[]) => {
   if (typeof window === "undefined") return true;

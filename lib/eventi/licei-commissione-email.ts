@@ -42,6 +42,11 @@ import {
   SCHEDE_MINIME,
   TEMI_PROGETTO,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
+import {
+  DOMANDE,
+  MINUTI_QUESTIONARIO,
+  QUESTIONARIO_CHIUDE_LABEL,
+} from "@/app/eventi/vivere-piu-a-lungo/licei/questionario/domande";
 
 /* ── Pezzi comuni ─────────────────────────────────────────────────────── */
 
@@ -474,14 +479,75 @@ export function giudiceUltimoGiornoHtml({ nome, mancano, assegnati }: { nome: st
 export const ENTRO_GIUDICI = SCADENZA_GIUDICI_LABEL;
 export const ENTRO_RISERVA = SCADENZA_RISERVA_LABEL;
 
+/* ── 30 novembre e 2 dicembre: il questionario di fine percorso ──────── */
+
+export type InvitoQuestionario = {
+  nome: string;
+  /** Il link personale: firmato, mai scritto nei log. */
+  url: string;
+  docente: boolean;
+  promemoria: boolean;
+};
+
+export const questionarioSubject = (docente: boolean, promemoria: boolean) => {
+  if (docente) {
+    return promemoria
+      ? "Il questionario sul percorso resta aperto fino a giovedì"
+      : `Com'è andato il percorso? Un questionario anonimo di ${MINUTI_QUESTIONARIO.docente} minuti`;
+  }
+  return promemoria
+    ? "Hai tempo fino a giovedì per dirci com'è andata"
+    : `Com'è andato il percorso? Dicci la tua in ${MINUTI_QUESTIONARIO.studente} minuti`;
+};
+
+/**
+ * L'invito al questionario e il suo promemoria, per studenti (tu) e docenti
+ * (Lei). Il link e personale: chi lo inoltra fa rispondere un altro al suo
+ * posto, e non potrebbe piu rispondere lui.
+ */
+export function questionarioHtml(i: InvitoQuestionario): string {
+  const percorso = `«${esc(LICEI.titolo)}»`;
+  const durata = (r: "studente" | "docente") =>
+    `${DOMANDE[r].length} domande, circa ${MINUTI_QUESTIONARIO[r]} minuti`;
+
+  if (i.docente) {
+    const apertura = i.promemoria
+      ? p(`nei giorni scorsi le abbiamo chiesto un parere sul percorso ${percorso}. Se non ha ancora avuto modo di rispondere, il questionario resta aperto fino a ${QUESTIONARIO_CHIUDE_LABEL}.`)
+      : p(`il percorso ${percorso} è arrivato alla fine e le chiediamo pochi minuti per dirci com'è andato per i suoi studenti e per lei: che cosa ha funzionato, che cosa migliorerebbe e se lo riproporrebbe.`);
+    return cornice(`
+      ${titolo(saluto(i.nome, false))}
+      ${apertura}
+      ${p(`Sono ${durata("docente")}. Il questionario è <strong>anonimo</strong> e facoltativo: le risposte non sono collegate al suo nome.`)}
+      ${bottone(i.url, "Risponda al questionario")}
+      ${p(`${i.promemoria ? "" : `Può rispondere fino a ${QUESTIONARIO_CHIUDE_LABEL}. `}Il link è personale: la preghiamo di non inoltrare questa email.`)}
+      ${i.promemoria ? "" : p("Le sue indicazioni ci servono per preparare la prossima edizione.")}
+      ${firma}`);
+  }
+
+  const apertura = i.promemoria
+    ? p(`qualche giorno fa ti abbiamo chiesto com'è andato il percorso ${percorso}. Se non hai ancora avuto tempo, il questionario resta aperto fino a ${QUESTIONARIO_CHIUDE_LABEL}.`)
+    : p(`il percorso ${percorso} è arrivato alla fine e vorremmo sapere com'è andato per te: che cosa ti è piaciuto, che cosa cambieresti e che cosa ti aspetti dall'evento del 10 dicembre.`);
+  return cornice(`
+      ${titolo(saluto(i.nome, true))}
+      ${apertura}
+      ${p(`Sono ${durata("studente")}. Il questionario è <strong>anonimo</strong>: le risposte non sono collegate al tuo nome e i tuoi docenti non le vedono. È facoltativo e non ha alcun effetto sulla valutazione dei progetti.`)}
+      ${bottone(i.url, "Rispondi al questionario")}
+      ${p(`${i.promemoria ? "" : `Puoi rispondere fino a ${QUESTIONARIO_CHIUDE_LABEL}. `}Il link è personale: non inoltrare questa email.`)}
+      ${i.promemoria ? "" : p("Le tue risposte ci aiutano a migliorare il percorso per chi verrà dopo di te.")}
+      ${firma}`);
+}
+
 /* ── Allo staff ──────────────────────────────────────────────────────── */
 
 export const staffRiepilogoSubject = (cosa: string) => `[Commissione licei] ${cosa}`;
 
-/** Il riepilogo per lo staff: un titolo e righe gia scritte, con l'escape fatto qui. */
-export function staffRiepilogoHtml(cosa: string, righe: string[]): string {
+/**
+ * Il riepilogo per lo staff: un titolo e righe gia scritte, con l'escape
+ * fatto qui. `scheda`: la scheda del pannello dove sta il dettaglio.
+ */
+export function staffRiepilogoHtml(cosa: string, righe: string[], scheda = "Commissione"): string {
   return cornice(`
       ${titolo(esc(cosa))}
       ${elenco(righe.map(esc))}
-      ${p(`Il dettaglio è nel pannello dei licei, scheda «Commissione».`, "18px 0 0")}`);
+      ${p(`Il dettaglio è nel pannello dei licei, scheda «${esc(scheda)}».`, "18px 0 0")}`);
 }

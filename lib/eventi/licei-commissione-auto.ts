@@ -21,7 +21,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Resend } from "resend";
-import { erroreSchemaMancante } from "@/lib/eventi/licei-server";
+import { erroreSchemaMancante, leggiChiusuraPercorso } from "@/lib/eventi/licei-server";
 import {
   STATI_ADESIONE_CHE_ACCETTANO,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
@@ -66,6 +66,12 @@ import {
 } from "@/lib/eventi/licei-email";
 import { destinatariPromemoriaTalk } from "@/lib/eventi/talk-promemoria";
 import { TALKS, talkConcluso } from "@/app/eventi/vivere-piu-a-lungo/talk/content";
+import { QUESTIONARIO_CHIUDE_LABEL } from "@/app/eventi/vivere-piu-a-lungo/licei/questionario/domande";
+import {
+  MIGRAZIONE_QUESTIONARIO,
+  TABELLA_INVITI,
+  linkQuestionario,
+} from "@/lib/eventi/licei-questionario";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Db = SupabaseClient<any, "public", any>;
@@ -997,6 +1003,166 @@ async function passoCopertura(db: Db, resend: Invio): Promise<RisultatoPasso> {
   return { fatto: nu.ok && sf.ok, dettagli: righe.slice(0, scoperti ? 3 : 2) };
 }
 
+/* ── Il questionario di fine percorso ─────────────────────────────────── */
+
+type RuoloInvito = "studente" | "docente";
+
+/**
+ * A chi va il questionario: gli studenti confermati delle scuole che
+ * partecipano e i loro docenti (il referente, poi i docenti del progetto).
+ * Una riga per indirizzo, come negli altri invii: chi e referente di due
+ * scuole riceve un'email sola, e chi e gia fra gli studenti non la riceve
+ * anche come docente.
+ */
+async function destinatariQuestionario(db: Db): Promise<{ studenti: Destinatario[]; docenti: Destinatario[] }> {
+  const s = await leggiScuole(db);
+  const studenti = destinatariUnici(
+    s.studenti.map((x) => ({ rif: `iscrizione ${x.id}`, nome: x.nome, email: x.email })),
+    null,
+  ).destinatari;
+  const giaStudenti = new Set(studenti.map((d) => d.email.trim().toLowerCase()));
+  const docenti = destinatariUnici([...s.adesioni.keys()].flatMap((id) => s.docentiDi(id)), null).destinatari.filter(
+    (d) => !giaStudenti.has(d.email.trim().toLowerCase()),
+  );
+  return { studenti, docenti };
+}
+
+const RIF_INVITO = /^(iscrizione|adesione|docente) ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+/** La riga dell'invito per un destinatario; null se il riferimento non e una persona del percorso. */
+function rigaInvito(d: Destinatario, ruolo: RuoloInvito) {
+  const m = RIF_INVITO.exec(d.rif);
+  if (!m) return null;
+  const tipo = m[1].toLowerCase();
+  if ((ruolo === "studente") !== (tipo === "iscrizione")) return null;
+  return {
+    ruolo,
+    chi: d.rif,
+    iscrizione_id: tipo === "iscrizione" ? m[2] : null,
+    adesione_id: tipo === "adesione" ? m[2] : null,
+    docente_id: tipo === "docente" ? m[2] : null,
+  };
+}
+
+type InvitoLetto = { id: string; chi: string; risposto: boolean };
+
+/** Gli inviti gia creati. `null` prima della migrazione. */
+async function leggiInviti(db: Db): Promise<InvitoLetto[] | null> {
+  const r = await tutte<InvitoLetto>(TABELLA_INVITI, (da, a) =>
+    db.from(TABELLA_INVITI).select("id, chi, risposto").order("id", { ascending: true }).range(da, a),
+  );
+  return r.presente ? r.righe : null;
+}
+
+/**
+ * Crea gli inviti che mancano (una riga per persona, anche se il passo si
+ * ripete) e li rilegge dal database: i link si costruiscono dagli id
+ * salvati, cosi il promemoria e un secondo giro mandano lo stesso link.
+ */
+async function creaInviti(db: Db, righe: { d: Destinatario; ruolo: RuoloInvito }[]): Promise<InvitoLetto[] | null> {
+  const nuove = righe.map((r) => rigaInvito(r.d, r.ruolo)).filter((r): r is NonNullable<typeof r> => r !== null);
+  for (let i = 0; i < nuove.length; i += 500) {
+    const { error } = await db
+      .from(TABELLA_INVITI)
+      .upsert(nuove.slice(i, i + 500), { onConflict: "chi", ignoreDuplicates: true });
+    if (error) {
+      if (erroreSchemaMancante(error)) return null;
+      throw new Error(`${TABELLA_INVITI}: ${error.message}`);
+    }
+  }
+  return leggiInviti(db);
+}
+
+/** Il link di ogni invito, per riferimento ("iscrizione <id>"...). Solo quelli ancora da rispondere, se richiesto. */
+function linkPerRif(inviti: InvitoLetto[], soloAperti: boolean): Map<string, string> {
+  const link = new Map<string, string>();
+  for (const i of inviti) {
+    if (soloAperti && i.risposto) continue;
+    const url = linkQuestionario(i.id);
+    if (url) link.set(i.chi, url);
+  }
+  return link;
+}
+
+const SENZA_MIGRAZIONE_QUESTIONARIO = `Il questionario parte dopo la migrazione ${MIGRAZIONE_QUESTIONARIO}.`;
+const SENZA_FIRMA = "Link non firmati: manca SUPABASE_SERVICE_ROLE_KEY.";
+
+/**
+ * 30 novembre: il questionario a studenti e docenti, ognuno con il suo
+ * link. Un invio per pubblico (chiavi `auto_questionario_<pubblico>`): se
+ * uno non riesce, il giro di domani rifa solo quello.
+ */
+async function passoQuestionario(db: Db, resend: Invio): Promise<RisultatoPasso> {
+  if ((await leggiChiusuraPercorso(db)).chiusoAt) {
+    return { fatto: false, dettagli: ["Percorso chiuso: il questionario non parte."] };
+  }
+  const { studenti, docenti } = await destinatariQuestionario(db);
+  const inviti = await creaInviti(db, [
+    ...studenti.map((d) => ({ d, ruolo: "studente" as const })),
+    ...docenti.map((d) => ({ d, ruolo: "docente" as const })),
+  ]);
+  if (inviti === null) return { fatto: false, dettagli: [SENZA_MIGRAZIONE_QUESTIONARIO] };
+  const link = linkPerRif(inviti, false);
+  if (link.size === 0 && studenti.length + docenti.length > 0) return { fatto: false, dettagli: [SENZA_FIRMA] };
+
+  const conLink = (xs: Destinatario[]) => xs.filter((d) => link.has(d.rif));
+  const st = await invia(db, resend, "auto_questionario_studenti", "Studenti", conLink(studenti),
+    E.questionarioSubject(false, false),
+    (d) => E.questionarioHtml({ nome: d.nome, url: link.get(d.rif)!, docente: false, promemoria: false }));
+  const dc = await invia(db, resend, "auto_questionario_docenti", "Docenti", conLink(docenti),
+    E.questionarioSubject(true, false),
+    (d) => E.questionarioHtml({ nome: d.nome, url: link.get(d.rif)!, docente: true, promemoria: false }));
+
+  const righe = [st.testo, dc.testo];
+  const cosa = "Questionario di fine percorso inviato";
+  const sf = await invia(db, resend, "auto_questionario_staff", "Staff", STAFF, E.staffRiepilogoSubject(cosa),
+    () => E.staffRiepilogoHtml(cosa, [...righe, `Si risponde fino a ${QUESTIONARIO_CHIUDE_LABEL}; il 2 dicembre un promemoria a chi non ha risposto.`], "Questionari"));
+  return { fatto: st.ok && dc.ok && sf.ok, dettagli: righe };
+}
+
+/** Quanto deve passare fra l'invito e il promemoria, se l'invito e partito in ritardo. */
+const PROMEMORIA_DOPO_MS = 20 * 60 * 60 * 1000;
+
+/**
+ * 2 dicembre: il promemoria, con lo stesso link, solo a chi non ha
+ * risposto e fa ancora parte del percorso. Mai nello stesso giro
+ * dell'invito: se l'invito e partito tardi, il promemoria aspetta.
+ */
+async function passoQuestionarioPromemoria(db: Db, resend: Invio, adesso: Date): Promise<RisultatoPasso> {
+  if ((await leggiChiusuraPercorso(db)).chiusoAt) {
+    return { fatto: false, dettagli: ["Percorso chiuso: il promemoria non parte."] };
+  }
+  const { data: invio } = await db.from("licei_config").select("valore").eq("chiave", chiavePasso("questionario")).maybeSingle();
+  const inviatoAt = Date.parse(String(invio?.valore ?? ""));
+  if (!Number.isFinite(inviatoAt)) return { fatto: false, dettagli: ["Il promemoria parte dopo l'invio del questionario."] };
+  if (adesso.getTime() - inviatoAt < PROMEMORIA_DOPO_MS) {
+    return { fatto: false, dettagli: ["Il questionario è partito da poco: il promemoria parte domani."] };
+  }
+
+  const inviti = await leggiInviti(db);
+  if (inviti === null) return { fatto: false, dettagli: [SENZA_MIGRAZIONE_QUESTIONARIO] };
+  const link = linkPerRif(inviti, true);
+  const aperti = inviti.filter((i) => !i.risposto).length;
+  if (link.size === 0 && aperti > 0) return { fatto: false, dettagli: [SENZA_FIRMA] };
+
+  // Chi fa ancora parte del percorso, con il nome e l'indirizzo di oggi.
+  const { studenti, docenti } = await destinatariQuestionario(db);
+  const conLink = (xs: Destinatario[]) => xs.filter((d) => link.has(d.rif));
+  const st = await invia(db, resend, "auto_questionario_promemoria_studenti", "Studenti", conLink(studenti),
+    E.questionarioSubject(false, true),
+    (d) => E.questionarioHtml({ nome: d.nome, url: link.get(d.rif)!, docente: false, promemoria: true }));
+  const dc = await invia(db, resend, "auto_questionario_promemoria_docenti", "Docenti", conLink(docenti),
+    E.questionarioSubject(true, true),
+    (d) => E.questionarioHtml({ nome: d.nome, url: link.get(d.rif)!, docente: true, promemoria: true }));
+
+  const risposti = inviti.length - aperti;
+  const righe = [st.testo, dc.testo, `Risposte arrivate finora: ${risposti} su ${inviti.length} inviti.`];
+  const cosa = "Promemoria del questionario";
+  const sf = await invia(db, resend, "auto_questionario_promemoria_staff", "Staff", STAFF, E.staffRiepilogoSubject(cosa),
+    () => E.staffRiepilogoHtml(cosa, righe, "Questionari"));
+  return { fatto: st.ok && dc.ok && sf.ok, dettagli: righe };
+}
+
 const ESEGUI: Record<IdPasso, (db: Db, resend: Invio, adesso: Date) => Promise<RisultatoPasso>> = {
   aggiornamento: passoAggiornamento,
   invito_mentor: (db, r) => passoInvitoMentor(db, r, false),
@@ -1008,7 +1174,9 @@ const ESEGUI: Record<IdPasso, (db: Db, resend: Invio, adesso: Date) => Promise<R
   consegna_ultimo_giorno: (db, r) => passoConsegna(db, r, true),
   smistamento: passoSmistamento,
   giudici_meta: passoGiudiciMeta,
+  questionario: passoQuestionario,
   ridistribuzione: passoRidistribuzione,
+  questionario_promemoria: passoQuestionarioPromemoria,
   giudici_ultimo_giorno: passoGiudiciUltimoGiorno,
   copertura: passoCopertura,
 };

@@ -18,6 +18,8 @@ import {
   SCHEDE_MINIME,
   passo,
 } from "@/app/eventi/vivere-piu-a-lungo/licei/smistamento";
+import { SITE_URL } from "@/app/eventi/vivere-piu-a-lungo/licei/content";
+import { QUESTIONARIO_PATH } from "@/app/eventi/vivere-piu-a-lungo/licei/questionario/domande";
 
 /**
  * Il calendario automatico della Commissione, per lo staff.
@@ -36,6 +38,9 @@ import {
  */
 
 export const maxDuration = 300;
+
+const ANTEPRIMA_STUDENTI = `${SITE_URL}${QUESTIONARIO_PATH}?anteprima=studente`;
+const ANTEPRIMA_DOCENTI = `${SITE_URL}${QUESTIONARIO_PATH}?anteprima=docente`;
 
 /** Le email in anteprima, con dati di esempio. */
 const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => string }> = {
@@ -92,6 +97,24 @@ const ANTEPRIME: Record<string, { subject: string | (() => string); html: () => 
   giudice_tolti: { subject: E.giudiceTolteSubject(), html: () => E.giudiceTolteHtml({ nome: "Mario Bianchi", n: 20 }) },
   giudice_nuovi: { subject: E.giudiceNuoviSubject(), html: () => E.giudiceNuoviHtml({ nome: "Mario Bianchi", n: 3, entro: E.ENTRO_RISERVA }) },
   giudice_ultimo: { subject: E.giudiceUltimoGiornoSubject(), html: () => E.giudiceUltimoGiornoHtml({ nome: "Mario Bianchi", mancano: 4, assegnati: 20 }) },
+  // Il link delle anteprime apre le domande in anteprima: un link vero non
+  // si crea qui, e una prova non deve poter rispondere al posto di nessuno.
+  questionario_studenti: {
+    subject: E.questionarioSubject(false, false),
+    html: () => E.questionarioHtml({ nome: "Giulia", url: ANTEPRIMA_STUDENTI, docente: false, promemoria: false }),
+  },
+  questionario_docenti: {
+    subject: E.questionarioSubject(true, false),
+    html: () => E.questionarioHtml({ nome: "Maria Rossi", url: ANTEPRIMA_DOCENTI, docente: true, promemoria: false }),
+  },
+  questionario_promemoria_studenti: {
+    subject: E.questionarioSubject(false, true),
+    html: () => E.questionarioHtml({ nome: "Giulia", url: ANTEPRIMA_STUDENTI, docente: false, promemoria: true }),
+  },
+  questionario_promemoria_docenti: {
+    subject: E.questionarioSubject(true, true),
+    html: () => E.questionarioHtml({ nome: "Maria Rossi", url: ANTEPRIMA_DOCENTI, docente: true, promemoria: true }),
+  },
 };
 
 const oggettoDi = (a: { subject: string | (() => string) }) => (typeof a.subject === "function" ? a.subject() : a.subject);

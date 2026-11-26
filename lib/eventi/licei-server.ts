@@ -164,6 +164,9 @@ export type EsitoCancellazione = {
   riflessioni: number;
   /** Iscrizioni ai talk di studenti e docenti. Assente negli esiti registrati prima dei talk. */
   talk?: number;
+  /** Questionario di fine percorso. Assenti negli esiti registrati prima del questionario. */
+  questionario_inviti?: number;
+  questionario_risposte?: number;
   account_cancellati: number;
   account_mantenuti: number;
   mantenuti_per_motivo: Record<string, number>;
